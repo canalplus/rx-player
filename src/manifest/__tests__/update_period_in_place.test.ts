@@ -60,6 +60,7 @@ const newAudioRepresentation = { parsingErrors: [],
                                  index: { _update() { /* noop */ },
                                           _replace() { /* noop */ } } };
 
+// XXX TODO
 describe("Manifest - updatePeriodInPlace", () => {
    let oldVideoRepresentation1ReplaceSpy : jest.MockInstance<void, []> | undefined;
    let oldVideoRepresentation2ReplaceSpy : jest.MockInstance<void, []> | undefined;
@@ -163,6 +164,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 5,
                         end: 15,
                         duration: 10,
@@ -186,6 +188,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 500,
                         end: 520,
                         duration: 20,
@@ -204,6 +207,7 @@ describe("Manifest - updatePeriodInPlace", () => {
 
     updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
 
+    expect(oldPeriod.isLoaded).toEqual(true);
     expect(oldPeriod.start).toEqual(500);
     expect(oldPeriod.end).toEqual(520);
     expect(oldPeriod.duration).toEqual(20);
@@ -229,6 +233,7 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(oldAudioRepresentationReplaceSpy)
       .toHaveBeenCalledWith(newAudioRepresentation.index);
 
+    expect(newPeriod.isLoaded).toEqual(true);
     expect(newPeriod.start).toEqual(500);
     expect(newPeriod.end).toEqual(520);
     expect(newPeriod.duration).toEqual(20);
@@ -270,6 +275,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 5,
                         end: 15,
                         duration: 10,
@@ -293,6 +299,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 500,
                         end: 520,
                         duration: 20,
@@ -311,6 +318,7 @@ describe("Manifest - updatePeriodInPlace", () => {
 
     updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Partial);
 
+    expect(oldPeriod.isLoaded).toEqual(true);
     expect(oldPeriod.start).toEqual(500);
     expect(oldPeriod.end).toEqual(520);
     expect(oldPeriod.duration).toEqual(20);
@@ -336,6 +344,7 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(oldAudioRepresentationUpdateSpy)
       .toHaveBeenCalledWith(newAudioRepresentation.index);
 
+    expect(oldPeriod.isLoaded).toEqual(true);
     expect(newPeriod.start).toEqual(500);
     expect(newPeriod.end).toEqual(520);
     expect(newPeriod.duration).toEqual(20);
@@ -371,6 +380,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 5,
                         end: 15,
                         duration: 10,
@@ -392,6 +402,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 500,
                         end: 520,
                         duration: 20,
@@ -427,6 +438,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 500,
                         end: 520,
                         duration: 20,
@@ -446,6 +458,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 5,
                         end: 15,
                         duration: 10,
@@ -480,6 +493,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 5,
                         end: 15,
                         duration: 10,
@@ -496,6 +510,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 500,
                         end: 520,
                         duration: 20,
@@ -524,6 +539,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 500,
                         end: 520,
                         duration: 20,
@@ -538,6 +554,7 @@ describe("Manifest - updatePeriodInPlace", () => {
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = { parsingErrors: [],
+                        isLoaded: true,
                         start: 5,
                         end: 15,
                         duration: 10,

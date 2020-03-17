@@ -17,7 +17,7 @@
 import { ICustomError } from "../../errors";
 import Manifest, {
   Adaptation,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../manifest";
 import {
@@ -45,7 +45,7 @@ export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
 
 /** Describes a given "real" Manifest for MetaPlaylist's segments. */
 export interface IBaseContentInfos { manifest: Manifest;
-                                     period: Period;
+                                     period: LoadedPeriod;
                                      adaptation: Adaptation;
                                      representation: Representation; }
 

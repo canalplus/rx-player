@@ -48,7 +48,7 @@ import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../../manifest";
 import deferSubscriptions from "../../../utils/defer_subscriptions";
@@ -102,7 +102,7 @@ export interface IAdaptationStreamArguments<T> {
   clock$ : Observable<IAdaptationStreamClockTick>;
   /** Content you want to create this Stream for. */
   content : { manifest : Manifest;
-              period : Period;
+              period : LoadedPeriod;
               adaptation : Adaptation; };
   /**
    * Strategy taken when the user switch manually the current Representation:
@@ -117,12 +117,6 @@ export interface IAdaptationStreamArguments<T> {
   queuedSourceBuffer : QueuedSourceBuffer<T>;
   /** Module used to fetch the wanted media segments. */
   segmentFetcherCreator : SegmentFetcherCreator<any>;
-  /**
-   * "Buffer goal" wanted, or the ideal amount of time ahead of the current
-   * position in the current SourceBuffer. When this amount has been reached
-   * this AdaptationStream won't try to download new segments.
-   */
-  wantedBufferAhead$ : BehaviorSubject<number>;
 }
 
 /**
@@ -153,6 +147,12 @@ export interface IAdaptationStreamOptions {
    * those devices.
    */
   enableFastSwitching : boolean;
+  /**
+   * "Buffer goal" wanted, or the ideal amount of time ahead of the current
+   * position in the current SourceBuffer. When this amount has been reached
+   * this AdaptationStream won't try to download new segments.
+   */
+  wantedBufferAhead$ : BehaviorSubject<number>;
 }
 
 /**
@@ -176,8 +176,8 @@ export default function AdaptationStream<T>({
   options,
   queuedSourceBuffer,
   segmentFetcherCreator,
-  wantedBufferAhead$,
 } : IAdaptationStreamArguments<T>) : Observable<IAdaptationStreamEvent<T>> {
+  const { wantedBufferAhead$ } = options;
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
 

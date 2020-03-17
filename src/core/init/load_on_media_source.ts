@@ -150,12 +150,13 @@ export default function createMediaSourceLoader({
     const cancelEndOfStream$ = new Subject<null>();
 
     // Creates Observable which will manage every Stream for the given Content.
-    const streams$ = StreamOrchestrator({ manifest, initialPeriod },
-                                          streamClock$,
-                                          abrManager,
-                                          sourceBuffersStore,
-                                          segmentFetcherCreator,
-                                          bufferOptions
+    const streams$ = StreamOrchestrator(manifest,
+                                        initialTime,
+                                        streamClock$,
+                                        abrManager,
+                                        sourceBuffersStore,
+                                        segmentFetcherCreator,
+                                        bufferOptions
     ).pipe(
       mergeMap((evt) : Observable<IMediaSourceLoaderEvent> => {
         switch (evt.type) {

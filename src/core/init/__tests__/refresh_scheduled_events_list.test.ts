@@ -17,11 +17,13 @@
 describe("core - init - refreshScheduledEventsList", () => {
   it("should correclty refresh scheduled events", () => {
     const manifest = { periods: [
-                         { start: 0,
+                         { isLoaded: true,
+                           start: 0,
                            streamEvents: [{ start: 0,
                                             end: 1,
                                             id: "1" }] },
-                         { start: 10,
+                         { isLoaded: true,
+                           start: 10,
                            streamEvents: [{ start: 11,
                                             end: 20,
                                             id: "2" },

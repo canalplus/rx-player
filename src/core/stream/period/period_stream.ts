@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   concat as observableConcat,
   EMPTY,
   merge as observableMerge,
@@ -37,7 +36,7 @@ import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
-  Period,
+  LoadedPeriod,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
@@ -80,12 +79,11 @@ export interface IPeriodStreamArguments {
   bufferType : IBufferType;
   clock$ : Observable<IPeriodStreamClockTick>;
   content : { manifest : Manifest;
-              period : Period; };
+              period : LoadedPeriod; };
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
   segmentFetcherCreator : SegmentFetcherCreator<any>;
   sourceBuffersStore : SourceBuffersStore;
   options: IPeriodStreamOptions;
-  wantedBufferAhead$ : BehaviorSubject<number>;
 }
 
 /** Options tweaking the behavior of the PeriodStream. */
@@ -111,9 +109,9 @@ export default function PeriodStream({
   segmentFetcherCreator,
   sourceBuffersStore,
   options,
-  wantedBufferAhead$,
 } : IPeriodStreamArguments) : Observable<IPeriodStreamEvent> {
   const { period } = content;
+  const { wantedBufferAhead$ } = options;
 
   // Emits the chosen Adaptation for the current type.
   // `null` when no Adaptation is chosen (e.g. no subtitles)
@@ -220,8 +218,7 @@ export default function PeriodStream({
                               content: { manifest, period, adaptation },
                               options,
                               queuedSourceBuffer: qSourceBuffer,
-                              segmentFetcherCreator,
-                              wantedBufferAhead$ })
+                              segmentFetcherCreator })
     .pipe(catchError((error : unknown) => {
       // Stream linked to a non-native SourceBuffer should not impact the
       // stability of the player. ie: if a text buffer sends an error, we want

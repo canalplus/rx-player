@@ -17,7 +17,7 @@
 import config from "../../../config";
 import {
   Adaptation,
-  Period,
+  LoadedPeriod,
 } from "../../../manifest";
 import {
   convertToRanges,
@@ -47,7 +47,7 @@ export type IAdaptationSwitchStrategy =
  */
 export default function getAdaptationSwitchStrategy(
   queuedSourceBuffer : QueuedSourceBuffer<unknown>,
-  period : Period,
+  period : LoadedPeriod,
   adaptation : Adaptation,
   clockTick : { currentTime : number; readyState : number }
 ) : IAdaptationSwitchStrategy {
@@ -107,7 +107,7 @@ export default function getAdaptationSwitchStrategy(
  */
 function getBufferedRangesFromAdaptation(
   queuedSourceBuffer : QueuedSourceBuffer<unknown>,
-  period : Period,
+  period : LoadedPeriod,
   adaptation : Adaptation
 ) : IRange[] {
   queuedSourceBuffer.synchronizeInventory();

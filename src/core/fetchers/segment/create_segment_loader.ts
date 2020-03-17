@@ -29,7 +29,7 @@ import { ICustomError } from "../../../errors";
 import Manifest, {
   Adaptation,
   ISegment,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../../manifest";
 import {
@@ -105,7 +105,7 @@ export type ISegmentPipelineLoader<T> =
 
 /** Content used by the segment loader as a context to load a new segment. */
 export interface ISegmentLoaderContent { manifest : Manifest;
-                                         period : Period;
+                                         period : LoadedPeriod;
                                          adaptation : Adaptation;
                                          representation : Representation;
                                          segment : ISegment; }

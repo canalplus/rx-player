@@ -15,7 +15,10 @@
  */
 
 import log from "../../../log";
-import { Period } from "../../../manifest";
+import {
+  LoadedPeriod,
+  PartialPeriod,
+} from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
@@ -68,7 +71,7 @@ export interface IAdaptationSetsContextInfos {
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousPeriod : Period | null;
+  unsafelyBaseOnPreviousPeriod : LoadedPeriod | PartialPeriod | null;
 }
 
 // Supplementary information for "switchable" AdaptationSets of the same Period
@@ -298,8 +301,11 @@ export default function parseAdaptationSets(
       unsafelyBaseOnPreviousAdaptation: null,
     };
     if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
-      adaptationInfos.unsafelyBaseOnPreviousAdaptation = periodInfos
-        .unsafelyBaseOnPreviousPeriod?.getAdaptation(videoMainAdaptation.id) ?? null;
+      const previousPeriod = periodInfos.unsafelyBaseOnPreviousPeriod;
+      if (previousPeriod !== null && previousPeriod.isLoaded) {
+        adaptationInfos.unsafelyBaseOnPreviousAdaptation = previousPeriod
+          .getAdaptation(videoMainAdaptation.id) ?? null;
+      }
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
                                                    adaptationInfos);
@@ -343,8 +349,11 @@ export default function parseAdaptationSets(
       newID = adaptationID;
       parsedAdaptationsIDs.push(adaptationID);
 
-      adaptationInfos.unsafelyBaseOnPreviousAdaptation = periodInfos
-        .unsafelyBaseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
+      const previousPeriod = periodInfos.unsafelyBaseOnPreviousPeriod;
+      if (previousPeriod !== null && previousPeriod.isLoaded) {
+        adaptationInfos.unsafelyBaseOnPreviousAdaptation = previousPeriod
+          .getAdaptation(adaptationID) ?? null;
+      }
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
                                                    adaptationInfos);

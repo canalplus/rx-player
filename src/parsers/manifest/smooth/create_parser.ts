@@ -631,7 +631,9 @@ function createSmoothStreamingParser(
                   duration: periodEnd !== undefined ?
                     periodEnd - periodStart : duration,
                   end: periodEnd,
+                  isLoaded: true,
                   id: "gen-smooth-period-0",
+                  url: null,
                   start: periodStart }],
       suggestedPresentationDelay,
       transportType: "smooth",

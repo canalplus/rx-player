@@ -81,7 +81,8 @@ import {
 import features from "../../features";
 import Manifest, {
   Adaptation,
-  Period,
+  LoadedPeriod,
+  PartialPeriod,
   Representation,
 } from "../../manifest";
 import { IBifThumbnail } from "../../parsers/images/bif";
@@ -190,14 +191,14 @@ interface IPublicAPIEvent {
   error : ICustomError | Error;
   warning : ICustomError | Error;
   nativeTextTracksChange : TextTrack[];
-  periodChange : Period;
+  periodChange : LoadedPeriod;
   availableAudioBitratesChange : number[];
   availableVideoBitratesChange : number[];
   availableAudioTracksChange : ITMAudioTrackListItem[];
   availableTextTracksChange : ITMTextTrackListItem[];
   availableVideoTracksChange : ITMVideoTrackListItem[];
   decipherabilityUpdate : Array<{ manifest : Manifest;
-                                  period : Period;
+                                  period : LoadedPeriod;
                                   adaptation : Adaptation;
                                   representation : Representation; }>;
   seeking : null;
@@ -331,7 +332,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * Current Period being played.
      * `null` if no Period is being played.
      */
-    currentPeriod : Period|null;
+    currentPeriod : LoadedPeriod|null;
 
     /**
      * Store currently considered adaptations, per active period.
@@ -2199,7 +2200,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {Object} value
    */
-  private _priv_onActivePeriodChanged({ period } : { period : Period }) : void {
+  private _priv_onActivePeriodChanged({ period } : { period : LoadedPeriod }) : void {
     if (this._priv_contentInfos === null) {
       log.error("API: The active period changed but no content is loaded");
       return;
@@ -2249,7 +2250,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPeriodStreamReady(value : {
     type : IBufferType;
-    period : Period;
+    period : LoadedPeriod;
     adaptation$ : Subject<Adaptation|null>;
   }) : void {
     const { type, period, adaptation$ } = value;
@@ -2303,7 +2304,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPeriodStreamCleared(value : {
     type : IBufferType;
-    period : Period;
+    period : LoadedPeriod | PartialPeriod;
   }) : void {
     const { type, period } = value;
 
@@ -2369,7 +2370,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   } : {
     type : IBufferType;
     adaptation : Adaptation|null;
-    period : Period;
+    period : LoadedPeriod;
   }) : void {
     if (this._priv_contentInfos === null) {
       log.error("API: The adaptations changed but no content is loaded");
@@ -2434,7 +2435,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     representation,
   }: {
     type : IBufferType;
-    period : Period;
+    period : LoadedPeriod;
     representation : Representation|null;
   }) : void {
     if (this._priv_contentInfos === null) {

@@ -15,18 +15,40 @@
  */
 
 import log from "../../../log";
-import { IParsedManifest } from "../types";
+import {
+  IParsedPartialPeriod,
+  IParsedPeriod,
+} from "../types";
 import getFirstPositionFromAdaptation from "./get_first_time_from_adaptation";
 
+export interface INeedsToLoadPeriodEvent {
+  type : "needs-to-load-period";
+  value : IParsedPartialPeriod;
+}
+
+export interface IResultEvent {
+  type : "result";
+  value : number | undefined;
+}
+
 /**
- * @param {Object} manifest
- * @returns {number | undefined}
+ * @param {Array.<Object>} periods
+ * @returns {Object}
  */
+export default function getMinimumPosition(periods : IParsedPeriod[]) : IResultEvent;
 export default function getMinimumPosition(
-  manifest: IParsedManifest
-) : number | undefined {
-  for (let i = 0; i <= manifest.periods.length - 1; i++) {
-    const periodAdaptations = manifest.periods[i].adaptations;
+  periods : Array<IParsedPartialPeriod | IParsedPeriod>
+) : INeedsToLoadPeriodEvent | IResultEvent;
+export default function getMinimumPosition(
+  periods : Array<IParsedPartialPeriod | IParsedPeriod>
+) : INeedsToLoadPeriodEvent | IResultEvent {
+  for (let i = 0; i <= periods.length - 1; i++) {
+    const period = periods[i];
+    if (!period.isLoaded) {
+      return { type: "needs-to-load-period",
+               value: period };
+    }
+    const periodAdaptations = period.adaptations;
     const firstAudioAdaptationFromPeriod = periodAdaptations.audio === undefined ?
       undefined :
       periodAdaptations.audio[0];
@@ -44,7 +66,7 @@ export default function getMinimumPosition(
         const firstPosition =
           getFirstPositionFromAdaptation(firstAudioAdaptationFromPeriod);
         if (firstPosition === undefined) {
-          return undefined;
+          return { type: "result", value: undefined };
         }
         minimumAudioPosition = firstPosition;
       }
@@ -52,7 +74,7 @@ export default function getMinimumPosition(
         const firstPosition =
           getFirstPositionFromAdaptation(firstVideoAdaptationFromPeriod);
         if (firstPosition === undefined) {
-          return undefined;
+          return { type: "result", value: undefined };
         }
         minimumVideoPosition = firstPosition;
       }
@@ -63,18 +85,19 @@ export default function getMinimumPosition(
            minimumVideoPosition === null)) {
         log.info("Parser utils: found Period with no segment. ",
                  "Going to next one to calculate first position");
-        return undefined;
+        return { type: "result", value: undefined };
       }
 
       if (minimumVideoPosition !== null) {
-        if (minimumAudioPosition !== null) {
-          return Math.max(minimumAudioPosition, minimumVideoPosition);
-        }
-        return minimumVideoPosition;
+        const value = minimumAudioPosition !== null ?
+          Math.max(minimumAudioPosition, minimumVideoPosition) :
+          minimumVideoPosition;
+        return { type: "result", value };
       }
       if (minimumAudioPosition !== null) {
-        return minimumAudioPosition;
+        return { type: "result", value: minimumAudioPosition };
       }
     }
   }
+  return { type: "result", value: undefined };
 }

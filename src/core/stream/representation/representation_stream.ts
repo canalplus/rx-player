@@ -52,7 +52,7 @@ import log from "../../../log";
 import Manifest, {
   Adaptation,
   ISegment,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../../manifest";
 import {
@@ -128,7 +128,7 @@ export interface IRepresentationStreamArguments<T> {
   /** The context of the Representation you want to load. */
   content: { adaptation : Adaptation;
              manifest : Manifest;
-             period : Period;
+             period : LoadedPeriod;
              representation : Representation; };
   /** The `QueuedSourceBuffer` on which segments will be pushed. */
   queuedSourceBuffer : QueuedSourceBuffer<T>;

@@ -19,10 +19,11 @@ import Manifest from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import { normalizeBaseURL } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
+import getMaximumPosition from "../utils/get_maximum_position";
+import getMinimumPosition from "../utils/get_minimum_position";
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
-import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -272,7 +273,36 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.minimumUpdatePeriod;
   }
 
-  const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
+  return findMinAndMaxPositionThenReturn(parsedMPD,
+                                         warnings,
+                                         { mediaPresentationDuration,
+                                           timeShiftBufferDepth,
+                                           isDynamic });
+}
+
+function findMinAndMaxPositionThenReturn(
+  parsedMPD : IParsedManifest,
+  warnings : Error[],
+  context : { mediaPresentationDuration : number | undefined;
+              isDynamic : boolean;
+              timeShiftBufferDepth : number | undefined; }
+) : IParserResponse<IParsedManifest> {
+  if (parsedMPD.periods.length === 0) {
+    throw new Error("DASH Parser: no period available for a dynamic content");
+  }
+  const { mediaPresentationDuration,
+          isDynamic,
+          timeShiftBufferDepth } = context;
+  const parsedPeriods = parsedMPD.periods;
+  const minTimeResult = getMinimumPosition(parsedMPD.periods);
+  const maxTimeResult = getMaximumPosition(parsedMPD.periods);
+  if (maxTimeResult.type === "needs-to-load-period" ||
+      minTimeResult.type === "needs-to-load-period")
+  {
+    throw new Error("onResolve Xlinks not yet implemented");
+  }
+  const maxTime = maxTimeResult.value;
+  const minTime = minTimeResult.value;
   const now = performance.now();
   if (!isDynamic) {
     if (minTime !== undefined) {

@@ -17,7 +17,7 @@
 import { ICustomError } from "../../errors";
 import Manifest, {
   Adaptation,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../manifest";
 import { IStalledStatus } from "../api";
@@ -56,7 +56,7 @@ export interface IManifestUpdateEvent { type: "manifestUpdate";
 export interface IDecipherabilityUpdateEvent {
   type: "decipherabilityUpdate";
   value: Array<{ manifest : Manifest;
-                 period : Period;
+                 period : LoadedPeriod;
                  adaptation : Adaptation;
                  representation : Representation; }>; }
 

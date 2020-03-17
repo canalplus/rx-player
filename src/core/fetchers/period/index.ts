@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-import parseMetaPlaylist, {
-  IMetaPlaylist,
-  IMetaPlaylistTextTrack,
-  IParserResponse,
-  transformManifestToMetaplaylistPeriod,
-} from "./metaplaylist_parser";
+import createPeriodFetcher, {
+  IPeriodFetcherParsedResult,
+  IPeriodFetcherWarningEvent,
+} from "./create_period_fetcher";
 
-export default parseMetaPlaylist;
+export default createPeriodFetcher;
 export {
-  IMetaPlaylist,
-  IMetaPlaylistTextTrack,
-  IParserResponse,
-  transformManifestToMetaplaylistPeriod,
+  IPeriodFetcherParsedResult,
+  IPeriodFetcherWarningEvent,
 };

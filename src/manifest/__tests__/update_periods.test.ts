@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-const MANIFEST_UPDATE_TYPE = {
-  Full: 0,
-  Partial: 1,
-};
+const MANIFEST_UPDATE_TYPE = { Full: 0,
+                               Partial: 1 };
 
 describe("Manifest - replacePeriods", () => {
   beforeEach(() => {
@@ -28,18 +26,18 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods : p1, p2
   // new periods : p2
-  it("should remove old period", () => {
+  it("should remove an old period", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
-      { id: "p1" },
-      { id: "p2" },
+      { id: "p1", isLoaded: true },
+      { id: "p2", isLoaded: true },
     ] as any;
     const newPeriods = [
-      { id: "p2" },
+      { id: "p2", isLoaded: true },
     ] as any;
     /* tslint:disable no-unsafe-any */
     const replacePeriods = require("../update_periods").replacePeriods;
@@ -47,10 +45,11 @@ describe("Manifest - replacePeriods", () => {
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p2");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            { id: "p2" },
-                                                            { id: "p2" },
-                                                            0);
+    expect(fakeUpdatePeriodInPlace)
+      .toHaveBeenNthCalledWith(1,
+                               { id: "p2", isLoaded: true },
+                               { id: "p2", isLoaded: true },
+                               0);
     /* tslint:enable no-unsafe-any */
   });
 
@@ -65,11 +64,11 @@ describe("Manifest - replacePeriods", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
-      { id: "p2" },
+      { id: "p2", isLoaded: true },
     ] as any;
     const newPeriods = [
-      { id: "p2" },
-      { id: "p3" },
+      { id: "p2", isLoaded: true },
+      { id: "p3", isLoaded: true },
     ] as any;
     /* tslint:disable no-unsafe-any */
     const replacePeriods = require("../update_periods").replacePeriods;
@@ -78,10 +77,11 @@ describe("Manifest - replacePeriods", () => {
     expect(oldPeriods[0].id).toBe("p2");
     expect(oldPeriods[1].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            { id: "p2" },
-                                                            { id: "p2" },
-                                                            0);
+    expect(fakeUpdatePeriodInPlace)
+      .toHaveBeenNthCalledWith(1,
+                               { id: "p2", isLoaded: true },
+                               { id: "p2", isLoaded: true },
+                               0);
     /* tslint:enable no-unsafe-any */
   });
 
@@ -96,10 +96,10 @@ describe("Manifest - replacePeriods", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
-      { id: "p1" },
+      { id: "p1", isLoaded: true },
     ] as any;
     const newPeriods = [
-      { id: "p2" },
+      { id: "p2", isLoaded: true },
     ] as any;
     /* tslint:disable no-unsafe-any */
     const replacePeriods = require("../update_periods").replacePeriods;
@@ -121,16 +121,16 @@ describe("Manifest - replacePeriods", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
-      { id: "p0" },
-      { id: "p1" },
-      { id: "p2", start: 0 },
+      { id: "p0", isLoaded: true },
+      { id: "p1", isLoaded: true },
+      { id: "p2", start: 0, isLoaded: true },
     ] as any;
     const newPeriods = [
-      { id: "p1" },
-      { id: "a" },
-      { id: "b" },
-      { id: "p2", start: 2 },
-      { id: "p3" },
+      { id: "p1", isLoaded: true },
+      { id: "a", isLoaded: true },
+      { id: "b", isLoaded: true },
+      { id: "p2", start: 2, isLoaded: true },
+      { id: "p3", isLoaded: true },
     ] as any;
     /* tslint:disable no-unsafe-any */
     const replacePeriods = require("../update_periods").replacePeriods;
@@ -143,14 +143,16 @@ describe("Manifest - replacePeriods", () => {
     expect(oldPeriods[3].id).toBe("p2");
     expect(oldPeriods[4].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            { id: "p1" },
-                                                            { id: "p1" },
-                                                            0);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(2,
-                                                            { id: "p2", start: 0 },
-                                                            { id: "p2", start: 2 },
-                                                            0);
+    expect(fakeUpdatePeriodInPlace)
+      .toHaveBeenNthCalledWith(1,
+                               { id: "p1", isLoaded: true },
+                               { id: "p1", isLoaded: true },
+                               0);
+    expect(fakeUpdatePeriodInPlace)
+      .toHaveBeenNthCalledWith(2,
+                               { id: "p2", start: 0, isLoaded: true },
+                               { id: "p2", start: 2, isLoaded: true },
+                               0);
     /* tslint:enable no-unsafe-any */
   });
 
@@ -165,11 +167,11 @@ describe("Manifest - replacePeriods", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
-      { id: "p2" },
+      { id: "p2", isLoaded: true },
     ] as any;
     const newPeriods = [
-      { id: "p1" },
-      { id: "p2" },
+      { id: "p1", isLoaded: true },
+      { id: "p2", isLoaded: true },
     ] as any;
     /* tslint:disable no-unsafe-any */
     const replacePeriods = require("../update_periods").replacePeriods;
@@ -178,10 +180,11 @@ describe("Manifest - replacePeriods", () => {
     expect(oldPeriods[0].id).toBe("p1");
     expect(oldPeriods[1].id).toBe("p2");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            { id: "p2" },
-                                                            { id: "p2" },
-                                                            0);
+    expect(fakeUpdatePeriodInPlace)
+      .toHaveBeenNthCalledWith(1,
+                               { id: "p2", isLoaded: true },
+                               { id: "p2", isLoaded: true },
+                               0);
     /* tslint:enable no-unsafe-any */
   });
 
@@ -196,8 +199,8 @@ describe("Manifest - replacePeriods", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
-      { id: "p1" },
-      { id: "p2" },
+      { id: "p1", isLoaded: true },
+      { id: "p2", isLoaded: true },
     ] as any;
     const newPeriods = [] as any;
     /* tslint:disable no-unsafe-any */
@@ -220,8 +223,8 @@ describe("Manifest - replacePeriods", () => {
     }));
     const oldPeriods = [] as any;
     const newPeriods = [
-      { id: "p1" },
-      { id: "p2" },
+      { id: "p1", isLoaded: true },
+      { id: "p2", isLoaded: true },
     ] as any;
     /* tslint:disable no-unsafe-any */
     const replacePeriods = require("../update_periods").replacePeriods;
@@ -249,9 +252,9 @@ describe("updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ { id: "p1", start: 50, end: 60 },
-                         { id: "p2", start: 60 } ] as any;
-    const newPeriods = [ { id: "p2", start: 60 } ] as any;
+    const oldPeriods = [ { id: "p1", start: 50, end: 60, isLoaded: true },
+                         { id: "p2", start: 60, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p2", start: 60, isLoaded: true } ] as any;
 
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
@@ -259,10 +262,11 @@ describe("updatePeriods", () => {
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            { id: "p2", start: 60 },
-                                                            { id: "p2", start: 60 },
-                                                            MANIFEST_UPDATE_TYPE.Partial);
+    expect(fakeUpdatePeriodInPlace)
+      .toHaveBeenNthCalledWith(1,
+                               { id: "p2", start: 60, isLoaded: true },
+                               { id: "p2", start: 60, isLoaded: true },
+                               MANIFEST_UPDATE_TYPE.Partial);
     /* tslint:enable no-unsafe-any */
   });
 
@@ -276,9 +280,9 @@ describe("updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ { id: "p2", start: 60 } ] as any;
-    const newPeriods = [ { id: "p2", start: 60, end: 80 },
-                         { id: "p3", start: 80 } ] as any;
+    const oldPeriods = [ { id: "p2", start: 60, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p2", start: 60, end: 80, isLoaded: true },
+                         { id: "p3", start: 80, isLoaded: true } ] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
@@ -288,8 +292,8 @@ describe("updatePeriods", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(1,
-                               { id: "p2", start: 60 },
-                               { id: "p2", start: 60, end: 80 },
+                               { id: "p2", start: 60, isLoaded: true },
+                               { id: "p2", start: 60, end: 80, isLoaded: true },
                                MANIFEST_UPDATE_TYPE.Partial);
     /* tslint:enable no-unsafe-any */
   });
@@ -304,8 +308,8 @@ describe("updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
-    const newPeriods = [ { id: "p3", start: 70, end: 80 } ] as any;
+    const oldPeriods = [ { id: "p1", start: 50, end: 60, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p3", start: 70, end: 80, isLoaded: true } ] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
 
@@ -334,14 +338,14 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ { id: "p0", start: 50, end: 60 },
-                         { id: "p1", start: 60, end: 70 },
-                         { id: "p2", start: 70 } ] as any;
-    const newPeriods = [ { id: "p1", start: 60, end: 65  },
-                         { id: "a", start: 65, end: 68  },
-                         { id: "b", start: 68, end: 70 },
-                         { id: "p2", start: 70, end: 80  },
-                         { id: "p3", start: 80 } ] as any;
+    const oldPeriods = [ { id: "p0", start: 50, end: 60, isLoaded: true },
+                         { id: "p1", start: 60, end: 70, isLoaded: true },
+                         { id: "p2", start: 70, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p1", start: 60, end: 65, isLoaded: true  },
+                         { id: "a", start: 65, end: 68, isLoaded: true  },
+                         { id: "b", start: 68, end: 70, isLoaded: true },
+                         { id: "p2", start: 70, end: 80, isLoaded: true  },
+                         { id: "p3", start: 80, isLoaded: true } ] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
@@ -356,8 +360,8 @@ describe("updatePeriods", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(1,
-                               { id: "p1", start: 60, end: 70 },
-                               { id: "p1", start: 60, end: 65  },
+                               { id: "p1", start: 60, end: 70, isLoaded: true },
+                               { id: "p1", start: 60, end: 65, isLoaded: true },
                                MANIFEST_UPDATE_TYPE.Partial);
     /* tslint:enable no-unsafe-any */
   });
@@ -370,9 +374,9 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ { id: "p2", start: 70 } ] as any;
-    const newPeriods = [ { id: "p1", start: 50, end: 70 },
-                         { id: "p2", start: 70 } ] as any;
+    const oldPeriods = [ { id: "p2", start: 70, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p1", start: 50, end: 70, isLoaded: true },
+                         { id: "p2", start: 70, isLoaded: true } ] as any;
 
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
@@ -402,7 +406,8 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ { id: "p1" }, { id: "p2" } ] as any;
+    const oldPeriods = [ { id: "p1", isLoaded: true },
+                         { id: "p2", isLoaded: true } ] as any;
     const newPeriods = [] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
@@ -423,7 +428,8 @@ describe("updatePeriods", () => {
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [] as any;
-    const newPeriods = [ { id: "p1" }, { id: "p2" } ] as any;
+    const newPeriods = [ { id: "p1", isLoaded: true },
+                         { id: "p2", isLoaded: true } ] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
@@ -444,9 +450,9 @@ describe("updatePeriods", () => {
                                                     default: fakeUpdatePeriodInPlace }));
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
-    const oldPeriods = [ { id: "p0", start: 50, end: 60 },
-                         { id: "p1", start: 60, end: 70 } ] as any;
-    const newPeriods = [ { id: "p3", start: 80 } ] as any;
+    const oldPeriods = [ { id: "p0", start: 50, end: 60, isLoaded: true },
+                         { id: "p1", start: 60, end: 70, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p3", start: 80, isLoaded: true } ] as any;
 
     let error = null;
     try {
@@ -476,8 +482,8 @@ describe("updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
-    const newPeriods = [ { id: "p2", start: 60, end: 80 } ] as any;
+    const oldPeriods = [ { id: "p1", start: 50, end: 60, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p2", start: 60, end: 80, isLoaded: true } ] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
 
@@ -501,8 +507,8 @@ describe("updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
-    const newPeriods = [ { id: "px", start: 50, end: 70 } ] as any;
+    const oldPeriods = [ { id: "p1", start: 50, end: 60, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "px", start: 50, end: 70, isLoaded: true } ] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
 
@@ -531,12 +537,12 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ { id: "p0", start: 50, end: 60 },
-                         { id: "p1", start: 60, end: 70 },
-                         { id: "p2", start: 70 } ] as any;
-    const newPeriods = [ { id: "p1", start: 60, end: 65  },
-                         { id: "p2", start: 65, end: 80  },
-                         { id: "p3", start: 80 } ] as any;
+    const oldPeriods = [ { id: "p0", start: 50, end: 60, isLoaded: true },
+                         { id: "p1", start: 60, end: 70, isLoaded: true },
+                         { id: "p2", start: 70, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p1", start: 60, end: 65, isLoaded: true },
+                         { id: "p2", start: 65, end: 80, isLoaded: true },
+                         { id: "p3", start: 80, isLoaded: true } ] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
@@ -549,13 +555,13 @@ describe("updatePeriods", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(1,
-                               { id: "p1", start: 60, end: 70 },
-                               { id: "p1", start: 60, end: 65  },
+                               { id: "p1", start: 60, end: 70, isLoaded: true },
+                               { id: "p1", start: 60, end: 65, isLoaded: true },
                                MANIFEST_UPDATE_TYPE.Partial);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(2,
-                               { id: "p2", start: 70 },
-                               { id: "p2", start: 65, end: 80  },
+                               { id: "p2", start: 70, isLoaded: true },
+                               { id: "p2", start: 65, end: 80, isLoaded: true },
                                MANIFEST_UPDATE_TYPE.Full);
     /* tslint:enable no-unsafe-any */
   });
@@ -568,12 +574,12 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ { id: "p0", start: 50, end: 60 },
-                         { id: "p1", start: 60, end: 70 },
-                         { id: "p2", start: 70, end: 80 },
-                         { id: "p3", start: 80 } ] as any;
-    const newPeriods = [ { id: "p1", start: 60, end: 70  },
-                         { id: "p3", start: 80 } ] as any;
+    const oldPeriods = [ { id: "p0", start: 50, end: 60, isLoaded: true },
+                         { id: "p1", start: 60, end: 70, isLoaded: true },
+                         { id: "p2", start: 70, end: 80, isLoaded: true },
+                         { id: "p3", start: 80, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p1", start: 60, end: 70, isLoaded: true  },
+                         { id: "p3", start: 80, isLoaded: true } ] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
@@ -585,13 +591,13 @@ describe("updatePeriods", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(1,
-                               { id: "p1", start: 60, end: 70 },
-                               { id: "p1", start: 60, end: 70  },
+                               { id: "p1", start: 60, end: 70, isLoaded: true },
+                               { id: "p1", start: 60, end: 70, isLoaded: true  },
                                MANIFEST_UPDATE_TYPE.Partial);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(2,
-                               { id: "p3", start: 80 },
-                               { id: "p3", start: 80 },
+                               { id: "p3", start: 80, isLoaded: true },
+                               { id: "p3", start: 80, isLoaded: true },
                                MANIFEST_UPDATE_TYPE.Full);
     /* tslint:enable no-unsafe-any */
   });
@@ -604,13 +610,13 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ { id: "p0", start: 50, end: 60 },
-                         { id: "p1", start: 60, end: 70 },
-                         { id: "p2", start: 70, end: 80 },
-                         { id: "p3", start: 80, end: 90 },
-                         { id: "p4", start: 90 } ] as any;
-    const newPeriods = [ { id: "p1", start: 60, end: 70  },
-                         { id: "p3", start: 80, end: 90 } ] as any;
+    const oldPeriods = [ { id: "p0", start: 50, end: 60, isLoaded: true },
+                         { id: "p1", start: 60, end: 70, isLoaded: true },
+                         { id: "p2", start: 70, end: 80, isLoaded: true },
+                         { id: "p3", start: 80, end: 90, isLoaded: true },
+                         { id: "p4", start: 90, isLoaded: true } ] as any;
+    const newPeriods = [ { id: "p1", start: 60, end: 70, isLoaded: true  },
+                         { id: "p3", start: 80, end: 90, isLoaded: true } ] as any;
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
@@ -622,13 +628,13 @@ describe("updatePeriods", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(1,
-                               { id: "p1", start: 60, end: 70 },
-                               { id: "p1", start: 60, end: 70  },
+                               { id: "p1", start: 60, end: 70, isLoaded: true },
+                               { id: "p1", start: 60, end: 70, isLoaded: true  },
                                MANIFEST_UPDATE_TYPE.Partial);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(2,
-                               { id: "p3", start: 80, end: 90 },
-                               { id: "p3", start: 80, end: 90 },
+                               { id: "p3", start: 80, end: 90, isLoaded: true },
+                               { id: "p3", start: 80, end: 90, isLoaded: true },
                                MANIFEST_UPDATE_TYPE.Full);
     /* tslint:enable no-unsafe-any */
   });

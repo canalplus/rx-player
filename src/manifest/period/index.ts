@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-import { IParsedManifest } from "../types";
-import getMaximumPosition from "../utils/get_maximum_position";
-import getMinimumPosition from "../utils/get_minimum_position";
+import LoadedPeriod, {
+  IManifestAdaptations,
+} from "./loaded_period";
+import PartialPeriod from "./partial_period";
 
-/**
- * @param {Object} manifest
- * @returns {Array.<number>}
- */
-export default function getMinimumAndMaximumPosition(
-  manifest: IParsedManifest
-) : [number|undefined, number|undefined] {
-  if (manifest.periods.length === 0) {
-    throw new Error("DASH Parser: no period available for a dynamic content");
-  }
+export {
+  LoadedPeriod,
+  IManifestAdaptations,
 
-  return [ getMinimumPosition(manifest),
-           getMaximumPosition(manifest) ];
-}
+  PartialPeriod,
+};

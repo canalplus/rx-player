@@ -15,6 +15,23 @@
  */
 
 /* tslint:disable no-unsafe-any */
+const fakeLoadedPeriod = jest.fn((period) => {
+  return { id: `foo${period.id}`,
+           start: period.start,
+           isLoaded: true,
+           adaptations: period.adaptations,
+           parsingErrors: [ new Error(`a${period.id}`),
+                            new Error(period.id) ] };
+});
+
+const fakePartialPeriod = jest.fn((period) => {
+  return { id: `foo${period.id}`,
+           start: period.start,
+           isLoaded: false };
+});
+/* tslint:enable no-unsafe-any */
+
+/* tslint:disable no-unsafe-any */
 describe("Manifest - Manifest", () => {
   const fakeLogger = { warn: jest.fn(() => undefined),
                        info: jest.fn(() => undefined) };
@@ -32,6 +49,11 @@ describe("Manifest - Manifest", () => {
     jest.mock("../../utils/id_generator", () => ({ __esModule: true as const,
                                                    default: fakeIdGenerator }));
 
+    fakeLoadedPeriod.mockClear();
+    fakePartialPeriod.mockClear();
+    jest.mock("../period/index", () =>  ({ __esModule: true,
+                                           LoadedPeriod: fakeLoadedPeriod,
+                                           PartialPeriod: fakePartialPeriod }));
   });
 
   it("should create a normalized Manifest structure", () => {
@@ -65,9 +87,10 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
+  // XXX TODO
   it("should create a Period for each manifest.periods given", () => {
-    const period1 = { id: "0", start: 4, adaptations: {} };
-    const period2 = { id: "1", start: 12, adaptations: {} };
+    const period1 = { id: "0", start: 4, isLoaded: true, adaptations: {} };
+    const period2 = { id: "1", start: 12, isLoaded: true, adaptations: {} };
     const simpleFakeManifest = { id: "man",
                                  isDynamic: false,
                                  isLive: false,
@@ -75,24 +98,24 @@ describe("Manifest - Manifest", () => {
                                  periods: [period1, period2],
                                  transportType: "foobar" };
 
-    const fakePeriod = jest.fn((period) => {
-      return { id: `foo${period.id}`, adaptations: {}, parsingErrors: [] };
-    });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
-
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
-    expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(period1, undefined);
-    expect(fakePeriod).toHaveBeenCalledWith(period2, undefined);
+    expect(fakeLoadedPeriod).toHaveBeenCalledTimes(2);
+    expect(fakeLoadedPeriod).toHaveBeenCalledWith(period1, undefined);
+    expect(fakeLoadedPeriod).toHaveBeenCalledWith(period2, undefined);
 
     expect(manifest.periods).toEqual([ { id: "foo0",
+                                         start: 4,
+                                         isLoaded: true,
                                          adaptations: {},
-                                         parsingErrors: [] },
+                                         parsingErrors: [ new Error("a0"),
+                                                          new Error("0") ] },
                                        { id: "foo1",
+                                         start: 12,
+                                         isLoaded: true,
                                          adaptations: {},
-                                         parsingErrors: [] } ]);
+                                         parsingErrors: [ new Error("a1"),
+                                                          new Error("1") ] } ]);
     expect(manifest.adaptations).toEqual({});
 
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
@@ -101,9 +124,10 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
+  // XXX TODO
   it("should pass a `representationFilter` to the Period if given", () => {
-    const period1 = { id: "0", start: 4, adaptations: {} };
-    const period2 = { id: "1", start: 12, adaptations: {} };
+    const period1 = { id: "0", start: 4, isLoaded: true, adaptations: {} };
+    const period2 = { id: "1", start: 12, isLoaded: true, adaptations: {} };
     const simpleFakeManifest = { id: "man",
                                  isDynamic: false,
                                  isLive: false,
@@ -113,31 +137,27 @@ describe("Manifest - Manifest", () => {
 
     const representationFilter = function() { return false; };
 
-    const fakePeriod = jest.fn((period) => {
-      return { id: `foo${period.id}`, parsingErrors: [] };
-    });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
     const Manifest = require("../manifest").default;
 
     /* tslint:disable no-unused-expression */
     new Manifest(simpleFakeManifest, { representationFilter });
     /* tslint:enable no-unused-expression */
 
-    expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(period1, representationFilter);
-    expect(fakePeriod).toHaveBeenCalledWith(period2, representationFilter);
+    expect(fakeLoadedPeriod).toHaveBeenCalledTimes(2);
+    expect(fakeLoadedPeriod).toHaveBeenCalledWith(period1, representationFilter);
+    expect(fakeLoadedPeriod).toHaveBeenCalledWith(period2, representationFilter);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
+  // XXX TODO
   it("should expose the adaptations of the first period if set", () => {
     const adapP1 = {};
     const adapP2 = {};
-    const period1 = { id: "0", start: 4, adaptations: adapP1 };
-    const period2 = { id: "1", start: 12, adaptations: adapP2 };
+    const period1 = { id: "0", start: 4, isLoaded: true, adaptations: adapP1 };
+    const period2 = { id: "1", start: 12, isLoaded: true, adaptations: adapP2 };
     const simpleFakeManifest = { id: "man",
                                  isDynamic: false,
                                  isLive: false,
@@ -145,21 +165,26 @@ describe("Manifest - Manifest", () => {
                                  periods: [period1, period2],
                                  transportType: "foobar" };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period, id: `foo${period.id}`, parsingErrors: [] };
-    });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
     const Manifest = require("../manifest").default;
 
     const manifest = new Manifest(simpleFakeManifest, {});
-    expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(period1, undefined);
-    expect(fakePeriod).toHaveBeenCalledWith(period2, undefined);
+    expect(fakeLoadedPeriod).toHaveBeenCalledTimes(2);
+    expect(fakeLoadedPeriod).toHaveBeenCalledWith(period1, undefined);
+    expect(fakeLoadedPeriod).toHaveBeenCalledWith(period2, undefined);
 
     expect(manifest.periods).toEqual([
-      { id: "foo0", parsingErrors: [], start: 4, adaptations: adapP1 },
-      { id: "foo1", parsingErrors: [], start: 12, adaptations: adapP2 },
+      { id: "foo0",
+        isLoaded: true,
+        parsingErrors: [ new Error("a0"),
+                         new Error("0") ],
+        start: 4,
+        adaptations: adapP1 },
+      { id: "foo1",
+        isLoaded: true,
+        parsingErrors: [ new Error("a1"),
+                         new Error("1") ],
+        start: 12,
+        adaptations: adapP2 },
     ]);
     expect(manifest.adaptations).toBe(adapP1);
 
@@ -170,8 +195,14 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should push any parsing errors from the Period parsing", () => {
-    const period1 = { id: "0", start: 4, adaptations: {} };
-    const period2 = { id: "1", start: 12, adaptations: {} };
+    const period1 = { id: "0",
+                      start: 4,
+                      isLoaded: true,
+                      adaptations: {} };
+    const period2 = { id: "1",
+                      start: 12,
+                      isLoaded: true,
+                      adaptations: {} };
     const simpleFakeManifest = { id: "man",
                                  isDynamic: false,
                                  isLive: false,
@@ -179,15 +210,6 @@ describe("Manifest - Manifest", () => {
                                  periods: [period1, period2],
                                  transportType: "foobar" };
 
-    const fakePeriod = jest.fn((period) => {
-      return { id: `foo${period.id}`,
-               parsingErrors: [ new Error(`a${period.id}`),
-                                new Error(period.id) ] };
-    });
-    jest.mock("../period", () =>  ({
-      __esModule: true as const,
-      default: fakePeriod,
-    }));
     const Manifest = require("../manifest").default;
 
     const manifest = new Manifest(simpleFakeManifest, {});
@@ -203,9 +225,16 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
+  // XXX TODO
   it("should correctly parse every manifest information given", () => {
-    const oldPeriod1 = { id: "0", start: 4, adaptations: {} };
-    const oldPeriod2 = { id: "1", start: 12, adaptations: {} };
+    const oldPeriod1 = { id: "0",
+                         start: 4,
+                         isLoaded: true,
+                         adaptations: {} };
+    const oldPeriod2 = { id: "1",
+                         start: 12,
+                         isLoaded: true,
+                         adaptations: {} };
     const time = performance.now();
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
@@ -221,13 +250,6 @@ describe("Manifest - Manifest", () => {
                               transportType: "foobar",
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period,
-               id: `foo${period.id}`,
-               parsingErrors: [new Error(period.id)] };
-    });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
 
@@ -237,12 +259,25 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(13);
-    expect(manifest.parsingErrors).toEqual([new Error("0"), new Error("1")]);
+
+    // From the parsed Periods
+    expect(manifest.parsingErrors).toEqual([ new Error("a0"),
+                                             new Error("0"),
+                                             new Error("a1"),
+                                             new Error("1") ]);
     expect(manifest.maximumTime).toEqual({ isContinuous: false, value: 10, time });
     expect(manifest.minimumTime).toEqual({ isContinuous: true, value: 5, time });
     expect(manifest.periods).toEqual([
-      { id: "foo0", parsingErrors: [new Error("0")], adaptations: {}, start: 4 },
-      { id: "foo1", parsingErrors: [new Error("1")], adaptations: {}, start: 12 },
+      { id: "foo0",
+        isLoaded: true,
+        parsingErrors: [new Error("a0"), new Error("0")],
+        adaptations: {},
+        start: 4 },
+      { id: "foo1",
+        isLoaded: true,
+        parsingErrors: [new Error("a1"), new Error("1")],
+        adaptations: {},
+        start: 12 },
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
     expect(manifest.transport).toEqual("foobar");
@@ -254,17 +289,6 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should return the first URL given with `getUrl`", () => {
-    const fakePeriod = jest.fn((period) => {
-      return {
-        ...period,
-        id: `foo${period.id}`,
-        parsingErrors: [new Error(period.id)],
-      };
-    });
-    jest.mock("../period", () =>  ({
-      __esModule: true as const,
-      default: fakePeriod,
-    }));
     const Manifest = require("../manifest").default;
 
     const oldManifestArgs1 = { availabilityStartTime: 5,
@@ -275,8 +299,8 @@ describe("Manifest - Manifest", () => {
                                lifetime: 13,
       parsingErrors: [new Error("a"), new Error("b")],
       periods: [
-        { id: "0", start: 4, adaptations: {} },
-        { id: "1", start: 12, adaptations: {} },
+        { id: "0", start: 4, isLoaded: true, adaptations: {} },
+        { id: "1", start: 12, isLoaded: true, adaptations: {} },
       ],
       suggestedPresentationDelay: 99,
       transportType: "foobar",
@@ -306,29 +330,22 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should update with a new Manifest when calling `update`", () => {
-    const fakePeriod = jest.fn((period) => {
-      return {
-        ...period,
-        id: `foo${period.id}`,
-        parsingErrors: [new Error(period.id)],
-      };
-    });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
+      oldPeriod.isLoaded = newPeriod.isLoaded;
       oldPeriod.start = newPeriod.start;
       oldPeriod.adaptations = newPeriod.adaptations;
     });
-    jest.mock("../period", () =>  ({
-      __esModule: true as const,
-      default: fakePeriod,
-    }));
     jest.mock("../update_period_in_place", () =>  ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
+
+    const period1 = { id: "0", start: 4, isLoaded: true, adaptations: {} };
+    const period2 = { id: "1", start: 12, isLoaded: true, adaptations: {} };
 
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
@@ -338,8 +355,7 @@ describe("Manifest - Manifest", () => {
                               lifetime: 13,
                               parsingErrors: [ new Error("a"),
                                                new Error("b") ],
-                              periods: [ { id: "0", start: 4, adaptations: {} },
-                                         { id: "1", start: 12, adaptations: {} } ],
+                              periods: [period1, period2],
                               maximumTime: { isContinuous: false,
                                              value: 10,
                                              time: 30000 },
@@ -360,8 +376,8 @@ describe("Manifest - Manifest", () => {
     const newMinimumTime = { isContinuous: false, value: 1, time: 5000000 };
     const newMaximumTime = { isContinuous: true, value: 3, time: 4000000 };
     const newAdaptations = {};
-    const newPeriod1 = { id: "foo0", start: 4, adaptations: {} };
-    const newPeriod2 = { id: "foo1", start: 12, adaptations: {} };
+    const newPeriod1 = { id: "foo0", start: 4, isLoaded: true, adaptations: {} };
+    const newPeriod2 = { id: "foo1", start: 12, isLoaded: true, adaptations: {} };
     const newManifest : any = { adaptations: newAdaptations,
                                 availabilityStartTime: 6,
                                 id: "man2",
@@ -406,6 +422,7 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should prepend older Periods when calling `update`", () => {
+    const period1 = { id: "1", start: 4, isLoaded: true, adaptations: {} };
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",
@@ -414,29 +431,21 @@ describe("Manifest - Manifest", () => {
                               lifetime: 13,
                               minimumTime: 4,
                               parsingErrors: [new Error("a"), new Error("b")],
-                              periods: [{ id: "1", start: 4, adaptations: {} }],
+                              periods: [period1],
                               suggestedPresentationDelay: 99,
                               transportType: "foobar",
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return {
-        ...period,
-        id: `foo${period.id}`,
-        parsingErrors: [new Error(period.id)],
-      };
-    });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
+      oldPeriod.isLoaded = newPeriod.isLoaded;
       oldPeriod.start = newPeriod.start;
       oldPeriod.adaptations = newPeriod.adaptations;
       oldPeriod.parsingErrors = newPeriod.parsingErrors;
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
@@ -449,14 +458,17 @@ describe("Manifest - Manifest", () => {
 
     const newPeriod1 = { id: "pre0",
                          start: 0,
+                         isLoaded: true,
                          adaptations: {},
                          parsingErrors: [] };
     const newPeriod2 = { id: "pre1",
                          start: 2,
+                         isLoaded: true,
                          adaptations: {},
                          parsingErrors: [] };
     const newPeriod3 = { id: "foo1",
                          start: 4,
+                         isLoaded: true,
                          adaptations: {},
                          parsingErrors: [] };
     const newManifest = { adaptations: {},
@@ -502,24 +514,18 @@ describe("Manifest - Manifest", () => {
                               lifetime: 13,
                               minimumTime: 4,
                               parsingErrors: [new Error("a"), new Error("b")],
-                              periods: [{ id: "1" }],
+                              periods: [{ id: "1", isLoaded: true }],
                               suggestedPresentationDelay: 99,
                               transportType: "foobar",
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period,
-               id: `foo${period.id}`,
-               parsingErrors: [new Error(period.id)] };
-    });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
+      oldPeriod.isLoaded = newPeriod.isLoaded;
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
@@ -530,9 +536,9 @@ describe("Manifest - Manifest", () => {
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
-    const newPeriod1 = { id: "foo1" };
-    const newPeriod2 = { id: "post0" };
-    const newPeriod3 = { id: "post1" };
+    const newPeriod1 = { id: "foo1", isLoaded: true };
+    const newPeriod2 = { id: "post0", isLoaded: true };
+    const newPeriod3 = { id: "post1", isLoaded: true };
     const newManifest = { adaptations: {},
                           availabilityStartTime: 6,
                           id: "man2",
@@ -571,24 +577,18 @@ describe("Manifest - Manifest", () => {
                               lifetime: 13,
                               minimumTime: 4,
                               parsingErrors: [new Error("a"), new Error("b")],
-                              periods: [{ id: "1" }],
+                              periods: [{ id: "1", isLoaded: true }],
                               suggestedPresentationDelay: 99,
                               transportType: "foobar",
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period,
-               id: `foo${period.id}`,
-               parsingErrors: [new Error(period.id)] };
-    });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
+      oldPeriod.isLoaded = newPeriod.isLoaded;
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
@@ -598,9 +598,9 @@ describe("Manifest - Manifest", () => {
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
-    const newPeriod1 = { id: "diff0" };
-    const newPeriod2 = { id: "diff1" };
-    const newPeriod3 = { id: "diff2" };
+    const newPeriod1 = { id: "diff0", isLoaded: true };
+    const newPeriod2 = { id: "diff1", isLoaded: true };
+    const newPeriod3 = { id: "diff2", isLoaded: true };
     const newManifest = { adaptations: {},
                           availabilityStartTime: 6,
                           id: "man2",
@@ -636,27 +636,21 @@ describe("Manifest - Manifest", () => {
                               lifetime: 13,
                               minimumTime: 4,
                               parsingErrors: [new Error("a"), new Error("b")],
-                              periods: [{ id: "1", start: 2 },
-                                        { id: "2", start: 4 },
-                                        { id: "3", start: 6 }],
+                              periods: [{ id: "1", start: 2, isLoaded: true },
+                                        { id: "2", start: 4, isLoaded: true },
+                                        { id: "3", start: 6, isLoaded: true }],
                               suggestedPresentationDelay: 99,
                               transportType: "foobar",
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period,
-               id: `foo${period.id}`,
-               parsingErrors: [new Error(period.id)] };
-    });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
+      oldPeriod.isLoaded = newPeriod.isLoaded;
       oldPeriod.start = newPeriod.start;
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
@@ -667,11 +661,11 @@ describe("Manifest - Manifest", () => {
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
-    const newPeriod1 = { id: "pre0", start: 0 };
-    const newPeriod2 = { id: "foo1", start: 2 };
-    const newPeriod3 = { id: "diff0", start: 3 };
-    const newPeriod4 = { id: "foo2", start: 4 };
-    const newPeriod5 = { id: "post0", start: 5 };
+    const newPeriod1 = { id: "pre0", start: 0, isLoaded: true };
+    const newPeriod2 = { id: "foo1", start: 2, isLoaded: true };
+    const newPeriod3 = { id: "diff0", start: 3, isLoaded: true };
+    const newPeriod4 = { id: "foo2", start: 4, isLoaded: true };
+    const newPeriod5 = { id: "post0", start: 5, isLoaded: true };
     const newManifest = { adaptations: {},
                           availabilityStartTime: 6,
                           id: "man2",

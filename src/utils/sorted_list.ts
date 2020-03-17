@@ -29,11 +29,9 @@ import arrayIncludes from "./array_includes";
  * const element3 = { start: 15 };
  *
  * sortedList.add(element1, element2);
- * console.log(sortedList.unwrap());
  * // -> [{ start: 10 }, { start : 20 }]
  *
  * sortedList.add(element3);
- * console.log(sortedList.unwrap());
  * // -> [{ start: 10 }, { start : 15 }, { start: 20 }]
  *
  * sortedList.removeElement(element2);
@@ -59,7 +57,6 @@ export default class SortedList<T> {
    *
    * /!\ The added Element will share the same reference than the given
    * argument, any mutation on your part can lead to an un-sorted SortedList.
-   * You can still re-force the sorting to happen by calling forceSort.
    * @param {...*} elements
    */
   public add(...elements : T[]) {
@@ -97,7 +94,6 @@ export default class SortedList<T> {
    *
    * /!\ The returned Element shares the same reference with what is used
    * internally, any mutation on your part can lead to an un-sorted SortedList.
-   * You can still re-force the sorting to happen by calling forceSort.
    * @throws Error - Throws if the given index is negative or superior to the
    * array's length.
    * @param {number} index
@@ -115,7 +111,6 @@ export default class SortedList<T> {
    *
    * /!\ The returned element shares the same reference with what is used
    * internally, any mutation on your part can lead to an un-sorted SortedList.
-   * You can still re-force the sorting to happen by calling forceSort.
    * @param {Function} fn
    * @returns {*}
    */
@@ -150,7 +145,6 @@ export default class SortedList<T> {
    *
    * /!\ The returned Element shares the same reference with what is used
    * internally, any mutation on your part can lead to an un-sorted SortedList.
-   * You can still re-force the sorting to happen by calling forceSort.
    * @returns {*}
    */
   public head() : T|undefined {
@@ -162,7 +156,6 @@ export default class SortedList<T> {
    *
    * /!\ The returned Element shares the same reference with what is used
    * internally, any mutation on your part can lead to an un-sorted SortedList.
-   * You can still re-force the sorting to happen by calling forceSort.
    * @returns {*}
    */
   public last() : T|undefined {
@@ -186,6 +179,23 @@ export default class SortedList<T> {
   public pop() : T|undefined {
     return this._array.pop();
   }
+
+  // /**
+  //  * Remove all occurences which satisfy a predicate.
+  //  * Returns the array of removed element.
+  //  * @param {Function} predicate
+  //  * @returns {Array}
+  //  */
+  // public removeAll(predicate : (x : T) => boolean) : T[] {
+  //   const removed : T[] = [];
+  //   for (let i = 0; i < this._array.length - 1; i++) {
+  //     if (predicate(this._array[i])) {
+  //       removed.push(...this._array.splice(i));
+  //       i--;
+  //     }
+  //   }
+  //   return removed;
+  // }
 
   /**
    * Returns true if the wrapped Array is well-sorted.

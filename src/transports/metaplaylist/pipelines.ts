@@ -15,41 +15,37 @@
  */
 
 import {
-  combineLatest,
-  merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
-import {
-  filter,
-  map,
-  mergeMap,
-  share,
-} from "rxjs/operators";
+import { map } from "rxjs/operators";
 import features from "../../features";
 import Manifest, {
   Adaptation,
   IMetaPlaylistPrivateInfos,
   ISegment,
-  Period,
+  LoadedPeriod,
+  PartialPeriod,
   Representation,
 } from "../../manifest";
 import parseMetaPlaylist, {
-  IParserResponse as IMPLParserResponse,
+  transformManifestToMetaplaylistPeriod,
 } from "../../parsers/manifest/metaplaylist";
-import { IParsedManifest } from "../../parsers/manifest/types";
-import deferSubscriptions from "../../utils/defer_subscriptions";
+import filterMap from "../../utils/filter_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
 import {
   IAudioVideoParserObservable,
   IChunkTimeInfo,
   IImageParserObservable,
-  ILoaderDataLoadedValue,
   IManifestParserArguments,
+  IManifestParserEvent,
   IManifestParserObservable,
-  IManifestParserResponseEvent,
-  IManifestParserWarningEvent,
+  IPeriodLoaderArguments,
+  IPeriodLoaderEvent,
+  IPeriodParserArguments,
+  IPeriodParserEvent,
+  IPeriodParserResponseEvent,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentParserParsedSegment,
@@ -68,7 +64,7 @@ function getContent(
   segment : ISegment,
   offset : number
 ) : { manifest : Manifest;
-      period : Period;
+      period : LoadedPeriod;
       adaptation : Adaptation;
       representation : Representation;
       segment : ISegment; }
@@ -177,12 +173,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
   const manifestPipeline = {
     loader: manifestLoader,
     parser(
-      { response,
-        url: loaderURL,
-        previousManifest,
-        scheduleRequest,
-        unsafeMode,
-        externalClockOffset } : IManifestParserArguments
+      { response, url: loaderURL } : IManifestParserArguments
     ) : IManifestParserObservable {
       const url = response.url === undefined ? loaderURL :
                                                response.url;
@@ -191,59 +182,51 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const parserOptions = { url,
                               serverSyncInfos: options.serverSyncInfos };
 
-      return handleParsedResult(parseMetaPlaylist(responseData, parserOptions));
+      const parsedManifest = parseMetaPlaylist(responseData, parserOptions);
+      const manifest = new Manifest(parsedManifest, options);
+      return observableOf({ type: "parsed",
+                            value: { manifest } });
 
-      function handleParsedResult(
-        parsedResult : IMPLParserResponse<IParsedManifest>
-      ) : IManifestParserObservable {
-        if (parsedResult.type === "done") {
-          const manifest = new Manifest(parsedResult.value, options);
-          return observableOf({ type: "parsed",
-                                value: { manifest } });
-        }
+    },
+  };
 
-        const loaders$ : IManifestParserObservable[] =
-          parsedResult.value.ressources.map((ressource) => {
-            const transport = getTransportPipelines(transports,
-                                                    ressource.transportType,
-                                                    otherTransportOptions);
-            const request$ = scheduleRequest(() =>
-                transport.manifest.loader({ url : ressource.url }).pipe(
-                  filter(
-                    (e): e is { type : "data-loaded";
-                                value : ILoaderDataLoadedValue<Document | string>; } =>
-                    e.type === "data-loaded"
-                  ),
-                  map((e) : ILoaderDataLoadedValue< Document | string > => e.value)
-                ));
+  const periodPipeline = {
+    loader({ period } : IPeriodLoaderArguments) : Observable<IPeriodLoaderEvent> {
+      const url = getURLFromPeriod(period);
+      const pipelines = getTransportPipelinesFromPeriod(period);
+      return pipelines.manifest.loader({ url });
+    },
 
-            return request$.pipe(mergeMap((responseValue) => {
-              return transport.manifest.parser({ response: responseValue,
-                                                 url: ressource.url,
-                                                 scheduleRequest,
-                                                 previousManifest,
-                                                 unsafeMode,
-                                                 externalClockOffset });
-            })).pipe(deferSubscriptions(), share());
+    parser({ externalClockOffset, // XXX TODO
+             period,
+             response,
+             scheduleRequest } : IPeriodParserArguments
+    ) : Observable<IPeriodParserEvent> {
+      const url = getURLFromPeriod(period);
+      const pipelines = getTransportPipelinesFromPeriod(period);
+      return pipelines.manifest.parser({ response,
+                                         url,
+                                         scheduleRequest,
+
+                                         // XXX TODO
+                                         previousManifest: null,
+                                         unsafeMode: false,
+                                         externalClockOffset })
+        .pipe(filterMap<IManifestParserEvent,
+                        IPeriodParserResponseEvent,
+                        null>((parserData) => {
+          if (parserData.type === "warning") {
+            return null; // XXX TODO
+          }
+          const transformed =
+            transformManifestToMetaplaylistPeriod(period, parserData.value.manifest);
+          const periods = transformed.map(parsedPeriod => {
+            return parsedPeriod.isLoaded ? new LoadedPeriod(parsedPeriod) :
+                                           new PartialPeriod(parsedPeriod);
           });
-
-        const warnings$ : Array<Observable<IManifestParserWarningEvent>> =
-          loaders$.map(loader =>
-            loader.pipe(filter((evt) : evt is IManifestParserWarningEvent =>
-              evt.type === "warning")));
-
-        const responses$ : Array<Observable<IManifestParserResponseEvent>> =
-          loaders$.map(loader =>
-            loader.pipe(filter((evt) : evt is IManifestParserResponseEvent =>
-              evt.type === "parsed")));
-
-        return observableMerge(
-          combineLatest(responses$).pipe(mergeMap((evt) => {
-            const loadedRessources = evt.map(e => e.value.manifest);
-            return handleParsedResult(parsedResult.value.continue(loadedRessources));
-          })),
-          ...warnings$);
-      }
+          return { type : "parsed" as const,
+                   periods };
+        }, null));
     },
   };
 
@@ -257,6 +240,33 @@ export default function(options : ITransportOptions): ITransportPipelines {
   ): ITransportPipelines {
     const { transportType } = getMetaPlaylistPrivateInfos(segment);
     return getTransportPipelines(transports, transportType, otherTransportOptions);
+  }
+
+  function getURLFromPeriod(
+    period : LoadedPeriod | PartialPeriod
+  ): string {
+    if (period.url === undefined || period.url === null) {
+      throw new Error("Cannot perform HTTP(s) request. URL not known");
+    }
+    return period.url;
+  }
+
+  function getTransportPipelinesFromPeriod(
+    period : LoadedPeriod | PartialPeriod
+  ): ITransportPipelines {
+    const transportType = getTransportTypeFromPeriod(period);
+    return getTransportPipelines(transports, transportType, otherTransportOptions);
+  }
+
+  function getTransportTypeFromPeriod(
+    period : LoadedPeriod | PartialPeriod
+  ) : string {
+    const mplPrivateInfos = period.privateInfos.metaplaylist;
+    if (mplPrivateInfos === undefined) {
+      throw new Error("A MetaPlaylist Partial Period should have the " +
+                      "corresponding privateInfos");
+    }
+    return mplPrivateInfos.transportType;
   }
 
   /**
@@ -423,6 +433,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
   };
 
   return { manifest: manifestPipeline,
+           period: periodPipeline,
            audio: audioPipeline,
            video: videoPipeline,
            text: textTrackPipeline,

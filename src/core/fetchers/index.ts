@@ -19,6 +19,10 @@ import createManifestFetcher, {
   IManifestFetcherParserOptions,
   IManifestFetcherWarningEvent,
 } from "./manifest";
+import createPeriodFetcher, {
+  IPeriodFetcherParsedResult,
+  IPeriodFetcherWarningEvent,
+} from "./period";
 import SegmentFetcherCreator, {
   IPrioritizedSegmentFetcher,
   IPrioritizedSegmentFetcherEvent,
@@ -31,11 +35,15 @@ import SegmentFetcherCreator, {
 
 export {
   createManifestFetcher,
+  createPeriodFetcher,
   SegmentFetcherCreator,
 
   IManifestFetcherParserOptions,
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
+
+  IPeriodFetcherParsedResult,
+  IPeriodFetcherWarningEvent,
 
   IPrioritizedSegmentFetcher,
   IPrioritizedSegmentFetcherEvent,

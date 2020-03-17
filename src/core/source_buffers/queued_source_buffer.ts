@@ -35,7 +35,7 @@ import log from "../../log";
 import {
   Adaptation,
   ISegment,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../manifest";
 import assertUnreachable from "../../utils/assert_unreachable";
@@ -122,7 +122,7 @@ export interface IPushedChunkInventoryInfos {
   /** Adaptation object linked to the chunk. */
   adaptation : Adaptation;
   /** Period object linked to the chunk. */
-  period : Period;
+  period : LoadedPeriod;
   /** Representation object linked to the chunk. */
   representation : Representation;
   /** The segment object linked to the pushed chunk. */
@@ -157,7 +157,7 @@ export interface IEndOfSegmentInfos {
   /** Adaptation object linked to the chunk. */
   adaptation : Adaptation;
   /** Period object linked to the chunk. */
-  period : Period;
+  period : LoadedPeriod;
   /** Representation object linked to the chunk. */
   representation : Representation;
   /** The segment object linked to the pushed chunk. */

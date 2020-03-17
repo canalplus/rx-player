@@ -19,7 +19,8 @@ import { ICustomError } from "../../errors";
 import {
   Adaptation,
   ISegment,
-  Period,
+  LoadedPeriod,
+  PartialPeriod,
   Representation,
 } from "../../manifest";
 import { IBufferType } from "../source_buffers";
@@ -36,7 +37,7 @@ export interface IStreamEventAddedSegment<T> {
   type : "added-segment";
   value : {
     /** Context about the content that has been added. */
-    content: { period : Period;
+    content: { period : LoadedPeriod;
                adaptation : Adaptation;
                representation : Representation; };
     /** The concerned Segment. */
@@ -167,7 +168,7 @@ export interface IRepresentationChangeEvent {
     /** The type of buffer linked to that `RepresentationStream`. */
     type : IBufferType;
     /** The `Period` linked to the `RepresentationStream` we're creating. */
-    period : Period;
+    period : LoadedPeriod;
     /**
      * The `Representation` linked to the `RepresentationStream` we're creating.
      * `null` when we're choosing no Representation at all.
@@ -193,7 +194,7 @@ export interface IAdaptationChangeEvent {
     /** The type of buffer for which the Representation is changing. */
     type : IBufferType;
     /** The `Period` linked to the `RepresentationStream` we're creating. */
-    period : Period;
+    period : LoadedPeriod;
     /**
      * The `Adaptation` linked to the `AdaptationStream` we're creating.
      * `null` when we're choosing no Adaptation at all.
@@ -208,7 +209,7 @@ export interface IActivePeriodChangedEvent {
   type: "activePeriodChanged";
   value : {
     /** The Period we're now playing. */
-    period: Period;
+    period: LoadedPeriod;
   };
 }
 
@@ -222,7 +223,7 @@ export interface IPeriodStreamReadyEvent {
     /** The type of buffer linked to the `PeriodStream` we want to create. */
     type : IBufferType;
     /** The `Period` linked to the `PeriodStream` we have created. */
-    period : Period;
+    period : LoadedPeriod;
     /**
      * The subject through which any Adaptation (i.e. track) choice should be
      * emitted for that `PeriodStream`.
@@ -258,7 +259,7 @@ export interface IPeriodStreamClearedEvent {
      * The combination of this and `Period` should give you enough information
      * about which `PeriodStream` has been removed.
      */
-    period : Period;
+    period : LoadedPeriod | PartialPeriod;
   };
 }
 
@@ -327,7 +328,7 @@ export interface INeedsMediaSourceReload {
      *
      * Outside of the Stream's code, you probably don't need this information.
      */
-    period : Period;
+    period : LoadedPeriod;
   };
 }
 
@@ -370,8 +371,19 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
                                  INeedsMediaSourceReload |
                                  IAdaptationChangeEvent;
 
+/**
+ * Event emitted when a PartialPeriod needs to be loaded to be able to create the
+ * right PeriodBuffer.
+ */
+export interface INeedsLoadedPeriodEvent {
+  type: "needs-loaded-period";
+  value : { type : IBufferType;
+            period : PartialPeriod; };
+}
+
 /** Event coming from function(s) managing multiple PeriodStreams. */
-export type IMultiplePeriodStreamsEvent = IPeriodStreamEvent |
+export type IMultiplePeriodStreamsEvent = INeedsLoadedPeriodEvent |
+                                          IPeriodStreamEvent |
                                           IPeriodStreamClearedEvent |
                                           ICompletedStreamEvent;
 

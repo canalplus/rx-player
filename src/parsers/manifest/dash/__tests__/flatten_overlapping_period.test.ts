@@ -15,6 +15,7 @@
  */
 
 import log from "../../../../log";
+import { IParsedPeriod } from "../../types";
 import flattenOverlappingPeriods from "../flatten_overlapping_periods";
 
 describe("flattenOverlappingPeriods", function() {
@@ -32,10 +33,10 @@ describe("flattenOverlappingPeriods", function() {
   it("should replace a period with an other if same start and duration", function() {
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
-    const periods = [
-      { id: "1", start: 0, duration: 60, adaptations: {} },
-      { id: "2", start: 60, duration: 60, adaptations: {} },
-      { id: "3", start: 60, duration: 60, adaptations: {} },
+    const periods : IParsedPeriod[] = [
+      { id: "1", url: null, start: 0, duration: 60, isLoaded: true, adaptations: {} },
+      { id: "2", url: null, start: 60, duration: 60, isLoaded: true, adaptations: {} },
+      { id: "3", url: null, start: 60, duration: 60, isLoaded: true, adaptations: {} },
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
@@ -58,10 +59,10 @@ describe("flattenOverlappingPeriods", function() {
   it("should replace part of period if part of next one is overlapping it", function() {
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
-    const periods = [
-      { id: "1", start: 0, duration: 60, adaptations: {} },
-      { id: "2", start: 60, duration: 60, adaptations: {} },
-      { id: "3", start: 90, duration: 60, adaptations: {} },
+    const periods : IParsedPeriod[] = [
+      { id: "1", url: null, start: 0, duration: 60, isLoaded: true, adaptations: {} },
+      { id: "2", url: null, start: 60, duration: 60, isLoaded: true, adaptations: {} },
+      { id: "3", url: null, start: 90, duration: 60, isLoaded: true, adaptations: {} },
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
@@ -87,10 +88,10 @@ describe("flattenOverlappingPeriods", function() {
   it("should erase period if a next period starts before and ends after it", function() {
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
-    const periods = [
-      { id: "1", start: 0, duration: 60, adaptations: {} },
-      { id: "2", start: 60, duration: 60, adaptations: {} },
-      { id: "3", start: 50, duration: 120, adaptations: {} },
+    const periods : IParsedPeriod[] = [
+      { id: "1", url: null, start: 0, duration: 60, isLoaded: true, adaptations: {} },
+      { id: "2", url: null, start: 60, duration: 60, isLoaded: true, adaptations: {} },
+      { id: "3", url: null, start: 50, duration: 120, isLoaded: true, adaptations: {} },
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
@@ -119,12 +120,17 @@ describe("flattenOverlappingPeriods", function() {
   /* tslint:enable max-line-length */
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
-    const periods = [
-      { id: "1", start: 0, duration: 60, adaptations: {} },
+    const periods : IParsedPeriod[] = [
+      { id: "1", url: null, start: 0, duration: 60, isLoaded: true, adaptations: {} },
     ];
 
     for (let i = 1; i <= 100; i++) {
-      periods.push({ id: i.toString(), start: 60, duration: 60, adaptations: {} });
+      periods.push({ id: i.toString(),
+                     url: null,
+                     start: 60,
+                     duration: 60,
+                     isLoaded: true,
+                     adaptations: {} });
     }
 
     const flattenPeriods = flattenOverlappingPeriods(periods);

@@ -23,7 +23,7 @@ import { map } from "rxjs/operators";
 import Manifest, {
   Adaptation,
   ISegment,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../../manifest";
 import { ISegmentParserParsedSegment } from "../../../transports";
@@ -50,7 +50,7 @@ export default function pushMediaSegment<T>(
     queuedSourceBuffer } : { clock$ : Observable<{ currentTime : number }>;
                              content: { adaptation : Adaptation;
                                         manifest : Manifest;
-                                        period : Period;
+                                        period : LoadedPeriod;
                                         representation : Representation; };
                              initSegmentData : T | null;
                              parsedSegment : ISegmentParserParsedSegment<T>;

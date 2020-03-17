@@ -23,7 +23,7 @@ import {
   map,
 } from "rxjs/operators";
 import log from "../../../log";
-import { Period } from "../../../manifest";
+import { LoadedPeriod } from "../../../manifest";
 import { IBufferType } from "../../source_buffers";
 import { IStreamStateFull } from "../types";
 
@@ -42,7 +42,7 @@ export default function createEmptyAdaptationStream(
   streamClock$ : Observable<{ currentTime : number }>,
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,
-  content : { period : Period }
+  content : { period : LoadedPeriod }
 ) : Observable<IStreamStateFull> {
   const { period } = content;
   return observableCombineLatest([streamClock$, wantedBufferAhead$]).pipe(

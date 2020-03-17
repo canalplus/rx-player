@@ -17,7 +17,7 @@
 import { ICustomError } from "../../errors";
 import Manifest, {
   Adaptation,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../manifest";
 import SourceBuffersStore, {
@@ -60,7 +60,7 @@ function stalled(stalling : IStallingItem|null) : IStalledEvent {
  */
 function decipherabilityUpdate(
   arg : Array<{ manifest : Manifest;
-                period : Period;
+                period : LoadedPeriod;
                 adaptation : Adaptation;
                 representation : Representation; }>
 ) : IDecipherabilityUpdateEvent {
@@ -103,7 +103,7 @@ function speedChanged(speed : number) : ISpeedChangedEvent {
  */
 function nullRepresentation(
   type : IBufferType,
-  period : Period
+  period : LoadedPeriod
 ) : IRepresentationChangeEvent {
   return { type: "representationChange",
            value: { type,

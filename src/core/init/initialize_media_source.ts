@@ -57,6 +57,7 @@ import {
 } from "../eme";
 import {
   createManifestFetcher,
+  createPeriodFetcher,
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
   SegmentFetcherCreator,
@@ -214,6 +215,10 @@ export default function InitializeOnMediaSource(
                                                 { lowLatencyMode,
                                                   maxRetryRegular: manifestRetry,
                                                   maxRetryOffline: offlineRetry });
+  const periodFetcher = createPeriodFetcher(transportPipelines,
+                                            { lowLatencyMode,
+                                              manifestRetry,
+                                              offlineRetry });
 
   /**
    * Fetch and parse the manifest from the URL given.
@@ -404,6 +409,10 @@ export default function InitializeOnMediaSource(
                   canUseUnsafeMode: false,
                   delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
                 });
+                break;
+              case "needs-loaded-period":
+                periodFetcher.fetch({ manifest,
+                                      period: evt.value.period }).subscribe();
                 break;
               case "needs-media-source-reload":
                 reloadMediaSource$.next(evt.value);

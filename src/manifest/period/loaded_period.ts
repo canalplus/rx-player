@@ -17,56 +17,79 @@ import {
   ICustomError,
   isKnownError,
   MediaError,
-} from "../errors";
+} from "../../errors";
 import {
   IManifestStreamEvent,
   IParsedPeriod,
-} from "../parsers/manifest";
-import arrayFind from "../utils/array_find";
-import objectValues from "../utils/object_values";
+} from "../../parsers/manifest";
+import arrayFind from "../../utils/array_find";
+import objectValues from "../../utils/object_values";
 import Adaptation, {
   IRepresentationFilter,
-} from "./adaptation";
-import { IAdaptationType } from "./types";
+} from "../adaptation";
+import { IAdaptationType } from "../types";
+import IPeriodPrivateInfo from "./private_info";
 
-/** Structure listing every `Adaptation` in a Period. */
+/** Structure listing every `Adaptation` in a LoadedPeriod. */
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
 
 /**
  * Class representing the tracks and qualities available from a given time
  * period in the the Manifest.
- * @class Period
+ * @class LoadedPeriod
  */
-export default class Period {
+export default class LoadedPeriod {
   /** ID uniquely identifying the Period in the Manifest. */
   public readonly id : string;
 
-  /** Every 'Adaptation' in that Period, per type of Adaptation. */
+  /** ID identifying the corresponding `PartialPeriod`, if one. */
+  public readonly partialPeriodId : string | undefined;
+
+  /** Constant to differentiate a `LoadedPeriod` from a `PartialPeriod` object. */
+  public readonly isLoaded : true;
+
+  /** Every 'Adaptation' in that LoadedPeriod, per type of Adaptation. */
   public adaptations : IManifestAdaptations;
 
-  /** Absolute start time of the Period, in seconds. */
+  /** Absolute start time of the LoadedPeriod, in seconds. */
   public start : number;
 
   /**
-   * Duration of this Period, in seconds.
+   * Duration of this LoadedPeriod, in seconds.
    * `undefined` for still-running Periods.
    */
   public duration? : number;
 
   /**
-   * Absolute end time of the Period, in seconds.
+   * Absolute end time of the LoadedPeriod, in seconds.
    * `undefined` for still-running Periods.
    */
   public end? : number;
 
   /**
-   * Array containing every errors that happened when the Period has been
+   * Optional URL linking directly to the LoadedPeriod
+   * To be called if only the LoadedPeriod needs to be refreshed.
+   */
+  public url? : string | null;
+
+  /**
+   * Array containing every errors that happened when the LoadedPeriod has been
    * created, in the order they have happened.
    */
   public readonly parsingErrors : ICustomError[];
 
   /** Array containing every stream event happening on the period */
   public streamEvents : IManifestStreamEvent[];
+
+  /**
+   * Optional information about the PartialPeriod, that can be used when loading
+   * and parsing the resulting Period.
+   * Its value depends on the transport used.
+   * It is named "private" because this value won't be checked / modified by the
+   * core logic. It is only used as a storage which can be exploited by the
+   * parser and transport protocol implementation.
+   */
+  public privateInfos : IPeriodPrivateInfo;
 
   /**
    * @constructor
@@ -132,14 +155,20 @@ export default class Period {
     if (this.duration != null && this.start != null) {
       this.end = this.start + this.duration;
     }
+
     this.streamEvents = args.streamEvents === undefined ?
       [] :
       args.streamEvents;
+
+    this.isLoaded = true;
+
+    this.privateInfos = args.privateInfos ?? {};
+    this.partialPeriodId = args.partialPeriodId;
+    this.url = args.url ?? undefined;
   }
 
   /**
-   * Returns every `Adaptations` (or `tracks`) linked to that Period, in an
-   * Array.
+   * Returns every `Adaptations` linked to that LoadedPeriod, in an Array.
    * @returns {Array.<Object>}
    */
   getAdaptations() : Adaptation[] {
@@ -154,8 +183,7 @@ export default class Period {
   }
 
   /**
-   * Returns every `Adaptations` (or `tracks`) linked to that Period for a
-   * given type.
+   * Returns every `Adaptations` linked to that LoadedPeriod for a given type.
    * @param {string} adaptationType
    * @returns {Array.<Object>}
    */

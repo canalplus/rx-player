@@ -35,7 +35,8 @@ function refreshScheduledEventsList(
   const { periods } = manifest;
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];
-    const { streamEvents } = period;
+    const streamEvents = period.isLoaded ? period.streamEvents :
+                                           [];
     streamEvents.forEach(({ start, end, id, data }) => {
       for (let j = 0; j < oldScheduledEvents.length; j++) {
         const currentScheduledEvent = oldScheduledEvents[j];

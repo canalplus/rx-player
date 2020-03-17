@@ -17,9 +17,44 @@
 import { MediaError } from "../errors";
 import log from "../log";
 import arrayFindIndex from "../utils/array_find_index";
-import Period from "./period";
+import {
+  LoadedPeriod,
+  PartialPeriod,
+} from "./period";
 import { MANIFEST_UPDATE_TYPE } from "./types";
 import updatePeriodInPlace from "./update_period_in_place";
+
+// Object informing what changed in an Array of Periods when updating it.
+export interface IPeriodsUpdateResult {
+  // Period that were available in the old Manifest that are now removed
+  removed: Array< PartialPeriod | LoadedPeriod >;
+
+  // Period from the new Manifest that have been added to the old one
+  added: Array< PartialPeriod | LoadedPeriod >;
+
+  // Period that have been mutated to be updated / replaced
+  updated: Array< PartialPeriod | LoadedPeriod >;
+
+  // Partial Period that have been now loaded
+  loaded: Array< [ PartialPeriod, LoadedPeriod[] ] >;
+}
+
+/**
+ * @param {Object} oldPeriod
+ * @param {Object} newPeriod
+ * @returns {boolean}
+ */
+function areLinkedPeriods(
+  oldPeriod : PartialPeriod | LoadedPeriod,
+  newPeriod : PartialPeriod | LoadedPeriod
+) : boolean {
+  if (!newPeriod.isLoaded) {
+    return newPeriod.id === (oldPeriod.isLoaded ? oldPeriod.partialPeriodId :
+                                                  oldPeriod.id);
+  }
+  return oldPeriod.id === (oldPeriod.isLoaded ? newPeriod.id :
+                                                newPeriod.partialPeriodId);
+}
 
 /**
  * Update old periods by adding new periods and removing
@@ -28,42 +63,104 @@ import updatePeriodInPlace from "./update_period_in_place";
  * @param {Array.<Object>} newPeriods
  */
 export function replacePeriods(
-  oldPeriods: Period[],
-  newPeriods: Period[]
-) : void {
-  let firstUnhandledPeriodIdx = 0;
-  for (let i = 0; i < newPeriods.length; i++) {
-    const newPeriod = newPeriods[i];
-    let j = firstUnhandledPeriodIdx;
-    let oldPeriod = oldPeriods[j];
-    while (oldPeriod != null && oldPeriod.id !== newPeriod.id) {
-      j++;
-      oldPeriod = oldPeriods[j];
+  oldPeriods: Array<LoadedPeriod | PartialPeriod>,
+  newPeriods: Array<LoadedPeriod | PartialPeriod>
+) : IPeriodsUpdateResult {
+  const result : IPeriodsUpdateResult = { removed: [],
+                                          added: [],
+                                          updated: [],
+                                          loaded: [] };
+  let prevOldPeriodIdx = 0;
+  for (let newPeriodIdx = 0; newPeriodIdx < newPeriods.length; newPeriodIdx++) {
+    let oldPeriodIdx = prevOldPeriodIdx;
+
+    // find the first old Period linked to newPeriod
+    const newPeriod = newPeriods[newPeriodIdx];
+    let oldPeriod = oldPeriods[oldPeriodIdx];
+    while (oldPeriod !== undefined && !areLinkedPeriods(oldPeriod, newPeriod)) {
+      oldPeriodIdx++;
+      oldPeriod = oldPeriods[oldPeriodIdx];
     }
-    if (oldPeriod != null) {
-      updatePeriodInPlace(oldPeriod, newPeriod, MANIFEST_UPDATE_TYPE.Full);
-      const periodsToInclude = newPeriods.slice(firstUnhandledPeriodIdx, i);
-      const nbrOfPeriodsToRemove = j - firstUnhandledPeriodIdx;
-      oldPeriods.splice(firstUnhandledPeriodIdx,
-                        nbrOfPeriodsToRemove,
-                        ...periodsToInclude);
-      firstUnhandledPeriodIdx = i + 1;
+
+    if (oldPeriod !== undefined) {
+      // first old Period linked to newPeriod is found, perform an update
+      const firstLinkedOldPeriodIdx = oldPeriodIdx;
+
+      if (oldPeriod.isLoaded) {
+        if (newPeriod.isLoaded) {
+          // both Periods are loaded -> perform a simple update
+          updatePeriodInPlace(oldPeriod, newPeriod, MANIFEST_UPDATE_TYPE.Full);
+          result.updated.push(oldPeriod);
+
+        } else {
+          // Old Period was loaded but the new one is not -> keep the old one(s)
+          const oldPeriodsToKeep : LoadedPeriod[] = [oldPeriod];
+          let nextPeriod = newPeriods[oldPeriodIdx + 1];
+          while (nextPeriod.isLoaded &&
+            nextPeriod.partialPeriodId === newPeriod.id)
+          {
+            oldPeriodsToKeep.push(nextPeriod);
+            oldPeriodIdx++;
+            nextPeriod = newPeriods[oldPeriodIdx + 1];
+          }
+        }
+      } else if (newPeriod.isLoaded) {
+        // the old Period was Partial and is now loaded -> remove the old
+        // Period and add the new loaded one(s) in its place
+
+        log.info("Manifest: new Period loaded", oldPeriod.id);
+
+        // get every loaded Period(s) linked to that previous PartialPeriod
+        const periodsToAdd : LoadedPeriod[] = [newPeriod];
+        let nextPeriod = newPeriods[newPeriodIdx + 1];
+        while (nextPeriod.isLoaded &&
+               nextPeriod.partialPeriodId === newPeriod.partialPeriodId)
+        {
+          periodsToAdd.push(nextPeriod);
+          newPeriodIdx++;
+          nextPeriod = newPeriods[newPeriodIdx + 1];
+        }
+
+        // add them and remove the previous partial one
+        oldPeriods.splice(oldPeriodIdx, 1, ...periodsToAdd);
+        result.removed.push(oldPeriod);
+        result.added.push(newPeriod);
+        result.loaded.push([oldPeriod, periodsToAdd]);
+      } else {
+        // both are PartialPeriod -> perform a simple update
+
+        updatePeriodInPlace(oldPeriod, newPeriod, MANIFEST_UPDATE_TYPE.Full);
+        result.updated.push(oldPeriod);
+      }
+
+      const nbrOfPeriodsToRemove = firstLinkedOldPeriodIdx - prevOldPeriodIdx;
+      const periodsToInclude = newPeriods.slice(prevOldPeriodIdx, newPeriodIdx);
+      const removedElts = oldPeriods.splice(prevOldPeriodIdx,
+                                            nbrOfPeriodsToRemove,
+                                            ...periodsToInclude);
+      result.removed.push(...removedElts);
+      result.added.push(...periodsToInclude);
+
+      prevOldPeriodIdx = newPeriodIdx + 1;
     }
   }
 
-  if (firstUnhandledPeriodIdx > oldPeriods.length) {
+  if (prevOldPeriodIdx > oldPeriods.length) {
     log.error("Manifest: error when updating Periods");
-    return;
+    return result;
   }
-  if (firstUnhandledPeriodIdx < oldPeriods.length) {
-    oldPeriods.splice(firstUnhandledPeriodIdx,
-                      oldPeriods.length - firstUnhandledPeriodIdx);
+  if (prevOldPeriodIdx < oldPeriods.length) {
+    const removedElts = oldPeriods.splice(prevOldPeriodIdx,
+                                          oldPeriods.length - prevOldPeriodIdx);
+    result.removed.push(...removedElts);
   }
-  const remainingNewPeriods = newPeriods.slice(firstUnhandledPeriodIdx,
+  const remainingNewPeriods = newPeriods.slice(prevOldPeriodIdx,
                                                newPeriods.length);
   if (remainingNewPeriods.length > 0) {
     oldPeriods.push(...remainingNewPeriods);
+    result.added.push(...remainingNewPeriods);
   }
+  return result;
 }
 
 /**
@@ -73,15 +170,21 @@ export function replacePeriods(
  * @param {Array.<Object>} newPeriods
  */
 export function updatePeriods(
-  oldPeriods: Period[],
-  newPeriods: Period[]
-) : void {
+  oldPeriods: Array<LoadedPeriod | PartialPeriod>,
+  newPeriods: Array<LoadedPeriod | PartialPeriod>
+) : IPeriodsUpdateResult {
+  const result : IPeriodsUpdateResult = { removed: [],
+                                          added: [],
+                                          updated: [],
+                                          loaded: [] };
   if (oldPeriods.length === 0) {
-    oldPeriods.splice(0, 0, ...newPeriods);
-    return;
+    const removedElts = oldPeriods.splice(0, 0, ...newPeriods);
+    result.removed.push(...removedElts);
+    result.added.push(...newPeriods);
+    return result;
   }
   if (newPeriods.length === 0) {
-    return;
+    return result;
   }
   const oldLastPeriod = oldPeriods[oldPeriods.length - 1];
   if (oldLastPeriod.start < newPeriods[0].start) {
@@ -90,7 +193,8 @@ export function updatePeriods(
                            "Cannot perform partial update: not enough data");
     }
     oldPeriods.push(...newPeriods);
-    return;
+    result.added.push(...newPeriods);
+    return result;
   }
   const indexOfNewFirstPeriod = arrayFindIndex(oldPeriods,
                                                ({ id }) => id === newPeriods[0].id);
@@ -98,10 +202,17 @@ export function updatePeriods(
     throw new MediaError("MANIFEST_UPDATE_ERROR",
                          "Cannot perform partial update: incoherent data");
   }
+  const firstOldPeriodToUpdate = oldPeriods[indexOfNewFirstPeriod];
+  const firstNewPeriod = newPeriods[0];
 
-  // The first updated Period can only be a partial part
-  updatePeriodInPlace(oldPeriods[indexOfNewFirstPeriod],
-                      newPeriods[0],
+  // XXX TODO
+  if (!firstOldPeriodToUpdate.isLoaded || !firstNewPeriod.isLoaded) {
+    throw new Error();
+  }
+
+  // The first updated Period can be a partial part only
+  updatePeriodInPlace(firstOldPeriodToUpdate,
+                      firstNewPeriod,
                       MANIFEST_UPDATE_TYPE.Partial);
 
   let prevIndexOfNewPeriod = indexOfNewFirstPeriod + 1;
@@ -118,7 +229,7 @@ export function updatePeriods(
       oldPeriods.splice(prevIndexOfNewPeriod,
                         oldPeriods.length - prevIndexOfNewPeriod,
                         ...newPeriods.slice(i, newPeriods.length));
-      return;
+      return result;
     }
 
     if (indexOfNewPeriod > prevIndexOfNewPeriod) {
@@ -127,8 +238,15 @@ export function updatePeriods(
       indexOfNewPeriod = prevIndexOfNewPeriod;
     }
 
+    const oldPeriod = oldPeriods[indexOfNewPeriod];
+
+    // XXX TODO
+    if (!oldPeriod.isLoaded || !newPeriod.isLoaded) {
+      throw new Error();
+    }
+
     // Later Periods can be fully replaced
-    updatePeriodInPlace(oldPeriods[indexOfNewPeriod],
+    updatePeriodInPlace(oldPeriod,
                         newPeriod,
                         MANIFEST_UPDATE_TYPE.Full);
     prevIndexOfNewPeriod++;
@@ -138,4 +256,5 @@ export function updatePeriods(
     oldPeriods.splice(prevIndexOfNewPeriod,
                       oldPeriods.length - prevIndexOfNewPeriod);
   }
+  return result;
 }

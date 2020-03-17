@@ -30,7 +30,7 @@ import Manifest, {
   Adaptation,
   areSameContent,
   ISegment,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
@@ -49,7 +49,7 @@ const { CONTENT_REPLACEMENT_PADDING,
 export interface ISegmentFilterArgument {
   content: { adaptation : Adaptation;
              manifest : Manifest;
-             period : Period;
+             period : LoadedPeriod;
              representation : Representation; };
   currentPlaybackTime: number;
   fastSwitchThreshold : number | undefined;
@@ -217,11 +217,11 @@ export default function getNeededSegments({
  */
 function shouldContentBeReplaced(
   oldContent : { adaptation : Adaptation;
-                 period : Period;
+                 period : LoadedPeriod;
                  representation : Representation;
                  segment : ISegment; },
   currentContent : { adaptation : Adaptation;
-                     period : Period;
+                     period : LoadedPeriod;
                      representation : Representation; },
   currentPlaybackTime: number,
   fastSwitchThreshold? : number

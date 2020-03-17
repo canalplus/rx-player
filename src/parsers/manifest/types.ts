@@ -15,6 +15,7 @@
  */
 
 import { IRepresentationIndex } from "../../manifest";
+import IPeriodPrivateInfo from "../../manifest/period/private_info";
 import { IParsedStreamEventData } from "./dash/node_parsers/EventStream";
 
 export interface IManifestStreamEvent { start: number;
@@ -143,10 +144,12 @@ export interface IParsedAdaptation {
 
 /** Information on a given period of time in the Manifest */
 export interface IParsedPeriod {
+  /** `true` to differentiate it from a non-yet loaded IParsedPartialPeriod */
+  isLoaded : true;
   /**
    * Unique ID that should not change between Manifest updates for this
-   * Period but which should be different than any other Period in this
-   * Manifest.
+   * Period but which should be different than any other LoadedPeriod and
+   * PartialPeriod in this Manifest.
    */
   id : string;
   /**
@@ -173,6 +176,59 @@ export interface IParsedPeriod {
    * `undefined` if no parsed stream event in manifest.
    */
   streamEvents?: IManifestStreamEvent[];
+  /** ID of the PartialPeriod at its source, if one. */
+  partialPeriodId? : string;
+  /** URL at which this IParsedPeriod can be refreshed. */
+  url? : string | null;
+  /**
+   * Optional supplementary information you might need when refreshing and
+   * parsing this Period.
+   * It is named "private" because this value won't be checked / modified by the
+   * core logic. It is only used as a storage which can be exploited by the
+   * parser and transport protocol implementation.
+   */
+  privateInfos? : IPeriodPrivateInfo;
+}
+
+/**
+ * Placeholder for a or multiple `IParsedPeriod` which have not yet been loaded.
+ * Such "partial" Period will only be loaded when needed.
+ */
+export interface IParsedPartialPeriod {
+  /** `false` to differentiate it from a loaded IParsedPeriod */
+  isLoaded : false;
+  /**
+   * Unique ID that should not change between Manifest updates for this
+   * Period but which should be different than any other LoadedPeriod and
+   * PartialPeriod in this Manifest.
+   */
+  id : string;
+  /** URL at which this IParsedPartialPeriod can be loaded. */
+  url : string | null;
+  /** Start time at which the first of the underlying IParsedPeriod begins.  */
+  start : number;
+  /**
+   * Combined duration of all underlying IParsedPeriod (from the start of the
+   * first one to the end of the last one), in seconds.
+   * `undefined` if the last underlying IParsedPeriod is the last one in the
+   * Manifest and is still being updated.
+   */
+  duration? : number;
+  /**
+   * Time at which the last underlying IParsedPeriod ends, in seconds.
+   * `undefined` if the last underlying IParsedPeriod is the last one in the
+   * Manifest and is still being updated.
+   */
+  end? : number;
+
+  /**
+   * Optional supplementary information you might need when fetching and
+   * parsing this Period.
+   * It is named "private" because this value won't be checked / modified by the
+   * core logic. It is only used as a storage which can be exploited by the
+   * parser and transport protocol implementation.
+   */
+  privateInfos? : IPeriodPrivateInfo;
 }
 
 /** Information on the whole content */
@@ -185,7 +241,7 @@ export interface IParsedManifest {
    */
   isLive : boolean;
   /** Periods contained in this manifest. */
-  periods: IParsedPeriod[];
+  periods: Array<IParsedPeriod | IParsedPartialPeriod>;
   /** Underlying transport protocol: "smooth", "dash", "metaplaylist" etc. */
   transportType: string;
   /** Base time from which the segments are generated. */

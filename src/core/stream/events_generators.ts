@@ -19,7 +19,7 @@ import { ICustomError } from "../../errors";
 import {
   Adaptation,
   ISegment,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../manifest";
 import { IBufferType } from "../source_buffers";
@@ -52,7 +52,7 @@ const EVENTS = {
              value: { bufferType } };
   },
 
-  activePeriodChanged(period : Period) : IActivePeriodChangedEvent {
+  activePeriodChanged(period : LoadedPeriod) : IActivePeriodChangedEvent {
     return { type : "activePeriodChanged",
              value : { period } };
   },
@@ -60,7 +60,7 @@ const EVENTS = {
   adaptationChange(
     bufferType : IBufferType,
     adaptation : Adaptation|null,
-    period : Period
+    period : LoadedPeriod
   ) : IAdaptationChangeEvent {
     return { type: "adaptationChange",
              value : { type: bufferType,
@@ -70,7 +70,7 @@ const EVENTS = {
 
   addedSegment<T>(
     content : { adaptation : Adaptation;
-                period : Period;
+                period : LoadedPeriod;
                 representation : Representation; },
     segment : ISegment,
     buffered : TimeRanges,
@@ -125,7 +125,7 @@ const EVENTS = {
   },
 
   needsMediaSourceReload(
-    period : Period,
+    period : LoadedPeriod,
     { currentTime,
       isPaused } : { currentTime : number;
                      isPaused : boolean; }
@@ -147,7 +147,7 @@ const EVENTS = {
 
   periodStreamReady(
     type : IBufferType,
-    period : Period,
+    period : LoadedPeriod,
     adaptation$ : Subject<Adaptation|null>
   ) : IPeriodStreamReadyEvent {
     return { type: "periodStreamReady",
@@ -156,7 +156,7 @@ const EVENTS = {
 
   periodStreamCleared(
     type : IBufferType,
-    period : Period
+    period : LoadedPeriod
   ) : IPeriodStreamClearedEvent {
     return { type: "periodStreamCleared",
              value: { type, period } };
@@ -171,7 +171,7 @@ const EVENTS = {
 
   representationChange(
     type : IBufferType,
-    period : Period,
+    period : LoadedPeriod,
     representation : Representation
   ) : IRepresentationChangeEvent {
     return { type: "representationChange",

@@ -24,11 +24,11 @@ import {
   map,
   scan,
 } from "rxjs/operators";
-import { Period } from "../../../manifest";
+import { LoadedPeriod } from "../../../manifest";
 import { IBufferType } from "../../source_buffers";
 import { IMultiplePeriodStreamsEvent } from "../types";
 
-interface IPeriodObject { period : Period;
+interface IPeriodObject { period : LoadedPeriod;
                           buffers: Set<IBufferType>; }
 
 type IPeriodsList = Partial<Record<string, IPeriodObject>>;
@@ -73,7 +73,7 @@ type IPeriodsList = Partial<Record<string, IPeriodObject>>;
  */
 export default function ActivePeriodEmitter(
   buffers$: Array<Observable<IMultiplePeriodStreamsEvent>>
-) : Observable<Period|null> {
+) : Observable<LoadedPeriod|null> {
   const numberOfStreams = buffers$.length;
   return observableMerge(...buffers$).pipe(
     // not needed to filter, this is an optim
@@ -118,9 +118,9 @@ export default function ActivePeriodEmitter(
       return acc;
     }, {}),
 
-    map((list) : Period | null => {
+    map((list) : LoadedPeriod | null => {
       const activePeriodIDs = Object.keys(list);
-      const completePeriods : Period[] = [];
+      const completePeriods : LoadedPeriod[] = [];
       for (let i = 0; i < activePeriodIDs.length; i++) {
         const periodInfos = list[activePeriodIDs[i]];
         if (periodInfos != null && periodInfos.buffers.size === numberOfStreams) {
@@ -128,7 +128,7 @@ export default function ActivePeriodEmitter(
         }
       }
 
-      return completePeriods.reduce<Period|null>((acc, period) => {
+      return completePeriods.reduce<LoadedPeriod|null>((acc, period) => {
         if (acc == null) {
           return period;
         }

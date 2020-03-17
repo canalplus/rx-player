@@ -44,6 +44,9 @@ export default function checkManifestIDs(
     } else {
       periodIDS.push(periodID);
     }
+    if (!period.isLoaded) {
+      return;
+    }
     const { adaptations } = period;
     const adaptationIDs : string[] = [];
     (Object.keys(adaptations) as IParsedAdaptationType[]).forEach((type) => {

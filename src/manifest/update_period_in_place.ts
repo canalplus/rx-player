@@ -16,7 +16,10 @@
 
 import log from "../log";
 import arrayFind from "../utils/array_find";
-import Period from "./period";
+import {
+  LoadedPeriod,
+  PartialPeriod,
+} from "./period";
 import { MANIFEST_UPDATE_TYPE } from "./types";
 
 /**
@@ -25,13 +28,32 @@ import { MANIFEST_UPDATE_TYPE } from "./types";
  * @param {Object} oldPeriod
  * @param {Object} newPeriod
  */
-export default function updatePeriodInPlace(oldPeriod : Period,
-                                            newPeriod : Period,
-                                            updateType : MANIFEST_UPDATE_TYPE) : void
-{
+export default function updatePeriodInPlace(oldPeriod : LoadedPeriod,
+                                            newPeriod : LoadedPeriod,
+                                            updateType : MANIFEST_UPDATE_TYPE) : void;
+export default function updatePeriodInPlace(oldPeriod : PartialPeriod,
+                                            newPeriod : PartialPeriod,
+                                            updateType : MANIFEST_UPDATE_TYPE) : void;
+export default function updatePeriodInPlace(
+  oldPeriod : PartialPeriod | LoadedPeriod,
+  newPeriod : PartialPeriod | LoadedPeriod,
+  updateType : MANIFEST_UPDATE_TYPE
+) : void {
   oldPeriod.start = newPeriod.start;
   oldPeriod.end = newPeriod.end;
   oldPeriod.duration = newPeriod.duration;
+
+  if (!oldPeriod.isLoaded) {
+    if (newPeriod.isLoaded) { // Shouldn't happen
+      log.error("Manifest: Shouldn't be trying to update in place " +
+                "a PartialPeriod with a LoadedPeriod");
+    }
+    return;
+  } else if (!newPeriod.isLoaded) { // Shouldn't happen
+    log.error("Manifest: Shouldn't be trying to update in place " +
+              "a LoadedPeriod with a PartialPeriod");
+    return;
+  }
 
   const oldAdaptations = oldPeriod.getAdaptations();
   const newAdaptations = newPeriod.getAdaptations();

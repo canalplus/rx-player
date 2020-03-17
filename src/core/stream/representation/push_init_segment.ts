@@ -23,7 +23,7 @@ import { map } from "rxjs/operators";
 import Manifest, {
   Adaptation,
   ISegment,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
@@ -51,7 +51,7 @@ export default function pushInitSegment<T>(
     queuedSourceBuffer } : { clock$ : Observable<{ currentTime : number }>;
                              content: { adaptation : Adaptation;
                                         manifest : Manifest;
-                                        period : Period;
+                                        period : LoadedPeriod;
                                         representation : Representation; };
                              segmentData : T | null;
                              segment : ISegment;

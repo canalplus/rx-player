@@ -48,6 +48,9 @@ export default function parseLocalManifest(
   }
   const periodIdGenerator = idGenerator();
   const { isFinished } = localManifest;
+
+  const parsedPeriods : IParsedPeriod[] = localManifest.periods
+    .map(period => parsePeriod(period, periodIdGenerator, isFinished));
   const manifest: IParsedManifest = {
     availabilityStartTime: 0,
     expired: localManifest.expired,
@@ -55,23 +58,19 @@ export default function parseLocalManifest(
     isDynamic: !localManifest.isFinished,
     isLive: false,
     uris: [],
-    periods: localManifest.periods
-      .map(period => parsePeriod(period, periodIdGenerator, isFinished)),
+    periods: parsedPeriods,
   };
-  const maximumPosition = getMaximumPosition(manifest);
+  const { value: maximumPosition } = getMaximumPosition(parsedPeriods);
   if (maximumPosition !== undefined) {
-    manifest.maximumTime = {
-        isContinuous : false,
-        value : maximumPosition,
-        time : performance.now(),
-    };
+    manifest.maximumTime = { isContinuous : false,
+                             value : maximumPosition,
+                             time : performance.now() };
   }
-  const minimumPosition = getMinimumPosition(manifest);
-  manifest.minimumTime = {
-    isContinuous : false,
-    value : minimumPosition !== undefined ? minimumPosition : 0,
-    time : performance.now(),
-  };
+  const { value: minimumPosition } = getMinimumPosition(parsedPeriods);
+  manifest.minimumTime = { isContinuous : false,
+                           value : minimumPosition !== undefined ? minimumPosition :
+                                                                   0,
+                           time : performance.now() };
   return manifest;
 }
 
@@ -87,6 +86,8 @@ function parsePeriod(
   const adaptationIdGenerator = idGenerator();
   return {
     id: "period-" + periodIdGenerator(),
+    isLoaded: true,
+    url: null,
     start: period.start,
     end: period.duration - period.start,
     duration: period.duration,

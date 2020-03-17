@@ -20,7 +20,7 @@ import {
   Adaptation,
   areSameContent,
   ISegment,
-  Period,
+  LoadedPeriod,
   Representation,
 } from "../../manifest";
 import takeFirstSet from "../../utils/take_first_set";
@@ -30,7 +30,7 @@ const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
         MINIMUM_SEGMENT_SIZE } = config;
 
 interface IBufferedChunkInfos { adaptation : Adaptation;
-                                period : Period;
+                                period : LoadedPeriod;
                                 representation : Representation;
                                 segment : ISegment; }
 
@@ -69,7 +69,7 @@ export interface IBufferedChunk {
 // information to provide when inserting a new chunk
 export interface IInsertedChunkInfos {
   adaptation : Adaptation;
-  period : Period;
+  period : LoadedPeriod;
   representation : Representation;
   segment : ISegment;
   start : number; // Start time the segment should most probably begin from when
@@ -596,7 +596,7 @@ export default class SegmentInventory {
    * @param {Object} content
    */
   public completeSegment(
-    content : { period: Period;
+    content : { period: LoadedPeriod;
                 adaptation: Adaptation;
                 representation: Representation;
                 segment: ISegment; }

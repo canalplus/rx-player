@@ -15,7 +15,7 @@
  */
 
 import Adaptation from "./adaptation";
-import Period from "./period";
+import { LoadedPeriod } from "./period";
 import Representation from "./representation";
 import { ISegment } from "./representation_index";
 
@@ -24,7 +24,7 @@ import { ISegment } from "./representation_index";
  * than another chunk.
  */
 interface IBufferedChunkInfos { adaptation : Adaptation;
-                                period : Period;
+                                period : LoadedPeriod;
                                 representation : Representation;
                                 segment : ISegment; }
 

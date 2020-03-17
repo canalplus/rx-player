@@ -157,6 +157,8 @@ export interface IPeriodsContextInfos {
                id: event.id };
     });
     const parsedPeriod : IParsedPeriod = { id: periodID,
+                                           isLoaded: true,
+                                           url: null,
                                            start: periodStart,
                                            end: periodEnd,
                                            duration: periodDuration,
