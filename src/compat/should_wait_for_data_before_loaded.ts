@@ -25,7 +25,14 @@ import { isSafariMobile } from "./browser_detection";
  * @returns {Boolean}
  */
 export default function shouldWaitForDataBeforeLoaded(
-  isDirectfile : boolean
+  isDirectfile : boolean,
+  mustPlaysInline: boolean,
 ) : boolean {
-  return !isDirectfile || !isSafariMobile;
+  if (isDirectfile) {
+    if (isSafariMobile && mustPlaysInline) {
+      return true
+    }
+    return false;
+  }
+  return !(isSafariMobile && mustPlaysInline)
 }
