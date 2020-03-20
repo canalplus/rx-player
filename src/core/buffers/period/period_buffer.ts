@@ -114,18 +114,22 @@ export default function PeriodBuffer({
   const adaptation$ = new ReplaySubject<Adaptation|null>(1);
   return adaptation$.pipe(
     switchMap((adaptation) => {
-      if (adaptation == null) {
+      if (adaptation === null) {
         log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
-        const previousQSourceBuffer = sourceBuffersStore.get(bufferType);
+        const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
-        if (previousQSourceBuffer != null) {
+        if (sourceBufferStatus.type === "set") {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
+          const previousQSourceBuffer = sourceBufferStatus.value;
           cleanBuffer$ = previousQSourceBuffer
             .removeBuffer(period.start,
                           period.end == null ? Infinity :
                                                period.end);
         } else {
+          if (sourceBufferStatus.type === "unset") {
+            sourceBuffersStore.disableSourceBuffer(bufferType);
+          }
           cleanBuffer$ = observableOf(null);
         }
 
@@ -161,7 +165,9 @@ export default function PeriodBuffer({
           const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
           const adaptationBuffer$ = createAdaptationBuffer(adaptation, qSourceBuffer);
 
-          return observableConcat(cleanBuffer$,
+          return observableConcat(sourceBuffersStore.onSourceBuffersReady()
+                                    .pipe(ignoreElements()),
+                                  cleanBuffer$,
                                   observableMerge(adaptationBuffer$,
                                                   bufferGarbageCollector$));
         }));
@@ -232,10 +238,10 @@ function createOrReuseQueuedSourceBuffer<T>(
   adaptation : Adaptation,
   options: { textTrackOptions? : ITextTrackSourceBufferOptions }
 ) : QueuedSourceBuffer<T> {
-  const currentQSourceBuffer = sourceBuffersStore.get(bufferType);
-  if (currentQSourceBuffer != null) {
+  const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
+  if (sourceBufferStatus.type === "set") {
     log.info("Buffer: Reusing a previous SourceBuffer for the type", bufferType);
-    return currentQSourceBuffer;
+    return sourceBufferStatus.value;
   }
   const codec = getFirstDeclaredMimeType(adaptation);
   const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
@@ -243,7 +249,7 @@ function createOrReuseQueuedSourceBuffer<T>(
 }
 
 /**
- * Get mimetype string of the first representation declared in the given
+ * Get mime-type string of the first representation declared in the given
  * adaptation.
  * @param {Adaptation} adaptation
  * @returns {string}

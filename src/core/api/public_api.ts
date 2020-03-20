@@ -1873,10 +1873,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     {
       return null;
     }
-    const queuedSourceBuffer = this._priv_contentInfos
-                                 .sourceBuffersStore.get(bufferType);
-    return queuedSourceBuffer === null ? null :
-                                         queuedSourceBuffer.getInventory();
+    const sourceBufferStatus = this._priv_contentInfos
+                                 .sourceBuffersStore.getStatus(bufferType);
+    return sourceBufferStatus.type === "set" ?
+      sourceBufferStatus.value.getInventory() :
+      null;
   }
 
   /**
