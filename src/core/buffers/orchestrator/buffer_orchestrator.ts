@@ -291,7 +291,6 @@ export default function BufferOrchestrator(
         enableOutOfBoundsCheck = false;
         destroyBuffers$.next();
         return observableConcat(
-          sourceBuffersStore.onSourceBuffersReady().pipe(ignoreElements()),
           ...rangesToClean.map(({ start, end }) =>
             queuedSourceBuffer.removeBuffer(start, end).pipe(ignoreElements())),
           clock$.pipe(take(1), mergeMap((lastTick) => {
