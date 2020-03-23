@@ -29,7 +29,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     });
     const shouldWaitForDataBeforeLoaded =
       require("../should_wait_for_data_before_loaded");
-    expect(shouldWaitForDataBeforeLoaded.default(false)).toBe(true);
+    expect(shouldWaitForDataBeforeLoaded.default(false, true)).toBe(true);
   });
 
   it("should return true if we are not on Safari browser but in directfile mode", () => {
@@ -41,7 +41,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     });
     const shouldWaitForDataBeforeLoaded =
       require("../should_wait_for_data_before_loaded");
-    expect(shouldWaitForDataBeforeLoaded.default(true)).toBe(true);
+    expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(true);
   });
 
   /* tslint:disable max-line-length */
@@ -55,7 +55,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     });
     const shouldWaitForDataBeforeLoaded =
       require("../should_wait_for_data_before_loaded");
-    expect(shouldWaitForDataBeforeLoaded.default(false)).toBe(true);
+    expect(shouldWaitForDataBeforeLoaded.default(false, false)).toBe(true);
   });
 
   it("should return false if we are on the Safari browser and in directfile mode", () => {
@@ -67,7 +67,55 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     });
     const shouldWaitForDataBeforeLoaded =
       require("../should_wait_for_data_before_loaded");
-    expect(shouldWaitForDataBeforeLoaded.default(true)).toBe(false);
+    expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(false);
+  });
+
+  it("should return true if we are on the Safari browser, we should play inline and in directfile mode", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true,
+        isSafariMobile: true,
+      };
+    });
+    const shouldWaitForDataBeforeLoaded =
+      require("../should_wait_for_data_before_loaded");
+    expect(shouldWaitForDataBeforeLoaded.default(true, true)).toBe(true);
+  });
+
+  it("should return true if we are on the Safari browser, we should play inline but not in directfile mode", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true,
+        isSafariMobile: true,
+      };
+    });
+    const shouldWaitForDataBeforeLoaded =
+      require("../should_wait_for_data_before_loaded");
+    expect(shouldWaitForDataBeforeLoaded.default(false, true)).toBe(true);
+  });
+
+  it("should return false if we are on the Safari browser, we should not play inline and in directfile mode", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true,
+        isSafariMobile: true,
+      };
+    });
+    const shouldWaitForDataBeforeLoaded =
+      require("../should_wait_for_data_before_loaded");
+    expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(false);
+  });
+
+  it("should return true if we are not on the Safari browser, should not play inline and in directfile mode", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true,
+        isSafariMobile: false,
+      };
+    });
+    const shouldWaitForDataBeforeLoaded =
+      require("../should_wait_for_data_before_loaded");
+    expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(true);
   });
   beforeEach(() => {
     jest.resetModules();

@@ -65,8 +65,7 @@ function canPlay(
       }
       if (!shouldWaitForDataBeforeLoaded(
         isDirectfile,
-        mediaElement.hasAttribute("playsinline"))
-      ) {
+        mediaElement.hasAttribute("playsinline"))) {
         return readyState >= 1 && mediaElement.duration > 0;
       }
       if (readyState >= 4 || (readyState === 3 && currentRange !== null)) {
