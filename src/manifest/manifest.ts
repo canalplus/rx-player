@@ -568,7 +568,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
 
     /* tslint:disable:deprecation */
-    this.adaptations = this.periods[0].adaptations;
+    this.adaptations = this.periods[0] === undefined ?
+                         {} :
+                         this.periods[0].adaptations;
     /* tslint:enable:deprecation */
 
     this.trigger("manifestUpdate", null);
