@@ -302,6 +302,46 @@ import TextTrackRenderer from \"../../dist/_esm5.processed/experimental/tools/Te
 export * from \"../../dist/_esm5.processed/experimental/tools/TextTrackRenderer/index\";
 export default TextTrackRenderer;" > experimental/tools/TextTrackRenderer.d.ts
 
+
+
+echo "/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import ContentDownloader from \"../../dist/_esm5.processed/experimental/tools/ContentDownloader/index.js\";
+export * from \"../../dist/_esm5.processed/experimental/tools/ContentDownloader/index.js\";
+export default ContentDownloader;" > experimental/tools/ContentDownloader.js
+echo "/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import ContentDownloader from \"../../dist/_esm5.processed/experimental/tools/ContentDownloader/index\";
+export * from \"../../dist/_esm5.processed/experimental/tools/ContentDownloader/index\";
+export default ContentDownloader;" > experimental/tools/ContentDownloader.d.ts
+
+
 mkdir -p experimental/features
 echo "/**
  * Copyright 2015 CANAL+ Group

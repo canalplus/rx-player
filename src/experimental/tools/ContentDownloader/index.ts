@@ -414,4 +414,6 @@ class ContentDownloader {
   }
 }
 
+export { DASH } from "../../../features/list/dash";
+export { SMOOTH } from "../../../features/list/smooth";
 export default ContentDownloader;
