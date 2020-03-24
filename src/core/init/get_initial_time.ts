@@ -107,7 +107,7 @@ export default function getInitialTime(
     }
     log.debug(`Init: ${liveTime} defined as the live time, applying a live gap` +
               ` of ${suggestedPresentationDelay}`);
-    if (suggestedPresentationDelay != null) {
+    if (suggestedPresentationDelay !== undefined) {
       return Math.max(liveTime - suggestedPresentationDelay, minimumPosition);
     }
     const defaultStartingPos = liveTime - (lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY :

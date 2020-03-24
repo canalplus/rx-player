@@ -27,19 +27,30 @@ import uniq from "../utils/uniq";
 import filterSupportedRepresentations from "./filter_supported_representations";
 import Representation from "./representation";
 
+/** Every possible value for the Adaptation's `type` property. */
 export type IAdaptationType = "video" | "audio" | "text" | "image";
 
+/** List in an array every possible value for the Adaptation's `type` property. */
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
                                                                "video",
                                                                "text",
                                                                "image" ];
 
+/**
+ * Returns true if the given Adaptation's `type` is a valid `type` property.
+ * @param {string} adaptationType
+ * @returns {boolean}
+ */
 function isSupportedAdaptationType(
   adaptationType : string
 ) : adaptationType is IAdaptationType {
   return arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptationType);
 }
 
+/**
+ * Information describing a single Representation from an Adaptation, to be used
+ * in the `representationFilter` API.
+ */
 export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         language?: string;
                                         isAudioDescription? : boolean;
@@ -47,6 +58,7 @@ export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         isDub? : boolean;
                                         normalizedLanguage? : string; }
 
+/** Type for the `representationFilter` API. */
 export type IRepresentationFilter = (representation: Representation,
                                      adaptationInfos: IRepresentationInfos)
                                     => boolean;
@@ -60,39 +72,46 @@ export type IRepresentationFilter = (representation: Representation,
  * @class Adaptation
  */
 export default class Adaptation {
-
-  // ID uniquely identifying the Adaptation in the Period.
+  /** ID uniquely identifying the Adaptation in the Period. */
   public readonly id : string;
 
-  // Different `Representations` (e.g. qualities) this Adaptation is available
-  // in.
+  /**
+   * Different `Representations` (e.g. qualities) this Adaptation is available
+   * in.
+   */
   public readonly representations : Representation[];
 
-  // Type of this Adaptation.
+  /** Type of this Adaptation. */
   public readonly type : IAdaptationType;
 
-  // Whether this track contains an audio description for the visually impaired.
+  /** Whether this track contains an audio description for the visually impaired. */
   public isAudioDescription? : boolean;
 
-  // Whether this Adaptation contains closed captions for the hard-of-hearing.
+  /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
   public isClosedCaption? : boolean;
 
-  // If `true`, this Adaptation is a "dub", meaning it was recorded in another
-  // language than the original
+  /**
+   * If `true`, this Adaptation is a "dub", meaning it was recorded in another
+   * language than the original one.
+   */
   public isDub? : boolean;
 
-  // Language this Adaptation is in, as announced in the original Manifest.
+  /** Language this Adaptation is in, as announced in the original Manifest. */
   public language? : string;
 
-  // Language this Adaptation is in, when translated into an ISO639-3 code.
+  /** Language this Adaptation is in, when translated into an ISO639-3 code. */
   public normalizedLanguage? : string;
 
-  // `true` if this Adaptation was not present in the original Manifest, but was
-  // manually added after through the corresponding APIs.
+  /**
+   * `true` if this Adaptation was not present in the original Manifest, but was
+   * manually added after through the corresponding APIs.
+   */
   public manuallyAdded? : boolean;
 
-  // Array containing every errors that happened when the Adaptation has been
-  // created, in the order they have happened.
+  /**
+   * Array containing every errors that happened when the Adaptation has been
+   * created, in the order they have happened.
+   */
   public readonly parsingErrors : ICustomError[];
 
   /**

@@ -26,7 +26,7 @@ export interface IStaticRepresentationIndexInfos { media: string; }
  * @class StaticRepresentationIndex
  */
 export default class StaticRepresentationIndex implements IRepresentationIndex {
-  // URL of the content
+  /** URL at which the content is available. */
   private readonly _mediaURLs: string;
 
   /**

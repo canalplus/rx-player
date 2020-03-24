@@ -18,10 +18,7 @@ import config from "../../config";
 
 const { FORCED_ENDED_THRESHOLD } = config;
 
-/**
- * Player state dictionnary
- * @type {Object}
- */
+/** Player state dictionnary. */
 export const PLAYER_STATES = { STOPPED: "STOPPED",
                                LOADED: "LOADED",
                                LOADING: "LOADING",

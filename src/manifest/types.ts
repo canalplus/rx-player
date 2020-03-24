@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-// Enumerate the different ways a Manifest update can be done
+/** Enumerate the different ways a Manifest update can be done. */
 export enum MANIFEST_UPDATE_TYPE {
-  Full, // The full version of the Manifest has been re-downloaded
-  Partial, // Only a shortened version of the Manifest has been downloaded
+  /** The full version of the Manifest has been re-downloaded. */
+  Full,
+  /** Only a shortened version of the Manifest has been downloaded. */
+  Partial,
 }

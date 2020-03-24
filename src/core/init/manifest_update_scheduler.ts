@@ -38,27 +38,44 @@ import { IFetchManifestResult } from "../pipelines";
 
 const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY } = config;
 
-export type IManifestFetcher =
-    (manifestURL? : string, externalClockOffset?: number) =>
-      Observable<IFetchManifestResult>;
-
+/** Arguments to give to the `manifestUpdateScheduler` */
 export interface IManifestUpdateSchedulerArguments {
+  /** Function used to refresh the manifest */
   fetchManifest : IManifestFetcher;
+  /** Information about the initial load of the manifest */
   initialManifest : { manifest : Manifest;
                       sendingTime? : number;
                       receivedTime? : number;
                       parsingTime : number; };
+  /** URL at which a shorter version of the Manifest can be found. */
   manifestUpdateUrl : string | undefined;
+  /** Minimum interval to keep between Manifest updates */
   minimumManifestUpdateInterval : number;
+  /** Allows the rest of the code to ask for a Manifest refresh */
   scheduleRefresh$ : IManifestRefreshScheduler;
 }
 
+/** Function defined to refresh the Manifest */
+export type IManifestFetcher =
+    (manifestURL? : string, externalClockOffset?: number) =>
+      Observable<IFetchManifestResult>;
+
+/** Events sent by the `IManifestRefreshScheduler` Observable */
 export interface IManifestRefreshSchedulerEvent {
-  completeRefresh : boolean; // if true, the Manifest should be fully updated
-  delay? : number; // optional wanted refresh delay, which is the minimum time
-                   // you want to wait before updating the manifest
+  /**
+   * if `true`, the Manifest should be fully updated.
+   * if `false`, a shorter version with just the added information can be loaded
+   * instead.
+   */
+  completeRefresh : boolean;
+  /**
+   * Optional wanted refresh delay, which is the minimum time you want to wait
+   * before updating the Manifest
+   */
+  delay? : number;
 }
 
+/** Observable to send events related to refresh requests coming from the Player. */
 export type IManifestRefreshScheduler = Observable<IManifestRefreshSchedulerEvent>;
 
 /**

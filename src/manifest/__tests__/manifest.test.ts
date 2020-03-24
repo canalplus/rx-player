@@ -76,7 +76,7 @@ describe("Manifest - Manifest", () => {
                                  transportType: "foobar" };
 
     const fakePeriod = jest.fn((period) => {
-      return { id: `foo${period.id}`, parsingErrors: [] };
+      return { id: `foo${period.id}`, adaptations: {}, parsingErrors: [] };
     });
     jest.mock("../period", () =>  ({ __esModule: true,
                                      default: fakePeriod }));
@@ -87,8 +87,12 @@ describe("Manifest - Manifest", () => {
     expect(fakePeriod).toHaveBeenCalledWith(period1, undefined);
     expect(fakePeriod).toHaveBeenCalledWith(period2, undefined);
 
-    expect(manifest.periods).toEqual([ { id: "foo0", parsingErrors: [] },
-                                       { id: "foo1", parsingErrors: [] } ]);
+    expect(manifest.periods).toEqual([ { id: "foo0",
+                                         adaptations: {},
+                                         parsingErrors: [] },
+                                       { id: "foo1",
+                                         adaptations: {},
+                                         parsingErrors: [] } ]);
     expect(manifest.adaptations).toEqual({});
 
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);

@@ -45,15 +45,26 @@ import createManifestLoader, {
 } from "./create_manifest_loader";
 import parseManifestPipelineOptions from "./parse_manifest_pipeline_options";
 
-// What will be sent once parsed
-export interface IFetchManifestResult { manifest : Manifest;
-                                        sendingTime? : number;
-                                        receivedTime? : number;
-                                        parsingTime : number; }
+/** What will be sent once parsed. */
+export interface IFetchManifestResult {
+  /** The resulting Manifest */
+  manifest : Manifest;
+  /**
+   * The time (`performance.now()`) at which the request was started (at which
+   * the JavaScript call was done).
+   */
+  sendingTime? : number;
+  /* The time (`performance.now()`) at which the request was fully received. */
+  receivedTime? : number;
+  /* The time taken to parse the Manifest through the corresponding parse function. */
+  parsingTime : number;
+}
 
-// The Manifest Pipeline generated here
+/** The Manifest Pipeline generated here. */
 export interface ICoreManifestPipeline {
+  /** Allows to perform the Manifest request. */
   fetch(url? : string) : Observable<IPipelineLoaderResponse<ILoadedManifest>>;
+  /** Allows to parse a fetched Manifest into a `Manifest` structure. */
   parse(response : IPipelineLoaderResponseValue<ILoadedManifest>,
         url? : string,
         externalClockOffset? : number) : Observable<IFetchManifestResult>;
@@ -68,24 +79,21 @@ export interface IManifestPipelineOptions {
 }
 
 /**
- * Create function allowing to easily fetch and parse the manifest from its URL.
- *
+ * Create function allowing to easily fetch and parse a Manifest from its URL.
  * @example
  * ```js
  * const manifestPipeline = createManifestPipeline(pipelines, options, warning$);
- * manifestPipeline.fetch(manifestURL)
- *  .mergeMap((evt) => {
- *    if (evt.type !== "response") { // Might also receive warning events
- *      return EMPTY;
- *    }
- *    return manifestPipeline.parse(evt.value);
- *  }).subscribe(({ manifest }) => console.log("Manifest:", manifest));
+ * manifestPipeline.fetch(manifestURL).pipe(
+ *   filter((evt) => {
+ *     return evt.type === "response"; // Might also receive warning events
+ *   }),
+ *   mergeMap(evt => manifestPipeline.parse(evt.value))
+ * ).subscribe(({ manifest }) => console.log("Manifest:", manifest));
  * ```
- *
  * @param {Object} pipelines
  * @param {Subject} pipelineOptions
  * @param {Subject} warning$
- * @returns {Function}
+ * @returns {Object}
  */
 export default function createManifestPipeline(
   pipelines : ITransportPipelines,

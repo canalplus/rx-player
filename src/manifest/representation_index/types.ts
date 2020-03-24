@@ -26,7 +26,10 @@ import {
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
 
-// privateInfos specific to Smooth Initialization Segments
+/**
+ * Supplementary information specific to Smooth Initialization segments.
+ * Contains every information needed to generate an initialization segment.
+ */
 export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
                                                   bitsPerSample? : number;
                                                   channels? : number;
@@ -40,33 +43,48 @@ export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
                                                     }>;
                                                   }; }
 
+/** Describes a given "real" Manifest for MetaPlaylist's segments. */
 export interface IBaseContentInfos { manifest: Manifest;
                                      period: Period;
                                      adaptation: Adaptation;
                                      representation: Representation; }
 
+/** Supplementary information needed for segments in the "metaplaylist" transport. */
 export interface IMetaPlaylistPrivateInfos { transportType : string;
                                              baseContent : IBaseContentInfos;
                                              contentStart : number;
                                              contentEnd? : number; }
 
-// privateInfos specific to local Manifest's init segments
+/**
+ * Supplementary information needed for initialization segments of the "local"
+ * transport.
+ */
 export interface ILocalManifestInitSegmentPrivateInfos {
+  /** Callback used to load that segment. */
   load : ILocalManifestInitSegmentLoader;
 }
 
-// privateInfos specific to local Manifests
+/** Supplementary information needed for media segments of the "local" transport. */
 export interface ILocalManifestSegmentPrivateInfos {
-  // Callback used to load local manifest's media segment
+  /** Callback used to load that segment. */
   load : ILocalManifestSegmentLoader;
 
-  // Exact same segment than the one given in a local manifest.
-  // Stored (with at best the same reference than in it) to facilitate the job
-  // of retrieving the wanted segment (this task will generally be done by the
-  // content downloader tool) when the RxPlayer asks for it.
+  /**
+   * Exact same segment than the one given in a local manifest.
+   * Stored (with at best the same reference than in it) to facilitate the job
+   * of retrieving the wanted segment (this task will generally be done by the
+   * content downloader tool) when the RxPlayer asks for it.
+   */
   segment : ILocalIndexSegment;
 }
 
+/**
+ * Supplementary information that can be added to any segment depending on the
+ * tranport logic used.
+ * Called "private" as it won't be read or exploited by any code in the core
+ * logic of the player. That information is only here to be retrieved and
+ * exploited by the corresponding transport logic.
+ */
 export interface IPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
@@ -74,36 +92,46 @@ export interface IPrivateInfos {
   localManifestSegment? : ILocalManifestSegmentPrivateInfos;
 }
 
-// ISegment Object.
-// Represent a single Segment from a Representation.
+/** Represent a single Segment from a Representation. */
 export interface ISegment {
-  duration : number; // Estimated duration of the segment, in timescale
-  id : string; // ID of the Segment. Should be unique for this Representation
-  isInit : boolean; // If true, this Segment contains initialization data
-  mediaURLs : string[]|null; // URLs of the segment
-  time : number; // Estimated time of beginning for the segment, in timescale
-  timescale : number; // Timescale to convert time and duration into seconds
-
-  indexRange? : [number, number]; // If set, the corresponding byte-range in the
-                                  // downloaded Segment will contain an index
-                                  // describing other Segments
-                                  // TODO put in privateInfos?
-  number? : number; // Optional number of the Segment
-                    // TODO put in privateInfos?
-  privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
-                                 // supplementary information in a given
-                                 // Segment for later downloading/parsing
-  range? : [number, number]; // Optional byte range to retrieve the Segment
-  timestampOffset? : number; // Estimated time, in seconds, at which the
-                             // concerned segment will be offseted when
-                             // decoded.
+  /** Estimated duration of the segment, in timescale. */
+  duration : number;
+  /** ID of the Segment. Should be unique for this Representation. */
+  id : string;
+  /** If true, this Segment contains initialization data. */
+  isInit : boolean;
+  /** URLs where this segment is available. From the most to least prioritary. */
+  mediaURLs : string[]|null;
+  /** Estimated start time for the segment, in timescale. */
+  time : number;
+  /** Timescale to convert `time` and `duration` into seconds. */
+  timescale : number;
+  /**
+   * If set, the corresponding byte-range in the downloaded segment will
+   * contain an index describing other Segments
+   * TODO put in privateInfos?
+   */
+  indexRange? : [number, number];
+  /**
+   * Optional number of the Segment
+   * TODO put in privateInfos?
+   */
+  number? : number;
+  /**
+   * Allows to store supplementary information on a segment that can be later
+   * exploited by the transport logic.
+   */
+  privateInfos? : IPrivateInfos;
+  /** Optional byte range to retrieve the Segment from its URL(s) */
+  range? : [number, number];
+  /**
+   * Estimated time, in seconds, at which the concerned segment should be
+   * offseted when decoded.
+   */
+  timestampOffset? : number;
 }
 
-export interface IRepresentationIndexSegmentInfos { duration : number;
-                                                    time : number;
-                                                    timescale : number; }
-
-// Interface that should be implemented by any Representation's index
+/** Interface that should be implemented by any Representation's `index` value. */
 export default interface IRepresentationIndex {
   /**
    * Returns Segment object allowing to do the Init Segment request.

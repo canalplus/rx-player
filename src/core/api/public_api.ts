@@ -137,17 +137,35 @@ const { isActive,
         onTextTrackChanges$,
         videoWidth$ } = events;
 
-interface IPositionUpdateItem { position : number;
-                                duration : number;
-                                playbackRate : number;
-                                bufferGap : number;
-                                maximumBufferTime? : number;
-                                wallClockTime? : number;
-                                liveGap? : number; }
+/** Payload emitted with a `positionUpdate` event. */
+interface IPositionUpdateItem {
+  /** current position the player is in, in seconds. */
+  position : number;
+  /** Last position set for the current media currently, in seconds. */
+  duration : number;
+  /** Playback rate (i.e. speed) at which the current media is played. */
+  playbackRate : number;
+  /** Amount of buffer available for now in front of the current position, in seconds. */
+  bufferGap : number;
+  /** Current maximum seekable position. */
+  maximumBufferTime? : number;
+  wallClockTime? : number;
+  /**
+   * Only for live contents. Difference between the "live edge" and the current
+   * position, in seconds.
+   */
+  liveGap? : number;
+}
 
-interface IBitrateEstimate { type : IBufferType;
-                             bitrate : number | undefined; }
+/** Payload emitted with a `bitrateEstimationChange` event. */
+interface IBitrateEstimate {
+  /** The type of buffer this estimation was done for (e.g. "audio). */
+  type : IBufferType;
+  /** The calculated bitrate, in bits per seconds. */
+  bitrate : number | undefined;
+}
 
+/** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {
   playerStateChange : string;
   positionUpdate : IPositionUpdateItem;
@@ -183,24 +201,16 @@ interface IPublicAPIEvent {
  */
 class Player extends EventEmitter<IPublicAPIEvent> {
 
-  /**
-   * Current version of the RxPlayer.
-   */
+  /** Current version of the RxPlayer.  */
   public static version : string;
 
-  /**
-   * Current version of the RxPlayer.
-   */
+  /** Current version of the RxPlayer.  */
   public readonly version : string;
 
-  /**
-   * Media element attached to the RxPlayer.
-   */
+  /** Media element attached to the RxPlayer.  */
   public videoElement : HTMLMediaElement|null; // null on dispose
 
-  /**
-   * Logger the RxPlayer uses.
-   */
+  /** Logger the RxPlayer uses.  */
   public readonly log : Logger;
 
   /**
@@ -210,14 +220,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   public state : string;
 
   /**
-   * Emit when the player is disposed to perform clean-up.
+   * Emit when the the RxPlayer is not needed anymore and thus all resources
+   * used for its normal functionment can be freed.
    * The player will be unusable after that.
    */
   private readonly _priv_destroy$ : Subject<void>;
 
-  /**
-   * Emit to stop the current content and clean-up all related ressources.
-   */
+  /** Emit to stop the current content and clean-up all related ressources. */
   private readonly _priv_stopCurrentContent$ : Subject<void>;
 
   /**
@@ -240,29 +249,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private readonly _priv_speed$ : BehaviorSubject<number>;
 
-  /**
-   * Store buffer-related options used needed when initializing a content.
-   */
+  /** Store buffer-related options used needed when initializing a content. */
   private readonly _priv_bufferOptions : {
-    /**
-     * Emit the last wanted buffer goal.
-     */
+    /** Emit the last wanted buffer goal. */
     wantedBufferAhead$ : BehaviorSubject<number>;
-
-    /**
-     * Maximum kept buffer ahead in the current position, in seconds.
-     */
+    /** Maximum kept buffer ahead in the current position, in seconds. */
     maxBufferAhead$ : BehaviorSubject<number>;
-
-    /**
-     * Maximum kept buffer behind in the current position, in seconds.
-     */
+    /** Maximum kept buffer behind in the current position, in seconds. */
     maxBufferBehind$ : BehaviorSubject<number>;
   };
 
-  /**
-   * Information on the current bitrate settings.
-   */
+  /** Information on the current bitrate settings. */
   private readonly _priv_bitrateInfos : {
     /**
      * Store last bitrates for each type for ABRManager instanciation.
@@ -273,66 +270,61 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                      text? : number;
                      image? : number; };
 
-    /**
-     * Store last wanted maxAutoBitrates for the next ABRManager instanciation.
-     */
+    /** Store last wanted maxAutoBitrates for the next ABRManager instanciation. */
     maxAutoBitrates : { audio : BehaviorSubject<number>;
                         video : BehaviorSubject<number>; };
 
-    /**
-     * Store last wanted manual bitrates for the next ABRManager instanciation.
-     */
+    /** Store last wanted manual bitrates for the next ABRManager instanciation. */
     manualBitrates : { audio : BehaviorSubject<number>;
                        video : BehaviorSubject<number>; };
   };
 
   /**
    * Current fatal error which STOPPED the player.
+   * `null` if no fatal error was received for the current or last content.
    */
   private _priv_currentError : Error|null;
 
   /**
    * Information about the current content being played.
-   * null when no content is launched.
+   * `null` when no content is currently loading or loaded.
    */
   private _priv_contentInfos : null | {
     /**
-     * URL of the content currently being played.
+     * URL of the Manifest (or just of the content for DirectFile contents)
+     * currently being played.
      */
     url? : string;
 
     /**
-     * true if the current content is in DirectFile mode.
-     * false is the current content has a transport protocol (Smooth/DASH...).
+     * `true` if the current content is in DirectFile mode.
+     * `false` is the current content has a transport protocol (Smooth/DASH...).
      */
     isDirectFile : boolean;
 
     /**
      * Current Image Track Data associated to the content.
-     *
-     * null if the current content has no image playlist linked to it.
-     *
+     * `null` if the current content has no image playlist linked to it.
      * @deprecated
      */
     thumbnails : IBifThumbnail[]|null;
 
     /**
      * Manifest linked to the current content.
-     * Null if the current content loaded has no manifest or if the content is
+     * `null` if the current content loaded has no manifest or if the content is
      * not yet loaded.
      */
     manifest : Manifest|null;
 
     /**
      * Current Period being played.
-     * null if no Period is being played.
+     * `null` if no Period is being played.
      */
     currentPeriod : Period|null;
 
     /**
      * Store currently considered adaptations, per active period.
-     *
-     * null if no Adaptation is active
+     * `null` if no Adaptation is active
      */
     activeAdaptations : {
       [periodId : string] : Partial<Record<IBufferType, Adaptation|null>>;
@@ -340,76 +332,55 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     /**
      * Store currently considered representations, per active period.
-     *
-     * null if no Representation is active
+     * `null` if no Representation is active
      */
     activeRepresentations : {
       [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
     } | null;
 
-    /**
-     * Store starting audio track if one.
-     */
+    /** Store starting audio track if one. */
     initialAudioTrack : undefined|IAudioTrackPreference;
 
-    /**
-     * Store starting text track if one.
-     */
+    /** Store starting text track if one. */
     initialTextTrack : undefined|ITextTrackPreference;
 
-    /**
-     * Keep information on the SourceBuffers
-     */
+    /** Keep information on the active SourceBuffers. */
     sourceBuffersStore : SourceBuffersStore | null;
   };
 
-  /**
-   * List of favorite audio tracks, in preference order.
-   */
+  /** List of favorite audio tracks, in preference order. */
   private _priv_preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
 
-  /**
-   * List of favorite text tracks, in preference order.
-   */
+  /** List of favorite text tracks, in preference order. */
   private _priv_preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
 
   /**
    * TrackChoiceManager instance linked to the current content.
-   * Null if no content has been loaded or if the current content loaded
+   * `null` if no content has been loaded or if the current content loaded
    * has no TrackChoiceManager.
    */
   private _priv_trackChoiceManager : TrackChoiceManager|null;
 
   /**
    * MediaElementTrackChoiceManager instance linked to the current content.
-   * Null if no content has been loaded or if the current content loaded
+   * `null` if no content has been loaded or if the current content loaded
    * has no MediaElementTrackChoiceManager.
    */
   private _priv_mediaElementTrackChoiceManager : MediaElementTrackChoiceManager|null;
 
-  /**
-   * Emit last picture in picture event.
-   */
+  /** Emit last picture in picture event. */
   private _priv_pictureInPictureEvent$ : ReplaySubject<events.IPictureInPictureEvent>;
 
-  /**
-   * Store wanted configuration for the limitVideoWidth option.
-   */
+  /** Store wanted configuration for the `limitVideoWidth` option. */
   private readonly _priv_limitVideoWidth : boolean;
 
-  /**
-   * Store wanted configuration for the throttleWhenHidden option.
-   */
+  /** Store wanted configuration for the `throttleWhenHidden` option. */
   private readonly _priv_throttleWhenHidden : boolean;
 
-  /**
-   * Store wanted configuration for the throttleVideoBitrateWhenHidden option.
-   */
+  /** Store wanted configuration for the `throttleVideoBitrateWhenHidden` option. */
   private readonly _priv_throttleVideoBitrateWhenHidden : boolean;
 
-  /**
-   * Store volume when mute is called, to restore it on unmute.
-   */
+  /** Store volume when mute is called, to restore it on unmute. */
   private _priv_mutedMemory : number;
 
   /**
@@ -418,27 +389,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * All those events are linked to the content being played and can be cleaned
    * on stop.
-   *
    */
   private _priv_contentEventsMemory : {
     [P in keyof IPublicAPIEvent]? : IPublicAPIEvent[P];
   };
 
-  /**
-   * Determines whether or not player should stop at the end of video playback.
-   */
+  /** Determines whether or not the player should stop at the end of video playback. */
   private readonly _priv_stopAtEnd : boolean;
 
-  /**
-   * All possible Error types emitted by the RxPlayer.
-   */
+  /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
   }
 
-  /**
-   * All possible Error codes emitted by the RxPlayer.
-   */
+  /** All possible Error codes emitted by the RxPlayer. */
   static get ErrorCodes() : Record<IErrorCode, IErrorCode> {
     return ErrorCodes;
   }
@@ -2199,7 +2163,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each times the we "remove" a PeriodBuffer.
+   * Triggered each times we "remove" a PeriodBuffer.
    * @param {Object} value
    */
   private _priv_onPeriodBufferCleared(value : {

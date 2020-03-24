@@ -40,122 +40,171 @@ import {
 const generateSupplementaryTrackID = idGenerator();
 const generateNewManifestId = idGenerator();
 
+/**
+ * Interface a manually-added supplementary image track should respect.
+ * @deprecated
+ */
 interface ISupplementaryImageTrack {
-  mimeType : string; // mimeType identifying the type of container for the track
-  url : string; // url to the thumbnails file
+  /** mime-type identifying the type of container for the track. */
+  mimeType : string;
+  /** URL to the thumbnails file */
+  url : string;
 }
 
+/**
+ * Interface a manually-added supplementary text track should respect.
+ * @deprecated
+ */
 interface ISupplementaryTextTrack {
-  mimeType : string; // mimeType identifying the type of container for the track
-  codecs? : string; // codecs in the container (mimeType can be enough)
-  url : string; // url to the text track file
-  language? : string; // ISO639-{1,2,3} code for the language of the track
-  languages? : string[]; // TODO remove
-  closedCaption : boolean; // if true, the track are closed captions
+  /** mime-type identifying the type of container for the track. */
+  mimeType : string;
+  /** codecs in the container (mimeType can be enough) */
+  codecs? : string;
+  /** URL to the text track file */
+  url : string;
+  /** ISO639-{1,2,3} code for the language of the track */
+  language? : string;
+  /**
+   * Same as `language`, but in an Array.
+   * Kept for compatibility with old API.
+   * @deprecated
+   */
+  languages? : string[];
+  /** If true, the track are closed captions. */
+  closedCaption : boolean;
 }
 
+/** Options given to the `Manifest` constructor. */
 interface IManifestParsingOptions {
+  /* tslint:disable deprecation */
+  /** Text tracks to add manually to the Manifest instance. */
   supplementaryTextTracks? : ISupplementaryTextTrack[];
+  /** Image tracks to add manually to the Manifest instance. */
   supplementaryImageTracks? : ISupplementaryImageTrack[];
+  /* tslint:enable deprecation */
+  /** External callback peforming an automatic filtering of wanted Representations. */
   representationFilter? : IRepresentationFilter;
 }
 
-// Representation affected by a `decipherabilityUpdate` event
+/** Representation affected by a `decipherabilityUpdate` event. */
 export interface IDecipherabilityUpdateElement { manifest : Manifest;
                                                  period : Period;
                                                  adaptation : Adaptation;
                                                  representation : Representation; }
 
-// Events emitted by a Manifest
+/** Events emitted by a `Manifest` instance */
 export interface IManifestEvents {
-  // Some Representation's decipherability status has been updated
+  /** The Manifest has been updated */
+  manifestUpdate : null;
+  /** Some Representation's decipherability status has been updated */
   decipherabilityUpdate : IDecipherabilityUpdateElement[];
-  manifestUpdate : null; // The Manifest has been updated
 }
 
 /**
  * Normalized Manifest structure.
+ *
  * Details the current content being played:
  *   - the duration of the content
  *   - the available tracks
  *   - the available qualities
  *   - the segments defined in those qualities
  *   - ...
- * while staying agnostic of the transport protocol used (Smooth or DASH).
+ * while staying agnostic of the transport protocol used (Smooth, DASH etc.).
  *
  * The Manifest and its contained information can evolve over time (like when
  * updating a dynamic manifest or when right management forbid some tracks from
  * being played).
  * To perform actions on those changes, any module using this Manifest can
  * listen to its sent events and react accordingly.
+ *
  * @class Manifest
  */
 export default class Manifest extends EventEmitter<IManifestEvents> {
   /** ID uniquely identifying this Manifest. */
   public readonly id : string;
 
-  // Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`.
+  /** Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`). */
   public transport : string;
 
-  // When that promise resolves, the Manifest needs to be updated
-  public expired : Promise<void> | null;
-
-  // Every `Adaptations` for the first `Period` of the Manifest.
-  // Deprecated. Please use manifest.periods[0].adaptations instead.
-  // @deprecated
-  public adaptations : IManifestAdaptations;
-
-  // List every `Period` in that Manifest chronologically (from its start time).
-  // A `Period` contains content information about the content available for
-  // a specific period in time.
+  /**
+   * List every Period in that Manifest chronologically (from start to end).
+   * A Period contains information about the content available for a specific
+   * period of time.
+   */
   public readonly periods : Period[];
 
-  // If true, the Manifest can evolve over time. New content can be downloaded,
-  // properties of the manifest can be changed.
+  /** When that promise resolves, the whole Manifest needs to be updated */
+  public expired : Promise<void> | null;
+
+  /**
+   * Deprecated. Equivalent to manifest.periods[0].adaptations.
+   * @deprecated
+   */
+  public adaptations : IManifestAdaptations;
+
+  /**
+   * If true, the Manifest can evolve over time. New content can be downloaded,
+   * properties of the manifest can be changed.
+   */
   public isDynamic : boolean;
 
-  // If true, this Manifest describes a live content.
-  // A live content is a specific kind of dynamic content where you want to play
-  // as close as possible to the maximum position.
-  // E.g., a TV channel is a live content.
+  /**
+   * If true, this Manifest describes a live content.
+   * A live content is a specific kind of dynamic content where you want to play
+   * as close as possible to the maximum position.
+   * E.g., a TV channel is a live content.
+   */
   public isLive : boolean;
 
-  // Every URI linking to that Manifest, used for refreshing it.
-  // Listed from the most important to the least important.
+  /*
+   * Every URI linking to that Manifest.
+   * They can be used for refreshing the Manifest.
+   * Listed from the most important to the least important.
+   */
   public uris : string[];
 
-  // Suggested delay from the "live edge" the content is suggested to start
-  // from.
-  // This only applies to live contents.
+  /**
+   * Suggested delay from the "live edge" the content is suggested to start
+   * from.
+   * This only applies to live contents.
+   */
   public suggestedPresentationDelay? : number;
 
-  // Amount of time, in seconds, this Manifest is valid from its fetching time.
-  // If not valid, you will need to refresh and update this Manifest (the latter
-  // can be done through the `update` method).
-  // If no lifetime is set, this Manifest does not become invalid after an
-  // amount of time.
+  /**
+   * Amount of time, in seconds, this Manifest is valid from its fetching time.
+   * If not valid, you will need to refresh and update this Manifest (the latter
+   * can be done through the `update` method).
+   * If no lifetime is set, this Manifest does not become invalid after an
+   * amount of time.
+   */
   public lifetime? : number;
 
-  // Minimum time, in seconds, at which the segment defined in the Manifest
-  // begins.
+  /**
+   * Minimum time, in seconds, at which a segment defined in the Manifest
+   * can begin.
+   * This is also used as an offset for live content to apply to a segment's
+   * time.
+   */
   public availabilityStartTime? : number;
 
-  // Information about the first seekable position.
+  /** Information about the first seekable position. */
   public minimumTime? : {
     isContinuous : boolean; // Whether this value continuously evolve over time
     value : number; // Minimum seekable time in milliseconds calculated at `time`.
     time : number; // `Performance.now()` output at the time `value` was calculated
   };
 
-  // Information about the last seekable position.
+  /** Information about the last seekable position. */
   public maximumTime? : {
     isContinuous : boolean; // Whether this value continuously evolve over time
     value : number; // Maximum seekable time in milliseconds calculated at `time`.
     time : number; // `Performance.now()` output at the time `value` was calculated
   };
 
-  // Array containing every errors that happened when the Manifest has been
-  // created, in the order they have happened.
+  /**
+   * Array containing every minor errors that happened when the Manifest has
+   * been created, in the order they have happened.
+   */
   public parsingErrors : ICustomError[];
 
   /*
@@ -167,7 +216,13 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public clockOffset : number | undefined;
 
   /**
+   * Construct a Manifest instance from a parsed Manifest object (as returned by
+   * Manifest parsers) and options.
+   *
+   * Some minor errors can arise during that construction. `this.parsingErrors`
+   * will contain all such errors, in the order they have been encountered.
    * @param {Object} parsedManifest
+   * @param {Object} options
    */
   constructor(parsedManifest : IParsedManifest, options : IManifestParsingOptions) {
     super();
@@ -191,9 +246,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
      * v3.x.x manages adaptations at the Manifest level
      */
     /* tslint:disable:deprecation */
-    this.adaptations = this.periods[0] == null ? {} :
-                       this.periods[0].adaptations == null ? {} :
-                       this.periods[0].adaptations;
+    this.adaptations = this.periods[0] === undefined ? {} :
+                                                       this.periods[0].adaptations;
     /* tslint:enable:deprecation */
 
     this.minimumTime = parsedManifest.minimumTime;
@@ -216,43 +270,45 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Returns Period corresponding to the given ID.
-   * Returns undefined if there is none.
+   * Returns the Period corresponding to the given `id`.
+   * Returns `undefined` if there is none.
    * @param {string} id
-   * @returns {Period|undefined}
+   * @returns {Object|undefined}
    */
-  getPeriod(id : string) : Period|undefined {
+  public getPeriod(id : string) : Period | undefined {
     return arrayFind(this.periods, (period) => {
       return id === period.id;
     });
   }
 
   /**
-   * Returns Period encountered at the given time.
-   * Returns undefined if there is no Period exactly at the given time.
+   * Returns the Period encountered at the given time.
+   * Returns `undefined` if there is no Period exactly at the given time.
    * @param {number} time
-   * @returns {Period|undefined}
+   * @returns {Object|undefined}
    */
-  getPeriodForTime(time : number) : Period|undefined {
+  public getPeriodForTime(time : number) : Period | undefined {
     return arrayFind(this.periods, (period) => {
       return time >= period.start &&
-             (period.end == null || period.end > time);
+             (period.end === undefined || period.end > time);
     });
   }
 
   /**
-   * Returns period coming just after a given period.
-   * Returns undefined if not found.
-   * @param {Period} period
-   * @returns {Period|null}
+   * Returns the Period coming chronologically just after another given Period.
+   * Returns `undefined` if not found.
+   * @param {Object} period
+   * @returns {Object|null}
    */
-  getPeriodAfter(period : Period) : Period | null {
+  public getPeriodAfter(
+    period : Period
+  ) : Period | null {
     const endOfPeriod = period.end;
-    if (endOfPeriod == null) {
+    if (endOfPeriod === undefined) {
       return null;
     }
     const nextPeriod = arrayFind(this.periods, (_period) => {
-      return _period.end == null || endOfPeriod < _period.end;
+      return _period.end === undefined || endOfPeriod < _period.end;
     });
     return nextPeriod === undefined ? null :
                                       nextPeriod;
@@ -260,74 +316,28 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
   /**
    * Returns the most important URL from which the Manifest can be refreshed.
+   * `undefined` if no URL is found.
    * @returns {string|undefined}
    */
-  getUrl() : string|undefined {
+  public getUrl() : string|undefined {
     return this.uris[0];
   }
 
   /**
-   * @deprecated only returns adaptations for the first period
-   * @returns {Array.<Object>}
-   */
-  getAdaptations() : Adaptation[] {
-    warnOnce("manifest.getAdaptations() is deprecated." +
-             " Please use manifest.period[].getAdaptations() instead");
-    const firstPeriod = this.periods[0];
-    if (firstPeriod == null) {
-      return [];
-    }
-    const adaptationsByType = firstPeriod.adaptations;
-    const adaptationsList : Adaptation[] = [];
-    for (const adaptationType in adaptationsByType) {
-      if (adaptationsByType.hasOwnProperty(adaptationType)) {
-        const adaptations =
-          adaptationsByType[adaptationType as IAdaptationType] as Adaptation[];
-        adaptationsList.push(...adaptations);
-      }
-    }
-    return adaptationsList;
-  }
-
-  /**
-   * @deprecated only returns adaptations for the first period
-   * @returns {Array.<Object>}
-   */
-  getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
-    warnOnce("manifest.getAdaptationsForType(type) is deprecated." +
-             " Please use manifest.period[].getAdaptationsForType(type) instead");
-    const firstPeriod = this.periods[0];
-    if (firstPeriod == null) {
-      return [];
-    }
-    const adaptationsForType = firstPeriod.adaptations[adaptationType];
-    return adaptationsForType == null ? [] :
-                                        adaptationsForType;
-  }
-
-  /**
-   * @deprecated only returns adaptations for the first period
-   * @returns {Array.<Object>}
-   */
-  getAdaptation(wantedId : number|string) : Adaptation|undefined {
-    warnOnce("manifest.getAdaptation(id) is deprecated." +
-             " Please use manifest.period[].getAdaptation(id) instead");
-    /* tslint:disable:deprecation */
-    return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
-    /* tslint:enable:deprecation */
-  }
-
-  /**
-   * update the current Manifest properties by those from the newly updated
-   * Manifest.
-   * @param {Object} Manifest
+   * Update the current Manifest properties by giving a new updated version.
+   * This instance will be updated with the new information coming from it.
+   * @param {Object} newManifest
    */
   public replace(newManifest : Manifest) : void {
     this._performUpdate(newManifest, MANIFEST_UPDATE_TYPE.Full);
   }
 
   /**
-   * Update current Manifest with a shorter new Manifest.
+   * Update the current Manifest properties by giving a new but shorter version
+   * of it.
+   * This instance will add the new information coming from it and will
+   * automatically clean old Periods that shouldn't be available anymore.
+   *
    * /!\ Throws if the given Manifest cannot be used or is not sufficient to
    * update the Manifest.
    * @param {Object} newManifest
@@ -337,12 +347,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Get minimum position currently defined by the Manifest, in seconds.
+   * Get the minimum position currently defined by the Manifest, in seconds.
    * @returns {number}
    */
   public getMinimumPosition() : number {
     const { minimumTime } = this;
-    if (minimumTime == null) {
+    if (minimumTime === undefined) {
       return 0;
     }
     if (!minimumTime.isContinuous) {
@@ -353,7 +363,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Get maximum position currently defined by the Manifest, in seconds.
+   * Get the maximum position currently defined by the Manifest, in seconds.
    * @returns {number}
    */
   public getMaximumPosition() : number {
@@ -389,7 +399,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public addUndecipherableKIDs(keyIDs : ArrayBuffer[]) : void {
     const updates = updateDeciperability(this, (representation) => {
       if (representation.decipherable === false ||
-          representation.contentProtections == null)
+          representation.contentProtections === undefined)
       {
         return true;
       }
@@ -411,8 +421,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Look in the Manifest for Representations linked to the given init data
-   * and mark them as being impossible to decrypt.
+   * Look in the Manifest for Representations linked to the given content
+   * protection initialization data and mark them as being impossible to
+   * decrypt.
    * Then trigger a "blacklist-update" event to notify everyone of the changes
    * performed.
    * @param {Array.<ArrayBuffer>} keyIDs
@@ -442,12 +453,65 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
+  public getAdaptations() : Adaptation[] {
+    warnOnce("manifest.getAdaptations() is deprecated." +
+             " Please use manifest.period[].getAdaptations() instead");
+    const firstPeriod = this.periods[0];
+    if (firstPeriod === undefined) {
+      return [];
+    }
+    const adaptationsByType = firstPeriod.adaptations;
+    const adaptationsList : Adaptation[] = [];
+    for (const adaptationType in adaptationsByType) {
+      if (adaptationsByType.hasOwnProperty(adaptationType)) {
+        const adaptations =
+          adaptationsByType[adaptationType as IAdaptationType] as Adaptation[];
+        adaptationsList.push(...adaptations);
+      }
+    }
+    return adaptationsList;
+  }
+
+  /**
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
+  public getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
+    warnOnce("manifest.getAdaptationsForType(type) is deprecated." +
+             " Please use manifest.period[].getAdaptationsForType(type) instead");
+    const firstPeriod = this.periods[0];
+    if (firstPeriod === undefined) {
+      return [];
+    }
+    const adaptationsForType = firstPeriod.adaptations[adaptationType];
+    return adaptationsForType === undefined ? [] :
+                                              adaptationsForType;
+  }
+
+  /**
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
+  public getAdaptation(wantedId : number|string) : Adaptation|undefined {
+    warnOnce("manifest.getAdaptation(id) is deprecated." +
+             " Please use manifest.period[].getAdaptation(id) instead");
+    /* tslint:disable:deprecation */
+    return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
+    /* tslint:enable:deprecation */
+  }
+
+  /**
    * Add supplementary image Adaptation(s) to the manifest.
    * @private
    * @param {Object|Array.<Object>} imageTracks
    */
   private addSupplementaryImageAdaptations(
-    imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
+    /* tslint:disable deprecation */
+    imageTracks : ISupplementaryImageTrack | ISupplementaryImageTrack[]
+    /* tslint:enable deprecated */
   ) : void {
     const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
@@ -482,7 +546,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @param {Object|Array.<Object>} textTracks
    */
   private addSupplementaryTextAdaptations(
+    /* tslint:disable deprecation */
     textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
+    /* tslint:enable deprecation */
   ) : void {
     const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
     const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
@@ -490,7 +556,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       codecs,
       url,
       language,
+      /* tslint:disable deprecation */
       languages,
+      /* tslint:enable deprecation */
       closedCaption,
     }) => {
       const langsToMapOn : string[] = language != null ? [language] :
@@ -555,6 +623,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       updatePeriods(this.periods, newManifest.periods);
     }
 
+    // Re-set this.adaptations for retro-compatibility in v3.x.x
     /* tslint:disable:deprecation */
     this.adaptations = this.periods[0] === undefined ?
                          {} :

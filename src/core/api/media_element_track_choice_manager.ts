@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import { BehaviorSubject } from "rxjs";
 import { ICompatTextTrackList } from "../../compat/browser_compatibility_types";
 import EventEmitter from "../../utils/event_emitter";
@@ -29,6 +34,7 @@ import {
   ITMVideoTrackListItem,
 } from "./track_choice_manager";
 
+/** Events emitted by the MediaElementTrackChoiceManager. */
 interface IMediaElementTrackChoiceManagerEvents {
   availableVideoTracksChange: ITMVideoTrackListItem[];
   availableAudioTracksChange: ITMAudioTrackListItem[];
@@ -162,24 +168,37 @@ function createVideoTracks(
  */
 export default class MediaElementTrackChoiceManager
   extends EventEmitter<IMediaElementTrackChoiceManagerEvents> {
-  // Array of preferred languages for audio tracks.
-  // Sorted by order of preference descending.
+  /**
+   * Array of preferred languages for audio tracks.
+   * Sorted by order of preference descending.
+   */
   private _preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
 
-  // Array of preferred languages for text tracks.
-  // Sorted by order of preference descending.
+  /**
+   * Array of preferred languages for text tracks.
+   * Sorted by order of preference descending.
+   */
   private _preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
 
+  /** List every available audio tracks available on the media element. */
   private _audioTracks : Array<{ track: ITMAudioTrack; nativeTrack: AudioTrack }>;
+  /** List every available text tracks available on the media element. */
   private _textTracks : Array<{ track: ITMTextTrack; nativeTrack: TextTrack }>;
+  /** List every available video tracks available on the media element. */
   private _videoTracks : Array<{ track: ITMVideoTrack; nativeTrack: VideoTrack }>;
 
+  /** Last audio track emitted as active. */
   private _lastEmittedNativeAudioTrack : AudioTrack | null | undefined;
+  /** Last video track emitted as active. */
   private _lastEmittedNativeVideoTrack : VideoTrack | null | undefined;
+  /** Last text track emitted as active. */
   private _lastEmittedNativeTextTrack : TextTrack | null | undefined;
 
+  /** Native `AudioTrackList` implemented on the media element. */
   private _nativeAudioTracks : AudioTrackList|undefined;
+  /** Native `VideoTrackList` implemented on the media element. */
   private _nativeVideoTracks : VideoTrackList|undefined;
+  /** Native `TextTrackList` implemented on the media element. */
   private _nativeTextTracks : ICompatTextTrackList|undefined;
 
   constructor(
@@ -217,6 +236,12 @@ export default class MediaElementTrackChoiceManager
     this._handleNativeTracksCallbacks();
   }
 
+  /**
+   * Update the currently active audio track by setting the wanted audio track's
+   * ID property.
+   * Throws if the wanted audio track is not found.
+   * @param {string|number|undefined} id
+   */
   public setAudioTrackById(id?: string|number): void {
     for (let i = 0; i < this._audioTracks.length; i++) {
       const { track, nativeTrack } = this._audioTracks[i];
@@ -228,6 +253,9 @@ export default class MediaElementTrackChoiceManager
     throw new Error("Audio track not found.");
   }
 
+  /**
+   * Disable the currently-active text track, if one.
+   */
   public disableTextTrack(): void {
     for (let i = 0; i < this._textTracks.length; i++) {
       const { nativeTrack } = this._textTracks[i];
@@ -235,6 +263,12 @@ export default class MediaElementTrackChoiceManager
     }
   }
 
+  /**
+   * Update the currently active text track by setting the wanted text track's
+   * ID property.
+   * Throws if the wanted text track is not found.
+   * @param {string|number|undefined} id
+   */
   public setTextTrackById(id?: string|number): void {
     let hasSetTrack = false;
     for (let i = 0; i < this._textTracks.length; i++) {
@@ -251,6 +285,12 @@ export default class MediaElementTrackChoiceManager
     }
   }
 
+  /**
+   * Update the currently active video track by setting the wanted video track's
+   * ID property.
+   * Throws if the wanted video track is not found.
+   * @param {string|number|undefined} id
+   */
   public setVideoTrackById(id?: string): void {
     for (let i = 0; i < this._videoTracks.length; i++) {
       const { track, nativeTrack } = this._videoTracks[i];
@@ -262,6 +302,12 @@ export default class MediaElementTrackChoiceManager
     throw new Error("Video track not found.");
   }
 
+  /**
+   * Returns the currently active audio track.
+   * Returns `null` if no audio track is active.
+   * Returns `undefined` if we cannot know which audio track is active.
+   * @returns {Object|null|undefined}
+   */
   public getChosenAudioTrack(): ITMAudioTrack|null|undefined {
     const chosenPrivateAudioTrack = this._getPrivateChosenAudioTrack();
     if (chosenPrivateAudioTrack != null) {
@@ -270,6 +316,12 @@ export default class MediaElementTrackChoiceManager
     return chosenPrivateAudioTrack;
   }
 
+  /**
+   * Returns the currently active text track.
+   * Returns `null` if no text track is active.
+   * Returns `undefined` if we cannot know which text track is active.
+   * @returns {Object|null|undefined}
+   */
   public getChosenTextTrack(): ITMTextTrack|null|undefined {
     const chosenPrivateTextTrack = this._getPrivateChosenTextTrack();
     if (chosenPrivateTextTrack != null) {
@@ -278,6 +330,12 @@ export default class MediaElementTrackChoiceManager
     return chosenPrivateTextTrack;
   }
 
+  /**
+   * Returns the currently active video track.
+   * Returns `null` if no video track is active.
+   * Returns `undefined` if we cannot know which video track is active.
+   * @returns {Object|null|undefined}
+   */
   public getChosenVideoTrack(): ITMVideoTrack|null|undefined {
     const chosenPrivateVideoTrack = this._getPrivateChosenVideoTrack();
     if (chosenPrivateVideoTrack != null) {
@@ -286,6 +344,10 @@ export default class MediaElementTrackChoiceManager
     return chosenPrivateVideoTrack;
   }
 
+  /**
+   * Returns a description of every available audio tracks.
+   * @returns {Array.<Object>}
+   */
   public getAvailableAudioTracks(): ITMAudioTrackListItem[] {
     return this._audioTracks.map(({ track, nativeTrack }) => {
       return { id: track.id,
@@ -296,6 +358,10 @@ export default class MediaElementTrackChoiceManager
     });
   }
 
+  /**
+   * Returns a description of every available text tracks.
+   * @returns {Array.<Object>}
+   */
   public getAvailableTextTracks(): ITMTextTrackListItem[] {
     return this._textTracks.map(({ track, nativeTrack }) => {
       return { id: track.id,
@@ -306,6 +372,10 @@ export default class MediaElementTrackChoiceManager
     });
   }
 
+  /**
+   * Returns a description of every available video tracks.
+   * @returns {Array.<Object>}
+   */
   public getAvailableVideoTracks(): ITMVideoTrackListItem[] {
     return this._videoTracks.map(({ track, nativeTrack }) => {
       return { id: track.id,
@@ -314,6 +384,9 @@ export default class MediaElementTrackChoiceManager
     });
   }
 
+  /**
+   * Free the resources used by the MediaElementTrackChoiceManager.
+   */
   public dispose(): void {
     if (this._nativeVideoTracks !== undefined) {
       this._nativeVideoTracks.onchange = null;
@@ -336,6 +409,12 @@ export default class MediaElementTrackChoiceManager
     this.removeEventListener();
   }
 
+  /**
+   * Get information about the currently chosen audio track.
+   * `undefined` if we cannot know it.
+   * `null` if no audio track is chosen.
+   * @returns {Object|undefined|null}
+   */
   private _getPrivateChosenAudioTrack(): { track: ITMAudioTrack;
                                            nativeTrack: AudioTrack; } |
                                          undefined |
@@ -352,6 +431,12 @@ export default class MediaElementTrackChoiceManager
     return null;
   }
 
+  /**
+   * Get information about the currently chosen video track.
+   * `undefined` if we cannot know it.
+   * `null` if no video track is chosen.
+   * @returns {Object|undefined|null}
+   */
   private _getPrivateChosenVideoTrack(): { track: ITMVideoTrack;
                                            nativeTrack: VideoTrack; } |
                                          undefined |
@@ -368,6 +453,12 @@ export default class MediaElementTrackChoiceManager
     return null;
   }
 
+  /**
+   * Get information about the currently chosen text track.
+   * `undefined` if we cannot know it.
+   * `null` if no text track is chosen.
+   * @returns {Object|undefined|null}
+   */
   private _getPrivateChosenTextTrack(): { track: ITMTextTrack;
                                           nativeTrack: TextTrack; } |
                                         undefined |
@@ -384,6 +475,11 @@ export default class MediaElementTrackChoiceManager
     return null;
   }
 
+  /**
+   * Iterate over every available audio tracks on the media element and over
+   * every set audio track preferences to activate the preferred audio track
+   * on the media element.
+   */
   private _setPreferredAudioTrack() : void {
     const preferredAudioTracks = this._preferredAudioTracks.getValue();
     const normalizedTracks = preferredAudioTracks
@@ -414,6 +510,11 @@ export default class MediaElementTrackChoiceManager
     }
   }
 
+  /**
+   * Iterate over every available text tracks on the media element and over
+   * every set text track preferences to activate the preferred text track
+   * on the media element.
+   */
   private _setPreferredTextTrack() : void {
     const preferredTextTracks = this._preferredTextTracks.getValue();
     const normalizedTracks = preferredTextTracks
@@ -442,8 +543,10 @@ export default class MediaElementTrackChoiceManager
     }
   }
 
-  // Monitor native tracks add, remove and change callback and trigger the
-  // change events.
+  /**
+   * Monitor native tracks add, remove and change callback and trigger the
+   * change events.
+   */
   private _handleNativeTracksCallbacks(): void {
     if (this._nativeAudioTracks !== undefined) {
       this._nativeAudioTracks.onaddtrack = () => {

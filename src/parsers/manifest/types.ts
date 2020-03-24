@@ -16,107 +16,200 @@
 
 import { IRepresentationIndex } from "../../manifest";
 
+/** Describes information about an encryption Key ID of a given media. */
 export interface IContentProtectionKID { keyId : Uint8Array;
                                          systemId?: string; }
 
+/**
+ * Describes information about the encryption initialization data of a given
+ * media.
+ */
 export interface IContentProtectionInitData { systemId : string;
                                               data : Uint8Array; }
 
+/** Describes every encryption protection parsed for a given media. */
 export interface IContentProtections {
+  /** The different encryption key IDs associated with that content. */
   keyIds : IContentProtectionKID[];
+  /** The different encryption initialization data associated with that content. */
   initData : Partial<Record<string, IContentProtectionInitData[]>>;
 }
 
-// Representation of a "quality" available in any Adaptation
+/** Representation of a "quality" available in an Adaptation. */
 export interface IParsedRepresentation {
-  // required
+  /** Average bitrate the Representation is available in, in bits per seconds. */
   bitrate : number;
+  /**
+   * Interface to get information about segments associated with this
+   * Representation,
+   */
   index : IRepresentationIndex;
+  /**
+   * Unique ID that should not change between Manifest updates for this
+   * Representation but which should be different than any other Representation
+   * in the same Adaptation.
+   */
   id: string;
 
-  // optional
+  /** Codec(s) associated with this Representation. */
   codecs?: string;
+  /**
+   * Information about the encryption associated with this Representation.
+   * Not set if unknown or if the content is not encrypted.
+   */
   contentProtections? : IContentProtections;
+  /**
+   * Frame rate (images per seconds) associated with this Representation.
+   * Not set if unknown or if it makes no sense (e.g. for subtitles).
+   */
   frameRate?: string;
+  /**
+   * Height (top to bottom) in pixels this Representation has.
+   * Not set if unknown or if it makes no sense (e.g. for audio).
+   */
   height?: number;
+  /**
+   * Defines the mime-type of the content.
+   * This allows to deduce the media container but most of the time, the
+   * `codecs` will also be needed to know how to decode that media.
+   */
   mimeType?: string;
-  url? : string;
+  /**
+   * Width (left to right) in pixels this Representation has.
+   * Not set if unknown or if it makes no sense (e.g. for audio).
+   */
   width?: number;
 }
 
+/** Every possible types an Adaptation can have. */
 export type IParsedAdaptationType = "audio" |
                                     "video" |
                                     "text" |
                                     "image";
 
-// Collection of multiple `Adaptation`, regrouped by type
+/**
+ * Collection of multiple `Adaptation`, regrouped by type, as used by a
+ * `Period`.
+ */
 export type IParsedAdaptations =
   Partial<Record<IParsedAdaptationType, IParsedAdaptation[]>>;
 
-// Representation of a "track" available in any Period
+/** Representation of a "track" available in any Period. */
 export interface IParsedAdaptation {
-  // required
-  id: string; // Unique ID for all Adaptation of that Period
-  representations: IParsedRepresentation[]; // Qualities available for that Adaptation
+  /**
+   * Unique ID that should not change between Manifest updates for this
+   * Adaptation but which should be different than any other Adaptation
+   * in the same Period.
+   */
+  id: string;
+  /** Describes every qualities this Adaptation is in. */
+  representations: IParsedRepresentation[];
+  /** The type of track (e.g. "video", "audio" or "text"). */
   type: IParsedAdaptationType;
-
-  // optional
-  audioDescription? : boolean; // Whether this Adaptation is an audio-track for
-                               // the visually impaired
-  closedCaption? : boolean; // Whether this Adaptation are closed caption for
-                            // the hard of hearing
-  isDub? : boolean; // If true this Adaptation is in a dub: it was recorded in
-                    // another language than the original(s) one(s)
-  language?: string; // Language the `Adaptation` is in, if it can be applied
+  /**
+   * Whether this Adaptation is an audio-track for the visually impaired.
+   * Not set if unknown or if it makes no sense for the current track (e.g. for
+   * a video track).
+   */
+  audioDescription? : boolean;
+  /**
+   * Whether this Adaptation are closed captions for the hard of hearing.
+   * Not set if unknown or if it makes no sense for the current track (e.g. for
+   * a video track).
+   */
+  closedCaption? : boolean;
+  /**
+   * If true this Adaptation is in a dub: it was recorded in another language
+   * than the original(s) one(s).
+   */
+  isDub? : boolean;
+  /**
+   * Language the `Adaptation` is in.
+   * Not set if unknown or if it makes no sense for the current track.
+   */
+  language?: string;
 }
 
-// Representation of a given period of time in the Manifest
+/** Information on a given period of time in the Manifest */
 export interface IParsedPeriod {
-  // required
-  id : string; // Unique ID amongst Periods of the Manifest
-  start : number; // Start time at which the Period begins.
-                  // For static contents, the start of the first Period should
-                  // corresponds to the time of the first available segment
-  adaptations : IParsedAdaptations; // Available tracks for this Period
-
-  // optional
-  duration? : number; // duration of the Period (from the start to the end),
-                      // in seconds.
-                      // `undefined` if the Period is the last one and is still
-                      // being updated
-  end? : number; // end time at which the Period ends, in seconds.
-                 // `undefined` if the Period is the last one and is still
-                 // being updated
+  /**
+   * Unique ID that should not change between Manifest updates for this
+   * Period but which should be different than any other Period in this
+   * Manifest.
+   */
+  id : string;
+  /**
+   * Start time at which the Period begins.
+   * For static contents, the start of the first Period should
+   * corresponds to the time of the first available segment
+   */
+  start : number;
+  /** Available tracks for this Period.  */
+  adaptations : IParsedAdaptations;
+  /**
+   * Duration of the Period (from the start to the end), in seconds.
+   * `undefined` if the Period is the last one and is still being updated.
+   */
+  duration? : number;
+  /**
+   * Time at which the Period ends, in seconds.
+   * `undefined` if the Period is the last one and is still
+   * being updated.
+   */
+  end? : number;
 }
 
-// Representation of the whole Manifest file
+/** Information on the whole content */
 export interface IParsedManifest {
-  // required
-  isDynamic : boolean; // If true, this Manifest can be updated
-  isLive : boolean; // If true, this Manifest describes a "live" content
-  periods: IParsedPeriod[]; // Periods contained in this manifest.
-  transportType: string; // "smooth", "dash", "metaplaylist" etc.
-
-  // optional
-  availabilityStartTime? : number; // Base time from which the segments are generated.
-  clockOffset?: number; // Offset, in milliseconds, the client's clock (in terms
-                        // of `performance.now`) has relatively to the server's
-  expired? : Promise<void>; // When this Promise resolves, it means that the
-                            // Manifest needs to be updated.
-  lifetime?: number; // Duration of the validity of this Manifest, after which it
-                     // should be refreshed.
-  maximumTime? : { // Information on the maximum seekable position.
-    isContinuous : boolean; // Whether this value linearly evolves over time.
-    value : number; // Maximum seekable time in seconds calculated at `time`.
-    time : number; // `Performance.now()` output at the time `value` was calculated.
+  /** If true, this Manifest can be updated. */
+  isDynamic : boolean;
+  /**
+   * If true, this Manifest describes a "live" content we shall play close to
+   * its "live edge".
+   */
+  isLive : boolean;
+  /** Periods contained in this manifest. */
+  periods: IParsedPeriod[];
+  /** Underlying transport protocol: "smooth", "dash", "metaplaylist" etc. */
+  transportType: string;
+  /** Base time from which the segments are generated. */
+  availabilityStartTime? : number;
+  /**
+   * Offset, in milliseconds, the client's clock (in terms of `performance.now`)
+   * has relatively to the server's
+   */
+  clockOffset?: number;
+  /** If set, the Manifest needs to be updated when that Promise resolves. */
+  expired? : Promise<void>;
+  /**
+   * Duration of the validity of this Manifest from its download time.
+   * After that time has elapsed, the Manifest should be refreshed.
+   */
+  lifetime?: number;
+  /** Information on the maximum seekable position or on how to calculate it. */
+  maximumTime? : {
+    /** Whether this value linearly evolves over time. */
+    isContinuous : boolean;
+    /** Maximum seekable time in seconds calculated at `time`. */
+    value : number;
+    /** `Performance.now()` output at the time `value` was calculated. */
+    time : number;
   };
+  /** Information on the minimum seekable position or on how to calculate it. */
   minimumTime? : { // Information on the minimum seekable position.
-    isContinuous : boolean; // Whether this value linearly evolves over time.
-    value : number; // minimum seekable time in seconds calculated at `time`.
-    time : number; // `Performance.now()` output at the time `value` was calculated.
+    /** Whether this value linearly evolves over time. */
+    isContinuous : boolean;
+    /** Minimum seekable time in seconds calculated at `time`. */
+    value : number;
+    /** `Performance.now()` output at the time `value` was calculated. */
+    time : number;
   };
-  suggestedPresentationDelay? : number; // Suggested delay from the last position.
-                                        // the player should start from by default.
-  uris?: string[]; // URIs where the manifest can be refreshed.
-                   // By order of importance.
+  /**
+   * Only used for live contents.
+   * Suggested delay from the last position the player should start from by
+   * default.
+   */
+  suggestedPresentationDelay? : number;
+  /** URIs where the manifest can be refreshed by order of importance. */
+  uris?: string[];
 }
