@@ -19,8 +19,14 @@
  * @returns {Function}
  */
 export default function idGenerator() : () => string {
-  let lastID = 0;
+  let prefix = "";
+  let currId = -1;
   return function generateNewId() : string {
-    return String(lastID++);
+    currId++;
+    if (currId >= Number.MAX_SAFE_INTEGER) {
+      prefix += "0";
+      currId = 0;
+    }
+    return prefix + String(currId);
   };
 }
