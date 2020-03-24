@@ -92,7 +92,6 @@ export interface IParsedPeriod {
 // Representation of the whole Manifest file
 export interface IParsedManifest {
   // required
-  id: string; // Unique ID for the manifest.
   isDynamic : boolean; // If true, this Manifest can be updated
   isLive : boolean; // If true, this Manifest describes a "live" content
   periods: IParsedPeriod[]; // Periods contained in this manifest.

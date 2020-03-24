@@ -26,7 +26,9 @@ import Adaptation, {
   IAdaptationType,
   IRepresentationFilter,
 } from "./adaptation";
-import Period from "./period";
+import Period, {
+  IManifestAdaptations,
+} from "./period";
 import Representation from "./representation";
 import { StaticRepresentationIndex } from "./representation_index";
 import { MANIFEST_UPDATE_TYPE } from "./types";
@@ -35,9 +37,8 @@ import {
   updatePeriods,
 } from "./update_periods";
 
-const generateNewId = idGenerator();
-
-type ManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
+const generateSupplementaryTrackID = idGenerator();
+const generateNewManifestId = idGenerator();
 
 interface ISupplementaryImageTrack {
   mimeType : string; // mimeType identifying the type of container for the track
@@ -90,8 +91,8 @@ export interface IManifestEvents {
  * @class Manifest
  */
 export default class Manifest extends EventEmitter<IManifestEvents> {
-  // ID uniquely identifying this Manifest.
-  public id : string;
+  /** ID uniquely identifying this Manifest. */
+  public readonly id : string;
 
   // Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`.
   public transport : string;
@@ -102,7 +103,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   // Every `Adaptations` for the first `Period` of the Manifest.
   // Deprecated. Please use manifest.periods[0].adaptations instead.
   // @deprecated
-  public adaptations : ManifestAdaptations;
+  public adaptations : IManifestAdaptations;
 
   // List every `Period` in that Manifest chronologically (from its start time).
   // A `Period` contains content information about the content available for
@@ -174,7 +175,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
             supplementaryImageTracks = [],
             representationFilter } = options;
     this.parsingErrors = [];
-    this.id = parsedManifest.id;
+    this.id = generateNewManifestId();
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
     this.clockOffset = parsedManifest.clockOffset;
@@ -450,8 +451,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   ) : void {
     const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
-      const adaptationID = "gen-image-ada-" + generateNewId();
-      const representationID = "gen-image-rep-" + generateNewId();
+      const adaptationID = "gen-image-ada-" + generateSupplementaryTrackID();
+      const representationID = "gen-image-rep-" + generateSupplementaryTrackID();
       const newAdaptation = new Adaptation({ id: adaptationID,
                                              type: "image",
                                              representations: [{
@@ -497,8 +498,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                           [];
 
       return allSubs.concat(langsToMapOn.map((_language) => {
-        const adaptationID = "gen-text-ada-" + generateNewId();
-        const representationID = "gen-text-rep-" + generateNewId();
+        const adaptationID = "gen-text-ada-" + generateSupplementaryTrackID();
+        const representationID = "gen-text-rep-" + generateSupplementaryTrackID();
         const newAdaptation = new Adaptation({ id: adaptationID,
                                                type: "text",
                                                language: _language,
@@ -535,7 +536,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     updateType : MANIFEST_UPDATE_TYPE
   ) : void {
     this.availabilityStartTime = newManifest.availabilityStartTime;
-    this.id = newManifest.id;
     this.isDynamic = newManifest.isDynamic;
     this.isLive = newManifest.isLive;
     this.lifetime = newManifest.lifetime;

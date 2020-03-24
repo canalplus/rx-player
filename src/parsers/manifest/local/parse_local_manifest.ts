@@ -32,8 +32,6 @@ import {
   ILocalRepresentation,
 } from "./types";
 
-const generateManifestID = idGenerator();
-
 /**
  * @param {Object} localManifest
  * @returns {Object}
@@ -53,7 +51,6 @@ export default function parseLocalManifest(
   const manifest: IParsedManifest = {
     availabilityStartTime: 0,
     expired: localManifest.expired,
-    id: "local-manifest_" + generateManifestID(),
     transportType: "local",
     isDynamic: !localManifest.isFinished,
     isLive: false,
