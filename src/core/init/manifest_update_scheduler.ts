@@ -148,7 +148,7 @@ export default function manifestUpdateScheduler({
        log.warn("Init: Cannot refresh the manifest: no url");
        return EMPTY;
      }
-     const externalClockOffset = manifest.getClockOffset();
+     const externalClockOffset = manifest.clockOffset;
      return fetchManifest(refreshURL, externalClockOffset)
        .pipe(mergeMap((value) => {
          const { manifest: newManifest,

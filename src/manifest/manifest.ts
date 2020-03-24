@@ -157,30 +157,32 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   // created, in the order they have happened.
   public parsingErrors : ICustomError[];
 
-  // Difference between the server's clock in ms and the return of the JS
-  // function `performance.now`.
-  // This property allows to calculate the server time at any moment.
-  // `undefined` if we did not obtain the server's time
-  private _clockOffset : number|undefined;
+  /*
+   * Difference between the server's clock in milliseconds and the return of the
+   * JS function `performance.now`.
+   * This property allows to calculate the server time at any moment.
+   * `undefined` if we did not obtain the server's time
+   */
+  public clockOffset : number | undefined;
 
   /**
-   * @param {Object} args
+   * @param {Object} parsedManifest
    */
-  constructor(args : IParsedManifest, options : IManifestParsingOptions) {
+  constructor(parsedManifest : IParsedManifest, options : IManifestParsingOptions) {
     super();
     const { supplementaryTextTracks = [],
             supplementaryImageTracks = [],
             representationFilter } = options;
     this.parsingErrors = [];
-    this.id = args.id;
-    this.expired = args.expired ?? null;
-    this.transport = args.transportType;
-    this._clockOffset = args.clockOffset;
+    this.id = parsedManifest.id;
+    this.expired = parsedManifest.expired ?? null;
+    this.transport = parsedManifest.transportType;
+    this.clockOffset = parsedManifest.clockOffset;
 
-    this.periods = args.periods.map((period) => {
-      const parsedPeriod = new Period(period, representationFilter);
-      this.parsingErrors.push(...parsedPeriod.parsingErrors);
-      return parsedPeriod;
+    this.periods = parsedManifest.periods.map((parsedPeriod) => {
+      const period = new Period(parsedPeriod, representationFilter);
+      this.parsingErrors.push(...period.parsingErrors);
+      return period;
     }).sort((a, b) => a.start - b.start);
 
     /**
@@ -193,16 +195,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                        this.periods[0].adaptations;
     /* tslint:enable:deprecation */
 
-    this.minimumTime = args.minimumTime;
-    this.isDynamic = args.isDynamic;
-    this.isLive = args.isLive;
-    this.uris = args.uris === undefined ? [] :
-                                          args.uris;
+    this.minimumTime = parsedManifest.minimumTime;
+    this.isDynamic = parsedManifest.isDynamic;
+    this.isLive = parsedManifest.isLive;
+    this.uris = parsedManifest.uris === undefined ? [] :
+                                                    parsedManifest.uris;
 
-    this.lifetime = args.lifetime;
-    this.suggestedPresentationDelay = args.suggestedPresentationDelay;
-    this.availabilityStartTime = args.availabilityStartTime;
-    this.maximumTime = args.maximumTime;
+    this.lifetime = parsedManifest.lifetime;
+    this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
+    this.availabilityStartTime = parsedManifest.availabilityStartTime;
+    this.maximumTime = parsedManifest.maximumTime;
 
     if (supplementaryImageTracks.length > 0) {
       this.addSupplementaryImageAdaptations(supplementaryImageTracks);
@@ -372,11 +374,11 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
         const ast = this.availabilityStartTime !== undefined ?
           this.availabilityStartTime :
           0;
-        if (this._clockOffset == null) {
+        if (this.clockOffset === undefined) {
           // server's time not known, rely on user's clock
           return (Date.now() / 1000) - ast;
        }
-        const serverTime = performance.now() + this._clockOffset;
+        const serverTime = performance.now() + this.clockOffset;
         return (serverTime / 1000) - ast;
       }
       return Infinity;
@@ -386,14 +388,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
     const timeDiff = performance.now() - maximumTime.time;
     return maximumTime.value + timeDiff / 1000;
-  }
-
-  /**
-   * If true, this Manifest is currently synchronized with the server's clock.
-   * @returns {Boolean}
-   */
-  public getClockOffset() : number | undefined {
-    return this._clockOffset;
   }
 
   /**
