@@ -26,7 +26,6 @@ import {
   ignoreElements,
 } from "rxjs/operators";
 import {
-  createSession,
   ICustomMediaKeys,
   ICustomMediaKeySession,
 } from "../../../compat";
@@ -115,7 +114,7 @@ export default class MediaKeySessionsStore {
                                     "This initialization data was already stored.");
     }
 
-    const session = createSession(this._mediaKeys, sessionType);
+    const session = this._mediaKeys.createSession(sessionType);
     const entry = { session,
                     sessionType,
                     initData: hashBuffer(initData),

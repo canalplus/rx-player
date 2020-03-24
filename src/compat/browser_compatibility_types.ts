@@ -16,7 +16,6 @@
 
 import { MediaError } from "../errors";
 import isNode from "./is_node";
-import shouldUseWebKitMediaKeys from "./should_use_webkit_media_keys";
 
 // regular MediaKeys type + optional functions present in IE11
 interface ICompatMediaKeysConstructor {
@@ -104,15 +103,10 @@ const MediaSource_ : typeof MediaSource|undefined =
                                   win.MSMediaSource;
 /* tslint:enable no-unsafe-any */
 
-const MediaKeys_ : ICompatMediaKeysConstructor|undefined = (() => {
+const MediaKeys_ : ICompatMediaKeysConstructor = (() => {
   /* tslint:disable no-unsafe-any */
-  if (shouldUseWebKitMediaKeys()) {
-    return win.WebKitMediaKeys;
-  }
   return win.MediaKeys != null ? win.MediaKeys :
-         win.MSMediaKeys != null ? win.MSMediaKeys :
          win.MozMediaKeys != null ? win.MozMediaKeys :
-         win.WebKitMediaKeys != null ? win.WebKitMediaKeys :
          class {
            public readonly create : () => never;
            public readonly isTypeSupported : () => never;

@@ -204,52 +204,6 @@ describe("compat - browser compatibility types", () => {
     (window as any).MSMediaKeys = origMSMediaKeys;
   });
 
-  it("should use WebKitMediaKeys if defined and MediaKeys is not", () => {
-    jest.mock("../is_node", () => ({ __esModule: true,
-                                     default: false }));
-
-    const origMediaKeys = (window as any).MediaKeys;
-    const origMozMediaKeys = (window as any).MozMediaKeys;
-    const origWebKitMediaKeys = (window as any).WebKitMediaKeys;
-    const origMSMediaKeys = (window as any).MSMediaKeys;
-
-    (window as any).MediaKeys = undefined;
-    (window as any).MozMediaKeys = undefined;
-    (window as any).WebKitMediaKeys = { a: 3 };
-    (window as any).MSMediaKeys = undefined;
-
-    const { MediaKeys_ } = require("../browser_compatibility_types");
-    expect(MediaKeys_).toEqual({ a: 3 });
-
-    (window as any).MediaKeys = origMediaKeys;
-    (window as any).MozMediaKeys = origMozMediaKeys;
-    (window as any).WebKitMediaKeys = origWebKitMediaKeys;
-    (window as any).MSMediaKeys = origMSMediaKeys;
-  });
-
-  it("should use MSMediaKeys if defined and MediaKeys is not", () => {
-    jest.mock("../is_node", () => ({ __esModule: true,
-                                     default: false }));
-
-    const origMediaKeys = (window as any).MediaKeys;
-    const origMozMediaKeys = (window as any).MozMediaKeys;
-    const origWebKitMediaKeys = (window as any).WebKitMediaKeys;
-    const origMSMediaKeys = (window as any).MSMediaKeys;
-
-    (window as any).MediaKeys = undefined;
-    (window as any).MozMediaKeys = undefined;
-    (window as any).WebKitMediaKeys = undefined;
-    (window as any).MSMediaKeys = { a: 4 };
-
-    const { MediaKeys_ } = require("../browser_compatibility_types");
-    expect(MediaKeys_).toEqual({ a: 4 });
-
-    (window as any).MediaKeys = origMediaKeys;
-    (window as any).MozMediaKeys = origMozMediaKeys;
-    (window as any).WebKitMediaKeys = origWebKitMediaKeys;
-    (window as any).MSMediaKeys = origMSMediaKeys;
-  });
-
   it("should throw when using compat MediaKeys methods if no MediaKeys API", () => {
     jest.mock("../is_node", () => ({ __esModule: true,
                                      default: false }));
