@@ -35,29 +35,33 @@ import normalizeLanguage from "../../utils/languages";
 import SortedList from "../../utils/sorted_list";
 import takeFirstSet from "../../utils/take_first_set";
 
-// single preference for an audio track Adaptation
+/** Single preference for an audio track Adaptation. */
 export type IAudioTrackPreference = null |
                                     { language : string;
                                       audioDescription : boolean; };
 
-// single preference for a text track Adaptation
+/** Single preference for a text track Adaptation. */
 export type ITextTrackPreference = null |
                                    { language : string;
                                      closedCaption : boolean; };
 
-// audio track returned by the TrackChoiceManager
+/** Audio track returned by the TrackChoiceManager. */
 export interface ITMAudioTrack { language : string;
                                  normalized : string;
                                  audioDescription : boolean;
                                  dub? : boolean;
                                  id : number|string; }
 
-// text track returned by the TrackChoiceManager
+/** Text track returned by the TrackChoiceManager. */
 export interface ITMTextTrack { language : string;
                                 normalized : string;
                                 closedCaption : boolean;
                                 id : number|string; }
 
+/**
+ * Definition of a single Video Representation as represented by the
+ * TrackChoiceManager.
+ */
 interface ITMVideoRepresentation { id : string|number;
                                    bitrate : number;
                                    width? : number;
@@ -65,48 +69,56 @@ interface ITMVideoRepresentation { id : string|number;
                                    codec? : string;
                                    frameRate? : string; }
 
-// video track returned by the TrackChoiceManager
+/** Video track returned by the TrackChoiceManager. */
 export interface ITMVideoTrack { id : number|string;
                                  representations: ITMVideoRepresentation[]; }
 
-// audio track from a list of audio tracks returned by the TrackChoiceManager
+/** Audio track from a list of audio tracks returned by the TrackChoiceManager. */
 export interface ITMAudioTrackListItem
   extends ITMAudioTrack { active : boolean; }
 
-// text track from a list of text tracks returned by the TrackChoiceManager
+/** Text track from a list of text tracks returned by the TrackChoiceManager. */
 export interface ITMTextTrackListItem
   extends ITMTextTrack { active : boolean; }
 
-// video track from a list of video tracks returned by the TrackChoiceManager
+/** Video track from a list of video tracks returned by the TrackChoiceManager. */
 export interface ITMVideoTrackListItem
   extends ITMVideoTrack { active : boolean; }
 
-// stored audio information for a single period
+/** Audio information stored for a single Period. */
 interface ITMPeriodAudioInfos { adaptations : Adaptation[];
                                 adaptation$ : Subject<Adaptation|null>; }
 
-// stored text information for a single period
+/** Text information stored for a single Period. */
 interface ITMPeriodTextInfos { adaptations : Adaptation[];
                                adaptation$ : Subject<Adaptation|null>; }
 
-// stored video information for a single period
+/** Video information stored for a single Period. */
 interface ITMPeriodVideoInfos { adaptations : Adaptation[];
                                 adaptation$ : Subject<Adaptation|null>; }
 
-// stored information for a single period
+/** Every information stored for a single Period. */
 interface ITMPeriodInfos { period : Period;
                            audio? : ITMPeriodAudioInfos;
                            text? : ITMPeriodTextInfos;
                            video? : ITMPeriodVideoInfos; }
 
+/** Audio track preference once normalized by the TrackChoiceManager. */
 type INormalizedPreferredAudioTrack = null |
                                       { normalized : string;
                                         audioDescription : boolean; };
 
-type INormalizedTextTrack = null |
-                            { normalized : string;
-                              closedCaption : boolean; };
+/** Text track preference once normalized by the TrackChoiceManager. */
+type INormalizedPreferredTextTrack = null |
+                                     { normalized : string;
+                                       closedCaption : boolean; };
 
+/**
+ * Transform an array of IAudioTrackPreference into an array of
+ * INormalizedPreferredAudioTrack to be exploited by the TrackChoiceManager.
+ * @param {Array.<Object|null>}
+ * @returns {Array.<Object|null>}
+ */
 function normalizeAudioTracks(
   tracks : IAudioTrackPreference[]
 ) : INormalizedPreferredAudioTrack[] {
@@ -116,9 +128,15 @@ function normalizeAudioTracks(
       audioDescription: t.audioDescription });
 }
 
+/**
+ * Transform an array of ITextTrackPreference into an array of
+ * INormalizedPreferredTextTrack to be exploited by the TrackChoiceManager.
+ * @param {Array.<Object|null>} tracks
+ * @returns {Array.<Object|null>}
+ */
 function normalizeTextTracks(
   tracks : ITextTrackPreference[]
-) : INormalizedTextTrack[] {
+) : INormalizedPreferredTextTrack[] {
   return tracks.map(t => t == null ?
     t :
     { normalized: normalizeLanguage(t.language),
@@ -131,25 +149,31 @@ function normalizeTextTracks(
  * @class TrackChoiceManager
  */
 export default class TrackChoiceManager {
-  // Current Periods considered by the TrackChoiceManager.
-  // Sorted by start time ascending
+  /**
+   * Current Periods considered by the TrackChoiceManager.
+   * Sorted by start time ascending
+   */
   private _periods : SortedList<ITMPeriodInfos>;
 
-  // Array of preferred languages for audio tracks.
-  // Sorted by order of preference descending.
+  /**
+   * Array of preferred languages for audio tracks.
+   * Sorted by order of preference descending.
+   */
   private _preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
 
-  // Array of preferred languages for text tracks.
-  // Sorted by order of preference descending.
+  /**
+   * Array of preferred languages for text tracks.
+   * Sorted by order of preference descending.
+   */
   private _preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
 
-  // Memoization of the previously-chosen audio Adaptation for each Period.
+  /** Memoization of the previously-chosen audio Adaptation for each Period. */
   private _audioChoiceMemory : WeakMap<Period, Adaptation|null>;
 
-  // Memoization of the previously-chosen text Adaptation for each Period.
+  /** Memoization of the previously-chosen text Adaptation for each Period. */
   private _textChoiceMemory : WeakMap<Period, Adaptation|null>;
 
-  // Memoization of the previously-chosen video Adaptation for each Period.
+  /** Memoization of the previously-chosen video Adaptation for each Period. */
   private _videoChoiceMemory : WeakMap<Period, Adaptation|null>;
 
   /**
@@ -797,13 +821,14 @@ export default class TrackChoiceManager {
  * Find an optimal audio adaptation given their list and the array of preferred
  * audio tracks sorted from the most preferred to the least preferred.
  *
- * null if the most optimal audio adaptation is no audio adaptation.
+ * `null` if the most optimal audio adaptation is no audio adaptation.
  * @param {Array.<Adaptation>} audioAdaptations
+ * @param {Array.<Object|null>} preferredAudioTracks
  * @returns {Adaptation|null}
  */
 function findFirstOptimalAudioAdaptation(
   audioAdaptations : Adaptation[],
-  preferredAudioTracks : Array<{ normalized: string; audioDescription: boolean }|null>
+  preferredAudioTracks : INormalizedPreferredAudioTrack[]
 ) : Adaptation|null {
   if (audioAdaptations.length === 0) {
     return null;
@@ -838,13 +863,14 @@ function findFirstOptimalAudioAdaptation(
  * Find an optimal text adaptation given their list and the array of preferred
  * text tracks sorted from the most preferred to the least preferred.
  *
- * null if the most optimal text adaptation is no text adaptation.
- * @param {Array.<Adaptation>} audioAdaptations
+ * `null` if the most optimal text adaptation is no text adaptation.
+ * @param {Array.<Object>} textAdaptations
+ * @param {Array.<Object|null>} preferredTextTracks
  * @returns {Adaptation|null}
  */
 function findFirstOptimalTextAdaptation(
   textAdaptations : Adaptation[],
-  preferredTextTracks : Array<{ normalized: string; closedCaption: boolean }|null>
+  preferredTextTracks : INormalizedPreferredTextTrack[]
 ) : Adaptation|null {
   if (textAdaptations.length === 0) {
     return null;
@@ -874,6 +900,14 @@ function findFirstOptimalTextAdaptation(
   return null;
 }
 
+/**
+ * Returns the index of the given `period` in the given `periods`
+ * SortedList.
+ * Returns `undefined` if that `period` is not found.
+ * @param {Object} periods
+ * @param {Object} period
+ * @returns {number|undefined}
+ */
 function findPeriodIndex(
   periods : SortedList<ITMPeriodInfos>,
   period : Period
@@ -886,6 +920,14 @@ function findPeriodIndex(
   }
 }
 
+/**
+ * Returns element in the given `periods` SortedList that corresponds to the
+ * `period` given.
+ * Returns `undefined` if that `period` is not found.
+ * @param {Object} periods
+ * @param {Object} period
+ * @returns {Object|undefined}
+ */
 function getPeriodItem(
   periods : SortedList<ITMPeriodInfos>,
   period : Period

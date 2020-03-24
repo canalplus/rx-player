@@ -44,6 +44,7 @@ import {
   getRange,
 } from "../../utils/ranges";
 
+/** "State" that triggered the clock tick. */
 export type IMediaInfosState = "init" | // set once on first emit
                                "canplay" | // HTML5 Event
                                "play" | // HTML5 Event
@@ -54,36 +55,51 @@ export type IMediaInfosState = "init" | // set once on first emit
                                "ratechange" | // HTML5 Event
                                "timeupdate"; // Interval
 
-// Information recuperated on the media element on each clock
-// tick
+/** Information recuperated on the media element on each clock tick. */
 interface IMediaInfos {
-  bufferGap : number; // Gap between `currentTime` and the next position with
-                      // bufferred data
-  buffered : TimeRanges; // Buffered ranges for the media element
-  currentRange : { start : number; // Buffered ranges related to `currentTime`
+  /** Gap between `currentTime` and the next position with un-buffered data. */
+  bufferGap : number;
+  /** Value of `buffered` (buffered ranges) for the media element. */
+  buffered : TimeRanges;
+  /** The buffered range we are currently playing. */
+  currentRange : { start : number;
                    end : number; } |
                  null;
-  currentTime : number; // Current position set on the media element
-  duration : number; // Current duration set on the media element
-  ended: boolean; // Current `ended` value set on the media element
-  paused : boolean; // Current `paused` value set on the media element
-  playbackRate : number; // Current `playbackRate` set on the mediaElement
-  readyState : number; // Current `readyState` value on the media element
-  seeking : boolean; // Current `seeking` value on the mediaElement
-  state : IMediaInfosState; } // see type
+  /** Current `currentTime` (position) set on the media element. */
+  currentTime : number;
+  /** Current `duration` set on the media element. */
+  duration : number;
+  /** Current `ended` set on the media element. */
+  ended: boolean;
+  /** Current `paused` set on the media element. */
+  paused : boolean;
+  /** Current `playbackRate` set on the media element. */
+  playbackRate : number;
+  /** Current `readyState` value on the media element. */
+  readyState : number;
+  /** Current `seeking` value on the mediaElement. */
+  seeking : boolean;
+  /** "State" that triggered this clock tick. */
+  state : IMediaInfosState; }
 
-type IStalledStatus = { // set if the player is stalled
-                       reason : "seeking" | // Building buffer after seeking
-                                "not-ready" | // Building buffer after low readyState
-                                "buffering"; // Other cases
-                       timestamp : number; // `performance.now` at the time the
-                                           // stalling happened
-                     } |
-                     null; // the player is not stalled
+/** Describes when the player is "stalled" and what event started that status. */
+type IStalledStatus =
+  /** Set if the player is stalled. */
+  {
+    /** What started the player to stall. */
+    reason : "seeking" | // Building buffer after seeking
+             "not-ready" | // Building buffer after low readyState
+             "buffering"; // Other cases
+    /** `performance.now` at the time the stalling happened. */
+    timestamp : number;
+  } |
+  /** The player is not stalled. */
+  null;
 
-// Global information emitted on each clock tick
+/** Information emitted on each clock tick. */
 export interface IClockTick extends IMediaInfos {
-  stalled : IStalledStatus; // see type
+  /** Set if the player is stalled. */
+  stalled : IStalledStatus;
 }
 
 const { SAMPLING_INTERVAL_MEDIASOURCE,

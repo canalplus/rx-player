@@ -389,8 +389,10 @@ export interface ITransportOptions {
   representationFilter? : IRepresentationFilter;
   segmentLoader? : CustomSegmentLoader;
   serverSyncInfos? : IServerSyncInfos;
+  /* tslint:disable deprecation */
   supplementaryImageTracks? : ISupplementaryImageTrack[];
   supplementaryTextTracks? : ISupplementaryTextTrack[];
+  /* tslint:enable deprecation */
 }
 
 export type ITransportFunction = (options : ITransportOptions) =>

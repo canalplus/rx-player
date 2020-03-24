@@ -19,6 +19,10 @@ import Period from "./period";
 import Representation from "./representation";
 import { ISegment } from "./representation_index";
 
+/**
+ * All information needed for a given chunk to know if it has the same content
+ * than another chunk.
+ */
 interface IBufferedChunkInfos { adaptation : Adaptation;
                                 period : Period;
                                 representation : Representation;
