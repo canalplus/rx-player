@@ -158,8 +158,8 @@ export default function InitializeOnMediaSource(
   const warning$ = new Subject<ICustomError>();
   const manifestPipeline = createManifestPipeline(pipelines,
                                                    { lowLatencyMode,
-                                                     manifestRetry,
-                                                     offlineRetry },
+                                                     maxRetryRegular: manifestRetry,
+                                                     maxRetryOffline: offlineRetry },
                                                    warning$);
 
   // Fetch and parse the manifest from the URL given.
@@ -172,10 +172,10 @@ export default function InitializeOnMediaSource(
         share()));
 
   // Instanciate tools to download media segments
-  const segmentPipelineCreator = new SegmentPipelineCreator<any>(pipelines,
-                                                                 { lowLatencyMode,
-                                                                   offlineRetry,
-                                                                   segmentRetry });
+  const segmentPipelineCreator =
+    new SegmentPipelineCreator<any>(pipelines, { lowLatencyMode,
+                                                 maxRetryOffline: offlineRetry,
+                                                 maxRetryRegular: segmentRetry });
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".

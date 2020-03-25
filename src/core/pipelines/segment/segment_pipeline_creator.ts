@@ -21,8 +21,7 @@ import {
   IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import { ISegmentPipelineLoaderOptions } from "./create_segment_loader";
-import getSegmentPipelineOptions from "./get_segment_pipeline_options";
+import getSegmentBackoffOptions from "./get_segment_backoff_options";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
@@ -31,14 +30,17 @@ import createSegmentFetcher, {
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
+/** Options used by `createManifestPipeline`. */
 export interface ISegmentPipelineCreatorOptions {
-  lowLatencyMode : boolean; // Whether the content is a low-latency content
-                            // This has an impact on default backoff delays
-  offlineRetry? : number; // Configuration for the maximum number of retries
-                          // the pipeline will do when the user is offline
-  segmentRetry? : number; // Configuration for the maximum number of retries
-                          // the pipeline will do when the request failed on
-                          // a retryable error
+  /**
+   * Whether the content is played in a low-latency mode.
+   * This has an impact on default backoff delays.
+   */
+  lowLatencyMode : boolean;
+  /** Maximum number of time a request on error will be retried. */
+  maxRetryRegular : number | undefined;
+  /** Maximum number of time a request be retried when the user is offline. */
+  maxRetryOffline : number | undefined;
 }
 
 /**
@@ -95,13 +97,11 @@ export default class SegmentPipelineCreator<T> {
     bufferType : IBufferType,
     requests$ : Subject<IABRRequest | IABRMetric>
   ) : IPrioritizedSegmentFetcher<T> {
-    const options = getSegmentPipelineOptions(bufferType, this._pipelineOptions);
+    const backoffOptions = getSegmentBackoffOptions(bufferType, this._pipelineOptions);
     const segmentFetcher = createSegmentFetcher<T>(bufferType,
                                                    this._transport,
                                                    requests$,
-                                                   options);
+                                                   backoffOptions);
     return applyPrioritizerToSegmentFetcher<T>(this._prioritizer, segmentFetcher);
   }
 }
-
-export { ISegmentPipelineLoaderOptions as ISegmentPipelineOptions };

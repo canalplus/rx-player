@@ -34,7 +34,10 @@ import {
 } from "../../../transports";
 import tryCatch$ from "../../../utils/rx-try_catch";
 import errorSelector from "../utils/error_selector";
-import { tryRequestObservableWithBackoff } from "../utils/try_urls_with_backoff";
+import {
+  IBackoffOptions,
+  tryRequestObservableWithBackoff,
+} from "../utils/try_urls_with_backoff";
 
 // An Error happened while loading (usually a request error)
 export interface IPipelineLoaderWarning { type : "warning";
@@ -89,9 +92,8 @@ export interface IManifestPipelineLoaderOptions {
  */
 export default function createManifestLoader(
   manifestPipeline : ITransportManifestPipeline,
-  options : IManifestPipelineLoaderOptions
+  backoffOptions : IBackoffOptions
 ) : (x : IManifestLoaderArguments) => Observable<IManifestPipelineLoaderEvent> {
-  const { maxRetry, maxRetryOffline } = options;
   const loader : IManifestLoaderFunction = manifestPipeline.loader;
 
   // TODO Remove the resolver completely in the next major version
@@ -101,11 +103,6 @@ export default function createManifestLoader(
                                         observableOf;
                                         /* tslint:enable deprecation */
 
-  // Backoff options given to the backoff retry done with the loader function.
-  const backoffOptions = { baseDelay: options.baseDelay,
-                           maxDelay: options.maxDelay,
-                           maxRetryRegular: maxRetry,
-                           maxRetryOffline };
   /**
    * Call the transport's resolver - if it exists - with the given data.
    * Throws with the right error if it fails.

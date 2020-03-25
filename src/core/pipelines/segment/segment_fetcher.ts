@@ -34,19 +34,21 @@ import {
   ISegmentParserResponse,
   ITransportPipelines,
 } from "../../../transports";
+import arrayIncludes from "../../../utils/array_includes";
 import idGenerator from "../../../utils/id_generator";
+import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
 import {
   IABRMetric,
   IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
+import { IBackoffOptions } from "../utils/try_urls_with_backoff";
 import createSegmentLoader, {
   IContent,
   IPipelineLoaderChunk,
   IPipelineLoaderChunkComplete,
   IPipelineLoaderData,
   IPipelineLoaderWarning,
-  ISegmentPipelineLoaderOptions,
 } from "./create_segment_loader";
 
 export type ISegmentFetcherWarning = IPipelineLoaderWarning;
@@ -80,9 +82,14 @@ export default function createSegmentFetcher<T>(
   bufferType : IBufferType,
   transport : ITransportPipelines,
   requests$ : Subject<IABRMetric | IABRRequest>,
-  options : ISegmentPipelineLoaderOptions<any>
+  options : IBackoffOptions
 ) : ISegmentFetcher<T> {
-  const segmentLoader = createSegmentLoader(transport[bufferType].loader, options);
+  const cache = arrayIncludes(["audio", "video"], bufferType) ?
+    new InitializationSegmentCache<any>() :
+    undefined;
+  const segmentLoader = createSegmentLoader<any>(transport[bufferType].loader,
+                                                 cache,
+                                                 options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
 
   /**
@@ -157,11 +164,16 @@ export default function createSegmentFetcher<T>(
       filter((e) : e is IPipelineLoaderChunk |
                         IPipelineLoaderChunkComplete |
                         IPipelineLoaderData<T> |
-                        ISegmentFetcherWarning => e.type === "warning" ||
-                                                  e.type === "chunk" ||
-                                                  e.type === "chunk-complete" ||
-                                                  e.type === "data"),
-
+                        ISegmentFetcherWarning => {
+                          switch (e.type) {
+                            case "chunk":
+                            case "chunk-complete":
+                            case "data":
+                              return true;
+                            default:
+                              return false;
+                          }
+                        }),
       mergeMap((evt) => {
         if (evt.type === "warning") {
           return observableOf(evt);

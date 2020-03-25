@@ -44,11 +44,13 @@ import castToObservable from "../../../utils/cast_to_observable";
 import objectAssign from "../../../utils/object_assign";
 import tryCatch from "../../../utils/rx-try_catch";
 import errorSelector from "../utils/error_selector";
-import tryURLsWithBackoff from "../utils/try_urls_with_backoff";
+import tryURLsWithBackoff, {
+  IBackoffOptions,
+} from "../utils/try_urls_with_backoff";
 
 // Data comes from a local cache (no request was done)
-interface IPipelineLoaderCache<T> { type : "cache";
-                                    value : ILoaderDataLoadedValue<T>; }
+interface IPipelineLoaderCachedSegmentEvent<T> { type : "cache";
+                                                 value : ILoaderDataLoadedValue<T>; }
 export type IPipelineLoaderProgress = ILoaderProgress;
 
 // An Error happened while loading (usually a request error)
@@ -88,17 +90,12 @@ export type IPipelineLoaderEvent<T> = IPipelineLoaderData<T> |
                                       IPipelineLoaderChunkComplete |
                                       IPipelineLoaderMetrics;
 
-// Options you can pass on to the loader
-export interface ISegmentPipelineLoaderOptions<T> {
-  cache? : { add : (obj : IContent,
-                    arg : ILoaderDataLoadedValue<T>) => void;
-             get : (obj : IContent)
-                     => ILoaderDataLoadedValue<T>; }; // Caching logic
-  maxRetry : number; // Maximum number of time a request on error will be retried
-  maxRetryOffline : number; // Maximum number of time a request be retried when
-                            // the user is offline
-  initialBackoffDelay : number;
-  maximumBackoffDelay : number;
+/** Cache implementation to avoid re-requesting segment */
+export interface ISegmentLoaderCache<T> {
+  /** Add a segment to the cache. */
+  add : (obj : IContent, arg : ILoaderDataLoadedValue<T>) => void;
+  /** Retrieve a segment from the cache */
+  get : (obj : IContent) => ILoaderDataLoadedValue<T> | null;
 }
 
 export type ISegmentPipelineLoader<T> =
@@ -152,16 +149,9 @@ export interface IContent {
  */
 export default function createSegmentLoader<T>(
   loader : ISegmentPipelineLoader<T>,
-  options : ISegmentPipelineLoaderOptions<T>
+  cache : ISegmentLoaderCache<T> | undefined,
+  backoffOptions : IBackoffOptions
 ) : (x : IContent) => Observable<IPipelineLoaderEvent<T>> {
-  const { cache, maxRetry, maxRetryOffline } = options;
-
-  // Backoff options given to the backoff retry done with the loader function.
-  const backoffOptions = { baseDelay: options.initialBackoffDelay,
-                           maxDelay: options.maximumBackoffDelay,
-                           maxRetryRegular: maxRetry,
-                           maxRetryOffline };
-
   /**
    * Load wanted data:
    *   - get it from cache if present
@@ -175,7 +165,7 @@ export default function createSegmentLoader<T>(
   ) : Observable< ISegmentLoaderEvent<T> |
                   IPipelineLoaderRequest |
                   IPipelineLoaderWarning |
-                  IPipelineLoaderCache<T>>
+                  IPipelineLoaderCachedSegmentEvent<T>>
   {
 
     /**

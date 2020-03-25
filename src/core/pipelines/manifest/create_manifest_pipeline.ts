@@ -15,16 +15,13 @@
  */
 
 import {
-  EMPTY,
   Observable,
-  of as observableOf,
   Subject,
 } from "rxjs";
 import {
   catchError,
   filter,
   map,
-  mergeMap,
   tap,
 } from "rxjs/operators";
 import {
@@ -34,16 +31,15 @@ import {
 import Manifest from "../../../manifest";
 import {
   ILoadedManifest,
+  ILoaderDataLoadedValue,
   ITransportPipelines,
 } from "../../../transports";
-import tryCatch from "../../../utils/rx-try_catch";
-import errorSelector from "../utils/error_selector";
-import { tryRequestObservableWithBackoff } from "../utils/try_urls_with_backoff";
+import createRequestScheduler from "../utils/create_request_scheduler";
 import createManifestLoader, {
   IPipelineLoaderResponse,
   IPipelineLoaderResponseValue,
 } from "./create_manifest_loader";
-import parseManifestPipelineOptions from "./parse_manifest_pipeline_options";
+import getManifestBackoffOptions from "./get_manifest_backoff_options";
 
 /** What will be sent once parsed. */
 export interface IFetchManifestResult {
@@ -70,12 +66,17 @@ export interface ICoreManifestPipeline {
         externalClockOffset? : number) : Observable<IFetchManifestResult>;
 }
 
+/** Options used by `createManifestPipeline`. */
 export interface IManifestPipelineOptions {
-  lowLatencyMode : boolean; // Whether the content is a low-latency content
-                            // This has an impact on default backoff delays
-  manifestRetry? : number; // Maximum number of time a request on error will be retried
-  offlineRetry? : number; // Maximum number of time a request be retried when
-                          // the user is offline
+  /**
+   * Whether the content is played in a low-latency mode.
+   * This has an impact on default backoff delays.
+   */
+  lowLatencyMode : boolean;
+  /** Maximum number of time a request on error will be retried. */
+  maxRetryRegular : number | undefined;
+  /** Maximum number of time a request be retried when the user is offline. */
+  maxRetryOffline : number | undefined;
 }
 
 /**
@@ -100,34 +101,13 @@ export default function createManifestPipeline(
   pipelineOptions : IManifestPipelineOptions,
   warning$ : Subject<ICustomError>
 ) : ICoreManifestPipeline {
-  const parsedOptions = parseManifestPipelineOptions(pipelineOptions);
-  const loader = createManifestLoader(pipelines.manifest, parsedOptions);
+  const backoffOptions = getManifestBackoffOptions(pipelineOptions);
+  const loader = createManifestLoader(pipelines.manifest, backoffOptions);
   const { parser } = pipelines.manifest;
 
-  /**
-   * Allow the parser to schedule a new request.
-   * @param {Object} transportPipeline
-   * @param {Object} options
-   * @returns {Function}
-   */
-  function scheduleRequest<T>(request : () => Observable<T>) : Observable<T> {
-    const backoffOptions = { baseDelay: parsedOptions.baseDelay,
-                             maxDelay: parsedOptions.maxDelay,
-                             maxRetryRegular: parsedOptions.maxRetry,
-                             maxRetryOffline: parsedOptions.maxRetryOffline };
-    return tryRequestObservableWithBackoff(tryCatch(request, undefined),
-                                           backoffOptions).pipe(
-      mergeMap(evt => {
-        if (evt.type === "retry") {
-          warning$.next(errorSelector(evt.value));
-          return EMPTY;
-        }
-        return observableOf(evt.value);
-      }),
-      catchError((error : unknown) : Observable<never> => {
-        throw errorSelector(error);
-      }));
-  }
+  type IRequestSchedulerData = ILoaderDataLoadedValue<string | Document>;
+  const scheduleRequest = createRequestScheduler<IRequestSchedulerData>(backoffOptions,
+                                                                        warning$);
 
   return {
     /**
