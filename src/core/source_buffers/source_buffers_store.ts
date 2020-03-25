@@ -211,7 +211,12 @@ export default class SourceBuffersStore {
    * @param {string}
    */
   public disableSourceBuffer(bufferType : IBufferType) : void {
-    if (this._initializedSourceBuffers[bufferType] !== undefined) {
+    const currentValue = this._initializedSourceBuffers[bufferType];
+    if (currentValue === null) {
+      log.warn(`SBS: The ${bufferType} SourceBuffer was already disabled.`);
+      return;
+    }
+    if (currentValue !== undefined) {
       throw new Error("Cannot disable an active SourceBuffer.");
     }
     this._initializedSourceBuffers[bufferType] = null;
@@ -340,6 +345,10 @@ export default class SourceBuffersStore {
     });
   }
 
+  /**
+   * Returns `true` when we're ready to push and decode contents through our
+   * native SourceBuffers.
+   */
   private _areNativeSourceBuffersReady() {
     return this._initializedSourceBuffers.audio !== undefined &&
            this._initializedSourceBuffers.video !== undefined;
