@@ -76,8 +76,9 @@ type INativeSourceBufferType = "audio" | "video";
  *
  * Only one SourceBuffer per type is allowed at the same time:
  *
- *   - source buffers for native types (which depends on the native
- *     SourceBuffer implementation), are reused if one is re-created.
+ *   - source buffers for native types (which are "audio" and "video" and which
+ *     depend on the native SourceBuffer implementation) are reused if one is
+ *     re-created.
  *
  *   - source buffers for custom types are aborted each time a new one of the
  *     same type is created.
@@ -86,8 +87,10 @@ type INativeSourceBufferType = "audio" | "video";
  * wrap a SourceBuffer implementation to queue all its actions.
  *
  * To be able to use a native SourceBuffer, you will first need to wait until
- * both of these are either created or disabled. The Observable returned by
- * `onSourceBuffersReady` will emit when that is the case.
+ * it is created - of course - but also until the other one is either created or
+ * disabled.
+ * The Observable returned by `waitForUsableSourceBuffers` will emit when
+ * that is the case.
  *
  * @class SourceBuffersStore
  */
@@ -127,7 +130,8 @@ export default class SourceBuffersStore {
 
   /**
    * Callbacks called when a native SourceBuffers is either created or disabled.
-   * Used for example to trigger the `this.onSourceBuffersReady` Observable.
+   * Used for example to trigger the `this.waitForUsableSourceBuffers`
+   * Observable.
    */
   private _onNativeSourceBufferAddedOrDisabled : Array<() => void>;
 
@@ -152,8 +156,9 @@ export default class SourceBuffersStore {
    *   - "set": A SourceBuffer has been created. You will in this case also have
    *     a second key, `value`, which will contain the related
    *     QueuedSourceBuffer instance.
-   *     Please note that you will need to wait until `this.onSourceBuffersReady()`
-   *     has emitted before updating a native SourceBuffer.
+   *     Please note that you will need to wait until
+   *     `this.waitForUsableSourceBuffers()` has emitted before updating a
+   *     native SourceBuffer.
    *
    *   - "disabled": The SourceBuffer has been explicitely disabled for this
    *     type.
@@ -185,17 +190,17 @@ export default class SourceBuffersStore {
    *   readyState. This can occur if the user agent's media engine
    *   does not support adding more tracks during playback.
    *
-   * This function will return an Observable emitting when each of these
-   * SourceBuffers is either created or disabled.
+   * This function will return an Observable emitting when any and all native
+   * Source Buffers through this store can be used.
    * @return {Observable}
    */
-  public onSourceBuffersReady() : Observable<void> {
-    if (this._areNativeSourceBuffersReady()) {
+  public waitForUsableSourceBuffers() : Observable<void> {
+    if (this._areNativeSourceBuffersUsable()) {
       return observableOf(undefined);
     }
     return new Observable(obs => {
       this._onNativeSourceBufferAddedOrDisabled.push(() => {
-        if (this._areNativeSourceBuffersReady()) {
+        if (this._areNativeSourceBuffersUsable()) {
           obs.next(undefined);
           obs.complete();
         }
@@ -206,8 +211,8 @@ export default class SourceBuffersStore {
   /**
    * Explicitely set no SourceBuffer for a given buffer type.
    * A call to this function is needed at least for unused native buffer types
-   * ("audio" and "video"), to be able to emit through `onSourceBuffersReady`
-   * when both of those are set.
+   * ("audio" and "video"), to be able to emit through
+   * `waitForUsableSourceBuffers` when conditions are met.
    * @param {string}
    */
   public disableSourceBuffer(bufferType : IBufferType) : void {
@@ -230,7 +235,7 @@ export default class SourceBuffersStore {
    * Reuse an already created one if a QueuedSourceBuffer for the given type
    * already exists.
    *
-   * Please note that you will need to wait until `this.onSourceBuffersReady()`
+   * Please note that you will need to wait until `this.waitForUsableSourceBuffers()`
    * has emitted before updating a native SourceBuffer.
    * @param {string} bufferType
    * @param {string} codec
@@ -347,11 +352,18 @@ export default class SourceBuffersStore {
 
   /**
    * Returns `true` when we're ready to push and decode contents through our
-   * native SourceBuffers.
+   * created native SourceBuffers.
    */
-  private _areNativeSourceBuffersReady() {
-    return this._initializedSourceBuffers.audio !== undefined &&
-           this._initializedSourceBuffers.video !== undefined;
+  private _areNativeSourceBuffersUsable() {
+    if (this._initializedSourceBuffers.audio === undefined ||
+        this._initializedSourceBuffers.video === undefined)
+    {
+      return false;
+    }
+    if (this._initializedSourceBuffers.video === null) {
+      return this._initializedSourceBuffers.audio !== null;
+    }
+    return true;
   }
 }
 

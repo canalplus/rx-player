@@ -165,7 +165,7 @@ export default function PeriodBuffer({
           const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
           const adaptationBuffer$ = createAdaptationBuffer(adaptation, qSourceBuffer);
 
-          return sourceBuffersStore.onSourceBuffersReady().pipe(mergeMap(() => {
+          return sourceBuffersStore.waitForUsableSourceBuffers().pipe(mergeMap(() => {
             return observableConcat(cleanBuffer$,
                                     observableMerge(adaptationBuffer$,
                                                     bufferGarbageCollector$));
