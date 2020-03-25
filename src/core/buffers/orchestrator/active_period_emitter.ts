@@ -32,9 +32,9 @@ import {
   map,
   scan,
 } from "rxjs/operators";
-import { Period } from "../../manifest";
-import { IBufferType } from "../source_buffers";
-import { IMultiplePeriodBuffersEvent } from "./types";
+import { Period } from "../../../manifest";
+import { IBufferType } from "../../source_buffers";
+import { IMultiplePeriodBuffersEvent } from "../types";
 
 interface IPeriodObject { period : Period;
                           buffers: Set<IBufferType>; }

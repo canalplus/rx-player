@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import log from "../../log";
+import log from "../../../log";
 import {
   Adaptation,
   Period,
   Representation,
-} from "../../manifest";
-import { IRange } from "../../utils/ranges";
-import { QueuedSourceBuffer } from "../source_buffers";
+} from "../../../manifest";
+import { IRange } from "../../../utils/ranges";
+import { QueuedSourceBuffer } from "../../source_buffers";
 
 /**
  * Returns the buffered ranges which hold the given content.
