@@ -37,36 +37,36 @@ import {
   takeUntil,
   tap,
 } from "rxjs/operators";
-import config from "../../config";
-import { MediaError } from "../../errors";
-import log from "../../log";
+import config from "../../../config";
+import { MediaError } from "../../../errors";
+import log from "../../../log";
 import Manifest, {
   Period,
-} from "../../manifest";
-import { fromEvent } from "../../utils/event_emitter";
-import SortedList from "../../utils/sorted_list";
-import WeakMapMemory from "../../utils/weak_map_memory";
-import ABRManager from "../abr";
-import { SegmentPipelineCreator } from "../pipelines";
+} from "../../../manifest";
+import { fromEvent } from "../../../utils/event_emitter";
+import SortedList from "../../../utils/sorted_list";
+import WeakMapMemory from "../../../utils/weak_map_memory";
+import ABRManager from "../../abr";
+import { SegmentPipelineCreator } from "../../pipelines";
 import SourceBuffersStore, {
   BufferGarbageCollector,
   getBufferTypes,
   IBufferType,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
-} from "../source_buffers";
-import ActivePeriodEmitter from "./active_period_emitter";
-import areBuffersComplete from "./are_buffers_complete";
-import EVENTS from "./events_generators";
-import getBlacklistedRanges from "./get_blacklisted_ranges";
+} from "../../source_buffers";
+import EVENTS from "../events_generators";
 import PeriodBuffer, {
   IPeriodBufferClockTick,
-} from "./period";
+} from "../period";
 import {
   IBufferOrchestratorEvent,
   IMultiplePeriodBuffersEvent,
   IPeriodBufferEvent,
-} from "./types";
+} from "../types";
+import ActivePeriodEmitter from "./active_period_emitter";
+import areBuffersComplete from "./are_buffers_complete";
+import getBlacklistedRanges from "./get_blacklisted_ranges";
 
 export type IBufferOrchestratorClockTick = IPeriodBufferClockTick;
 

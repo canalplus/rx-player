@@ -24,7 +24,7 @@ import {
   map,
   startWith,
 } from "rxjs/operators";
-import { IMultiplePeriodBuffersEvent } from "./types";
+import { IMultiplePeriodBuffersEvent } from "../types";
 
 /**
  * Returns an Observable which emits ``true`` when all PeriodBuffers given are
