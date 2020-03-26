@@ -16,7 +16,6 @@
 
 import config from "../../../config";
 import arrayFind from "../../../utils/array_find";
-import idGenerator from "../../../utils/id_generator";
 import { normalizeBaseURL } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
@@ -39,8 +38,6 @@ import parsePeriods, {
 import resolveBaseURLs from "./resolve_base_urls";
 
 const { DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 } = config;
-
-const generateManifestID = idGenerator();
 
 export interface IMPDParserArguments {
   aggressiveMode : boolean; // Whether we should request new segments even if
@@ -228,8 +225,6 @@ function parseCompleteIntermediateRepresentation(
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
-    id: rootAttributes.id != null ? rootAttributes.id :
-                                    "gen-dash-manifest-" + generateManifestID(),
     isDynamic,
     isLive: isDynamic,
     periods: parsedPeriods,

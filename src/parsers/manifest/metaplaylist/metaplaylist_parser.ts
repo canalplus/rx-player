@@ -58,8 +58,6 @@ export interface IMetaPlaylist {
   }>;
 }
 
-const generateManifestID = idGenerator();
-
 /**
  * Parse playlist string to JSON.
  * Returns an array of contents.
@@ -296,7 +294,6 @@ function createManifest(
   const manifest = { availabilityStartTime: 0,
                      clockOffset,
                      suggestedPresentationDelay: 10,
-                     id: "gen-metaplaylist-man-" + generateManifestID(),
                      periods,
                      transportType: "metaplaylist",
                      isLive: isDynamic,

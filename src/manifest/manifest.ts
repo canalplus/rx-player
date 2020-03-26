@@ -26,7 +26,9 @@ import Adaptation, {
   IAdaptationType,
   IRepresentationFilter,
 } from "./adaptation";
-import Period from "./period";
+import Period, {
+  IManifestAdaptations,
+} from "./period";
 import Representation from "./representation";
 import { StaticRepresentationIndex } from "./representation_index";
 import { MANIFEST_UPDATE_TYPE } from "./types";
@@ -35,9 +37,8 @@ import {
   updatePeriods,
 } from "./update_periods";
 
-const generateNewId = idGenerator();
-
-type ManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
+const generateSupplementaryTrackID = idGenerator();
+const generateNewManifestId = idGenerator();
 
 interface ISupplementaryImageTrack {
   mimeType : string; // mimeType identifying the type of container for the track
@@ -90,8 +91,8 @@ export interface IManifestEvents {
  * @class Manifest
  */
 export default class Manifest extends EventEmitter<IManifestEvents> {
-  // ID uniquely identifying this Manifest.
-  public id : string;
+  /** ID uniquely identifying this Manifest. */
+  public readonly id : string;
 
   // Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`.
   public transport : string;
@@ -102,7 +103,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   // Every `Adaptations` for the first `Period` of the Manifest.
   // Deprecated. Please use manifest.periods[0].adaptations instead.
   // @deprecated
-  public adaptations : ManifestAdaptations;
+  public adaptations : IManifestAdaptations;
 
   // List every `Period` in that Manifest chronologically (from its start time).
   // A `Period` contains content information about the content available for
@@ -157,30 +158,32 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   // created, in the order they have happened.
   public parsingErrors : ICustomError[];
 
-  // Difference between the server's clock in ms and the return of the JS
-  // function `performance.now`.
-  // This property allows to calculate the server time at any moment.
-  // `undefined` if we did not obtain the server's time
-  private _clockOffset : number|undefined;
+  /*
+   * Difference between the server's clock in milliseconds and the return of the
+   * JS function `performance.now`.
+   * This property allows to calculate the server time at any moment.
+   * `undefined` if we did not obtain the server's time
+   */
+  public clockOffset : number | undefined;
 
   /**
-   * @param {Object} args
+   * @param {Object} parsedManifest
    */
-  constructor(args : IParsedManifest, options : IManifestParsingOptions) {
+  constructor(parsedManifest : IParsedManifest, options : IManifestParsingOptions) {
     super();
     const { supplementaryTextTracks = [],
             supplementaryImageTracks = [],
             representationFilter } = options;
     this.parsingErrors = [];
-    this.id = args.id;
-    this.expired = args.expired ?? null;
-    this.transport = args.transportType;
-    this._clockOffset = args.clockOffset;
+    this.id = generateNewManifestId();
+    this.expired = parsedManifest.expired ?? null;
+    this.transport = parsedManifest.transportType;
+    this.clockOffset = parsedManifest.clockOffset;
 
-    this.periods = args.periods.map((period) => {
-      const parsedPeriod = new Period(period, representationFilter);
-      this.parsingErrors.push(...parsedPeriod.parsingErrors);
-      return parsedPeriod;
+    this.periods = parsedManifest.periods.map((parsedPeriod) => {
+      const period = new Period(parsedPeriod, representationFilter);
+      this.parsingErrors.push(...period.parsingErrors);
+      return period;
     }).sort((a, b) => a.start - b.start);
 
     /**
@@ -193,16 +196,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                        this.periods[0].adaptations;
     /* tslint:enable:deprecation */
 
-    this.minimumTime = args.minimumTime;
-    this.isDynamic = args.isDynamic;
-    this.isLive = args.isLive;
-    this.uris = args.uris === undefined ? [] :
-                                          args.uris;
+    this.minimumTime = parsedManifest.minimumTime;
+    this.isDynamic = parsedManifest.isDynamic;
+    this.isLive = parsedManifest.isLive;
+    this.uris = parsedManifest.uris === undefined ? [] :
+                                                    parsedManifest.uris;
 
-    this.lifetime = args.lifetime;
-    this.suggestedPresentationDelay = args.suggestedPresentationDelay;
-    this.availabilityStartTime = args.availabilityStartTime;
-    this.maximumTime = args.maximumTime;
+    this.lifetime = parsedManifest.lifetime;
+    this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
+    this.availabilityStartTime = parsedManifest.availabilityStartTime;
+    this.maximumTime = parsedManifest.maximumTime;
 
     if (supplementaryImageTracks.length > 0) {
       this.addSupplementaryImageAdaptations(supplementaryImageTracks);
@@ -331,18 +334,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public update(newManifest : Manifest) : void {
     this._performUpdate(newManifest, MANIFEST_UPDATE_TYPE.Partial);
-
-    // Partial updates do not remove old Periods.
-    // This can become a memory problem when playing a content long enough.
-    // Let's clean manually Periods behind the minimum possible position.
-    const min = this.getMinimumPosition();
-    while (this.periods.length > 0) {
-      const period = this.periods[0];
-      if (period.end === undefined || period.end > min) {
-        return;
-      }
-      this.periods.splice(0);
-    }
   }
 
   /**
@@ -372,11 +363,11 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
         const ast = this.availabilityStartTime !== undefined ?
           this.availabilityStartTime :
           0;
-        if (this._clockOffset == null) {
+        if (this.clockOffset === undefined) {
           // server's time not known, rely on user's clock
           return (Date.now() / 1000) - ast;
        }
-        const serverTime = performance.now() + this._clockOffset;
+        const serverTime = performance.now() + this.clockOffset;
         return (serverTime / 1000) - ast;
       }
       return Infinity;
@@ -386,14 +377,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
     const timeDiff = performance.now() - maximumTime.time;
     return maximumTime.value + timeDiff / 1000;
-  }
-
-  /**
-   * If true, this Manifest is currently synchronized with the server's clock.
-   * @returns {Boolean}
-   */
-  public getClockOffset() : number | undefined {
-    return this._clockOffset;
   }
 
   /**
@@ -468,8 +451,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   ) : void {
     const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
-      const adaptationID = "gen-image-ada-" + generateNewId();
-      const representationID = "gen-image-rep-" + generateNewId();
+      const adaptationID = "gen-image-ada-" + generateSupplementaryTrackID();
+      const representationID = "gen-image-rep-" + generateSupplementaryTrackID();
       const newAdaptation = new Adaptation({ id: adaptationID,
                                              type: "image",
                                              representations: [{
@@ -515,8 +498,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                           [];
 
       return allSubs.concat(langsToMapOn.map((_language) => {
-        const adaptationID = "gen-text-ada-" + generateNewId();
-        const representationID = "gen-text-rep-" + generateNewId();
+        const adaptationID = "gen-text-ada-" + generateSupplementaryTrackID();
+        const representationID = "gen-text-rep-" + generateSupplementaryTrackID();
         const newAdaptation = new Adaptation({ id: adaptationID,
                                                type: "text",
                                                language: _language,
@@ -553,7 +536,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     updateType : MANIFEST_UPDATE_TYPE
   ) : void {
     this.availabilityStartTime = newManifest.availabilityStartTime;
-    this.id = newManifest.id;
     this.isDynamic = newManifest.isDynamic;
     this.isLive = newManifest.isLive;
     this.lifetime = newManifest.lifetime;
@@ -574,9 +556,28 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
 
     /* tslint:disable:deprecation */
-    this.adaptations = this.periods[0].adaptations;
+    this.adaptations = this.periods[0] === undefined ?
+                         {} :
+                         this.periods[0].adaptations;
     /* tslint:enable:deprecation */
 
+    if (updateType === MANIFEST_UPDATE_TYPE.Partial) {
+      // Partial updates do not remove old Periods.
+      // This can become a memory problem when playing a content long enough.
+      // Let's clean manually Periods behind the minimum possible position.
+      const min = this.getMinimumPosition();
+      while (this.periods.length > 0) {
+        const period = this.periods[0];
+        if (period.end === undefined || period.end > min) {
+          break;
+        }
+        this.periods.splice(0);
+      }
+    }
+
+    // Let's trigger events at the end, as those can trigger side-effects.
+    // We do not want the current Manifest object to be incomplete when those
+    // happen.
     this.trigger("manifestUpdate", null);
   }
 }

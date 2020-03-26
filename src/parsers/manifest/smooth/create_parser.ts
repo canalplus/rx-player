@@ -17,7 +17,6 @@
 import log from "../../../log";
 import arrayIncludes from "../../../utils/array_includes";
 import assert from "../../../utils/assert";
-import idGenerator from "../../../utils/id_generator";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import objectAssign from "../../../utils/object_assign";
 import resolveURL, {
@@ -52,8 +51,6 @@ import { replaceRepresentationSmoothTokens } from "./utils/tokens";
  * to be generated.
  */
 const DEFAULT_AGGRESSIVE_MODE = false;
-
-const generateManifestID = idGenerator();
 
 interface IAdaptationParserArguments { root : Element;
                                        rootURL : string;
@@ -626,7 +623,6 @@ function createSmoothStreamingParser(
         0 :
         availabilityStartTime,
       clockOffset: serverTimeOffset,
-      id: "gen-smooth-manifest-" + generateManifestID(),
       isLive,
       isDynamic: isLive,
       maximumTime,
