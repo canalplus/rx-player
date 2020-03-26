@@ -49,7 +49,7 @@ export interface IManifestFetcherParsedResult {
    * the JavaScript call was done).
    */
   sendingTime? : number;
-  /* The time (`performance.now()`) at which the request was fully received. */
+  /** The time (`performance.now()`) at which the request was fully received. */
   receivedTime? : number;
   /* The time taken to parse the Manifest through the corresponding parse function. */
   parsingTime : number;
