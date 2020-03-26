@@ -72,8 +72,8 @@ export interface IManifestPipelineLoaderOptions {
 }
 
 /**
- * Returns function allowing to download the Manifest through a resolver ->
- * loader -> parser pipeline.
+ * Returns function allowing to download the Manifest through a
+ * `resolver -> loader` pipeline.
  *
  * The function returned takes the loader's data in arguments and returns an
  * Observable which will emit:
@@ -146,7 +146,7 @@ export default function createManifestLoader(
 
   /**
    * Load the corresponding data.
-   * @param {Object} pipelineInputData
+   * @param {sObject} pipelineInputData
    * @returns {Observable}
    */
   return function startPipeline(
