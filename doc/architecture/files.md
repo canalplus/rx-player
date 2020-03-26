@@ -27,7 +27,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/core/api/: The API definition](#core-api)
   - [src/core/buffers/: The Buffer management](#core-buffers)
   - [src/core/eme/: Encryption management](#core-eme)
-  - [src/core/pipelines/: The networking pipelines](#core-pipelines)
+  - [src/core/fetchers/: The fetchers](#core-fetchers)
   - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
   - [src/core/init/: Media streaming logic](#core-init)
 - [tests/: Test strategies, integration and memory tests](#tests)
@@ -266,11 +266,11 @@ download and push the segments into the SourceBuffers.
 Defines functions allowing to handle encrypted contents through the EME APIs.
 
 
-<a name="core-pipelines"></a>
-### src/core/pipelines/: The networking pipelines ##############################
+<a name="core-fetchers"></a>
+### src/core/fetchers/: The fetchers ###########################################
 
-Handle the segment downloading pipelines (load and parse) as defined in the
-``src/transports/`` directory.
+Handle the segments and Manifest downloading pipelines (load and parse) as
+defined in the ``src/transports/`` directory.
 
 This is the layer directly interacting with the transport part (HSS, DASH).
 It facilitates the role of loading the Manifest and new segments for the rest of

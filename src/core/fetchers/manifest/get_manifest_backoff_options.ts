@@ -18,13 +18,13 @@ import config from "../../../config";
 import { IBackoffOptions } from "../utils/try_urls_with_backoff";
 
 const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-        DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
+        DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
         INITIAL_BACKOFF_DELAY_BASE,
         MAX_BACKOFF_DELAY_BASE } = config;
 
 /**
- * Parse config to replace missing manifest pipeline options.
- * @param {Object} manifestPipelineOptions
+ * Parse config to replace missing manifest backoff options.
+ * @param {Object} backoffOptions
  * @returns {Object}
  */
 export default function getManifestBackoffOptions(
@@ -43,7 +43,8 @@ export default function getManifestBackoffOptions(
     maxDelay,
     maxRetryRegular: maxRetryRegular !== undefined ? maxRetryRegular :
                                                      DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-    maxRetryOffline: maxRetryOffline !== undefined ? maxRetryOffline :
-                                                     DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
+    maxRetryOffline: maxRetryOffline !== undefined ?
+      maxRetryOffline :
+      DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
   };
 }

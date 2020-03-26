@@ -47,7 +47,7 @@ import { fromEvent } from "../../../utils/event_emitter";
 import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
-import { SegmentFetcherCreator } from "../../pipelines";
+import { SegmentFetcherCreator } from "../../fetchers";
 import SourceBuffersStore, {
   BufferGarbageCollector,
   getBufferTypes,

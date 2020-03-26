@@ -66,7 +66,7 @@ import ABRManager, {
   IABRMetric,
   IABRRequest,
 } from "../../abr";
-import { SegmentFetcherCreator } from "../../pipelines";
+import { SegmentFetcherCreator } from "../../fetchers";
 import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import RepresentationBuffer, {

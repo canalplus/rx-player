@@ -655,7 +655,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
-      const pipelines = transportFn(transportOptions);
+      const transportPipelines = transportFn(transportOptions);
 
       // Options used by the ABR Manager.
       const adaptiveOptions = {
@@ -708,7 +708,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     mediaElement: videoElement,
                                                     minimumManifestUpdateInterval,
                                                     networkConfig,
-                                                    pipelines,
+                                                    transportPipelines,
                                                     speed$: this._priv_speed$,
                                                     startAt,
                                                     textTrackOptions,

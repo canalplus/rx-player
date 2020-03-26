@@ -58,7 +58,7 @@ import {
   createManifestFetcher,
   IManifestFetcherParsedResult,
   SegmentFetcherCreator,
-} from "../pipelines";
+} from "../fetchers";
 import { ITextTrackSourceBufferOptions } from "../source_buffers";
 import createEMEManager, {
   IEMEDisabledEvent,
@@ -87,34 +87,60 @@ import {
 
 const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
 
-// Arguments to give to the `InitializeOnMediaSource` function
+/** Arguments to give to the `InitializeOnMediaSource` function. */
 export interface IInitializeArguments {
-  adaptiveOptions: IABRManagerArguments; // options concerning the ABR logic
-  autoPlay : boolean; // `true` if we should play when loaded
-  bufferOptions : { wantedBufferAhead$ : BehaviorSubject<number>;  // buffer "goal"
-                    maxBufferAhead$ : Observable<number>; // To GC after the position
-                    maxBufferBehind$ : Observable<number>; // To GC before the position
-
-                    // strategy when switching the current bitrate manually
-                    manualBitrateSwitchingMode : "seamless" | "direct"; };
-  clock$ : Observable<IInitClockTick>; // Emit current playback conditions
-  keySystems : IKeySystemOption[]; // DRM configuration
-  lowLatencyMode : boolean; // `true` to play low-latency contents optimally
-  manifestUpdateUrl? : string; // Allow a custom version of the Manifest for updates
-  mediaElement : HTMLMediaElement; // The HTMLMediaElement on which we will play
-  minimumManifestUpdateInterval : number; // throttle manifest update
-  networkConfig: { manifestRetry? : number; // Maximum number of Manifest retry
-                   offlineRetry? : number; // Maximum number of offline segment retry
-                   segmentRetry? : number; }; // Maximum number of non-offline segment
-                                              // retry
-  pipelines : ITransportPipelines; // Transport (e.g. DASH, Smooth...) pipelines
-  speed$ : Observable<number>; // Emit the wanted playback rate
-  startAt? : IInitialTimeOptions; // The wanted starting position
-  textTrackOptions : ITextTrackSourceBufferOptions; // TextTrack configuration
-  url? : string; // URL of the Manifest
+  /** Options concerning the ABR logic. */
+  adaptiveOptions: IABRManagerArguments;
+  /** `true` if we should play when loaded. */
+  autoPlay : boolean;
+  /** Options concerning the media buffers. */
+  bufferOptions : {
+    /** Buffer "goal" at which we stop downloading new segments. */
+    wantedBufferAhead$ : BehaviorSubject<number>;
+    /** Max buffer size after the current position, in seconds (we GC further up). */
+    maxBufferAhead$ : Observable<number>;
+    /** Max buffer size before the current position, in seconds (we GC further down). */
+    maxBufferBehind$ : Observable<number>;
+    /** Strategy when switching the current bitrate manually (smooth vs reload). */
+    manualBitrateSwitchingMode : "seamless" | "direct";
+  };
+  /** Regularly emit current playback conditions. */
+  clock$ : Observable<IInitClockTick>;
+  /** Every encryption configuration set. */
+  keySystems : IKeySystemOption[];
+  /** `true` to play low-latency contents optimally. */
+  lowLatencyMode : boolean;
+  /** Optional shorter version of the Manifest used for updates only. */
+  manifestUpdateUrl? : string;
+  /** The HTMLMediaElement on which we will play. */
+  mediaElement : HTMLMediaElement;
+  /** Limit the frequency of Manifest updates. */
+  minimumManifestUpdateInterval : number;
+  /** Requests configuration. */
+  networkConfig: {
+    /** Maximum number of Manifest retry. */
+    manifestRetry? : number;
+    /** Maximum number of offline segment retry. */
+    offlineRetry? : number;
+    /** Maximum number of non-offline segment retry. */
+    segmentRetry? : number;
+  };
+  /** Emit the playback rate (speed) set by the user. */
+  speed$ : Observable<number>;
+  /** The configured starting position. */
+  startAt? : IInitialTimeOptions;
+  /** Configuration specific to the text track. */
+  textTrackOptions : ITextTrackSourceBufferOptions;
+  /**
+   * "Transport pipelines": logic specific to the current transport
+   * (e.g. DASH, Smooth...)
+   */
+  transportPipelines : ITransportPipelines;
+  /** URL of the Manifest. */
+  url? : string;
 }
 
-// Every events emitted by Init.
+/** Every events emitted by `InitializeOnMediaSource`. */
 export type IInitEvent = IManifestReadyEvent |
                          IManifestUpdateEvent |
                          IMediaSourceLoaderEvent |
@@ -148,15 +174,15 @@ export default function InitializeOnMediaSource(
     mediaElement,
     minimumManifestUpdateInterval,
     networkConfig,
-    pipelines,
     speed$,
     startAt,
     textTrackOptions,
+    transportPipelines,
     url } : IInitializeArguments
 ) : Observable<IInitEvent> {
   const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
 
-  const manifestFetcher = createManifestFetcher(pipelines,
+  const manifestFetcher = createManifestFetcher(transportPipelines,
                                                 { lowLatencyMode,
                                                   maxRetryRegular: manifestRetry,
                                                   maxRetryOffline: offlineRetry });
@@ -176,9 +202,9 @@ export default function InitializeOnMediaSource(
 
   /** Interface used to download segments */
   const segmentFetcherCreator =
-    new SegmentFetcherCreator<any>(pipelines, { lowLatencyMode,
-                                                maxRetryOffline: offlineRetry,
-                                                maxRetryRegular: segmentRetry });
+    new SegmentFetcherCreator<any>(transportPipelines, { lowLatencyMode,
+                                                         maxRetryOffline: offlineRetry,
+                                                         maxRetryRegular: segmentRetry });
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".

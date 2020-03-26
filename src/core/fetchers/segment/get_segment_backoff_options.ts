@@ -17,8 +17,8 @@
 import config from "../../../config";
 import { IBackoffOptions } from "../utils/try_urls_with_backoff";
 
-const { DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-        DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
+const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+        DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
         INITIAL_BACKOFF_DELAY_BASE,
         MAX_BACKOFF_DELAY_BASE } = config;
 
@@ -36,8 +36,8 @@ export default function getSegmentBackoffOptions(
                          lowLatencyMode : boolean; }
 ) : IBackoffOptions {
   return { maxRetryRegular: bufferType === "image" ? 0 :
-                            maxRetryRegular ?? DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-           maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
+                            maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+           maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
            baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR,
            maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :

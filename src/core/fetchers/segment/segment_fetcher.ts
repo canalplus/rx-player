@@ -44,14 +44,14 @@ import {
 import { IBufferType } from "../../source_buffers";
 import { IBackoffOptions } from "../utils/try_urls_with_backoff";
 import createSegmentLoader, {
-  IContent,
-  IPipelineLoaderChunk,
-  IPipelineLoaderChunkComplete,
-  IPipelineLoaderData,
-  IPipelineLoaderWarning,
+  ISegmentLoaderChunk,
+  ISegmentLoaderChunkComplete,
+  ISegmentLoaderContent,
+  ISegmentLoaderData,
+  ISegmentLoaderWarning,
 } from "./create_segment_loader";
 
-export type ISegmentFetcherWarning = IPipelineLoaderWarning;
+export type ISegmentFetcherWarning = ISegmentLoaderWarning;
 
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
@@ -64,7 +64,7 @@ export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
                                       ISegmentFetcherChunkEvent<T> |
                                       ISegmentFetcherWarning;
 
-export type ISegmentFetcher<T> = (content : IContent) =>
+export type ISegmentFetcher<T> = (content : ISegmentLoaderContent) =>
                                    Observable<ISegmentFetcherEvent<T>>;
 
 const generateRequestID = idGenerator();
@@ -92,16 +92,16 @@ export default function createSegmentFetcher<T>(
   const segmentParser = transport[bufferType].parser as any; // deal with it
 
   /**
-   * Process a pipeline observable to adapt it to the the rest of the code:
+   * Process the segmentLoader observable to adapt it to the the rest of the
+   * code:
    *   - use the requests subject for network requests and their progress
    *   - use the warning$ subject for retries' error messages
    *   - only emit the data
-   * @param {string} pipelineType
-   * @param {Observable} pipeline$
+   * @param {Object} content
    * @returns {Observable}
    */
   return function fetchSegment(
-    content : IContent
+    content : ISegmentLoaderContent
   ) : Observable<ISegmentFetcherEvent<T>> {
     const id = generateRequestID();
     let requestBeginSent = false;
@@ -160,9 +160,9 @@ export default function createSegmentFetcher<T>(
         }
       }),
 
-      filter((e) : e is IPipelineLoaderChunk |
-                        IPipelineLoaderChunkComplete |
-                        IPipelineLoaderData<T> |
+      filter((e) : e is ISegmentLoaderChunk |
+                        ISegmentLoaderChunkComplete |
+                        ISegmentLoaderData<T> |
                         ISegmentFetcherWarning => {
                           switch (e.type) {
                             case "chunk":

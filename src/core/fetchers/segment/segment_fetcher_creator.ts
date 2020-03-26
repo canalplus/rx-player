@@ -44,7 +44,7 @@ export interface ISegmentFetcherCreatorBackoffOptions {
 }
 
 /**
- * Interact with the networking pipelines to download segments with the right
+ * Interact with the transport pipelines to download segments with the right
  * priority.
  *
  * @class SegmentFetcherCreator

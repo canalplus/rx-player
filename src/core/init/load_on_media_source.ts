@@ -40,7 +40,7 @@ import ABRManager from "../abr";
 import BufferOrchestrator, {
   IBufferOrchestratorEvent,
 } from "../buffers";
-import { SegmentFetcherCreator } from "../pipelines";
+import { SegmentFetcherCreator } from "../fetchers";
 import SourceBuffersStore, {
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";

@@ -33,7 +33,7 @@ import config from "../../config";
 import log from "../../log";
 import Manifest from "../../manifest";
 import isNonEmptyString from "../../utils/is_non_empty_string";
-import { IManifestFetcherParsedResult } from "../pipelines";
+import { IManifestFetcherParsedResult } from "../fetchers";
 import { IWarningEvent } from "./types";
 
 const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY } = config;
