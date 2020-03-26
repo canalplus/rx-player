@@ -43,7 +43,7 @@ import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
-import { SegmentPipelineCreator } from "../../pipelines";
+import { SegmentFetcherCreator } from "../../pipelines";
 import SourceBuffersStore, {
   IBufferType,
   ITextTrackSourceBufferOptions,
@@ -79,7 +79,7 @@ export interface IPeriodBufferArguments {
   content : { manifest : Manifest;
               period : Period; };
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
-  segmentPipelineCreator : SegmentPipelineCreator<any>;
+  segmentFetcherCreator : SegmentFetcherCreator<any>;
   sourceBuffersStore : SourceBuffersStore;
   options: { manualBitrateSwitchingMode : "seamless" | "direct";
              textTrackOptions? : ITextTrackSourceBufferOptions; };
@@ -102,7 +102,7 @@ export default function PeriodBuffer({
   clock$,
   content,
   garbageCollectors,
-  segmentPipelineCreator,
+  segmentFetcherCreator,
   sourceBuffersStore,
   options,
   wantedBufferAhead$,
@@ -196,7 +196,7 @@ export default function PeriodBuffer({
                               content: { manifest, period, adaptation },
                               options,
                               queuedSourceBuffer: qSourceBuffer,
-                              segmentPipelineCreator,
+                              segmentFetcherCreator,
                               wantedBufferAhead$ })
     .pipe(catchError((error : unknown) => {
       // non native buffer should not impact the stability of the

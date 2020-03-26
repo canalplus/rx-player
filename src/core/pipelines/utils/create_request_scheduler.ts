@@ -39,8 +39,7 @@ export default function createRequestScheduler<T>(
 
   /**
    * Allow the parser to schedule a new request.
-   * @param {Object} transportPipeline
-   * @param {Object} options
+   * @param {Function} request - Function performing the request.
    * @returns {Function}
    */
   return function scheduleRequest(request : () => Observable<T>) : Observable<T> {

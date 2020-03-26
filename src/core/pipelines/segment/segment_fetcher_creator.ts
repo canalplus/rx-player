@@ -30,8 +30,8 @@ import createSegmentFetcher, {
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
-/** Options used by `createManifestPipeline`. */
-export interface ISegmentPipelineCreatorOptions {
+/** Options used by the `SegmentFetcherCreator`. */
+export interface ISegmentFetcherCreatorBackoffOptions {
   /**
    * Whether the content is played in a low-latency mode.
    * This has an impact on default backoff delays.
@@ -47,57 +47,57 @@ export interface ISegmentPipelineCreatorOptions {
  * Interact with the networking pipelines to download segments with the right
  * priority.
  *
- * @class SegmentPipelineCreator
+ * @class SegmentFetcherCreator
  *
  * @example
  * ```js
- * const creator = new SegmentPipelineCreator(transport);
+ * const creator = new SegmentFetcherCreator(transport);
  *
- * // 2 - create a new pipeline with its own options
- * const pipeline = creator.createPipeline("audio", {
- *   maxRetry: Infinity,
+ * // 2 - create a new fetcher with its backoff options
+ * const fetcher = creator.createSegmentFetcher("audio", {
+ *   maxRetryRegular: Infinity,
  *   maxRetryOffline: Infinity,
  * });
  *
  * // 3 - load a segment with a given priority
- * pipeline.createRequest(myContent, 1)
+ * fetcher.createRequest(myContent, 1)
  *   // 4 - parse it
  *   .pipe(
- *     filter(evt => evt.type === "response"),
+ *     filter(evt => evt.type === "chunk"),
  *     mergeMap(response => response.parse());
  *   )
  *   // 5 - use it
- *   .subscribe((res) => console.log("audio segment downloaded:", res));
+ *   .subscribe((res) => console.log("audio chunk downloaded:", res));
  * ```
  */
-export default class SegmentPipelineCreator<T> {
+export default class SegmentFetcherCreator<T> {
   private readonly _transport : ITransportPipelines;
   private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<T>>;
-  private readonly _pipelineOptions : ISegmentPipelineCreatorOptions;
+  private readonly _backoffOptions : ISegmentFetcherCreatorBackoffOptions;
 
   /**
    * @param {Object} transport
    */
   constructor(
     transport : ITransportPipelines,
-    options : ISegmentPipelineCreatorOptions
+    options : ISegmentFetcherCreatorBackoffOptions
   ) {
     this._transport = transport;
     this._prioritizer = new ObservablePrioritizer();
-    this._pipelineOptions = options;
+    this._backoffOptions = options;
   }
 
   /**
-   * Create a segment pipeline, allowing to easily perform segment requests.
+   * Create a segment fetcher, allowing to easily perform segment requests.
    * @param {string} bufferType
    * @param {Object} options
    * @returns {Object}
    */
-  createPipeline(
+  createSegmentFetcher(
     bufferType : IBufferType,
     requests$ : Subject<IABRRequest | IABRMetric>
   ) : IPrioritizedSegmentFetcher<T> {
-    const backoffOptions = getSegmentBackoffOptions(bufferType, this._pipelineOptions);
+    const backoffOptions = getSegmentBackoffOptions(bufferType, this._backoffOptions);
     const segmentFetcher = createSegmentFetcher<T>(bufferType,
                                                    this._transport,
                                                    requests$,

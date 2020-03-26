@@ -21,16 +21,16 @@ import {
   ISegmentFetcherEvent,
   ISegmentFetcherWarning,
 } from "./segment_fetcher";
-import SegmentPipelineCreator, {
-  ISegmentPipelineCreatorOptions,
-} from "./segment_pipeline_creator";
+import SegmentFetcherCreator, {
+  ISegmentFetcherCreatorBackoffOptions,
+} from "./segment_fetcher_creator";
 
-export default SegmentPipelineCreator;
+export default SegmentFetcherCreator;
 export {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherChunkCompleteEvent,
   ISegmentFetcherChunkEvent,
   ISegmentFetcherEvent,
   ISegmentFetcherWarning,
-  ISegmentPipelineCreatorOptions,
+  ISegmentFetcherCreatorBackoffOptions,
 };

@@ -70,8 +70,7 @@ export type ISegmentFetcher<T> = (content : IContent) =>
 const generateRequestID = idGenerator();
 
 /**
- * Create a function which will fetch segments.
- *
+ * Create a function which will fetch and parse segments.
  * @param {string} bufferType
  * @param {Object} transport
  * @param {Subject} requests$
