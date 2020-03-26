@@ -109,10 +109,7 @@ export function assertResumeADownload(
     );
   }
 
-  if (
-    activeDownloads[manifest.contentID] !== null ||
-    activeDownloads[manifest.contentID] !== undefined
-  ) {
+  if (activeDownloads[manifest.contentID] !== undefined) {
     throw new ValidationArgsError("The content is already downloading");
   }
 
