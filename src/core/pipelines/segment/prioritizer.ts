@@ -55,6 +55,12 @@ import arrayFindIndex from "../../../utils/array_find_index";
  * const pObservable4 = prioritizer.create(observable4, 3);
  * const pObservable5 = prioritizer.create(observable5, 2);
  *
+ * // To spice things up, update pObservable1 priority to go before
+ * // pObservable4
+ * if (i === 5) { // if pObservable5 is currently emitting
+ *   prioritizer.updatePriority(pObservable1, 1);
+ * }
+ *
  * // start every Observables at the same time
  * observableMerge(
  *   pObservable1,
@@ -63,11 +69,6 @@ import arrayFindIndex from "../../../utils/array_find_index";
  *   pObservable4,
  *   pObservable5
  * ).subscribe((i) => {
- *   // To spice things up, update pObservable1 priority to go before
- *   // pObservable4
- *   if (i === 5) { // if pObservable5 is currently emitting
- *     prioritizer.updatePriority(pObservable1, 1);
- *   }
  *   console.log(i);
  * });
  *

@@ -22,12 +22,13 @@ import {
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
-// Defines what is returned by the SegmentPipeline
-// See the function definition for documentation
+/** Oject returned by `applyPrioritizerToSegmentFetcher`. */
 export interface IPrioritizedSegmentFetcher<T> {
+  /** Create a new request for a segment with a given priority. */
   createRequest : (content : IContent,
                    priority? : number) => Observable<ISegmentFetcherEvent<T>>;
 
+  /** Update priority of a request created through `createRequest`. */
   updatePriority : (observable : Observable<ISegmentFetcherEvent<T>>,
                     priority : number) => void;
 }
@@ -62,7 +63,8 @@ export default function applyPrioritizerToSegmentFetcher<T>(
     },
 
     /**
-     * Update the priority of a pending request, created through createRequest.
+     * Update the priority of a pending request, created through
+     * `createRequest`.
      * @param {Observable} observable - the corresponding request
      * @param {Number} priority
      */
