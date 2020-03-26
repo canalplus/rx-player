@@ -15,14 +15,17 @@
  */
 
 import {
+  concat as observableConcat,
+  EMPTY,
+  merge as observableMerge,
   Observable,
+  of as observableOf,
   Subject,
 } from "rxjs";
 import {
   catchError,
-  filter,
   map,
-  tap,
+  mergeMap,
 } from "rxjs/operators";
 import {
   formatError,
@@ -30,18 +33,18 @@ import {
 } from "../../../errors";
 import Manifest from "../../../manifest";
 import {
-  ILoadedManifest,
   ILoaderDataLoadedValue,
   ITransportPipelines,
 } from "../../../transports";
 import createRequestScheduler from "../utils/create_request_scheduler";
-import createManifestLoader, {
-  IPipelineLoaderResponse,
-} from "./create_manifest_loader";
+import createManifestLoader from "./create_manifest_loader";
 import getManifestBackoffOptions from "./get_manifest_backoff_options";
 
 /** What will be sent once parsed. */
 export interface IManifestFetcherParsedResult {
+  /** To differentiate it from a "warning" event. */
+  type : "parsed";
+
   /** The resulting Manifest */
   manifest : Manifest;
   /**
@@ -55,17 +58,31 @@ export interface IManifestFetcherParsedResult {
   parsingTime : number;
 }
 
+/** Emitted when a fetching or parsing minor error happened. */
+export interface IManifestFetcherWarningEvent {
+  /** To differentiate it from other events. */
+  type : "warning";
+
+  /** The error in question. */
+  value : ICustomError;
+}
+
 /** Response emitted by a Manifest fetcher. */
 export interface IManifestFetcherResponse {
+  /** To differentiate it from a "warning" event. */
+  type : "response";
+
   /** Allows to parse a fetched Manifest into a `Manifest` structure. */
   parse(parserOptions : { externalClockOffset? : number }) :
-    Observable<IManifestFetcherParsedResult>;
+    Observable<IManifestFetcherWarningEvent |
+               IManifestFetcherParsedResult>;
 }
 
 /** The Manifest fetcher generated here. */
 export interface IManifestFetcher {
   /** Allows to perform the Manifest request. */
-  fetch(url? : string) : Observable<IManifestFetcherResponse>;
+  fetch(url? : string) : Observable<IManifestFetcherWarningEvent |
+                                    IManifestFetcherResponse>;
 }
 
 /** Options used by `createManifestFetcher`. */
@@ -85,31 +102,29 @@ export interface IManifestFetcherBackoffOptions {
  * Create function allowing to easily fetch and parse a Manifest from its URL.
  * @example
  * ```js
- * const manifestFetcher = createManifestFetcher(pipelines, options, warning$);
+ * const manifestFetcher = createManifestFetcher(pipelines, options);
  * manifestFetcher.fetch(manifestURL).pipe(
- *   filter((evt) => {
- *     return evt.type === "response"; // Might also receive warning events
- *   }),
- *   mergeMap(evt => manifestFetcher.parse(evt.value))
- * ).subscribe(({ manifest }) => console.log("Manifest:", manifest));
+ *   // Filter only responses (might also receive warning events)
+ *   filter((evt) => evt.type === "response");
+ *   // Parse the Manifest
+ *   mergeMap(res => res.parse({ externalClockOffset }))
+ *   // (again)
+ *   filter((evt) => evt.type === "parsed");
+ * ).subscribe(({ value }) => {
+ *   console.log("Manifest:", value.manifest);
+ * });
  * ```
  * @param {Object} pipelines
  * @param {Subject} backoffOptions
- * @param {Subject} warning$
  * @returns {Object}
  */
 export default function createManifestFetcher(
   pipelines : ITransportPipelines,
-  options : IManifestFetcherBackoffOptions,
-  warning$ : Subject<ICustomError>
+  options : IManifestFetcherBackoffOptions
 ) : IManifestFetcher {
   const backoffOptions = getManifestBackoffOptions(options);
   const loader = createManifestLoader(pipelines.manifest, backoffOptions);
   const { parser } = pipelines.manifest;
-
-  type IRequestSchedulerData = ILoaderDataLoadedValue<string | Document>;
-  const scheduleRequest = createRequestScheduler<IRequestSchedulerData>(backoffOptions,
-                                                                        warning$);
 
   return {
     /**
@@ -117,47 +132,65 @@ export default function createManifestFetcher(
      * @param {string} url - URL of the manifest
      * @returns {Observable}
      */
-    fetch(url : string) : Observable<IManifestFetcherResponse> {
+    fetch(url : string) : Observable<IManifestFetcherWarningEvent |
+                                     IManifestFetcherResponse> {
       return loader({ url }).pipe(
-        tap((arg) => {
-          if (arg.type === "warning") {
-            warning$.next(arg.value); // TODO not through warning$
+        map((evt) : IManifestFetcherWarningEvent | IManifestFetcherResponse => {
+          if (evt.type === "warning") {
+            return evt;
           }
-        }),
-        filter((arg) : arg is IPipelineLoaderResponse<ILoadedManifest> =>
-          arg.type === "response"
-        ),
-        map(
-          ({ value } : IPipelineLoaderResponse<ILoadedManifest>
-        ) : IManifestFetcherResponse => {
-          const { sendingTime, receivedTime } = value;
+          const { sendingTime, receivedTime } = evt.value;
           const parsingTimeStart = performance.now();
+
+          // Prepare RequestScheduler
+          // TODO Remove the need of a subject
+          type IRequestSchedulerData = ILoaderDataLoadedValue<string | Document>;
+          const schedulerWarnings$ = new Subject<ICustomError>();
+          const scheduleRequest =
+            createRequestScheduler<IRequestSchedulerData>(backoffOptions,
+                                                          schedulerWarnings$);
+
           return {
-            parse(
-              parserOptions : { externalClockOffset? : number }
-            ) : Observable<IManifestFetcherParsedResult> {
-              return parser({ response: value,
-                              url,
-                              externalClockOffset: parserOptions.externalClockOffset,
-                              scheduleRequest,
-              }).pipe(
-                catchError((error: unknown) => {
-                  throw formatError(error, {
-                    defaultCode: "PIPELINE_PARSE_ERROR",
-                    defaultReason: "Unknown error when parsing the Manifest",
-                  });
-                }),
-                map(({ manifest }) => {
-                  const warnings = manifest.parsingErrors;
-                  for (let i = 0; i < warnings.length; i++) {
-                    warning$.next(warnings[i]); // TODO not through warning$
-                  }
-                  const parsingTime = performance.now() - parsingTimeStart;
-                  return { manifest, sendingTime, receivedTime, parsingTime };
-                }));
-            },
-          };
-        }));
+            type: "response",
+            parse(parserOptions : { externalClockOffset? : number }) {
+              return observableMerge(
+                schedulerWarnings$
+                  .pipe(map(err => ({ type: "warning" as const, value: err }))),
+                parser({ response: evt.value,
+                         url,
+                         externalClockOffset: parserOptions.externalClockOffset,
+                         scheduleRequest,
+                }).pipe(
+                  catchError((error: unknown) => {
+                    throw formatError(error, {
+                      defaultCode: "PIPELINE_PARSE_ERROR",
+                      defaultReason: "Unknown error when parsing the Manifest",
+                    });
+                  }),
+                  mergeMap(({ manifest }) => {
+                    // 1 - send warnings first
+                    const warnings = manifest.parsingErrors;
+                    let warningEvts$ : Observable<IManifestFetcherWarningEvent> = EMPTY;
+                    for (let i = 0; i < warnings.length; i++) {
+                      const warning = warnings[i];
+                      warningEvts$ =
+                        observableConcat(warningEvts$,
+                                         observableOf({ type: "warning" as const,
+                                                        value: warning }));
+                    }
+
+                    // 2 - send response
+                    const parsingTime = performance.now() - parsingTimeStart;
+                    return observableConcat(warningEvts$,
+                                            observableOf({ type: "parsed" as const,
+                                                           manifest,
+                                                           sendingTime,
+                                                           receivedTime,
+                                                           parsingTime }));
+                  })));
+              },
+            };
+          }));
     },
   };
 }

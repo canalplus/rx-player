@@ -18,8 +18,10 @@ import {
   asapScheduler,
   BehaviorSubject,
   combineLatest as observableCombineLatest,
+  EMPTY,
   merge as observableMerge,
   Observable,
+  of as observableOf,
   Subject,
 } from "rxjs";
 import {
@@ -38,7 +40,6 @@ import {
 } from "rxjs/operators";
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
-import { ICustomError } from "../../errors";
 import log from "../../log";
 import { ITransportPipelines } from "../../transports";
 import { fromEvent } from "../../utils/event_emitter";
@@ -155,22 +156,25 @@ export default function InitializeOnMediaSource(
 ) : Observable<IInitEvent> {
   const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
 
-  const warning$ = new Subject<ICustomError>();
   const manifestFetcher = createManifestFetcher(pipelines,
                                                 { lowLatencyMode,
                                                   maxRetryRegular: manifestRetry,
-                                                  maxRetryOffline: offlineRetry },
-                                                warning$);
+                                                  maxRetryOffline: offlineRetry });
 
-  // Fetch and parse the manifest from the URL given.
-  // Throttled to avoid doing multiple simultaneous requests.
-  const fetchManifest = throttle((manifestURL? : string, externalClockOffset? : number)
-    : Observable<IManifestFetcherParsedResult> =>
+  /**
+   * Fetch and parse the manifest from the URL given.
+   * Throttled to avoid doing multiple simultaneous requests.
+   */
+  const fetchManifest = throttle((manifestURL? : string,
+                                  externalClockOffset? : number)
+    : Observable<IWarningEvent | IManifestFetcherParsedResult> =>
       manifestFetcher.fetch(manifestURL).pipe(
-        mergeMap((response) => response.parse({ externalClockOffset })),
+        mergeMap((response) => response.type === "warning" ?
+          observableOf(response) : // bubble-up warnings
+          response.parse({ externalClockOffset })),
         share()));
 
-  // Instanciate tools to download media segments
+  /** Interface used to download segments */
   const segmentPipelineCreator =
     new SegmentPipelineCreator<any>(pipelines, { lowLatencyMode,
                                                  maxRetryOffline: offlineRetry,
@@ -200,11 +204,20 @@ export default function InitializeOnMediaSource(
   const mediaError$ = throwOnMediaError(mediaElement);
 
   const loadContent$ = observableCombineLatest([
-    openMediaSource$,
+    openMediaSource$.pipe(startWith(null)),
+    emeManager$.pipe(filter(isEMEReadyEvent),
+                     mapTo(true),
+                     take(1),
+                     startWith(false)),
     fetchManifest(url, undefined),
-    emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
-  ]).pipe(mergeMap(([ initialMediaSource, initialManifestObj ]) => {
-    const { manifest } = initialManifestObj;
+  ]).pipe(mergeMap(([ initialMediaSource, isEMEReady, manifestEvt ]) => {
+    if (manifestEvt.type === "warning") {
+      return observableOf(manifestEvt);
+    }
+    if (!isEMEReady || initialMediaSource === null) {
+      return EMPTY; // not ready yet
+    }
+    const { manifest } = manifestEvt;
 
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
@@ -229,7 +242,7 @@ export default function InitializeOnMediaSource(
     const scheduleRefresh$ = new Subject<IManifestRefreshSchedulerEvent>();
 
     const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
-                                                      initialManifest: initialManifestObj,
+                                                      initialManifest: manifestEvt,
                                                       manifestUpdateUrl,
                                                       minimumManifestUpdateInterval,
                                                       scheduleRefresh$ });
@@ -323,8 +336,5 @@ export default function InitializeOnMediaSource(
     }
   }));
 
-  return observableMerge(loadContent$,
-                         mediaError$,
-                         emeManager$,
-                         warning$.pipe(map(EVENTS.warning)));
+  return observableMerge(loadContent$, mediaError$, emeManager$);
 }
