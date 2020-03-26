@@ -34,7 +34,7 @@ import config from "../../config";
 import log from "../../log";
 import Manifest from "../../manifest";
 import isNonEmptyString from "../../utils/is_non_empty_string";
-import { IFetchManifestResult } from "../pipelines";
+import { IManifestFetcherParsedResult } from "../pipelines";
 
 const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY } = config;
 
@@ -58,7 +58,7 @@ export interface IManifestUpdateSchedulerArguments {
 /** Function defined to refresh the Manifest */
 export type IManifestFetcher =
     (manifestURL? : string, externalClockOffset?: number) =>
-      Observable<IFetchManifestResult>;
+      Observable<IManifestFetcherParsedResult>;
 
 /** Events sent by the `IManifestRefreshScheduler` Observable */
 export interface IManifestRefreshSchedulerEvent {
@@ -157,7 +157,7 @@ export default function manifestUpdateScheduler({
    */
    function refreshManifest(
      completeRefresh : boolean
-   ) : Observable<IFetchManifestResult> {
+   ) : Observable<IManifestFetcherParsedResult> {
      const fullRefresh = completeRefresh || manifestUpdateUrl === undefined;
      const refreshURL = fullRefresh ? manifest.getUrl() :
                                       manifestUpdateUrl;

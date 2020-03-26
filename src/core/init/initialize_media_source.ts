@@ -54,8 +54,8 @@ import {
   IKeySystemOption,
 } from "../eme";
 import {
-  createManifestPipeline,
-  IFetchManifestResult,
+  createManifestFetcher,
+  IManifestFetcherParsedResult,
   SegmentPipelineCreator,
 } from "../pipelines";
 import { ITextTrackSourceBufferOptions } from "../source_buffers";
@@ -156,19 +156,18 @@ export default function InitializeOnMediaSource(
   const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
 
   const warning$ = new Subject<ICustomError>();
-  const manifestPipeline = createManifestPipeline(pipelines,
-                                                   { lowLatencyMode,
-                                                     maxRetryRegular: manifestRetry,
-                                                     maxRetryOffline: offlineRetry },
-                                                   warning$);
+  const manifestFetcher = createManifestFetcher(pipelines,
+                                                { lowLatencyMode,
+                                                  maxRetryRegular: manifestRetry,
+                                                  maxRetryOffline: offlineRetry },
+                                                warning$);
 
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
   const fetchManifest = throttle((manifestURL? : string, externalClockOffset? : number)
-    : Observable<IFetchManifestResult> =>
-      manifestPipeline.fetch(manifestURL).pipe(
-        mergeMap((response) =>
-          manifestPipeline.parse(response.value, manifestURL, externalClockOffset)),
+    : Observable<IManifestFetcherParsedResult> =>
+      manifestFetcher.fetch(manifestURL).pipe(
+        mergeMap((response) => response.parse({ externalClockOffset })),
         share()));
 
   // Instanciate tools to download media segments

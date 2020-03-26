@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import createManifestPipeline, {
-  IFetchManifestResult,
-} from "./create_manifest_pipeline";
+import createManifestFetcher, {
+  IManifestFetcherParsedResult,
+} from "./create_manifest_fetcher";
 
-export default createManifestPipeline;
-export { IFetchManifestResult };
+export default createManifestFetcher;
+export { IManifestFetcherParsedResult };

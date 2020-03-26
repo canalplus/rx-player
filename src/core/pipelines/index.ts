@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import createManifestPipeline, {
-  IFetchManifestResult,
+import createManifestFetcher, {
+  IManifestFetcherParsedResult,
 } from "./manifest";
 import SegmentPipelineCreator, {
   IPrioritizedSegmentFetcher,
@@ -27,10 +27,10 @@ import SegmentPipelineCreator, {
 } from "./segment";
 
 export {
-  createManifestPipeline,
+  createManifestFetcher,
   SegmentPipelineCreator,
 
-  IFetchManifestResult,
+  IManifestFetcherParsedResult,
 
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
