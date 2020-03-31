@@ -119,7 +119,7 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "dependencies": {
-    "idb": "^4.0.3",
+    "idb": "4.0.3",
     "next-tick": "1.1.0",
     "pinkie": "2.0.4",
     "rxjs": "6.5.5"
