@@ -30,7 +30,6 @@ import {
   tap,
   withLatestFrom,
 } from "rxjs/operators";
-import config from "../../config";
 import log from "../../log";
 import {
   Adaptation,
@@ -40,6 +39,7 @@ import {
 import { getLeftSizeOfRange } from "../../utils/ranges";
 import BandwidthEstimator from "./bandwidth_estimator";
 import BufferBasedChooser from "./buffer_based_chooser";
+import generateCachedSegmentFinder from "./cached_segment_finder";
 import filterByBitrate from "./filter_by_bitrate";
 import filterByWidth from "./filter_by_width";
 import fromBitrateCeil from "./from_bitrate_ceil";
@@ -144,8 +144,6 @@ export interface IRepresentationEstimatorArguments {
   representations : Representation[]; // List of Representations to choose from
 }
 
-const { CACHE_LOAD_DURATION_THRESHOLDS } = config;
-
 /**
  * Filter representations given through filters options.
  * @param {Array.<Representation>} representations
@@ -194,47 +192,9 @@ export default function RepresentationEstimator({
                                                                        initialBitrate,
                                               lowLatencyMode);
   const requestsStore = new PendingRequestsStore();
-  const latestDurationFromCache: { video: number|undefined;
-                                   audio: number|undefined; } = { video: undefined,
-                                                                  audio: undefined };
+  let mayBeFromCache = generateCachedSegmentFinder();
 
   let hasLoadedNonCachedSegments = false;
-
-  /**
-   * Determines with request duration if a loaded chunk may have been loaded
-   * from cache
-   * @param {Object} content
-   * @param {number} duration
-   * @returns {undefined|boolean}
-   */
-  function mayBeFromCache(content: { representation: Representation;
-                                     adaptation: Adaptation;
-                                     segment: ISegment; },
-                          duration: number): undefined|boolean {
-    const contentType = content.adaptation.type;
-    if (contentType === "text" || contentType === "image") {
-      return undefined;
-    }
-
-    const [ isFromCacheMaxDuration,
-            canBeFromCacheMaxDuration ] =
-      CACHE_LOAD_DURATION_THRESHOLDS[contentType];
-
-    const latestDurationFromCacheByType =
-      latestDurationFromCache[contentType];
-    if (duration > canBeFromCacheMaxDuration ||
-        (
-          duration > isFromCacheMaxDuration &&
-          latestDurationFromCacheByType !== undefined &&
-          latestDurationFromCacheByType > isFromCacheMaxDuration
-        )
-    ) {
-      latestDurationFromCache[contentType] = undefined;
-      return false;
-    }
-    latestDurationFromCache[contentType] = duration;
-    return true;
-  }
 
   /**
    * Callback to call when new metrics arrive.
@@ -294,6 +254,7 @@ export default function RepresentationEstimator({
 
   const currentRepresentation$ = bufferEvents$.pipe(
     filter((e) : e is IABRRepresentationChange => e.type === "representationChange"),
+    tap(() => { mayBeFromCache = generateCachedSegmentFinder(); }),
     map((e) => e.value.representation),
     startWith(null));
 
