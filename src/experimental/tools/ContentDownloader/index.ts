@@ -139,9 +139,7 @@ class ContentDownloader {
       const { metadata, transport, url } = options;
       const pause$ = new AsyncSubject<void>();
       this.activePauses[contentID] = pause$;
-      const downloadManager = new DownloadManager({
-        db,
-      });
+      const downloadManager = new DownloadManager(db);
       const initDownloadSub = downloadManager
         .initDownload({ ...options, contentID }, pause$)
         .subscribe(
@@ -205,9 +203,7 @@ class ContentDownloader {
       assertResumeADownload(storedManifest, this.activeDownloads);
       const pause$ = new AsyncSubject<void>();
       this.activePauses[contentID] = pause$;
-      const downloadManager = new DownloadManager({
-        db,
-      });
+      const downloadManager = new DownloadManager(db);
       const resumeDownloadSub = downloadManager
         .resumeDownload(storedManifest, pause$, callbacks)
         .subscribe(

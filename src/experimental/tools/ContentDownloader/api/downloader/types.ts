@@ -104,10 +104,6 @@ export interface ISegmentStored {
   size: number;
 }
 
-export interface IDownloadManagerOptions {
-  db: IDBPDatabase;
-}
-
 export interface IUtils extends ICallbacks {
   db: IDBPDatabase;
   pause$: AsyncSubject<void>;
