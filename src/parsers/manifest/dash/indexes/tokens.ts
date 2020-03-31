@@ -32,6 +32,10 @@ function padLeftWithZeros(n : number|string, l : number) : string {
   return arr.slice(-l);
 }
 
+/**
+ * @param {string|number} replacer
+ * @returns {Function}
+ */
 function processFormatedToken(
   replacer : string | number
 ) : (x: unknown, y: unknown, widthStr: string) => string {
@@ -95,8 +99,8 @@ export function replaceRepresentationDASHTokens(
  * Replace "tokens" written in a given path (e.g. $Time$) by the corresponding
  * infos, taken from the given segment.
  * @param {string} path
- * @param {number} time
- * @param {number} number
+ * @param {number|undefined} time
+ * @param {number|undefined} nb
  * @returns {string}
  *
  * @throws Error - Throws if we do not have enough data to construct the URL

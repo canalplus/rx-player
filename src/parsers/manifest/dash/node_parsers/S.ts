@@ -16,15 +16,22 @@
 
 import log from "../../../../log";
 
+/** SegmentTimeline `S` element once parsed. */
 export interface IParsedS {
+  /** Start time in a previously-given timescaled unit. */
   start? : number;
-  repeatCount? : number; // Amount of repetition(s)
-                         // 0 = no repeat
-                         // negative number = max possible repeat
+  /**
+   * Amount of repetition(s).
+   * 0 = no repeat.
+   * negative number = max possible repeat.
+   */
+  repeatCount? : number;
+  /** Duration of the content in a previously-given timescaled unit. */
   duration? : number;
 }
 
 /**
+ * Parse a given <S> element in the MPD into a JS Object.
  * @param {Element} root
  * @returns {Object}
  */

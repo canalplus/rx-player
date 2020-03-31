@@ -39,15 +39,21 @@ import resolveBaseURLs from "./resolve_base_urls";
 
 const { DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 } = config;
 
+/** Possible options for `parseMPD`.  */
 export interface IMPDParserArguments {
-  aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished
-  externalClockOffset? : number; // If set, offset to add to `performance.now()`
-                                 // to obtain the current server's time
-  manifestReceivedTime? : number; // Time, in terms of `performance.now` at
-                                  // which this MPD was received.
-  referenceDateTime? : number; // Default base time, in seconds
-  url? : string; // URL of the manifest (post-redirection if one)
+  /** Whether we should request new segments even if they are not yet finished. */
+  aggressiveMode : boolean;
+  /**
+   * If set, offset to add to `performance.now()` to obtain the current server's
+   * time.
+   */
+  externalClockOffset? : number;
+  /** Time, in terms of `performance.now` at which this MPD was received. */
+  manifestReceivedTime? : number;
+  /** Default base time, in seconds. */
+  referenceDateTime? : number;
+  /** URL of the manifest (post-redirection if one). */
+  url? : string;
 }
 
 interface ILoadedResource { url? : string;

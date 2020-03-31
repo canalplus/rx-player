@@ -16,15 +16,23 @@
 
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
 
+/** Time information from a Period. */
 interface IPeriodTimeInformation {
+  /** Time in seconds at which the Period starts. */
   periodStart: number;
+  /** Difference in seconds between the Period's end and its start. */
   periodDuration?: number;
+  /** Time in seconds at which the Period ends. */
   periodEnd?: number;
 }
 
+/** Additionnal context needed to retrieve the period time information. */
 export interface IParsedPeriodsContext {
-  availabilityStartTime : number; // Time from which the content starts
+  /** Value of MPD@availabilityStartTime. */
+  availabilityStartTime : number;
+  /** Value of MPD@mediaPresentationDuration. */
   duration? : number;
+  /** `true` if MPD@type is equal to "dynamic". */
   isDynamic : boolean;
 }
 

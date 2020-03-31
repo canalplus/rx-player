@@ -20,6 +20,7 @@ import parseMPD, {
   IParserResponse,
 } from "./parse_mpd";
 
+/** Response when parsing the Manifest. */
 export type IMPDParserResponse = IParserResponse<IParsedManifest>;
 
 /**

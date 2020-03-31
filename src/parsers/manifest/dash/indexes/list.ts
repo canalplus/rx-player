@@ -23,89 +23,100 @@ import { getTimescaledRange } from "../../utils/index_helpers";
 import getInitSegment from "./get_init_segment";
 import { createIndexURLs } from "./tokens";
 
-// index property defined for a SegmentList RepresentationIndex
+/**
+ * Index property defined for a SegmentList RepresentationIndex
+ * This object contains every property needed to generate an ISegment for a
+ * given media time.
+ */
 export interface IListIndex {
-  timescale : number; // timescale to convert a time given here into seconds.
-                      // This is done by this simple operation:
-                      // ``timeInSeconds = timeInIndex * timescale``
-  duration : number; // duration of each element in the list, in the
-                     // timescale given (see timescale and list)
-  list: Array<{ // List of Segments for this index
-    mediaURLs : string[] | null; // URLs of the segment
-    mediaRange? : [number, number]; // possible byte-range of the segment
-  }>;
-  indexTimeOffset : number; // Temporal offset, in the current timescale (see
-                            // timescale), to add to the presentation time
-                            // (time a segment has at decoding time) to
-                            // obtain the corresponding media time (original
-                            // time of the media segment in the index and on
-                            // the media file).
-                            // For example, to look for a segment beginning at
-                            // a second `T` on a HTMLMediaElement, we
-                            // actually will look for a segment in the index
-                            // beginning at:
-                            // ``` T * timescale + indexTimeOffset ```
-
-  initialization? : { // information on the initialization segment
-    mediaURLs: string[] | null; // URLs to access the initialization segment
-    range?: [number, number]; // possible byte range to request it
+  /**
+   * Duration of each element in the list, in the timescale given (see
+   * timescale and list properties.)
+   */
+  duration : number;
+  /** Byte range for a possible index of segments in the server. */
+  indexRange?: [number, number];
+  /**
+   * Temporal offset, in the current timescale (see timescale), to add to the
+   * presentation time (time a segment has at decoding time) to obtain the
+   * corresponding media time (original time of the media segment in the index
+   * and on the media file).
+   * For example, to look for a segment beginning at a second `T` on a
+   * HTMLMediaElement, we actually will look for a segment in the index
+   * beginning at:
+   * ```
+   * T * timescale + indexTimeOffset
+   * ```
+   */
+  indexTimeOffset : number;
+  /** Information on the initialization segment. */
+  initialization? : {
+    /** URLs to access the initialization segment. */
+    mediaURLs: string[] | null;
+    /** possible byte range to request it. */
+    range?: [number, number];
   };
-  indexRange?: [number, number]; // byte range for a possible index of segments
-                                 // in the server
-}
-
-// `index` Argument for a SegmentList RepresentationIndex
-// Those properties come generally come from a SegmentList Node in an MPD.
-export interface IListIndexIndexArgument {
-  duration : number; // duration of each element in the list, in the
-                     // timescale given (see timescale and list)
-  indexRange?: [number, number]; // byte range for a possible index of segments
-                                 // in the server
-  initialization?: { // data allowing to download the init segment
-    media? : string; // URL of the init segment
-    range?: [number, number]; // possible byte-range for the init segment
-  };
-  list: Array<{ // List of Segments for this index
-    media? : string; // URL of the segment
-    mediaRange? : [number, number]; // possible byte-range of the segment
+  /** Information on the list of segments for this index. */
+  list: Array<{
+    /** URLs of the segment. */
+    mediaURLs : string[] | null;
+    /** Possible byte-range of the segment. */
+    mediaRange? : [number, number];
   }>;
-  presentationTimeOffset? : number; // Offset present in the index to convert
-                                    // from the mediaTime (time declared in the
-                                    // media segments and in this index) to the
-                                    // presentationTime (time wanted when
-                                    // decoding the segment).
-                                    // Basically by doing something along the
-                                    // line of:
-                                    // ```
-                                    // presentationTimeInSeconds =
-                                    //   mediaTimeInSeconds -
-                                    //   presentationTimeOffsetInSeconds +
-                                    //   periodStartInSeconds
-                                    // ```
-                                    // The time given here is in the current
-                                    // timescale (see timescale)
-  timescale : number; // timescale to convert a time given here into seconds.
-                      // This is done by this simple operation:
-                      // ``timeInSeconds = timeInIndex * timescale``
-}
-
-// Aditional argument for a SegmentList RepresentationIndex
-// Offers some context about the current Representation
-export interface IListIndexContextArgument {
-  periodStart : number; // Start of the period concerned by this
-                        // RepresentationIndex, in seconds
-  representationBaseURLs : string[]; // Base URL for the Representation concerned
-  representationId? : string; // ID of the Representation concerned
-  representationBitrate? : number; // Bitrate of the Representation concerned
+  /**
+   * Timescale to convert a time given here into seconds.
+   * This is done by this simple operation:
+   * ``timeInSeconds = timeInIndex * timescale``
+   */
+  timescale : number;
 }
 
 /**
- * Provide helpers for SegmentList-based DASH indexes.
- * @type {Object}
+ * `index` Argument for a SegmentList RepresentationIndex.
+ * Most of the properties here are already defined in IListIndex.
  */
+export interface IListIndexIndexArgument {
+  duration : number;
+  indexRange?: [number, number];
+  initialization?: { media? : string;
+                     range? : [number, number]; };
+  list: Array<{ media? : string;
+                mediaRange? : [number, number]; }>;
+  /**
+   * Offset present in the index to convert from the mediaTime (time declared in
+   * the media segments and in this index) to the presentationTime (time wanted
+   * when decoding the segment).  Basically by doing something along the line
+   * of:
+   * ```
+   * presentationTimeInSeconds =
+   *   mediaTimeInSeconds -
+   *   presentationTimeOffsetInSeconds +
+   *   periodStartInSeconds
+   * ```
+   * The time given here is in the current
+   * timescale (see timescale)
+   */
+  presentationTimeOffset? : number;
+  timescale : number;
+}
+
+/** Aditional context needed by a SegmentList RepresentationIndex. */
+export interface IListIndexContextArgument {
+  /** Start of the period concerned by this RepresentationIndex, in seconds. */
+  periodStart : number;
+  /** Base URL for the Representation concerned. */
+  representationBaseURLs : string[];
+  /** ID of the Representation concerned. */
+  representationId? : string;
+  /** Bitrate of the Representation concerned. */
+  representationBitrate? : number;
+}
+
 export default class ListRepresentationIndex implements IRepresentationIndex {
-  protected _periodStart : number;
+  /** Underlying structure to retrieve segment information. */
   private _index : IListIndex;
+  /** Start of the period concerned by this RepresentationIndex, in seconds. */
+  protected _periodStart : number;
 
   /**
    * @param {Object} index
@@ -198,7 +209,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Returns first position in index.
+   * Returns first position in this index, in seconds.
    * @returns {Number}
    */
   getFirstPosition() : number {
@@ -206,7 +217,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Returns last position in index.
+   * Returns last position in this index, in seconds.
    * @returns {Number}
    */
   getLastPosition() : number {
@@ -219,7 +230,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * Returns true if a Segment returned by this index is still considered
    * available.
    * @param {Object} segment
-   * @returns {Boolean|undefined}
+   * @returns {Boolean}
    */
   isSegmentStillAvailable(segment : ISegment) : boolean {
     if (segment.isInit) {

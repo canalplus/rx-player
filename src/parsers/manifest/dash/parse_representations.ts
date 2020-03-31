@@ -34,43 +34,52 @@ import {
 } from "./node_parsers/Representation";
 import resolveBaseURLs from "./resolve_base_urls";
 
-// Supplementary context about the current AdaptationSet
+/** Supplementary context needed to parse a Representation. */
 export interface IAdaptationInfos {
-  aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished
-  availabilityTimeOffset: number; // availability time offset of the concerned adaptation
-  baseURLs : string[]; // Eventual URLs from which every relative URL will be based
-                       // on
-  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
-                                                       // available position of a
-                                                       // dynamic content
-  end? : number; // End time of the current period, in seconds
-  isDynamic : boolean; // Whether the Manifest can evolve with time
-  receivedTime? : number; // time (in terms of `performance.now`) at which the
-                          // XML file containing this Representation was received
-  start : number; // Start time of the current period, in seconds
-  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
-                                  // in seconds
+  /** Whether we should request new segments even if they are not yet finished. */
+  aggressiveMode : boolean;
+  /** availability time offset of the concerned Adaptation. */
+  availabilityTimeOffset: number;
+  /** Eventual URLs from which every relative URL will be based on. */
+  baseURLs : string[];
+  /** Allows to obtain the first available position of a dynamic content. */
+  manifestBoundsCalculator : ManifestBoundsCalculator;
+  /** End time of the current period, in seconds. */
+  end? : number;
+  /** Whether the Manifest can evolve with time. */
+  isDynamic : boolean;
+  /**
+   * Time (in terms of `performance.now`) at which the XML file containing this
+   * Representation was received.
+   */
+  receivedTime? : number;
+  /** Start time of the current period, in seconds. */
+  start : number;
+  /** Depth of the buffer for the whole content, in seconds. */
+  timeShiftBufferDepth? : number;
 }
 
-// base context given to the various indexes
+/** Base context given to the various indexes. */
 interface IIndexContext {
-  aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished
+  /** Whether we should request new segments even if they are not yet finished. */
+  aggressiveMode : boolean;
   availabilityTimeOffset: number;
-  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
-                                                       // available position of a
-                                                       // dynamic content
-  isDynamic : boolean; // Whether the Manifest can evolve with time
-  periodStart : number; // Start of the period concerned by this
-                        // RepresentationIndex, in seconds
-  periodEnd : number|undefined; // End of the period concerned by this
-                                // RepresentationIndex, in seconds
-  representationBaseURLs : string[]; // Base URLs for the Representation concerned
-  representationId? : string; // ID of the Representation concerned
-  representationBitrate? : number; // Bitrate of the Representation concerned
-  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
-                                  // in seconds
+  /** Allows to obtain the first available position of a dynamic content. */
+  manifestBoundsCalculator : ManifestBoundsCalculator;
+  /** Whether the Manifest can evolve with time. */
+  isDynamic : boolean;
+  /** Start of the period concerned by this RepresentationIndex, in seconds. */
+  periodStart : number;
+  /** End of the period concerned by this RepresentationIndex, in seconds. */
+  periodEnd : number|undefined;
+  /** Base URLs for the Representation concerned. */
+  representationBaseURLs : string[];
+  /** ID of the Representation concerned. */
+  representationId? : string;
+  /** Bitrate of the Representation concerned. */
+  representationBitrate? : number;
+  /** Depth of the buffer for the whole content, in seconds. */
+  timeShiftBufferDepth? : number;
 }
 
 /**

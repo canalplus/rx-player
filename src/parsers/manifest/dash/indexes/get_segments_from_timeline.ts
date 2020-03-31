@@ -46,6 +46,7 @@ function getWantedRepeatIndex(
  * @param {Object} index - index object, constructed by parsing the manifest.
  * @param {number} from - starting timestamp wanted, in seconds
  * @param {number} durationWanted - duration wanted, in seconds
+ * @param {number|undefined} maximumTime
  * @returns {Array.<Object>}
  */
 export default function getSegmentsFromTimeline(

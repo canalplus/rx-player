@@ -29,37 +29,55 @@ import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { createIndexURLs } from "./tokens";
 
-// index property defined for a SegmentBase RepresentationIndex
+/**
+ * Index property defined for a SegmentBase RepresentationIndex
+ * This object contains every property needed to generate an ISegment for a
+ * given media time.
+ */
 export interface IBaseIndex {
-  indexRange?: [number, number]; // byte range for a possible index of segments
-                                 // in the server
-  indexTimeOffset : number; // Temporal offset, in the current timescale (see
-                            // timescale), to add to the presentation time
-                            // (time a segment has at decoding time) to
-                            // obtain the corresponding media time (original
-                            // time of the media segment in the index and on
-                            // the media file).
-                            // For example, to look for a segment beginning at
-                            // a second `T` on a HTMLMediaElement, we
-                            // actually will look for a segment in the index
-                            // beginning at:
-                            // ``` T * timescale + indexTimeOffset ```
-  initialization? : { // information on the initialization segment
-    mediaURLs: string[] | null; // URLs to access the initialization segment
-    range?: [number, number]; // possible byte range to request it
+  /** Byte range for a possible index of segments in the server. */
+  indexRange?: [number, number];
+  /**
+   * Temporal offset, in the current timescale (see timescale), to add to the
+   * presentation time (time a segment has at decoding time) to obtain the
+   * corresponding media time (original time of the media segment in the index
+   * and on the media file).
+   * For example, to look for a segment beginning at a second `T` on a
+   * HTMLMediaElement, we actually will look for a segment in the index
+   * beginning at:
+   * ```
+   * T * timescale + indexTimeOffset
+   * ```
+   */
+  indexTimeOffset : number;
+  /** Information on the initialization segment. */
+  initialization? : {
+    /** URLs to access the initialization segment. */
+    mediaURLs: string[] | null;
+    /** possible byte range to request it. */
+    range?: [number, number];
   };
-  mediaURLs : string[] | null; // base URLs to access any segment. Can contain token to
-                              // replace to convert it to a real URL
-  startNumber? : number; // number from which the first segments in this index
-                         // starts with
-  timeline : IIndexSegment[]; // Every segments defined in this index
-  timescale : number; // timescale to convert a time given here into seconds.
-                      // This is done by this simple operation:
-                      // ``timeInSeconds = timeInIndex * timescale``
+  /**
+   * Base URL(s) to access any segment. Can contain tokens to replace to convert
+   * it to real URLs.
+   */
+  mediaURLs : string[] | null;
+  /** Number from which the first segments in this index starts with. */
+  startNumber? : number;
+  /** Every segments defined in this index. */
+  timeline : IIndexSegment[];
+  /**
+   * Timescale to convert a time given here into seconds.
+   * This is done by this simple operation:
+   * ``timeInSeconds = timeInIndex * timescale``
+   */
+  timescale : number;
 }
 
-// `index` Argument for a SegmentBase RepresentationIndex
-// Most of the properties here are already defined in IBaseIndex.
+/**
+ * `index` Argument for a SegmentBase RepresentationIndex.
+ * Most of the properties here are already defined in IBaseIndex.
+ */
 export interface IBaseIndexIndexArgument {
   timeline : IIndexSegment[];
   timescale : number;
@@ -67,32 +85,35 @@ export interface IBaseIndexIndexArgument {
   indexRange?: [number, number];
   initialization?: { media?: string; range?: [number, number] };
   startNumber? : number;
-  presentationTimeOffset? : number; // Offset present in the index to convert
-                                    // from the mediaTime (time declared in the
-                                    // media segments and in this index) to the
-                                    // presentationTime (time wanted when
-                                    // decoding the segment).
-                                    // Basically by doing something along the
-                                    // line of:
-                                    // ```
-                                    // presentationTimeInSeconds =
-                                    //   mediaTimeInSeconds -
-                                    //   presentationTimeOffsetInSeconds *
-                                    //   periodStartInSeconds
-                                    // ```
-                                    // The time given here is in the current
-                                    // timescale (see timescale)
+  /**
+   * Offset present in the index to convert from the mediaTime (time declared in
+   * the media segments and in this index) to the presentationTime (time wanted
+   * when decoding the segment).  Basically by doing something along the line
+   * of:
+   * ```
+   * presentationTimeInSeconds =
+   *   mediaTimeInSeconds -
+   *   presentationTimeOffsetInSeconds +
+   *   periodStartInSeconds
+   * ```
+   * The time given here is in the current
+   * timescale (see timescale)
+   */
+  presentationTimeOffset? : number;
 }
 
-// Aditional argument for a SegmentBase RepresentationIndex
+/** Aditional context needed by a SegmentBase RepresentationIndex. */
 export interface IBaseIndexContextArgument {
-  periodStart : number; // Start of the period concerned by this
-                        // RepresentationIndex, in seconds
-  periodEnd : number|undefined; // End of the period concerned by this
-                                // RepresentationIndex, in seconds
-  representationBaseURLs : string[]; // Base URLs for the Representation concerned
-  representationId? : string; // ID of the Representation concerned
-  representationBitrate? : number; // Bitrate of the Representation concerned
+  /** Start of the period concerned by this RepresentationIndex, in seconds. */
+  periodStart : number;
+  /** End of the period concerned by this RepresentationIndex, in seconds. */
+  periodEnd : number|undefined;
+  /** Base URL for the Representation concerned. */
+  representationBaseURLs : string[];
+  /** ID of the Representation concerned. */
+  representationId? : string;
+  /** Bitrate of the Representation concerned. */
+  representationBitrate? : number;
 }
 
 /**
@@ -132,14 +153,11 @@ function _addSegmentInfos(
   return true;
 }
 
-/**
- * Provide helpers for SegmentBase-based indexes.
- * @type {Object}
- */
 export default class BaseRepresentationIndex implements IRepresentationIndex {
+  /** Underlying structure to retrieve segment information. */
   private _index : IBaseIndex;
 
-  // absolute end of the period, timescaled and converted to index time
+  /** Absolute end of the period, timescaled and converted to index time. */
   private _scaledPeriodEnd : number | undefined;
 
   /**
@@ -276,7 +294,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * SegmentBase should not be updated.
+   * Returns true as SegmentBase does not get updated.
    * @returns {Boolean}
    */
   canBeOutOfSyncError() : false {
@@ -284,6 +302,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns true as SegmentBase does not get updated.
    * @returns {Boolean}
    */
   isFinished() : true {

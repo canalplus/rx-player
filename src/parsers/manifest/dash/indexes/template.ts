@@ -29,44 +29,73 @@ import {
 
 const { MINIMUM_SEGMENT_SIZE } = config;
 
-// index property defined for a SegmentTemplate RepresentationIndex
+/**
+ * Index property defined for a SegmentTemplate RepresentationIndex
+ * This object contains every property needed to generate an ISegment for a
+ * given media time.
+ */
 export interface ITemplateIndex {
-  duration : number; // duration of each element in the timeline, in the
-                     // timescale given (see timescale and timeline)
-  timescale : number; // timescale to convert a time given here into seconds.
-                      // This is done by this simple operation:
-                      // ``timeInSeconds = timeInIndex * timescale``
-
-  indexRange?: [number, number]; // byte range for a possible index of segments
-                                 // in the server
-  initialization?: { // information on the initialization segment
-    mediaURLs: string[] | null; // URLs to access the initialization segment
-    range?: [number, number]; // possible byte range to request it
+  /**
+   * Duration of each segment, in the timescale given (see timescale property).
+   * timescale and list properties.)
+   */
+  duration : number;
+  /**
+   * Timescale to convert a time given here into seconds.
+   * This is done by this simple operation:
+   * ``timeInSeconds = timeInIndex * timescale``
+   */
+  timescale : number;
+  /** Byte range for a possible index of segments in the server. */
+  indexRange?: [number, number];
+  /** Information on the initialization segment. */
+  initialization? : {
+    /** URLs to access the initialization segment. */
+    mediaURLs: string[] | null;
+    /** possible byte range to request it. */
+    range?: [number, number];
   };
-  mediaURLs : string[] | null; // base URL to access any segment. Can contain
-                              // token to replace to convert it to real URLs
-  indexTimeOffset : number; // Temporal offset, in the current timescale (see
-                            // timescale), to add to the presentation time
-                            // (time a segment has at decoding time) to
-                            // obtain the corresponding media time (original
-                            // time of the media segment in the index and on
-                            // the media file).
-                            // For example, to look for a segment beginning at
-                            // a second `T` on a HTMLMediaElement, we
-                            // actually will look for a segment in the index
-                            // beginning at:
-                            // ``` T * timescale + indexTimeOffset ```
-  presentationTimeOffset : number; // Time, in the timescale, at which the first
-                                   // segment of the Period is declared.
-                                   // This value should be substracted from the
-                                   // media time to produce the presentation
-                                   // time.
-  startNumber? : number; // number from which the first segments in this index
-                         // starts with
+  /**
+   * URL base to access any segment.
+   * Can contain token to replace to convert it to real URLs.
+   */
+  mediaURLs : string[] | null;
+  /**
+   * Temporal offset, in the current timescale (see timescale), to add to the
+   * presentation time (time a segment has at decoding time) to obtain the
+   * corresponding media time (original time of the media segment in the index
+   * and on the media file).
+   * For example, to look for a segment beginning at a second `T` on a
+   * HTMLMediaElement, we actually will look for a segment in the index
+   * beginning at:
+   * ```
+   * T * timescale + indexTimeOffset
+   * ```
+   */
+  indexTimeOffset : number;
+  /**
+   * Offset present in the index to convert from the mediaTime (time declared in
+   * the media segments and in this index) to the presentationTime (time wanted
+   * when decoding the segment).  Basically by doing something along the line
+   * of:
+   * ```
+   * presentationTimeInSeconds =
+   *   mediaTimeInSeconds -
+   *   presentationTimeOffsetInSeconds +
+   *   periodStartInSeconds
+   * ```
+   * The time given here is in the current
+   * timescale (see timescale)
+   */
+  presentationTimeOffset : number;
+  /** Number from which the first segments in this index starts with. */
+  startNumber? : number;
 }
 
-// `index` Argument for a SegmentTemplate RepresentationIndex
-// All of the properties here are already defined in ITemplateIndex.
+/**
+ * `index` Argument for a SegmentTemplate RepresentationIndex.
+ * Most of the properties here are already defined in ITemplateIndex.
+ */
 export interface ITemplateIndexIndexArgument {
   duration : number;
   timescale : number;
@@ -79,24 +108,25 @@ export interface ITemplateIndexIndexArgument {
   startNumber? : number;
 }
 
-// Aditional argument for a SegmentTemplate RepresentationIndex
+/** Aditional context needed by a SegmentTemplate RepresentationIndex. */
 export interface ITemplateIndexContextArgument {
-  aggressiveMode : boolean; // If `true`, this index will return segments which
-                            // which had time to be started but not finished.
-  availabilityTimeOffset : number; // availability time offset of the
-                                   // concerned Representation
-  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
-                                                       // minimum and maximum
-                                                       // of a content
-  isDynamic : boolean; // if true, the MPD can be updated over time
-  periodEnd : number|undefined; // End of the Period concerned by this
-                                // RepresentationIndex, in seconds
-  periodStart : number; // Start of the Period concerned by this
-                        // RepresentationIndex, in seconds
-  representationBaseURLs : string[]; // Base URL for the Representation concerned
-                                  // i.e. Common beginning of the URL
-  representationBitrate? : number; // Bitrate of the Representation concerned
-  representationId? : string; // ID of the Representation concerned
+  aggressiveMode : boolean;
+  /** Minimum availabilityTimeOffset concerning the segments of this Representation. */
+  availabilityTimeOffset : number;
+  /** Allows to obtain the minimum and maximum positions of a content. */
+  manifestBoundsCalculator : ManifestBoundsCalculator;
+  /** Start of the period concerned by this RepresentationIndex, in seconds. */
+  periodStart : number;
+  /** End of the period concerned by this RepresentationIndex, in seconds. */
+  periodEnd : number|undefined;
+  /** Whether the corresponding Manifest can be updated and changed. */
+  isDynamic : boolean;
+  /** Base URL for the Representation concerned. */
+  representationBaseURLs : string[];
+  /** ID of the Representation concerned. */
+  representationId? : string;
+  /** Bitrate of the Representation concerned. */
+  representationBitrate? : number;
 }
 
 /**
@@ -105,14 +135,22 @@ export interface ITemplateIndexContextArgument {
  * @class TemplateRepresentationIndex
  */
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
-  private _aggressiveMode : boolean;
+  /** Underlying structure to retrieve segment information. */
   private _index : ITemplateIndex;
+  /**
+   * Whether the "aggressiveMode" is enabled. If enabled, segments can be
+   * requested in advance.
+   */
+  private _aggressiveMode : boolean;
+  /** Retrieve the maximum and minimum position of the whole content. */
   private _manifestBoundsCalculator : ManifestBoundsCalculator;
+  /** Absolute start of the Period, in seconds. */
   private _periodStart : number;
+  /** Difference between the end time of the Period and its start time, in seconds. */
   private _relativePeriodEnd? : number;
+  /** Minimum availabilityTimeOffset concerning the segments of this Representation. */
   private _availabilityTimeOffset? : number;
-
-  // Whether this RepresentationIndex can change over time.
+  /** Whether the corresponding Manifest can be updated and changed. */
   private _isDynamic : boolean;
 
   /**
@@ -251,7 +289,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * Returns first possible position in the index.
+   * Returns first possible position in the index, in seconds.
    * @returns {number|null|undefined}
    */
   getFirstPosition() : number | null | undefined {
@@ -263,7 +301,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * Returns last possible position in the index.
+   * Returns last possible position in the index, in seconds.
    * @returns {number|null}
    */
   getLastPosition() : number|null|undefined {
@@ -295,6 +333,14 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     return -1;
   }
 
+  /**
+   * Returns `true` if the given segment should still be available as of now
+   * (not removed since and still request-able).
+   * Returns `false` if that's not the case.
+   * Returns `undefined` if we do not know whether that's the case or not.
+   * @param {Object} segment
+   * @returns {boolean|undefined}
+   */
   isSegmentStillAvailable(segment : ISegment) : boolean|undefined {
     if (segment.isInit) {
       return true;

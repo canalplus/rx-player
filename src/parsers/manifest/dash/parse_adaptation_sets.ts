@@ -32,22 +32,29 @@ import {
 import parseRepresentations from "./parse_representations";
 import resolveBaseURLs from "./resolve_base_urls";
 
-// Supplementary context about the current Period
-export interface IPeriodInfos {
-  aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished
-  availabilityTimeOffset: number; // availability time offset of the concerned period
-  baseURLs : string[]; // Eventual URLs from which every relative URL will be based
-                       // on
-  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
-                                                       // available position of a content
-  end? : number; // End time of the current period, in seconds
-  isDynamic : boolean; // Whether the Manifest can evolve with time
-  receivedTime? : number; // time (in terms of `performance.now`) at which the
-                          // XML file containing this AdaptationSet was received
-  start : number; // Start time of the current period, in seconds
-  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
-                                  // in seconds
+/** Context needed when calling `parseAdaptationSets`. */
+export interface IAdaptationSetsContextInfos {
+  /** Whether we should request new segments even if they are not yet finished. */
+  aggressiveMode : boolean;
+  /** availabilityTimeOffset of the concerned period. */
+  availabilityTimeOffset: number;
+  /** Eventual URLs from which every relative URL will be based on. */
+  baseURLs : string[];
+  /** Allows to obtain the first available position of a content. */
+  manifestBoundsCalculator : ManifestBoundsCalculator;
+  /* End time of the current period, in seconds. */
+  end? : number;
+  /** Whether the Manifest can evolve with time. */
+  isDynamic : boolean;
+  /**
+   * Time (in terms of `performance.now`) at which the XML file containing
+   * this AdaptationSet was received.
+   */
+  receivedTime? : number;
+  /** Start time of the current period, in seconds. */
+  start : number;
+  /** Depth of the buffer for the whole content, in seconds. */
+  timeShiftBufferDepth? : number;
 }
 
 // Supplementary information for "switchable" AdaptationSets of the same Period
@@ -175,7 +182,7 @@ function getAdaptationSetSwitchingIDs(
  */
 export default function parseAdaptationSets(
   adaptationsIR : IAdaptationSetIntermediateRepresentation[],
-  periodInfos : IPeriodInfos
+  periodInfos : IAdaptationSetsContextInfos
 ): IParsedAdaptations {
   return adaptationsIR
     .reduce<{ adaptations : IParsedAdaptations;

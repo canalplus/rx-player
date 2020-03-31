@@ -18,13 +18,19 @@ import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
 import { IRepresentationIntermediateRepresentation } from "./node_parsers/Representation";
 
+/** Different "type" a parsed Adaptation can be. */
 type IAdaptationType = "audio" |
                        "video" |
                        "text" |
                        "image";
+
+/** Array grouping every possible type a parsed Adaptation can be. */
 const KNOWN_ADAPTATION_TYPES : IAdaptationType[] = ["audio", "video", "text", "image"];
+
+/** Different `role`s a text Adaptation can be. */
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
 
+/** Structure of a parsed "scheme-like" element in the MPD. */
 interface IScheme {
   schemeIdUri? : string;
   value? : string;
@@ -41,7 +47,10 @@ interface IScheme {
  *       3. codec
  *
  * Note: This is based on DASH-IF-IOP-v4.0 with some more freedom.
- * @param {Object} adaptation
+ * @param {Array.<Object>} representations
+ * @param {string|null} adaptationMimeType
+ * @param {string|null} adaptationCodecs
+ * @param {Array.<Object>|null} adaptationRoles
  * @returns {string} - "audio"|"video"|"text"|"image"|"metadata"|"unknown"
  */
 export default function inferAdaptationType(

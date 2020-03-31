@@ -16,6 +16,11 @@
 
 import { IMPDAttributes } from "./node_parsers/MPD";
 
+/**
+ * Returns the base time of the Manifest.
+ * @param {Object} rootAttributes
+ * @param {number|undefined}
+ */
 export default function parseAvailabilityStartTime(
   rootAttributes : IMPDAttributes,
   referenceDateTime? : number

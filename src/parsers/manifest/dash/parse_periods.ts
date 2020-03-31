@@ -33,63 +33,67 @@ import resolveBaseURLs from "./resolve_base_urls";
 
 const generatePeriodID = idGenerator();
 
-// Information about each linked Xlink.
+/** Information about each linked Xlink. */
 export type IXLinkInfos = WeakMap<IPeriodIntermediateRepresentation, {
-  url? : string; // real URL (post-redirection) used to download this xlink
-  sendingTime? : number; // time at which the request was sent (since the time
-                         // origin), in ms
-  receivedTime? : number; // time at which the request was received (since the
-                          // time origin), in ms
+  /** Real URL (post-redirection) used to download this xlink. */
+  url? : string;
+  /** Time at which the request was sent (since the time origin), in ms. */
+  sendingTime? : number;
+  /** Time at which the request was received (since the time origin), in ms. */
+  receivedTime? : number;
 }>;
 
-export interface IManifestInfos {
-  aggressiveMode : boolean; // Whether we should request new segments even if
-  availabilityTimeOffset: number; // availability time offset of the concerned
-                                  // manifest they are not yet finished
-  availabilityStartTime : number; // Time from which the content starts
+/** Context needed when calling `parsePeriods`. */
+export interface IPeriodsContextInfos {
+  /** Whether we should request new segments even if they are not yet finished. */
+  aggressiveMode : boolean;
+  availabilityTimeOffset: number;
+  availabilityStartTime : number;
   baseURLs : string[];
   clockOffset? : number;
   duration? : number;
   isDynamic : boolean;
-  receivedTime? : number; // time (in terms of `performance.now`) at which the
-                          // XML file containing this Period was received
-  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
-                                  // in seconds
+  /**
+   * Time (in terms of `performance.now`) at which the XML file containing this
+   * Period was received.
+   */
+  receivedTime? : number;
+  /** Depth of the buffer for the whole content, in seconds. */
+  timeShiftBufferDepth? : number;
   xlinkInfos : IXLinkInfos;
 }
 
 /**
  * Process intermediate periods to create final parsed periods.
  * @param {Array.<Object>} periodsIR
- * @param {Object} manifestInfos
+ * @param {Object} contextInfos
  * @returns {Array.<Object>}
  */
-export default function parsePeriods(
+  export default function parsePeriods(
   periodsIR : IPeriodIntermediateRepresentation[],
-  manifestInfos : IManifestInfos
+  contextInfos : IPeriodsContextInfos
 ): IParsedPeriod[] {
   const parsedPeriods : IParsedPeriod[] = [];
-  const periodsTimeInformation = getPeriodsTimeInformation(periodsIR, manifestInfos);
+  const periodsTimeInformation = getPeriodsTimeInformation(periodsIR, contextInfos);
   if (periodsTimeInformation.length !== periodsIR.length) {
     throw new Error("MPD parsing error: the time information are incoherent.");
   }
 
-  // We might to communicate the depth of the Buffer while parsing
   const { isDynamic,
-          timeShiftBufferDepth } = manifestInfos;
+          timeShiftBufferDepth } = contextInfos;
   const manifestBoundsCalculator = new ManifestBoundsCalculator({ isDynamic,
                                                                   timeShiftBufferDepth });
 
-  if (!isDynamic && manifestInfos.duration != null) {
-    manifestBoundsCalculator.setLastPosition(manifestInfos.duration);
+  if (!isDynamic && contextInfos.duration != null) {
+    manifestBoundsCalculator.setLastPosition(contextInfos.duration);
   }
 
   // We parse it in reverse because we might need to deduce the buffer depth from
   // the last Periods' indexes
   for (let i = periodsIR.length - 1; i >= 0; i--) {
     const periodIR = periodsIR[i];
-    const xlinkInfos = manifestInfos.xlinkInfos.get(periodIR);
-    const periodBaseURLs = resolveBaseURLs(manifestInfos.baseURLs,
+    const xlinkInfos = contextInfos.xlinkInfos.get(periodIR);
+    const periodBaseURLs = resolveBaseURLs(contextInfos.baseURLs,
                                            periodIR.children.baseURLs);
 
     const { periodStart,
@@ -105,13 +109,13 @@ export default function parsePeriods(
     }
 
     const receivedTime = xlinkInfos !== undefined ? xlinkInfos.receivedTime :
-                                                    manifestInfos.receivedTime;
+                                                    contextInfos.receivedTime;
 
     const availabilityTimeOffset =
       extractMinimumAvailabilityTimeOffset(periodIR.children.baseURLs) +
-      manifestInfos.availabilityTimeOffset;
+      contextInfos.availabilityTimeOffset;
 
-    const periodInfos = { aggressiveMode: manifestInfos.aggressiveMode,
+    const periodInfos = { aggressiveMode: contextInfos.aggressiveMode,
                           availabilityTimeOffset,
                           baseURLs: periodBaseURLs,
                           manifestBoundsCalculator,
@@ -141,7 +145,7 @@ export default function parsePeriods(
           manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
         } else {
           const guessedLastPositionFromClock =
-            guessLastPositionFromClock(manifestInfos, periodStart);
+            guessLastPositionFromClock(contextInfos, periodStart);
           if (guessedLastPositionFromClock !== undefined) {
             const [guessedLastPosition, guessedPositionTime] =
               guessedLastPositionFromClock;
@@ -153,9 +157,9 @@ export default function parsePeriods(
     }
   }
 
-  if (manifestInfos.isDynamic && !manifestBoundsCalculator.lastPositionIsKnown()) {
+  if (contextInfos.isDynamic && !manifestBoundsCalculator.lastPositionIsKnown()) {
     // Guess a last time the last position
-    const guessedLastPositionFromClock = guessLastPositionFromClock(manifestInfos, 0);
+    const guessedLastPositionFromClock = guessLastPositionFromClock(contextInfos, 0);
     if (guessedLastPositionFromClock !== undefined) {
       const [lastPosition, positionTime] = guessedLastPositionFromClock;
       manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
@@ -187,17 +191,17 @@ export default function parsePeriods(
  * the live time more directly from that previous one, we might be better off
  * than just using the clock.
  *
- * @param {Object} manifestInfos
+ * @param {Object} contextInfos
  * @param {number} minimumTime
  * @returns {Array.<number|undefined>}
  */
 function guessLastPositionFromClock(
-  manifestInfos : IManifestInfos,
+  contextInfos : IPeriodsContextInfos,
   minimumTime : number
 ) : [number, number] | undefined {
-  if (manifestInfos.clockOffset != null) {
-    const lastPosition = manifestInfos.clockOffset / 1000 -
-      manifestInfos.availabilityStartTime;
+  if (contextInfos.clockOffset != null) {
+    const lastPosition = contextInfos.clockOffset / 1000 -
+      contextInfos.availabilityStartTime;
     const positionTime = performance.now() / 1000;
     const timeInSec = positionTime + lastPosition;
     if (timeInSec >= minimumTime) {
@@ -208,7 +212,7 @@ function guessLastPositionFromClock(
     if (now >= minimumTime) {
       log.warn("DASH Parser: no clock synchronization mechanism found." +
                " Using the system clock instead.");
-      const lastPosition = now - manifestInfos.availabilityStartTime;
+      const lastPosition = now - contextInfos.availabilityStartTime;
       const positionTime = performance.now() / 1000;
       return [lastPosition, positionTime];
     }
