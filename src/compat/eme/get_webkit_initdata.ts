@@ -15,7 +15,7 @@
  */
 
 import {
-  bytesToStr,
+  bytesToUTF16Str,
   le4toi,
   UTF16StrToBytes,
 } from "../../utils/byte_parsing";
@@ -41,7 +41,7 @@ export default function getWebKitInitData(initDataBytes: Uint8Array|ArrayBuffer,
   if (length + 4 !== initData.length) {
     throw new Error("Unsupported WebKit initData.");
   }
-  const initDataUri = bytesToStr(initData);
+  const initDataUri = bytesToUTF16Str(initData);
   const contentIdStr = initDataUri.split("skd://")[1];
   const id = UTF16StrToBytes(contentIdStr);
 

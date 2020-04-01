@@ -48,6 +48,7 @@ import {
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
 import isNode from "./is_node";
+import shouldUseWebKitMediaKeys from "./should_use_webkit_media_keys";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -409,7 +410,9 @@ const onRemoveSourceBuffers$ = compatibleListener(["onremovesourcebuffer"]);
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-const onEncrypted$ = compatibleListener<MediaEncryptedEvent>(["encrypted", "needkey"]);
+const onEncrypted$ = compatibleListener<MediaEncryptedEvent>(
+  shouldUseWebKitMediaKeys() ? ["needkey"] :
+                               ["encrypted", "needkey"]);
 
 /**
  * @param {MediaKeySession} mediaKeySession
