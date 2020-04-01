@@ -58,111 +58,109 @@ export function isOldWebkitMediaElement(
     .webkitGenerateKeyRequest === "function";
 }
 
-export default function getOldWebKitMediaKeysCallbacks() {
-  class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
-    implements ICustomMediaKeySession {
-    public readonly update: (license: ArrayBuffer, sessionId?: string) =>
-      Promise<void>;
-    public readonly closed: Promise<void>;
-    public expiration: number;
-    public keyStatuses: ICustomMediaKeyStatusMap;
-    public sessionId: string;
+class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
+                               implements ICustomMediaKeySession {
+  public readonly update: (license: ArrayBuffer, sessionId?: string) =>
+    Promise<void>;
+  public readonly closed: Promise<void>;
+  public expiration: number;
+  public keyStatuses: ICustomMediaKeyStatusMap;
+  public sessionId: string;
 
-    private readonly _vid: IOldWebkitHTMLMediaElement;
-    private readonly _key: string;
-    private readonly _closeSession$: Subject<void>;
+  private readonly _vid: IOldWebkitHTMLMediaElement;
+  private readonly _key: string;
+  private readonly _closeSession$: Subject<void>;
 
-    constructor(
-      mediaElement: IOldWebkitHTMLMediaElement,
-      keySystem: string
-    ) {
-      super();
-      this._closeSession$ = new Subject();
-      this._vid = mediaElement;
-      this._key = keySystem;
+  constructor(mediaElement: IOldWebkitHTMLMediaElement,
+              keySystem: string) {
+    super();
+    this._closeSession$ = new Subject();
+    this._vid = mediaElement;
+    this._key = keySystem;
 
-      this.sessionId = "";
-      this.closed = new PPromise((resolve) => {
-        this._closeSession$.subscribe(resolve);
-      });
-      this.keyStatuses = new Map();
-      this.expiration = NaN;
+    this.sessionId = "";
+    this.closed = new PPromise((resolve) => {
+      this._closeSession$.subscribe(resolve);
+    });
+    this.keyStatuses = new Map();
+    this.expiration = NaN;
 
-      observableMerge(events.onKeyMessage$(mediaElement),
-        events.onKeyAdded$(mediaElement),
-        events.onKeyError$(mediaElement))
-        .pipe(takeUntil(this._closeSession$))
-        .subscribe((evt: Event) => this.trigger(evt.type, evt));
+    observableMerge(events.onKeyMessage$(mediaElement),
+                    events.onKeyAdded$(mediaElement),
+                    events.onKeyError$(mediaElement))
+      .pipe(takeUntil(this._closeSession$))
+      .subscribe((evt: Event) => this.trigger(evt.type, evt));
 
-      this.update = wrapUpdate((license, sessionId?) => {
-        if (this._key.indexOf("clearkey") >= 0) {
-          const licenseTypedArray =
-            license instanceof ArrayBuffer ? new Uint8Array(license) :
-              license;
-          /* tslint:disable no-unsafe-any */
-          const json = JSON.parse(bytesToStr(licenseTypedArray));
-          const key = strToBytes(atob(json.keys[0].k));
-          const kid = strToBytes(atob(json.keys[0].kid));
-          /* tslint:enable no-unsafe-any */
-          this._vid.webkitAddKey(this._key, key, kid, sessionId);
-        } else {
-          this._vid.webkitAddKey(this._key, license, null, sessionId);
-        }
-        this.sessionId = sessionId;
-      });
-    }
-
-    generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
-      return new PPromise((resolve) => {
-        this._vid.webkitGenerateKeyRequest(this._key, initData);
-        resolve();
-      });
-    }
-
-    close(): Promise<void> {
-      return new PPromise((resolve) => {
-        this._closeSession$.next();
-        this._closeSession$.complete();
-        resolve();
-      });
-    }
-
-    load(): Promise<boolean> {
-      return PPromise.resolve(false);
-    }
-
-    remove(): Promise<void> {
-      return PPromise.resolve();
-    }
+    this.update = wrapUpdate((license, sessionId?) => {
+      if (this._key.indexOf("clearkey") >= 0) {
+        const licenseTypedArray =
+          license instanceof ArrayBuffer ? new Uint8Array(license) :
+            license;
+        /* tslint:disable no-unsafe-any */
+        const json = JSON.parse(bytesToStr(licenseTypedArray));
+        const key = strToBytes(atob(json.keys[0].k));
+        const kid = strToBytes(atob(json.keys[0].kid));
+        /* tslint:enable no-unsafe-any */
+        this._vid.webkitAddKey(this._key, key, kid, sessionId);
+      } else {
+        this._vid.webkitAddKey(this._key, license, null, sessionId);
+      }
+      this.sessionId = sessionId;
+    });
   }
 
-  const OldWebKitCustomMediaKeys = class implements ICustomMediaKeys {
-    private readonly ks_: string;
-    private _videoElement?: IOldWebkitHTMLMediaElement;
+  generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
+    return new PPromise((resolve) => {
+      this._vid.webkitGenerateKeyRequest(this._key, initData);
+      resolve();
+    });
+  }
 
-    constructor(keySystem: string) {
-      this.ks_ = keySystem;
+  close(): Promise<void> {
+    return new PPromise((resolve) => {
+      this._closeSession$.next();
+      this._closeSession$.complete();
+      resolve();
+    });
+  }
+
+  load(): Promise<boolean> {
+    return PPromise.resolve(false);
+  }
+
+  remove(): Promise<void> {
+    return PPromise.resolve();
+  }
+}
+
+class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
+  private readonly ks_: string;
+  private _videoElement?: IOldWebkitHTMLMediaElement;
+
+  constructor(keySystem: string) {
+    this.ks_ = keySystem;
+  }
+
+  _setVideo(videoElement: IOldWebkitHTMLMediaElement|HTMLMediaElement): void {
+    if (!isOldWebkitMediaElement(videoElement)) {
+      throw new Error("Video not attached to the MediaKeys");
     }
+    this._videoElement = videoElement;
+  }
 
-    _setVideo(videoElement: IOldWebkitHTMLMediaElement|HTMLMediaElement): void {
-      if (!isOldWebkitMediaElement(videoElement)) {
-        throw new Error("Video not attached to the MediaKeys");
-      }
-      this._videoElement = videoElement;
+  createSession(/* sessionType */): ICustomMediaKeySession {
+    if (this._videoElement == null) {
+      throw new Error("Video not attached to the MediaKeys");
     }
+    return new OldWebkitMediaKeySession(this._videoElement, this.ks_);
+  }
 
-    createSession(/* sessionType */): ICustomMediaKeySession {
-      if (this._videoElement == null) {
-        throw new Error("Video not attached to the MediaKeys");
-      }
-      return new OldWebkitMediaKeySession(this._videoElement, this.ks_);
-    }
+  setServerCertificate(): Promise<void> {
+    throw new Error("Server certificate is not implemented in your browser");
+  }
+}
 
-    setServerCertificate(): Promise<void> {
-      throw new Error("Server certificate is not implemented in your browser");
-    }
-  };
-
+export default function getOldWebKitMediaKeysCallbacks() {
   const isTypeSupported = function (keyType: string): boolean {
     // get any <video> element from the DOM or create one
     // and try the `canPlayType` method

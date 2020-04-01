@@ -92,7 +92,7 @@ if (isNode ||
              typeof WebKitMediaKeys.isTypeSupported === "function"
              /* tslint:enable no-unsafe-any */
   ) {
-    const callbacks = getWebKitMediaKeysCallbacks(WebKitMediaKeys);
+    const callbacks = getWebKitMediaKeysCallbacks();
     /* tslint:disable no-unsafe-any */
     isTypeSupported = callbacks.isTypeSupported;
     /* tslint:enable no-unsafe-any */
@@ -105,7 +105,7 @@ if (isNode ||
              typeof MSMediaKeys?.prototype?.createSession === "function")
              /* tslint:enable no-unsafe-any */
     {
-      const callbacks = getIE11MediaKeysCallbacks(MSMediaKeys);
+      const callbacks = getIE11MediaKeysCallbacks();
       /* tslint:disable no-unsafe-any */
       isTypeSupported = callbacks.isTypeSupported;
       /* tslint:enable no-unsafe-any */
