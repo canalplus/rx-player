@@ -1811,17 +1811,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return this._priv_trackChoiceManager.disableVideoTrack(currentPeriod);
   }
 
-  disableAudioOnly() : void {
-    if (!this._priv_contentInfos) {
-      return;
-    }
-    const { currentPeriod } = this._priv_contentInfos;
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      return;
-    }
-    return this._priv_trackChoiceManager.setInitialVideoTrack(currentPeriod, true);
-  }
-
   /**
    * @returns {Array.<Object>|null}
    * @deprecated

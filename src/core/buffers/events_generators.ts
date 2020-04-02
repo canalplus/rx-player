@@ -125,13 +125,11 @@ const EVENTS = {
 
   needsMediaSourceReload(
     { currentTime,
-      isPaused,
-      isAudioOnly } : { currentTime : number; 
-                          isPaused : boolean, 
-                          isAudioOnly : boolean }
+      isPaused } : { currentTime : number;
+                     isPaused : boolean; }
   ) : INeedsMediaSourceReload {
     return { type: "needs-media-source-reload",
-             value: { currentTime, isPaused, isAudioOnly } };
+             value: { currentTime, isPaused } };
   },
 
   needsDecipherabilityFlush(
