@@ -181,6 +181,7 @@ export default function createManifestFetcher(
 
                     // 2 - send response
                     const parsingTime = performance.now() - parsingTimeStart;
+                    schedulerWarnings$.complete();
                     return observableConcat(warningEvts$,
                                             observableOf({ type: "parsed" as const,
                                                            manifest,
