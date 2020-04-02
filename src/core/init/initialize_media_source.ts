@@ -262,6 +262,7 @@ export default function InitializeOnMediaSource(
       if (manifestEvt.type === "warning") { // Bubble up warning events
         return observableOf(manifestEvt);
       }
+      // Now that the Manifest is parsed, wait for the end of the other Observables.
       return observableCombineLatest([openMediaSource$, waitForEMEReady$])
         .pipe(map(([mediaSource]) => ({ type: "ready-to-load" as const,
                                         value: { mediaSource,
