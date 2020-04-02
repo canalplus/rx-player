@@ -451,7 +451,7 @@ export default function RepresentationBuffer<T>({
             const { index } = representation;
             if (index.isSegmentStillAvailable(retriedSegment) === false) {
               reCheckNeededSegments$.next();
-            } else if (index.canBeOutOfSyncError(evt.value.error)) {
+            } else if (index.canBeOutOfSyncError(evt.value.error, retriedSegment)) {
               return observableOf(EVENTS.manifestMightBeOufOfSync());
             }
             return EMPTY;

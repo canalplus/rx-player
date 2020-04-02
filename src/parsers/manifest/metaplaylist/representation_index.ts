@@ -158,10 +158,11 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
 
   /**
    * @param {Error} error
+   * @param {Object} segment
    * @returns {Boolean}
    */
-  public canBeOutOfSyncError(error : ICustomError) : boolean {
-    return this._wrappedIndex.canBeOutOfSyncError(error);
+  public canBeOutOfSyncError(error : ICustomError, segment : ISegment) : boolean {
+    return this._wrappedIndex.canBeOutOfSyncError(error, segment);
   }
 
   /**
