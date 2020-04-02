@@ -16,11 +16,13 @@
 
 import createManifestFetcher, {
   IManifestFetcherParsedResult,
+  IManifestFetcherParserOptions,
   IManifestFetcherWarningEvent,
 } from "./create_manifest_fetcher";
 
 export default createManifestFetcher;
 export {
   IManifestFetcherParsedResult,
+  IManifestFetcherParserOptions,
   IManifestFetcherWarningEvent,
 };

@@ -33,10 +33,14 @@ import config from "../../config";
 import log from "../../log";
 import Manifest from "../../manifest";
 import isNonEmptyString from "../../utils/is_non_empty_string";
-import { IManifestFetcherParsedResult } from "../fetchers";
+import {
+  IManifestFetcherParsedResult,
+  IManifestFetcherParserOptions,
+} from "../fetchers";
 import { IWarningEvent } from "./types";
 
-const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY } = config;
+const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
+        MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE } = config;
 
 /** Arguments to give to the `manifestUpdateScheduler` */
 export interface IManifestUpdateSchedulerArguments {
@@ -57,7 +61,7 @@ export interface IManifestUpdateSchedulerArguments {
 
 /** Function defined to refresh the Manifest */
 export type IManifestFetcher =
-    (manifestURL? : string, externalClockOffset?: number) =>
+    (manifestURL : string | undefined, options : IManifestFetcherParserOptions) =>
       Observable<IManifestFetcherParsedResult | IWarningEvent>;
 
 /** Events sent by the `IManifestRefreshScheduler` Observable */
@@ -93,13 +97,24 @@ export default function manifestUpdateScheduler({
   // The Manifest always keeps the same Manifest
   const { manifest } = initialManifest;
 
+  /** Number of consecutive times the parsing has been done in `unsafeMode`. */
+  let consecutiveUnsafeMode = 0;
   function handleManifestRefresh$(
     manifestInfos: { manifest: Manifest;
                      sendingTime?: number;
                      receivedTime? : number;
                      parsingTime : number;
                      updatingTime? : number; }): Observable<IWarningEvent> {
-    const { sendingTime } = manifestInfos;
+    const { sendingTime,
+            parsingTime,
+            updatingTime } = manifestInfos;
+    const totalUpdateTime = parsingTime + (updatingTime ?? 0);
+
+    // Only perform parsing in `unsafeMode` when the last full parsing took too
+    // much time and do not go higher than the maximum consecutive time.
+    const unsafeMode = consecutiveUnsafeMode > 0 ?
+      consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE :
+      totalUpdateTime >= 100;
 
     const internalRefresh$ = scheduleRefresh$
       .pipe(mergeMap(({ completeRefresh, delay }) => {
@@ -148,7 +163,8 @@ export default function manifestUpdateScheduler({
     //   - its lifetime expired.
     return observableMerge(autoRefresh$, internalRefresh$, expired$).pipe(
       take(1),
-      mergeMap(({ completeRefresh }) => refreshManifest(completeRefresh)),
+      mergeMap(({ completeRefresh }) => refreshManifest({ completeRefresh,
+                                                          unsafeMode })),
       mergeMap(evt => {
         if (evt.type === "warning") {
           return observableOf(evt);
@@ -166,7 +182,9 @@ export default function manifestUpdateScheduler({
    * @returns {Observable}
    */
    function refreshManifest(
-     completeRefresh : boolean
+     { completeRefresh,
+       unsafeMode } : { completeRefresh : boolean;
+                        unsafeMode : boolean; }
    ) : Observable<IManifestFetcherParsedResult | IWarningEvent> {
      const fullRefresh = completeRefresh || manifestUpdateUrl === undefined;
      const refreshURL = fullRefresh ? manifest.getUrl() :
@@ -176,7 +194,19 @@ export default function manifestUpdateScheduler({
        return EMPTY;
      }
      const externalClockOffset = manifest.clockOffset;
-     return fetchManifest(refreshURL, externalClockOffset)
+
+     if (unsafeMode) {
+       consecutiveUnsafeMode += 1;
+       log.info("Init: Refreshing the Manifest in \"unsafeMode\" for the " +
+                String(consecutiveUnsafeMode) + " consecutive time.");
+     } else if (consecutiveUnsafeMode > 0) {
+       log.info("Init: Not parsing the Manifest in \"unsafeMode\" anymore after " +
+                String(consecutiveUnsafeMode) + " consecutive times.");
+       consecutiveUnsafeMode = 0;
+     }
+     return fetchManifest(refreshURL, { externalClockOffset,
+                                        previousManifest: manifest,
+                                        unsafeMode })
        .pipe(mergeMap((value) => {
          if (value.type === "warning") {
            return observableOf(value);
@@ -200,7 +230,8 @@ export default function manifestUpdateScheduler({
              return startManualRefreshTimer(FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
                                             minimumManifestUpdateInterval,
                                             newSendingTime)
-               .pipe(mergeMap(() => refreshManifest(true)));
+               .pipe(mergeMap(() =>
+                 refreshManifest({ completeRefresh: true, unsafeMode: false })));
            }
          }
          return observableOf({ type: "parsed" as const,
