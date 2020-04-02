@@ -17,26 +17,29 @@
 import {
  ICustomError,
  NetworkError,
-} from "../../../../errors";
-import log from "../../../../log";
+} from "../../../../../errors";
+import log from "../../../../../log";
 import {
   IRepresentationIndex,
   ISegment,
-} from "../../../../manifest";
-import clearTimelineFromPosition from "../../utils/clear_timeline_from_position";
+  Representation,
+} from "../../../../../manifest";
+import clearTimelineFromPosition from "../../../utils/clear_timeline_from_position";
 import {
   fromIndexTime,
   getIndexSegmentEnd,
   IIndexSegment,
   toIndexTime,
-} from "../../utils/index_helpers";
-import isSegmentStillAvailable from "../../utils/is_segment_still_available";
-import updateSegmentTimeline from "../../utils/update_segment_timeline";
-import ManifestBoundsCalculator from "../manifest_bounds_calculator";
-import { IParsedS } from "../node_parsers/S";
-import getInitSegment from "./get_init_segment";
-import getSegmentsFromTimeline from "./get_segments_from_timeline";
-import { createIndexURLs } from "./tokens";
+} from "../../../utils/index_helpers";
+import isSegmentStillAvailable from "../../../utils/is_segment_still_available";
+import updateSegmentTimeline from "../../../utils/update_segment_timeline";
+import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
+// import { IParsedS } from "../../node_parsers/S";
+import getInitSegment from "../get_init_segment";
+import getSegmentsFromTimeline from "../get_segments_from_timeline";
+import { createIndexURLs } from "../tokens";
+import constructTimelineFromElements from "./construct_timeline_from_elements";
+import constructTimelineFromPreviousTimeline from "./construct_timeline_from_previous_timeline";
 
 /**
  * Index property defined for a SegmentTimeline RepresentationIndex
@@ -96,7 +99,7 @@ export interface ITimelineIndexIndexArgument {
   initialization? : { media? : string; range?: [number, number] };
   media? : string;
   startNumber? : number;
-  parseTimeline : () => IParsedS[];
+  parseTimeline : () => HTMLCollection;
   timescale : number;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
@@ -117,6 +120,15 @@ export interface ITimelineIndexIndexArgument {
 
 /** Aditional context needed by a SegmentTimeline RepresentationIndex. */
 export interface ITimelineIndexContextArgument {
+  /**
+   * The parser should take this previous version of the
+   * `TimelineRepresentationIndex` - which was from the same Representation
+   * parsed at an earlier time - as a base to speed-up the parsing process.
+   * /!\ If unexpected differences exist between both, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  baseOnPreviousRepresentation : Representation | null;
   /** Allows to obtain the minimum and maximum positions of a content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
@@ -136,56 +148,6 @@ export interface ITimelineIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
-}
-
-/**
- * Translate parsed `S` node into Segment compatible with this index:
- * Find out the start, repeatCount and duration of each of these.
- *
- * @param {Object} item - parsed `S` node
- * @param {Object|null} previousItem - the previously parsed Segment (related
- * to the `S` node coming just before). If `null`, we're talking about the first
- * segment.
- * @param {Object|null} nextItem - the `S` node coming next. If `null`, we're
- * talking about the last segment.
- * @param {number} timelineStart - Absolute start for the timeline. In the same
- * timescale than the given `S` nodes.
- * @returns {Object|null}
- */
-function fromParsedSToIndexSegment(
-  item : { start? : number; repeatCount? : number; duration? : number },
-  previousItem : IIndexSegment|null,
-  nextItem : { start? : number; repeatCount? : number; duration? : number }|null,
-  timelineStart : number
-) : IIndexSegment|null {
-  let start = item.start;
-  let duration = item.duration;
-  const repeatCount = item.repeatCount;
-  if (start == null) {
-    if (previousItem == null) {
-      start = timelineStart;
-    } else if (previousItem.duration != null) {
-      start = previousItem.start +
-              (previousItem.duration * (previousItem.repeatCount + 1));
-    }
-  }
-  if ((duration == null || isNaN(duration)) &&
-      nextItem != null && nextItem.start != null && !isNaN(nextItem.start) &&
-      start != null && !isNaN(start)
-  ) {
-    duration = nextItem.start - start;
-  }
-  if ((start != null && !isNaN(start)) &&
-      (duration != null && !isNaN(duration)) &&
-      (repeatCount == null || !isNaN(repeatCount))
-  ) {
-    return { start,
-             duration,
-             repeatCount: repeatCount === undefined ? 0 :
-                                                      repeatCount };
-  }
-  log.warn("DASH: A \"S\" Element could not have been parsed.");
-  return null;
 }
 
 /**
@@ -223,6 +185,16 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /** Underlying structure to retrieve segment information. */
   protected _index : ITimelineIndex;
 
+  /**
+   * This variable represents the same `TimelineRepresentationIndex` at the
+   * previous Manifest update.
+   * Note that it is not always set.
+   * This can be used as a base to speed-up the creation of the underlying
+   * index structure as it can be really heavy for long Manifests.
+   * To avoid taking too much memory, this variable is reset to `null` once used.
+   */
+  private _baseOnPreviousIndex : TimelineRepresentationIndex | null;
+
   /** Time, in terms of `performance.now`, of the last Manifest update. */
   private _lastUpdate : number;
 
@@ -238,8 +210,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /** Retrieve the maximum and minimum position of the whole content. */
   private _manifestBoundsCalculator : ManifestBoundsCalculator;
 
-  /** Lazily parse the part of the MPD declaring segments. */
-  private _parseTimeline : () => IParsedS[];
+  /**
+   * Lazily get the S elements from this timeline.
+   * `null` once this call has been done once, to free memory.
+   */
+  private _parseTimeline : (() => HTMLCollection) | null;
 
   /**
    * @param {Object} index
@@ -271,6 +246,14 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                                  performance.now() :
                                  context.receivedTime;
 
+    this._baseOnPreviousIndex = null;
+    if (context.baseOnPreviousRepresentation !== null &&
+        context.baseOnPreviousRepresentation.index instanceof TimelineRepresentationIndex)
+    {
+      // avoid too much nested references, to keep memory down
+      context.baseOnPreviousRepresentation.index._baseOnPreviousIndex = null;
+      this._baseOnPreviousIndex = context.baseOnPreviousRepresentation.index;
+    }
     this._isDynamic = isDynamic;
     this._parseTimeline = index.parseTimeline;
     this._index = { indexRange: index.indexRange,
@@ -313,7 +296,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   getSegments(from : number, duration : number) : ISegment[] {
     this._refreshTimeline(); // clear timeline if needed
     if (this._index.timeline === null) {
-      this._index.timeline = this._constructTimeline();
+      this._index.timeline = this._getTimeline();
     }
 
     // destructuring to please TypeScript
@@ -353,7 +336,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   getFirstPosition() : number|null {
     this._refreshTimeline();
     if (this._index.timeline === null) {
-      this._index.timeline = this._constructTimeline();
+      this._index.timeline = this._getTimeline();
     }
     const timeline = this._index.timeline;
     return timeline.length === 0 ? null :
@@ -370,7 +353,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   getLastPosition() : number|null {
     this._refreshTimeline();
     if (this._index.timeline === null) {
-      this._index.timeline = this._constructTimeline();
+      this._index.timeline = this._getTimeline();
     }
     const lastTime = TimelineRepresentationIndex.getIndexEnd(this._index.timeline,
                                                              this._scaledPeriodStart);
@@ -392,7 +375,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
     this._refreshTimeline();
     if (this._index.timeline === null) {
-      this._index.timeline = this._constructTimeline();
+      this._index.timeline = this._getTimeline();
     }
     const { timeline, timescale, indexTimeOffset } = this._index;
     return isSegmentStillAvailable(segment, timeline, timescale, indexTimeOffset);
@@ -410,7 +393,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   checkDiscontinuity(_time : number) : number {
     this._refreshTimeline();
     if (this._index.timeline === null) {
-      this._index.timeline = this._constructTimeline();
+      this._index.timeline = this._getTimeline();
     }
     const { timeline, timescale } = this._index;
     const scaledTime = toIndexTime(_time, this._index);
@@ -487,10 +470,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   _update(newIndex : TimelineRepresentationIndex) : void {
     if (this._index.timeline === null) {
-      this._index.timeline = this._constructTimeline();
+      this._index.timeline = this._getTimeline();
     }
     if (newIndex._index.timeline === null) {
-      newIndex._index.timeline = newIndex._constructTimeline();
+      newIndex._index.timeline = newIndex._getTimeline();
     }
     updateSegmentTimeline(this._index.timeline, newIndex._index.timeline);
     this._isDynamic = newIndex._isDynamic;
@@ -517,7 +500,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return true;
     }
     if (this._index.timeline === null) {
-      this._index.timeline = this._constructTimeline();
+      this._index.timeline = this._getTimeline();
     }
     const { timeline } = this._index;
     if (this._scaledPeriodEnd == null || timeline.length === 0) {
@@ -539,7 +522,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   private _refreshTimeline() : void {
     if (this._index.timeline === null) {
-      this._index.timeline = this._constructTimeline();
+      this._index.timeline = this._getTimeline();
     }
     const firstPosition = this._manifestBoundsCalculator.getMinimumBound();
     if (firstPosition == null) {
@@ -564,27 +547,41 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * Call this function when the timeline is unknown.
    * This function was added to only perform that task lazily, i.e. only when
    * first needed.
+   * After calling it, every now unneeded variable will be freed from memory.
+   * This means that calling _getTimeline more than once will just return an
+   * empty array.
    * @returns {Array.<Object>}
    */
-  private _constructTimeline() : IIndexSegment[] {
-    const initialTimeline = this._parseTimeline();
-    const timeline : IIndexSegment[] = [];
-    for (let i = 0; i < initialTimeline.length; i++) {
-      const item = initialTimeline[i];
-      const nextItem = timeline[timeline.length - 1] === undefined ?
-        null :
-        timeline[timeline.length - 1];
-      const prevItem = initialTimeline[i + 1] === undefined ?
-        null :
-        initialTimeline[i + 1];
-      const timelineElement = fromParsedSToIndexSegment(item,
-                                                        nextItem,
-                                                        prevItem,
-                                                        this._scaledPeriodStart);
-      if (timelineElement != null) {
-        timeline.push(timelineElement);
+  private _getTimeline() : IIndexSegment[] {
+    if (this._parseTimeline === null) {
+      if (this._index.timeline !== null) {
+        return this._index.timeline;
       }
+      log.error("DASH: Timeline already lazily parsed.");
+      return [];
     }
-    return timeline;
+
+    const newElements = this._parseTimeline();
+    this._parseTimeline = null; // Free memory
+
+    if (this._baseOnPreviousIndex === null) {
+      // Just completely parse the current timeline
+      return constructTimelineFromElements(newElements, this._scaledPeriodStart);
+    }
+
+    // Construct previously parsed timeline if not already done
+    let prevTimeline : IIndexSegment[];
+    if (this._baseOnPreviousIndex._index.timeline === null) {
+      prevTimeline = this._baseOnPreviousIndex._getTimeline();
+      this._baseOnPreviousIndex._index.timeline = prevTimeline;
+    } else {
+      prevTimeline = this._baseOnPreviousIndex._index.timeline;
+    }
+    this._baseOnPreviousIndex = null; // Free memory
+
+    return constructTimelineFromPreviousTimeline(newElements,
+                                                 prevTimeline,
+                                                 this._scaledPeriodStart);
+
   }
 }
