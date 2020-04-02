@@ -750,6 +750,18 @@ export default {
   /* tslint:enable no-object-literal-type-assertion */
 
   /**
+   * The Manifest parsing logic has a notion of "unsafeMode" which allows to
+   * speed-up this process a lot with a small risk of de-synchronization with
+   * what actually is on the server.
+   * Because using that mode is risky, and can lead to all sort of problems, we
+   * regularly should fall back to a regular "safe" parsing every once in a
+   * while.
+   * This value defines how many consecutive time maximum the "unsafeMode"
+   * parsing can be done.
+   */
+  MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE: 10,
+
+  /**
    * When we detect that the local Manifest might be out-of-sync with the
    * server's one, we schedule a Manifest refresh.
    * However, as this "unsynchronization" is only a theory and as we do not want
