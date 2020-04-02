@@ -20,6 +20,7 @@ const representation1 = {
   bitrate: 12,
   id: "r1",
   getMimeTypeString() : string { return ""; },
+  isSupported: true,
   index: {
     getInitSegment() : null { return null; },
     getSegments() : never { throw new Error("Not implemented"); },
@@ -42,6 +43,7 @@ const representation2 = {
   bitrate: 14,
   id: "r2",
   getMimeTypeString() : string { return ""; },
+  isSupported: true,
   index: {
     getInitSegment() : null { return null; },
     getSegments() : never { throw new Error("Not implemented"); },

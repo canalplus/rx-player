@@ -21,3 +21,6 @@ export enum MANIFEST_UPDATE_TYPE {
   /** Only a shortened version of the Manifest has been downloaded. */
   Partial,
 }
+
+/** Every possible value for the Adaptation's `type` property. */
+export type IAdaptationType = "video" | "audio" | "text" | "image";

@@ -15,7 +15,6 @@
  */
 
 import Adaptation, {
-  IAdaptationType,
   IRepresentationFilter,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
@@ -33,6 +32,7 @@ import IRepresentationIndex, {
   ISegment,
   StaticRepresentationIndex,
 } from "./representation_index";
+import { IAdaptationType } from "./types";
 
 export default Manifest;
 export {

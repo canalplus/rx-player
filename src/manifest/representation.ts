@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { isCodecSupported } from "../compat";
 import log from "../log";
 import {
   IContentProtections,
@@ -22,6 +23,7 @@ import {
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import { concat } from "../utils/byte_parsing";
 import IRepresentationIndex from "./representation_index";
+import { IAdaptationType } from "./types";
 
 export interface IContentProtectionsInitDataObject {
   type : string;
@@ -90,10 +92,13 @@ class Representation {
    */
   public decipherable? : boolean;
 
+  /** `true` if the Representation is in a supported codec, false otherwise. */
+  public isSupported : boolean;
+
   /**
    * @param {Object} args
    */
-  constructor(args : IParsedRepresentation) {
+  constructor(args : IParsedRepresentation, opts : { type : IAdaptationType }) {
     this.id = args.id;
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
@@ -119,6 +124,10 @@ class Representation {
     }
 
     this.index = args.index;
+    this.isSupported = opts.type === "audio" ||
+                       opts.type === "video" ?
+      isCodecSupported(this.getMimeTypeString()) :
+      true; // TODO for other types
   }
 
   /**
@@ -127,7 +136,7 @@ class Representation {
    * @returns {string}
    */
   getMimeTypeString() : string {
-    return `${this.mimeType};codecs="${this.codec}"`;
+    return `${this.mimeType ?? ""};codecs="${this.codec ?? ""}"`;
   }
 
   /**
