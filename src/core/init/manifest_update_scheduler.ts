@@ -117,11 +117,17 @@ export default function manifestUpdateScheduler({
     if (manifest.lifetime === undefined || manifest.lifetime < 0) {
       autoRefresh$ = EMPTY;
     } else {
-      const { parsingTime, updatingTime } = manifestInfos;
       let autoRefreshInterval = manifest.lifetime * 1000 - timeSinceRequest;
-      if (parsingTime + (updatingTime ?? 0) >= (manifest.lifetime * 1000) / 4) {
-        const newInterval = Math.max(autoRefreshInterval, 0)
-                            + parsingTime + (updatingTime ?? 0);
+      if (manifest.lifetime < 3 && totalUpdateTime >= 100) {
+        const defaultDelay = (3 - manifest.lifetime) * 1000 + autoRefreshInterval;
+        const newInterval = Math.max(defaultDelay,
+                                     Math.max(autoRefreshInterval, 0) + totalUpdateTime);
+        log.info("MUS: Manifest update rythm is too frequent. Postponing next request.",
+                 autoRefreshInterval,
+                 newInterval);
+        autoRefreshInterval = newInterval;
+      } else if (totalUpdateTime >= (manifest.lifetime * 1000) / 10) {
+        const newInterval = Math.max(autoRefreshInterval, 0) + totalUpdateTime;
         log.info("MUS: Manifest took too long to parse. Postponing next request",
                  autoRefreshInterval,
                  newInterval);
