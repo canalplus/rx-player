@@ -230,10 +230,7 @@ export default class TrackChoiceManager {
     adaptation$ : Subject<Adaptation|null>
   ) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    let adaptations = period.adaptations[bufferType];
-    if (adaptations == null) {
-      adaptations = [];
-    }
+    const adaptations = period.getPlayableAdaptations(bufferType);
     if (periodItem != null) {
       if (periodItem[bufferType] != null) {
         log.warn(`TrackChoiceManager: ${bufferType} already added for period`, period);
@@ -309,9 +306,7 @@ export default class TrackChoiceManager {
     }
 
     const preferredAudioTracks = this._preferredAudioTracks.getValue();
-    const audioAdaptations = period.adaptations.audio === undefined ?
-      [] :
-      period.adaptations.audio;
+    const audioAdaptations = period.getPlayableAdaptations("audio");
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
     if (chosenAudioAdaptation === null) {
@@ -347,9 +342,7 @@ export default class TrackChoiceManager {
     }
 
     const preferredTextTracks = this._preferredTextTracks.getValue();
-    const textAdaptations = period.adaptations.text === undefined ?
-      [] :
-      period.adaptations.text;
+    const textAdaptations = period.getPlayableAdaptations("text");
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (chosenTextAdaptation === null) {
       // If the Period was previously without text, keep it that way
@@ -383,9 +376,7 @@ export default class TrackChoiceManager {
     }
 
     const preferredVideoTracks = this._preferredVideoTracks.getValue();
-    const videoAdaptations = period.adaptations.video === undefined ?
-      [] :
-      period.adaptations.video;
+    const videoAdaptations = period.getPlayableAdaptations("video");
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
     if (chosenVideoAdaptation === null) {
@@ -745,9 +736,7 @@ export default class TrackChoiceManager {
 
       const { period,
               audio: audioItem } = periodItem;
-      const audioAdaptations = period.adaptations.audio === undefined ?
-        [] :
-        period.adaptations.audio;
+      const audioAdaptations = period.getPlayableAdaptations("audio");
       const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
       if (chosenAudioAdaptation === null ||
@@ -793,9 +782,7 @@ export default class TrackChoiceManager {
 
       const { period,
               text: textItem } = periodItem;
-      const textAdaptations = period.adaptations.text === undefined ?
-        [] :
-        period.adaptations.text;
+      const textAdaptations = period.getPlayableAdaptations("text");
       const chosenTextAdaptation = this._textChoiceMemory.get(period);
 
       if (chosenTextAdaptation === null ||
@@ -838,9 +825,7 @@ export default class TrackChoiceManager {
       }
 
       const { period, video: videoItem, } = periodItem;
-      const videoAdaptations = period.adaptations.video === undefined ?
-        [] :
-        period.adaptations.video;
+      const videoAdaptations = period.getPlayableAdaptations("video");
       const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
       if (chosenVideoAdaptation === null ||
