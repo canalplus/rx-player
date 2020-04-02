@@ -34,7 +34,7 @@ function regularManifestLoader(
   if (url === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
-  return request({ url, responseType: "document" });
+  return request({ url, responseType: "text" });
 }
 
 /**
