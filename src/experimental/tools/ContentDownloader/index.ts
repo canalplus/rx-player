@@ -161,6 +161,10 @@ class ContentDownloader {
               size,
               duration: manifest.getMaximumPosition() - manifest.getMinimumPosition(),
               metadata,
+            }).then(() => {
+              if (progress.percentage === 100) {
+                options.onFinished?.();
+              }
             }).catch((err: Error) => {
               if (err instanceof Error) {
                return options?.onError?.(err);
@@ -226,6 +230,10 @@ class ContentDownloader {
               size,
               duration,
               metadata,
+            }).then(() => {
+              if (progress.percentage === 100) {
+                callbacks?.onFinished?.();
+              }
             }).catch((err) => {
               if (err instanceof Error) {
                return callbacks?.onError?.(err);

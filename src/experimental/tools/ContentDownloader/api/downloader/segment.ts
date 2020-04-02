@@ -15,7 +15,7 @@
  */
 
 import { EMPTY, merge, Observable, of, Subject } from "rxjs";
-import { map, mergeMap, reduce, scan, takeUntil, tap } from "rxjs/operators";
+import { distinct, map, mergeMap, reduce, scan, takeUntil, tap } from "rxjs/operators";
 
 import { ISegmentParserResponse } from "../../../../../transports";
 import find from "../../../../../utils/array_find";
@@ -233,7 +233,7 @@ function handleAbstractSegmentPipelineContextFor(
 export function segmentPipelineDownloader$(
   builderObs$: Observable<IInitGroupedSegments>,
   builderInit: IManifestDBState,
-  { contentID, pause$, db, ...cbsEvt }: IUtils
+  { contentID, pause$, db, onError }: IUtils
 ): Observable<IManifestDBState> {
   return builderObs$.pipe(
     mergeMap(
@@ -287,7 +287,7 @@ export function segmentPipelineDownloader$(
           data: chunkData.data,
           size: chunkData.data.byteLength,
         }).catch((err: Error) => {
-          cbsEvt.onError?.(new IndexedDBError(`
+           onError?.(new IndexedDBError(`
             ${contentID}: Impossible
             to store the current segment (${contentType}) at ${timeScaled}: ${err.message}
           `));
@@ -312,10 +312,9 @@ export function segmentPipelineDownloader$(
         acc.progress.segmentsDownloaded += 1;
         const percentage =
           (acc.progress.segmentsDownloaded / acc.progress.totalSegments) * 100;
-        acc.progress.percentage =
-          percentage > 98 && percentage < 100
-            ? percentage
-            : Math.round(percentage);
+        acc.progress.percentage = percentage > 98 && percentage < 100
+        ? percentage
+        : Math.round(percentage);
         acc.size += chunkData.data.byteLength;
         if (nextSegments === undefined) {
           return acc;
@@ -345,8 +344,7 @@ export function segmentPipelineDownloader$(
       },
       builderInit
     ),
-    tap(({ size, progress }) =>
-      cbsEvt.onProgress?.({ progress: progress.percentage, size })),
+    distinct(({ progress }) => progress.percentage),
     takeUntil(pause$)
   );
 }

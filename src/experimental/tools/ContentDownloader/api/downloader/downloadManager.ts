@@ -16,7 +16,7 @@
 
 import { IDBPDatabase } from "idb";
 import { AsyncSubject, combineLatest, of } from "rxjs";
-import { filter, startWith } from "rxjs/operators";
+import { filter, startWith, tap } from "rxjs/operators";
 
 import { SegmentPipelineCreator } from "../../../../../core/pipelines";
 import { ICallbacks, IInitSettings, IStoredManifest } from "../../types";
@@ -52,6 +52,9 @@ class DownloadManager {
     );
     return combineLatest([
       pipelineSegmentDownloader$.pipe(
+        tap(({ progress: { percentage }, size }) => {
+          onProgress?.({ progress: percentage, size });
+        }),
         // TODO: See what we can do here with, this define the frequency of save
         filter(({ progress: { percentage } }) => percentage % 10 === 0),
         startWith(null)
@@ -70,6 +73,8 @@ class DownloadManager {
       transport,
       size,
     } = resumeSettings;
+    const onError = callbacks?.onError;
+    const onProgress = callbacks?.onProgress;
     const segmentPipelineCreator = new SegmentPipelineCreator<any>(
       getTransportPipelineByTransport(transport),
       {
@@ -95,10 +100,12 @@ class DownloadManager {
         type: "resume",
       }),
       builderInit,
-      { contentID, db: this.db, pause$, ...callbacks }
+      { contentID, db: this.db, pause$, onError }
     );
     return combineLatest([
       pipelineSegmentDownloader$.pipe(
+        tap(({ progress: { percentage }, size: progressSize }) =>
+          onProgress?.({ progress: percentage, size: progressSize })),
         // TODO: See what we can do here with, this define the frequency of save
         filter(({ progress: { percentage } }) => percentage % 10 === 0),
         startWith(null)
