@@ -1557,20 +1557,7 @@ it was called:
 
 _return value_: ``void``
 
-Disable the video track adaptation.
-
-This permits to play in **Audio only** mode.
-
-> Will enter in `RELOADING` state for a short period.
-
-<a name="meth-disableAudioOnly"></a>
-### disableAudioOnly #####################################################
-
-_return value_: ``void``
-
-Disable the **Audio only** mode, by switching from audio adaptation only to video/audio adaptations.
-
-This permits to play in **normal** mode with video.
+Deactivate the current text track, if one.
 
 > Will enter in `RELOADING` state for a short period.
 

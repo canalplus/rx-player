@@ -196,11 +196,7 @@ export default function AdaptationBuffer<T>({
         // To do that properly, we need to reload the MediaSource
         if (directManualBitrateSwitching && estimate.manual && i !== 0) {
           return clock$.pipe(take(1),
-                             map(t => EVENTS.needsMediaSourceReload({
-                               currentTime: t.currentTime,
-                               isPaused: t.isPaused,
-                               isAudioOnly: false,
-                              })));
+                             map(t => EVENTS.needsMediaSourceReload(t)));
         }
 
         const representationChange$ =

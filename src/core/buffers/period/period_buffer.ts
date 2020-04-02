@@ -125,11 +125,7 @@ export default function PeriodBuffer({
             .removeBuffer(period.start,
                           period.end == null ? Infinity :
                                                period.end);
-          return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload({
-            currentTime: tick.currentTime,
-            isPaused: tick.isPaused,
-            isAudioOnly: true,
-          })));
+          return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
         } else {
           if (sourceBufferStatus.type === "unset") {
             sourceBuffersStore.disableSourceBuffer(bufferType);
@@ -144,13 +140,9 @@ export default function PeriodBuffer({
       }
 
       // Check if we are in AudioOnly mode, if yes, revert to normal mode
-      const videoStatus = sourceBuffersStore.getStatus('video');
+      const videoStatus = sourceBuffersStore.getStatus("video");
       if (videoStatus.type === "disabled" && adaptation.type === "video") {
-        return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload({
-          currentTime: tick.currentTime,
-          isPaused: tick.isPaused,
-          isAudioOnly: false,
-        })));
+        return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
       }
 
       log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation, period);
@@ -167,11 +159,7 @@ export default function PeriodBuffer({
                                                        adaptation,
                                                        tick);
           if (strategy.type === "needs-reload") {
-            return observableOf(EVENTS.needsMediaSourceReload({
-              currentTime: tick.currentTime,
-              isPaused: tick.isPaused,
-              isAudioOnly: false,
-            }));
+            return observableOf(EVENTS.needsMediaSourceReload(tick));
           }
 
           const cleanBuffer$ = strategy.type === "clean-buffer" ?
