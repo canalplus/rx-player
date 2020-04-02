@@ -57,7 +57,7 @@ import {
   ITransportPipelines,
 } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
-import generateManifestLoader from "../utils/document_manifest_loader";
+import generateManifestLoader from "../utils/text_manifest_loader";
 import extractTimingsInfos from "./extract_timings_infos";
 import { patchSegment } from "./isobmff";
 import generateSegmentLoader from "./segment_loader";

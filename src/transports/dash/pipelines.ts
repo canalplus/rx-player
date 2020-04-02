@@ -18,7 +18,7 @@ import {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
-import generateManifestLoader from "../utils/document_manifest_loader";
+import generateManifestLoader from "../utils/text_manifest_loader";
 import {
   imageLoader,
   imageParser,
