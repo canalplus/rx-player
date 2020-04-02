@@ -184,14 +184,16 @@ export default interface IRepresentationIndex {
   isSegmentStillAvailable(segment : ISegment) : boolean | undefined;
 
   /**
-   * Returns true if the Error given can indicate that the local index became
-   * "unsynchronized" with the server.
+   * Returns true if the `error` given following the request of `segment` can
+   * indicate that the index became "unsynchronized" with the server.
    * Some transport cannot become unsynchronized and can return false directly.
    * Note: This API assumes that the user first checked that the segment is
    * still available through `isSegmentStillAvailable`.
+   * @param {Error} error
+   * @param {Object} segment
    * @returns {Boolean}
    */
-  canBeOutOfSyncError(error : ICustomError) : boolean;
+  canBeOutOfSyncError(error : ICustomError, segment : ISegment) : boolean;
 
   /**
    * Checks if the given time - in seconds - is in a discontinuity. That is:
