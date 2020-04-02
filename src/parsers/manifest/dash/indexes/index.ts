@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-export type ITimelineParser = () => HTMLCollection;
+import BaseRepresentationIndex from "./base";
+import ListRepresentationIndex from "./list";
+import TemplateRepresentationIndex from "./template";
+import TimelineRepresentationIndex from "./timeline";
 
-/**
- * @param {Element} root
- * @returns {Function}
- */
-export default function createSegmentTimelineParser(root: Element) : ITimelineParser {
-  let result : HTMLCollection | null = null;
-  return function() : HTMLCollection {
-    if (result === null) {
-      const elements = root.getElementsByTagName("S");
-      result = elements;
-      return elements;
-    }
-    return result;
-  };
-}
+export {
+  BaseRepresentationIndex,
+  ListRepresentationIndex,
+  TemplateRepresentationIndex,
+  TimelineRepresentationIndex,
+};

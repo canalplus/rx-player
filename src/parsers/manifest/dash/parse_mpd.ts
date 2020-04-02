@@ -15,10 +15,10 @@
  */
 
 import config from "../../../config";
+import Manifest from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import { normalizeBaseURL } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
-import checkManifestIDs from "../utils/check_manifest_ids";
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
@@ -43,6 +43,15 @@ const { DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 } = config;
 export interface IMPDParserArguments {
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
+  /**
+   * The parser should take this Manifest - which is a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between the two, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  baseOnPreviousManifest : Manifest | null;
   /**
    * If set, offset to add to `performance.now()` to obtain the current server's
    * time.
@@ -220,6 +229,7 @@ function parseCompleteIntermediateRepresentation(
                           availabilityStartTime,
                           availabilityTimeOffset,
                           baseURLs,
+                          baseOnPreviousManifest: args.baseOnPreviousManifest,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
@@ -249,7 +259,6 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.minimumUpdatePeriod;
   }
 
-  checkManifestIDs(parsedMPD);
   const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
   const now = performance.now();
   if (!isDynamic) {

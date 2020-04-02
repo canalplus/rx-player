@@ -79,8 +79,11 @@ export default function generateManifestParser(
                    response.responseData as Document;
 
     const externalClockOffset = serverTimeOffset ?? argClockOffset;
+    const baseOnPreviousManifest = args.unsafeMode ? args.previousManifest :
+                                                     null;
     const parsedManifest = dashManifestParser(data, { aggressiveMode:
                                                         aggressiveMode === true,
+                                                      baseOnPreviousManifest,
                                                       url,
                                                       referenceDateTime,
                                                       externalClockOffset });
