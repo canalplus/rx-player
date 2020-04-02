@@ -17,7 +17,7 @@
 import {
   asapScheduler,
   BehaviorSubject,
-  EMPTY,
+  combineLatest as observableCombineLatest,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -26,6 +26,7 @@ import {
 import {
   filter,
   finalize,
+  ignoreElements,
   map,
   mapTo,
   mergeMap,
@@ -37,7 +38,6 @@ import {
   take,
   takeUntil,
   tap,
-  withLatestFrom,
 } from "rxjs/operators";
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
@@ -151,6 +151,17 @@ export type IInitEvent = IManifestReadyEvent |
                          IDecipherabilityUpdateEvent |
                          IWarningEvent;
 
+/** Internal event emitted when the content is ready to load. */
+interface IReadyToLoadEvent {
+  type: "ready-to-load";
+  value: {
+    /** The MediaSource element on which the content will be loaded. */
+    mediaSource : MediaSource;
+    /** The initial information taken from the Manifest. */
+    parsedManifest : IManifestFetcherParsedResult;
+  };
+}
+
 /**
  * Play a content described by the given Manifest.
  *
@@ -201,48 +212,68 @@ export default function InitializeOnMediaSource(
           response.parse({ externalClockOffset })),
         share()));
 
-  /** Interface used to download segments */
+  /** Interface used to download segments. */
   const segmentFetcherCreator =
     new SegmentFetcherCreator<any>(transportPipelines, { lowLatencyMode,
                                                          maxRetryOffline: offlineRetry,
                                                          maxRetryRegular: segmentRetry });
 
-  // Create ABR Manager, which will choose the right "Representation" for a
-  // given "Adaptation".
+  /** Choose the right "Representation" for a given "Adaptation". */
   const abrManager = new ABRManager(adaptiveOptions);
 
-  // Create and open a new MediaSource object on the given media element.
-  // The MediaSource will be closed on unsubscription
+  /**
+   * Create and open a new MediaSource object on the given media element.
+   * The MediaSource will be closed on unsubscription.
+   */
   const openMediaSource$ = openMediaSource(mediaElement)
     .pipe(shareReplay()); // Cache value on success
 
-  // Send content protection data to the `EMEManager`
+  /** Send content protection data to the `EMEManager`. */
   const protectedSegments$ = new Subject<IContentProtection>();
 
-  // Create `EMEManager`, an observable which will handle content DRM
+  /** Create `EMEManager`, an observable which will handle content DRM. */
   const emeManager$ = openMediaSource$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems, protectedSegments$)),
     subscribeOn(asapScheduler), // to launch subscriptions only when all
     share());                   // Observables here are linked
 
-  // Translate errors coming from the media element into RxPlayer errors
-  // through a throwing Observable.
+  /**
+   * Translate errors coming from the media element into RxPlayer errors
+   * through a throwing Observable.
+   */
   const mediaError$ = throwOnMediaError(mediaElement);
 
-  const loadContent$ = fetchManifest(url, undefined).pipe(
-    withLatestFrom(openMediaSource$.pipe(startWith(null)),
-                   emeManager$.pipe(filter(isEMEReadyEvent),
-                     mapTo(true),
-                     take(1),
-                     startWith(false))),
-    mergeMap(([ manifestEvt, initialMediaSource, isEMEReady ]) => {
-      if (manifestEvt.type === "warning") {
+  /**
+   * Emit when EME negociations that should happen before pushing any content
+   * have finished.
+   */
+  const waitForEMEReady$ = emeManager$.pipe(filter(isEMEReadyEvent),
+                                            take(1),
+                                            mapTo(true),
+                                            shareReplay()); // Cache value on success
+
+  /** Load and play the content asked. */
+  const loadContent$ = observableMerge(fetchManifest(url, undefined),
+                                       // Subscribe to both Observables without
+                                       // listening to prepare them
+                                       waitForEMEReady$.pipe(ignoreElements()),
+                                       openMediaSource$.pipe(ignoreElements())).pipe(
+    mergeMap((manifestEvt) : Observable<IWarningEvent | IReadyToLoadEvent> => {
+      if (manifestEvt.type === "warning") { // Bubble up warning events
         return observableOf(manifestEvt);
       }
-      if (!isEMEReady || initialMediaSource === null) {
-        return EMPTY; // not ready yet
+      return observableCombineLatest([openMediaSource$, waitForEMEReady$])
+        .pipe(map(([mediaSource]) => ({ type: "ready-to-load" as const,
+                                        value: { mediaSource,
+                                                 parsedManifest: manifestEvt } })));
+    }),
+    mergeMap((loadEvt) => {
+      if (loadEvt.type === "warning") { // Bubble up warning events
+        return observableOf(loadEvt);
       }
-      const { manifest } = manifestEvt;
+      const { parsedManifest,
+              mediaSource: initialMediaSource } = loadEvt.value;
+      const manifest = parsedManifest.manifest;
 
       log.debug("Init: Calculating initial time");
       const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
@@ -267,7 +298,7 @@ export default function InitializeOnMediaSource(
       const scheduleRefresh$ = new Subject<IManifestRefreshSchedulerEvent>();
 
       const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
-                                                        initialManifest: manifestEvt,
+                                                        initialManifest: parsedManifest,
                                                         manifestUpdateUrl,
                                                         minimumManifestUpdateInterval,
                                                         scheduleRefresh$ });
