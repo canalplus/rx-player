@@ -77,6 +77,12 @@ export interface IManifestRefreshSchedulerEvent {
    * before updating the Manifest
    */
   delay? : number;
+  /**
+   * Whether the parsing can be done in the more efficient "unsafeMode".
+   * This mode is extremely fast but can lead to de-synchronisation with the
+   * server.
+   */
+  canUseUnsafeMode : boolean;
 }
 
 /** Observable to send events related to refresh requests coming from the Player. */
@@ -112,16 +118,17 @@ export default function manifestUpdateScheduler({
 
     // Only perform parsing in `unsafeMode` when the last full parsing took too
     // much time and do not go higher than the maximum consecutive time.
-    const unsafeMode = consecutiveUnsafeMode > 0 ?
+    const unsafeModeEnabled = consecutiveUnsafeMode > 0 ?
       consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE :
       totalUpdateTime >= 100;
 
     const internalRefresh$ = scheduleRefresh$
-      .pipe(mergeMap(({ completeRefresh, delay }) => {
+      .pipe(mergeMap(({ completeRefresh, delay, canUseUnsafeMode }) => {
+        const unsafeMode = canUseUnsafeMode && unsafeModeEnabled;
         return startManualRefreshTimer(delay ?? 0,
                                        minimumManifestUpdateInterval,
                                        sendingTime)
-          .pipe(mapTo({ completeRefresh }));
+          .pipe(mapTo({ completeRefresh, unsafeMode }));
       }));
 
     const timeSinceRequest = sendingTime == null ? 0 :
@@ -149,22 +156,23 @@ export default function manifestUpdateScheduler({
         autoRefreshInterval = newInterval;
       }
       autoRefresh$ = observableTimer(Math.max(autoRefreshInterval, minInterval))
-        .pipe(mapTo({ completeRefresh: false }));
+        .pipe(mapTo({ completeRefresh: false, unsafeMode: unsafeModeEnabled }));
     }
 
     const expired$ = manifest.expired === null ?
       EMPTY :
       observableTimer(minInterval)
         .pipe(mergeMapTo(observableFrom(manifest.expired)),
-              mapTo({ completeRefresh: true }));
+              mapTo({ completeRefresh: true, unsafeMode: unsafeModeEnabled }));
 
     // Emit when the manifest should be refreshed. Either when:
     //   - A buffer asks for it to be refreshed
     //   - its lifetime expired.
     return observableMerge(autoRefresh$, internalRefresh$, expired$).pipe(
       take(1),
-      mergeMap(({ completeRefresh }) => refreshManifest({ completeRefresh,
-                                                          unsafeMode })),
+      mergeMap(({ completeRefresh,
+                  unsafeMode }) => refreshManifest({ completeRefresh,
+                                                     unsafeMode })),
       mergeMap(evt => {
         if (evt.type === "warning") {
           return observableOf(evt);
