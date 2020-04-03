@@ -328,11 +328,13 @@ export default function InitializeOnMediaSource(
           .pipe(tap(evt => {
                   switch (evt.type) {
                     case "needs-manifest-refresh":
-                      scheduleRefresh$.next({ completeRefresh: false });
+                      scheduleRefresh$.next({ completeRefresh: false,
+                                              canUseUnsafeMode: true });
                       break;
                     case "manifest-might-be-out-of-sync":
                       scheduleRefresh$.next({
                         completeRefresh: true,
+                        canUseUnsafeMode: false,
                         delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
                       });
                       break;
