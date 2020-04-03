@@ -38,7 +38,9 @@ import takeFirstSet from "../../utils/take_first_set";
 /** Single preference for an audio track Adaptation. */
 export type IAudioTrackPreference = null |
                                     { language : string;
-                                      audioDescription : boolean; };
+                                      audioDescription : boolean;
+                                      codec? : { all: boolean;
+                                                 test: RegExp; }; };
 
 /** Single preference for a text track Adaptation. */
 export type ITextTrackPreference = null |
@@ -106,7 +108,9 @@ interface ITMPeriodInfos { period : Period;
 /** Audio track preference once normalized by the TrackChoiceManager. */
 type INormalizedPreferredAudioTrack = null |
                                       { normalized : string;
-                                        audioDescription : boolean; };
+                                        audioDescription : boolean;
+                                        codec? : { all: boolean;
+                                                   test: RegExp; }; };
 
 /** Text track preference once normalized by the TrackChoiceManager. */
 type INormalizedPreferredTextTrack = null |
@@ -125,7 +129,8 @@ function normalizeAudioTracks(
   return tracks.map(t => t == null ?
     t :
     { normalized: normalizeLanguage(t.language),
-      audioDescription: t.audioDescription });
+      audioDescription: t.audioDescription,
+      codec: t.codec });
 }
 
 /**
@@ -841,13 +846,30 @@ function findFirstOptimalAudioAdaptation(
       return null;
     }
 
-    const foundAdaptation = arrayFind(audioAdaptations, (audioAdaptation) =>
-      takeFirstSet<string>(audioAdaptation.normalizedLanguage,
-                           "") === preferredAudioTrack.normalized &&
-      (preferredAudioTrack.audioDescription ?
-        audioAdaptation.isAudioDescription === true :
-        audioAdaptation.isAudioDescription !== true)
-    );
+    const foundAdaptation = arrayFind(audioAdaptations, (audioAdaptation) => {
+      const language = audioAdaptation.normalizedLanguage ?? "";
+      if (language !== preferredAudioTrack.normalized) {
+        return false;
+      }
+      if (preferredAudioTrack.audioDescription) {
+        if (audioAdaptation.isAudioDescription !== true) {
+          return false;
+        }
+      } else if (audioAdaptation.isAudioDescription === true) {
+        return false;
+      }
+      if (preferredAudioTrack.codec === undefined) {
+        return true;
+      }
+      const regxp = preferredAudioTrack.codec.test;
+      const codecTestingFn = (rep : Representation) =>
+        rep.codec !== undefined && regxp.test(rep.codec);
+
+      if (preferredAudioTrack.codec.all) {
+        return audioAdaptation.representations.every(codecTestingFn);
+      }
+      return audioAdaptation.representations.some(codecTestingFn);
+    });
 
     if (foundAdaptation !== undefined) {
       return foundAdaptation;

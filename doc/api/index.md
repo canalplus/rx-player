@@ -1327,6 +1327,25 @@ This method takes an array of objects describing the languages wanted:
 }
 ```
 
+Optionally, you can ask for tracks having specific codecs by adding a `codec`
+property:
+```js
+// Example: English tracks in Dolby Digital Plus
+{
+  language: "eng",
+  audioDescription: false,
+  codec: {
+    test: /ec-3/, // RegExp validating the codec you want.
+    all: true, // Whether all the profiles (i.e. Representation) in a track
+               // should be checked to have codecs compatible to that RegExp.
+               // If `true`, we will only choose a track if every profiles for
+               // it have a codec that is validated by that RegExp.
+               // If `false`, we will choose a track if we know that at least
+               // a single profile from it has a codec validated by that RegExp.
+  }
+}
+```
+
 All elements in that Array should be set in preference order: from the most
 preferred to the least preferred.
 
@@ -1382,15 +1401,9 @@ Returns the current list of preferred audio tracks - by order of preference.
 
 This returns the data in the same format that it was given to either the
 `preferredAudioTracks` constructor option or the last `setPreferredAudioTracks`
-if it was called:
-```js
-{
-  language: "fra", // {string} The wanted language
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-  audioDescription: false // {Boolean} Whether the audio track should be an
-                          // audio description for the visually impaired
-}
-```
+if it was called.
+
+It will return an empty Array if none of those two APIs were used until now.
 
 
 <a name="meth-setPreferredTextTracks"></a>
