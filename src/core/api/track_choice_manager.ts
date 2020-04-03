@@ -37,8 +37,8 @@ import takeFirstSet from "../../utils/take_first_set";
 
 /** Single preference for an audio track Adaptation. */
 export type IAudioTrackPreference = null |
-                                    { language : string;
-                                      audioDescription : boolean;
+                                    { language? : string;
+                                      audioDescription? : boolean;
                                       codec? : { all: boolean;
                                                  test: RegExp; }; };
 
@@ -107,8 +107,8 @@ interface ITMPeriodInfos { period : Period;
 
 /** Audio track preference once normalized by the TrackChoiceManager. */
 type INormalizedPreferredAudioTrack = null |
-                                      { normalized : string;
-                                        audioDescription : boolean;
+                                      { normalized? : string;
+                                        audioDescription? : boolean;
                                         codec? : { all: boolean;
                                                    test: RegExp; }; };
 
@@ -128,7 +128,8 @@ function normalizeAudioTracks(
 ) : INormalizedPreferredAudioTrack[] {
   return tracks.map(t => t == null ?
     t :
-    { normalized: normalizeLanguage(t.language),
+    { normalized: t.language === undefined ? undefined :
+                                             normalizeLanguage(t.language),
       audioDescription: t.audioDescription,
       codec: t.codec });
 }
@@ -847,16 +848,20 @@ function findFirstOptimalAudioAdaptation(
     }
 
     const foundAdaptation = arrayFind(audioAdaptations, (audioAdaptation) => {
-      const language = audioAdaptation.normalizedLanguage ?? "";
-      if (language !== preferredAudioTrack.normalized) {
-        return false;
-      }
-      if (preferredAudioTrack.audioDescription) {
-        if (audioAdaptation.isAudioDescription !== true) {
+      if (preferredAudioTrack.normalized !== undefined) {
+        const language = audioAdaptation.normalizedLanguage ?? "";
+        if (language !== preferredAudioTrack.normalized) {
           return false;
         }
-      } else if (audioAdaptation.isAudioDescription === true) {
-        return false;
+      }
+      if (preferredAudioTrack.audioDescription !== undefined) {
+        if (preferredAudioTrack.audioDescription) {
+          if (audioAdaptation.isAudioDescription !== true) {
+            return false;
+          }
+        } else if (audioAdaptation.isAudioDescription === true) {
+          return false;
+        }
       }
       if (preferredAudioTrack.codec === undefined) {
         return true;

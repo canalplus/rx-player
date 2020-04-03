@@ -224,53 +224,60 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="prop-preferredAudioTracks"></a>
 ### preferredAudioTracks #######################################################
 
-_type_: ``Array.<Object>``
+_type_: ``Array.<Object|null>``
 
 _defaults_: ``[]``
 
-Set the initial audio tracks preferences.
+This option allows to help the RxPlayer choose an initial audio track based on
+either language preferences, codec preferences or both.
 
-This option takes an array of objects describing the languages wanted:
+It is defined as an array of objects, each object describing constraints a
+track should respect.
+
+If the first object - defining the first set of constraints - can not be
+respected under the currently available audio tracks, the RxPlayer will skip
+it and check with the second object and so on.
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.
+
+Here is all the possible constraints you can set in any one of those objects
+(note that all properties are optional here, only those set will have an effect
+on which tracks will be filtered):
 ```js
 {
-  language: "fra", // {string} The wanted language
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-  audioDescription: false // {Boolean} Whether the audio track should be an
-                          // audio description for the visually impaired
-}
-```
+  language: "fra", // {string|undefined} The language the track should be in
+                   // (in preference as an ISO 639-1, ISO 639-2 or ISO 639-3
+                   // language code).
+                   // If not set or set to `undefined`, the RxPlayer won't
+                   // filter based on the language of the track.
 
-Optionally, you can ask for tracks having specific codecs by adding a `codec`
-property:
-```js
-// Example: English tracks in Dolby Digital Plus
-{
-  language: "eng",
-  audioDescription: false,
-  codec: {
-    test: /ec-3/, // RegExp validating the codec you want.
-    all: true, // Whether all the profiles (i.e. Representation) in a track
-               // should be checked to have codecs compatible to that RegExp.
-               // If `true`, we will only choose a track if every profiles for
-               // it have a codec that is validated by that RegExp.
+  audioDescription: false // {Boolean|undefined} Whether the audio track should
+                          // be an audio description for the visually impaired
+                          // or not.
+                          // If not set or set to `undefined`, the RxPlayer
+                          // won't filter based on that status.
+
+  codec: { // {Object|undefined} Constraints about the codec wanted.
+           // if not set or set to `undefined` we won't filter based on codecs.
+
+    test: /ec-3/, // {RegExp} RegExp validating the type of codec you want.
+
+    all: true, // {Boolean} Whether all the profiles (i.e. Representation) in a
+               // track should be checked against the RegExp given in `test`.
+               // If `true`, we will only choose a track if EVERY profiles for
+               // it have a codec information that is validated by that RegExp.
                // If `false`, we will choose a track if we know that at least
-               // a single profile from it has a codec validated by that RegExp.
+               // A SINGLE profile from it has codec information validated by
+               // that RegExp.
   }
 }
 ```
-
-All elements in that Array should be set in preference order: from the most
-preferred to the least preferred.
-
-When loading a content, the RxPlayer will then try to choose its audio track by
-comparing what is available with your current preferences (i.e. if the most
-preferred is not available, it will look if the second one etc.).
 
 This array of preferrences can be updated at any time through the
 ``setPreferredAudioTracks`` method, documented
 [here](./index.md#meth-getPreferredAudioTracks).
 
-#### Example
+#### Examples
 
 Let's imagine that you prefer to have french or italian over all other audio
 languages. If not found, you want to fallback to english:
@@ -283,6 +290,45 @@ const player = new RxPlayer({
     { language: "eng", audioDescription: false }
   ]
 });
+```
+
+Now let's imagine that you want to have in priority a track that contain at
+least one profile in Dolby Digital Plus (ec-3 codec) without caring about the
+language:
+```js
+const player = new RxPlayer({
+  preferredAudioTracks: [ { codec: { all: false, test: /ec-3/ } ]
+});
+```
+
+At last, let's combine both examples by preferring french over itialian, italian
+over english while preferring it to be in Dolby Digital Plus:
+```js
+const player = new RxPlayer({
+  preferredAudioTracks: [
+    {
+      language: "fra",
+      audioDescription: false,
+      codec: { all: false, test: /ec-3/ }
+    },
+
+    // We still prefer non-DD+ french over DD+ italian
+    { language: "fra", audioDescription: false },
+
+    {
+      language: "ita",
+      audioDescription: false,
+      codec: { all: false, test: /ec-3/ }
+    },
+    { language: "ita", audioDescription: false },
+
+    {
+      language: "eng",
+      audioDescription: false,
+      codec: { all: false, test: /ec-3/ }
+    },
+    { language: "eng", audioDescription: false }
+  ]
 ```
 
 ---
