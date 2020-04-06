@@ -24,6 +24,7 @@ import {
 } from "rxjs";
 import {
   catchError,
+  finalize,
   map,
   mergeMap,
 } from "rxjs/operators";
@@ -181,14 +182,13 @@ export default function createManifestFetcher(
 
                     // 2 - send response
                     const parsingTime = performance.now() - parsingTimeStart;
-                    schedulerWarnings$.complete();
                     return observableConcat(warningEvts$,
                                             observableOf({ type: "parsed" as const,
                                                            manifest,
                                                            sendingTime,
                                                            receivedTime,
                                                            parsingTime }));
-                  })));
+                  }))).pipe(finalize(() => { schedulerWarnings$.complete(); }));
               },
             };
           }));
