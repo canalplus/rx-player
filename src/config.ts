@@ -762,6 +762,14 @@ export default {
   MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE: 10,
 
   /**
+   * Minimum time spent parsing the Manifest before we can authorize parsing
+   * it in an "unsafeMode", to speed-up the process with a little risk.
+   * Please note that this parsing time also sometimes includes idle time such
+   * as when the parser is waiting for a request to finish.
+   */
+  MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE: 150,
+
+  /**
    * When we detect that the local Manifest might be out-of-sync with the
    * server's one, we schedule a Manifest refresh.
    * However, as this "unsynchronization" is only a theory and as we do not want
