@@ -95,10 +95,10 @@ export default function launchTestsForContent(manifestInfos) {
         player.loadVideo({ url: manifestInfos.url, transport });
 
         // should only have the manifest for now
+        await sleep(1);
         expect(xhrMock.getLockedXHR().length).to.equal(1);
         expect(xhrMock.getLockedXHR()[0].url).to.equal(manifestInfos.url);
 
-        await sleep(1);
         await xhrMock.flush(); // only wait for the manifest request
         await sleep(1);
 

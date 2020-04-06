@@ -21,7 +21,6 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
-  partition,
   Subject,
 } from "rxjs";
 import {
@@ -31,7 +30,6 @@ import {
   mapTo,
   mergeMap,
   share,
-  shareReplay,
   startWith,
   subscribeOn,
   switchMap,
@@ -241,17 +239,21 @@ export default function InitializeOnMediaSource(
                                             take(1),
                                             mapTo(true));
 
-  const [ warningManifest$, manifest$ ] = partition(
-    fetchManifest(url, undefined).pipe(shareReplay()),
-    (evt): evt is IWarningEvent => evt.type === "warning"
-  ) as [ Observable<IWarningEvent>,
-         Observable<IManifestFetcherParsedResult> ];
+  /** Do the first Manifest request. */
+  const initialManifestRequest$ = fetchManifest(url, undefined).pipe(
+    subscribeOn(asapScheduler), // to launch subscriptions only when all
+    share());                   // Observables here are linked
+
+  const initialManifestRequestWarnings$ = initialManifestRequest$
+    .pipe(filter((evt) : evt is IWarningEvent => evt.type === "warning"));
+  const initialManifest$ = initialManifestRequest$
+    .pipe(filter((evt) : evt is IManifestFetcherParsedResult => evt.type === "parsed"));
 
   /** Load and play the content asked. */
-  const loadContent$ = observableCombineLatest([manifest$,
+  const loadContent$ = observableCombineLatest([initialManifest$,
                                                 openMediaSource$,
                                                 waitForEMEReady$]).pipe(
-    mergeMap(([parsedManifest, initMediaSource]) => {
+    mergeMap(([parsedManifest, initialMediaSource]) => {
       const manifest = parsedManifest.manifest;
 
       log.debug("Init: Calculating initial time");
@@ -269,7 +271,7 @@ export default function InitializeOnMediaSource(
       });
 
       // handle initial load and reloads
-      const recursiveLoad$ = recursivelyLoadOnMediaSource(initMediaSource,
+      const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,
                                                           initialTime,
                                                           autoPlay);
 
@@ -373,5 +375,8 @@ export default function InitializeOnMediaSource(
       }
     }));
 
-  return observableMerge(warningManifest$, loadContent$, mediaError$, emeManager$);
+  return observableMerge(initialManifestRequestWarnings$,
+                         loadContent$,
+                         mediaError$,
+                         emeManager$);
 }
