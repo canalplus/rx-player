@@ -214,8 +214,9 @@ export default function InitializeOnMediaSource(
    * Create and open a new MediaSource object on the given media element.
    * The MediaSource will be closed on unsubscription.
    */
-  const openMediaSource$ = openMediaSource(mediaElement)
-    .pipe(shareReplay()); // Cache value on success
+  const openMediaSource$ = openMediaSource(mediaElement).pipe(
+    subscribeOn(asapScheduler), // to launch subscriptions only when all
+    share());                   // Observables here are linked
 
   /** Send content protection data to the `EMEManager`. */
   const protectedSegments$ = new Subject<IContentProtection>();
