@@ -40,7 +40,8 @@ import {
 import { IWarningEvent } from "./types";
 
 const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
-        MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE } = config;
+        MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE,
+        MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE } = config;
 
 /** Arguments to give to the `manifestUpdateScheduler` */
 export interface IManifestUpdateSchedulerArguments {
@@ -125,7 +126,7 @@ export default function manifestUpdateScheduler({
     // lot of time and do not go higher than the maximum consecutive time.
     const unsafeModeEnabled = consecutiveUnsafeMode > 0 ?
       consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE :
-      totalUpdateTime >= 100;
+      totalUpdateTime >= MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE;
 
     const internalRefresh$ = scheduleRefresh$
       .pipe(mergeMap(({ completeRefresh, delay, canUseUnsafeMode }) => {
