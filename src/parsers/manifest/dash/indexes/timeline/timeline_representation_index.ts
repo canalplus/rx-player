@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../../../../../config";
 import {
  ICustomError,
  NetworkError,
@@ -40,6 +41,8 @@ import getSegmentsFromTimeline from "../get_segments_from_timeline";
 import { createIndexURLs } from "../tokens";
 import constructTimelineFromElements from "./construct_timeline_from_elements";
 import constructTimelineFromPreviousTimeline from "./construct_timeline_from_previous_timeline";
+
+const { MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY } = config;
 
 /**
  * Index property defined for a SegmentTimeline RepresentationIndex
@@ -568,7 +571,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const newElements = this._parseTimeline();
     this._parseTimeline = null; // Free memory
 
-    if (this._unsafelyBaseOnPreviousIndex === null) {
+    if (this._unsafelyBaseOnPreviousIndex === null ||
+        newElements.length < MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY)
+    {
       // Just completely parse the current timeline
       return constructTimelineFromElements(newElements, this._scaledPeriodStart);
     }

@@ -769,6 +769,14 @@ export default {
   MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE: 200,
 
   /**
+   * Minimum amount of <S> elements in a DASH MPD's <SegmentTimeline> element
+   * necessary to begin parsing the current SegmentTimeline element in an
+   * unsafe manner (meaning: with risks of de-synchronization).
+   * This is only done when the "unsafeMode" parsing mode is enabled.
+   */
+  MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY: 300,
+
+  /**
    * When we detect that the local Manifest might be out-of-sync with the
    * server's one, we schedule a Manifest refresh.
    * However, as this "unsynchronization" is only a theory and as we do not want
