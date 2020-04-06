@@ -44,15 +44,6 @@ export interface IMPDParserArguments {
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
   /**
-   * The parser should take this Manifest - which is a previously parsed
-   * Manifest for the same dynamic content - as a base to speed-up the parsing
-   * process.
-   * /!\ If unexpected differences exist between the two, there is a risk of
-   * de-synchronization with what is actually on the server,
-   * Use with moderation.
-   */
-  baseOnPreviousManifest : Manifest | null;
-  /**
    * If set, offset to add to `performance.now()` to obtain the current server's
    * time.
    */
@@ -61,6 +52,15 @@ export interface IMPDParserArguments {
   manifestReceivedTime? : number;
   /** Default base time, in seconds. */
   referenceDateTime? : number;
+  /**
+   * The parser should take this Manifest - which is a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between the two, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousManifest : Manifest | null;
   /** URL of the manifest (post-redirection if one). */
   url? : string;
 }
@@ -221,7 +221,8 @@ function parseCompleteIntermediateRepresentation(
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
-  const clockOffset = args.externalClockOffset;
+  const { externalClockOffset: clockOffset,
+           unsafelyBaseOnPreviousManifest } = args;
   const availabilityTimeOffset =
     extractMinimumAvailabilityTimeOffset(rootChildren.baseURLs);
 
@@ -229,12 +230,12 @@ function parseCompleteIntermediateRepresentation(
                           availabilityStartTime,
                           availabilityTimeOffset,
                           baseURLs,
-                          baseOnPreviousManifest: args.baseOnPreviousManifest,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
                           receivedTime: args.manifestReceivedTime,
                           timeShiftBufferDepth,
+                          unsafelyBaseOnPreviousManifest,
                           xlinkInfos };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
   const mediaPresentationDuration = rootAttributes.duration;

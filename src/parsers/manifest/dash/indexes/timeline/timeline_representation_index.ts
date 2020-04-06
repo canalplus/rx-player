@@ -120,15 +120,6 @@ export interface ITimelineIndexIndexArgument {
 
 /** Aditional context needed by a SegmentTimeline RepresentationIndex. */
 export interface ITimelineIndexContextArgument {
-  /**
-   * The parser should take this previous version of the
-   * `TimelineRepresentationIndex` - which was from the same Representation
-   * parsed at an earlier time - as a base to speed-up the parsing process.
-   * /!\ If unexpected differences exist between both, there is a risk of
-   * de-synchronization with what is actually on the server,
-   * Use with moderation.
-   */
-  baseOnPreviousRepresentation : Representation | null;
   /** Allows to obtain the minimum and maximum positions of a content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
@@ -148,6 +139,15 @@ export interface ITimelineIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
+  /**
+   * The parser should take this previous version of the
+   * `TimelineRepresentationIndex` - which was from the same Representation
+   * parsed at an earlier time - as a base to speed-up the parsing process.
+   * /!\ If unexpected differences exist between both, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousRepresentation : Representation | null;
 }
 
 /**
@@ -185,16 +185,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /** Underlying structure to retrieve segment information. */
   protected _index : ITimelineIndex;
 
-  /**
-   * This variable represents the same `TimelineRepresentationIndex` at the
-   * previous Manifest update.
-   * Note that it is not always set.
-   * This can be used as a base to speed-up the creation of the underlying
-   * index structure as it can be really heavy for long Manifests.
-   * To avoid taking too much memory, this variable is reset to `null` once used.
-   */
-  private _baseOnPreviousIndex : TimelineRepresentationIndex | null;
-
   /** Time, in terms of `performance.now`, of the last Manifest update. */
   private _lastUpdate : number;
 
@@ -215,6 +205,16 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * `null` once this call has been done once, to free memory.
    */
   private _parseTimeline : (() => HTMLCollection) | null;
+
+  /**
+   * This variable represents the same `TimelineRepresentationIndex` at the
+   * previous Manifest update.
+   * Note that it is not always set.
+   * This can be used as a base to speed-up the creation of the underlying
+   * index structure as it can be really heavy for long Manifests.
+   * To avoid taking too much memory, this variable is reset to `null` once used.
+   */
+  private _unsafelyBaseOnPreviousIndex : TimelineRepresentationIndex | null;
 
   /**
    * @param {Object} index
@@ -246,14 +246,18 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                                  performance.now() :
                                  context.receivedTime;
 
-    this._baseOnPreviousIndex = null;
-    if (context.baseOnPreviousRepresentation !== null &&
-        context.baseOnPreviousRepresentation.index instanceof TimelineRepresentationIndex)
+    this._unsafelyBaseOnPreviousIndex = null;
+    if (context.unsafelyBaseOnPreviousRepresentation !== null &&
+        context.unsafelyBaseOnPreviousRepresentation.index
+          instanceof TimelineRepresentationIndex)
     {
       // avoid too much nested references, to keep memory down
-      context.baseOnPreviousRepresentation.index._baseOnPreviousIndex = null;
-      this._baseOnPreviousIndex = context.baseOnPreviousRepresentation.index;
+      context.unsafelyBaseOnPreviousRepresentation
+        .index._unsafelyBaseOnPreviousIndex = null;
+      this._unsafelyBaseOnPreviousIndex = context
+        .unsafelyBaseOnPreviousRepresentation.index;
     }
+
     this._isDynamic = isDynamic;
     this._parseTimeline = index.parseTimeline;
     this._index = { indexRange: index.indexRange,
@@ -564,20 +568,20 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const newElements = this._parseTimeline();
     this._parseTimeline = null; // Free memory
 
-    if (this._baseOnPreviousIndex === null) {
+    if (this._unsafelyBaseOnPreviousIndex === null) {
       // Just completely parse the current timeline
       return constructTimelineFromElements(newElements, this._scaledPeriodStart);
     }
 
     // Construct previously parsed timeline if not already done
     let prevTimeline : IIndexSegment[];
-    if (this._baseOnPreviousIndex._index.timeline === null) {
-      prevTimeline = this._baseOnPreviousIndex._getTimeline();
-      this._baseOnPreviousIndex._index.timeline = prevTimeline;
+    if (this._unsafelyBaseOnPreviousIndex._index.timeline === null) {
+      prevTimeline = this._unsafelyBaseOnPreviousIndex._getTimeline();
+      this._unsafelyBaseOnPreviousIndex._index.timeline = prevTimeline;
     } else {
-      prevTimeline = this._baseOnPreviousIndex._index.timeline;
+      prevTimeline = this._unsafelyBaseOnPreviousIndex._index.timeline;
     }
-    this._baseOnPreviousIndex = null; // Free memory
+    this._unsafelyBaseOnPreviousIndex = null; // Free memory
 
     return constructTimelineFromPreviousTimeline(newElements,
                                                  prevTimeline,

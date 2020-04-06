@@ -46,15 +46,6 @@ export interface IAdaptationInfos {
   aggressiveMode : boolean;
   /** availability time offset of the concerned Adaptation. */
   availabilityTimeOffset: number;
-  /**
-   * The parser should take this Adaptation - which is from a previously parsed
-   * Manifest for the same dynamic content - as a base to speed-up the parsing
-   * process.
-   * /!\ If unexpected differences exist between both, there is a risk of
-   * de-synchronization with what is actually on the server,
-   * Use with moderation.
-   */
-  baseOnPreviousAdaptation : Adaptation | null;
   /** Eventual URLs from which every relative URL will be based on. */
   baseURLs : string[];
   /** Allows to obtain the first available position of a dynamic content. */
@@ -72,6 +63,15 @@ export interface IAdaptationInfos {
   start : number;
   /** Depth of the buffer for the whole content, in seconds. */
   timeShiftBufferDepth? : number;
+  /**
+   * The parser should take this Adaptation - which is from a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between both, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousAdaptation : Adaptation | null;
 }
 
 /** Base context given to the various indexes. */
@@ -79,13 +79,6 @@ interface IIndexContext {
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
   availabilityTimeOffset: number;
-  /**
-   * The parser should take this Representation - which is the same as this one
-   * parsed at an earlier time - as a base to speed-up the parsing process.
-   * /!\ If unexpected differences exist between both, there is a risk of
-   * de-synchronization with what is actually on the server.
-   */
-  baseOnPreviousRepresentation: Representation | null;
   /** Allows to obtain the first available position of a dynamic content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /** Whether the Manifest can evolve with time. */
@@ -102,6 +95,13 @@ interface IIndexContext {
   representationBitrate? : number;
   /** Depth of the buffer for the whole content, in seconds. */
   timeShiftBufferDepth? : number;
+  /**
+   * The parser should take this Representation - which is the same as this one
+   * parsed at an earlier time - as a base to speed-up the parsing process.
+   * /!\ If unexpected differences exist between both, there is a risk of
+   * de-synchronization with what is actually on the server.
+   */
+  unsafelyBaseOnPreviousRepresentation: Representation | null;
 }
 
 /**
@@ -182,14 +182,14 @@ export default function parseRepresentations(
     }
 
     // 2. Retrieve previous version of the Representation, if one.
-    const baseOnPreviousRepresentation =
-      adaptationInfos.baseOnPreviousAdaptation?.getRepresentation(representationID) ??
+    const unsafelyBaseOnPreviousRepresentation = adaptationInfos
+      .unsafelyBaseOnPreviousAdaptation?.getRepresentation(representationID) ??
       null;
 
     // 3. Find Index
     const context = { aggressiveMode: adaptationInfos.aggressiveMode,
                       availabilityTimeOffset: adaptationInfos.availabilityTimeOffset,
-                      baseOnPreviousRepresentation,
+                      unsafelyBaseOnPreviousRepresentation,
                       manifestBoundsCalculator: adaptationInfos.manifestBoundsCalculator,
                       isDynamic: adaptationInfos.isDynamic,
                       periodEnd: adaptationInfos.end,

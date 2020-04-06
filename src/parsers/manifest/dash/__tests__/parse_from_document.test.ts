@@ -28,17 +28,17 @@ describe("parseFromDocument", () => {
     expect(function() {
       parseFromDocument(doc, {
         url: "",
-        baseOnPreviousManifest: null,
-        externalClockOffset: 10,
         aggressiveMode: false,
+        externalClockOffset: 10,
+        unsafelyBaseOnPreviousManifest: null,
       });
     }).toThrow("document root should be MPD");
     expect(function() {
       const prevManifest = {} as any as Manifest;
       parseFromDocument(doc, {
         url: "",
-        baseOnPreviousManifest: prevManifest,
         aggressiveMode: false,
+        unsafelyBaseOnPreviousManifest: prevManifest,
       });
     }).toThrow("document root should be MPD");
   });
