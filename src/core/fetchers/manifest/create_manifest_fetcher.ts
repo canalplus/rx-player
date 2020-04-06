@@ -188,7 +188,10 @@ export default function createManifestFetcher(
                                                            sendingTime,
                                                            receivedTime,
                                                            parsingTime }));
-                  }))).pipe(finalize(() => { schedulerWarnings$.complete(); }));
+
+                  }),
+                  finalize(() => { schedulerWarnings$.complete(); })
+                ));
               },
             };
           }));
