@@ -50,15 +50,6 @@ export interface IPeriodsContextInfos {
   aggressiveMode : boolean;
   availabilityTimeOffset: number;
   availabilityStartTime : number;
-  /**
-   * The parser should take this Manifest - which is a previously parsed
-   * Manifest for the same dynamic content - as a base to speed-up the parsing
-   * process.
-   * /!\ If unexpected differences exist between the two, there is a risk of
-   * de-synchronization with what is actually on the server,
-   * Use with moderation.
-   */
-  baseOnPreviousManifest : Manifest | null;
   baseURLs : string[];
   clockOffset? : number;
   duration? : number;
@@ -70,6 +61,15 @@ export interface IPeriodsContextInfos {
   receivedTime? : number;
   /** Depth of the buffer for the whole content, in seconds. */
   timeShiftBufferDepth? : number;
+  /**
+   * The parser should take this Manifest - which is a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between the two, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousManifest : Manifest | null;
   xlinkInfos : IXLinkInfos;
 }
 
@@ -130,19 +130,19 @@ export interface IPeriodsContextInfos {
       extractMinimumAvailabilityTimeOffset(periodIR.children.baseURLs) +
       contextInfos.availabilityTimeOffset;
 
-    const baseOnPreviousPeriod =
-      contextInfos.baseOnPreviousManifest?.getPeriod(periodID) ?? null;
+    const unsafelyBaseOnPreviousPeriod = contextInfos
+      .unsafelyBaseOnPreviousManifest?.getPeriod(periodID) ?? null;
 
     const periodInfos = { aggressiveMode: contextInfos.aggressiveMode,
                           availabilityTimeOffset,
-                          baseOnPreviousPeriod,
                           baseURLs: periodBaseURLs,
                           manifestBoundsCalculator,
                           end: periodEnd,
                           isDynamic,
                           receivedTime,
                           start: periodStart,
-                          timeShiftBufferDepth };
+                          timeShiftBufferDepth,
+                          unsafelyBaseOnPreviousPeriod };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
                                             periodInfos);
     const parsedPeriod : IParsedPeriod = { id: periodID,

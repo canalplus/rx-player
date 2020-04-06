@@ -42,15 +42,6 @@ export interface IAdaptationSetsContextInfos {
   aggressiveMode : boolean;
   /** availabilityTimeOffset of the concerned period. */
   availabilityTimeOffset: number;
-  /**
-   * The parser should take this Period - which is from a previously parsed
-   * Manifest for the same dynamic content - as a base to speed-up the parsing
-   * process.
-   * /!\ If unexpected differences exist between both, there is a risk of
-   * de-synchronization with what is actually on the server,
-   * Use with moderation.
-   */
-  baseOnPreviousPeriod : Period | null;
   /** Eventual URLs from which every relative URL will be based on. */
   baseURLs : string[];
   /** Allows to obtain the first available position of a content. */
@@ -68,6 +59,15 @@ export interface IAdaptationSetsContextInfos {
   start : number;
   /** Depth of the buffer for the whole content, in seconds. */
   timeShiftBufferDepth? : number;
+  /**
+   * The parser should take this Period - which is from a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between both, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousPeriod : Period | null;
 }
 
 // Supplementary information for "switchable" AdaptationSets of the same Period
@@ -267,7 +267,6 @@ export default function parseAdaptationSets(
     const adaptationInfos : IAdaptationInfos = {
       aggressiveMode: periodInfos.aggressiveMode,
       availabilityTimeOffset,
-      baseOnPreviousAdaptation: null,
       baseURLs: resolveBaseURLs(periodInfos.baseURLs, adaptationChildren.baseURLs),
       manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
       end: periodInfos.end,
@@ -275,10 +274,11 @@ export default function parseAdaptationSets(
       receivedTime: periodInfos.receivedTime,
       start: periodInfos.start,
       timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,
+      unsafelyBaseOnPreviousAdaptation: null,
     };
     if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
-      adaptationInfos.baseOnPreviousAdaptation =
-        periodInfos.baseOnPreviousPeriod?.getAdaptation(videoMainAdaptation.id) ?? null;
+      adaptationInfos.unsafelyBaseOnPreviousAdaptation = periodInfos
+        .unsafelyBaseOnPreviousPeriod?.getAdaptation(videoMainAdaptation.id) ?? null;
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
                                                    adaptationInfos);
@@ -322,8 +322,8 @@ export default function parseAdaptationSets(
       newID = adaptationID;
       parsedAdaptationsIDs.push(adaptationID);
 
-      adaptationInfos.baseOnPreviousAdaptation =
-        periodInfos.baseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
+      adaptationInfos.unsafelyBaseOnPreviousAdaptation = periodInfos
+        .unsafelyBaseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
                                                    adaptationInfos);
