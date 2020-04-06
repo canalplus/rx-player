@@ -114,10 +114,15 @@ export default function manifestUpdateScheduler({
     const { sendingTime,
             parsingTime,
             updatingTime } = manifestInfos;
+
+    /**
+     * Total time taken to fully update the last Manifest.
+     * Note: this time also includes possible requests done by the parsers.
+     */
     const totalUpdateTime = parsingTime + (updatingTime ?? 0);
 
-    // Only perform parsing in `unsafeMode` when the last full parsing took too
-    // much time and do not go higher than the maximum consecutive time.
+    // Only perform parsing in `unsafeMode` when the last full parsing took a
+    // lot of time and do not go higher than the maximum consecutive time.
     const unsafeModeEnabled = consecutiveUnsafeMode > 0 ?
       consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE :
       totalUpdateTime >= 100;
