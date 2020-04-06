@@ -766,7 +766,7 @@ export default {
    * Please note that this parsing time also sometimes includes idle time such
    * as when the parser is waiting for a request to finish.
    */
-  MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE: 150,
+  MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE: 200,
 
   /**
    * When we detect that the local Manifest might be out-of-sync with the
