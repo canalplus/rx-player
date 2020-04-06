@@ -21,12 +21,12 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
+  partition,
   Subject,
 } from "rxjs";
 import {
   filter,
   finalize,
-  ignoreElements,
   map,
   mapTo,
   mergeMap,
@@ -151,17 +151,6 @@ export type IInitEvent = IManifestReadyEvent |
                          IDecipherabilityUpdateEvent |
                          IWarningEvent;
 
-/** Internal event emitted when the content is ready to load. */
-interface IReadyToLoadEvent {
-  type: "ready-to-load";
-  value: {
-    /** The MediaSource element on which the content will be loaded. */
-    mediaSource : MediaSource;
-    /** The initial information taken from the Manifest. */
-    parsedManifest : IManifestFetcherParsedResult;
-  };
-}
-
 /**
  * Play a content described by the given Manifest.
  *
@@ -249,31 +238,19 @@ export default function InitializeOnMediaSource(
    */
   const waitForEMEReady$ = emeManager$.pipe(filter(isEMEReadyEvent),
                                             take(1),
-                                            mapTo(true),
-                                            shareReplay()); // Cache value on success
+                                            mapTo(true));
+
+  const [ warningManifest$, manifest$ ] = partition(
+    fetchManifest(url, undefined).pipe(shareReplay()),
+    (evt): evt is IWarningEvent => evt.type === "warning"
+  ) as [ Observable<IWarningEvent>,
+         Observable<IManifestFetcherParsedResult> ];
 
   /** Load and play the content asked. */
-  const loadContent$ = observableMerge(fetchManifest(url, undefined),
-                                       // Subscribe to both Observables without
-                                       // listening to prepare them
-                                       waitForEMEReady$.pipe(ignoreElements()),
-                                       openMediaSource$.pipe(ignoreElements())).pipe(
-    mergeMap((manifestEvt) : Observable<IWarningEvent | IReadyToLoadEvent> => {
-      if (manifestEvt.type === "warning") { // Bubble up warning events
-        return observableOf(manifestEvt);
-      }
-      // Now that the Manifest is parsed, wait for the end of the other Observables.
-      return observableCombineLatest([openMediaSource$, waitForEMEReady$])
-        .pipe(map(([mediaSource]) => ({ type: "ready-to-load" as const,
-                                        value: { mediaSource,
-                                                 parsedManifest: manifestEvt } })));
-    }),
-    mergeMap((loadEvt) => {
-      if (loadEvt.type === "warning") { // Bubble up warning events
-        return observableOf(loadEvt);
-      }
-      const { parsedManifest,
-              mediaSource: initialMediaSource } = loadEvt.value;
+  const loadContent$ = observableCombineLatest([manifest$,
+                                                openMediaSource$,
+                                                waitForEMEReady$]).pipe(
+    mergeMap(([parsedManifest, initMediaSource]) => {
       const manifest = parsedManifest.manifest;
 
       log.debug("Init: Calculating initial time");
@@ -291,7 +268,7 @@ export default function InitializeOnMediaSource(
       });
 
       // handle initial load and reloads
-      const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,
+      const recursiveLoad$ = recursivelyLoadOnMediaSource(initMediaSource,
                                                           initialTime,
                                                           autoPlay);
 
@@ -395,5 +372,5 @@ export default function InitializeOnMediaSource(
       }
     }));
 
-  return observableMerge(loadContent$, mediaError$, emeManager$);
+  return observableMerge(warningManifest$, loadContent$, mediaError$, emeManager$);
 }
