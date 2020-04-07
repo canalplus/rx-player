@@ -36,7 +36,7 @@ import {
   ILoaderDataLoadedValue,
   ILoaderProgress,
   ISegmentLoaderArguments,
-  ISegmentLoaderEvent,
+  ISegmentLoaderEvent as ISegmentPipelineLoaderEvent,
   ISegmentLoaderObservable,
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
@@ -44,73 +44,69 @@ import castToObservable from "../../../utils/cast_to_observable";
 import objectAssign from "../../../utils/object_assign";
 import tryCatch from "../../../utils/rx-try_catch";
 import errorSelector from "../utils/error_selector";
-import tryURLsWithBackoff from "../utils/try_urls_with_backoff";
+import tryURLsWithBackoff, {
+  IBackoffOptions,
+} from "../utils/try_urls_with_backoff";
 
 // Data comes from a local cache (no request was done)
-interface IPipelineLoaderCache<T> { type : "cache";
-                                    value : ILoaderDataLoadedValue<T>; }
-export type IPipelineLoaderProgress = ILoaderProgress;
+interface ISegmentLoaderCachedSegmentEvent<T> { type : "cache";
+                                                 value : ILoaderDataLoadedValue<T>; }
+export type ISegmentLoaderProgress = ILoaderProgress;
 
 // An Error happened while loading (usually a request error)
-export interface IPipelineLoaderWarning { type : "warning";
-                                          value : ICustomError; }
+export interface ISegmentLoaderWarning { type : "warning";
+                                         value : ICustomError; }
 
 // Request metrics are available
-export interface IPipelineLoaderMetrics { type : "metrics";
-                                          value : { size? : number;
-                                                    duration? : number; }; }
+export interface ISegmentLoaderMetrics { type : "metrics";
+                                         value : { size? : number;
+                                                   duration? : number; }; }
 
 // The request begins to be done
-export interface IPipelineLoaderRequest { type : "request";
-                                          value : ISegmentLoaderArguments; }
+export interface ISegmentLoaderRequest { type : "request";
+                                         value : ISegmentLoaderArguments; }
 
 // The whole data is available
-export interface IPipelineLoaderData<T> { type : "data";
-                                          value : { responseData : T }; }
+export interface ISegmentLoaderData<T> { type : "data";
+                                         value : { responseData : T }; }
 
 // A chunk of the data is available
-export interface IPipelineLoaderChunk { type : "chunk";
-                                        value : { responseData : null |
-                                                                 ArrayBuffer |
-                                                                 Uint8Array; }; }
+export interface ISegmentLoaderChunk { type : "chunk";
+                                       value : { responseData : null |
+                                                                ArrayBuffer |
+                                                                Uint8Array; }; }
 // The data has been entirely sent through "chunk" events
-export interface IPipelineLoaderChunkComplete { type : "chunk-complete";
-                                                value : null; }
+export interface ISegmentLoaderChunkComplete { type : "chunk-complete";
+                                               value : null; }
 
 // Events a loader emits
 // Type parameters: T: Argument given to the loader
 //                  U: ResponseType of the request
-export type IPipelineLoaderEvent<T> = IPipelineLoaderData<T> |
-                                      IPipelineLoaderRequest |
-                                      IPipelineLoaderProgress |
-                                      IPipelineLoaderWarning |
-                                      IPipelineLoaderChunk |
-                                      IPipelineLoaderChunkComplete |
-                                      IPipelineLoaderMetrics;
+export type ISegmentLoaderEvent<T> = ISegmentLoaderData<T> |
+                                     ISegmentLoaderRequest |
+                                     ISegmentLoaderProgress |
+                                     ISegmentLoaderWarning |
+                                     ISegmentLoaderChunk |
+                                     ISegmentLoaderChunkComplete |
+                                     ISegmentLoaderMetrics;
 
-// Options you can pass on to the loader
-export interface ISegmentPipelineLoaderOptions<T> {
-  cache? : { add : (obj : IContent,
-                    arg : ILoaderDataLoadedValue<T>) => void;
-             get : (obj : IContent)
-                     => ILoaderDataLoadedValue<T>; }; // Caching logic
-  maxRetry : number; // Maximum number of time a request on error will be retried
-  maxRetryOffline : number; // Maximum number of time a request be retried when
-                            // the user is offline
-  initialBackoffDelay : number;
-  maximumBackoffDelay : number;
+/** Cache implementation to avoid re-requesting segment */
+export interface ISegmentLoaderCache<T> {
+  /** Add a segment to the cache. */
+  add : (obj : ISegmentLoaderContent, arg : ILoaderDataLoadedValue<T>) => void;
+  /** Retrieve a segment from the cache */
+  get : (obj : ISegmentLoaderContent) => ILoaderDataLoadedValue<T> | null;
 }
 
 export type ISegmentPipelineLoader<T> =
   (x : ISegmentLoaderArguments) => ISegmentLoaderObservable<T>;
 
-export interface IContent {
-  manifest : Manifest;
-  period : Period;
-  adaptation : Adaptation;
-  representation : Representation;
-  segment : ISegment;
-}
+/** Content used by the segment loader as a context to load a new segment. */
+export interface ISegmentLoaderContent { manifest : Manifest;
+                                         period : Period;
+                                         adaptation : Adaptation;
+                                         representation : Representation;
+                                         segment : ISegment; }
 
 /**
  * Returns function allowing to download the wanted data through the loader.
@@ -146,22 +142,16 @@ export interface IContent {
  * Type parameters:
  *   - T: type of the data emitted
  *
- * @param {Object} segmentPipeline
+ * @param {Function} loader
+ * @param {Object | undefined} cache
  * @param {Object} options
  * @returns {Function}
  */
 export default function createSegmentLoader<T>(
   loader : ISegmentPipelineLoader<T>,
-  options : ISegmentPipelineLoaderOptions<T>
-) : (x : IContent) => Observable<IPipelineLoaderEvent<T>> {
-  const { cache, maxRetry, maxRetryOffline } = options;
-
-  // Backoff options given to the backoff retry done with the loader function.
-  const backoffOptions = { baseDelay: options.initialBackoffDelay,
-                           maxDelay: options.maximumBackoffDelay,
-                           maxRetryRegular: maxRetry,
-                           maxRetryOffline };
-
+  cache : ISegmentLoaderCache<T> | undefined,
+  backoffOptions : IBackoffOptions
+) : (x : ISegmentLoaderContent) => Observable<ISegmentLoaderEvent<T>> {
   /**
    * Load wanted data:
    *   - get it from cache if present
@@ -171,11 +161,11 @@ export default function createSegmentLoader<T>(
    * @returns {Observable}
    */
   function loadData(
-    wantedContent : IContent
-  ) : Observable< ISegmentLoaderEvent<T> |
-                  IPipelineLoaderRequest |
-                  IPipelineLoaderWarning |
-                  IPipelineLoaderCache<T>>
+    wantedContent : ISegmentLoaderContent
+  ) : Observable< ISegmentPipelineLoaderEvent<T> |
+                  ISegmentLoaderRequest |
+                  ISegmentLoaderWarning |
+                  ISegmentLoaderCachedSegmentEvent<T>>
   {
 
     /**
@@ -183,9 +173,9 @@ export default function createSegmentLoader<T>(
      * @returns {Observable}
      */
     function startLoaderWithBackoff(
-    ) : Observable< ISegmentLoaderEvent<T> |
-                    IPipelineLoaderRequest |
-                    IPipelineLoaderWarning >
+    ) : Observable< ISegmentPipelineLoaderEvent<T> |
+                    ISegmentLoaderRequest |
+                    ISegmentLoaderWarning >
     {
       const request$ = (url : string | null) => {
         const loaderArgument = objectAssign({ url }, wantedContent);
@@ -200,9 +190,9 @@ export default function createSegmentLoader<T>(
           throw errorSelector(error);
         }),
 
-        map((evt) : ISegmentLoaderEvent<T> |
-                    IPipelineLoaderWarning |
-                    IPipelineLoaderRequest => {
+        map((evt) : ISegmentPipelineLoaderEvent<T> |
+                    ISegmentLoaderWarning |
+                    ISegmentLoaderRequest => {
           if (evt.type === "retry") {
             return { type: "warning" as const,
                      value: errorSelector(evt.value) };
@@ -236,14 +226,14 @@ export default function createSegmentLoader<T>(
 
   /**
    * Load the corresponding data.
-   * @param {Object} pipelineInputData
+   * @param {Object} content
    * @returns {Observable}
    */
-  return function startPipeline(
-    pipelineInputData : IContent
-  ) : Observable<IPipelineLoaderEvent<T>> {
-    return loadData(pipelineInputData).pipe(
-      mergeMap((arg) : Observable<IPipelineLoaderEvent<T>> => {
+  return function loadSegment(
+    content : ISegmentLoaderContent
+  ) : Observable<ISegmentLoaderEvent<T>> {
+    return loadData(content).pipe(
+      mergeMap((arg) : Observable<ISegmentLoaderEvent<T>> => {
         const metrics$ =
           arg.type === "data-chunk-complete" ||
           arg.type === "data-loaded" ? observableOf({
@@ -252,7 +242,7 @@ export default function createSegmentLoader<T>(
                                                     duration: arg.value.duration } }) :
                                        EMPTY;
 
-        // "cache": data taken from cache by the pipeline
+        // "cache": data taken from the SegmentLoader's cache.
         // "data-created": the data is available but no request has been done
         // "data-loaded": data received through a request
         switch (arg.type) {
@@ -264,7 +254,7 @@ export default function createSegmentLoader<T>(
             const chunck$ = observableOf({
               type: "data" as const,
               value: objectAssign({},
-                                  pipelineInputData,
+                                  content,
                                   { responseData: arg.value.responseData }),
             });
             return observableConcat(chunck$, metrics$);
@@ -274,7 +264,7 @@ export default function createSegmentLoader<T>(
 
           case "data-chunk":
             return observableOf({ type: "chunk" as const,
-                                  value: objectAssign({}, pipelineInputData, {
+                                  value: objectAssign({}, content, {
                                     responseData: arg.value.responseData }),
             });
           case "data-chunk-complete":

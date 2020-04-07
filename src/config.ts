@@ -275,13 +275,13 @@ export default {
    *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
    *     retry will be performed.
    *   - if it has a high chance of being due to the user being offline, a
-   *     separate counter is used (see DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE).
+   *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
    * @type Number
    */
   DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
 
   /**
-   * The default number of times a pipeline request will be re-performed when
+   * The default number of times a segment request will be re-performed when
    * on error which justify a retry.
    *
    * Note that some errors do not use this counter:
@@ -289,10 +289,10 @@ export default {
    *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
    *     retry will be performed.
    *   - if it has a high chance of being due to the user being offline, a
-   *     separate counter is used (see DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE).
+   *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
    * @type Number
    */
-  DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR: 4,
+  DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR: 4,
 
   /**
    * Under some circonstances, we're able to tell that the user is offline (see
@@ -305,7 +305,7 @@ export default {
    * A capped exponential backoff will still be used (like for an error code).
    * @type {Number}
    */
-  DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE: Infinity,
+  DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE: Infinity,
 
   /**
    * Initial backoff delay when a segment / manifest download fails, in

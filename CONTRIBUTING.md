@@ -271,11 +271,11 @@ It usually is one of the following:
   - `dash`
   - `eme`
   - `errors`
+  - `fetchers`
   - `init`
   - `isobmff`
   - `manifest`
   - `matroska`
-  - `pipelines`
   - `sami`
   - `scripts`
   - `smooth`

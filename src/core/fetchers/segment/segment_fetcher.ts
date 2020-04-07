@@ -34,22 +34,24 @@ import {
   ISegmentParserResponse,
   ITransportPipelines,
 } from "../../../transports";
+import arrayIncludes from "../../../utils/array_includes";
 import idGenerator from "../../../utils/id_generator";
+import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
 import {
   IABRMetric,
   IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
+import { IBackoffOptions } from "../utils/try_urls_with_backoff";
 import createSegmentLoader, {
-  IContent,
-  IPipelineLoaderChunk,
-  IPipelineLoaderChunkComplete,
-  IPipelineLoaderData,
-  IPipelineLoaderWarning,
-  ISegmentPipelineLoaderOptions,
+  ISegmentLoaderChunk,
+  ISegmentLoaderChunkComplete,
+  ISegmentLoaderContent,
+  ISegmentLoaderData,
+  ISegmentLoaderWarning,
 } from "./create_segment_loader";
 
-export type ISegmentFetcherWarning = IPipelineLoaderWarning;
+export type ISegmentFetcherWarning = ISegmentLoaderWarning;
 
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
@@ -62,14 +64,13 @@ export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
                                       ISegmentFetcherChunkEvent<T> |
                                       ISegmentFetcherWarning;
 
-export type ISegmentFetcher<T> = (content : IContent) =>
+export type ISegmentFetcher<T> = (content : ISegmentLoaderContent) =>
                                    Observable<ISegmentFetcherEvent<T>>;
 
 const generateRequestID = idGenerator();
 
 /**
- * Create a function which will fetch segments.
- *
+ * Create a function which will fetch and parse segments.
  * @param {string} bufferType
  * @param {Object} transport
  * @param {Subject} requests$
@@ -80,22 +81,27 @@ export default function createSegmentFetcher<T>(
   bufferType : IBufferType,
   transport : ITransportPipelines,
   requests$ : Subject<IABRMetric | IABRRequest>,
-  options : ISegmentPipelineLoaderOptions<any>
+  options : IBackoffOptions
 ) : ISegmentFetcher<T> {
-  const segmentLoader = createSegmentLoader(transport[bufferType].loader, options);
+  const cache = arrayIncludes(["audio", "video"], bufferType) ?
+    new InitializationSegmentCache<any>() :
+    undefined;
+  const segmentLoader = createSegmentLoader<any>(transport[bufferType].loader,
+                                                 cache,
+                                                 options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
 
   /**
-   * Process a pipeline observable to adapt it to the the rest of the code:
+   * Process the segmentLoader observable to adapt it to the the rest of the
+   * code:
    *   - use the requests subject for network requests and their progress
    *   - use the warning$ subject for retries' error messages
    *   - only emit the data
-   * @param {string} pipelineType
-   * @param {Observable} pipeline$
+   * @param {Object} content
    * @returns {Observable}
    */
   return function fetchSegment(
-    content : IContent
+    content : ISegmentLoaderContent
   ) : Observable<ISegmentFetcherEvent<T>> {
     const id = generateRequestID();
     let requestBeginSent = false;
@@ -154,14 +160,19 @@ export default function createSegmentFetcher<T>(
         }
       }),
 
-      filter((e) : e is IPipelineLoaderChunk |
-                        IPipelineLoaderChunkComplete |
-                        IPipelineLoaderData<T> |
-                        ISegmentFetcherWarning => e.type === "warning" ||
-                                                  e.type === "chunk" ||
-                                                  e.type === "chunk-complete" ||
-                                                  e.type === "data"),
-
+      filter((e) : e is ISegmentLoaderChunk |
+                        ISegmentLoaderChunkComplete |
+                        ISegmentLoaderData<T> |
+                        ISegmentFetcherWarning => {
+                          switch (e.type) {
+                            case "chunk":
+                            case "chunk-complete":
+                            case "data":
+                              return true;
+                            default:
+                              return false;
+                          }
+                        }),
       mergeMap((evt) => {
         if (evt.type === "warning") {
           return observableOf(evt);

@@ -15,19 +15,20 @@
  */
 
 import { Observable } from "rxjs";
-import { IContent } from "./create_segment_loader";
+import { ISegmentLoaderContent } from "./create_segment_loader";
 import ObservablePrioritizer from "./prioritizer";
 import {
   ISegmentFetcher,
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
-// Defines what is returned by the SegmentPipeline
-// See the function definition for documentation
+/** Oject returned by `applyPrioritizerToSegmentFetcher`. */
 export interface IPrioritizedSegmentFetcher<T> {
-  createRequest : (content : IContent,
+  /** Create a new request for a segment with a given priority. */
+  createRequest : (content : ISegmentLoaderContent,
                    priority? : number) => Observable<ISegmentFetcherEvent<T>>;
 
+  /** Update priority of a request created through `createRequest`. */
   updatePriority : (observable : Observable<ISegmentFetcherEvent<T>>,
                     priority : number) => void;
 }
@@ -55,14 +56,15 @@ export default function applyPrioritizerToSegmentFetcher<T>(
      * @returns {Observable}
      */
     createRequest(
-      content : IContent,
+      content : ISegmentLoaderContent,
       priority : number = 0
     ) : Observable<ISegmentFetcherEvent<T>> {
       return prioritizer.create(fetcher(content), priority);
     },
 
     /**
-     * Update the priority of a pending request, created through createRequest.
+     * Update the priority of a pending request, created through
+     * `createRequest`.
      * @param {Observable} observable - the corresponding request
      * @param {Number} priority
      */

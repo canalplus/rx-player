@@ -28,8 +28,8 @@ describe("DASH live content (SegmentTimeline)", function () {
       transport: manifestInfos.transport,
     });
 
-    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
     await sleep(1);
+    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
     await xhrMock.flush();
     await sleep(1);
 
@@ -425,8 +425,8 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
       transport: noTimeShiftBufferDepthManifestInfos.transport,
     });
 
-    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
     await sleep(1);
+    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
     await xhrMock.flush();
     await sleep(1);
 

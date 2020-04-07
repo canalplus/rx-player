@@ -15,28 +15,25 @@
  */
 
 import config from "../../../config";
+import { IBackoffOptions } from "../utils/try_urls_with_backoff";
 
 const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-        DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
+        DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
         INITIAL_BACKOFF_DELAY_BASE,
         MAX_BACKOFF_DELAY_BASE } = config;
 
 /**
- * Parse config to replace missing manifest pipeline options.
- * @param {Object} manifestPipelineOptions
+ * Parse config to replace missing manifest backoff options.
+ * @param {Object} backoffOptions
  * @returns {Object}
  */
-export default function parseManifestPipelineOptions(
-  { manifestRetry,
-    offlineRetry,
-    lowLatencyMode }: { manifestRetry? : number;
-                        offlineRetry? : number;
+export default function getManifestBackoffOptions(
+  { maxRetryRegular,
+    maxRetryOffline,
+    lowLatencyMode }: { maxRetryRegular? : number;
+                        maxRetryOffline? : number;
                         lowLatencyMode : boolean; }
-) : { baseDelay : number;
-      lowLatencyMode : boolean;
-      maxDelay : number;
-      maxRetry : number;
-      maxRetryOffline : number; } {
+) : IBackoffOptions {
   const baseDelay = lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                      INITIAL_BACKOFF_DELAY_BASE.REGULAR;
   const maxDelay = lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
@@ -44,10 +41,10 @@ export default function parseManifestPipelineOptions(
   return {
     baseDelay,
     maxDelay,
-    maxRetry: manifestRetry != null ? manifestRetry :
-                                      DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-    maxRetryOffline: offlineRetry != null ? offlineRetry :
-                                            DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-    lowLatencyMode,
+    maxRetryRegular: maxRetryRegular !== undefined ? maxRetryRegular :
+                                                     DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
+    maxRetryOffline: maxRetryOffline !== undefined ?
+      maxRetryOffline :
+      DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
   };
 }

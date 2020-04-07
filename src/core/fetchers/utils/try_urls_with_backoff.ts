@@ -35,7 +35,7 @@ import log from "../../../log";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
 
 /**
- * Called on a pipeline's loader error.
+ * Called on a loader error.
  * Returns whether the loader request should be retried.
  * @param {Error} error
  * @returns {Boolean} - If true, the request can be retried.
@@ -144,7 +144,7 @@ export default function tryURLsWithBackoff<T>(
 
   const urlsToTry = urls.slice();
   if (urlsToTry.length === 0) {
-    log.warn("Pipelines: no URL given to `tryURLsWithBackoff`.");
+    log.warn("Fetchers: no URL given to `tryURLsWithBackoff`.");
     return EMPTY;
   }
   return tryURLsRecursively(urlsToTry[0], 0);

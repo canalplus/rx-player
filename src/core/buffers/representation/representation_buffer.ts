@@ -67,7 +67,7 @@ import {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
   ISegmentFetcherWarning,
-} from "../../pipelines";
+} from "../../fetchers";
 import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import {

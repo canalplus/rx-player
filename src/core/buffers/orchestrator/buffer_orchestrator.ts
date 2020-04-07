@@ -47,7 +47,7 @@ import { fromEvent } from "../../../utils/event_emitter";
 import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
-import { SegmentPipelineCreator } from "../../pipelines";
+import { SegmentFetcherCreator } from "../../fetchers";
 import SourceBuffersStore, {
   BufferGarbageCollector,
   getBufferTypes,
@@ -97,7 +97,7 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  * to play.
  * @param {Object} sourceBuffersStore - Will be used to lazily create
  * SourceBuffer instances associated with the current content.
- * @param {Object} segmentPipelineCreator - Download segments
+ * @param {Object} segmentFetcherCreator - Allow to download segments.
  * @param {Object} options
  * @returns {Observable}
  *
@@ -110,7 +110,7 @@ export default function BufferOrchestrator(
   clock$ : Observable<IBufferOrchestratorClockTick>,
   abrManager : ABRManager,
   sourceBuffersStore : SourceBuffersStore,
-  segmentPipelineCreator : SegmentPipelineCreator<any>,
+  segmentFetcherCreator : SegmentFetcherCreator<any>,
   options: { wantedBufferAhead$ : BehaviorSubject<number>;
              maxBufferAhead$ : Observable<number>;
              maxBufferBehind$ : Observable<number>;
@@ -390,7 +390,7 @@ export default function BufferOrchestrator(
                                          clock$,
                                          content: { manifest, period: basePeriod },
                                          garbageCollectors,
-                                         segmentPipelineCreator,
+                                         segmentFetcherCreator,
                                          sourceBuffersStore,
                                          options,
                                          wantedBufferAhead$, }

@@ -27,20 +27,23 @@ import { ICustomError } from "../../../errors";
 import {
   ILoadedManifest,
   IManifestLoaderArguments,
-  IManifestLoaderEvent,
+  IManifestLoaderEvent as IManifestPipelineLoaderEvent,
   IManifestLoaderFunction,
   IManifestResolverFunction,
   ITransportManifestPipeline,
 } from "../../../transports";
 import tryCatch$ from "../../../utils/rx-try_catch";
 import errorSelector from "../utils/error_selector";
-import { tryRequestObservableWithBackoff } from "../utils/try_urls_with_backoff";
+import {
+  IBackoffOptions,
+  tryRequestObservableWithBackoff,
+} from "../utils/try_urls_with_backoff";
 
 // An Error happened while loading (usually a request error)
-export interface IPipelineLoaderWarning { type : "warning";
+export interface IManifestLoaderWarning { type : "warning";
                                           value : ICustomError; }
 
-export interface IPipelineLoaderResponseValue<T> {
+export interface IManifestLoaderResponseValue<T> {
   responseData : T; // The Manifest's data
   url? : string; // The URL on which the Manifest was loaded (post-redirection)
   sendingTime? : number; // The time at which the Manifest request was sent
@@ -48,19 +51,18 @@ export interface IPipelineLoaderResponseValue<T> {
                           // completely received
 }
 
-// A response is available from a pipeline's loader
-export interface IPipelineLoaderResponse<T> { type : "response";
-                                              value : IPipelineLoaderResponseValue<T>; }
-
-export type IManifestPipelineLoaderResponse =
-  IPipelineLoaderResponse<ILoadedManifest>;
+// A response is available from a Manifest's loader
+export interface IManifestLoaderResponse {
+  type : "response";
+  value : IManifestLoaderResponseValue<ILoadedManifest>;
+}
 
 // Events a loader emits
-export type IManifestPipelineLoaderEvent = IManifestPipelineLoaderResponse |
-                                           IPipelineLoaderWarning;
+export type IManifestLoaderEvent = IManifestLoaderResponse |
+                                   IManifestLoaderWarning;
 
 // Options you can pass on to the loader
-export interface IManifestPipelineLoaderOptions {
+export interface IManifestLoaderOptions {
   maxRetry : number; // Maximum number of time a request on error will be retried
   maxRetryOffline : number; // Maximum number of time a request be retried when
                             // the user is offline
@@ -69,8 +71,8 @@ export interface IManifestPipelineLoaderOptions {
 }
 
 /**
- * Returns function allowing to download the Manifest through a resolver ->
- * loader -> parser pipeline.
+ * Returns function allowing to download the Manifest through a
+ * `resolver -> loader` transport pipeline.
  *
  * The function returned takes the loader's data in arguments and returns an
  * Observable which will emit:
@@ -84,14 +86,13 @@ export interface IManifestPipelineLoaderOptions {
  * possible retries all failed.
  *
  * @param {Object} manifestPipeline
- * @param {Object} options
+ * @param {Object} backoffOptions
  * @returns {Function}
  */
 export default function createManifestLoader(
   manifestPipeline : ITransportManifestPipeline,
-  options : IManifestPipelineLoaderOptions
-) : (x : IManifestLoaderArguments) => Observable<IManifestPipelineLoaderEvent> {
-  const { maxRetry, maxRetryOffline } = options;
+  backoffOptions : IBackoffOptions
+) : (x : IManifestLoaderArguments) => Observable<IManifestLoaderEvent> {
   const loader : IManifestLoaderFunction = manifestPipeline.loader;
 
   // TODO Remove the resolver completely in the next major version
@@ -101,11 +102,6 @@ export default function createManifestLoader(
                                         observableOf;
                                         /* tslint:enable deprecation */
 
-  // Backoff options given to the backoff retry done with the loader function.
-  const backoffOptions = { baseDelay: options.baseDelay,
-                           maxDelay: options.maxDelay,
-                           maxRetryRegular: maxRetry,
-                           maxRetryOffline };
   /**
    * Call the transport's resolver - if it exists - with the given data.
    * Throws with the right error if it fails.
@@ -130,16 +126,16 @@ export default function createManifestLoader(
    */
   function loadData(
     loaderArgument : IManifestLoaderArguments
-  ) : Observable< IManifestLoaderEvent |
-                  IPipelineLoaderWarning >
+  ) : Observable< IManifestPipelineLoaderEvent |
+                  IManifestLoaderWarning >
   {
     const loader$ = tryCatch$(loader, loaderArgument);
     return tryRequestObservableWithBackoff(loader$, backoffOptions).pipe(
       catchError((error : unknown) : Observable<never> => {
         throw errorSelector(error);
       }),
-      map((evt) : IManifestLoaderEvent |
-                  IPipelineLoaderWarning =>
+      map((evt) : IManifestPipelineLoaderEvent |
+                  IManifestLoaderWarning =>
       {
         return evt.type === "retry" ? ({ type: "warning" as const,
                                          value: errorSelector(evt.value) }) :
@@ -149,12 +145,12 @@ export default function createManifestLoader(
 
   /**
    * Load the corresponding data.
-   * @param {Object} pipelineInputData
+   * @param {sObject} pipelineInputData
    * @returns {Observable}
    */
-  return function startPipeline(
+  return function loadManifest(
     loaderArgs : IManifestLoaderArguments
-  ) : Observable<IManifestPipelineLoaderEvent> {
+  ) : Observable<IManifestLoaderEvent> {
     return callResolver(loaderArgs).pipe(
       mergeMap((resolverResponse : IManifestLoaderArguments) => {
         return loadData(resolverResponse).pipe(

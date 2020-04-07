@@ -14,28 +14,30 @@
  * limitations under the License.
  */
 
-import createManifestPipeline, {
-  IFetchManifestResult,
+import createManifestFetcher, {
+  IManifestFetcherParsedResult,
+  IManifestFetcherWarningEvent,
 } from "./manifest";
-import SegmentPipelineCreator, {
+import SegmentFetcherCreator, {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherChunkCompleteEvent,
   ISegmentFetcherChunkEvent,
+  ISegmentFetcherCreatorBackoffOptions,
   ISegmentFetcherEvent,
   ISegmentFetcherWarning,
-  ISegmentPipelineCreatorOptions,
 } from "./segment";
 
 export {
-  createManifestPipeline,
-  SegmentPipelineCreator,
+  createManifestFetcher,
+  SegmentFetcherCreator,
 
-  IFetchManifestResult,
+  IManifestFetcherParsedResult,
+  IManifestFetcherWarningEvent,
 
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
 
-  ISegmentPipelineCreatorOptions,
+  ISegmentFetcherCreatorBackoffOptions,
 
   ISegmentFetcherChunkEvent,
   ISegmentFetcherChunkCompleteEvent,

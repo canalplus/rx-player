@@ -47,8 +47,8 @@ describe("DASH live content multi-periods (SegmentTemplate)", function() {
       transport: manifestInfos.transport,
     });
 
-    expect(xhrMock.getLockedXHR().length).to.equal(1);
     await sleepWithoutSinonStub(1);
+    expect(xhrMock.getLockedXHR().length).to.equal(1);
     await xhrMock.flush();
     await sleepWithoutSinonStub(1);
 
@@ -70,8 +70,8 @@ describe("DASH live content multi-periods (SegmentTemplate)", function() {
       transport: manifestInfos.transport,
     });
 
-    expect(xhrMock.getLockedXHR().length).to.equal(1);
     await sleepWithoutSinonStub(1);
+    expect(xhrMock.getLockedXHR().length).to.equal(1);
     await xhrMock.flush();
     await sleepWithoutSinonStub(1);
 
@@ -93,8 +93,8 @@ describe("DASH live content multi-periods (SegmentTemplate)", function() {
       transport: manifestInfos.transport,
     });
 
-    expect(xhrMock.getLockedXHR().length).to.equal(1);
     await sleepWithoutSinonStub(1);
+    expect(xhrMock.getLockedXHR().length).to.equal(1);
     await xhrMock.flush();
     await sleepWithoutSinonStub(1);
 

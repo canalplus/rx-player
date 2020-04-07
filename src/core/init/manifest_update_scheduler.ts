@@ -24,7 +24,6 @@ import {
   timer as observableTimer,
 } from "rxjs";
 import {
-  ignoreElements,
   mapTo,
   mergeMap,
   mergeMapTo,
@@ -34,7 +33,8 @@ import config from "../../config";
 import log from "../../log";
 import Manifest from "../../manifest";
 import isNonEmptyString from "../../utils/is_non_empty_string";
-import { IFetchManifestResult } from "../pipelines";
+import { IManifestFetcherParsedResult } from "../fetchers";
+import { IWarningEvent } from "./types";
 
 const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY } = config;
 
@@ -58,7 +58,7 @@ export interface IManifestUpdateSchedulerArguments {
 /** Function defined to refresh the Manifest */
 export type IManifestFetcher =
     (manifestURL? : string, externalClockOffset?: number) =>
-      Observable<IFetchManifestResult>;
+      Observable<IManifestFetcherParsedResult | IWarningEvent>;
 
 /** Events sent by the `IManifestRefreshScheduler` Observable */
 export interface IManifestRefreshSchedulerEvent {
@@ -89,7 +89,7 @@ export default function manifestUpdateScheduler({
   manifestUpdateUrl,
   minimumManifestUpdateInterval,
   scheduleRefresh$,
-} : IManifestUpdateSchedulerArguments) : Observable<never> {
+} : IManifestUpdateSchedulerArguments) : Observable<IWarningEvent> {
   // The Manifest always keeps the same Manifest
   const { manifest } = initialManifest;
 
@@ -98,7 +98,7 @@ export default function manifestUpdateScheduler({
                      sendingTime?: number;
                      receivedTime? : number;
                      parsingTime : number;
-                     updatingTime? : number; }): Observable<never> {
+                     updatingTime? : number; }): Observable<IWarningEvent> {
     const { sendingTime } = manifestInfos;
 
     const internalRefresh$ = scheduleRefresh$
@@ -143,8 +143,12 @@ export default function manifestUpdateScheduler({
     return observableMerge(autoRefresh$, internalRefresh$, expired$).pipe(
       take(1),
       mergeMap(({ completeRefresh }) => refreshManifest(completeRefresh)),
-      mergeMap(handleManifestRefresh$),
-      ignoreElements());
+      mergeMap(evt => {
+        if (evt.type === "warning") {
+          return observableOf(evt);
+        }
+        return handleManifestRefresh$(evt);
+      }));
   }
 
   return observableDefer(() => handleManifestRefresh$(initialManifest));
@@ -157,7 +161,7 @@ export default function manifestUpdateScheduler({
    */
    function refreshManifest(
      completeRefresh : boolean
-   ) : Observable<IFetchManifestResult> {
+   ) : Observable<IManifestFetcherParsedResult | IWarningEvent> {
      const fullRefresh = completeRefresh || manifestUpdateUrl === undefined;
      const refreshURL = fullRefresh ? manifest.getUrl() :
                                       manifestUpdateUrl;
@@ -168,6 +172,9 @@ export default function manifestUpdateScheduler({
      const externalClockOffset = manifest.clockOffset;
      return fetchManifest(refreshURL, externalClockOffset)
        .pipe(mergeMap((value) => {
+         if (value.type === "warning") {
+           return observableOf(value);
+         }
          const { manifest: newManifest,
                  sendingTime: newSendingTime,
                  receivedTime,
@@ -190,7 +197,8 @@ export default function manifestUpdateScheduler({
                .pipe(mergeMap(() => refreshManifest(true)));
            }
          }
-         return observableOf({ manifest,
+         return observableOf({ type: "parsed" as const,
+                               manifest,
                                sendingTime: newSendingTime,
                                receivedTime,
                                parsingTime,
