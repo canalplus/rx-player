@@ -41,7 +41,7 @@ import log from "../../../log";
 import Manifest, {
   Period,
 } from "../../../manifest";
-import deferInitialSubscriptions from "../../../utils/defer_initial_subscriptions";
+import deferSubscriptions from "../../../utils/defer_subscriptions";
 import { fromEvent } from "../../../utils/event_emitter";
 import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
@@ -164,7 +164,7 @@ export default function BufferOrchestrator(
   // Every PeriodBuffers for every possible types
   const buffersArray = bufferTypes.map((bufferType) => {
     return manageEveryBuffers(bufferType, initialPeriod)
-      .pipe(deferInitialSubscriptions(), share());
+      .pipe(deferSubscriptions(), share());
   });
 
   // Emits the activePeriodChanged events every time the active Period changes.

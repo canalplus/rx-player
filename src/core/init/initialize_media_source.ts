@@ -39,7 +39,7 @@ import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
 import log from "../../log";
 import { ITransportPipelines } from "../../transports";
-import deferInitialSubscriptions from "../../utils/defer_initial_subscriptions";
+import deferSubscriptions from "../../utils/defer_subscriptions";
 import { fromEvent } from "../../utils/event_emitter";
 import objectAssign from "../../utils/object_assign";
 import throttle from "../../utils/rx-throttle";
@@ -212,7 +212,7 @@ export default function InitializeOnMediaSource(
    * The MediaSource will be closed on unsubscription.
    */
   const openMediaSource$ = openMediaSource(mediaElement).pipe(
-    deferInitialSubscriptions(),
+    deferSubscriptions(),
     share());
 
   /** Send content protection data to the `EMEManager`. */
@@ -221,7 +221,7 @@ export default function InitializeOnMediaSource(
   /** Create `EMEManager`, an observable which will handle content DRM. */
   const emeManager$ = openMediaSource$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems, protectedSegments$)),
-    deferInitialSubscriptions(),
+    deferSubscriptions(),
     share());
 
   /**
@@ -240,7 +240,7 @@ export default function InitializeOnMediaSource(
 
   /** Do the first Manifest request. */
   const initialManifestRequest$ = fetchManifest(url, undefined).pipe(
-    deferInitialSubscriptions(),
+    deferSubscriptions(),
     share());
 
   const initialManifestRequestWarnings$ = initialManifestRequest$

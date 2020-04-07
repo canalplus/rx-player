@@ -40,7 +40,7 @@ import {
 } from "../../compat";
 import { MediaError } from "../../errors";
 import log from "../../log";
-import deferInitialSubscriptions from "../../utils/defer_initial_subscriptions";
+import deferSubscriptions from "../../utils/defer_subscriptions";
 import {
   IEMEManagerEvent,
   IKeySystemOption,
@@ -163,7 +163,7 @@ export default function initializeDirectfileContent({
   // issue.
   const emeManager$ = linkURL$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems, EMPTY)),
-    deferInitialSubscriptions(),
+    deferSubscriptions(),
     share()
   );
 

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import nextTick from "next-tick";
 import {
   asapScheduler,
   Observable,
@@ -22,15 +21,15 @@ import {
 import { subscribeOn } from "rxjs/operators";
 
 /**
- * At the first subscription, instead of "running" the Observable right away,
- * wait until the current script has finished executing before actually running
- * this Observable.
+ * At  subscription, instead of "running" the Observable right away, wait until
+ * the current script has finished executing before actually running this
+ * Observable.
  *
  * This can be important for example when you want in a given function to
  * exploit the same shared Observable which may send synchronous events directly
  * after subscription.
- * Calling `deferInitialSubscriptions` in those cases will make sure that all
- * such subscriptions in the same function are registered before the Observable
+ * Calling `deferSubscriptions` in those cases will make sure that all such
+ * subscriptions in the same function are registered before the Observable
  * start emitting events (as long as such Subscriptions are done synchronously).
  *
  * @example
@@ -56,7 +55,7 @@ import { subscribeOn } from "rxjs/operators";
  *
  * const myObservableDeferred = rxjs.timer(100).pipe(mapTo("ASYNC MSG"),
  *                                                   startWith("SYNCHRONOUS MSG"),
- *                                                   deferInitialSubscriptions(),
+ *                                                   deferSubscriptions(),
  *                                                   // NOTE: the order is important here
  *                                                   share());
  *
@@ -76,15 +75,9 @@ import { subscribeOn } from "rxjs/operators";
  * ```
  * @returns {function}
  */
-export default function deferInitialSubscriptions<T>(
+export default function deferSubscriptions<T>(
 ) : (source: Observable<T>) => Observable<T> {
-  let isSubscriptionAsyncWithFirstOne = false;
   return (source: Observable<T>) => {
-    if (isSubscriptionAsyncWithFirstOne) {
-      return source;
-    }
-    nextTick(() => { isSubscriptionAsyncWithFirstOne = true; });
-
     // TODO asapScheduler seems to not push the subscription in the microtask
     // queue as nextTick does but in a regular event loop queue.
     // This means that the subscription will be run even later that we wish for.

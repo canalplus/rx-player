@@ -59,7 +59,7 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import concatMapLatest from "../../../utils/concat_map_latest";
-import deferInitialSubscriptions from "../../../utils/defer_initial_subscriptions";
+import deferSubscriptions from "../../../utils/defer_subscriptions";
 import ABRManager, {
   IABREstimate,
   IABRMetric,
@@ -159,7 +159,7 @@ export default function AdaptationBuffer<T>({
                                                           decipherableRepresentations,
                                                           clock$,
                                                           abrEvents$)
-      .pipe(deferInitialSubscriptions(), share());
+      .pipe(deferSubscriptions(), share());
 
   const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type,
                                                                     requestsEvents$);
