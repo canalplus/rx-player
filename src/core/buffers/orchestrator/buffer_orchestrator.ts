@@ -280,11 +280,12 @@ export default function BufferOrchestrator(
 
     const handleDecipherabilityUpdate$ = fromEvent(manifest, "decipherabilityUpdate")
       .pipe(mergeMap((updates) => {
-        const queuedSourceBuffer = sourceBuffersStore.get(bufferType);
+        const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
         const hasType = updates.some(update => update.adaptation.type === bufferType);
-        if (!hasType || queuedSourceBuffer == null) {
+        if (!hasType || sourceBufferStatus.type !== "set") {
           return EMPTY; // no need to stop the current buffers
         }
+        const queuedSourceBuffer = sourceBufferStatus.value;
         const rangesToClean = getBlacklistedRanges(queuedSourceBuffer, updates);
         enableOutOfBoundsCheck = false;
         destroyBuffers$.next();
