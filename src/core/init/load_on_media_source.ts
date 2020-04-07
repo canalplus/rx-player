@@ -33,9 +33,7 @@ import {
 } from "rxjs/operators";
 import { MediaError } from "../../errors";
 import log from "../../log";
-import Manifest, {
-  Period,
-} from "../../manifest";
+import Manifest from "../../manifest";
 import ABRManager from "../abr";
 import BufferOrchestrator, {
   IBufferOrchestratorEvent,
@@ -135,18 +133,6 @@ export default function createMediaSourceLoader({
     // single SourceBuffer per type.
     const sourceBuffersStore = new SourceBuffersStore(mediaElement, mediaSource);
 
-    // Initialize all native source buffers from the first period at the same
-    // time.
-    // We cannot lazily create native sourcebuffers since the spec does not
-    // allow adding them during playback.
-    //
-    // From https://w3c.github.io/media-source/#methods
-    //    For example, a user agent may throw a QuotaExceededError
-    //    exception if the media element has reached the HAVE_METADATA
-    //    readyState. This can occur if the user agent's media engine
-    //    does not support adding more tracks during playback.
-    createNativeSourceBuffersForPeriod(sourceBuffersStore, initialPeriod);
-
     const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
                                                         mediaElement,
                                                         startTime: initialTime,
@@ -242,32 +228,4 @@ export default function createMediaSourceLoader({
         sourceBuffersStore.disposeAll();
       }));
   };
-}
-
-/**
- * Create all native SourceBuffers needed for a given Period.
- *
- * Native Buffers have the particulary to need to be created at the beginning of
- * the content.
- * Custom source buffers (entirely managed in JS) can generally be created and
- * disposed at will during the lifecycle of the content.
- * @param {SourceBuffersStore} sourceBuffersStore
- * @param {Period} period
- */
-function createNativeSourceBuffersForPeriod(
-  sourceBuffersStore : SourceBuffersStore,
-  period : Period
-) : void {
-  Object.keys(period.adaptations).forEach(bufferType => {
-    if (SourceBuffersStore.isNative(bufferType)) {
-      const adaptations = period.adaptations[bufferType];
-      const representations = adaptations != null &&
-                              adaptations.length > 0 ? adaptations[0].representations :
-                                                       [];
-      if (representations.length > 0) {
-        const codec = representations[0].getMimeTypeString();
-        sourceBuffersStore.createSourceBuffer(bufferType, codec);
-      }
-    }
-  });
 }
