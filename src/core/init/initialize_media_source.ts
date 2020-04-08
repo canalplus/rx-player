@@ -236,8 +236,7 @@ export default function InitializeOnMediaSource(
    * have finished.
    */
   const waitForEMEReady$ = emeManager$.pipe(filter(isEMEReadyEvent),
-                                            take(1),
-                                            mapTo(true));
+                                            take(1));
 
   /** Do the first Manifest request. */
   const initialManifestRequest$ = fetchManifest(url, undefined).pipe(
