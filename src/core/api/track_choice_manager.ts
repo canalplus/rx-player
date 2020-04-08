@@ -71,6 +71,7 @@ interface ITMVideoRepresentation { id : string|number;
 
 /** Video track returned by the TrackChoiceManager. */
 export interface ITMVideoTrack { id : number|string;
+                                 signInterpreted?: boolean;
                                  representations: ITMVideoRepresentation[]; }
 
 /** Audio track from a list of audio tracks returned by the TrackChoiceManager. */
@@ -579,9 +580,13 @@ export default class TrackChoiceManager {
     if (chosenVideoAdaptation == null) {
       return null;
     }
-    return { id: chosenVideoAdaptation.id,
+    const videoTrack: ITMVideoTrack = { id: chosenVideoAdaptation.id,
              representations: chosenVideoAdaptation.representations
                                 .map(parseVideoRepresentation) };
+    if (chosenVideoAdaptation.isSignInterpreted === true) {
+      videoTrack.signInterpreted = true;
+    }
+    return videoTrack;
   }
 
   /**
@@ -668,12 +673,16 @@ export default class TrackChoiceManager {
 
     return videoInfos.adaptations
       .map((adaptation) => {
-        return {
+        const formatted: ITMVideoTrackListItem = {
           id: adaptation.id,
           active: currentId === null ? false :
                                        currentId === adaptation.id,
           representations: adaptation.representations.map(parseVideoRepresentation),
         };
+        if (adaptation.isSignInterpreted === true) {
+          formatted.signInterpreted = true;
+        }
+        return formatted;
     });
   }
 
