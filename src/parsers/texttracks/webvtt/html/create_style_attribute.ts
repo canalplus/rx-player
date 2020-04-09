@@ -28,7 +28,7 @@ const VERTICAL_BOUNDARY_OFFSET = 5;
  * @param {Partial<Record<string, string>>} settings
  * @returns {Attr}
  */
-export default function createSettingsAttributes (
+export default function createStyleAttribute (
   settings : Partial<Record<string, string>>
 ) : Attr {
   const pAttr = document.createAttribute("style");
@@ -108,7 +108,9 @@ const getLineStyle = (lineSetting: string | undefined) => {
     "";
 };
 
-const getPercentageValueOrDefault = (percentageString: string | undefined, defaultValue: number): number => {
+const getPercentageValueOrDefault = (
+  percentageString: string | undefined, defaultValue: number
+): number => {
   const value = getPercentageValue(percentageString);
 
   return value !== null ?

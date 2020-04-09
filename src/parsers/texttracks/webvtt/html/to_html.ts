@@ -16,7 +16,7 @@
 
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import convertPayloadToHTML from "./convert_payload_to_html";
-import createSettingsAttributes from "./create_settings_attributes";
+import createStyleAttribute from "./create_style_attribute";
 import { IStyleElements } from "./parse_style_block";
 
 export interface IVTTHTMLCue { start : number;
@@ -59,7 +59,7 @@ export default function toHTML(
 
   // Get content, format and apply style.
   const pElement = document.createElement("p");
-  const pAttr = createSettingsAttributes(settings);
+  const pAttr = createStyleAttribute(settings);
   pElement.setAttributeNode(pAttr);
 
   const spanElement = document.createElement("span");

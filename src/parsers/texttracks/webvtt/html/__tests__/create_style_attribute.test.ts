@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import createSettingsAttributes from "../create_settings_attributes";
+import createStyleAttribute from "../create_style_attribute";
 
-describe("parsers - webvtt - createSettingsAttributes", () => {
+describe("parsers - webvtt - createStyleAttribute", () => {
   const baseStyle = "position: absolute; margin:0;";
   const baseLeft = "left:50%;";
   const baseTransform = "transform:translate(-50%,-50%);";
@@ -27,10 +27,10 @@ describe("parsers - webvtt - createSettingsAttributes", () => {
       size: "30%",
     };
 
-    const attributes = createSettingsAttributes(settings);
+    const attribute = createStyleAttribute(settings);
 
     const expected = style + "width:30%;";
-    isEqualStyle(attributes.value, expected);
+    isEqualStyle(attribute.value, expected);
   });
 
   it("should set horizontal position, start", () => {
@@ -38,10 +38,10 @@ describe("parsers - webvtt - createSettingsAttributes", () => {
       position: "0%",
     };
 
-    const attributes = createSettingsAttributes(settings);
+    const attribute = createStyleAttribute(settings);
 
     const expected = baseStyle + "left:0%;" + "transform:translate(-0%, -50%);";
-    isEqualStyle(attributes.value, expected);
+    isEqualStyle(attribute.value, expected);
   });
 
   it("should set horizontal position, end", () => {
@@ -49,10 +49,10 @@ describe("parsers - webvtt - createSettingsAttributes", () => {
       position: "100%",
     };
 
-    const attributes = createSettingsAttributes(settings);
+    const attribute = createStyleAttribute(settings);
 
     const expected = baseStyle + "left:100%;" + "transform:translate(-100%, -50%);";
-    isEqualStyle(attributes.value, expected);
+    isEqualStyle(attribute.value, expected);
   });
 
   it("should set horizontal position, middle value", () => {
@@ -60,10 +60,10 @@ describe("parsers - webvtt - createSettingsAttributes", () => {
       position: "60%",
     };
 
-    const attributes = createSettingsAttributes(settings);
+    const attribute = createStyleAttribute(settings);
 
     const expected = baseStyle + baseTransform + "left:60%;";
-    isEqualStyle(attributes.value, expected);
+    isEqualStyle(attribute.value, expected);
   });
 
   it("should set vertical position, top", () => {
@@ -71,10 +71,10 @@ describe("parsers - webvtt - createSettingsAttributes", () => {
       line: "0%",
     };
 
-    const attributes = createSettingsAttributes(settings);
+    const attribute = createStyleAttribute(settings);
 
     const expected = baseStyle + baseLeft + "top:0%;" + "transform:translate(-50%, -0%);";
-    isEqualStyle(attributes.value, expected);
+    isEqualStyle(attribute.value, expected);
   });
 
   it("should set vertical position, end", () => {
@@ -82,10 +82,10 @@ describe("parsers - webvtt - createSettingsAttributes", () => {
       line: "100%",
     };
 
-    const attributes = createSettingsAttributes(settings);
+    const attribute = createStyleAttribute(settings);
 
     const expected = baseStyle + baseLeft + "top:100%;" + "transform:translate(-50%, -100%);";
-    isEqualStyle(attributes.value, expected);
+    isEqualStyle(attribute.value, expected);
   });
 
   it("should set vertical position, middle value", () => {
@@ -93,10 +93,10 @@ describe("parsers - webvtt - createSettingsAttributes", () => {
      line: "60%",
     };
 
-    const attributes = createSettingsAttributes(settings);
+    const attribute = createStyleAttribute(settings);
 
     const expected = style + "top:60%;";
-    isEqualStyle(attributes.value, expected);
+    isEqualStyle(attribute.value, expected);
   });
 
   it("should set text align", () => {
@@ -104,10 +104,10 @@ describe("parsers - webvtt - createSettingsAttributes", () => {
       align: "middle",
     };
 
-    const attributes = createSettingsAttributes(settings);
+    const attribute = createStyleAttribute(settings);
 
     const expected = style + "text-align:center";
-    isEqualStyle(attributes.value, expected);
+    isEqualStyle(attribute.value, expected);
   });
 });
 
