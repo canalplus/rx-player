@@ -26,7 +26,13 @@ type TypedArray = Int8Array |
                   Float32Array |
                   Float64Array;
 
-function UTF16StrToBytes(string: string): Uint16Array {
+/**
+ * Convert a string to an Uint16Array containing the corresponding
+ * UTF-16 code units.
+ * @param {string} string
+ * @returns {Uint16Array}
+ */
+function strToUTF16Array(string: string): Uint16Array {
   const buffer = new ArrayBuffer(string.length * 2);
   const array = new Uint16Array(buffer);
   for (let i = 0, strLen = string.length; i < strLen; i += 1) {
@@ -364,7 +370,7 @@ function isABEqualBytes(buffer : ArrayBuffer, bytes : Uint8Array) : boolean {
 }
 
 export {
-  strToBytes, UTF16StrToBytes,
+  strToBytes, strToUTF16Array,
   bytesToStr, bytesToUTF16Str,
   hexToBytes,
   bytesToHex,

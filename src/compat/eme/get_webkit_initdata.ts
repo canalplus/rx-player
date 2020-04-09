@@ -16,8 +16,9 @@
 
 import {
   bytesToUTF16Str,
+  itole4,
   le4toi,
-  UTF16StrToBytes,
+  strToUTF16Array,
 } from "../../utils/byte_parsing";
 
 /**
@@ -42,32 +43,28 @@ export default function getWebKitInitData(initDataBytes: Uint8Array|ArrayBuffer,
     throw new Error("Unsupported WebKit initData.");
   }
   const initDataUri = bytesToUTF16Str(initData);
-  const contentIdStr = initDataUri.split("skd://")[1];
-  const id = UTF16StrToBytes(contentIdStr);
+  const skdIdx = initDataUri.indexOf("skd://");
+  const contentIdStr = initDataUri.substring(skdIdx);
+  const id = strToUTF16Array(contentIdStr);
 
   let offset = 0;
-  const buffer = new ArrayBuffer(initData.byteLength + 4 +
-                                 id.byteLength + 4 +
-                                 serverCertificate.byteLength);
-  const dataView = new DataView(buffer);
+  const res =
+    new Uint8Array(initData.byteLength
+                   /* id length */ + 4 + id.byteLength
+                   /* certificate length */ + 4 + serverCertificate.byteLength);
 
-  const initDataArray = new Uint8Array(buffer, offset, initData.byteLength);
-  initDataArray.set(initData);
-  offset += initData.byteLength;
+  res.set(initData);
+  offset += initData.length;
 
-  dataView.setUint32(offset, id.byteLength, true);
+  res.set(itole4(id.byteLength), offset);
   offset += 4;
 
-  const idArray = new Uint16Array(buffer, offset, id.length);
-  idArray.set(id);
-  offset += idArray.byteLength;
+  res.set(new Uint8Array(id.buffer), offset);
+  offset += id.length * 2;
 
-  dataView.setUint32(offset, serverCertificate.byteLength, true);
+  res.set(itole4(serverCertificate.byteLength), offset);
   offset += 4;
 
-  const certArray = new Uint8Array(buffer, offset, serverCertificate.byteLength);
-  certArray.set(serverCertificate);
-
-  const res = new Uint8Array(buffer, 0, buffer.byteLength);
+  res.set(serverCertificate, offset);
   return res;
 }

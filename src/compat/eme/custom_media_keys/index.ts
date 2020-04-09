@@ -31,32 +31,18 @@ import { isIE11 } from "../../browser_detection";
 import isNode from "../../is_node";
 import shouldUseWebKitMediaKeys from "../../should_use_webkit_media_keys";
 import CustomMediaKeySystemAccess from "./../custom_key_system_access";
-import getIE11MediaKeysCallbacks from "./ie11_media_keys";
+import getIE11MediaKeysCallbacks, {
+  MSMediaKeysConstructor
+} from "./ie11_media_keys";
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement
-} from "./oldwebkit_media_keys";
+} from "./old_webkit_media_keys";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
 } from "./types";
 import getWebKitMediaKeysCallbacks from "./webkit_media_keys";
 
-/* tslint:disable no-unsafe-any */
-const { MSMediaKeys,
-        WebKitMediaKeys } = (window as any);
-/* tslint:enable no-unsafe-any */
-
-let isTypeSupported = (keyType: string): boolean => {
-  if ((MediaKeys_ as any).isTypeSupported === undefined) {
-    throw new Error("No isTypeSupported on MediaKeys.");
-  }
-  /* tslint:disable no-unsafe-any */
-  return (MediaKeys_ as any).isTypeSupported(keyType);
-  /* tslint:enable no-unsafe-any */
-};
-let createCustomMediaKeys = (keyType: string) => {
-  return new (MediaKeys_ as any)(keyType);
-};
 let requestMediaKeySystemAccess : null |
                                   ((keyType : string,
                                     config : ICompatMediaKeySystemConfiguration[])
@@ -81,29 +67,31 @@ if (isNode ||
       navigator.requestMediaKeySystemAccess(a, b) as Promise<ICompatMediaKeySystemAccess>
     );
 } else {
+  let isTypeSupported = (keyType: string): boolean => {
+    if ((MediaKeys_ as any).isTypeSupported === undefined) {
+      throw new Error("No isTypeSupported on MediaKeys.");
+    }
+    /* tslint:disable no-unsafe-any */
+    return (MediaKeys_ as any).isTypeSupported(keyType);
+    /* tslint:enable no-unsafe-any */
+  };
+  let createCustomMediaKeys = (keyType: string) => {
+    return new (MediaKeys_ as any)(keyType);
+  };
+
   // This is for Chrome with unprefixed EME api
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
     const callbacks = getOldKitWebKitMediaKeyCallbacks();
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
   // This is for WebKit with prefixed EME api
-  } else if (shouldUseWebKitMediaKeys() &&
-             /* tslint:disable no-unsafe-any */
-             typeof WebKitMediaKeys.isTypeSupported === "function"
-             /* tslint:enable no-unsafe-any */
-  ) {
+  } else if (shouldUseWebKitMediaKeys()) {
     const callbacks = getWebKitMediaKeysCallbacks();
     /* tslint:disable no-unsafe-any */
     isTypeSupported = callbacks.isTypeSupported;
     /* tslint:enable no-unsafe-any */
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
-  } else if (isIE11 &&
-             MSMediaKeys != null &&
-             /* tslint:disable no-unsafe-any */
-             MSMediaKeys.prototype != null &&
-             typeof MSMediaKeys.isTypeSupported === "function" &&
-             typeof MSMediaKeys?.prototype?.createSession === "function")
-             /* tslint:enable no-unsafe-any */
+  } else if (isIE11 && MSMediaKeysConstructor !== undefined)
     {
       const callbacks = getIE11MediaKeysCallbacks();
       /* tslint:disable no-unsafe-any */

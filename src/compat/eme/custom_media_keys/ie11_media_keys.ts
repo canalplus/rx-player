@@ -22,18 +22,17 @@ import { takeUntil } from "rxjs/operators";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
+import { MSMediaKeysConstructor } from "./ms_media_keys_constructor";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeyStatusMap,
   IMediaKeySessionEvents,
 } from "./types";
-import wrapUpdate from "./wrap_update";
 
 class IE11MediaKeySession extends EventEmitter<IMediaKeySessionEvents>
                           implements ICustomMediaKeySession {
-  public readonly update: (license: ArrayBuffer,
-                           sessionId?: string) => Promise<void>;
+  public readonly update: (license: Uint8Array) => Promise<void>;
   public readonly closed: Promise<void>;
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
@@ -51,15 +50,22 @@ class IE11MediaKeySession extends EventEmitter<IMediaKeySessionEvents>
     this.closed = new PPromise((resolve) => {
       this._closeSession$.subscribe(resolve);
     });
-    this.update = wrapUpdate((license, sessionId) => {
-      if (this._ss == null) {
-        throw new Error("MediaKeySession not set");
-      }
-      /* tslint:disable no-unsafe-any */
-      (this._ss as any).update(license, sessionId);
-      /* tslint:enable no-unsafe-any */
-      this.sessionId = sessionId;
-    });
+    this.update = (license: Uint8Array) => {
+      return new PPromise((resolve, reject) => {
+        if (this._ss === undefined) {
+          return reject("MediaKeySession not set.");
+        }
+        try {
+          resolve(
+            /* tslint:disable no-unsafe-any */
+            (this._ss as any).update(license, /* sessionId */ "")
+            /* tslint:enable no-unsafe-any */
+          );
+        } catch (err) {
+          reject(err);
+        }
+      });
+    };
   }
   generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
     return new PPromise((resolve) => {
@@ -101,9 +107,10 @@ class IE11CustomMediaKeys implements ICustomMediaKeys {
   private _mediaKeys?: MSMediaKeys;
 
   constructor(keyType: string) {
-    /* tslint:disable no-unsafe-any */
-    this._mediaKeys = new MSMediaKeys(keyType);
-    /* tslint:enable no-unsafe-any */
+    if (MSMediaKeysConstructor === undefined) {
+      throw new Error("No MSMediaKeys API.");
+    }
+    this._mediaKeys = new MSMediaKeysConstructor(keyType);
   }
 
   _setVideo(videoElement: HTMLMediaElement): void {
@@ -128,13 +135,20 @@ class IE11CustomMediaKeys implements ICustomMediaKeys {
 }
 
 export default function getIE11MediaKeysCallbacks() {
-  /* tslint:disable no-unsafe-any */
-  const isTypeSupported = (keySystem: string, type?: string|null) =>
-    MSMediaKeys.isTypeSupported(keySystem, type);
-  /* tslint:enable no-unsafe-any */
+  const isTypeSupported = (keySystem: string, type?: string|null) => {
+    if (MSMediaKeysConstructor === undefined) {
+      throw new Error("No MSMediaKeys API.");
+    }
+    if (type !== undefined) {
+      return MSMediaKeysConstructor.isTypeSupported(keySystem, type);
+    }
+    return MSMediaKeysConstructor.isTypeSupported(keySystem);
+  };
   const createCustomMediaKeys = (keyType: string) => new IE11CustomMediaKeys(keyType);
   return {
     isTypeSupported,
     createCustomMediaKeys,
   };
 }
+
+export { MSMediaKeysConstructor };

@@ -20,10 +20,10 @@ import {
 } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import { TypedArray } from "../../../core/eme";
-  import {
-    bytesToStr,
-    strToBytes,
-  } from "../../../utils/byte_parsing";
+import {
+  bytesToStr,
+  strToBytes,
+} from "../../../utils/byte_parsing";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
@@ -33,7 +33,6 @@ import {
   ICustomMediaKeyStatusMap,
   IMediaKeySessionEvents,
 } from "./types";
-import wrapUpdate from "./wrap_update";
 
 export interface IOldWebkitHTMLMediaElement extends HTMLVideoElement {
   webkitGenerateKeyRequest : (keyType: string, initData : ArrayBuffer) => void;
@@ -60,7 +59,7 @@ export function isOldWebkitMediaElement(
 
 class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
                                implements ICustomMediaKeySession {
-  public readonly update: (license: ArrayBuffer, sessionId?: string) =>
+  public readonly update: (license: Uint8Array) =>
     Promise<void>;
   public readonly closed: Promise<void>;
   public expiration: number;
@@ -91,22 +90,27 @@ class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
       .pipe(takeUntil(this._closeSession$))
       .subscribe((evt: Event) => this.trigger(evt.type, evt));
 
-    this.update = wrapUpdate((license, sessionId?) => {
-      if (this._key.indexOf("clearkey") >= 0) {
-        const licenseTypedArray =
-          license instanceof ArrayBuffer ? new Uint8Array(license) :
-            license;
-        /* tslint:disable no-unsafe-any */
-        const json = JSON.parse(bytesToStr(licenseTypedArray));
-        const key = strToBytes(atob(json.keys[0].k));
-        const kid = strToBytes(atob(json.keys[0].kid));
-        /* tslint:enable no-unsafe-any */
-        this._vid.webkitAddKey(this._key, key, kid, sessionId);
-      } else {
-        this._vid.webkitAddKey(this._key, license, null, sessionId);
-      }
-      this.sessionId = sessionId;
-    });
+    this.update = (license: Uint8Array) => {
+      return new PPromise((resolve, reject) => {
+        try {
+          if (this._key.indexOf("clearkey") >= 0) {
+            const licenseTypedArray =
+              license instanceof ArrayBuffer ? new Uint8Array(license) :
+                                               license;
+            /* tslint:disable no-unsafe-any */
+            const json = JSON.parse(bytesToStr(licenseTypedArray));
+            const key = strToBytes(atob(json.keys[0].k));
+            const kid = strToBytes(atob(json.keys[0].kid));
+            /* tslint:enable no-unsafe-any */
+            resolve(this._vid.webkitAddKey(this._key, key, kid, /* sessionId */ ""));
+          } else {
+            resolve(this._vid.webkitAddKey(this._key, license, null, /* sessionId */ ""));
+          }
+        } catch (err) {
+          reject(err);
+        }
+      });
+    };
   }
 
   generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {

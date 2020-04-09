@@ -29,7 +29,10 @@ import {
   ICustomMediaKeyStatusMap,
   IMediaKeySessionEvents,
 } from "./types";
-import wrapUpdate from "./wrap_update";
+import {
+  IWebKitMediaKeys,
+  WebKitMediaKeys,
+} from "./webkit_media_keys_constructor";
 
 export interface ICustomWebKitMediaKeys {
   _setVideo: (videoElement: HTMLMediaElement) => void;
@@ -37,13 +40,17 @@ export interface ICustomWebKitMediaKeys {
   setServerCertificate(setServerCertificate: ArrayBuffer | TypedArray): Promise<void>;
 }
 
-/* tslint:disable no-unsafe-any */
-const { WebKitMediaKeys } = (window as any);
-/* tslint:enable no-unsafe-any */
-
+/**
+ * On Safari browsers (>= 9), there are specific webkit prefixed APIs for cyphered
+ * content playback. Standard EME APIs are therefore available since Safari 12.1, but they
+ * don't allow to play fairplay cyphered content.
+ *
+ * This class implements a standard EME API polyfill that wraps webkit prefixed Safari
+ * EME custom APIs.
+ */
 class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
                             implements ICustomMediaKeySession {
-  public readonly update: (license: ArrayBuffer, sessionId?: string) =>
+  public readonly update: (license: Uint8Array) =>
     Promise<void>;
   public readonly closed: Promise<void>;
   public expiration: number;
@@ -69,17 +76,22 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
     this.keyStatuses = new Map();
     this.expiration = NaN;
 
-    this.update = wrapUpdate((license, sessionId?) => {
+    this.update = (license: Uint8Array) => {
       /* tslint:disable no-unsafe-any */
-      if (this._nativeSession === undefined ||
-        this._nativeSession.update === undefined ||
-        typeof this._nativeSession.update !== "function") {
-        throw new Error("Unavailable WebKit key session.");
-      }
-      this._nativeSession.update(license);
+      return new PPromise((resolve, reject) => {
+        if (this._nativeSession === undefined ||
+            this._nativeSession.update === undefined ||
+            typeof this._nativeSession.update !== "function") {
+          return reject("Unavailable WebKit key session.");
+        }
+        try {
+          resolve(this._nativeSession.update(license));
+        } catch (err) {
+          reject(err);
+        }
+      });
       /* tslint:enable no-unsafe-any */
-      this.sessionId = sessionId;
-    });
+    };
   }
 
   /* tslint:disable no-unsafe-any */
@@ -142,13 +154,14 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
 
 class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
   private _videoElement?: HTMLMediaElement;
-  private _mediaKeys?: MediaKeys;
+  private _mediaKeys?: IWebKitMediaKeys;
   private _serverCertificate?: Uint8Array;
 
   constructor(keyType: string) {
-    /* tslint:disable no-unsafe-any */
+    if (WebKitMediaKeys === undefined) {
+      throw new Error("No WebKitMediaKeys API.");
+    }
     this._mediaKeys = new WebKitMediaKeys(keyType);
-    /* tslint:enable no-unsafe-any */
   }
 
   _setVideo(videoElement: HTMLMediaElement): void {
@@ -180,9 +193,10 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
 }
 
 export default function getWebKitMediaKeysCallbacks() {
-  /* tslint:disable no-unsafe-any */
+  if (WebKitMediaKeys === undefined) {
+    throw new Error("No WebKitMediaKeys API.");
+  }
   const isTypeSupported = WebKitMediaKeys.isTypeSupported;
-  /* tslint:enable no-unsafe-any */
   const createCustomMediaKeys = (keyType: string) => new WebKitCustomMediaKeys(keyType);
   return {
     isTypeSupported,
