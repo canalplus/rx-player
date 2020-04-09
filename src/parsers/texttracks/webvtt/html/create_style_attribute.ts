@@ -16,13 +16,6 @@
 
 import objectValues from "../../../../utils/object_values";
 
-/*
- * How far in, in percentage, from the boundary box where the origin
- * of the text box should be shifted in order to no be placed outside the box.
- */
-const HORIZONTAL_BOUNDARY_OFFSET = 30;
-const VERTICAL_BOUNDARY_OFFSET = 5;
-
 /**
  * Construct a DOM attribute reflecting given cue settings
  * @param {Partial<Record<string, string>>} settings
@@ -47,54 +40,147 @@ const getAttrValue = (settings: Partial<Record<string, string>>) => {
     "margin: 0;" +
     `${getTransformStyle(settings)}` +
     `${getSizeStyle(settings.size)}` +
-    `${getPositionStyle(settings.position)}` +
+    `${getPositionStyle(settings)}` +
     `${getLineStyle(settings.line)}` +
     `${getAlignStyle(settings.align)}`
   );
 };
 
+enum PositionAlignment {
+  LINE_LEFT = "line-left",
+  CENTER = "center",
+  LINE_RIGHT = "line-right",
+}
+
+enum Align {
+  LEFT = "left",
+  CENTER = "center",
+  RIGHT = "right",
+}
+
+enum LineAlignment {
+  START = "start",
+  CENTER = "center",
+  END = "end",
+}
+
+/**
+ * Used to shift cue box origin in order to define
+ * what the position and line values are relating to.
+ */
 const getTransformStyle = (settings: Partial<Record<string, string>>) => {
-  const xTranslateDefault = 50;
-  const xPosition = getPercentageValueOrDefault(settings.position, xTranslateDefault);
-
-  const yTranslateDefault = 50;
-  const yPosition = getPercentageValueOrDefault(settings.line, yTranslateDefault);
-
-  const xOffset = getPercentageValueOrDefault(settings.size, HORIZONTAL_BOUNDARY_OFFSET);
-  const yOffset = VERTICAL_BOUNDARY_OFFSET;
-
-  const isCloseToXBoundary = xPosition < xOffset || xPosition > (100 - xOffset);
-  const isCloseToYBoundary = yPosition < yOffset || yPosition > (100 - yOffset);
-
-  const xTranslate = isCloseToXBoundary ? xPosition : xTranslateDefault;
-  const yTranslate = isCloseToYBoundary ? yPosition : yTranslateDefault;
-
-  return `transform: translate(-${xTranslate}%,-${yTranslate}%);`;
-} ;
-
-const getSizeStyle = (size: string | undefined) => {
-  return size !== undefined ?
-    `width:${size};` :
-    "";
+  return `transform: translate(${getTransformX(settings)}%,${getTransformY(settings.line)}%);`;
 };
 
-const getPositionStyle = (positionSetting: string | undefined) => {
-  const positionDefault = 50;
-  const position = getPercentageValueOrDefault(positionSetting, positionDefault);
+const getTransformX = (settings: Partial<Record<string, string>>) => {
+  const positionAlignmentMap = {
+    [PositionAlignment.LINE_LEFT]: 0,
+    [PositionAlignment.CENTER]: -50,
+    [PositionAlignment.LINE_RIGHT]: -100,
+  };
 
-  return `left:${position}%;`;
+  const positionAlignment = settings.position !== undefined ?
+    getPositionAlignment(settings.position) :
+    null;
+
+  if (positionAlignment !== null) {
+    return positionAlignmentMap[positionAlignment];
+  }
+
+  const alignMap = {
+    [Align.LEFT]: 0,
+    [Align.CENTER]: -50,
+    [Align.RIGHT]: -100,
+  };
+
+  const align = settings.align !== undefined ?
+    getAlign(settings.align)
+    : Align.CENTER;
+
+  return alignMap[align];
+};
+
+const getTransformY = (lineSetting: string | undefined) => {
+  const lineAlignmentMap = {
+    [LineAlignment.START]: 0,
+    [LineAlignment.CENTER]: -50,
+    [LineAlignment.END]: -100,
+  };
+
+  if (lineSetting === undefined) {
+    return lineAlignmentMap[LineAlignment.START];
+  }
+
+  const lineAlignment = getLineAlignment(lineSetting);
+
+  return lineAlignment !== null ?
+    lineAlignmentMap[lineAlignment] :
+    lineAlignmentMap[LineAlignment.START];
+};
+
+const getPositionAlignment = (positionSetting: string): PositionAlignment | null => {
+  const positionRegex = /,(line-left|line-right|center)/;
+  const matches = positionRegex.exec(positionSetting);
+
+  if (!Array.isArray(matches) || matches.length < 2) {
+    return null;
+  }
+
+  return matches[1] as PositionAlignment;
+};
+
+const getLineAlignment = (lineSetting: string): LineAlignment | null => {
+  const positionRegex = /,(start|center|end)/;
+  const matches = positionRegex.exec(lineSetting);
+
+  if (!Array.isArray(matches) || matches.length < 2) {
+    return null;
+  }
+
+  return matches[1] as LineAlignment;
+};
+
+const getSizeStyle = (sizeSetting: string | undefined) => {
+  const defaultSize = 100;
+  const size = getPercentageValueOrDefault(sizeSetting, defaultSize);
+  return `width:${size}%;`;
+};
+
+const getPositionStyle = (settings: Partial<Record<string, string>>) => {
+  const positionStyle = (value: number) => `left:${value}%;`;
+
+  const position = getPercentageValue(settings.position);
+  if (position !== null) {
+    return positionStyle(position);
+  }
+
+  const align = getAlign(settings.align);
+  const alignMap = {
+    [Align.LEFT]: 0,
+    [Align.CENTER]: 50,
+    [Align.RIGHT]: 100,
+  };
+
+  return positionStyle(alignMap[align]);
 };
 
 const getAlignStyle = (alignSetting: string | undefined) => {
-  if (alignSetting === undefined) {
-    return "";
+  return alignSetting !== undefined ?
+    `text-align:${getAlign(alignSetting)};` :
+    "";
+};
+
+const getAlign = (alignSetting: string | undefined): Align => {
+  switch (alignSetting) {
+    case "left":
+    case "start":
+      return "left" as Align;
+    case "right":
+    case "end":
+      return "right" as Align;
+    default:
+      return "center" as Align;
   }
-
-  const align = alignSetting === "middle" ?
-    "center" :
-    alignSetting;
-
-  return `text-align:${align};`;
 };
 
 const getLineStyle = (lineSetting: string | undefined) => {
