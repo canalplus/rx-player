@@ -123,11 +123,11 @@ const getPercentageValue = (percentageString: string | undefined): number | null
     return null;
   }
 
-  const positionRegex = /^([\d.]+)%(?:,(line-left|line-right|center))?$/;
-  const positionArr = positionRegex.exec(percentageString);
-  if (!Array.isArray(positionArr) || positionArr.length < 2) {
+  const percentageValueRegex = /^([\d.]+)%/;
+  const matches = percentageValueRegex.exec(percentageString);
+  if (!Array.isArray(matches) || matches.length < 2) {
     return null;
   }
 
-  return parseInt(positionArr[1], 10);
+  return parseInt(matches[1], 10);
 };
