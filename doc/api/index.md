@@ -59,12 +59,11 @@
     - [setTextTrack](#meth-setTextTrack)
     - [disableTextTrack](#meth-disableTextTrack)
     - [setVideoTrack](#meth-setVideoTrack)
+    - [disableVideoTrack](#meth-disableVideoTrack)
     - [setPreferredAudioTracks](#meth-setPreferredAudioTracks)
     - [getPreferredAudioTracks](#meth-getPreferredAudioTracks)
     - [setPreferredTextTracks](#meth-setPreferredTextTracks)
     - [getPreferredTextTracks](#meth-getPreferredTextTracks)
-    - [disableVideoTrack](#meth-disableVideoTrack)
-    - [disableAudioOnly](#meth-disableAudioOnly)
     - [getCurrentAdaptations](#meth-getCurrentAdaptations)
     - [getCurrentRepresentations](#meth-getCurrentRepresentations)
     - [dispose](#meth-dispose)
@@ -1323,6 +1322,16 @@ During this period of time:
 ---
 
 
+<a name="meth-disableVideoTrack"></a>
+### disableVideoTrack #####################################################
+
+_return value_: ``void``
+
+Deactivate the current video track, if one.
+
+> Will enter in `RELOADING` state for a short period.
+
+
 <a name="meth-setPreferredAudioTracks"></a>
 ### setPreferredAudioTracks ####################################################
 
@@ -1552,14 +1561,6 @@ it was called:
 }
 ```
 
-<a name="meth-disableVideoTrack"></a>
-### disableVideoTrack #####################################################
-
-_return value_: ``void``
-
-Deactivate the current text track, if one.
-
-> Will enter in `RELOADING` state for a short period.
 
 <a name="meth-getManifest"></a>
 ### getManifest ################################################################

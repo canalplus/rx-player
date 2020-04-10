@@ -125,7 +125,9 @@ export default function PeriodBuffer({
             .removeBuffer(period.start,
                           period.end == null ? Infinity :
                                                period.end);
-          return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
+          if (SourceBuffersStore.isNative(bufferType)) {
+            return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
+          }
         } else {
           if (sourceBufferStatus.type === "unset") {
             sourceBuffersStore.disableSourceBuffer(bufferType);
@@ -139,9 +141,9 @@ export default function PeriodBuffer({
         );
       }
 
-      // Check if we are in AudioOnly mode, if yes, revert to normal mode
-      const videoStatus = sourceBuffersStore.getStatus("video");
-      if (videoStatus.type === "disabled" && adaptation.type === "video") {
+      if (SourceBuffersStore.isNative(bufferType) &&
+          sourceBuffersStore.getStatus(bufferType).type === "disabled")
+      {
         return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
       }
 
