@@ -1761,6 +1761,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Disable video track for the current content.
+   */
+  disableVideoTrack() : void {
+    if (this._priv_contentInfos === null) {
+      return;
+    }
+    const { currentPeriod } = this._priv_contentInfos;
+    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
+      return;
+    }
+    return this._priv_trackChoiceManager.disableVideoTrack(currentPeriod);
+  }
+
+  /**
    * Returns the current list of preferred audio tracks, in preference order.
    * @returns {Array.<Object>}
    */
@@ -1798,17 +1812,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                       "Should have been an Array.");
     }
     return this._priv_preferredTextTracks.next(tracks);
-  }
-
-  disableVideoTrack() : void {
-    if (this._priv_contentInfos === null) {
-      return;
-    }
-    const { currentPeriod } = this._priv_contentInfos;
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      return;
-    }
-    return this._priv_trackChoiceManager.disableVideoTrack(currentPeriod);
   }
 
   /**
