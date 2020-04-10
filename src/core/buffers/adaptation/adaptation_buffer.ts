@@ -124,6 +124,7 @@ export default function AdaptationBuffer<T>({
 } : IAdaptationBufferArguments<T>) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
+
   // The buffer goal ratio limits the wanted buffer ahead to determine the
   // buffer goal.
   //

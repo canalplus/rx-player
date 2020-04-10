@@ -498,6 +498,11 @@ export default class TrackChoiceManager {
     textInfos.adaptation$.next(null);
   }
 
+  /**
+   * Disable the current video track for a given period.
+   * @param {Object} period
+   * @throws Error - Throws if the period given has not been added
+   */
   public disableVideoTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const videoInfos = periodItem?.video;
