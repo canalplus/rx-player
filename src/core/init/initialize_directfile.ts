@@ -20,7 +20,6 @@
  */
 
 import {
-  asapScheduler,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -33,7 +32,6 @@ import {
   mergeMap,
   mergeMapTo,
   share,
-  subscribeOn,
   take,
 } from "rxjs/operators";
 import {
@@ -42,6 +40,7 @@ import {
 } from "../../compat";
 import { MediaError } from "../../errors";
 import log from "../../log";
+import deferSubscriptions from "../../utils/defer_subscriptions";
 import {
   IEMEManagerEvent,
   IKeySystemOption,
@@ -164,7 +163,7 @@ export default function initializeDirectfileContent({
   // issue.
   const emeManager$ = linkURL$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems, EMPTY)),
-    subscribeOn(asapScheduler), // multiple Observables here are based on this one
+    deferSubscriptions(),
     share()
   );
 

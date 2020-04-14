@@ -15,7 +15,6 @@
  */
 
 import {
-  asapScheduler,
   BehaviorSubject,
   combineLatest as observableCombineLatest,
   merge as observableMerge,
@@ -31,7 +30,6 @@ import {
   mergeMap,
   share,
   startWith,
-  subscribeOn,
   switchMap,
   take,
   takeUntil,
@@ -41,6 +39,7 @@ import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
 import log from "../../log";
 import { ITransportPipelines } from "../../transports";
+import deferSubscriptions from "../../utils/defer_subscriptions";
 import { fromEvent } from "../../utils/event_emitter";
 import objectAssign from "../../utils/object_assign";
 import throttle from "../../utils/rx-throttle";
@@ -213,8 +212,8 @@ export default function InitializeOnMediaSource(
    * The MediaSource will be closed on unsubscription.
    */
   const openMediaSource$ = openMediaSource(mediaElement).pipe(
-    subscribeOn(asapScheduler), // to launch subscriptions only when all
-    share());                   // Observables here are linked
+    deferSubscriptions(),
+    share());
 
   /** Send content protection data to the `EMEManager`. */
   const protectedSegments$ = new Subject<IContentProtection>();
@@ -222,8 +221,8 @@ export default function InitializeOnMediaSource(
   /** Create `EMEManager`, an observable which will handle content DRM. */
   const emeManager$ = openMediaSource$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems, protectedSegments$)),
-    subscribeOn(asapScheduler), // to launch subscriptions only when all
-    share());                   // Observables here are linked
+    deferSubscriptions(),
+    share());
 
   /**
    * Translate errors coming from the media element into RxPlayer errors
@@ -240,8 +239,8 @@ export default function InitializeOnMediaSource(
 
   /** Do the first Manifest request. */
   const initialManifestRequest$ = fetchManifest(url, undefined).pipe(
-    subscribeOn(asapScheduler), // to launch subscriptions only when all
-    share());                   // Observables here are linked
+    deferSubscriptions(),
+    share());
 
   const initialManifestRequestWarnings$ = initialManifestRequest$
     .pipe(filter((evt) : evt is IWarningEvent => evt.type === "warning"));

@@ -25,7 +25,6 @@
  */
 
 import {
-  asapScheduler,
   BehaviorSubject,
   concat as observableConcat,
   defer as observableDefer,
@@ -45,7 +44,6 @@ import {
   multicast,
   share,
   startWith,
-  subscribeOn,
   take,
   takeUntil,
   tap,
@@ -61,6 +59,7 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import concatMapLatest from "../../../utils/concat_map_latest";
+import deferSubscriptions from "../../../utils/defer_subscriptions";
 import ABRManager, {
   IABREstimate,
   IABRMetric,
@@ -160,7 +159,7 @@ export default function AdaptationBuffer<T>({
                                                           decipherableRepresentations,
                                                           clock$,
                                                           abrEvents$)
-      .pipe(subscribeOn(asapScheduler), share());
+      .pipe(deferSubscriptions(), share());
 
   const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type,
                                                                     requestsEvents$);
