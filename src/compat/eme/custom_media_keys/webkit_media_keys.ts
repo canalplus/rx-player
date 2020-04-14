@@ -31,7 +31,7 @@ import {
 } from "./types";
 import {
   IWebKitMediaKeys,
-  WebKitMediaKeys,
+  WebKitMediaKeysConstructor,
 } from "./webkit_media_keys_constructor";
 
 export interface ICustomWebKitMediaKeys {
@@ -158,10 +158,10 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
   private _serverCertificate?: Uint8Array;
 
   constructor(keyType: string) {
-    if (WebKitMediaKeys === undefined) {
+    if (WebKitMediaKeysConstructor === undefined) {
       throw new Error("No WebKitMediaKeys API.");
     }
-    this._mediaKeys = new WebKitMediaKeys(keyType);
+    this._mediaKeys = new WebKitMediaKeysConstructor(keyType);
   }
 
   _setVideo(videoElement: HTMLMediaElement): void {
@@ -193,10 +193,10 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
 }
 
 export default function getWebKitMediaKeysCallbacks() {
-  if (WebKitMediaKeys === undefined) {
+  if (WebKitMediaKeysConstructor === undefined) {
     throw new Error("No WebKitMediaKeys API.");
   }
-  const isTypeSupported = WebKitMediaKeys.isTypeSupported;
+  const isTypeSupported = WebKitMediaKeysConstructor.isTypeSupported;
   const createCustomMediaKeys = (keyType: string) => new WebKitCustomMediaKeys(keyType);
   return {
     isTypeSupported,

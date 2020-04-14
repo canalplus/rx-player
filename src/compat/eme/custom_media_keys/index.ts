@@ -42,6 +42,7 @@ import {
   ICustomMediaKeySession,
 } from "./types";
 import getWebKitMediaKeysCallbacks from "./webkit_media_keys";
+import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
 let requestMediaKeySystemAccess : null |
                                   ((keyType : string,
@@ -85,7 +86,7 @@ if (isNode ||
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
   // This is for WebKit with prefixed EME api
-  } else if (shouldUseWebKitMediaKeys()) {
+  } else if (WebKitMediaKeysConstructor !== undefined) {
     const callbacks = getWebKitMediaKeysCallbacks();
     /* tslint:disable no-unsafe-any */
     isTypeSupported = callbacks.isTypeSupported;

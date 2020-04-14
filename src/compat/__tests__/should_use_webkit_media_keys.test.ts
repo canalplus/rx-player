@@ -52,7 +52,13 @@ describe("compat - shouldUseWebKitMediaKeys", () => {
   it("should return true if we are on Safari and a WebKitMediaKeys implementation is available", () => {
   /* tslint:enable max-line-length */
 
-    (window as any).WebKitMediaKeys = {};
+    (window as any).WebKitMediaKeys = {
+      isTypeSupported: () => ({}),
+      prototype: {
+        createSession: () => ({}),
+      },
+    };
+    (window as any).HTMLMediaElement.prototype.webkitSetMediaKeys = () => ({});
     jest.mock("../browser_detection", () => {
       return { __esModule: true,
                isSafari: true };
