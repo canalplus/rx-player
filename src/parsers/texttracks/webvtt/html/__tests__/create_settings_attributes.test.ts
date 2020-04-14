@@ -111,7 +111,7 @@ describe("parsers - webvtt - createSettingsAttributes", () => {
   });
 });
 
-function isEqualStyle (style1: string, style2: string) {
+ const isEqualStyle = (style1: string, style2: string) => {
   const uniform = (str: string) => str.split(";")
     .map(s => s.replace(" ", ""))
     .filter(s => s !== "")
@@ -121,4 +121,4 @@ function isEqualStyle (style1: string, style2: string) {
   ).toEqual(
     uniform(style2)
   );
-}
+};

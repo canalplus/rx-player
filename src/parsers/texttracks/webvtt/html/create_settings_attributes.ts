@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-/*
- * How far from edge to start translating the text's origin,
- * in order to keep all text inside it's box.
- */
 import objectValues from "../../../../utils/object_values";
 
-const DEFAULT_HORIZONTAL_OFFSET = 30;
-const DEFAULT_VERTICAL_OFFSET = 5;
+/*
+ * How far in, in percentage, from the boundary box where the origin
+ * of the text box should be shifted in order to no be placed outside the box.
+ */
+const HORIZONTAL_BOUNDARY_OFFSET = 30;
+const VERTICAL_BOUNDARY_OFFSET = 5;
 
+/**
+ * Construct a DOM attribute reflecting given cue settings
+ * @param {Partial<Record<string, string>>} settings
+ * @returns {Attr}
+ */
 export default function createSettingsAttributes (
   settings : Partial<Record<string, string>>
 ) : Attr {
@@ -41,7 +46,7 @@ const getAttrValue = (settings: Partial<Record<string, string>>) => {
     "position: absolute;" +
     "margin: 0;" +
     `${getTransformStyle(settings)}` +
-    `${getWidthStyle(settings.size)}` +
+    `${getSizeStyle(settings.size)}` +
     `${getPositionStyle(settings.position)}` +
     `${getLineStyle(settings.line)}` +
     `${getAlignStyle(settings.align)}`
@@ -50,35 +55,24 @@ const getAttrValue = (settings: Partial<Record<string, string>>) => {
 
 const getTransformStyle = (settings: Partial<Record<string, string>>) => {
   const xTranslateDefault = 50;
+  const xPosition = getPercentageValueOrDefault(settings.position, xTranslateDefault);
+
   const yTranslateDefault = 50;
+  const yPosition = getPercentageValueOrDefault(settings.line, yTranslateDefault);
 
-  let xPosition = getPercentageValue(settings.position);
-  xPosition = xPosition !== null ?
-    xPosition :
-    xTranslateDefault;
+  const xOffset = getPercentageValueOrDefault(settings.size, HORIZONTAL_BOUNDARY_OFFSET);
+  const yOffset = VERTICAL_BOUNDARY_OFFSET;
 
-  let yPosition = getPercentageValue(settings.line);
-  yPosition = yPosition !== null ?
-    yPosition :
-    yTranslateDefault;
+  const isCloseToXBoundary = xPosition < xOffset || xPosition > (100 - xOffset);
+  const isCloseToYBoundary = yPosition < yOffset || yPosition > (100 - yOffset);
 
-  const width = getPercentageValue(settings.size);
-  const xOffset = width !== null ?
-    width :
-    DEFAULT_HORIZONTAL_OFFSET;
-  const yOffset = DEFAULT_VERTICAL_OFFSET;
-
-  const isCloseToXEdge = xPosition < xOffset || xPosition > (100 - xOffset);
-  const isCloseToYEdge = yPosition < yOffset || yPosition > (100 - yOffset);
-
-  const xTranslate = isCloseToXEdge ? xPosition : xTranslateDefault;
-  const yTranslate = isCloseToYEdge ? yPosition : yTranslateDefault;
+  const xTranslate = isCloseToXBoundary ? xPosition : xTranslateDefault;
+  const yTranslate = isCloseToYBoundary ? yPosition : yTranslateDefault;
 
   return `transform: translate(-${xTranslate}%,-${yTranslate}%);`;
-
 } ;
 
-const getWidthStyle = (size: string | undefined) => {
+const getSizeStyle = (size: string | undefined) => {
   return size !== undefined ?
     `width:${size};` :
     "";
@@ -86,10 +80,7 @@ const getWidthStyle = (size: string | undefined) => {
 
 const getPositionStyle = (positionSetting: string | undefined) => {
   const positionDefault = 50;
-  let position = getPercentageValue(positionSetting);
-  position = position !== null ?
-    position :
-    positionDefault;
+  const position = getPercentageValueOrDefault(positionSetting, positionDefault);
 
   return `left:${position}%;`;
 };
@@ -112,7 +103,17 @@ const getLineStyle = (lineSetting: string | undefined) => {
   }
 
   const line = getPercentageValue(lineSetting);
-  return `top:${line}%;`;
+  return line !== null ?
+    `top:${line}%;` :
+    "";
+};
+
+const getPercentageValueOrDefault = (percentageString: string | undefined, defaultValue: number): number => {
+  const value = getPercentageValue(percentageString);
+
+  return value !== null ?
+    value :
+    defaultValue;
 };
 
 const getPercentageValue = (percentageString: string | undefined): number | null => {
