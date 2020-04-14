@@ -1315,45 +1315,75 @@ During this period of time:
 
 _arguments_: ``Array.<Object>``
 
-Update the audio language preferences at any time.
+Allows the RxPlayer to choose an initial audio track, based on language
+preferences, codec preferences or both.
 
-This method takes an array of objects describing the languages wanted:
+It is defined as an array of objects, each object describing constraints a
+track should respect.
+
+If the first object - defining the first set of constraints - can not be
+respected under the currently available audio tracks, the RxPlayer will skip
+it and check with the second object and so on.
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.
+
+Here is all the possible constraints you can set in any one of those objects
+(note that all properties are optional here, only those set will have an effect
+on which tracks will be filtered):
 ```js
 {
-  language: "fra", // {string} The wanted language
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-  audioDescription: false // {Boolean} Whether the audio track should be an
-                          // audio description for the visually impaired
+  language: "fra", // {string|undefined} The language the track should be in
+                   // (in preference as an ISO 639-1, ISO 639-2 or ISO 639-3
+                   // language code).
+                   // If not set or set to `undefined`, the RxPlayer won't
+                   // filter based on the language of the track.
+
+  audioDescription: false // {Boolean|undefined} Whether the audio track should
+                          // be an audio description for the visually impaired
+                          // or not.
+                          // If not set or set to `undefined`, the RxPlayer
+                          // won't filter based on that status.
+
+  codec: { // {Object|undefined} Constraints about the codec wanted.
+           // if not set or set to `undefined` we won't filter based on codecs.
+
+    test: /ec-3/, // {RegExp} RegExp validating the type of codec you want.
+
+    all: true, // {Boolean} Whether all the profiles (i.e. Representation) in a
+               // track should be checked against the RegExp given in `test`.
+               // If `true`, we will only choose a track if EVERY profiles for
+               // it have a codec information that is validated by that RegExp.
+               // If `false`, we will choose a track if we know that at least
+               // A SINGLE profile from it has codec information validated by
+               // that RegExp.
+  }
 }
 ```
 
-All elements in that Array should be set in preference order: from the most
-preferred to the least preferred.
+This logic is ran each time a new `Period` with audio tracks is loaded by the
+RxPlayer. This means at the start of the content, but also when [pre-]loading a
+new DASH `Period` or a new MetaPlaylist `content`.
 
-When encountering a new Period or a new content, the RxPlayer will then try to
-choose its audio track by comparing what is available with your current
-preferences (i.e. if the most preferred is not available, it will look if the
-second one is etc.).
-
-Please note that those preferences will only apply either to the next loaded
-content or to the next newly encountered Period.
+Please note that those preferences won't be re-applied once the logic was
+already run for a given `Period`.
 Simply put, once set this preference will be applied to all contents but:
 
   - the current Period being played (or the current loaded content, in the case
-    of Smooth streaming). In that case, the current audio preference will stay
-    in place.
+    of single-Period contents such as in Smooth streaming).
+    In that case, the current audio preference will stay in place.
 
-  - the Periods which have already been played in the current loaded content.
-    Those will keep the last set audio preference at the time it was played.
+  - the Periods which have already been loaded in the current content.
+    Those will keep their last set audio preferences (e.g. the preferred audio
+    tracks at the time they were first loaded).
 
 To update the current audio track in those cases, you should use the
-`setAudioTrack` method.
+`setAudioTrack` method once they are currently played.
 
-#### Example
+
+#### Examples
 
 Let's imagine that you prefer to have french or italian over all other audio
-languages. If not found, you want to fallback to english.
-You will thus call ``setPreferredAudioTracks`` that way.
+languages. If not found, you want to fallback to english:
 
 ```js
 player.setPreferredAudioTracks([
@@ -1361,6 +1391,43 @@ player.setPreferredAudioTracks([
   { language: "ita", audioDescription: false },
   { language: "eng", audioDescription: false }
 ])
+```
+
+Now let's imagine that you want to have in priority a track that contain at
+least one profile in Dolby Digital Plus (ec-3 codec) without caring about the
+language:
+```js
+player.setPreferredAudioTracks([ { codec: { all: false, test: /ec-3/ } ]);
+```
+
+At last, let's combine both examples by preferring french over itialian, italian
+over english while preferring it to be in Dolby Digital Plus:
+```js
+
+player.setPreferredAudioTracks([
+  {
+    language: "fra",
+    audioDescription: false,
+    codec: { all: false, test: /ec-3/ }
+  },
+
+  // We still prefer non-DD+ french over DD+ italian
+  { language: "fra", audioDescription: false },
+
+  {
+    language: "ita",
+    audioDescription: false,
+    codec: { all: false, test: /ec-3/ }
+  },
+  { language: "ita", audioDescription: false },
+
+  {
+    language: "eng",
+    audioDescription: false,
+    codec: { all: false, test: /ec-3/ }
+  },
+  { language: "eng", audioDescription: false }
+]);
 ```
 
 ---
@@ -1382,15 +1449,9 @@ Returns the current list of preferred audio tracks - by order of preference.
 
 This returns the data in the same format that it was given to either the
 `preferredAudioTracks` constructor option or the last `setPreferredAudioTracks`
-if it was called:
-```js
-{
-  language: "fra", // {string} The wanted language
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-  audioDescription: false // {Boolean} Whether the audio track should be an
-                          // audio description for the visually impaired
-}
-```
+if it was called.
+
+It will return an empty Array if none of those two APIs were used until now.
 
 
 <a name="meth-setPreferredTextTracks"></a>
