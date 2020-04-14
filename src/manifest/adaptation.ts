@@ -56,6 +56,7 @@ export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         isAudioDescription? : boolean;
                                         isClosedCaption? : boolean;
                                         isDub? : boolean;
+                                        isSignInterpreted?: boolean;
                                         normalizedLanguage? : string; }
 
 /** Type for the `representationFilter` API. */
@@ -89,6 +90,12 @@ export default class Adaptation {
 
   /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
   public isClosedCaption? : boolean;
+
+  /**
+   * If true this Adaptation is sign interpreted: which is a
+   * variant in sign language.
+   */
+  public isSignInterpreted? : boolean;
 
   /**
    * If `true`, this Adaptation is a "dub", meaning it was recorded in another
@@ -161,6 +168,9 @@ export default class Adaptation {
     if (parsedAdaptation.isDub !== undefined) {
       this.isDub = parsedAdaptation.isDub;
     }
+    if (parsedAdaptation.isSignInterpreted !== undefined) {
+      this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
+    }
 
     this.representations = argsRepresentations
       .map(representation => new Representation(representation))
@@ -175,7 +185,8 @@ export default class Adaptation {
                                       normalizedLanguage: this.normalizedLanguage,
                                       isClosedCaption: this.isClosedCaption,
                                       isDub: this.isDub,
-                                      isAudioDescription: this.isAudioDescription });
+                                      isAudioDescription: this.isAudioDescription,
+                                      isSignInterpreted: this.isSignInterpreted });
       });
 
     // for manuallyAdded adaptations (not in the manifest)
