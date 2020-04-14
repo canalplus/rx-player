@@ -2091,9 +2091,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       preferredTextTracks: initialTextTrack === undefined ?
         this._priv_preferredTextTracks :
         new BehaviorSubject([initialTextTrack]),
-      preferredVideoTracks: initialTextTrack === undefined ?
-        this._priv_preferredVideoTracks :
-        new BehaviorSubject([] as IVideoTrackPreference[]),
+      preferredVideoTracks: this._priv_preferredVideoTracks,
     });
 
     fromEvent(manifest, "manifestUpdate")
