@@ -413,6 +413,10 @@ it and check with the second object and so on.
 As such, this array should be sorted by order of preference: from the most
 wanted constraints to the least.
 
+When the next encountered constraint is set to `null`, the player will simply
+disable the video track. If you want to disable the video track by default,
+you can just set `null` as the first element of this array (e.g. `[null]`).
+
 Here is all the possible constraints you can set in any one of those objects
 (note that all properties are optional here, only those set will have an effect
 on which tracks will be filtered):
