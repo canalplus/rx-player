@@ -286,6 +286,16 @@ export default class MediaElementTrackChoiceManager
   }
 
   /**
+   * Disable the currently-active video track, if one.
+   */
+  public disableVideoTrack(): void {
+    for (let i = 0; i < this._videoTracks.length; i++) {
+      const { nativeTrack } = this._videoTracks[i];
+      nativeTrack.selected = false;
+    }
+  }
+
+  /**
    * Update the currently active video track by setting the wanted video track's
    * ID property.
    * Throws if the wanted video track is not found.
