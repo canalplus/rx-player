@@ -1102,6 +1102,12 @@ Each of the objects in the returned array have the following properties:
 
     - ``frameRate`` (``string|undefined``): The video framerate.
 
+  - ``signInterpreted`` (``Boolean|undefined``): If set to `true`, the track is
+    known to contain an interpretation in sign language.
+    If set to `false`, the track is known to not contain that type of content.
+    If not set or set to undefined we don't know whether that video track
+    contains an interpretation in sign language.
+
 
 In _DirectFile_ mode
 (see [loadVideo options](./loadVideo_options.md#prop-transport)), if there are
@@ -1193,7 +1199,6 @@ The track is an object with the following properties:
   - ``id`` (``string``): The id used to identify the track. Use it for setting
     the track via ``setVideoTrack``.
 
-
   - ``representations`` (``Array.<Object>``):
     [Representations](../terms.md#representation) of this video track, with
     attributes:
@@ -1211,6 +1216,12 @@ The track is an object with the following properties:
       format.
 
     - ``frameRate`` (``string|undefined``): The video framerate.
+
+  - ``signInterpreted`` (``Boolean|undefined``): If set to `true`, the track is
+    known to contain an interpretation in sign language.
+    If set to `false`, the track is known to not contain that type of content.
+    If not set or set to undefined we don't know whether that video track
+    contains an interpretation in sign language.
 
 ``undefined`` if no content has been loaded yet.
 
