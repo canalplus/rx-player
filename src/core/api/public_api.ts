@@ -1767,7 +1767,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return;
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile && this._priv_mediaElementTrackChoiceManager !== null) {
+      return this._priv_mediaElementTrackChoiceManager.disableVideoTrack();
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return;
     }
