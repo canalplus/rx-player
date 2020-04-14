@@ -83,7 +83,7 @@ function displayHelp() {
 Options:
   -h, --help    Display this help
   --bchrome     Launch tests on Chrome
-  --bchromehl   Launch tests on headless Chrome`
+  --bchromehl   Launch tests on headless Chrome`,
   /* eslint-enable indent */
   );
   /* eslint-enable no-console */
