@@ -124,6 +124,11 @@ export interface IParsedAdaptation {
    */
   isDub? : boolean;
   /**
+   * If true this Adaptation is in a sign interpreted: which is a variant of the
+   * video with sign language.
+   */
+  isSignInterpreted? : boolean;
+  /**
    * Language the `Adaptation` is in.
    * Not set if unknown or if it makes no sense for the current track.
    */
