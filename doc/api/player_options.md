@@ -334,8 +334,10 @@ const player = new RxPlayer({
 
 ---
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+- No audio track API is supported on the current browser
+- The media file tracks are not supported on the browser
 
 ---
 
@@ -389,8 +391,10 @@ const player = new RxPlayer({
 
 ---
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+- No text track API is supported on the current browser
+- The media file tracks are not supported on the browser
 
 ---
 
@@ -496,8 +500,10 @@ const player = new RxPlayer({
 
 ---
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+- No video track API is supported on the current browser
+- The media file tracks are not supported on the browser
 
 ---
 
