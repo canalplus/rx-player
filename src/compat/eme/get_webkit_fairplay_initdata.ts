@@ -22,7 +22,7 @@ import {
 } from "../../utils/byte_parsing";
 
 /**
- * Create formatted init data for WebKit createSession.
+ * Create formatted fairplay initdata for WebKit createSession.
  * Layout is :
  * [initData][4 byte: idLength][idLength byte: id]
  * [4 byte:certLength][certLength byte: cert]
@@ -30,8 +30,9 @@ import {
  * @param {Uint8Array} serverCertificate
  * @returns {Uint8Array}
  */
-export default function getWebKitInitData(initDataBytes: Uint8Array|ArrayBuffer,
-                                          serverCertificateBytes: Uint8Array|ArrayBuffer
+export default function getWebKitFairPlayInitData(
+  initDataBytes: Uint8Array|ArrayBuffer,
+  serverCertificateBytes: Uint8Array|ArrayBuffer
 ): Uint8Array {
   const initData = initDataBytes instanceof Uint8Array ? initDataBytes :
                                                          new Uint8Array(initDataBytes);
@@ -59,6 +60,11 @@ export default function getWebKitInitData(initDataBytes: Uint8Array|ArrayBuffer,
   res.set(itole4(id.byteLength), offset);
   offset += 4;
 
+  /**
+   * As the id is formatted in Uint16, we need to represent
+   * it in an Uint8 array to be able to set it in our result bytes
+   * array.
+   */
   res.set(new Uint8Array(id.buffer), offset);
   offset += id.length * 2;
 

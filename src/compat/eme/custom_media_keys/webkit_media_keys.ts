@@ -23,7 +23,7 @@ import { TypedArray } from "../../../core/eme";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
-import getWebKitInitData from "../get_webkit_initdata";
+import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import {
   ICustomMediaKeySession,
   ICustomMediaKeyStatusMap,
@@ -38,6 +38,16 @@ export interface ICustomWebKitMediaKeys {
   _setVideo: (videoElement: HTMLMediaElement) => void;
   createSession(mimeType: string, initData: Uint8Array): ICustomMediaKeySession;
   setServerCertificate(setServerCertificate: ArrayBuffer | TypedArray): Promise<void>;
+}
+
+/**
+ * Check if keyType is for fairplay DRM
+ * @param {string} keyType
+ * @returns {boolean}
+ */
+function isFairplayKeyType(keyType: string): boolean {
+  return keyType === "com.apple.fps.1_0" ||
+         keyType === "com.apple.fps.2_0";
 }
 
 /**
@@ -59,15 +69,18 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
 
   private readonly _videoElement: HTMLMediaElement;
   private readonly _closeSession$: Subject<void>;
+  private readonly _keyType: string;
   private _nativeSession: undefined | any;
   private _serverCertificate: Uint8Array;
 
   constructor(mediaElement: HTMLMediaElement,
-              serverCertificate: Uint8Array) {
+              serverCertificate: Uint8Array,
+              keyType: string) {
     super();
     this._serverCertificate = serverCertificate;
     this._closeSession$ = new Subject();
     this._videoElement = mediaElement;
+    this._keyType = keyType;
 
     this.sessionId = "";
     this.closed = new PPromise((resolve) => {
@@ -114,8 +127,9 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
         (this._videoElement as any).webkitKeys.createSession === undefined) {
         throw new Error("No WebKitMediaKeys API.");
       }
-      const formattedInitData =
-        getWebKitInitData(initData, this._serverCertificate);
+      const formattedInitData = isFairplayKeyType(this._keyType) ?
+        getWebKitFairplayInitData(initData, this._serverCertificate) :
+        initData;
       const keySession =
         (this._videoElement as any).webkitKeys.createSession("video/mp4",
           formattedInitData);
@@ -156,11 +170,13 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
   private _videoElement?: HTMLMediaElement;
   private _mediaKeys?: IWebKitMediaKeys;
   private _serverCertificate?: Uint8Array;
+  private _keyType: string;
 
   constructor(keyType: string) {
     if (WebKitMediaKeysConstructor === undefined) {
       throw new Error("No WebKitMediaKeys API.");
     }
+    this._keyType = keyType;
     this._mediaKeys = new WebKitMediaKeysConstructor(keyType);
   }
 
@@ -183,7 +199,9 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
       this._serverCertificate === undefined) {
       throw new Error("Video not attached to the MediaKeys");
     }
-    return new WebkitMediaKeySession(this._videoElement, this._serverCertificate);
+    return new WebkitMediaKeySession(this._videoElement,
+                                     this._serverCertificate,
+                                     this._keyType);
   }
 
   setServerCertificate(serverCertificate: Uint8Array): Promise<void> {
