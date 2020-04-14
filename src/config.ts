@@ -860,7 +860,7 @@ export default {
    * - The segment may be loaded from cache depending on the previous request
    */
   CACHE_LOAD_DURATION_THRESHOLDS: {
-    video: [50, 150],
-    audio: [10, 100],
+    video: 50,
+    audio: 10,
   },
 };

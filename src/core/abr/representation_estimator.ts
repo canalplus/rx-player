@@ -39,7 +39,7 @@ import {
 import { getLeftSizeOfRange } from "../../utils/ranges";
 import BandwidthEstimator from "./bandwidth_estimator";
 import BufferBasedChooser from "./buffer_based_chooser";
-import generateCachedSegmentFinder from "./cached_segment_finder";
+import generateCachedSegmentDetector from "./cached_segment_detector";
 import filterByBitrate from "./filter_by_bitrate";
 import filterByWidth from "./filter_by_width";
 import fromBitrateCeil from "./from_bitrate_ceil";
@@ -192,9 +192,7 @@ export default function RepresentationEstimator({
                                                                        initialBitrate,
                                               lowLatencyMode);
   const requestsStore = new PendingRequestsStore();
-  let mayBeFromCache = generateCachedSegmentFinder();
-
-  let hasLoadedNonCachedSegments = false;
+  const shouldIgnoreMetrics = generateCachedSegmentDetector();
 
   /**
    * Callback to call when new metrics arrive.
@@ -203,17 +201,10 @@ export default function RepresentationEstimator({
   function onMetric(value : IABRMetricValue) : void {
     const { duration, size, content } = value;
 
-    const segmentMayBeFromCache = mayBeFromCache(content, duration);
-
-    if (segmentMayBeFromCache === true && hasLoadedNonCachedSegments) {
+    if (shouldIgnoreMetrics(content, duration)) {
       // We already loaded not cached segments.
       // Do not consider cached segments anymore.
       return;
-    }
-    if (segmentMayBeFromCache === false && !hasLoadedNonCachedSegments) {
-      // First segment not loaded from cache. Reset estimator.
-      bandwidthEstimator.reset();
-      hasLoadedNonCachedSegments = true;
     }
 
     // calculate bandwidth
@@ -254,7 +245,6 @@ export default function RepresentationEstimator({
 
   const currentRepresentation$ = bufferEvents$.pipe(
     filter((e) : e is IABRRepresentationChange => e.type === "representationChange"),
-    tap(() => { mayBeFromCache = generateCachedSegmentFinder(); }),
     map((e) => e.value.representation),
     startWith(null));
 
