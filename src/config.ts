@@ -853,4 +853,14 @@ export default {
    * @type {Number} - in seconds
    */
   CONTENT_REPLACEMENT_PADDING: 2,
+
+  /**
+   * For video and audio segments, determines two thresholds below which :
+   * - The segment is considered as loaded from cache
+   * - The segment may be loaded from cache depending on the previous request
+   */
+  CACHE_LOAD_DURATION_THRESHOLDS: {
+    video: 50,
+    audio: 10,
+  },
 };
