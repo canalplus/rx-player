@@ -47,6 +47,11 @@ export type ITextTrackPreference = null |
                                    { language : string;
                                      closedCaption : boolean; };
 
+/** Single preference for a video track Adaptation. */
+export type IVideoTrackPreference = null |
+                                    { codec? : { all: boolean;
+                                                 test: RegExp; }; };
+
 /** Audio track returned by the TrackChoiceManager. */
 export interface ITMAudioTrack { language : string;
                                  normalized : string;
@@ -163,7 +168,7 @@ export default class TrackChoiceManager {
   private _periods : SortedList<ITMPeriodInfos>;
 
   /**
-   * Array of preferred languages for audio tracks.
+   * Array of preferred settings for audio tracks.
    * Sorted by order of preference descending.
    */
   private _preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
@@ -173,6 +178,12 @@ export default class TrackChoiceManager {
    * Sorted by order of preference descending.
    */
   private _preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
+
+  /**
+   * Array of preferred settings for video tracks.
+   * Sorted by order of preference descending.
+   */
+  private _preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
 
   /** Memoization of the previously-chosen audio Adaptation for each Period. */
   private _audioChoiceMemory : WeakMap<Period, Adaptation|null>;
@@ -192,16 +203,17 @@ export default class TrackChoiceManager {
   constructor(defaults : {
     preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
     preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
+    preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
   }) {
-    const { preferredAudioTracks, preferredTextTracks } = defaults;
     this._periods = new SortedList((a, b) => a.period.start - b.period.start);
 
     this._audioChoiceMemory = new WeakMap();
     this._textChoiceMemory = new WeakMap();
     this._videoChoiceMemory = new WeakMap();
 
-    this._preferredAudioTracks = preferredAudioTracks;
-    this._preferredTextTracks = preferredTextTracks;
+    this._preferredAudioTracks = defaults.preferredAudioTracks;
+    this._preferredTextTracks = defaults.preferredTextTracks;
+    this._preferredVideoTracks = defaults.preferredVideoTracks;
   }
 
   /**
@@ -369,6 +381,7 @@ export default class TrackChoiceManager {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
+    const preferredVideoTracks = this._preferredVideoTracks.getValue();
     const videoAdaptations = period.adaptations.video === undefined ?
       [] :
       period.adaptations.video;
@@ -380,7 +393,8 @@ export default class TrackChoiceManager {
     } else if (chosenVideoAdaptation === undefined ||
                !arrayIncludes(videoAdaptations, chosenVideoAdaptation)
     ) {
-      const optimalAdaptation = videoAdaptations[0];
+      const optimalAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations,
+                                                                preferredVideoTracks);
       this._videoChoiceMemory.set(period, optimalAdaptation);
       videoInfos.adaptation$.next(optimalAdaptation);
     } else {
@@ -808,6 +822,7 @@ export default class TrackChoiceManager {
   }
 
   private _updateVideoTrackChoices() {
+    const preferredVideoTracks = this._preferredVideoTracks.getValue();
     const recursiveUpdateVideoTrack = (index : number) : void => {
       if (index >= this._periods.length()) {
         // we did all video Buffers, exit
@@ -838,7 +853,8 @@ export default class TrackChoiceManager {
         return;
       }
 
-      const optimalAdaptation = videoAdaptations[0];
+      const optimalAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations,
+                                                                preferredVideoTracks);
 
       this._videoChoiceMemory.set(period, optimalAdaptation);
       videoItem.adaptation$.next(optimalAdaptation);
@@ -953,6 +969,54 @@ function findFirstOptimalTextAdaptation(
 
   // no optimal adaptation
   return null;
+}
+
+/**
+ * Find an optimal video adaptation given their list and the array of preferred
+ * video tracks sorted from the most preferred to the least preferred.
+ *
+ * `null` if the most optimal video adaptation is no video adaptation.
+ * @param {Array.<Adaptation>} videoAdaptations
+ * @param {Array.<Object|null>} preferredvideoTracks
+ * @returns {Adaptation|null}
+ */
+function findFirstOptimalVideoAdaptation(
+  videoAdaptations : Adaptation[],
+  preferredVideoTracks : IVideoTrackPreference[]
+) : Adaptation|null {
+  if (videoAdaptations.length === 0) {
+    return null;
+  }
+
+  for (let i = 0; i < preferredVideoTracks.length; i++) {
+    const preferredVideoTrack = preferredVideoTracks[i];
+
+    if (preferredVideoTrack === null) {
+      return null;
+    }
+
+    const foundAdaptation = arrayFind(videoAdaptations, (videoAdaptation) => {
+      if (preferredVideoTrack.codec === undefined) {
+        return true;
+      }
+      const regxp = preferredVideoTrack.codec.test;
+      const codecTestingFn = (rep : Representation) =>
+        rep.codec !== undefined && regxp.test(rep.codec);
+
+      if (preferredVideoTrack.codec.all) {
+        return videoAdaptation.representations.every(codecTestingFn);
+      }
+      return videoAdaptation.representations.some(codecTestingFn);
+    });
+
+    if (foundAdaptation !== undefined) {
+      return foundAdaptation;
+    }
+
+  }
+
+  // no optimal adaptation, just return the first one
+  return videoAdaptations[0];
 }
 
 /**

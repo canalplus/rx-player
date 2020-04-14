@@ -12,6 +12,7 @@
     - [wantedBufferAhead](#prop-wantedBufferAhead)
     - [preferredAudioTracks](#prop-preferredAudioTracks)
     - [preferredTextTracks](#prop-preferredTextTracks)
+    - [preferredVideoTracks](#prop-preferredVideoTracks)
     - [maxBufferAhead](#prop-maxBufferAhead)
     - [maxBufferBehind](#prop-maxBufferBehind)
     - [limitVideoWidth](#prop-limitVideoWidth)
@@ -234,7 +235,7 @@ either language preferences, codec preferences or both.
 It is defined as an array of objects, each object describing constraints a
 track should respect.
 
-If the first object - defining the first set of constraints - can not be
+If the first object - defining the first set of constraints - cannot be
 respected under the currently available audio tracks, the RxPlayer will skip
 it and check with the second object and so on.
 As such, this array should be sorted by order of preference: from the most
@@ -383,6 +384,77 @@ const player = new RxPlayer({
     { language: "ita", closedCaption: false },
     null
   ]
+});
+```
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
+
+<a name="prop-preferredVideoTracks"></a>
+### preferredVideoTracks #######################################################
+
+_type_: ``Array.<Object|null>``
+
+_defaults_: ``[]``
+
+This option allows to help the RxPlayer choose an initial video track.
+
+It is defined as an array of objects, each object describing constraints a
+track should respect.
+
+If the first object - defining the first set of constraints - cannot be
+respected under the currently available video tracks, the RxPlayer will skip
+it and check with the second object and so on.
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.
+
+Here is all the possible constraints you can set in any one of those objects
+(note that all properties are optional here, only those set will have an effect
+on which tracks will be filtered):
+```js
+{
+  codec: { // {Object|undefined} Constraints about the codec wanted.
+           // if not set or set to `undefined` we won't filter based on codecs.
+
+    test: /hvc/, // {RegExp} RegExp validating the type of codec you want.
+
+    all: true, // {Boolean} Whether all the profiles (i.e. Representation) in a
+               // track should be checked against the RegExp given in `test`.
+               // If `true`, we will only choose a track if EVERY profiles for
+               // it have a codec information that is validated by that RegExp.
+               // If `false`, we will choose a track if we know that at least
+               // A SINGLE profile from it has codec information validated by
+               // that RegExp.
+  }
+}
+```
+
+This array of preferrences can be updated at any time through the
+``setPreferredVideoTracks`` method, documented
+[here](./index.md#meth-getPreferredVideoTracks).
+
+#### Examples
+
+Let's imagine that you prefer to have a track which contains at least one H265
+profile.
+
+You can do:
+```js
+const player = new RxPlayer({
+  preferredVideoTracks: [ { codec: { all: false, test: /^hvc/ } } ]
+});
+```
+
+Now let's imagine you want to start without any video track enabled (e.g. to
+start in an audio-only mode). To do that, you can simply do:
+```js
+const player = new RxPlayer({
+  preferredVideoTracks: [null]
 });
 ```
 
