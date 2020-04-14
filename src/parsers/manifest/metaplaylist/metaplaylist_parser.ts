@@ -228,6 +228,7 @@ function createManifest(
               closedCaption: currentAdaptation.isClosedCaption,
               isDub: currentAdaptation.isDub,
               language: currentAdaptation.language,
+              isSignInterpreted: currentAdaptation.isSignInterpreted,
             });
             acc[type] = adaptationsForCurrentType;
           }
