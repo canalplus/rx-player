@@ -104,6 +104,23 @@ function isHardOfHearing(
 }
 
 /**
+ * Detect if the accessibility given defines an adaptation for the hearing impaired
+ * Based on DASH-IF 4.3.
+ * @param {Object} accessibility
+ * @returns {Boolean}
+ */
+function isHearingImpaired(
+  accessibility? : { schemeIdUri? : string; value? : string }
+) : boolean {
+  if (accessibility == null) {
+    return false;
+  }
+
+  return (accessibility.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+    accessibility.value === "sign");
+}
+
+/**
  * Contruct Adaptation ID from the information we have.
  * @param {Object} adaptation
  * @param {Array.<Object>} representations
@@ -113,7 +130,12 @@ function isHardOfHearing(
 function getAdaptationID(
   adaptation : IAdaptationSetIntermediateRepresentation,
   representations : IParsedRepresentation[],
-  infos : { isClosedCaption? : boolean; isAudioDescription? : boolean; type : string }
+  infos : {
+    isClosedCaption? : boolean;
+    isAudioDescription? : boolean;
+    isSignInterpreted?: boolean;
+    type : string;
+  }
 ) : string {
   if (isNonEmptyString(adaptation.attributes.id)) {
     return adaptation.attributes.id;
@@ -128,6 +150,9 @@ function getAdaptationID(
   }
   if (infos.isAudioDescription === true) {
     idString += "-ad";
+  }
+  if (infos.isSignInterpreted === true) {
+    idString += "-si";
   }
   if (isNonEmptyString(adaptation.attributes.contentType)) {
     idString += `-${adaptation.attributes.contentType}`;
@@ -268,10 +293,17 @@ export default function parseAdaptationSets(
                                    accessibility != null &&
                                    isVisuallyImpaired(accessibility) ? true :
                                                                        undefined;
+
+        const isSignInterpreted = type === "video" &&
+                                  accessibility != null &&
+                                  isHearingImpaired(accessibility) ? true :
+                                    undefined;
+
         const adaptationID = newID = getAdaptationID(adaptation,
-                                                     representations,
+          representations,
                                                      { isClosedCaption,
                                                        isAudioDescription,
+                                                       isSignInterpreted,
                                                        type });
         const parsedAdaptationSet : IParsedAdaptation = { id: adaptationID,
                                                           representations,
@@ -287,6 +319,10 @@ export default function parseAdaptationSets(
         }
         if (isDub === true) {
           parsedAdaptationSet.isDub = true;
+        }
+
+        if (isSignInterpreted === true) {
+          parsedAdaptationSet.isSignInterpreted = true;
         }
 
         const adaptationsOfTheSameType = parsedAdaptations[type];
