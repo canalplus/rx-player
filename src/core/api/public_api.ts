@@ -734,7 +734,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               new BehaviorSubject([defaultAudioTrack]),
             preferredTextTracks: defaultTextTrack === undefined ?
               this._priv_preferredTextTracks :
-              new BehaviorSubject([defaultTextTrack]) },
+              new BehaviorSubject([defaultTextTrack]),
+            preferredVideoTracks: this._priv_preferredVideoTracks },
           this.videoElement
         );
 
