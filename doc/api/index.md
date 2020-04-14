@@ -1329,7 +1329,18 @@ _return value_: ``void``
 
 Deactivate the current video track, if one.
 
-> Will enter in `RELOADING` state for a short period.
+Will enter in `RELOADING` state for a short period, if not in _DirectFile_
+
+---
+
+:warning: This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+- No audio track API was supported on the current browser
+- The media file tracks are not supported on the browser
+
+/!\ On Safari browser in _DirectFile_, video playback may continue on same track
+even if video tracks are disabled.
+---
 
 
 <a name="meth-setPreferredAudioTracks"></a>
