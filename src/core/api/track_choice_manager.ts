@@ -50,7 +50,8 @@ export type ITextTrackPreference = null |
 /** Single preference for a video track Adaptation. */
 export type IVideoTrackPreference = null |
                                     { codec? : { all: boolean;
-                                                 test: RegExp; }; };
+                                                 test: RegExp; };
+                                      signInterpreted? : boolean; };
 
 /** Audio track returned by the TrackChoiceManager. */
 export interface ITMAudioTrack { language : string;
@@ -996,6 +997,11 @@ function findFirstOptimalVideoAdaptation(
     }
 
     const foundAdaptation = arrayFind(videoAdaptations, (videoAdaptation) => {
+      if (preferredVideoTrack.signInterpreted !== undefined &&
+          preferredVideoTrack.signInterpreted !== videoAdaptation.isSignInterpreted)
+      {
+        return false;
+      }
       if (preferredVideoTrack.codec === undefined) {
         return true;
       }

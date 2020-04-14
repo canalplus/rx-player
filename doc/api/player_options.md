@@ -435,6 +435,13 @@ on which tracks will be filtered):
                // A SINGLE profile from it has codec information validated by
                // that RegExp.
   }
+  signInterpreted: true, // {Boolean|undefined} If set to `true`, only tracks
+                         // which are known to contains a sign language
+                         // interpretation will be considered.
+                         // If set to `false`, only tracks which are known
+                         // to not contain it will be considered.
+                         // if not set or set to `undefined` we won't filter
+                         // based on that status.
 }
 ```
 
@@ -445,17 +452,42 @@ This array of preferrences can be updated at any time through the
 #### Examples
 
 Let's imagine that you prefer to have a track which contains at least one H265
-profile.
-
-You can do:
+profile. You can do:
 ```js
 const player = new RxPlayer({
   preferredVideoTracks: [ { codec: { all: false, test: /^hvc/ } } ]
 });
 ```
 
-Now let's imagine you want to start without any video track enabled (e.g. to
-start in an audio-only mode). To do that, you can simply do:
+With that same constraint, let's no consider that the current user is deaf and
+would thus prefer the video to contain a sign language interpretation.
+We could set both the previous and that new constraint that way:
+```js
+const player = new RxPlayer({
+  preferredVideoTracks: [
+    // first let's consider the best case: H265 + sign language interpretation
+    {
+      codec: { all: false, test: /^hvc/ }
+      signInterpreted: true,
+    },
+
+    // If not available, we still prefer a sign interpreted track without H265
+    { signInterpreted: true },
+
+    // If not available either, we would prefer an H265 content
+    { codec: { all: false, test: /^hvc/ } },
+
+    // Note: If this is also available, we will here still have a video track
+    // but which do not respect any of the constraints set here.
+  ]
+});
+```
+
+---
+
+For a totally different example, let's imagine you want to start without any
+video track enabled (e.g. to start in an audio-only mode). To do that, you can
+simply do:
 ```js
 const player = new RxPlayer({
   preferredVideoTracks: [null]
