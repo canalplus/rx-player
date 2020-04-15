@@ -1329,19 +1329,25 @@ _return value_: ``void``
 
 Deactivate the current video track, if one.
 
-Might enter in `RELOADING` state for a short period, if not in _DirectFile_
+Might enter in `RELOADING` state for a short period after calling this API.
 
 ---
 
-:warning: This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
-- No video track API was supported on the current browser
-- The media file tracks are not supported on the browser
+:warning: This option may have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)).
+The directfile mode is a special case here because when in it, the RxPlayer
+depends for track selection on the [corresponding HTML
+standard](https://html.spec.whatwg.org/multipage/media.html) as implemented by
+the different browsers.
+Though this standard says nothing about not being able to disable the video
+track (or to stay more in line with their terms: to not select any video track),
+no browser implementation actually seem to be able to do it, even when the
+corresponding browser APIs show that no video track is currently selected.
+This might be a bug on their parts.
 
-:warning: On Safari, and only for contents played in the _DirectFile_ mode (see
-[loadVideo options](./loadVideo_options.md#prop-transport)), a video track may
-have been disabled but still displaying on screen.
-Based on our understanding of the standard, we consider this to be a Safari bug.
+Due to this fact, we do not recommend using this API in directfile mode for
+now. You might even receive a reassuring `videoTrackChange` event (with a `null`
+payload) while the video track is still actually active.
 
 ---
 
