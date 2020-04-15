@@ -121,8 +121,10 @@ export default function PeriodBuffer({
 
         if (sourceBufferStatus.type === "set") {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
-          const previousQSourceBuffer = sourceBufferStatus.value;
-          cleanBuffer$ = previousQSourceBuffer
+          if (SourceBuffersStore.isNative(bufferType)) {
+            return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
+          }
+          cleanBuffer$ = sourceBufferStatus.value
             .removeBuffer(period.start,
                           period.end == null ? Infinity :
                                                period.end);
@@ -137,6 +139,12 @@ export default function PeriodBuffer({
           cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
           createEmptyBuffer(clock$, wantedBufferAhead$, bufferType, { period })
         );
+      }
+
+      if (SourceBuffersStore.isNative(bufferType) &&
+          sourceBuffersStore.getStatus(bufferType).type === "disabled")
+      {
+        return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
       }
 
       log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation, period);

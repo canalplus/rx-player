@@ -59,6 +59,7 @@
     - [setTextTrack](#meth-setTextTrack)
     - [disableTextTrack](#meth-disableTextTrack)
     - [setVideoTrack](#meth-setVideoTrack)
+    - [disableVideoTrack](#meth-disableVideoTrack)
     - [setPreferredAudioTracks](#meth-setPreferredAudioTracks)
     - [getPreferredAudioTracks](#meth-getPreferredAudioTracks)
     - [setPreferredTextTracks](#meth-setPreferredTextTracks)
@@ -1318,6 +1319,27 @@ During this period of time:
 - No video track API was supported on the current browser
 - The media file tracks are not supported on the browser
 
+---
+
+
+<a name="meth-disableVideoTrack"></a>
+### disableVideoTrack ##########################################################
+
+_return value_: ``void``
+
+Deactivate the current video track, if one.
+
+Might enter in `RELOADING` state for a short period, if not in _DirectFile_
+
+---
+
+:warning: This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+- No video track API was supported on the current browser
+- The media file tracks are not supported on the browser
+
+:warning: On Safari browser in _DirectFile_, video playback may continue on same
+track even if video tracks are disabled.
 ---
 
 
