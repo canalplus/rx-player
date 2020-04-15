@@ -21,6 +21,6 @@ import { WebKitMediaKeysConstructor } from "./eme/custom_media_keys/webkit_media
 // within the browser is not standard with EME w3c current spec, the
 // requestMediaKeySystemAccess API doesn't resolve positively, even
 // if the drm (fairplay in most cases) is supported.
-export default function shouldUseWebKitMediaKeys() {
+export default function shouldFavourCustomSafariEME() {
   return isSafari && WebKitMediaKeysConstructor !== undefined;
 }

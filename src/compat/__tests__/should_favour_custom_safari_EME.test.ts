@@ -17,7 +17,7 @@
 const originalWebKitMediaKeys = (window as any).WebKitMediaKeys;
 
 /* tslint:disable no-unsafe-any */
-describe("compat - shouldUseWebKitMediaKeys", () => {
+describe("compat - shouldFavourSafariMediaKeys", () => {
   beforeEach(() => {
     jest.resetModules();
   });
@@ -31,8 +31,8 @@ describe("compat - shouldUseWebKitMediaKeys", () => {
       return { __esModule: true,
                isSafari: false };
     });
-    const shouldUseWebKitMediaKeys = require("../should_use_webkit_media_keys");
-    expect(shouldUseWebKitMediaKeys.default()).toBe(false);
+    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
   /* tslint:disable max-line-length */
@@ -44,8 +44,8 @@ describe("compat - shouldUseWebKitMediaKeys", () => {
       return { __esModule: true,
                isSafari: true };
     });
-    const shouldUseWebKitMediaKeys = require("../should_use_webkit_media_keys");
-    expect(shouldUseWebKitMediaKeys.default()).toBe(false);
+    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
   /* tslint:disable max-line-length */
@@ -63,8 +63,8 @@ describe("compat - shouldUseWebKitMediaKeys", () => {
       return { __esModule: true,
                isSafari: true };
     });
-    const shouldUseWebKitMediaKeys = require("../should_use_webkit_media_keys");
-    expect(shouldUseWebKitMediaKeys.default()).toBe(true);
+    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    expect(shouldFavourCustomSafariEME.default()).toBe(true);
   });
 });
 /* tslint:enable no-unsafe-any */

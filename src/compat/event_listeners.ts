@@ -48,7 +48,7 @@ import {
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
 import isNode from "./is_node";
-import shouldUseWebKitMediaKeys from "./should_use_webkit_media_keys";
+import shouldFavourCustomSafariEME from "./should_favour_custom_safari_EME";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -411,8 +411,8 @@ const onRemoveSourceBuffers$ = compatibleListener(["onremovesourcebuffer"]);
  * @returns {Observable}
  */
 const onEncrypted$ = compatibleListener<MediaEncryptedEvent>(
-  shouldUseWebKitMediaKeys() ? ["needkey"] :
-                               ["encrypted", "needkey"]);
+  shouldFavourCustomSafariEME() ? ["needkey"] :
+                                  ["encrypted", "needkey"]);
 
 /**
  * @param {MediaKeySession} mediaKeySession

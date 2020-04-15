@@ -29,7 +29,7 @@ import {
 } from "../../browser_compatibility_types";
 import { isIE11 } from "../../browser_detection";
 import isNode from "../../is_node";
-import shouldUseWebKitMediaKeys from "../../should_use_webkit_media_keys";
+import shouldFavourCustomSafariEME from "../../should_favour_custom_safari_EME";
 import CustomMediaKeySystemAccess from "./../custom_key_system_access";
 import getIE11MediaKeysCallbacks, {
   MSMediaKeysConstructor
@@ -61,7 +61,7 @@ let requestMediaKeySystemAccess : null |
  * is available.
  */
 if (isNode ||
-    (navigator.requestMediaKeySystemAccess != null && !shouldUseWebKitMediaKeys())
+    (navigator.requestMediaKeySystemAccess != null && !shouldFavourCustomSafariEME())
 ) {
   requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
     castToObservable(
