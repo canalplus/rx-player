@@ -169,9 +169,19 @@ content a single time.
 ### Period #####################################################################
 
 A Period is an element of the [Manifest](#manifest) which describes the media
-to play at a certain points in time.
+to play at a given point in time.
 
-They are directly a DASH' concept, also called _Period_.
+Depending on the transport used, they correspond to different concepts:
+  - for DASH contents, it is linked to an MPD's Period element
+  - for "local" contents, it corresponds to a single object from the `periods`
+    array.
+  - for "MetaPlaylist" contents, it corresponds to all the Period elements we
+    retrieved bwhen parsing the corresponding [Manifest](#manifest) from the
+    elements of the `contents` array.
+  - any other transport will have a single Period, describing the whole content.
+
+Despite having a different source depending on the transport used, a Period is
+a single concept in the RxPlayer.
 
 Simply put, it allows to set various types of content successively in the same
 manifest.
@@ -195,7 +205,8 @@ This can be done by putting each in a different Period:
         TV Show               Italian Film        American Blockbuster
 ```
 
-Each of these Periods will be linked to different audio, video and text tracks.
+Each of these Periods will be linked to different audio, video and text tracks,
+themselves linked to different qualities.
 
 
 <a name="representation"></a>
