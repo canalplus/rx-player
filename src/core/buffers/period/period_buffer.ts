@@ -121,13 +121,13 @@ export default function PeriodBuffer({
 
         if (sourceBufferStatus.type === "set") {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
+          if (SourceBuffersStore.isNative(bufferType)) {
+            return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
+          }
           cleanBuffer$ = sourceBufferStatus.value
             .removeBuffer(period.start,
                           period.end == null ? Infinity :
                                                period.end);
-          if (SourceBuffersStore.isNative(bufferType)) {
-            return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
-          }
         } else {
           if (sourceBufferStatus.type === "unset") {
             sourceBuffersStore.disableSourceBuffer(bufferType);
