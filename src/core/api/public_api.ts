@@ -1761,6 +1761,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Disable video track for the current content.
+   */
+  disableVideoTrack() : void {
+    if (this._priv_contentInfos === null) {
+      return;
+    }
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile && this._priv_mediaElementTrackChoiceManager !== null) {
+      return this._priv_mediaElementTrackChoiceManager.disableVideoTrack();
+    }
+    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
+      return;
+    }
+    return this._priv_trackChoiceManager.disableVideoTrack(currentPeriod);
+  }
+
+  /**
    * Returns the current list of preferred audio tracks, in preference order.
    * @returns {Array.<Object>}
    */

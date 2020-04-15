@@ -378,7 +378,7 @@ export default class TrackChoiceManager {
       // If the Period was previously without video, keep it that way
       videoInfos.adaptation$.next(null);
     } else if (chosenVideoAdaptation === undefined ||
-        !arrayIncludes(videoAdaptations, chosenVideoAdaptation)
+               !arrayIncludes(videoAdaptations, chosenVideoAdaptation)
     ) {
       const optimalAdaptation = videoAdaptations[0];
       this._videoChoiceMemory.set(period, optimalAdaptation);
@@ -496,6 +496,25 @@ export default class TrackChoiceManager {
 
     this._textChoiceMemory.set(period, null);
     textInfos.adaptation$.next(null);
+  }
+
+  /**
+   * Disable the current video track for a given period.
+   * @param {Object} period
+   * @throws Error - Throws if the period given has not been added
+   */
+  public disableVideoTrack(period : Period) : void {
+    const periodItem = getPeriodItem(this._periods, period);
+    const videoInfos = periodItem?.video;
+    if (videoInfos === undefined) {
+      throw new Error("TrackManager: Given Period not found.");
+    }
+    const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
+    if (chosenVideoAdaptation === null) {
+      return;
+    }
+    this._videoChoiceMemory.set(period, null);
+    videoInfos.adaptation$.next(null);
   }
 
   /**

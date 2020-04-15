@@ -124,7 +124,9 @@ const EVENTS = {
   },
 
   needsMediaSourceReload(
-    { currentTime, isPaused } : { currentTime : number; isPaused : boolean}
+    { currentTime,
+      isPaused } : { currentTime : number;
+                     isPaused : boolean; }
   ) : INeedsMediaSourceReload {
     return { type: "needs-media-source-reload",
              value: { currentTime, isPaused } };

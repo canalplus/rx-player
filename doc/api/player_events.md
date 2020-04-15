@@ -326,7 +326,9 @@ properties:
 
     - ``frameRate`` (``string|undefined``): The video framerate.
 
-
+A null payload means that video track has been disabled.
+/!\ On Safari in _DirectFile_, a video track may have been disabled by user but
+still playing on screen.
 
 <a name="events-availableAudioBitratesChange"></a>
 ### availableAudioBitratesChange ###############################################
