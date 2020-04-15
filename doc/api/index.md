@@ -1338,8 +1338,11 @@ Might enter in `RELOADING` state for a short period, if not in _DirectFile_
 - No video track API was supported on the current browser
 - The media file tracks are not supported on the browser
 
-:warning: On Safari browser in _DirectFile_, video playback may continue on same
-track even if video tracks are disabled.
+:warning: On Safari, and only for contents played in the _DirectFile_ mode (see
+[loadVideo options](./loadVideo_options.md#prop-transport)), a video track may
+have been disabled but still displaying on screen.
+Based on our understanding of the standard, we consider this to be a Safari bug.
+
 ---
 
 
