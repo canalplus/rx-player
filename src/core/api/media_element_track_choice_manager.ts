@@ -482,29 +482,17 @@ export default class MediaElementTrackChoiceManager
    */
   private _setPreferredAudioTrack() : void {
     const preferredAudioTracks = this._preferredAudioTracks.getValue();
-    const normalizedTracks = preferredAudioTracks
-      .filter(
-        (audioTrack): audioTrack is {
-          language : string;
-          audioDescription : boolean;
-        } => audioTrack !== null)
-      .map(({ language, audioDescription }) => {
-        const normalized = normalizeLanguage(language);
-        return {
-          normalized,
-          audioDescription,
-        };
-      });
-
-    for (let i = 0; i < normalizedTracks.length; i++) {
-      const track = normalizedTracks[i];
-      for (let j = 0; j < this._audioTracks.length; j++) {
-        const audioTrack = this._audioTracks[j];
-        if (audioTrack.track.normalized === track.normalized &&
-            audioTrack.track.audioDescription === track.audioDescription
-        ) {
-          this.setAudioTrackById(audioTrack.track.id);
-          return;
+    for (let i = 0; i < preferredAudioTracks.length; i++) {
+      const track = preferredAudioTracks[i];
+      if (track !== null) {
+        const normalized = normalizeLanguage(track.language);
+        for (let j = 0; j < this._audioTracks.length; j++) {
+          const audioTrack = this._audioTracks[j];
+          if (audioTrack.track.normalized === normalized &&
+              audioTrack.track.audioDescription === track.audioDescription
+          ) {
+            return this.setAudioTrackById(audioTrack.track.id);
+          }
         }
       }
     }
@@ -517,27 +505,18 @@ export default class MediaElementTrackChoiceManager
    */
   private _setPreferredTextTrack() : void {
     const preferredTextTracks = this._preferredTextTracks.getValue();
-    const normalizedTracks = preferredTextTracks
-      .filter(
-        (textTrack): textTrack is { language : string;
-                                    closedCaption : boolean; } => textTrack !== null)
-      .map(({ language, closedCaption }) =>  {
-        const normalized = normalizeLanguage(language);
-        return {
-          normalized,
-          closedCaption,
-        };
-      });
-
-    for (let i = 0; i < normalizedTracks.length; i++) {
-      const track = normalizedTracks[i];
+    for (let i = 0; i < preferredTextTracks.length; i++) {
+      const track = preferredTextTracks[i];
+      if (track === null) {
+        return this.disableTextTrack();
+      }
+      const normalized = normalizeLanguage(track.language);
       for (let j = 0; j < this._textTracks.length; j++) {
         const textTrack = this._textTracks[j];
-        if (textTrack.track.normalized === track.normalized &&
+        if (textTrack.track.normalized === normalized &&
             textTrack.track.closedCaption === track.closedCaption
         ) {
-          this.setTextTrackById(textTrack.track.id);
-          return;
+          return this.setTextTrackById(textTrack.track.id);
         }
       }
     }
