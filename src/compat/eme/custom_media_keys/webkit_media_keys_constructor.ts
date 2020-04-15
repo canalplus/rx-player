@@ -19,12 +19,10 @@ type IWebKitMediaKeys = unknown;
 interface IWebKitMediaKeysConstructor {
   new(keySystem: string) : IWebKitMediaKeys;
   isTypeSupported: (keyType: string) => boolean;
-  prototype: { createSession: () => void };
 }
 
-const { WebKitMediaKeys }: {
-  WebKitMediaKeys: IWebKitMediaKeysConstructor|undefined;
-} = (window as any);
+/* tslint:disable no-unsafe-any */
+const { WebKitMediaKeys } = (window as any);
 
 let WebKitMediaKeysConstructor: undefined|IWebKitMediaKeysConstructor;
 
@@ -34,6 +32,7 @@ if (WebKitMediaKeys !== undefined &&
     typeof (HTMLMediaElement.prototype as any).webkitSetMediaKeys === "function") {
   WebKitMediaKeysConstructor = WebKitMediaKeys;
 }
+/* tslint:enable no-unsafe-any */
 
 export {
   WebKitMediaKeysConstructor,
