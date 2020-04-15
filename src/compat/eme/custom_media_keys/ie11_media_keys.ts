@@ -36,13 +36,11 @@ class IE11MediaKeySession extends EventEmitter<IMediaKeySessionEvents>
   public readonly closed: Promise<void>;
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
-  public sessionId: string;
   private readonly _mk: MSMediaKeys;
   private readonly _closeSession$: Subject<void>;
   private _ss?: MediaKeySession;
   constructor(mk: MSMediaKeys) {
     super();
-    this.sessionId = "";
     this.expiration = NaN;
     this.keyStatuses = new Map();
     this._mk = mk;
@@ -99,6 +97,9 @@ class IE11MediaKeySession extends EventEmitter<IMediaKeySessionEvents>
   }
   remove(): Promise<void> {
     return PPromise.resolve();
+  }
+  get sessionId(): string {
+    return this._ss?.sessionId ?? "";
   }
 }
 

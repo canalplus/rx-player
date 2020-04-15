@@ -65,7 +65,6 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
   public readonly closed: Promise<void>;
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
-  public sessionId: string;
 
   private readonly _videoElement: HTMLMediaElement;
   private readonly _closeSession$: Subject<void>;
@@ -82,7 +81,6 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
     this._videoElement = mediaElement;
     this._keyType = keyType;
 
-    this.sessionId = "";
     this.closed = new PPromise((resolve) => {
       this._closeSession$.subscribe(resolve);
     });
@@ -163,6 +161,12 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
 
   remove(): Promise<void> {
     return PPromise.resolve();
+  }
+
+  get sessionId(): string {
+    /* tslint:disable */
+    return this._nativeSession?.sessionId ?? "";
+    /* tslint:enable */
   }
 }
 
