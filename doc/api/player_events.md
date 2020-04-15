@@ -326,12 +326,13 @@ properties:
 
     - ``frameRate`` (``string|undefined``): The video framerate.
 
-A null payload means that video track has been disabled.
+A `null` payload means that video track has been disabled.
 
-:warning: On Safari, and only for contents played in the _DirectFile_ mode (see
-[loadVideo options](./loadVideo_options.md#prop-transport)), a video track may
-have been disabled but still displaying on screen.
-Based on our understanding of the standard, we consider this to be a Safari bug.
+:warning: In _DirectFile_ mode, a `null` payload may be received even if the
+video track is still visually active.
+This seems due to difficult-to-detect browser bugs. We recommend not disabling
+the video track when in directfile mode to avoid that case (this is documented
+in the corresponding APIs).
 
 <a name="events-availableAudioBitratesChange"></a>
 ### availableAudioBitratesChange ###############################################
