@@ -1249,8 +1249,8 @@ This has two potential reasons :
 - Safari may decide to enable a track for accessibility or user language
 convenience (e.g. Safari may switch subtitle to your OS language if you pick
 another audio language)
-The user may know through the [videoTrackChange]
-(./player_events.md#events-videoTrackChange) event that the track has changed.
+The user may know through the [audioTrackChange]
+(./player_events.md#events-audioTrackChange) event that the track has changed.
 
 ---
 
@@ -1272,8 +1272,8 @@ This has two potential reasons :
 - Safari may decide to enable a track for accessibility or user language
 convenience (e.g. Safari may switch subtitle to your OS language if you pick
 another audio language)
-The user may know through the [audioTrackChange]
-(./player_events.md#events-audioTrackChange) event that the track has changed.
+The user may know through the [textTrackChange]
+(./player_events.md#events-textTrackChange) event that the track has changed.
 
 ---
 
@@ -1316,7 +1316,7 @@ During this period of time:
 
 :warning: This option will have no effect in _DirectFile_ mode
 (see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
-- No audio track API was supported on the current browser
+- No video track API was supported on the current browser
 - The media file tracks are not supported on the browser
 
 ---
