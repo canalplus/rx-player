@@ -35,7 +35,6 @@ import {
 import isSegmentStillAvailable from "../../../utils/is_segment_still_available";
 import updateSegmentTimeline from "../../../utils/update_segment_timeline";
 import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
-// import { IParsedS } from "../../node_parsers/S";
 import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
 import { createIndexURLs } from "../tokens";
