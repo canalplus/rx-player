@@ -1919,7 +1919,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const sourceBufferStatus = this._priv_contentInfos
                                  .sourceBuffersStore.getStatus(bufferType);
-    return sourceBufferStatus.type === "set" ?
+    return sourceBufferStatus.type === "initialized" ?
       sourceBufferStatus.value.getInventory() :
       null;
   }

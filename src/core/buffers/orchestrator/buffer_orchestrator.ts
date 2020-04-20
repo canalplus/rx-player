@@ -282,7 +282,7 @@ export default function BufferOrchestrator(
       .pipe(mergeMap((updates) => {
         const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
         const hasType = updates.some(update => update.adaptation.type === bufferType);
-        if (!hasType || sourceBufferStatus.type !== "set") {
+        if (!hasType || sourceBufferStatus.type !== "initialized") {
           return EMPTY; // no need to stop the current buffers
         }
         const queuedSourceBuffer = sourceBufferStatus.value;
