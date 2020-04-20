@@ -122,7 +122,8 @@ import TrackChoiceManager, {
   ITMTextTrack,
   ITMTextTrackListItem,
   ITMVideoTrack,
-  ITMVideoTrackListItem
+  ITMVideoTrackListItem,
+  IVideoTrackPreference,
 } from "./track_choice_manager";
 
 const { DEFAULT_UNMUTED_VOLUME } = config;
@@ -354,6 +355,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** List of favorite text tracks, in preference order. */
   private _priv_preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
 
+  /** List of favorite video tracks, in preference order. */
+  private _priv_preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
+
   /**
    * TrackChoiceManager instance linked to the current content.
    * `null` if no content has been loaded or if the current content loaded
@@ -440,6 +444,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             maxVideoBitrate,
             preferredAudioTracks,
             preferredTextTracks,
+            preferredVideoTracks,
             throttleWhenHidden,
             throttleVideoBitrateWhenHidden,
             videoElement,
@@ -539,6 +544,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_preferredAudioTracks = new BehaviorSubject(preferredAudioTracks);
     this._priv_preferredTextTracks = new BehaviorSubject(preferredTextTracks);
+    this._priv_preferredVideoTracks = new BehaviorSubject(preferredVideoTracks);
   }
 
   /**
@@ -728,7 +734,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               new BehaviorSubject([defaultAudioTrack]),
             preferredTextTracks: defaultTextTrack === undefined ?
               this._priv_preferredTextTracks :
-              new BehaviorSubject([defaultTextTrack]) },
+              new BehaviorSubject([defaultTextTrack]),
+            preferredVideoTracks: this._priv_preferredVideoTracks },
           this.videoElement
         );
 
@@ -1794,6 +1801,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Returns the current list of preferred text tracks, in preference order.
+   * @returns {Array.<Object>}
+   */
+  getPreferredVideoTracks() : IVideoTrackPreference[] {
+    return this._priv_preferredVideoTracks.getValue();
+  }
+
+  /**
    * Set the list of preferred audio tracks, in preference order.
    * @param {Array.<Object>} tracks
    */
@@ -1815,6 +1830,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                       "Should have been an Array.");
     }
     return this._priv_preferredTextTracks.next(tracks);
+  }
+
+  /**
+   * Set the list of preferred text tracks, in preference order.
+   * @param {Array.<Object>} tracks
+   */
+  setPreferredVideoTracks(tracks : IVideoTrackPreference[]) : void {
+    if (!Array.isArray(tracks)) {
+      throw new Error("Invalid `setPreferredVideoTracks` argument. " +
+                      "Should have been an Array.");
+    }
+    return this._priv_preferredVideoTracks.next(tracks);
   }
 
   /**
@@ -2064,6 +2091,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       preferredTextTracks: initialTextTrack === undefined ?
         this._priv_preferredTextTracks :
         new BehaviorSubject([initialTextTrack]),
+      preferredVideoTracks: this._priv_preferredVideoTracks,
     });
 
     fromEvent(manifest, "manifestUpdate")

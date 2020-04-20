@@ -32,6 +32,7 @@ import {
   ITMTextTrackListItem,
   ITMVideoTrack,
   ITMVideoTrackListItem,
+  IVideoTrackPreference,
 } from "./track_choice_manager";
 
 /** Events emitted by the MediaElementTrackChoiceManager. */
@@ -169,7 +170,7 @@ function createVideoTracks(
 export default class MediaElementTrackChoiceManager
   extends EventEmitter<IMediaElementTrackChoiceManagerEvents> {
   /**
-   * Array of preferred languages for audio tracks.
+   * Array of preferred settings for audio tracks.
    * Sorted by order of preference descending.
    */
   private _preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
@@ -179,6 +180,12 @@ export default class MediaElementTrackChoiceManager
    * Sorted by order of preference descending.
    */
   private _preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
+
+  /**
+   * Array of preferred settings for video tracks.
+   * Sorted by order of preference descending.
+   */
+  private _preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
 
   /** List every available audio tracks available on the media element. */
   private _audioTracks : Array<{ track: ITMAudioTrack; nativeTrack: AudioTrack }>;
@@ -203,14 +210,15 @@ export default class MediaElementTrackChoiceManager
 
   constructor(
     defaults : { preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
-                 preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>; },
+                 preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
+                 preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>; },
     mediaElement: HTMLMediaElement
   ) {
     super();
-    const { preferredAudioTracks, preferredTextTracks } = defaults;
 
-    this._preferredAudioTracks = preferredAudioTracks;
-    this._preferredTextTracks = preferredTextTracks;
+    this._preferredAudioTracks = defaults.preferredAudioTracks;
+    this._preferredTextTracks = defaults.preferredTextTracks;
+    this._preferredVideoTracks = defaults.preferredVideoTracks;
 
     // TODO In practice, the audio/video/text tracks API are not always implemented on
     // the media element, although Typescript HTMLMediaElement types tend to mean
@@ -301,7 +309,7 @@ export default class MediaElementTrackChoiceManager
    * Throws if the wanted video track is not found.
    * @param {string|number|undefined} id
    */
-  public setVideoTrackById(id?: string): void {
+  public setVideoTrackById(id?: string | number): void {
     for (let i = 0; i < this._videoTracks.length; i++) {
       const { track, nativeTrack } = this._videoTracks[i];
       if (track.id === id) {
@@ -533,6 +541,32 @@ export default class MediaElementTrackChoiceManager
   }
 
   /**
+   * Iterate over every available video tracks on the media element and over
+   * every set video track preferences to activate the preferred video track
+   * on the media element.
+   */
+  private _setPreferredVideoTrack() : void {
+    // NOTE: As we cannot access either codec information or sign interpretation
+    // information easily about the different codecs. It is the same case than
+    // if we had only tracks where those were set to undefined.
+    // Based on that, we should disable the video track as long as one of the
+    // set preferrence is "no video track" (i.e. `null`) as this is the only
+    // constraint that we know we can respect.
+    // Else, just chose the first track.
+    const preferredVideoTracks = this._preferredVideoTracks.getValue();
+    const hasNullPreference = preferredVideoTracks.some(p => p === null);
+    if (hasNullPreference) {
+      this.disableVideoTrack();
+      return;
+    }
+
+    if (this._videoTracks.length === 0) {
+      return;
+    }
+    this.setVideoTrackById(this._videoTracks[0].track.id);
+  }
+
+  /**
    * Monitor native tracks add, remove and change callback and trigger the
    * change events.
    */
@@ -647,6 +681,7 @@ export default class MediaElementTrackChoiceManager
           const newVideoTracks = createVideoTracks(this._nativeVideoTracks);
           if (areTrackArraysDifferent(this._videoTracks, newVideoTracks)) {
             this._videoTracks = newVideoTracks;
+            this._setPreferredVideoTrack();
             this.trigger("availableVideoTracksChange", this.getAvailableVideoTracks());
             const chosenVideoTrack = this._getPrivateChosenVideoTrack();
             if (chosenVideoTrack?.nativeTrack !== this._lastEmittedNativeVideoTrack) {
@@ -661,6 +696,7 @@ export default class MediaElementTrackChoiceManager
           const newVideoTracks = createVideoTracks(this._nativeVideoTracks);
           if (areTrackArraysDifferent(this._videoTracks, newVideoTracks)) {
             this._videoTracks = newVideoTracks;
+            this._setPreferredVideoTrack();
             this.trigger("availableVideoTracksChange", this.getAvailableVideoTracks());
             const chosenVideoTrack = this._getPrivateChosenVideoTrack();
             if (chosenVideoTrack?.nativeTrack !== this._lastEmittedNativeVideoTrack) {
