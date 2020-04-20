@@ -912,9 +912,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns manifest/playlist object.
    * null if the player is STOPPED.
+   * @deprecated
    * @returns {Manifest|null} - The current Manifest (`null` when not known).
    */
   getManifest() : Manifest|null {
+    warnOnce("getManifest is deprecated." +
+             " Please open an issue if you used this API.");
     if (this._priv_contentInfos === null) {
       return null;
     }
@@ -924,11 +927,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns Adaptations (tracks) for every currently playing type
    * (audio/video/text...).
+   * @deprecated
    * @returns {Object|null} - The current Adaptation objects, per type (`null`
    * when none is known for now.
    */
   getCurrentAdaptations(
   ) : Partial<Record<IBufferType, Adaptation|null>> | null {
+    warnOnce("getCurrentAdaptations is deprecated." +
+             " Please open an issue if you used this API.");
     if (this._priv_contentInfos === null) {
       return null;
     }
@@ -945,11 +951,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns representations (qualities) for every currently playing type
    * (audio/video/text...).
+   * @deprecated
    * @returns {Object|null} - The current Representation objects, per type
    * (`null` when none is known for now.
    */
   getCurrentRepresentations(
   ) : Partial<Record<IBufferType, Representation|null>> | null {
+    warnOnce("getCurrentRepresentations is deprecated." +
+             " Please open an issue if you used this API.");
     if (this._priv_contentInfos === null) {
       return null;
     }
@@ -1223,7 +1232,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number|undefined}
    */
   getVideoBitrate() : number|undefined {
+    /* tslint:disable deprecation */
     const representations = this.getCurrentRepresentations();
+    /* tslint:enable deprecation */
     if (representations === null || representations.video == null) {
       return undefined;
     }
@@ -1235,7 +1246,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number|undefined}
    */
   getAudioBitrate() : number|undefined {
+    /* tslint:disable deprecation */
     const representations = this.getCurrentRepresentations();
+    /* tslint:enable deprecation */
     if (representations === null || representations.audio == null) {
       return undefined;
     }
@@ -2146,10 +2159,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
                                                    this.getAvailableVideoBitrates());
 
+    /* tslint:disable deprecation */
     const audioBitrate = this.getCurrentRepresentations()?.audio?.bitrate ?? -1;
+    /* tslint:enable deprecation */
     this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
 
+    /* tslint:disable deprecation */
     const videoBitrate = this.getCurrentRepresentations()?.video?.bitrate ?? -1;
+    /* tslint:enable deprecation */
     this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", videoBitrate);
   }
 
