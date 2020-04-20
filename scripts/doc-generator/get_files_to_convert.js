@@ -22,7 +22,7 @@ const path = require("path");
 module.exports = async function getFilesToConvert(
   baseInDir,
   baseOutDir,
-  opts = {}
+  opts = {},
 ) {
   const filesToConvert = [];
   const { fileFilter } = opts;
@@ -32,7 +32,7 @@ module.exports = async function getFilesToConvert(
     try {
       files = await promisify(fs.readdir)(inputDir);
     } catch (err) {
-      throw new Error("error reading directory: " + err);
+      throw new Error("error while reading directory: " + err);
     }
 
     const filteredFiles = fileFilter != null ?
@@ -46,7 +46,7 @@ module.exports = async function getFilesToConvert(
       try {
         stat = await promisify(fs.stat)(filePath);
       } catch (err) {
-        throw new Error("error stating file: " + err);
+        throw new Error("error while stating file: " + err);
       }
 
       if (stat.isDirectory()) {
