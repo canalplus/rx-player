@@ -25,11 +25,11 @@
 <a name="overview"></a>
 ## Overview ####################################################################
 
-Player options are options given to the player on instantiation. It's an object
-with multiple properties.
+Player options are options given to the player on instantiation.
 
-None of them are mandatory. For most usecase though, you might want to set at
-least the associated video element via the ``videoElement`` property.
+It's an object with multiple properties. None of them are mandatory.
+For most usecase though, you might want to set at least the associated video
+element via the ``videoElement`` property.
 
 
 
@@ -41,7 +41,9 @@ least the associated video element via the ``videoElement`` property.
 
 _type_: ``HTMLMediaElement|undefined``
 
-The video element the player will use.
+The media element the player will use.
+
+Note that this can be a `<video>` or an `<audio>` element.
 
 ```js
 // Instantiate the player with the first video element in the DOM
@@ -50,14 +52,14 @@ const player = new Player({
 });
 ```
 
-If not defined, a new video element will be created without being inserted in
-the document, you will have to do it yourself through the ``getVideoElement``
-method:
+If not defined, a `<video>` element will be created without being inserted in
+the document. You will have to do it yourself through the ``getVideoElement``
+method to add it yourself:
 ```js
 const player = new Player();
 
 const videoElement = player.getVideoElement();
-document.appendChild(videoElement);
+document.body.appendChild(videoElement);
 ```
 
 
@@ -71,12 +73,10 @@ _defaults_: ``0``
 This is a ceil value for the initial video bitrate chosen.
 
 That is, the first video [Representation](../terms.md#representation) chosen
-will be:
-
-  - inferior to this value.
-
-  - the closest available to this value (after filtering out the other,
-    superior, ones)
+will be both:
+  - inferior or equal to this value.
+  - the closest possible to this value (after filtering out the ones with a
+    superior bitrate).
 
 
 If no Representation is found to respect those rules, the Representation with
@@ -91,12 +91,10 @@ const player = new Player({
 });
 ```
 
----
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="prop-initialAudioBitrate"></a>
@@ -110,12 +108,9 @@ This is a ceil value for the initial audio bitrate chosen.
 
 That is, the first audio [Representation](../terms.md#representation) chosen
 will be:
-
-  - inferior to this value.
-
-  - the closest available to this value (after filtering out the other,
-    superior, ones)
-
+  - inferior or equal to this value.
+  - the closest possible to this value (after filtering out the ones with a
+    superior bitrate).
 
 If no Representation is found to respect those rules, the Representation with
 the lowest bitrate will be chosen instead. Thus, the default value - ``0`` -
@@ -129,12 +124,10 @@ const player = new Player({
 });
 ```
 
----
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="prop-maxVideoBitrate"></a>
@@ -161,12 +154,10 @@ call.
 This limit can be removed by setting it to ``Infinity`` (which is the default
 value).
 
----
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="prop-maxAudioBitrate"></a>
@@ -193,12 +184,10 @@ call.
 This limit can be removed by setting it to ``Infinity`` (which is the default
 value).
 
----
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="prop-wantedBufferAhead"></a>
@@ -211,15 +200,13 @@ _defaults_: ``30``
 Set the default buffering goal, as a duration ahead of the current position, in
 seconds.
 
-Once this size of buffer is reached, the player won't try to download new video
+Once this size of buffer is reached, the player won't try to download new
 segments anymore.
 
----
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="prop-preferredAudioTracks"></a>
@@ -332,14 +319,12 @@ const player = new RxPlayer({
   ]
 ```
 
----
+--
 
 :warning: This option will have no effect in _DirectFile_ mode
 (see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
 - No audio track API is supported on the current browser
 - The media file tracks are not supported on the browser
-
----
 
 
 <a name="prop-preferredTextTracks"></a>
@@ -389,7 +374,7 @@ const player = new RxPlayer({
 });
 ```
 
----
+--
 
 :warning: This option will have no effect in _DirectFile_ mode
 (see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
@@ -505,8 +490,6 @@ const player = new RxPlayer({
 - No video track API is supported on the current browser
 - The media file tracks are not supported on the browser
 
----
-
 
 <a name="prop-maxBufferAhead"></a>
 ### maxBufferAhead #############################################################
@@ -515,22 +498,33 @@ _type_: ``Number|undefined``
 
 _defaults_: ``Infinity``
 
-Set the default maximum kept buffer ahead of the current position, in seconds.
-Everything superior to that limit (``currentPosition + maxBufferAhead``) will be
-automatically garbage collected. This feature is not necessary as
-the browser is already supposed to deallocate memory from old segments if/when
-the memory is scarce.
+Set the maximum kept buffer ahead of the current position, in seconds.
 
-However on some custom targets, or just to better control the memory imprint of
-the player, you might want to set this limit. You can set it to ``Infinity`` to
-remove any limit and just let the browser do this job.
+Everything superior to that limit (``currentPosition + maxBufferAhead``) will
+be automatically garbage collected.
 
----
+This feature is not necessary as the browser should by default correctly
+remove old segments from memory if/when the memory is scarce.
+
+However on some custom targets, or just to better control the memory footprint
+of the player, you might want to set this limit.
+
+Its default value, ``Infinity``, will remove this limit and just let the browser
+do this job instead.
+
+The minimum value between this one and the one returned by
+``getWantedBufferAhead`` will be considered when downloading new segments.
+
+:warning: Bear in mind that a too-low configuration there (e.g. inferior to
+``10``) might prevent the browser to play the content at all.
+
+You can update that limit at any time through the [setMaxBufferAhead
+method](./index.md#meth-setMaxBufferAhead).
+
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="prop-maxBufferBehind"></a>
@@ -540,23 +534,27 @@ _type_: ``Number|undefined``
 
 _defaults_: ``Infinity``
 
-Set the default maximum kept past buffer, in seconds.
+Set the maximum kept buffer before the current position, in seconds.
+
 Everything before that limit (``currentPosition - maxBufferBehind``) will be
 automatically garbage collected.
 
-This feature is not necessary as the browser is already supposed to deallocate
-memory from old segments if/when the memory is scarce.
+This feature is not necessary as the browser should by default correctly
+remove old segments from memory if/when the memory is scarce.
 
-However on some custom targets, or just to better control the memory imprint of
-the player, you might want to set this limit. You can set it to ``Infinity`` to
-remove any limit and just let the browser do this job.
+However on some custom targets, or just to better control the memory footprint
+of the player, you might want to set this limit.
 
----
+Its default value, ``Infinity``, will remove this limit and just let the browser
+do this job instead.
+
+You can update that limit at any time through the [setMaxBufferBehind
+method](./index.md#meth-setMaxBufferBehind).
+
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="prop-limitVideoWidth"></a>
@@ -586,12 +584,10 @@ const player = Player({
 For some reasons (displaying directly a good quality when switching to
 fullscreen, specific environments), you might not want to activate this limit.
 
----
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="prop-throttleVideoBitrateWhenHidden"></a>
@@ -613,12 +609,10 @@ const player = Player({
 });
 ```
 
----
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="prop-stopAtEnd"></a>
@@ -648,12 +642,16 @@ const player = Player({
 <a name="prop-throttleWhenHidden"></a>
 ### throttleWhenHidden #########################################################
 
----
+--
 
 :warning: This option is deprecated, it will disappear in the next major release
 ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
----
+Please use the
+[throttleVideoBitrateWhenHidden](#prop-throttleVideoBitrateWhenHidden) property
+instead, which is better defined for advanced cases, such as Picture-In-Picture.
+
+--
 
 _type_: ``Boolean``
 
@@ -669,9 +667,7 @@ const player = Player({
 });
 ```
 
----
+--
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----

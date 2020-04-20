@@ -10,9 +10,8 @@
     - [ErrorTypes](#static-ErrorTypes)
     - [ErrorCodes](#static-ErrorCodes)
     - [LogLevel](#static-LogLevel)
-- [Methods](#meth)
+- [Basic methods](#meth-group-basic)
     - [loadVideo](#meth-loadVideo)
-    - [getVideoElement](#meth-getVideoElement)
     - [getPlayerState](#meth-getPlayerState)
     - [addEventListener](#meth-addEventListener)
     - [removeEventListener](#meth-removeEventListener)
@@ -21,40 +20,29 @@
     - [stop](#meth-stop)
     - [getPosition](#meth-getPosition)
     - [getWallClockTime](#meth-getWallClockTime)
-    - [getVideoDuration](#meth-getVideoDuration)
-    - [getVolume](#meth-getVolume)
-    - [getError](#meth-getError)
     - [seekTo](#meth-seekTo)
-    - [isLive](#meth-isLive)
-    - [getUrl](#meth-getUrl)
-    - [getAvailableVideoBitrates](#meth-getAvailableVideoBitrates)
-    - [getAvailableAudioBitrates](#meth-getAvailableAudioBitrates)
-    - [getVideoBitrate](#meth-getVideoBitrate)
-    - [getAudioBitrate](#meth-getAudioBitrate)
-    - [getMaxVideoBitrate](#meth-getMaxVideoBitrate)
-    - [getMaxAudioBitrate](#meth-getMaxAudioBitrate)
-    - [setVideoBitrate](#meth-setVideoBitrate)
-    - [setAudioBitrate](#meth-setAudioBitrate)
-    - [getManualVideoBitrate](#meth-getManualVideoBitrate)
-    - [getManualAudioBitrate](#meth-getManualAudioBitrate)
-    - [setWantedBufferAhead](#meth-setWantedBufferAhead)
-    - [getWantedBufferAhead](#meth-getWantedBufferAhead)
-    - [setMaxBufferBehind](#meth-setMaxBufferBehind)
-    - [getMaxBufferBehind](#meth-getMaxBufferBehind)
-    - [setMaxBufferAhead](#meth-setMaxBufferAhead)
-    - [getMaxBufferAhead](#meth-getMaxBufferAhead)
-    - [setMaxVideoBitrate](#meth-setMaxVideoBitrate)
-    - [setMaxAudioBitrate](#meth-setMaxAudioBitrate)
+    - [getMinimumPosition](#meth-getMinimumPosition)
+    - [getMaximumPosition](#meth-getMaximumPosition)
+    - [getVideoDuration](#meth-getVideoDuration)
+    - [getError](#meth-getError)
+    - [getVideoElement](#meth-getVideoElement)
+    - [dispose](#meth-dispose)
+ - [Speed control](#meth-group-speed-control)
+    - [setPlaybackRate](#meth-setPlaybackRate)
+    - [getPlaybackRate](#meth-getPlaybackRate)
+ - [Volume control](#meth-group-volume-control)
     - [setVolume](#meth-setVolume)
+    - [getVolume](#meth-getVolume)
     - [mute](#meth-mute)
     - [unMute](#meth-unMute)
     - [isMute](#meth-isMute)
-    - [getAvailableAudioTracks](#meth-getAvailableAudioTracks)
-    - [getAvailableTextTracks](#meth-getAvailableTextTracks)
-    - [getAvailableVideoTracks](#meth-getAvailableVideoTracks)
+  - [Track selection](#meth-track-selection)
     - [getAudioTrack](#meth-getAudioTrack)
     - [getTextTrack](#meth-getTextTrack)
     - [getVideoTrack](#meth-getVideoTrack)
+    - [getAvailableAudioTracks](#meth-getAvailableAudioTracks)
+    - [getAvailableTextTracks](#meth-getAvailableTextTracks)
+    - [getAvailableVideoTracks](#meth-getAvailableVideoTracks)
     - [setAudioTrack](#meth-setAudioTrack)
     - [setTextTrack](#meth-setTextTrack)
     - [disableTextTrack](#meth-disableTextTrack)
@@ -66,17 +54,38 @@
     - [getPreferredTextTracks](#meth-getPreferredTextTracks)
     - [setPreferredVideoTracks](#meth-setPreferredVideoTracks)
     - [getPreferredVideoTracks](#meth-getPreferredVideoTracks)
-    - [getCurrentAdaptations](#meth-getCurrentAdaptations)
-    - [getCurrentRepresentations](#meth-getCurrentRepresentations)
-    - [dispose](#meth-dispose)
+ - [Bitrate selection](#meth-group-bitrate-selection)
+    - [getAvailableVideoBitrates](#meth-getAvailableVideoBitrates)
+    - [getAvailableAudioBitrates](#meth-getAvailableAudioBitrates)
+    - [getVideoBitrate](#meth-getVideoBitrate)
+    - [getAudioBitrate](#meth-getAudioBitrate)
+    - [setMaxVideoBitrate](#meth-setMaxVideoBitrate)
+    - [setMaxAudioBitrate](#meth-setMaxAudioBitrate)
+    - [getMaxVideoBitrate](#meth-getMaxVideoBitrate)
+    - [getMaxAudioBitrate](#meth-getMaxAudioBitrate)
+    - [setVideoBitrate](#meth-setVideoBitrate)
+    - [setAudioBitrate](#meth-setAudioBitrate)
+    - [getManualVideoBitrate](#meth-getManualVideoBitrate)
+    - [getManualAudioBitrate](#meth-getManualAudioBitrate)
+  - [Buffer control](#meth-group-buffer-control)
+    - [setWantedBufferAhead](#meth-setWantedBufferAhead)
+    - [getWantedBufferAhead](#meth-getWantedBufferAhead)
+    - [setMaxBufferBehind](#meth-setMaxBufferBehind)
+    - [getMaxBufferBehind](#meth-getMaxBufferBehind)
+    - [setMaxBufferAhead](#meth-setMaxBufferAhead)
+    - [getMaxBufferAhead](#meth-getMaxBufferAhead)
+ - [Buffer information](#meth-group-buffer-info)
     - [getVideoLoadedTime](#meth-getVideoLoadedTime)
     - [getVideoPlayedTime](#meth-getVideoPlayedTime)
     - [getVideoBufferGap](#meth-getVideoBufferGap)
-    - [getPlaybackRate](#meth-getPlaybackRate)
-    - [setPlaybackRate](#meth-setPlaybackRate)
+ - [Content information](#meth-group-content-info)
+    - [isLive](#meth-isLive)
+    - [getUrl](#meth-getUrl)
+    - [getManifest](#meth-getManifest)
+    - [getCurrentAdaptations](#meth-getCurrentAdaptations)
+    - [getCurrentRepresentations](#meth-getCurrentRepresentations)
     - [getCurrentKeySystem](#meth-getCurrentKeySystem)
-    - [getMinimumPosition](#meth-getMinimumPosition)
-    - [getMaximumPosition](#meth-getMaximumPosition)
+ - [Deprecated](#meth-group-deprecated)
     - [getImageTrackData (deprecated)](#meth-getImageTrackData)
     - [setFullscreen (deprecated)](#meth-setFullscreen)
     - [exitFullscreen (deprecated)](#meth-exitFullscreen)
@@ -94,21 +103,19 @@
 ## Overview ####################################################################
 
 The RxPlayer has a complete API allowing you to:
-  - load and stop video or audio contents
-  - perform trickmodes (play, pause, seek, etc.) as a content is loaded.
+  - load and stop contents containing video and/or audio media data
+  - control playback (play, pause, seek, etc.) when a content is loaded.
   - get multiple information on the current content and on the player's state.
-  - choose a specific audio language or subtitles track
-  - set your own bitrate and buffer length
+  - choose a specific audio language, subtitles track video track
+  - force a given bitrate
+  - update the wanted buffer length to reach
   - and more
 
 The following pages define the entire API.
 
 :warning: Only variables and methods defined here are considered as part of the
-API. Any other property or method you might find by using our library can change
-without notice (not considered as part of the API).
-
-Only use the documented variables and open an issue if you think it's not
-enough.
+API. Any other property or method you might find in any other way are not
+considered as part of the API and can thus change without notice.
 
 _Note: As some terms used here might be too foreign or slightly different than
 the one you're used to, we also wrote a list of terms and definitions used by
@@ -119,7 +126,8 @@ the RxPlayer [here](../terms.md)._
 <a name="instantiation"></a>
 ## Instantiation ##############################################################
 
-Instantiating a new player is straightforward:
+Instantiating a new RxPlayer is necessary before being able to load a content.
+Doing so is straightforward:
 ```js
 import RxPlayer from "rx-player";
 const player = new RxPlayer(options);
@@ -130,75 +138,11 @@ page](./player_options.md).
 
 
 
-<a name="static"></a>
-## Static properties ###########################################################
-
-<a name="static-version"></a>
-### version ####################################################################
-
-_type_: ``Number``
-
-The current version of the RxPlayer.
-
-
-<a name="static-ErrorTypes"></a>
-### ErrorTypes #################################################################
-
-_type_: ``Object``
-
-The different "types" of Error you can get on playback error,
-
-See [the Player Error documentation](./errors.md) for more information.
-
-
-<a name="static-ErrorCodes"></a>
-### ErrorCodes #################################################################
-
-_type_: ``Object``
-
-The different Error "codes" you can get on playback error,
-
-See [the Player Error documentation](./errors.md) for more information.
-
-
-<a name="static-LogLevel"></a>
-### LogLevel ###################################################################
-
-_type_: ``string``
-
-_default_: ``"NONE"``
-
-The current level of verbosity for the RxPlayer logs. Those logs all use the
-console.
-
-From the less verbose to the most:
-
-  - ``"NONE"``: no log
-
-  - ``"ERROR"``: unexpected errors (via ``console.error``)
-
-  - ``"WARNING"``: The previous level + minor problems encountered (via
-    ``console.warn``)
-
-  - ``"INFO"``: The previous levels + noteworthy events (via ``console.info``)
-
-  - ``"DEBUG"``: The previous levels + normal events of the player (via
-    ``console.log``)
-
-
-If the value set to this property is different than those, it will be
-automatically set to ``"NONE"``.
-
-#### Example
-```js
-import RxPlayer from "rx-player";
-RxPlayer.LogLevel = "WARNING";
-```
-
-
-
 <a name="meth"></a>
-## Methods #####################################################################
+## Basic methods ###############################################################
+
+In this chapter, we will go through the basic methods you will need to use when
+playing a content through the RxPlayer.
 
 <a name="meth-loadVideo"></a>
 ### loadVideo ##################################################################
@@ -206,12 +150,16 @@ RxPlayer.LogLevel = "WARNING";
 _arguments_:
   - _options_ (``Object``)
 
-Loads a new video described in the argument.
+Loads the content described in the argument.
 
+This is the central method to use when you want to play a new content.
 The options possible as arguments are all defined in [this
 page](./loadVideo_options.md).
 
+Despite its name, this method can also load audio-only content.
+
 #### Example
+
 ```js
 player.loadVideo({
   url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
@@ -221,28 +169,12 @@ player.loadVideo({
 ```
 
 
-<a name="meth-getVideoElement"></a>
-### getVideoElement ############################################################
-
-_return value_: ``HTMLMediaElement``
-
-Returns the video element used by the player.
-
-You're not encouraged to use its API, you should always prefer the Player's API.
-
-#### Example
-```js
-const videoElement = player.getVideoElement();
-videoElement.className = "my-video-element";
-```
-
-
 <a name="meth-getPlayerState"></a>
 ### getPlayerState #############################################################
 
 _return value_: ``string``
 
-The current player's state.
+The "state" the player is currently in.
 Can be either one of those strings:
 
   - ``"STOPPED"``: The player is idle. No content is loading nor is loaded.
@@ -278,6 +210,7 @@ As it is a central part of our API and can be difficult concept to understand,
 we have a special [page of documentation on player states](./states.md).
 
 #### Example
+
 ```js
 switch (player.getPlayerState()) {
   case "STOPPED":
@@ -328,10 +261,15 @@ _arguments_:
 Add an event listener to trigger a callback as it happens. The callback will
 have the event payload as a single argument.
 
+The RxPlayer API is heavily event-based. As an example: to know when a content
+is loaded, the most straightforward way is to add an event listener for the
+`"playerStateChange"` event. This can be done only through this method.
+
 To have the complete list of player events, consult the [Player events
 page](./player_events.md).
 
 #### Example
+
 ```js
 player.addEventListener("Error", function(err) {
   console.log(`The player crashed: ${err.message}`);
@@ -347,14 +285,16 @@ _arguments_:
   - _callback_ (optional) (``Function``): The callback given when calling the
     corresponding ``addEventListener`` API.
 
-Remove an event listener. That is, stop your registered callback (with
-``addEventListener``) to be called as events happen and free up ressources.
+Remove an event listener.
+That is, remove a callback previously registered with ``addEventListener`` from
+being triggered on the corresponding event. This also free-up the corresponding
+ressources.
 
 The callback given is optional: if not given, _every_ registered callback to
-that event will be removed. That's why using both arguments is recommended for
-most usecase.
+that event will be removed.
 
 #### Example
+
 ```js
 player.removeEventListener("playerStateChange", listenerCallback);
 ```
@@ -366,6 +306,10 @@ player.removeEventListener("playerStateChange", listenerCallback);
 _return value_: ``Promise.<void>``
 
 Play/resume the current video. Equivalent to a video element's play method.
+
+You might want to call that method either to start playing (when the content is
+in the `"LOADED"` state and auto-play has not been enabled in the last
+`loadVideo` call) or to resume when the content has been paused.
 
 The returned Promise informs you on the result:
 
@@ -386,6 +330,7 @@ implementation has the exact same implementation than [ES2015
 Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
 #### Example
+
 ```js
 const resumeContent = () => {
   player.play();
@@ -402,6 +347,7 @@ Note that a content can be paused even if its current state is ``BUFFERING`` or
 ``SEEKING``.
 
 #### Example
+
 ```js
 const pauseContent = () => {
   player.pause();
@@ -414,7 +360,11 @@ const pauseContent = () => {
 
 Stop playback of the current content if one.
 
+This will totaly un-load the current content. To re-start playing the same
+content, you will need to call `loadVideo` again.
+
 #### Example
+
 ```js
 const stopVideo = () => {
   player.stop();
@@ -427,12 +377,24 @@ const stopVideo = () => {
 
 _return value_: ``Number``
 
-Returns the video element's current position, in seconds.
+Returns the current media element's playing position, in seconds.
 
-The difference with the ``getWallClockTime`` method is that for live contents
-the position is not re-calculated to match a live timestamp.
+For live contents, the returned position will not be re-scaled to correspond to
+a live timestamp. If you want that behavior, you can call `getWallClockTime`
+instead.
+
+This is the only difference between the two. Generally, you can follow the
+following rule:
+
+  - if you want to use that current position to use it with the other APIs
+    (like `seekTo`, `getMinimumPosition`, `getMaximumPosition`
+    etc.) use `getPosition`.
+
+  - if you want to display the current position to the viewer/listener, use
+    `getWallClockTime` instead.
 
 #### Example
+
 ```js
 const pos = player.getPosition();
 console.log(`The video element's current position is: ${pos} second(s)`);
@@ -444,15 +406,21 @@ console.log(`The video element's current position is: ${pos} second(s)`);
 
 _return value_: ``Number``
 
-Returns the wall-clock-time of the current position in seconds.
+Returns the current "wall-clock" playing position in seconds.
 
 That is:
-  - for live content, get a timestamp in seconds of the current position.
-  - for static content, returns the position from beginning, also in seconds.
+
+  - for live contents, this is the current position scaled to correspond to a
+    live timestamp, in seconds.
+
+  - for non-live contents, returns the position from the absolute beginning time
+    of the content, also in seconds. In the absolute majority of cases this will
+    be equal to the value returned by `getPosition`.
 
 Use this method to display the current position to the user.
 
 #### Example
+
 ```js
 const wallClockTime = player.getWallClockTime();
 const nowInSeconds = Date.now() / 1000;
@@ -466,75 +434,12 @@ if (delta < 5) { // (5 seconds of margin)
 ```
 
 
-<a name="meth-getVideoDuration"></a>
-### getVideoDuration ###########################################################
-
-_return value_: ``Number``
-
-Returns the duration of the current video, directly from the video element.
-
-#### Example
-```js
-const pos = player.getPosition();
-const dur = player.getVideoDuration();
-
-console.log(`current position: ${pos} / ${dur}`);
-```
-
-
-<a name="meth-getVolume"></a>
-### getVolume ##################################################################
-
-_return value_: ``Number``
-
-Current volume of the player, from 0 (no sound) to 1 (maximum sound). 0 if muted
-(different than videoElement.muted).
-
-#### Example
-```js
-const volume = player.getVolume();
-
-if (volume === 1) {
-  console.log("You're playing at maximum volume");
-} else if (volume === 0) {
-  console.log("You're playing at no volume");
-} else if (volume > 0.5) {
-  console.log("You're playing at a high volume");
-} else {
-  console.log("You're playing at a low volume");
-}
-```
-
-
-<a name="meth-getError"></a>
-### getError ###################################################################
-
-_return value_: ``Error|null``
-
-Returns the fatal error if it happened. null otherwise.
-
-See [the Player Error documentation](./errors.md) for more information.
-
-#### Example
-```js
-const error = player.getError();
-
-if (!error) {
-  console.log("The player did not crash");
-} else if (error.code === "PIPELINE_LOAD_ERROR") {
-  console.error("The player crashed due to a failing request");
-} else {
-  console.error(`The player crashed: ${error.code}`);
-}
-```
-
-
 <a name="meth-seekTo"></a>
 ### seekTo #####################################################################
 
 _arguments_: ``Object|Number``
 
-Seek in the current content.
+Seek in the current content (i.e. change the current position).
 
 The argument can be an object with a single ``Number`` property, either:
 
@@ -549,7 +454,8 @@ The argument can be an object with a single ``Number`` property, either:
 The argument can also just be a ``Number`` property, which will have the same
 effect than the ``position`` property (absolute position).
 
-#### Example
+#### Examples
+
 ```js
 // seeking to 54 seconds from the start of the content
 player.seekTo({ position: 54 });
@@ -568,404 +474,200 @@ player.seekTo({ wallClockTime: Date.now() / 1000 });
 ```
 
 
-<a name="meth-isLive"></a>
-### isLive #####################################################################
+<a name="meth-getMinimumPosition"></a>
+### getMinimumPosition #########################################################
 
-_return value_: ``Boolean``
+_return value_: ``Number|null``
 
-Returns ``true`` if the content is a "live" content (e.g. a live TV Channel).
-``false`` otherwise.
+The minimum seekable player position. ``null`` if no content is loaded.
 
-Also ``false`` if no content is loaded yet.
+This is useful for live contents, where server-side buffer size are often not
+infinite. This method allows thus to seek at the earliest possible time.
 
-#### Example
-```js
-if (player.isLive()) {
-  console.log("We're playing a live content");
-}
-```
+As the given position is the absolute minimum position, you might add a security
+margin (like a few seconds) when seeking to this position in a live content.
+Not doing so could led to the player being behind the minimum position after
+some time, and thus unable to continue playing.
 
-
-<a name="meth-getUrl"></a>
-### getUrl #####################################################################
-
-_return value_: ``string|undefined``
-
-Returns the URL of the downloaded [Manifest](../terms.md#manifest).
-
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns the URL of the content
-being played.
-
-Returns ``undefined`` if no content is loaded yet.
+For VoD contents, as the minimum position normally don't change, seeking at the
+minimum position should not cause any issue.
 
 #### Example
+
 ```js
-const url = player.getUrl();
-if (url) {
-  console.log("We are playing the following content:", url);
-}
+// Seeking close to the minimum position (with a 5 seconds security margin)
+player.seekTo({ position: player.getMinimumPosition() + 5 });
 ```
 
 
-<a name="meth-getAvailableVideoBitrates"></a>
-### getAvailableVideoBitrates ##################################################
+<a name="meth-getMaximumPosition"></a>
+### getMaximumPosition #########################################################
 
-_return value_: ``Array.<Number>``
+_return value_: ``Number|null``
 
-The different bitrates available for the current video
-[Adaptation](../terms.md#adaptation), in bits per seconds.
+The maximum seekable player position. ``null`` if no content is loaded.
 
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+This is useful for live contents, where the buffer end updates continously.
+This method allows thus to seek directly at the live edge of the content.
+
+Please bear in mind that seeking exactly at the maximum position is rarely a
+good idea:
+  - for VoD contents, the playback will end
+  - for live contents, the player will then need to wait until it can build
+    enough buffer.
+
+As such, we advise to remove a few seconds from that position when seeking.
 
 #### Example
+
 ```js
-const videoBitrates = player.getAvailableVideoBitrates();
-if (videoBitrates.length) {
-  console.log(
-    "The current video is available in the following bitrates",
-    videoBitrates.join(", ")
-  );
-}
+// seeking 5 seconds before the end (or the live edge for live contents)
+player.seekTo({
+  position: player.getMaximumPosition() - 5
+});
 ```
 
 
-<a name="meth-getAvailableAudioBitrates"></a>
-### getAvailableAudioBitrates ##################################################
-
-_return value_: ``Array.<Number>``
-
-The different bitrates available for the current audio
-[Adaptation](../terms.md#adaptation), in bits per seconds.
-
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns an empty Array.
-
-#### Example
-```js
-const audioBitrates = player.getAvailableAudioBitrates();
-if (audioBitrates.length) {
-  console.log(
-    "The current audio is available in the following bitrates",
-    audioBitrates.join(", ")
-  );
-}
-```
-
-
-<a name="meth-getVideoBitrate"></a>
-### getVideoBitrate ############################################################
-
-_return value_: ``Number|undefined``
-
-Returns the video bitrate of the last downloaded video segment, in bits per
-seconds.
-
-Returns ``undefined`` if no content is loaded.
-
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns ``undefined``.
-
-
-<a name="meth-getAudioBitrate"></a>
-### getAudioBitrate ############################################################
-
-_return value_: ``Number|undefined``
-
-Returns the audio bitrate of the last downloaded audio segment, in bits per
-seconds.
-
-Returns ``undefined`` if no content is loaded.
-
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns ``undefined``.
-
-
-<a name="meth-getMaxVideoBitrate"></a>
-### getMaxVideoBitrate #########################################################
-
-_return value_: ``Number|undefined``
-
-Returns the maximum set video bitrate to which switching is possible, in bits
-per seconds.
-
-This only affects adaptive strategies (you can bypass this limit by calling
-``setVideoBitrate``), and is set to ``Infinity`` when no limit has been set.
-
-
-<a name="meth-getMaxAudioBitrate"></a>
-### getMaxAudioBitrate #########################################################
-
-_return value_: ``Number"undefined``
-
-Returns the maximum set audio bitrate to which switching is possible, in bits
-per seconds.
-
-This only affects adaptive strategies (you can bypass this limit by calling
-``setAudioBitrate``), and is set to ``Infinity`` when no limit has been set.
-
-
-<a name="meth-setVideoBitrate"></a>
-### setVideoBitrate ############################################################
-
-_arguments_: ``Number``
-
-Force the current video track to be of a certain bitrate.
-
-If an video [Representation](../terms.md#representation) (in the current video
-[Adaptation](../terms.md#adaptation)) is found with the exact same bitrate, this
-Representation will be set.
-
-If no video Representation is found with the exact same bitrate, either:
-
-  - the video Representation immediately inferior to it will be chosen instead
-    (the closest inferior)
-
-  - if no video Representation has a bitrate lower than that value, the video
-    Representation with the lowest bitrate will be chosen instead.
-
-
-Set to ``-1`` to deactivate (and thus re-activate adaptive streaming for video
-tracks).
-
-When active (called with a positive value), adaptive streaming for video tracks
-will be disabled to stay in the chosen Representation.
-
-You can use ``getAvailableVideoBitrates`` to get the list of available bitrates
-you can set on the current content.
-
-Note that the value set is persistent between ``loadVideo`` calls.
-As such, this method can also be called when no content is playing (the same
-rules apply for future contents).
-
----
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
-
-
-<a name="meth-setAudioBitrate"></a>
-### setAudioBitrate ############################################################
-
-_arguments_: ``Number``
-
-Force the current audio track to be of a certain bitrate.
-
-If an audio [Representation](../terms.md#representation) (in the current audio
-[Adaptation](../terms.md#adaptation)) is found with the exact same bitrate, this
-Representation will be set.
-
-If no audio Representation is found with the exact same bitrate, either:
-
-  - the audio Representation immediately inferior to it will be chosen instead
-    (the closest inferior)
-
-  - if no audio Representation has a bitrate lower than that value, the audio
-    Representation with the lowest bitrate will be chosen instead.
-
-
-Set to ``-1`` to deactivate (and thus re-activate adaptive streaming for audio
-tracks).
-
-When active (called with a positive value), adaptive streaming for audio tracks
-will be disabled to stay in the chosen Representation.
-
-You can use ``getAvailableAudioBitrates`` to get the list of available bitrates
-you can set on the current content.
-
-Note that the value set is persistent between ``loadVideo`` calls.
-As such, this method can also be called when no content is playing (the same
-rules apply for future contents).
-
----
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
-
-
-<a name="meth-getManualVideoBitrate"></a>
-### getManualVideoBitrate ######################################################
-
-_arguments_: ``Number``
-
-Get the last video bitrate manually set. Either via ``setVideoBitrate`` or via
-the ``initialVideoBitrate`` constructor option.
-
-This value can be different than the one returned by ``getVideoBitrate``:
-  - ``getManualVideoBitrate`` returns the last bitrate set manually by the user
-  - ``getVideoBitrate`` returns the actual bitrate of the current video track
-
-``-1`` when no video bitrate is forced.
-
-
-<a name="meth-getManualAudioBitrate"></a>
-### getManualAudioBitrate ######################################################
-
-_arguments_: ``Number``
-
-Get the last audio bitrate manually set. Either via ``setAudioBitrate`` or via
-the ``initialAudioBitrate`` constructor option.
-
-This value can be different than the one returned by ``getAudioBitrate``:
-  - ``getManualAudioBitrate`` returns the last bitrate set manually by the user
-  - ``getAudioBitrate`` returns the actual bitrate of the current audio track
-
-``-1`` when no audio bitrate is forced.
-
-
-<a name="meth-setMaxVideoBitrate"></a>
-### setMaxVideoBitrate #########################################################
-
-_arguments_: ``Number``
-
-Set the maximum video bitrate reachable through adaptive streaming. The player
-will never automatically switch to a video
-[Representation](../terms.md#representation) with a higher bitrate.
-
-This limit can be removed by setting it to ``Infinity``:
-```js
-// remove video bitrate limit
-player.setMaxVideoBitrate(Infinity);
-```
-
-This only affects adaptive strategies (you can bypass this limit by calling
-``setVideoBitrate``).
-
----
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
-
-
-<a name="meth-setMaxAudioBitrate"></a>
-### setMaxAudioBitrate #########################################################
-
-_arguments_: ``Number``
-
-Set the maximum audio bitrate reachable through adaptive streaming. The player
-will never automatically switch to a audio
-[Representation](../terms.md#representation) with a higher bitrate.
-
-This limit can be removed by setting it to ``Infinity``:
-```js
-// remove audio bitrate limit
-player.setMaxAudioBitrate(Infinity);
-```
-
-This only affects adaptive strategies (you can bypass this limit by calling
-``setAudioBitrate``).
-
----
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
-
-
-<a name="meth-setWantedBufferAhead"></a>
-### setWantedBufferAhead #######################################################
-
-_arguments_: ``Number``
-
-Set the buffering goal, as a duration ahead of the current position, in seconds.
-Once this size of buffer reached, the player won't try to download new video
-segments anymore.
-
----
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
-
-
-<a name="meth-getWantedBufferAhead"></a>
-### getWantedBufferAhead #######################################################
+<a name="meth-getVideoDuration"></a>
+### getVideoDuration ###########################################################
 
 _return value_: ``Number``
-_defaults_: ``30``
 
-returns the buffering goal, as a duration ahead of the current position, in
-seconds.
+Returns the duration of the current video as taken from the video element.
+
+:warning: This duration is in fact the maximum position possible for the
+content. As such, for contents not starting at `0`, this value will not be equal
+to the difference between the maximum and minimum possible position, as would
+normally be expected from a property named "duration".
 
 
-<a name="meth-setMaxBufferBehind"></a>
-### setMaxBufferBehind #########################################################
+#### Example
+
+
+```js
+const pos = player.getPosition();
+const dur = player.getVideoDuration();
+
+console.log(`current position: ${pos} / ${dur}`);
+```
+
+
+<a name="meth-getError"></a>
+### getError ###################################################################
+
+_return value_: ``Error|null``
+
+Returns the current "fatal error" if one happenned for the last loaded content.
+
+Returns `null` otherwise.
+
+A "fatal error" is an error which led the current loading/loaded content to
+completely stop.
+Such errors are usually also sent through the `"error"` event when they happen.
+
+See [the Player Error documentation](./errors.md) for more information.
+
+#### Example
+
+```js
+const error = player.getError();
+
+if (!error) {
+  console.log("The player did not crash");
+} else if (error.code === "PIPELINE_LOAD_ERROR") {
+  console.error("The player crashed due to a failing request");
+} else {
+  console.error(`The player crashed: ${error.code}`);
+}
+```
+
+
+<a name="meth-getVideoElement"></a>
+### getVideoElement ############################################################
+
+_return value_: ``HTMLMediaElement``
+
+Returns the media element used by the RxPlayer.
+
+You're not encouraged to use its APIs as they can enter in conflict with the
+RxPlayer's API.
+
+Despite its name, this method can also return an audio element if the RxPlayer
+was instantiated with one.
+
+#### Example
+
+```js
+const videoElement = player.getVideoElement();
+videoElement.className = "my-video-element";
+```
+
+
+<a name="meth-dispose"></a>
+### dispose ####################################################################
+
+Free the ressources used by the player.
+
+You can call this method if you know you won't need the RxPlayer anymore.
+
+:warning: The player won't work correctly after calling this method.
+
+
+
+<a name="meth-group-speed-control"></a>
+## Speed control ###############################################################
+
+The following methods allows to update the current speed of playback (also
+called the "playback rate").
+
+
+<a name="meth-setPlaybackRate"></a>
+### setPlaybackRate ############################################################
 
 _arguments_: ``Number``
 
-Set the maximum kept past buffer, in seconds.
-Everything before that limit (``currentPosition - maxBufferBehind``) will be
-automatically garbage collected.
+Updates the current playback rate.
 
-This feature is not necessary as the browser is already supposed to deallocate
-memory from old segments if/when the memory is scarce.
+Setting that value to `1` reset the playback rate to its "normal" rythm.
 
-However on some custom targets, or just to better control the memory imprint
-of the player, you might want to set this limit. You can set it to
-``Infinity`` to remove any limit and just let the browser do this job.
+Setting it to `2` allows to play at a speed multiplied by 2 relatively to
+regular playback.
 
----
+Setting it to `0.5` allows to play at half the speed relatively to regular
+playback.
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+etc.
 
----
+#### Example
 
-
-<a name="meth-getMaxBufferBehind"></a>
-### getMaxBufferBehind #########################################################
-
-_return value_: ``Number``
-_defaults_: ``Infinity``
-
-Returns the maximum kept past buffer, in seconds.
+```js
+// plays three times faster than normal
+player.setPlaybackRate(3);
+```
 
 
-<a name="meth-setMaxBufferAhead"></a>
-### setMaxBufferAhead ##########################################################
-
-_arguments_: ``Number``
-
-Set the maximum kept buffer ahead of the current position, in seconds.
-Everything superior to that limit (``currentPosition + maxBufferAhead``) will
-be automatically garbage collected. This feature is not necessary as
-the browser is already supposed to deallocate memory from old segments if/when
-the memory is scarce.
-
-However on some custom targets, or just to better control the memory imprint of
-the player, you might want to set this limit. You can set it to ``Infinity`` to
-remove any limit and just let the browser do this job.
-
-The minimum value between this one and the one returned by
-``getWantedBufferAhead`` will be considered when downloading new segments.
-
-:warning: Bear in mind that a too-low configuration there (e.g. inferior to
-``10``) might prevent the browser to play the content at all.
-
----
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
-
-
-<a name="meth-getMaxBufferAhead"></a>
-### getMaxBufferAhead ##########################################################
+<a name="meth-getPlaybackRate"></a>
+### getPlaybackRate ############################################################
 
 _return value_: ``Number``
-_defaults_: ``Infinity``
 
-Returns the maximum kept buffer ahead of the current position, in seconds.
+Returns the current video playback rate. ``1`` for normal playback, ``2`` when
+playing at double the speed, etc.
+
+#### Example
+
+```js
+const currentPlaybackRate = player.getPlaybackRate();
+console.log(`Playing at a x${currentPlaybackRate}} speed`);
+```
+
+
+
+<a name="meth-group-volume-control"></a>
+## Volume control ##############################################################
+
+Those methods allows to have control over the current audio volume of playing
+contents.
 
 
 <a name="meth-setVolume"></a>
@@ -973,21 +675,84 @@ Returns the maximum kept buffer ahead of the current position, in seconds.
 
 _arguments_: ``Number``
 
-Set the new volume, from 0 (no sound) to 1 (the maximum sound level).
+Set the current volume, from 0 (no sound) to 1 (the maximum sound level).
+
+Note that the volume set here is persisted even when loading another content.
+As such, this method can also be called when no content is currently playing.
+
+#### Example
+
+```js
+// set the full volume
+player.setVolume(1);
+```
+
+
+<a name="meth-getVolume"></a>
+### getVolume ##################################################################
+
+_return value_: ``Number``
+
+Current volume of the player, from 0 (no sound) to 1 (maximum sound).
+0 if muted through the `mute` API.
+
+As the volume is not dependent on a single content (it is persistent), this
+method can also be called when no content is playing.
+
+#### Example
+
+```js
+const volume = player.getVolume();
+
+if (volume === 1) {
+  console.log("You're playing at maximum volume");
+} else if (volume === 0) {
+  console.log("You're playing at no volume");
+} else if (volume > 0.5) {
+  console.log("You're playing at a high volume");
+} else {
+  console.log("You're playing at a low volume");
+}
+```
 
 
 <a name="meth-mute"></a>
 ### mute #######################################################################
 
-Cut the volume. Basically set the volume to 0 while keeping in memory the
-previous volume.
+Mute the volume.
+Basically set the volume to 0 while keeping in memory the previous volume to
+reset it at the next `unMute` call.
+
+As the volume is not dependent on a single content (it is persistent), this
+method can also be called when no content is playing.
+
+#### Example
+
+```js
+// mute the current volume
+player.mute();
+```
 
 
 <a name="meth-unMute"></a>
 ### unMute #####################################################################
 
-Restore the volume when it has been muted, to the one previous the ``mute``
-call.
+When muted, restore the volume to the one previous to the last ``mute`` call.
+
+When the volume is already superior to `0`, this call won't do anything.
+
+As the volume is not dependent on a single content (it is persistent), this
+method can also be called when no content is playing.
+
+#### Example
+
+```js
+// mute the current volume
+player.mute();
+
+// unmute and restore the previous volume
+player.unMute();
+```
 
 
 <a name="meth-isMute"></a>
@@ -995,7 +760,185 @@ call.
 
 _returns_: ``Boolean``
 
-Returns true if the volume is muted i.e., set to 0.
+Returns true if the volume is set to `0`.
+
+#### Example
+
+```js
+if (player.isMute()) {
+  console.log("The content plays with no sound.");
+}
+```
+
+
+
+<a name="meth-group-track-selection"></a>
+## Track selection #############################################################
+
+The following methods allows to choose the right video audio or text track and
+to obtain information about the currently playing tracks.
+
+
+<a name="meth-getAudioTrack"></a>
+### getAudioTrack ##############################################################
+
+_returns_: ``Object|null|undefined``
+
+Get information about the audio track currently set.
+``null`` if no audio track is enabled right now.
+
+If an audio track is set and information about it is known, this method will
+return an object with the following properties:
+
+  - ``id`` (``Number|string``): The id used to identify this track. No other
+    audio track for the same [Period](../terms.md#period) will have the
+    same `id`.
+
+    This can be useful when setting the track through the `setAudioTrack`
+    method.
+
+  - ``language`` (``string``): The language the audio track is in, as set in the
+    [Manifest](../terms.md#manifest).
+
+  - ``normalized`` (``string``): An attempt to translate the ``language``
+    property into an ISO 639-3 language code (for now only support translations
+    from ISO 639-1 and ISO 639-3 language codes). If the translation attempt
+    fails (no corresponding ISO 639-3 language code is found), it will equal the
+    value of ``language``
+
+  - ``audioDescription`` (``Boolean``): Whether the track is an audio
+    description (for the visually impaired or not).
+
+  - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
+    "dub", meaning it was recorded in another language than the original.
+    If set to `false`, we know that this audio track is in an original language.
+    This property is `undefined` if we do not known whether it is in an original
+    language.
+
+
+``undefined`` if no audio content has been loaded yet or if its information is
+unknown.
+
+--
+
+Note for multi-Period contents:
+
+This method will only return the chosen audio track for the
+[Period](../terms.md#period) that is currently playing.
+
+__
+
+In _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
+no audio tracks API in the browser, this method will return ``undefined``.
+
+
+<a name="meth-getTextTrack"></a>
+### getTextTrack ###############################################################
+
+_returns_: ``Object|null|undefined``
+
+Get information about the text track currently set.
+``null`` if no audio track is enabled right now.
+
+If a text track is set and information about it is known, this method will
+return an object with the following properties:
+
+  - ``id`` (``Number|string``): The id used to identify this track. No other
+    text track for the same [Period](../terms.md#period) will have the same
+    `id`.
+
+    This can be useful when setting the track through the `setTextTrack` method.
+
+  - ``language`` (``string``): The language the text track is in, as set in the
+    [Manifest](../terms.md#manifest).
+
+  - ``normalized`` (``string``): An attempt to translate the ``language``
+    property into an ISO 639-3 language code (for now only support translations
+    from ISO 639-1 and ISO 639-3 language codes). If the translation attempt
+    fails (no corresponding ISO 639-3 language code is found), it will equal the
+    value of ``language``
+
+  - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for
+    the hard of hearing or not.
+
+
+``undefined`` if no text content has been loaded yet or if its information is
+unknown.
+
+--
+
+Note for multi-Period contents:
+
+This method will only return the chosen text track for the
+[Period](../terms.md#period) that is currently playing.
+
+__
+
+In _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
+no text tracks API in the browser, this method will return ``undefined``.
+
+
+<a name="meth-getVideoTrack"></a>
+### getVideoTrack ##############################################################
+
+_returns_: ``Object|null|undefined``
+
+Get information about the video track currently set.
+``null`` if no audio track is enabled right now.
+
+If a video track is set and information about it is known, this method will
+return an object with the following properties:
+
+  - ``id`` (``Number|string``): The id used to identify this track. No other
+    video track for the same [Period](../terms.md#period) will have the same
+    `id`.
+
+    This can be useful when setting the track through the `setVideoTrack`
+    method.
+
+  - ``representations`` (``Array.<Object>``):
+    [Representations](../terms.md#representation) of this video track, with
+    attributes:
+
+    - ``id`` (``string``): The id used to identify this Representation.
+      No other Representation from this track will have the same `id`.
+
+    - ``bitrate`` (``Number``): The bitrate of this Representation, in bits per
+      seconds.
+
+    - ``width`` (``Number|undefined``): The width of video, in pixels.
+
+    - ``height`` (``Number|undefined``): The height of video, in pixels.
+
+    - ``codec`` (``string|undefined``): The codec given in standard MIME type
+      format.
+
+    - ``frameRate`` (``string|undefined``): The video frame rate.
+
+  - ``signInterpreted`` (``Boolean|undefined``): If set to `true`, the track is
+    known to contain an interpretation in sign language.
+    If set to `false`, the track is known to not contain that type of content.
+    If not set or set to undefined we don't know whether that video track
+    contains an interpretation in sign language.
+
+
+``undefined`` if no video content has been loaded yet or if its information is
+unknown.
+
+--
+
+Note for multi-Period contents:
+
+This method will only return the chosen video track for the
+[Period](../terms.md#period) that is currently playing.
+
+--
+
+In _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
+no video tracks API in the browser, this method will return ``undefined``.
 
 
 <a name="meth-getAvailableAudioTracks"></a>
@@ -1008,7 +951,7 @@ Returns the list of available audio tracks for the current content.
 Each of the objects in the returned array have the following properties:
 
   - ``active`` (``Boolean``): Whether the track is the one currently active or
-    not.
+    not. Only maximum one audio track can be active at a time.
 
   - ``id`` (``string``): The id used to identify the track. Use it for
     setting the track via ``setAudioTrack``.
@@ -1031,10 +974,19 @@ Each of the objects in the returned array have the following properties:
     This property is `undefined` if we do not known whether it is in an original
     language.
 
+--
 
-In _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there are
-no supported tracks in the file or no track management API : returns an empty
+Note for multi-Period contents:
+
+This method will only return the available tracks of the
+[Period](../terms.md#period) that is currently playing.
+
+--
+
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), if there are no supported
+tracks in the file or no track management API this method will return an empty
 Array.
 
 
@@ -1065,10 +1017,19 @@ Each of the objects in the returned array have the following properties:
   - ``active`` (``Boolean``): Whether the track is the one currently active or
     not.
 
+--
 
-In _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there are
-no supported tracks in the file or no track management API : returns an empty
+Note for multi-Period contents:
+
+This method will only return the available tracks of the
+[Period](../terms.md#period) that is currently playing.
+
+--
+
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), if there are no supported
+tracks in the file or no track management API this method will return an empty
 Array.
 
 
@@ -1111,127 +1072,19 @@ Each of the objects in the returned array have the following properties:
     If not set or set to undefined we don't know whether that video track
     contains an interpretation in sign language.
 
+--
 
-In _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there are
-no supported tracks in the file or no track management API : returns an empty
+Note for multi-Period contents:
+
+This method will only return the available tracks of the
+[Period](../terms.md#period) that is currently playing.
+
+--
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), if there are no supported
+tracks in the file or no track management API this method will return an empty
 Array.
-
-
-<a name="meth-getAudioTrack"></a>
-### getAudioTrack ##############################################################
-
-_returns_: ``Object|null|undefined``
-
-Get the audio track currently set. ``null`` if no audio track is enabled right
-now.
-
-The track is an object with the following properties:
-
-  - ``id`` (``Number|string``): The id used to identify the track. Use it for
-    setting the track via ``setAudioTrack``.
-
-  - ``language`` (``string``): The language the audio track is in, as set in the
-    [Manifest](../terms.md#manifest).
-
-  - ``normalized`` (``string``): An attempt to translate the ``language``
-    property into an ISO 639-3 language code (for now only support translations
-    from ISO 639-1 and ISO 639-3 language codes). If the translation attempt
-    fails (no corresponding ISO 639-3 language code is found), it will equal the
-    value of ``language``
-
-  - ``audioDescription`` (``Boolean``): Whether the track is an audio
-    description (for the visually impaired or not).
-
-  - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
-    "dub", meaning it was recorded in another language than the original.
-    If set to `false`, we know that this audio track is in an original language.
-    This property is `undefined` if we do not known whether it is in an original
-    language.
-
-
-``undefined`` if no content has been loaded yet.
-
-In _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
-no audio tracks API in the browser, return ``undefined``.
-
-<a name="meth-getTextTrack"></a>
-### getTextTrack ###############################################################
-
-_returns_: ``Object|null``
-
-Get the audio track currently set. ``null`` if no text track is enabled right
-now.
-
-The track is an object with the following properties:
-
-  - ``id`` (``Number|string``): The id used to identify the track. Use it for
-    setting the track via ``setTextTrack``.
-
-  - ``language`` (``string``): The language the text track is in, as set in the
-    [Manifest](../terms.md#manifest).
-
-  - ``normalized`` (``string``): An attempt to translate the ``language``
-    property into an ISO 639-3 language code (for now only support translations
-    from ISO 639-1 and ISO 639-3 language codes). If the translation attempt
-    fails (no corresponding ISO 639-3 language code is found), it will equal the
-    value of ``language``
-
-  - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for
-    the hard of hearing or not.
-
-
-``undefined`` if no content has been loaded yet.
-
-In _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
-no text tracks API in the browser, return ``undefined``.
-
-
-<a name="meth-getVideoTrack"></a>
-### getVideoTrack ##############################################################
-
-_returns_: ``Object|null|undefined``
-
-Get the video track currently set. ``null`` if no video track is enabled right
-now.
-
-The track is an object with the following properties:
-
-  - ``id`` (``string``): The id used to identify the track. Use it for setting
-    the track via ``setVideoTrack``.
-
-  - ``representations`` (``Array.<Object>``):
-    [Representations](../terms.md#representation) of this video track, with
-    attributes:
-
-    - ``id`` (``string``): The id used to identify this Representation.
-
-    - ``bitrate`` (``Number``): The bitrate of this Representation, in bits per
-      seconds.
-
-    - ``width`` (``Number|undefined``): The width of video, in pixels.
-
-    - ``height`` (``Number|undefined``): The height of video, in pixels.
-
-    - ``codec`` (``string|undefined``): The codec given in standard MIME type
-      format.
-
-    - ``frameRate`` (``string|undefined``): The video framerate.
-
-  - ``signInterpreted`` (``Boolean|undefined``): If set to `true`, the track is
-    known to contain an interpretation in sign language.
-    If set to `false`, the track is known to not contain that type of content.
-    If not set or set to undefined we don't know whether that video track
-    contains an interpretation in sign language.
-
-``undefined`` if no content has been loaded yet.
-
-
-In _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
-no video tracks API in the browser, return ``undefined``.
 
 
 <a name="meth-setAudioTrack"></a>
@@ -1239,9 +1092,26 @@ no video tracks API in the browser, return ``undefined``.
 
 _arguments_: ``string|Number``
 
-Set a new audio track from its id, recuperated from ``getAvailableAudioTracks``.
+Change the current audio track.
 
----
+The argument to this method is the wanted track's `id` property. This `id` can
+for example be obtained on the corresponding track object returned by the
+``getAvailableAudioTracks`` method.
+
+--
+
+Note for multi-Period contents:
+
+This method will only have an effect on the [Period](../terms.md#period) that is
+currently playing.
+If you want to update the track for other Periods as well, you might want to
+either:
+  - update the preferred audio tracks through the
+    [setPreferredAudioTracks](#meth-setPreferredAudioTracks) method.
+  - update the current audio track once a `"periodChange"` event has been
+    received.
+
+--
 
 :warning: If used on Safari, in _DirectFile_ mode, the track change may change
 the track on other track type (e.g. changing video track may change subtitle
@@ -1251,10 +1121,9 @@ This has two potential reasons :
 - Safari may decide to enable a track for accessibility or user language
 convenience (e.g. Safari may switch subtitle to your OS language if you pick
 another audio language)
-The user may know through the [audioTrackChange]
-(./player_events.md#events-audioTrackChange) event that the track has changed.
+You can know if another track has changed by listening to the corresponding
+events that the tracks have changed.
 
----
 
 
 <a name="meth-setTextTrack"></a>
@@ -1262,9 +1131,27 @@ The user may know through the [audioTrackChange]
 
 _arguments_: ``string``
 
-Set a new text track from its id, recuperated from ``getAvailableTextTracks``.
+Change the current text (subtitles) track.
 
----
+The argument to this method is the wanted track's `id` property. This `id` can
+for example be obtained on the corresponding track object returned by the
+``getAvailableTextTracks`` method.
+
+--
+
+Note for multi-Period contents:
+
+This method will only have an effect on the [Period](../terms.md#period) that is
+currently playing.
+If you want to update the track for other Periods as well, you might want to
+either:
+  - update the preferred text tracks through the
+    [setPreferredTextTracks](#meth-setPreferredTextTracks) method.
+  - update the current text track once a `"periodChange"` event has been
+    received.
+
+
+--
 
 :warning: If used on Safari, in _DirectFile_ mode, the track change may change
 the track on other track type (e.g. changing video track may change subtitle
@@ -1274,16 +1161,30 @@ This has two potential reasons :
 - Safari may decide to enable a track for accessibility or user language
 convenience (e.g. Safari may switch subtitle to your OS language if you pick
 another audio language)
-The user may know through the [textTrackChange]
-(./player_events.md#events-textTrackChange) event that the track has changed.
-
----
+You can know if another track has changed by listening to the corresponding
+events that the tracks have changed.
 
 
 <a name="meth-disableTextTrack"></a>
 ### disableTextTrack ###########################################################
 
-Deactivate the current text track, if one.
+Disable the current text track, if one.
+
+After calling that method, no subtitles track will be displayed until
+`setTextTrack` is called.
+
+--
+
+Note for multi-Period contents:
+
+This method will only have an effect on the [Period](../terms.md#period) that is
+currently playing.
+If you want to disable the text track for other Periods as well, you might want
+to either:
+  - update the preferred text tracks through the
+    [setPreferredTextTracks](#meth-setPreferredTextTracks) method to include
+    `null` (which meaning that you want no text track).
+  - call `disableTextTrack` once a `"periodChange"` event has been received.
 
 
 <a name="meth-setVideoTrack"></a>
@@ -1291,7 +1192,11 @@ Deactivate the current text track, if one.
 
 _arguments_: ``string|Number``
 
-Set a new video track from its id, recuperated from ``getAvailableVideoTracks``.
+Change the current video track.
+
+The argument to this method is the wanted track's `id` property. This `id` can
+for example be obtained on the corresponding track object returned by the
+``getAvailableAudioTracks`` method.
 
 Setting a new video track when a previous one was already playing can lead the
 rx-player to "reload" this content.
@@ -1314,14 +1219,25 @@ During this period of time:
       - ``setAudioTrack`` will throw
       - ``setTextTrack`` will throw
 
----
+--
+
+Note for multi-Period contents:
+
+This method will only have an effect on the [Period](../terms.md#period) that is
+currently playing.
+If you want to update the track for other Periods as well, you might want to
+either:
+  - update the preferred video tracks through the
+    [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method.
+  - update the current video track once a `"periodChange"` event has been
+    received.
+
+--
 
 :warning: This option will have no effect in _DirectFile_ mode
 (see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
 - No video track API is supported on the current browser
 - The media file tracks are not supported on the browser
-
----
 
 
 <a name="meth-disableVideoTrack"></a>
@@ -1329,11 +1245,24 @@ During this period of time:
 
 _return value_: ``void``
 
-Deactivate the current video track, if one.
+Disable the current video track, if one.
 
 Might enter in `RELOADING` state for a short period after calling this API.
 
----
+--
+
+Note for multi-Period contents:
+
+This method will only have an effect on the [Period](../terms.md#period) that is
+currently playing.
+If you want to disable the video track for other Periods as well, you might want
+to either:
+  - update the preferred video tracks through the
+    [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method to include
+    `null` (which meaning that you want no video track).
+  - call `disableVideoTrack` once a `"periodChange"` event has been received.
+
+--
 
 :warning: This option may have no effect in _DirectFile_ mode
 (see [loadVideo options](./loadVideo_options.md#prop-transport)).
@@ -1350,8 +1279,6 @@ This might be a bug on their parts.
 Due to this fact, we do not recommend using this API in directfile mode for
 now. You might even receive a reassuring `videoTrackChange` event (with a `null`
 payload) while the video track is still actually active.
-
----
 
 
 <a name="meth-setPreferredAudioTracks"></a>
@@ -1421,7 +1348,7 @@ Simply put, once set this preference will be applied to all contents but:
     tracks at the time they were first loaded).
 
 To update the current audio track in those cases, you should use the
-`setAudioTrack` method once they are currently played.
+`setAudioTrack` method once they are currently playing.
 
 
 #### Examples
@@ -1474,14 +1401,12 @@ player.setPreferredAudioTracks([
 ]);
 ```
 
----
+--
 
 :warning: This option will have no effect in _DirectFile_ mode
 (see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
 - No audio track API is supported on the current browser
 - The media file tracks are not supported on the browser
-
----
 
 
 <a name="meth-getPreferredAudioTracks"></a>
@@ -1553,14 +1478,12 @@ player.setPreferredTextTracks([
 ])
 ```
 
----
+--
 
 :warning: This option will have no effect in _DirectFile_ mode
 (see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
 - No text track API is supported on the current browser
 - The media file tracks are not supported on the browser
-
----
 
 
 <a name="meth-getPreferredTextTracks"></a>
@@ -1580,6 +1503,514 @@ it was called:
                    // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
   closedCaption: false // {Boolean} Whether the text track should be a closed
                        // caption for the hard of hearing
+}
+```
+
+
+
+<a name="meth-group-bitrate-selection"></a>
+## Bitrate selection ###########################################################
+
+The following methods allows to choose a given bitrate for audio or video
+content. It can also enable or disable an adaptive bitrate logic or influence
+it.
+
+
+<a name="meth-getAvailableVideoBitrates"></a>
+### getAvailableVideoBitrates ##################################################
+
+_return value_: ``Array.<Number>``
+
+The different bitrates available for the current video track in bits per
+seconds.
+
+--
+
+Note for multi-Period contents:
+
+This method will only return the available video bitrates of the
+[Period](../terms.md#period) that is currently playing.
+
+--
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+
+#### Example
+
+```js
+const videoBitrates = player.getAvailableVideoBitrates();
+if (videoBitrates.length) {
+  console.log(
+    "The current video is available in the following bitrates",
+    videoBitrates.join(", ")
+  );
+}
+```
+
+
+<a name="meth-getAvailableAudioBitrates"></a>
+### getAvailableAudioBitrates ##################################################
+
+_return value_: ``Array.<Number>``
+
+The different bitrates available for the current audio track in bits per
+seconds.
+
+--
+
+Note for multi-Period contents:
+
+This method will only return the available audio bitrates of the
+[Period](../terms.md#period) that is currently playing.
+
+--
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+
+#### Example
+
+```js
+const audioBitrates = player.getAvailableAudioBitrates();
+if (audioBitrates.length) {
+  console.log(
+    "The current audio is available in the following bitrates",
+    audioBitrates.join(", ")
+  );
+}
+```
+
+
+<a name="meth-getVideoBitrate"></a>
+### getVideoBitrate ############################################################
+
+_return value_: ``Number|undefined``
+
+Returns the bitrate of the video quality currently set, in bits per second.
+
+Returns ``undefined`` if no content is loaded.
+
+--
+
+Note for multi-Period contents:
+
+This method will only return the chosen video bitrate for the
+[Period](../terms.md#period) that is currently playing.
+
+--
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), returns ``undefined``.
+
+
+<a name="meth-getAudioBitrate"></a>
+### getAudioBitrate ############################################################
+
+_return value_: ``Number|undefined``
+
+Returns the bitrate of the audio quality currently set, in bits per second.
+
+Returns ``undefined`` if no content is loaded.
+
+--
+
+Note for multi-Period contents:
+
+This method will only return the chosen audio bitrate for the
+[Period](../terms.md#period) that is currently playing.
+
+--
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), returns ``undefined``.
+
+
+<a name="meth-setMaxVideoBitrate"></a>
+### setMaxVideoBitrate #########################################################
+
+_arguments_: ``Number``
+
+Set the maximum video bitrate reachable through adaptive streaming. The player
+will never automatically switch to a video quality with a higher bitrate.
+
+This limit can be removed by setting it to ``Infinity``:
+```js
+// remove video bitrate limit
+player.setMaxVideoBitrate(Infinity);
+```
+
+The effect of this method is persisted from content to content. As such, it can
+even be called when no content is currently loaded.
+
+Note that this only affects adaptive strategies (you can bypass this limit by
+calling ``setVideoBitrate``).
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="meth-setMaxAudioBitrate"></a>
+### setMaxAudioBitrate #########################################################
+
+_arguments_: ``Number``
+
+Set the maximum audio bitrate reachable through adaptive streaming. The player
+will never automatically switch to a audio
+[Representation](../terms.md#representation) with a higher bitrate.
+
+This limit can be removed by setting it to ``Infinity``:
+```js
+// remove audio bitrate limit
+player.setMaxAudioBitrate(Infinity);
+```
+
+The effect of this method is persisted from content to content. As such, it can
+even be called when no content is currently loaded.
+
+Note that this only affects adaptive strategies (you can bypass this limit by
+calling ``setAudioBitrate``).
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="meth-getMaxVideoBitrate"></a>
+### getMaxVideoBitrate #########################################################
+
+_return value_: ``Number``
+
+Returns the maximum video bitrate reachable through adaptive streaming, in bits
+per seconds.
+
+This limit can be updated by calling the
+[setMaxVideoBitrate](#meth-setMaxVideoBitrate) method.
+
+This limit only affects adaptive strategies (you can bypass this limit by
+calling ``setVideoBitrate``), and is set to ``Infinity`` when no limit has been
+set.
+
+
+<a name="meth-getMaxAudioBitrate"></a>
+### getMaxAudioBitrate #########################################################
+
+_return value_: ``Number``
+
+Returns the maximum audio bitrate reachable through adaptive streaming, in bits
+per seconds.
+
+This limit can be updated by calling the
+[setMaxAudioBitrate](#meth-setMaxAudioBitrate) method.
+
+This limit only affects adaptive strategies (you can bypass this limit by
+calling ``setAudioBitrate``), and is set to ``Infinity`` when no limit has been
+set.
+
+
+<a name="meth-setVideoBitrate"></a>
+### setVideoBitrate ############################################################
+
+_arguments_: ``Number``
+
+Force the current video track to be of a certain bitrate.
+
+If an video quality in the current track is found with the exact same bitrate,
+this quality will be set.
+
+If no video quality is found with the exact same bitrate, either:
+
+  - the video quality with the closest bitrate inferior to that value will be
+    chosen.
+
+  - if no video quality has a bitrate lower than that value, the video
+    quality with the lowest bitrate will be chosen instead.
+
+By calling this method with an argument set to ``-1``, this setting will be
+disabled and the RxPlayer will chose the right quality according to its adaptive
+logic.
+
+You can use ``getAvailableVideoBitrates`` to get the list of available bitrates
+for the current video track.
+
+Note that the value set is persistent between ``loadVideo`` calls.
+As such, this method can also be called when no content is playing (the same
+rules apply for future contents).
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="meth-setAudioBitrate"></a>
+### setAudioBitrate ############################################################
+
+_arguments_: ``Number``
+
+Force the current audio track to be of a certain bitrate.
+
+If an audio quality in the current track is found with the exact same bitrate,
+this quality will be set.
+
+If no audio quality is found with the exact same bitrate, either:
+
+  - the audio quality with the closest bitrate inferior to that value will be
+    chosen.
+
+  - if no audio quality has a bitrate lower than that value, the audio
+    quality with the lowest bitrate will be chosen instead.
+
+By calling this method with an argument set to ``-1``, this setting will be
+disabled and the RxPlayer will chose the right quality according to its adaptive
+logic.
+
+You can use ``getAvailableAudioBitrates`` to get the list of available bitrates
+for the current audio track.
+
+Note that the value set is persistent between ``loadVideo`` calls.
+As such, this method can also be called when no content is playing (the same
+rules apply for future contents).
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="meth-getManualVideoBitrate"></a>
+### getManualVideoBitrate ######################################################
+
+_arguments_: ``Number``
+
+Get the last video bitrate manually set. Either via ``setVideoBitrate`` or via
+the ``initialVideoBitrate`` constructor option.
+
+This value can be different than the one returned by ``getVideoBitrate``:
+  - ``getManualVideoBitrate`` returns the last bitrate set manually by the user
+  - ``getVideoBitrate`` returns the actual bitrate of the current video track
+
+``-1`` when no video bitrate is forced.
+
+
+<a name="meth-getManualAudioBitrate"></a>
+### getManualAudioBitrate ######################################################
+
+_arguments_: ``Number``
+
+Get the last audio bitrate manually set. Either via ``setAudioBitrate`` or via
+the ``initialAudioBitrate`` constructor option.
+
+This value can be different than the one returned by ``getAudioBitrate``:
+  - ``getManualAudioBitrate`` returns the last bitrate set manually by the user
+  - ``getAudioBitrate`` returns the actual bitrate of the current audio track
+
+``-1`` when no audio bitrate is forced.
+
+
+
+<a name="meth-group-buffer-control"></a>
+## Buffer control ##############################################################
+
+The methods in this chapter allow to get and set limits on how the current
+buffer can grow.
+
+
+<a name="meth-setWantedBufferAhead"></a>
+### setWantedBufferAhead #######################################################
+
+_arguments_: ``Number``
+
+Set the buffering goal, as a duration ahead of the current position, in seconds.
+
+Once this size of buffer reached, the player won't try to download new segments
+anymore.
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="meth-getWantedBufferAhead"></a>
+### getWantedBufferAhead #######################################################
+
+_return value_: ``Number``
+_defaults_: ``30``
+
+returns the buffering goal, as a duration ahead of the current position, in
+seconds.
+
+
+<a name="meth-setMaxBufferBehind"></a>
+### setMaxBufferBehind #########################################################
+
+_arguments_: ``Number``
+
+Set the maximum kept buffer before the current position, in seconds.
+
+Everything before that limit (``currentPosition - maxBufferBehind``) will be
+automatically garbage collected.
+
+This feature is not necessary as the browser should by default correctly
+remove old segments from memory if/when the memory is scarce.
+
+However on some custom targets, or just to better control the memory footprint
+of the player, you might want to set this limit.
+
+You can set it to ``Infinity`` to remove this limit and just let the browser do
+this job instead.
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="meth-getMaxBufferBehind"></a>
+### getMaxBufferBehind #########################################################
+
+_return value_: ``Number``
+_defaults_: ``Infinity``
+
+Returns the maximum kept buffer before the current position, in seconds.
+
+This setting can be updated either by:
+  - calling the `setMaxBufferBehind` method.
+  - instanciating an RxPlayer with a `maxBufferBehind` property set.
+
+
+<a name="meth-setMaxBufferAhead"></a>
+### setMaxBufferAhead ##########################################################
+
+_arguments_: ``Number``
+
+Set the maximum kept buffer ahead of the current position, in seconds.
+
+Everything superior to that limit (``currentPosition + maxBufferAhead``) will
+be automatically garbage collected.
+
+This feature is not necessary as the browser should by default correctly
+remove old segments from memory if/when the memory is scarce.
+
+However on some custom targets, or just to better control the memory footprint
+of the player, you might want to set this limit.
+
+You can set it to ``Infinity`` to remove any limit and just let the browser do
+this job instead.
+
+The minimum value between this one and the one returned by
+``getWantedBufferAhead`` will be considered when downloading new segments.
+
+:warning: Bear in mind that a too-low configuration there (e.g. inferior to
+``10``) might prevent the browser to play the content at all.
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="meth-getMaxBufferAhead"></a>
+### getMaxBufferAhead ##########################################################
+
+_return value_: ``Number``
+_defaults_: ``Infinity``
+
+Returns the maximum kept buffer ahead of the current position, in seconds.
+
+This setting can be updated either by:
+  - calling the `setMaxBufferAhead` method.
+  - instanciating an RxPlayer with a `maxBufferAhead` property set.
+
+
+
+<a name="meth-group-buffer-info"></a>
+## Buffer information ##########################################################
+
+The methods in this chapter allows to retrieve information about what is
+currently buffered.
+
+
+<a name="meth-getVideoLoadedTime"></a>
+### getVideoLoadedTime #########################################################
+
+_return value_: ``Number``
+
+Returns in seconds the difference between:
+  - the start of the current contiguous loaded range.
+  - the end of it.
+
+
+<a name="meth-getVideoPlayedTime"></a>
+### getVideoPlayedTime #########################################################
+
+_return value_: ``Number``
+
+Returns in seconds the difference between:
+  - the start of the current contiguous loaded range.
+  - the current time.
+
+
+<a name="meth-getVideoBufferGap"></a>
+### getVideoBufferGap ##########################################################
+
+_return value_: ``Number``
+
+Returns in seconds the difference between:
+  - the current time.
+  - the end of the current contiguous loaded range.
+
+
+
+<a name="meth-group-content-info"></a>
+## Content information #########################################################
+
+The methods documented in this chapter allows to obtain general information
+about the current loaded content.
+
+
+<a name="meth-isLive"></a>
+### isLive #####################################################################
+
+_return value_: ``Boolean``
+
+Returns ``true`` if the content is a "live" content (e.g. a live TV Channel).
+``false`` otherwise.
+
+Also ``false`` if no content is loaded yet.
+
+#### Example
+
+```js
+if (player.isLive()) {
+  console.log("We're playing a live content");
+}
+```
+
+
+<a name="meth-getUrl"></a>
+### getUrl #####################################################################
+
+_return value_: ``string|undefined``
+
+Returns the URL of the downloaded [Manifest](../terms.md#manifest).
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), returns the URL of the content
+being played.
+
+Returns ``undefined`` if no content is loaded yet.
+
+#### Example
+
+```js
+const url = player.getUrl();
+if (url) {
+  console.log("We are playing the following content:", url);
 }
 ```
 
@@ -1770,61 +2201,6 @@ An Representation object structure is relatively complex and is described in the
 options](./loadVideo_options.md#prop-transport)).
 
 
-<a name="meth-dispose"></a>
-### dispose ####################################################################
-
-Free the ressources used by the player.
-
-!warning!: The player won't work correctly after calling this method.
-
-
-<a name="meth-getVideoLoadedTime"></a>
-### getVideoLoadedTime #########################################################
-
-_return value_: ``Number``
-
-Returns in seconds the difference between:
-  - the start of the current contiguous loaded range.
-  - the end of it.
-
-
-<a name="meth-getVideoPlayedTime"></a>
-### getVideoPlayedTime #########################################################
-
-_return value_: ``Number``
-
-Returns in seconds the difference between:
-  - the start of the current contiguous loaded range.
-  - the current time.
-
-
-<a name="meth-getVideoBufferGap"></a>
-### getVideoBufferGap ##########################################################
-
-_return value_: ``Number``
-
-Returns in seconds the difference between:
-  - the current time.
-  - the end of the current contiguous loaded range.
-
-
-<a name="meth-getPlaybackRate"></a>
-### getPlaybackRate ############################################################
-
-_return value_: ``Number``
-
-Returns the current video normal playback rate (speed when playing). ``1`` for
-normal playback, ``2`` when playing *2, etc.
-
-
-<a name="meth-setPlaybackRate"></a>
-### setPlaybackRate ############################################################
-
-_arguments_: ``Number``
-
-Updates the "normal" (when playing) playback rate for the video.
-
-
 <a name="meth-getCurrentKeySystem"></a>
 ### getCurrentKeySystem ########################################################
 
@@ -1833,54 +2209,23 @@ _return value_: ``string|undefined``
 Returns the type of keySystem used for DRM-protected contents.
 
 
-<a name="meth-getMinimumPosition"></a>
-### getMinimumPosition #########################################################
 
-_return value_: ``Number|null``
+<a name="meth-group-deprecated"></a>
+## Deprecated ##################################################################
 
-The minimum seekable player position. ``null`` if no content is loaded.
-
-This is useful for live contents, where server-side buffer size are often not
-infinite. This method allows thus to seek at the earliest possible time.
-
-#### Example
-```js
-// seeking to the earliest position possible (beginning of the buffer for live
-// contents, position '0' for non-live contents).
-player.seekTo({
-  position: player.getMinimumPosition()
-});
-```
-
-
-<a name="meth-getMaximumPosition"></a>
-### getMaximumPosition #########################################################
-
-_return value_: ``Number|null``
-
-The maximum seekable player position. ``null`` if no content is loaded.
-
-This is useful for live contents, where the buffer end updates continously.
-This method allows thus to seek directly at the live edge of the content.
-
-#### Example
-```js
-// seeking to the end
-player.seekTo({
-  position: player.getMaximumPosition()
-});
-```
+The following methods are deprecated. They are still supported but we advise
+users to not use those as they might become not supported in the future.
 
 
 <a name="meth-getImageTrackData"></a>
 ### getImageTrackData ##########################################################
 
----
+--
 
 :warning: This method is deprecated, it will disappear in the next major
 release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
----
+--
 
 _return value_: ``Array.<Object>|null``
 
@@ -1897,12 +2242,12 @@ options](./loadVideo_options.md#prop-transport)).
 <a name="meth-setFullscreen"></a>
 ### setFullscreen ##############################################################
 
----
+--
 
 :warning: This method is deprecated, it will disappear in the next major
 release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
----
+--
 
 _arguments_: ``Boolean``
 
@@ -1921,12 +2266,12 @@ prefer to implement your own method to include your controls in the final UI.
 <a name="meth-exitFullscreen"></a>
 ### exitFullscreen #############################################################
 
----
+--
 
 :warning: This method is deprecated, it will disappear in the next major
 release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
----
+--
 
 Exit fullscreen mode. Same than ``setFullscreen(false)``.
 
@@ -1934,12 +2279,12 @@ Exit fullscreen mode. Same than ``setFullscreen(false)``.
 <a name="meth-isFullscreen"></a>
 ### isFullscreen ###############################################################
 
----
+--
 
 :warning: This method is deprecated, it will disappear in the next major
 release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
----
+--
 
 _return value_: ``Boolean``
 
@@ -1947,6 +2292,7 @@ Returns ``true`` if the video element is in fullscreen mode, ``false``
 otherwise.
 
 #### Example
+
 ```js
 if (player.isFullscreen()) {
   console.log("The player is in fullscreen mode");
@@ -1957,12 +2303,12 @@ if (player.isFullscreen()) {
 <a name="meth-getNativeTextTrack"></a>
 ### getNativeTextTrack #########################################################
 
----
+--
 
 :warning: This method is deprecated, it will disappear in the next major
 release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
----
+--
 
 _return value_: ``TextTrack|null``
 
@@ -1976,20 +2322,95 @@ const textTrack = el.textTracks.length ? el.textTracks[0] : null;
 
 
 
+<a name="static"></a>
+## Static properties ###########################################################
+
+This chapter documents the static properties that can be found on the RxPlayer
+class.
+
+<a name="static-version"></a>
+### version ####################################################################
+
+_type_: ``Number``
+
+The current version of the RxPlayer.
+
+
+<a name="static-ErrorTypes"></a>
+### ErrorTypes #################################################################
+
+_type_: ``Object``
+
+The different "types" of Error you can get on playback error,
+
+See [the Player Error documentation](./errors.md) for more information.
+
+
+<a name="static-ErrorCodes"></a>
+### ErrorCodes #################################################################
+
+_type_: ``Object``
+
+The different Error "codes" you can get on playback error,
+
+See [the Player Error documentation](./errors.md) for more information.
+
+
+<a name="static-LogLevel"></a>
+### LogLevel ###################################################################
+
+_type_: ``string``
+
+_default_: ``"NONE"``
+
+The current level of verbosity for the RxPlayer logs. Those logs all use the
+console.
+
+From the less verbose to the most:
+
+  - ``"NONE"``: no log
+
+  - ``"ERROR"``: unexpected errors (via ``console.error``)
+
+  - ``"WARNING"``: The previous level + minor problems encountered (via
+    ``console.warn``)
+
+  - ``"INFO"``: The previous levels + noteworthy events (via ``console.info``)
+
+  - ``"DEBUG"``: The previous levels + normal events of the player (via
+    ``console.log``)
+
+
+If the value set to this property is different than those, it will be
+automatically set to ``"NONE"``.
+
+#### Example
+
+```js
+import RxPlayer from "rx-player";
+RxPlayer.LogLevel = "WARNING";
+```
+
+
+
 <a name="tools"></a>
 ## Tools #######################################################################
 
+The RxPlayer has several "tools", which are utils which can be imported without
+importing the whole RxPlayer itself.
+
+They are all documented here.
 
 <a name="tools-mediaCapabilitiesProber"></a>
 ### MediaCapabilitiesProber ####################################################
 
----
+--
 
 :warning: This tool is experimental. This only means that its API can change at
 any new RxPlayer version (with all the details in the corresponding release
 note).
 
----
+--
 
 
 An experimental tool to probe browser media capabilities:
@@ -2004,13 +2425,13 @@ You can find its documentation [here](./mediaCapabilitiesProber.md).
 <a name="tools-textTrackRenderer"></a>
 ### TextTrackRenderer ##########################################################
 
----
+--
 
 :warning: This tool is experimental. This only means that its API can change at
 any new RxPlayer version (with all the details in the corresponding release
 note).
 
----
+--
 
 The TextTrackRenderer allows to easily render subtitles synchronized to a video
 element.
@@ -2024,13 +2445,13 @@ This tool is documented [here](./TextTrackRenderer.md).
 <a name="tools-parseBifThumbnails"></a>
 ### parseBifThumbnails #########################################################
 
----
+--
 
 :warning: This tool is experimental. This only means that its API can change at
 any new RxPlayer version (with all the details in the corresponding release
 note).
 
----
+--
 
 The `parseBifThumbnails` function parses BIF files, which is a format created by
 Canal+ to declare thumbnails linked to a given content.
@@ -2040,13 +2461,13 @@ This tool is documented [here](./parseBifThumbnails.md).
 <a name="tools-createMetaplaylist"></a>
 ### createMetaplaylist #########################################################
 
----
+--
 
 :warning: This tool is experimental. This only means that its API can change at
 any new RxPlayer version (with all the details in the corresponding release
 note).
 
----
+--
 
 The `createMetaplaylist` function build a metaplaylist object from given
 informations about contents.
