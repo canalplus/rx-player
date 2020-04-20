@@ -81,6 +81,7 @@ describe("API - parseConstructorOptions", () => {
     stopAtEnd: true,
     preferredAudioTracks: [],
     preferredTextTracks: [],
+    preferredVideoTracks: [],
   };
 
   it("should create default values if no option is given", () => {
@@ -334,6 +335,17 @@ describe("API - parseConstructorOptions", () => {
     expect(parseConstructorOptions({ preferredTextTracks })).toEqual({
       ...defaultConstructorOptions,
       preferredTextTracks,
+    });
+  });
+
+  it("should authorize setting a preferredVideoTracks option", () => {
+    const preferredVideoTracks = [
+      { codec: { all: true, test: /hvc/ } },
+      null,
+    ];
+    expect(parseConstructorOptions({ preferredVideoTracks })).toEqual({
+      ...defaultConstructorOptions,
+      preferredVideoTracks,
     });
   });
 

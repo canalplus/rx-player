@@ -43,4 +43,5 @@ export {
 
   IAudioTrackPreference,
   ITextTrackPreference,
+  IVideoTrackPreference,
 } from "./core/api";

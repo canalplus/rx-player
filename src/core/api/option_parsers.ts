@@ -37,6 +37,7 @@ import { IKeySystemOption } from "../eme";
 import {
   IAudioTrackPreference,
   ITextTrackPreference,
+  IVideoTrackPreference,
 } from "./track_choice_manager";
 
 const { DEFAULT_AUTO_PLAY,
@@ -192,6 +193,7 @@ export interface IConstructorOptions { maxBufferAhead? : number;
 
                                        preferredAudioTracks? : IAudioTrackPreference[];
                                        preferredTextTracks? : ITextTrackPreference[];
+                                       preferredVideoTracks? : IVideoTrackPreference[];
 
                                        videoElement? : HTMLMediaElement;
                                        initialVideoBitrate? : number;
@@ -212,6 +214,7 @@ export interface IParsedConstructorOptions {
 
   preferredAudioTracks : IAudioTrackPreference[];
   preferredTextTracks : ITextTrackPreference[];
+  preferredVideoTracks : IVideoTrackPreference[];
 
   videoElement : HTMLMediaElement;
   initialVideoBitrate : number;
@@ -311,6 +314,7 @@ function parseConstructorOptions(
 
   let preferredAudioTracks : IAudioTrackPreference[];
   let preferredTextTracks : ITextTrackPreference[];
+  let preferredVideoTracks : IVideoTrackPreference[];
 
   let videoElement : HTMLMediaElement;
   let initialVideoBitrate : number;
@@ -392,6 +396,17 @@ function parseConstructorOptions(
     preferredAudioTracks = [];
   }
 
+  if (options.preferredVideoTracks !== undefined) {
+    if (!Array.isArray(options.preferredVideoTracks)) {
+      warnOnce("Invalid `preferredVideoTracks` option, it should be an Array");
+      preferredVideoTracks = [];
+    } else {
+      preferredVideoTracks = options.preferredVideoTracks;
+    }
+  } else {
+    preferredVideoTracks = [];
+  }
+
   if (options.videoElement == null) {
     videoElement = document.createElement("video");
   } else if (options.videoElement instanceof HTMLMediaElement) {
@@ -454,6 +469,7 @@ function parseConstructorOptions(
            throttleVideoBitrateWhenHidden,
            preferredAudioTracks,
            preferredTextTracks,
+           preferredVideoTracks,
            initialAudioBitrate,
            initialVideoBitrate,
            maxAudioBitrate,
