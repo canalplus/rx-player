@@ -25,7 +25,6 @@ import arrayIncludes from "../utils/array_includes";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
 import uniq from "../utils/uniq";
-// import filterSupportedRepresentations from "./filter_supported_representations";
 import Representation from "./representation";
 import { IAdaptationType } from "./types";
 
