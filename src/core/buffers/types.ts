@@ -78,12 +78,12 @@ export interface IBufferStateFull {
   value : { bufferType : IBufferType };
 }
 
+/** Emitted when a segment with protection information has been encountered. */
 export interface IProtectedSegmentEvent {
   type : "protected-segment";
   value : { type : string;
             data : Uint8Array; }; }
 
-// State emitted when the buffer waits
 export type IRepresentationBufferStateEvent = IBufferNeededActions |
                                               IBufferStateFull |
                                               IBufferStateActive |
