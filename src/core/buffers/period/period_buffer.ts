@@ -119,7 +119,7 @@ export default function PeriodBuffer({
         const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
-        if (sourceBufferStatus.type === "set") {
+        if (sourceBufferStatus.type === "initialized") {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
           if (SourceBuffersStore.isNative(bufferType)) {
             return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
@@ -129,7 +129,7 @@ export default function PeriodBuffer({
                           period.end == null ? Infinity :
                                                period.end);
         } else {
-          if (sourceBufferStatus.type === "unset") {
+          if (sourceBufferStatus.type === "uninitialized") {
             sourceBuffersStore.disableSourceBuffer(bufferType);
           }
           cleanBuffer$ = observableOf(null);
@@ -247,7 +247,7 @@ function createOrReuseQueuedSourceBuffer<T>(
   options: { textTrackOptions? : ITextTrackSourceBufferOptions }
 ) : QueuedSourceBuffer<T> {
   const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
-  if (sourceBufferStatus.type === "set") {
+  if (sourceBufferStatus.type === "initialized") {
     log.info("Buffer: Reusing a previous SourceBuffer for the type", bufferType);
     return sourceBufferStatus.value;
   }
