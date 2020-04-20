@@ -83,6 +83,18 @@ export interface ITimelineIndex {
    * Every segments defined in this index.
    * `null` at the beginning as this property is parsed lazily (only when first
    * needed) for performances reasons.
+   *
+   * /!\ Please note that this structure should follow the exact same structure
+   * than a SegmentTimeline element in the corresponding MPD.
+   * This means:
+   *   - It should have the same amount of elements in its array than there was
+   *     `<S>` elements in the SegmentTimeline.
+   *   - Each of those same elements should have the same start time, the same
+   *     duration and the same repeat counter than what could be deduced from
+   *     the SegmentTimeline.
+   * This is needed to be able to run parsing optimization when refreshing the
+   * MPD. Not doing so could lead to the RxPlayer not being able to play the
+   * stream anymore.
    */
   timeline : IIndexSegment[] | null;
   /**
@@ -557,6 +569,18 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * After calling it, every now unneeded variable will be freed from memory.
    * This means that calling _getTimeline more than once will just return an
    * empty array.
+   *
+   * /!\ Please note that this structure should follow the exact same structure
+   * than a SegmentTimeline element in the corresponding MPD.
+   * This means:
+   *   - It should have the same amount of elements in its array than there was
+   *     `<S>` elements in the SegmentTimeline.
+   *   - Each of those same elements should have the same start time, the same
+   *     duration and the same repeat counter than what could be deduced from
+   *     the SegmentTimeline.
+   * This is needed to be able to run parsing optimization when refreshing the
+   * MPD. Not doing so could lead to the RxPlayer not being able to play the
+   * stream anymore.
    * @returns {Array.<Object>}
    */
   private _getTimeline() : IIndexSegment[] {
