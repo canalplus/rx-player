@@ -502,7 +502,7 @@ export default class MediaElementTrackChoiceManager
     const preferredAudioTracks = this._preferredAudioTracks.getValue();
     for (let i = 0; i < preferredAudioTracks.length; i++) {
       const track = preferredAudioTracks[i];
-      if (track !== null) {
+      if (track !== null && track.language !== undefined) {
         const normalized = normalizeLanguage(track.language);
         for (let j = 0; j < this._audioTracks.length; j++) {
           const audioTrack = this._audioTracks[j];
