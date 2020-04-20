@@ -41,6 +41,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
         {
           preferredAudioTracks: new BehaviorSubject([] as any[]),
           preferredTextTracks: new BehaviorSubject([] as any[]),
+          preferredVideoTracks: new BehaviorSubject([] as any[]),
         },
         fakeMediaElement as any
       );
@@ -79,6 +80,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
         {
           preferredAudioTracks: new BehaviorSubject([] as any[]),
           preferredTextTracks: new BehaviorSubject([] as any[]),
+          preferredVideoTracks: new BehaviorSubject([] as any[]),
         },
         fakeMediaElement as any
       );
@@ -108,6 +110,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
       {
         preferredAudioTracks: new BehaviorSubject([] as any[]),
         preferredTextTracks: new BehaviorSubject([] as any[]),
+        preferredVideoTracks: new BehaviorSubject([] as any[]),
       },
       fakeMediaElement as any
     );
@@ -134,6 +137,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
       {
         preferredAudioTracks: new BehaviorSubject([] as any[]),
         preferredTextTracks: new BehaviorSubject([] as any[]),
+        preferredVideoTracks: new BehaviorSubject([] as any[]),
       },
       fakeMediaElement as any
     );
@@ -157,6 +161,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
       {
         preferredAudioTracks: new BehaviorSubject([] as any[]),
         preferredTextTracks: new BehaviorSubject([] as any[]),
+        preferredVideoTracks: new BehaviorSubject([] as any[]),
       },
       fakeMediaElement as any
     );
@@ -183,6 +188,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
       {
         preferredAudioTracks: new BehaviorSubject([] as any[]),
         preferredTextTracks: new BehaviorSubject([] as any[]),
+        preferredVideoTracks: new BehaviorSubject([] as any[]),
       },
       fakeMediaElement as any
     );
