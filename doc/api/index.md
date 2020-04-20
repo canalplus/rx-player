@@ -103,21 +103,19 @@
 ## Overview ####################################################################
 
 The RxPlayer has a complete API allowing you to:
-  - load and stop video or audio contents
-  - perform trickmodes (play, pause, seek, etc.) as a content is loaded.
+  - load and stop contents containing video and/or audio media data
+  - control playback (play, pause, seek, etc.) when a content is loaded.
   - get multiple information on the current content and on the player's state.
-  - choose a specific audio language or subtitles track
-  - set your own bitrate and buffer length
+  - choose a specific audio language, subtitles track video track
+  - force a given bitrate
+  - update the wanted buffer length to reach
   - and more
 
 The following pages define the entire API.
 
 :warning: Only variables and methods defined here are considered as part of the
-API. Any other property or method you might find by using our library can change
-without notice (not considered as part of the API).
-
-Only use the documented variables and open an issue if you think it's not
-enough.
+API. Any other property or method you might find in any other way are not
+considered as part of the API and can thus change without notice.
 
 _Note: As some terms used here might be too foreign or slightly different than
 the one you're used to, we also wrote a list of terms and definitions used by
@@ -128,7 +126,8 @@ the RxPlayer [here](../terms.md)._
 <a name="instantiation"></a>
 ## Instantiation ##############################################################
 
-Instantiating a new player is straightforward:
+Instantiating a new RxPlayer is necessary before being able to load a content.
+Doing so is straightforward:
 ```js
 import RxPlayer from "rx-player";
 const player = new RxPlayer(options);
@@ -136,77 +135,6 @@ const player = new RxPlayer(options);
 
 The options are all... optional. They are all defined in the [Player Options
 page](./player_options.md).
-
-
-
-<a name="static"></a>
-## Static properties ###########################################################
-
-This chapter documents the static properties that can be found on the RxPlayer
-class.
-
-<a name="static-version"></a>
-### version ####################################################################
-
-_type_: ``Number``
-
-The current version of the RxPlayer.
-
-
-<a name="static-ErrorTypes"></a>
-### ErrorTypes #################################################################
-
-_type_: ``Object``
-
-The different "types" of Error you can get on playback error,
-
-See [the Player Error documentation](./errors.md) for more information.
-
-
-<a name="static-ErrorCodes"></a>
-### ErrorCodes #################################################################
-
-_type_: ``Object``
-
-The different Error "codes" you can get on playback error,
-
-See [the Player Error documentation](./errors.md) for more information.
-
-
-<a name="static-LogLevel"></a>
-### LogLevel ###################################################################
-
-_type_: ``string``
-
-_default_: ``"NONE"``
-
-The current level of verbosity for the RxPlayer logs. Those logs all use the
-console.
-
-From the less verbose to the most:
-
-  - ``"NONE"``: no log
-
-  - ``"ERROR"``: unexpected errors (via ``console.error``)
-
-  - ``"WARNING"``: The previous level + minor problems encountered (via
-    ``console.warn``)
-
-  - ``"INFO"``: The previous levels + noteworthy events (via ``console.info``)
-
-  - ``"DEBUG"``: The previous levels + normal events of the player (via
-    ``console.log``)
-
-
-If the value set to this property is different than those, it will be
-automatically set to ``"NONE"``.
-
-#### Example
-
-```js
-import RxPlayer from "rx-player";
-RxPlayer.LogLevel = "WARNING";
-```
 
 
 
@@ -556,12 +484,19 @@ The minimum seekable player position. ``null`` if no content is loaded.
 This is useful for live contents, where server-side buffer size are often not
 infinite. This method allows thus to seek at the earliest possible time.
 
+As the given position is the absolute minimum position, you might add a security
+margin (like a few seconds) when seeking to this position in a live content.
+Not doing so could led to the player being behind the minimum position after
+some time, and thus unable to continue playing.
+
+For VoD contents, as the minimum position normally don't change, seeking at the
+minimum position should not cause any issue.
+
 #### Example
 
 ```js
-// seeking to the earliest position possible (beginning of the buffer for live
-// contents, position '0' for non-live contents).
-player.seekTo({ position: player.getMinimumPosition() });
+// Seeking close to the minimum position (with a 5 seconds security margin)
+player.seekTo({ position: player.getMinimumPosition() + 5 });
 ```
 
 
@@ -575,12 +510,20 @@ The maximum seekable player position. ``null`` if no content is loaded.
 This is useful for live contents, where the buffer end updates continously.
 This method allows thus to seek directly at the live edge of the content.
 
+Please bear in mind that seeking exactly at the maximum position is rarely a
+good idea:
+  - for VoD contents, the playback will end
+  - for live contents, the player will then need to wait until it can build
+    enough buffer.
+
+As such, we advise to remove a few seconds from that position when seeking.
+
 #### Example
 
 ```js
-// seeking to the end
+// seeking 5 seconds before the end (or the live edge for live contents)
 player.seekTo({
-  position: player.getMaximumPosition()
+  position: player.getMaximumPosition() - 5
 });
 ```
 
@@ -1986,7 +1929,7 @@ This setting can be updated either by:
 
 
 <a name="meth-group-buffer-info"></a>
-### Buffer information #########################################################
+## Buffer information ##########################################################
 
 The methods in this chapter allows to retrieve information about what is
 currently buffered.
@@ -2375,6 +2318,77 @@ This is equivalent to:
 ```js
 const el = player.getVideoElement();
 const textTrack = el.textTracks.length ? el.textTracks[0] : null;
+```
+
+
+
+<a name="static"></a>
+## Static properties ###########################################################
+
+This chapter documents the static properties that can be found on the RxPlayer
+class.
+
+<a name="static-version"></a>
+### version ####################################################################
+
+_type_: ``Number``
+
+The current version of the RxPlayer.
+
+
+<a name="static-ErrorTypes"></a>
+### ErrorTypes #################################################################
+
+_type_: ``Object``
+
+The different "types" of Error you can get on playback error,
+
+See [the Player Error documentation](./errors.md) for more information.
+
+
+<a name="static-ErrorCodes"></a>
+### ErrorCodes #################################################################
+
+_type_: ``Object``
+
+The different Error "codes" you can get on playback error,
+
+See [the Player Error documentation](./errors.md) for more information.
+
+
+<a name="static-LogLevel"></a>
+### LogLevel ###################################################################
+
+_type_: ``string``
+
+_default_: ``"NONE"``
+
+The current level of verbosity for the RxPlayer logs. Those logs all use the
+console.
+
+From the less verbose to the most:
+
+  - ``"NONE"``: no log
+
+  - ``"ERROR"``: unexpected errors (via ``console.error``)
+
+  - ``"WARNING"``: The previous level + minor problems encountered (via
+    ``console.warn``)
+
+  - ``"INFO"``: The previous levels + noteworthy events (via ``console.info``)
+
+  - ``"DEBUG"``: The previous levels + normal events of the player (via
+    ``console.log``)
+
+
+If the value set to this property is different than those, it will be
+automatically set to ``"NONE"``.
+
+#### Example
+
+```js
+import RxPlayer from "rx-player";
+RxPlayer.LogLevel = "WARNING";
 ```
 
 
