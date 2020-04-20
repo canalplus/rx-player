@@ -886,7 +886,7 @@ no text tracks API in the browser, this method will return ``undefined``.
 _returns_: ``Object|null|undefined``
 
 Get information about the video track currently set.
-``null`` if no audio track is enabled right now.
+``null`` if no video track is enabled right now.
 
 If a video track is set and information about it is known, this method will
 return an object with the following properties:
