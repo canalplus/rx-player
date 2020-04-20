@@ -76,11 +76,11 @@
  - [Content information](#meth-group-content-info)
     - [isLive](#meth-isLive)
     - [getUrl](#meth-getUrl)
-    - [getManifest](#meth-getManifest)
-    - [getCurrentAdaptations](#meth-getCurrentAdaptations)
-    - [getCurrentRepresentations](#meth-getCurrentRepresentations)
     - [getCurrentKeySystem](#meth-getCurrentKeySystem)
  - [Deprecated](#meth-group-deprecated)
+    - [getManifest (deprecated)](#meth-getManifest)
+    - [getCurrentAdaptations (deprecated)](#meth-getCurrentAdaptations)
+    - [getCurrentRepresentations (deprecated)](#meth-getCurrentRepresentations)
     - [getImageTrackData (deprecated)](#meth-getImageTrackData)
     - [setFullscreen (deprecated)](#meth-setFullscreen)
     - [exitFullscreen (deprecated)](#meth-exitFullscreen)
@@ -2145,9 +2145,31 @@ if it was called.
 
 It will return an empty Array if none of those two APIs were used until now.
 
+<a name="meth-getCurrentKeySystem"></a>
+### getCurrentKeySystem ########################################################
+
+_return value_: ``string|undefined``
+
+Returns the type of keySystem used for DRM-protected contents.
+
+
+
+<a name="meth-group-deprecated"></a>
+## Deprecated ##################################################################
+
+The following methods are deprecated. They are still supported but we advise
+users to not use those as they might become not supported in the future.
+
 
 <a name="meth-getManifest"></a>
 ### getManifest ################################################################
+
+--
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+--
 
 _return value_: ``Manifest|null``
 
@@ -2165,6 +2187,13 @@ The Manifest will be available before the player reaches the ``"LOADED"`` state.
 
 <a name="meth-getCurrentAdaptations"></a>
 ### getCurrentAdaptations ######################################################
+
+--
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+--
 
 _return value_: ``Object|null``
 
@@ -2185,6 +2214,13 @@ options](./loadVideo_options.md#prop-transport)).
 <a name="meth-getCurrentRepresentations"></a>
 ### getCurrentRepresentations ##################################################
 
+--
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+--
+
 _return value_: ``Object|null``
 
 Returns the [Representations](../terms.md#representation) being loaded per type
@@ -2200,21 +2236,6 @@ An Representation object structure is relatively complex and is described in the
 ``null`` in _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)).
 
-
-<a name="meth-getCurrentKeySystem"></a>
-### getCurrentKeySystem ########################################################
-
-_return value_: ``string|undefined``
-
-Returns the type of keySystem used for DRM-protected contents.
-
-
-
-<a name="meth-group-deprecated"></a>
-## Deprecated ##################################################################
-
-The following methods are deprecated. They are still supported but we advise
-users to not use those as they might become not supported in the future.
 
 
 <a name="meth-getImageTrackData"></a>

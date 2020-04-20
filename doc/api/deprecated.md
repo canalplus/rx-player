@@ -69,6 +69,50 @@ multiple reasons:
 The following RxPlayer methods are deprecated.
 
 
+### getManifest ################################################################
+
+`getManifest` returns our internal representation we have of a given "manifest"
+document.
+
+Though it was first exposed to allow users to have access to more precize
+information on the current content, this method also limited us on the possible
+evolutions we could do, as changing what this function returns would mean
+breaking the API.
+
+We also realized that that method was not used for now by the implementation we
+know of.
+
+For now, we decided we will simply remove that API in the next major version. If
+that's a problem for you, please open an issue.
+
+
+### getCurrentAdaptations ######################################################
+
+`getCurrentAdaptations` returns an object describing each tracks available for
+the current Period in the current content.
+
+Like `getManifest`, we found that this API was not much used and limited us on
+the possible evolutions we can do on the RxPlayer.
+
+Again like `getManifest`, we plan to remove that API completely without
+replacing it.
+If that's a problem for you, please open an issue.
+
+
+### getCurrentRepresentations ##################################################
+
+`getCurrentRepresentations` returns an object describing each "qualities"
+available in the current chosen tracks.
+
+Exactly like `getCurrentAdaptations` and `getManifest`, we found that this API:
+  - was not used as far as we know
+  - limited the evolutions we could do on the RxPlayer's code without breaking
+    the API.
+
+We thus plan to remove that API completely without replacing it.
+If that's a problem for you, please open an issue.
+
+
 ### getNativeTextTrack #########################################################
 
 ``getNativeTextTrack`` returned the first ``TextTrack`` element attached to the
