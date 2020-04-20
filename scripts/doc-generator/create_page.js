@@ -18,7 +18,7 @@ const constructHTML = require("./construct_html.js");
 module.exports = async function createDocumentationPage(
   inputFile,
   outputFile,
-  options = {}
+  options = {},
 )  {
   const { css = [],
           linkTranslator = (link) => link,
@@ -100,6 +100,7 @@ async function updateMediaTag(mediaTag, inputDir, outputDir) {
  */
 async function parseMD(data, inputDir, outputDir, linkTranslator) {
   // TODO I don't understand Cheerio/Jquery here, that's plain ugly
+  // TODO use markdown-it plugin instead
   const $ = cheerio.load(convertMDToHTML(data));
 
   if (linkTranslator) {

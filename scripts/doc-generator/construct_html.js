@@ -109,7 +109,7 @@ module.exports = function constructHTMLPage(
   { homeLink,
     listLink,
     toc,
-    css }
+    css },
 ) {
   const header = constructHTMLHeader({ homeLink, listLink });
   const sidebar = constructHTMLSidebar(toc, { homeLink, listLink });

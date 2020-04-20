@@ -42,7 +42,7 @@ async function createDirIfDoesntExist(dir) {
 module.exports = async function createDocumentationForDir(
   baseInDir,
   baseOutDir,
-  options = {}
+  options = {},
 ) {
   const { getPageTitle = t => t,
           fileFilter,
