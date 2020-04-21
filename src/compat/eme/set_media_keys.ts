@@ -19,9 +19,13 @@ import {
   Observable
 } from "rxjs";
 import castToObservable from "../../utils/cast_to_observable";
-import CustomMediaKeys, {
-  ICustomMediaKeys,
-} from "./custom_media_keys";
+import { ICustomMediaKeys } from "./custom_media_keys";
+
+function isCustomMediaKeys(
+  mediaKeys: MediaKeys|ICustomMediaKeys
+): mediaKeys is ICustomMediaKeys {
+  return (mediaKeys as ICustomMediaKeys)._setVideo !== undefined;
+}
 
 /**
  * Set the MediaKeys given on the media element.
@@ -33,7 +37,11 @@ function _setMediaKeys(
   elt : HTMLMediaElement,
   mediaKeys : MediaKeys|ICustomMediaKeys|null
 ) : any {
-  if (mediaKeys instanceof CustomMediaKeys) {
+  if (mediaKeys === null) {
+    return;
+  }
+
+  if (isCustomMediaKeys(mediaKeys)) {
     return mediaKeys._setVideo(elt);
   }
 
@@ -41,10 +49,6 @@ function _setMediaKeys(
   if (typeof elt.setMediaKeys === "function") {
   /* tslint:enable no-unbound-method */
     return elt.setMediaKeys(mediaKeys);
-  }
-
-  if (mediaKeys === null) {
-    return;
   }
 
   if ((elt as any).WebkitSetMediaKeys) {

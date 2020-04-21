@@ -745,6 +745,7 @@ export default {
     playready: [ "com.microsoft.playready",
                  "com.chromecast.playready",
                  "com.youtube.playready" ],
+    fairplay: [ "com.apple.fps.1_0" ],
   } as Partial<Record<string, string[]>>,
   /* tslint:enable no-object-literal-type-assertion */
 
