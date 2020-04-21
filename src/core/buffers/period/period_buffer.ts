@@ -122,7 +122,9 @@ export default function PeriodBuffer({
         if (sourceBufferStatus.type === "initialized") {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
           if (SourceBuffersStore.isNative(bufferType)) {
-            return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
+            return clock$.pipe(map((tick) => {
+              return EVENTS.needsMediaSourceReload(period, tick);
+            }));
           }
           cleanBuffer$ = sourceBufferStatus.value
             .removeBuffer(period.start,
@@ -144,7 +146,9 @@ export default function PeriodBuffer({
       if (SourceBuffersStore.isNative(bufferType) &&
           sourceBuffersStore.getStatus(bufferType).type === "disabled")
       {
-        return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload(tick)));
+        return clock$.pipe(map((tick) => {
+          return EVENTS.needsMediaSourceReload(period, tick);
+        }));
       }
 
       log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation, period);
@@ -161,7 +165,7 @@ export default function PeriodBuffer({
                                                        adaptation,
                                                        tick);
           if (strategy.type === "needs-reload") {
-            return observableOf(EVENTS.needsMediaSourceReload(tick));
+            return observableOf(EVENTS.needsMediaSourceReload(period, tick));
           }
 
           const cleanBuffer$ = strategy.type === "clean-buffer" ?

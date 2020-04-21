@@ -44,7 +44,6 @@ import {
   multicast,
   share,
   startWith,
-  take,
   takeUntil,
   tap,
 } from "rxjs/operators";
@@ -235,8 +234,7 @@ export default function AdaptationBuffer<T>({
         // A manual bitrate switch might need an immediate feedback.
         // To do that properly, we need to reload the MediaSource
         if (directManualBitrateSwitching && estimate.manual && i !== 0) {
-          return clock$.pipe(take(1),
-                             map(t => EVENTS.needsMediaSourceReload(t)));
+          return clock$.pipe(map(t => EVENTS.needsMediaSourceReload(period, t)));
         }
 
         const representationChange$ =
