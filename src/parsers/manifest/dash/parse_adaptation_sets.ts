@@ -170,7 +170,7 @@ function getAdaptationID(
     idString += representations.length > 0 ?
       ("-" + representations[0].id) : "-empty";
   }
-  return "adaptation-" + idString;
+  return idString;
 }
 
 /**
