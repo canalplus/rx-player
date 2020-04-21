@@ -26806,14 +26806,15 @@ var EVENTS = {
       value: undefined
     };
   },
-  needsMediaSourceReload: function needsMediaSourceReload(_ref) {
+  needsMediaSourceReload: function needsMediaSourceReload(period, _ref) {
     var currentTime = _ref.currentTime,
         isPaused = _ref.isPaused;
     return {
       type: "needs-media-source-reload",
       value: {
         currentTime: currentTime,
-        isPaused: isPaused
+        isPaused: isPaused,
+        period: period
       }
     };
   },
@@ -28186,8 +28187,8 @@ function AdaptationBuffer(_ref) {
     // To do that properly, we need to reload the MediaSource
 
     if (directManualBitrateSwitching && estimate.manual && i !== 0) {
-      return clock$.pipe(Object(take["a" /* take */])(1), Object(map["a" /* map */])(function (t) {
-        return buffers_events_generators.needsMediaSourceReload(t);
+      return clock$.pipe(Object(map["a" /* map */])(function (t) {
+        return buffers_events_generators.needsMediaSourceReload(period, t);
       }));
     }
 
@@ -28522,7 +28523,7 @@ function PeriodBuffer(_ref) {
 
         if (source_buffers.isNative(bufferType)) {
           return clock$.pipe(Object(map["a" /* map */])(function (tick) {
-            return buffers_events_generators.needsMediaSourceReload(tick);
+            return buffers_events_generators.needsMediaSourceReload(period, tick);
           }));
         }
 
@@ -28542,7 +28543,7 @@ function PeriodBuffer(_ref) {
 
     if (source_buffers.isNative(bufferType) && sourceBuffersStore.getStatus(bufferType).type === "disabled") {
       return clock$.pipe(Object(map["a" /* map */])(function (tick) {
-        return buffers_events_generators.needsMediaSourceReload(tick);
+        return buffers_events_generators.needsMediaSourceReload(period, tick);
       }));
     }
 
@@ -28552,7 +28553,7 @@ function PeriodBuffer(_ref) {
       var strategy = getAdaptationSwitchStrategy(qSourceBuffer, period, adaptation, tick);
 
       if (strategy.type === "needs-reload") {
-        return Object(of["a" /* of */])(buffers_events_generators.needsMediaSourceReload(tick));
+        return Object(of["a" /* of */])(buffers_events_generators.needsMediaSourceReload(period, tick));
       }
 
       var cleanBuffer$ = strategy.type === "clean-buffer" ? concat["a" /* concat */].apply(void 0, strategy.value.map(function (_ref2) {
@@ -29110,13 +29111,30 @@ function BufferOrchestrator(content, clock$, abrManager, sourceBuffersStore, seg
      */
 
     function launchConsecutiveBuffersForPeriod(period) {
-      return manageConsecutivePeriodBuffers(bufferType, period, destroyBuffers$).pipe(Object(tap["a" /* tap */])(function (message) {
-        if (message.type === "periodBufferReady") {
-          enableOutOfBoundsCheck = true;
-          periodList.add(message.value.period);
-        } else if (message.type === "periodBufferCleared") {
-          periodList.removeElement(message.value.period);
+      return manageConsecutivePeriodBuffers(bufferType, period, destroyBuffers$).pipe(Object(mergeMap["a" /* mergeMap */])(function (message) {
+        switch (message.type) {
+          case "needs-media-source-reload":
+            // Only reload the MediaSource when the more immediately required
+            // Period is the one asking for it
+            var firstPeriod = periodList.head();
+
+            if (firstPeriod === undefined || firstPeriod.id !== message.value.period.id) {
+              return empty["a" /* EMPTY */];
+            }
+
+            break;
+
+          case "periodBufferReady":
+            enableOutOfBoundsCheck = true;
+            periodList.add(message.value.period);
+            break;
+
+          case "periodBufferCleared":
+            periodList.removeElement(message.value.period);
+            break;
         }
+
+        return Object(of["a" /* of */])(message);
       }), Object(share["a" /* share */])());
     }
     /**
