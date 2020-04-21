@@ -220,13 +220,27 @@ export default function BufferOrchestrator(
       period : Period
     ) : Observable<IMultiplePeriodBuffersEvent> {
       return manageConsecutivePeriodBuffers(bufferType, period, destroyBuffers$).pipe(
-        tap((message) => {
-          if (message.type === "periodBufferReady") {
-            enableOutOfBoundsCheck = true;
-            periodList.add(message.value.period);
-          } else if (message.type === "periodBufferCleared") {
-            periodList.removeElement(message.value.period);
+        mergeMap((message) => {
+          switch (message.type) {
+            case "needs-media-source-reload":
+              // Only reload the MediaSource when the more immediately required
+              // Period is the one asking for it
+              const firstPeriod = periodList.head();
+              if (firstPeriod === undefined ||
+                  firstPeriod.id !== message.value.period.id)
+              {
+                return EMPTY;
+              }
+              break;
+            case "periodBufferReady":
+              enableOutOfBoundsCheck = true;
+              periodList.add(message.value.period);
+              break;
+            case "periodBufferCleared":
+              periodList.removeElement(message.value.period);
+              break;
           }
+          return observableOf(message);
         }),
         share()
       );
