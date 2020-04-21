@@ -185,10 +185,9 @@ export default function AdaptationBuffer<T>({
   const requestsEvents$ = new Subject<IABRMetric | IABRRequest>();
   const abrEvents$ = observableMerge(bufferEvents$, requestsEvents$);
 
-  const decipherableRepresentations = adaptation.representations
-    .filter((representation) => representation.decipherable !== false);
+  const playableRepresentations = adaptation.getPlayableRepresentations();
 
-  if (decipherableRepresentations.length <= 0) {
+  if (playableRepresentations.length <= 0) {
     const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
                                     "No Representation in the chosen " +
                                     "Adaptation can be played");
@@ -196,7 +195,7 @@ export default function AdaptationBuffer<T>({
   }
 
   const abr$ : Observable<IABREstimate> = abrManager.get$(adaptation.type,
-                                                          decipherableRepresentations,
+                                                          playableRepresentations,
                                                           clock$,
                                                           abrEvents$)
       .pipe(deferSubscriptions(), share());

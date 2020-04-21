@@ -21,70 +21,54 @@ describe("DASH Node parsers - SegmentTimeline", () => {
   });
 
   it("should return a function to parse lazily the timeline", () => {
-    const parseS = jest.fn();
-    jest.mock("../S", () => ({
-      __esModule: true,
-      default: parseS,
-    }));
     const parseSegmentTimeline = require("../SegmentTimeline").default;
 
     const element = new DOMParser()
-      .parseFromString("<Root S=\"a\"/>", "text/xml")
+      .parseFromString("<Root><S /></Root>", "text/xml")
       .childNodes[0] as Element;
+    const getElementsByTagNameSpy = jest.spyOn(element, "getElementsByTagName");
     const timeline = parseSegmentTimeline(element);
     expect(typeof timeline).toEqual("function");
     expect(timeline.length).toEqual(0);
+    expect(getElementsByTagNameSpy).not.toHaveBeenCalled();
+    getElementsByTagNameSpy.mockReset();
   });
 
-  it("should do nothing if no childNode is present", () => {
-    const parseS = jest.fn();
-    jest.mock("../S", () => ({
-      __esModule: true,
-      default: parseS,
-    }));
+  it("should return an empty HTMLCollection if no S element is present", () => {
     const parseSegmentTimeline = require("../SegmentTimeline").default;
 
     const element = new DOMParser()
-      .parseFromString("<Root S=\"a\"/>", "text/xml")
+      .parseFromString("<Root />", "text/xml")
       .childNodes[0] as Element;
+    const getElementsByTagNameSpy = jest.spyOn(element, "getElementsByTagName");
 
     const timeline = parseSegmentTimeline(element);
-    expect(timeline()).toEqual([]);
-    expect(parseS).not.toHaveBeenCalled();
+    const res = timeline();
+    expect(res).toBeInstanceOf(HTMLCollection);
+    expect(res).toHaveLength(0);
+    expect(getElementsByTagNameSpy).toHaveBeenCalledTimes(1);
+    expect(getElementsByTagNameSpy).toHaveBeenCalledWith("S");
+    getElementsByTagNameSpy.mockReset();
   });
 
-  it("should do nothing with childNodes if no S is present", () => {
-    const parseS = jest.fn();
-    jest.mock("../S", () => ({
-      __esModule: true,
-      default: parseS,
-    }));
+  it("should return an empty HTMLCollection for an Invalid XML", () => {
     const parseSegmentTimeline = require("../SegmentTimeline").default;
 
-    const aElement = new DOMParser()
-      .parseFromString("<A/>", "text/xml")
-      .childNodes[0] as Element;
-    const oElement = new DOMParser()
-      .parseFromString("<O/>", "text/xml")
-      .childNodes[0] as Element;
     const element = new DOMParser()
-      .parseFromString("<Root S=\"a\"/>", "text/xml")
+      .parseFromString("<Root><S></S><S<S></Root>", "text/xml")
       .childNodes[0] as Element;
-
-    element.appendChild(aElement);
-    element.appendChild(oElement);
+    const getElementsByTagNameSpy = jest.spyOn(element, "getElementsByTagName");
 
     const timeline = parseSegmentTimeline(element);
-    expect(timeline()).toEqual([]);
-    expect(parseS).not.toHaveBeenCalled();
+    const res = timeline();
+    expect(res).toBeInstanceOf(HTMLCollection);
+    expect(res).toHaveLength(0);
+    expect(getElementsByTagNameSpy).toHaveBeenCalledTimes(1);
+    expect(getElementsByTagNameSpy).toHaveBeenCalledWith("S");
+    getElementsByTagNameSpy.mockReset();
   });
 
   it("should parse S elements only when called for the first time", () => {
-    const parseS = jest.fn((s) => ({ start: +s.innerHTML }));
-    jest.mock("../S", () => ({
-      __esModule: true,
-      default: parseS,
-    }));
     const parseSegmentTimeline = require("../SegmentTimeline").default;
 
     const sElement1 = new DOMParser()
@@ -107,17 +91,24 @@ describe("DASH Node parsers - SegmentTimeline", () => {
     element.appendChild(aElement);
     element.appendChild(oElement);
     element.appendChild(sElement2);
+    const getElementsByTagNameSpy = jest.spyOn(element, "getElementsByTagName");
 
     const timeline = parseSegmentTimeline(element);
-    expect(parseS).toHaveBeenCalledTimes(0);
-    expect(timeline()).toEqual([{ start: 1 }, { start: 2 }]);
-    expect(parseS).toHaveBeenCalledTimes(2);
-    expect(parseS).toHaveBeenCalledWith(sElement1);
-    expect(parseS).toHaveBeenCalledWith(sElement2);
-    timeline();
-    expect(parseS).toHaveBeenCalledTimes(2);
-    timeline();
-    expect(parseS).toHaveBeenCalledTimes(2);
+    const res1 = timeline();
+    expect(res1).toBeInstanceOf(HTMLCollection);
+    expect(res1).toHaveLength(2);
+    expect(getElementsByTagNameSpy).toHaveBeenCalledTimes(1);
+    expect(getElementsByTagNameSpy).toHaveBeenCalledWith("S");
+    getElementsByTagNameSpy.mockClear();
+    const res2 = timeline();
+    const res3 = timeline();
+    expect(res2).toBe(res1);
+    expect(res2).toBeInstanceOf(HTMLCollection);
+    expect(res2).toHaveLength(2);
+    expect(res3).toBe(res1);
+    expect(res3).toBeInstanceOf(HTMLCollection);
+    expect(res3).toHaveLength(2);
+    expect(getElementsByTagNameSpy).not.toHaveBeenCalled();
   });
 });
 /* tslint:enable no-unsafe-any */

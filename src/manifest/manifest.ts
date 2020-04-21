@@ -23,7 +23,6 @@ import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
 import warnOnce from "../utils/warn_once";
 import Adaptation, {
-  IAdaptationType,
   IRepresentationFilter,
 } from "./adaptation";
 import Period, {
@@ -31,7 +30,10 @@ import Period, {
 } from "./period";
 import Representation from "./representation";
 import { StaticRepresentationIndex } from "./representation_index";
-import { MANIFEST_UPDATE_TYPE } from "./types";
+import {
+  IAdaptationType,
+  MANIFEST_UPDATE_TYPE,
+} from "./types";
 import {
   replacePeriods,
   updatePeriods,

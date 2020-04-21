@@ -175,7 +175,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
     parser(
       { response,
         url: loaderURL,
+        previousManifest,
         scheduleRequest,
+        unsafeMode,
         externalClockOffset } : IManifestParserArguments
     ) : IManifestParserObservable {
       const url = response.url === undefined ? loaderURL :
@@ -214,6 +216,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
               return transport.manifest.parser({ response: responseValue,
                                                  url: ressource.url,
                                                  scheduleRequest,
+                                                 previousManifest,
+                                                 unsafeMode,
                                                  externalClockOffset })
                 .pipe(map((parserData) : Manifest => parserData.manifest));
             }));

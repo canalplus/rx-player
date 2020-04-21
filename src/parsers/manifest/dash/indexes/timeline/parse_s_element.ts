@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
+import log from "../../../../../log";
 
 /** SegmentTimeline `S` element once parsed. */
 export interface IParsedS {
@@ -35,7 +35,7 @@ export interface IParsedS {
  * @param {Element} root
  * @returns {Object}
  */
-export default function parseS(root : Element) : IParsedS {
+export default function parseSElement(root : Element) : IParsedS {
   const parsedS : IParsedS = {};
 
   for (let j = 0; j < root.attributes.length; j++) {

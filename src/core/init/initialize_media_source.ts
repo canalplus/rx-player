@@ -55,6 +55,7 @@ import {
 import {
   createManifestFetcher,
   IManifestFetcherParsedResult,
+  IManifestFetcherParserOptions,
   SegmentFetcherCreator,
 } from "../fetchers";
 import { ITextTrackSourceBufferOptions } from "../source_buffers";
@@ -189,13 +190,13 @@ export default function InitializeOnMediaSource(
    * Fetch and parse the manifest from the URL given.
    * Throttled to avoid doing multiple simultaneous requests.
    */
-  const fetchManifest = throttle((manifestURL? : string,
-                                  externalClockOffset? : number)
+  const fetchManifest = throttle((manifestURL : string | undefined,
+                                  options : IManifestFetcherParserOptions)
     : Observable<IWarningEvent | IManifestFetcherParsedResult> =>
       manifestFetcher.fetch(manifestURL).pipe(
         mergeMap((response) => response.type === "warning" ?
           observableOf(response) : // bubble-up warnings
-          response.parse({ externalClockOffset })),
+          response.parse(options)),
         share()));
 
   /** Interface used to download segments. */
@@ -238,7 +239,8 @@ export default function InitializeOnMediaSource(
                                             take(1));
 
   /** Do the first Manifest request. */
-  const initialManifestRequest$ = fetchManifest(url, undefined).pipe(
+  const initialManifestRequest$ = fetchManifest(url, { previousManifest: null,
+                                                       unsafeMode: false }).pipe(
     deferSubscriptions(),
     share());
 
@@ -326,11 +328,13 @@ export default function InitializeOnMediaSource(
           .pipe(tap(evt => {
                   switch (evt.type) {
                     case "needs-manifest-refresh":
-                      scheduleRefresh$.next({ completeRefresh: false });
+                      scheduleRefresh$.next({ completeRefresh: false,
+                                              canUseUnsafeMode: true });
                       break;
                     case "manifest-might-be-out-of-sync":
                       scheduleRefresh$.next({
                         completeRefresh: true,
+                        canUseUnsafeMode: false,
                         delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
                       });
                       break;

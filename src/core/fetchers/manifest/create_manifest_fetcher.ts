@@ -68,13 +68,31 @@ export interface IManifestFetcherWarningEvent {
   value : ICustomError;
 }
 
+export interface IManifestFetcherParserOptions {
+  /**
+   * If set, offset to add to `performance.now()` to obtain the current
+   * server's time.
+   */
+  externalClockOffset? : number;
+  /** The previous value of the Manifest (when updating). */
+  previousManifest : Manifest | null;
+  /**
+   * If set to `true`, the Manifest parser can perform advanced optimizations
+   * to speed-up the parsing process. Those optimizations might lead to a
+   * de-synchronization with what is actually on the server, hence the "unsafe"
+   * part.
+   * To use with moderation and only when needed.
+   */
+  unsafeMode : boolean;
+}
+
 /** Response emitted by a Manifest fetcher. */
 export interface IManifestFetcherResponse {
   /** To differentiate it from a "warning" event. */
   type : "response";
 
   /** Allows to parse a fetched Manifest into a `Manifest` structure. */
-  parse(parserOptions : { externalClockOffset? : number }) :
+  parse(parserOptions : IManifestFetcherParserOptions) :
     Observable<IManifestFetcherWarningEvent |
                IManifestFetcherParsedResult>;
 }
@@ -153,14 +171,16 @@ export default function createManifestFetcher(
 
           return {
             type: "response",
-            parse(parserOptions : { externalClockOffset? : number }) {
+            parse(parserOptions : IManifestFetcherParserOptions) {
               return observableMerge(
                 schedulerWarnings$
                   .pipe(map(err => ({ type: "warning" as const, value: err }))),
                 parser({ response: evt.value,
                          url,
                          externalClockOffset: parserOptions.externalClockOffset,
+                         previousManifest: parserOptions.previousManifest,
                          scheduleRequest,
+                         unsafeMode: parserOptions.unsafeMode,
                 }).pipe(
                   catchError((error: unknown) => {
                     throw formatError(error, {

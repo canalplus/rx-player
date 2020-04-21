@@ -14,20 +14,5 @@
  * limitations under the License.
  */
 
-export type ITimelineParser = () => HTMLCollection;
-
-/**
- * @param {Element} root
- * @returns {Function}
- */
-export default function createSegmentTimelineParser(root: Element) : ITimelineParser {
-  let result : HTMLCollection | null = null;
-  return function() : HTMLCollection {
-    if (result === null) {
-      const elements = root.getElementsByTagName("S");
-      result = elements;
-      return elements;
-    }
-    return result;
-  };
-}
+import TimelineRepresentationIndex from "./timeline_representation_index";
+export default TimelineRepresentationIndex;

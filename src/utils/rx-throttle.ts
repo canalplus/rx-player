@@ -46,6 +46,9 @@ export default function throttle<T, U, V>(
 export default function throttle<T, U, V>(
   func : (arg1: T, arg2: U) => Observable<V>
 ) : (arg1: T, arg2: U) => Observable<V>;
+export default function throttle<T, U, V, W>(
+  func : (arg1: T, arg2: U, arg3: V) => Observable<W>
+) : (arg1: T, arg2: U, arg3: V) => Observable<W>;
 export default function throttle<T, U, V>(
   func : (...args : Array<T|U>) => Observable<V>
 ) : (...args : Array<T|U>) => Observable<V> {

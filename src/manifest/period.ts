@@ -22,9 +22,9 @@ import { IParsedPeriod } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
 import Adaptation, {
-  IAdaptationType,
   IRepresentationFilter,
 } from "./adaptation";
+import { IAdaptationType } from "./types";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
@@ -163,5 +163,20 @@ export default class Period {
    */
   getAdaptation(wantedId : string) : Adaptation|undefined {
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
+  }
+
+  getPlayableAdaptations(type? : IAdaptationType) {
+    if (type === undefined) {
+      return this.getAdaptations().filter(ada => {
+        return ada.isSupported && ada.decipherable !== false;
+      });
+    }
+    const adaptationsForType = this.adaptations[type];
+    if (adaptationsForType === undefined) {
+      return [];
+    }
+    return adaptationsForType.filter(ada => {
+      return ada.isSupported && ada.decipherable !== false;
+    });
   }
 }

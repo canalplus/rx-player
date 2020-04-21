@@ -15,6 +15,7 @@
  */
 
 import log from "../../../log";
+import Manifest from "../../../manifest";
 import flatMap from "../../../utils/flat_map";
 import idGenerator from "../../../utils/id_generator";
 import objectValues from "../../../utils/object_values";
@@ -60,6 +61,15 @@ export interface IPeriodsContextInfos {
   receivedTime? : number;
   /** Depth of the buffer for the whole content, in seconds. */
   timeShiftBufferDepth? : number;
+  /**
+   * The parser should take this Manifest - which is a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between the two, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousManifest : Manifest | null;
   xlinkInfos : IXLinkInfos;
 }
 
@@ -108,12 +118,20 @@ export interface IPeriodsContextInfos {
       periodID = periodIR.attributes.id;
     }
 
+    // Avoid duplicate IDs
+    while (parsedPeriods.some(p => p.id === periodID)) {
+      periodID += "-dup";
+    }
+
     const receivedTime = xlinkInfos !== undefined ? xlinkInfos.receivedTime :
                                                     contextInfos.receivedTime;
 
     const availabilityTimeOffset =
       extractMinimumAvailabilityTimeOffset(periodIR.children.baseURLs) +
       contextInfos.availabilityTimeOffset;
+
+    const unsafelyBaseOnPreviousPeriod = contextInfos
+      .unsafelyBaseOnPreviousManifest?.getPeriod(periodID) ?? null;
 
     const periodInfos = { aggressiveMode: contextInfos.aggressiveMode,
                           availabilityTimeOffset,
@@ -123,7 +141,8 @@ export interface IPeriodsContextInfos {
                           isDynamic,
                           receivedTime,
                           start: periodStart,
-                          timeShiftBufferDepth };
+                          timeShiftBufferDepth,
+                          unsafelyBaseOnPreviousPeriod };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
                                             periodInfos);
     const parsedPeriod : IParsedPeriod = { id: periodID,
