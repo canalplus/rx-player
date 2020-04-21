@@ -152,6 +152,10 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
       player.setVideoTrack(track.id);
     },
 
+    DISABLE_VIDEO_TRACK: () => {
+      player.disableVideoTrack();
+    },
+
     SET_SUBTITLES_TRACK: (track) => {
       player.setTextTrack(track.id);
     },
@@ -171,7 +175,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
     DISABLE_LIVE_CATCH_UP() {
       $switchCatchUpMode.next(false);
-    }
+    },
   };
 };
 
