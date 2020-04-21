@@ -91,7 +91,6 @@ export default function findFirstCommonStartTime(
         return null;
       }
     }
-
   } else {
     let newElementsIdx = 0;
     let newElt = newElements[0];
