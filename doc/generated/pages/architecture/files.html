@@ -25,7 +25,7 @@
 <li><a href="#subchapter-src/core/api/:%20The%20API%20definition">src/core/api/: The API definition</a></li>
 <li><a href="#subchapter-src/core/buffers/:%20The%20Buffer%20management">src/core/buffers/: The Buffer management</a></li>
 <li><a href="#subchapter-src/core/eme/:%20Encryption%20management">src/core/eme/: Encryption management</a></li>
-<li><a href="#subchapter-src/core/pipelines/:%20The%20networking%20pipelines">src/core/pipelines/: The networking pipelines</a></li>
+<li><a href="#subchapter-src/core/fetchers/:%20The%20fetchers">src/core/fetchers/: The fetchers</a></li>
 <li><a href="#subchapter-src/core/source_buffers/:%20SourceBuffers%20definitions">src/core/source_buffers/: SourceBuffers definitions</a></li>
 <li><a href="#subchapter-src/core/init/:%20Content%20initialization">src/core/init/: Content initialization</a></li>
 </ul>
@@ -227,11 +227,11 @@ download and push the segments into the SourceBuffers.</p>
 <a name="subchapter-src/core/eme/:%20Encryption%20management"></a></p>
 <h3>src/core/eme/: Encryption management</h3>
 <p>Defines functions allowing to handle encrypted contents through the EME APIs.</p>
-<p><a name="core-pipelines"></a>
-<a name="subchapter-src/core/pipelines/:%20The%20networking%20pipelines"></a></p>
-<h3>src/core/pipelines/: The networking pipelines</h3>
-<p>Handle the segment downloading pipelines (load and parse) as defined in the
-<code>src/transports/</code> directory.</p>
+<p><a name="core-fetchers"></a>
+<a name="subchapter-src/core/fetchers/:%20The%20fetchers"></a></p>
+<h3>src/core/fetchers/: The fetchers</h3>
+<p>Handle the segments and Manifest downloading pipelines (load and parse) as
+defined in the <code>src/transports/</code> directory.</p>
 <p>This is the layer directly interacting with the transport part (HSS, DASH).
 It facilitates the role of loading the Manifest and new segments for the rest of
 the core.</p>

@@ -320,6 +320,12 @@ format.</p>
 </ul>
 </li>
 </ul>
+<p>A <code>null</code> payload means that video track has been disabled.</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> In <em>DirectFile</em> mode, a <code>null</code> payload may be received even if the
+video track is still visually active.
+This seems due to difficult-to-detect browser bugs. We recommend not disabling
+the video track when in directfile mode to avoid that case (this is documented
+in the corresponding APIs).</p>
 <p><a name="events-availableAudioBitratesChange"></a>
 <a name="subchapter-availableAudioBitratesChange"></a></p>
 <h3>availableAudioBitratesChange</h3>
