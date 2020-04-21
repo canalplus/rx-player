@@ -1,5 +1,36 @@
 # Changelog
 
+## v3.20.0 (2020/04/21)
+
+### Features
+
+  - api: add `disableVideoTrack` method
+  - api: add the `preferredVideoTrack` constructor option and `setPreferredVideoTracks` / `getPreferredVideoTracks` methods to set a video track preference (or to start with the video track disabled).
+  - api: add optional `codec` property to preferredAudioTrack, allowing applications to communicate a codec preference.
+  - api: make the `language` and `audioDescription` properties in `preferredAudioTracks`' objects optional.
+  - api: add `signInterpreted` to `getVideoTrack` and `getAvailableVideoTracks` return objects to know when a track contains sign language interpretation
+
+### Deprecated
+
+  - api: deprecate the `getManifest()` method
+  - api: deprecate the `getCurrentAdaptations()` method
+  - api: deprecate the `getCurrentRepresentations()` method
+
+### Bug fixes
+
+  - compat/eme: Set proper EME Safari implementation, to play contents with DRM on it without issues
+  - compat/directfile/iOS: On Safari iOS, fix auto-play warnings when a directfile content is played with the `playsinline` attribute set.
+  - directfile: In Directfile mode, always disable the current text track when a `null` is encountered in the preferredTextTracks array
+
+### Other improvements
+
+  - abr: ignore requests that may have directly hit the cache in our adaptive logic
+  - dash/perf: improve parsing efficiency for very large MPDs, at the expense of a very small risk of de-synchronization. Mechanisms still allow for regular re-synchronization.
+  - misc: replace CONTRIBUTORS file by a more intelligible MAINTAINERS.md
+  - code: rename core-pipelines modules (in src/core/pipelines) into "fetchers" (moved to src/core/fetchers) for better clarity
+  - doc: fix links to chapters with the same name all linking to the first one in the table of contents
+  - doc: update API documentation landing page organization to improve readability
+
 ## v3.19.0 (2020/03/11)
 
 ### Features
