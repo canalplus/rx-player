@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNode from "../../is_node";
+
 type IWebKitMediaKeys = unknown;
 
 interface IWebKitMediaKeysConstructor {
@@ -21,18 +23,20 @@ interface IWebKitMediaKeysConstructor {
   isTypeSupported: (keyType: string) => boolean;
 }
 
-/* tslint:disable no-unsafe-any */
-const { WebKitMediaKeys } = (window as any);
-
 let WebKitMediaKeysConstructor: undefined|IWebKitMediaKeysConstructor;
 
-if (WebKitMediaKeys !== undefined &&
-    typeof WebKitMediaKeys.isTypeSupported === "function" &&
-    typeof WebKitMediaKeys.prototype.createSession === "function" &&
-    typeof (HTMLMediaElement.prototype as any).webkitSetMediaKeys === "function") {
-  WebKitMediaKeysConstructor = WebKitMediaKeys;
+if (!isNode) {
+  /* tslint:disable no-unsafe-any */
+  const { WebKitMediaKeys } = (window as any);
+
+  if (WebKitMediaKeys !== undefined &&
+      typeof WebKitMediaKeys.isTypeSupported === "function" &&
+      typeof WebKitMediaKeys.prototype.createSession === "function" &&
+      typeof (HTMLMediaElement.prototype as any).webkitSetMediaKeys === "function") {
+    WebKitMediaKeysConstructor = WebKitMediaKeys;
+  }
+  /* tslint:enable no-unsafe-any */
 }
-/* tslint:enable no-unsafe-any */
 
 export {
   WebKitMediaKeysConstructor,
