@@ -6,7 +6,7 @@
 
   - api: add `disableVideoTrack` method
   - api: add the `preferredVideoTrack` constructor option and `setPreferredVideoTracks` / `getPreferredVideoTracks` methods to set a video track preference (or to start with the video track disabled).
-  - api: add optional `codec` property to preferredAudioTrack, allowing applications to communicate a codec preference.
+  - api: add optional `codec` property to preferred audio tracks APIs, allowing applications to communicate a codec preference.
   - api: make the `language` and `audioDescription` properties in `preferredAudioTracks`' objects optional.
   - api: add `signInterpreted` to `getVideoTrack` and `getAvailableVideoTracks` return objects to know when a track contains sign language interpretation
 
@@ -26,10 +26,7 @@
 
   - abr: ignore requests that may have directly hit the cache in our adaptive logic
   - dash/perf: improve parsing efficiency for very large MPDs, at the expense of a very small risk of de-synchronization. Mechanisms still allow for regular re-synchronization.
-  - misc: replace CONTRIBUTORS file by a more intelligible MAINTAINERS.md
-  - code: rename core-pipelines modules (in src/core/pipelines) into "fetchers" (moved to src/core/fetchers) for better clarity
-  - doc: fix links to chapters with the same name all linking to the first one in the table of contents
-  - doc: update API documentation landing page organization to improve readability
+
 
 ## v3.19.0 (2020/03/11)
 
