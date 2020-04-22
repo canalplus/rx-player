@@ -11,7 +11,6 @@ function PlayerKnobsSettings({
   shouldDisplay,
   close,
   player,
-  availableVideoTracks,
   lowLatencyMode,
   isContentLoaded,
 }) {
@@ -43,10 +42,7 @@ function PlayerKnobsSettings({
         <VideoBitrateKnob className="black-knob" player={player} />
         <LanguageKnob className="black-knob" player={player} />
         <SubtitlesKnob className="black-knob" player={player} />
-        {
-          availableVideoTracks.length > 1 ?
-            <VideoTrack player={player} /> : null
-        }
+        <VideoTrack className="black-knob" player={player} />
       </div>
     </div>
   );
@@ -57,6 +53,5 @@ export default React.memo(withModulesState({
     lowLatencyMode: "lowLatencyMode",
     isStopped: "isStopped",
     isContentLoaded: "isContentLoaded",
-    availableVideoTracks: "availableVideoTracks",
   },
 })(PlayerKnobsSettings));

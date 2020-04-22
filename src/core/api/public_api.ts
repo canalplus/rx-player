@@ -122,7 +122,8 @@ import TrackChoiceManager, {
   ITMTextTrack,
   ITMTextTrackListItem,
   ITMVideoTrack,
-  ITMVideoTrackListItem
+  ITMVideoTrackListItem,
+  IVideoTrackPreference,
 } from "./track_choice_manager";
 
 const { DEFAULT_UNMUTED_VOLUME } = config;
@@ -354,6 +355,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** List of favorite text tracks, in preference order. */
   private _priv_preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
 
+  /** List of favorite video tracks, in preference order. */
+  private _priv_preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
+
   /**
    * TrackChoiceManager instance linked to the current content.
    * `null` if no content has been loaded or if the current content loaded
@@ -440,6 +444,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             maxVideoBitrate,
             preferredAudioTracks,
             preferredTextTracks,
+            preferredVideoTracks,
             throttleWhenHidden,
             throttleVideoBitrateWhenHidden,
             videoElement,
@@ -450,7 +455,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.19.0";
+    this.version = /*PLAYER_VERSION*/"3.20.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -539,6 +544,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_preferredAudioTracks = new BehaviorSubject(preferredAudioTracks);
     this._priv_preferredTextTracks = new BehaviorSubject(preferredTextTracks);
+    this._priv_preferredVideoTracks = new BehaviorSubject(preferredVideoTracks);
   }
 
   /**
@@ -728,7 +734,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               new BehaviorSubject([defaultAudioTrack]),
             preferredTextTracks: defaultTextTrack === undefined ?
               this._priv_preferredTextTracks :
-              new BehaviorSubject([defaultTextTrack]) },
+              new BehaviorSubject([defaultTextTrack]),
+            preferredVideoTracks: this._priv_preferredVideoTracks },
           this.videoElement
         );
 
@@ -905,9 +912,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns manifest/playlist object.
    * null if the player is STOPPED.
+   * @deprecated
    * @returns {Manifest|null} - The current Manifest (`null` when not known).
    */
   getManifest() : Manifest|null {
+    warnOnce("getManifest is deprecated." +
+             " Please open an issue if you used this API.");
     if (this._priv_contentInfos === null) {
       return null;
     }
@@ -917,11 +927,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns Adaptations (tracks) for every currently playing type
    * (audio/video/text...).
+   * @deprecated
    * @returns {Object|null} - The current Adaptation objects, per type (`null`
    * when none is known for now.
    */
   getCurrentAdaptations(
   ) : Partial<Record<IBufferType, Adaptation|null>> | null {
+    warnOnce("getCurrentAdaptations is deprecated." +
+             " Please open an issue if you used this API.");
     if (this._priv_contentInfos === null) {
       return null;
     }
@@ -938,22 +951,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns representations (qualities) for every currently playing type
    * (audio/video/text...).
+   * @deprecated
    * @returns {Object|null} - The current Representation objects, per type
    * (`null` when none is known for now.
    */
   getCurrentRepresentations(
   ) : Partial<Record<IBufferType, Representation|null>> | null {
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
-    if (currentPeriod === null ||
-        activeRepresentations === null ||
-        activeRepresentations[currentPeriod.id] == null)
-    {
-      return null;
-    }
-    return activeRepresentations[currentPeriod.id];
+    warnOnce("getCurrentRepresentations is deprecated." +
+             " Please open an issue if you used this API.");
+    return this._priv_getCurrentRepresentations();
   }
 
   /**
@@ -1216,7 +1222,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number|undefined}
    */
   getVideoBitrate() : number|undefined {
-    const representations = this.getCurrentRepresentations();
+    const representations = this._priv_getCurrentRepresentations();
     if (representations === null || representations.video == null) {
       return undefined;
     }
@@ -1228,7 +1234,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number|undefined}
    */
   getAudioBitrate() : number|undefined {
-    const representations = this.getCurrentRepresentations();
+    const representations = this._priv_getCurrentRepresentations();
     if (representations === null || representations.audio == null) {
       return undefined;
     }
@@ -1761,6 +1767,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Disable video track for the current content.
+   */
+  disableVideoTrack() : void {
+    if (this._priv_contentInfos === null) {
+      return;
+    }
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile && this._priv_mediaElementTrackChoiceManager !== null) {
+      return this._priv_mediaElementTrackChoiceManager.disableVideoTrack();
+    }
+    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
+      return;
+    }
+    return this._priv_trackChoiceManager.disableVideoTrack(currentPeriod);
+  }
+
+  /**
    * Returns the current list of preferred audio tracks, in preference order.
    * @returns {Array.<Object>}
    */
@@ -1774,6 +1797,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getPreferredTextTracks() : ITextTrackPreference[] {
     return this._priv_preferredTextTracks.getValue();
+  }
+
+  /**
+   * Returns the current list of preferred text tracks, in preference order.
+   * @returns {Array.<Object>}
+   */
+  getPreferredVideoTracks() : IVideoTrackPreference[] {
+    return this._priv_preferredVideoTracks.getValue();
   }
 
   /**
@@ -1798,6 +1829,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                       "Should have been an Array.");
     }
     return this._priv_preferredTextTracks.next(tracks);
+  }
+
+  /**
+   * Set the list of preferred text tracks, in preference order.
+   * @param {Array.<Object>} tracks
+   */
+  setPreferredVideoTracks(tracks : IVideoTrackPreference[]) : void {
+    if (!Array.isArray(tracks)) {
+      throw new Error("Invalid `setPreferredVideoTracks` argument. " +
+                      "Should have been an Array.");
+    }
+    return this._priv_preferredVideoTracks.next(tracks);
   }
 
   /**
@@ -1873,10 +1916,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     {
       return null;
     }
-    const queuedSourceBuffer = this._priv_contentInfos
-                                 .sourceBuffersStore.get(bufferType);
-    return queuedSourceBuffer === null ? null :
-                                         queuedSourceBuffer.getInventory();
+    const sourceBufferStatus = this._priv_contentInfos
+                                 .sourceBuffersStore.getStatus(bufferType);
+    return sourceBufferStatus.type === "initialized" ?
+      sourceBufferStatus.value.getInventory() :
+      null;
   }
 
   /**
@@ -2046,6 +2090,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       preferredTextTracks: initialTextTrack === undefined ?
         this._priv_preferredTextTracks :
         new BehaviorSubject([initialTextTrack]),
+      preferredVideoTracks: this._priv_preferredVideoTracks,
     });
 
     fromEvent(manifest, "manifestUpdate")
@@ -2100,10 +2145,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
                                                    this.getAvailableVideoBitrates());
 
-    const audioBitrate = this.getCurrentRepresentations()?.audio?.bitrate ?? -1;
+    const audioBitrate = this._priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
     this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
 
-    const videoBitrate = this.getCurrentRepresentations()?.video?.bitrate ?? -1;
+    const videoBitrate = this._priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
     this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", videoBitrate);
   }
 
@@ -2469,7 +2514,22 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.trigger(event, newVal);
     }
   }
+
+  private _priv_getCurrentRepresentations(
+  ) : Partial<Record<IBufferType, Representation|null>> | null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
+    if (currentPeriod === null ||
+        activeRepresentations === null ||
+        activeRepresentations[currentPeriod.id] == null)
+    {
+      return null;
+    }
+    return activeRepresentations[currentPeriod.id];
+  }
 }
-Player.version = /*PLAYER_VERSION*/"3.19.0";
+Player.version = /*PLAYER_VERSION*/"3.20.0";
 
 export default Player;

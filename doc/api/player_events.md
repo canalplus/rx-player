@@ -178,6 +178,7 @@ The array emitted contains object describing each available audio track:
     This property is `undefined` if we do not known whether it is in an original
     language.
 
+This event only concerns the currently-playing Period.
 
 
 <a name="events-availableVideoTracksChange"></a>
@@ -216,6 +217,8 @@ The array emitted contains object describing each available video track:
 
     - ``frameRate`` (``string|undefined``): The video framerate.
 
+This event only concerns the currently-playing Period.
+
 
 
 <a name="events-availableTextTracksChange"></a>
@@ -248,6 +251,8 @@ The array emitted contains object describing each available text track:
   - ``active`` (``Boolean``): Whether the track is the one currently active or
     not.
 
+This event only concerns the currently-playing Period.
+
 
 
 <a name="events-audioTrackChange"></a>
@@ -272,6 +277,8 @@ properties:
     This property is `undefined` if we do not known whether it is in an original
     language.
 
+This event only concerns the currently-playing Period.
+
 
 <a name="events-textTrackChange"></a>
 ### textTrackChange ############################################################
@@ -289,6 +296,8 @@ properties:
   - ``language`` (``string``): The language the text track is in.
   - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for
     the hard of hearing or not.
+
+This event only concerns the currently-playing Period.
 
 
 <a name="events-videoTrackChange"></a>
@@ -326,7 +335,15 @@ properties:
 
     - ``frameRate`` (``string|undefined``): The video framerate.
 
+A `null` payload means that video track has been disabled.
 
+This event only concerns the currently-playing Period.
+
+:warning: In _DirectFile_ mode, a `null` payload may be received even if the
+video track is still visually active.
+This seems due to difficult-to-detect browser bugs. We recommend not disabling
+the video track when in directfile mode to avoid that case (this is documented
+in the corresponding APIs).
 
 <a name="events-availableAudioBitratesChange"></a>
 ### availableAudioBitratesChange ###############################################
@@ -346,6 +363,8 @@ changes...).
 
 The payload is an array of the different bitrates available, in bits per
 seconds.
+
+This event only concerns the currently-playing Period.
 
 
 <a name="events-availableVideoBitratesChange"></a>
@@ -367,6 +386,8 @@ changes...).
 The payload is an array of the different bitrates available, in bits per
 seconds.
 
+This event only concerns the currently-playing Period.
+
 
 <a name="events-audioBitrateChange"></a>
 ### audioBitrateChange #########################################################
@@ -385,6 +406,8 @@ time it changes (based on the last received segment).
 
 `-1` when the bitrate is not known.
 
+This event only concerns the currently-playing Period.
+
 
 <a name="events-videoBitrateChange"></a>
 ### videoBitrateChange #########################################################
@@ -402,6 +425,8 @@ The payload is the new video bitrate, in bits per seconds. It is emitted every
 time it changes (based on the last received segment).
 
 `-1` when the bitrate is not known.
+
+This event only concerns the currently-playing Period.
 
 
 <a name="events-bitrateEstimationChange"></a>

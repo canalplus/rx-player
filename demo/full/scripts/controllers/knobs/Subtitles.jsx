@@ -41,10 +41,10 @@ const SubtitlesKnobBase = ({
 
   return (
     <Knob
-      name="Subtitles"
+      name="Subtitles Track"
       ariaLabel="Update the current subtitles"
       className={className}
-      disabled={!availableSubtitles.length}
+      disabled={options.length <= 1}
       onChange={onLanguageChange}
       options={options}
       selected={currentLanguageIndex}

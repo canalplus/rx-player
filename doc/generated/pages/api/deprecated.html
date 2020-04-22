@@ -4,6 +4,9 @@
 <li><a href="#chapter-Image%20(BIF)%20APIs">Image (BIF) APIs</a></li>
 <li><a href="#chapter-RxPlayer%20Methods">RxPlayer Methods</a>
 <ul>
+<li><a href="#subchapter-getManifest">getManifest</a></li>
+<li><a href="#subchapter-getCurrentAdaptations">getCurrentAdaptations</a></li>
+<li><a href="#subchapter-getCurrentRepresentations">getCurrentRepresentations</a></li>
 <li><a href="#subchapter-getNativeTextTrack">getNativeTextTrack</a></li>
 <li><a href="#subchapter-isFullscreen">isFullscreen</a></li>
 <li><a href="#subchapter-setFullscreen">setFullscreen</a></li>
@@ -103,6 +106,39 @@ can easily be re-implemented by any application.</li>
 <p><a name="chapter-RxPlayer%20Methods"></a></p>
 <h2>RxPlayer Methods</h2>
 <p>The following RxPlayer methods are deprecated.</p>
+<p><a name="subchapter-getManifest"></a></p>
+<h3>getManifest</h3>
+<p><code>getManifest</code> returns our internal representation we have of a given &#x201C;manifest&#x201D;
+document.</p>
+<p>Though it was first exposed to allow users to have access to more precize
+information on the current content, this method also limited us on the possible
+evolutions we could do, as changing what this function returns would mean
+breaking the API.</p>
+<p>We also realized that that method was not used for now by the implementation we
+know of.</p>
+<p>For now, we decided we will simply remove that API in the next major version. If
+that&#x2019;s a problem for you, please open an issue.</p>
+<p><a name="subchapter-getCurrentAdaptations"></a></p>
+<h3>getCurrentAdaptations</h3>
+<p><code>getCurrentAdaptations</code> returns an object describing each tracks available for
+the current Period in the current content.</p>
+<p>Like <code>getManifest</code>, we found that this API was not much used and limited us on
+the possible evolutions we can do on the RxPlayer.</p>
+<p>Again like <code>getManifest</code>, we plan to remove that API completely without
+replacing it.
+If that&#x2019;s a problem for you, please open an issue.</p>
+<p><a name="subchapter-getCurrentRepresentations"></a></p>
+<h3>getCurrentRepresentations</h3>
+<p><code>getCurrentRepresentations</code> returns an object describing each &#x201C;qualities&#x201D;
+available in the current chosen tracks.</p>
+<p>Exactly like <code>getCurrentAdaptations</code> and <code>getManifest</code>, we found that this API:</p>
+<ul>
+<li>was not used as far as we know</li>
+<li>limited the evolutions we could do on the RxPlayer&#x2019;s code without breaking
+the API.</li>
+</ul>
+<p>We thus plan to remove that API completely without replacing it.
+If that&#x2019;s a problem for you, please open an issue.</p>
 <p><a name="subchapter-getNativeTextTrack"></a></p>
 <h3>getNativeTextTrack</h3>
 <p><code>getNativeTextTrack</code> returned the first <code>TextTrack</code> element attached to the

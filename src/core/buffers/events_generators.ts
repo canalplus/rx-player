@@ -124,10 +124,13 @@ const EVENTS = {
   },
 
   needsMediaSourceReload(
-    { currentTime, isPaused } : { currentTime : number; isPaused : boolean}
+    period : Period,
+    { currentTime,
+      isPaused } : { currentTime : number;
+                     isPaused : boolean; }
   ) : INeedsMediaSourceReload {
     return { type: "needs-media-source-reload",
-             value: { currentTime, isPaused } };
+             value: { currentTime, isPaused, period } };
   },
 
   needsDecipherabilityFlush(

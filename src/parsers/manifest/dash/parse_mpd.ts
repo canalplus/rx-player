@@ -15,10 +15,10 @@
  */
 
 import config from "../../../config";
+import Manifest from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import { normalizeBaseURL } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
-import checkManifestIDs from "../utils/check_manifest_ids";
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
@@ -52,6 +52,15 @@ export interface IMPDParserArguments {
   manifestReceivedTime? : number;
   /** Default base time, in seconds. */
   referenceDateTime? : number;
+  /**
+   * The parser should take this Manifest - which is a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between the two, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousManifest : Manifest | null;
   /** URL of the manifest (post-redirection if one). */
   url? : string;
 }
@@ -212,7 +221,8 @@ function parseCompleteIntermediateRepresentation(
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
-  const clockOffset = args.externalClockOffset;
+  const { externalClockOffset: clockOffset,
+           unsafelyBaseOnPreviousManifest } = args;
   const availabilityTimeOffset =
     extractMinimumAvailabilityTimeOffset(rootChildren.baseURLs);
 
@@ -225,6 +235,7 @@ function parseCompleteIntermediateRepresentation(
                           isDynamic,
                           receivedTime: args.manifestReceivedTime,
                           timeShiftBufferDepth,
+                          unsafelyBaseOnPreviousManifest,
                           xlinkInfos };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
   const mediaPresentationDuration = rootAttributes.duration;
@@ -249,7 +260,6 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.minimumUpdatePeriod;
   }
 
-  checkManifestIDs(parsedMPD);
   const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
   const now = performance.now();
   if (!isDynamic) {

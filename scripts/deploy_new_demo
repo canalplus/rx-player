@@ -101,7 +101,7 @@ if [ -n "$(git status --porcelain $deployed_branch)" ]; then
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
       git add "$deployed_branch"
-      git commit -m "demo: deploy $current_version to the gh-pages" -S
+      git commit -m "demo: deploy $deployed_branch demo to the gh-pages" -S
       git push origin gh-pages
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then

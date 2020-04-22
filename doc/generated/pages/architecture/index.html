@@ -68,7 +68,7 @@ In theory, it should be the only directory to update when adding /
 modifying / deleting a transport protocol</p>
 </li>
 <li>
-<p><strong>the <a href="pipelines/index.html">Pipelines</a></strong></p>
+<p><strong>the <a href="fetchers/index.html">fetchers</a></strong></p>
 <p>Link the <code>transport</code> module with the rest of the code, to download segments,
 download/refresh the manifest and collect data (such as the user&#x2019;s
 bandwidth) for the other modules.</p>
@@ -104,7 +104,7 @@ which are used by these different modules.</p>
  the API                  +---------------+                                    |
                           |               |           +----------+ ------&gt; +------------+
  +------------+ &lt;-------- |               | --------&gt; | Manifest | &lt;~~~~~~ | transports |
- | EMEManager | ~~~~~~~~&gt; |     Init      | &lt;~~~~~~~~ | Pipeline |         +------------+
+ | EMEManager | ~~~~~~~~&gt; |     Init      | &lt;~~~~~~~~ | fetcher  |         +------------+
  +------------+           |               |           +----------+         Abstract   ^ ~
  Negotiate content        |               |           Download the         the        | ~
  decryption               +---------------+           manifest             streaming  | ~
@@ -151,7 +151,7 @@ Buffers                          | ~                                            
 |                  (audio) v ~    (video) V ~     (text) v ~     |                    | ~
 |                  +----------+   +----------+    +----------+ ----&gt; +------------+   | ~
 | (Representation- |          |   |          |    |          | &lt;~~~~ |  Segment   | --+ ~
-| Buffer).         |Represe...|-+ |Represe...|-+  |Represe...|-+ |   |Pipeline (1)| &lt;~~~+
+| Buffer).         |Represe...|-+ |Represe...|-+  |Represe...|-+ |   | fetcher (1)| &lt;~~~+
 | Download and push|  Buffer  | | |  Buffer  | |  |  Buffer  | | |   +------------+
 | segments based on|          | | |          | |  |          | | |   Download media
 | the current      +----------+ | +----------+ |  +----------+ | |   segments
@@ -160,7 +160,7 @@ Buffers                          | ~                                            
 |                                                                |
 +----------------------------------------------------------------+
 
-(1) The SourceBuffer Store, Segment Pipeline and ABRManager are actually created by the
+(1) The SourceBuffer Store, Segment fetcher and ABRManager are actually created by the
 Init and then used by the Buffers.
 </code></pre>
 </body></html></div></div></div></body>

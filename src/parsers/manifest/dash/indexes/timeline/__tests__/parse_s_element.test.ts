@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../../../log";
-import parseS from "../S";
+import log from "../../../../../../log";
+import parseS from "../parse_s_element";
 
 function testNumberAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;

@@ -78,12 +78,12 @@ export interface IBufferStateFull {
   value : { bufferType : IBufferType };
 }
 
+/** Emitted when a segment with protection information has been encountered. */
 export interface IProtectedSegmentEvent {
   type : "protected-segment";
   value : { type : string;
             data : Uint8Array; }; }
 
-// State emitted when the buffer waits
 export type IRepresentationBufferStateEvent = IBufferNeededActions |
                                               IBufferStateFull |
                                               IBufferStateActive |
@@ -157,7 +157,8 @@ export interface ICompletedBufferEvent { type: "complete-buffer";
 // The MediaSource needs to be reloaded to continue
 export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
                                            value: { currentTime : number;
-                                                    isPaused : boolean; }; }
+                                                    isPaused : boolean;
+                                                    period : Period; }; }
 
 // Emitted after the buffers have been cleaned due to an update of the
 // decipherability status of some segment.

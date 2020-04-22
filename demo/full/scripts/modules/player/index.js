@@ -11,10 +11,8 @@ import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import $handleCatchUpMode from "./catchUp";
 
-const RxPlayer = window.RxPlayer;
-
 const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
-  const player = new RxPlayer({
+  const player = new window.RxPlayer({
     limitVideoWidth: false,
     stopAtEnd: false,
     throttleVideoBitrateWhenHidden: true,
@@ -152,6 +150,10 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
       player.setVideoTrack(track.id);
     },
 
+    DISABLE_VIDEO_TRACK: () => {
+      player.disableVideoTrack();
+    },
+
     SET_SUBTITLES_TRACK: (track) => {
       player.setTextTrack(track.id);
     },
@@ -171,7 +173,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
     DISABLE_LIVE_CATCH_UP() {
       $switchCatchUpMode.next(false);
-    }
+    },
   };
 };
 

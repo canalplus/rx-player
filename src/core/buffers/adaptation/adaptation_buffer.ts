@@ -15,13 +15,13 @@
  */
 
 /**
- * This file allows to create AdaptationBuffers.
+ * This file allows to create `AdaptationBuffer`s.
  *
- * An AdaptationBuffer downloads and push segment for a single Adaptation (e.g.
- * a single audio or text track).
+ * An `AdaptationBuffer` downloads and push segment for a single Adaptation
+ * (e.g.  a single audio, video or text track).
  * It chooses which Representation to download mainly thanks to the
- * ABRManager, and orchestrates the various RepresentationBuffer, which will
- * download and push segments for a single Representation.
+ * ABRManager, and orchestrates a RepresentationBuffer, which will download and
+ * push segments corresponding to a chosen Representation.
  */
 
 import {
@@ -44,7 +44,6 @@ import {
   multicast,
   share,
   startWith,
-  take,
   takeUntil,
   tap,
 } from "rxjs/operators";
@@ -82,33 +81,68 @@ import {
   IRepresentationChangeEvent,
 } from "../types";
 
+/** `Clock tick` information needed by the AdaptationBuffer. */
 export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTick {
-  bufferGap : number; // /!\ bufferGap of the SourceBuffer
-  duration : number; // duration of the HTMLMediaElement
-  isPaused: boolean; // If true, the player is on pause
-  speed : number; // Current regular speed asked by the user
+  /**
+   * For the current SourceBuffer, difference in seconds between the next position
+   * where no segment data is available and the current position.
+   */
+  bufferGap : number;
+  /** `duration` property of the HTMLMediaElement on which the content plays. */
+  duration : number;
+  /** If true, the player has been put on pause. */
+  isPaused: boolean;
+  /** Last "playback rate" asked by the user. */
+  speed : number;
 }
 
+/** Arguments given when creating a new `AdaptationBuffer`. */
 export interface IAdaptationBufferArguments<T> {
-  abrManager : ABRManager; // Estimate best Representation
-  clock$ : Observable<IAdaptationBufferClockTick>; // Emit current playback conditions.
+  /**
+   * Module allowing to find the best Representation depending on the current
+   * conditions like the current network bandwidth.
+   */
+  abrManager : ABRManager;
+  /**
+   * Regularly emit playback conditions.
+   * The main AdaptationBuffer logic will be triggered on each `tick`.
+   */
+  clock$ : Observable<IAdaptationBufferClockTick>;
+  /** Content you want to create this buffer for. */
   content : { manifest : Manifest;
               period : Period;
-              adaptation : Adaptation; }; // content to download
-  options: { manualBitrateSwitchingMode : "seamless" | "direct" }; // Switch strategy
-  queuedSourceBuffer : QueuedSourceBuffer<T>; // Interact with the SourceBuffer
-  segmentFetcherCreator : SegmentFetcherCreator<any>; // Load and parse segments
-  wantedBufferAhead$ : BehaviorSubject<number>; // Buffer goal wanted by the user
+              adaptation : Adaptation; };
+  /**
+   * Strategy taken when the user switch manually the current Representation:
+   *   - "seamless": the switch will happen smoothly, with the Representation
+   *     with the new bitrate progressively being pushed alongside the old
+   *     Representation.
+   *   - "direct": hard switch. The Representation switch will be directly
+   *     visible but may necessitate the current MediaSource to be reloaded.
+   */
+  options: { manualBitrateSwitchingMode : "seamless" | "direct" };
+  /** SourceBuffer wrapper - needed to push media segments. */
+  queuedSourceBuffer : QueuedSourceBuffer<T>;
+  /** Module used to fetch the wanted media segments. */
+  segmentFetcherCreator : SegmentFetcherCreator<any>;
+  /**
+   * "Buffer goal" wanted, or the ideal amount of time ahead of the current
+   * position in the current SourceBuffer. When this amount has been reached
+   * this AdaptationBuffer won't try to download new segments.
+   */
+  wantedBufferAhead$ : BehaviorSubject<number>;
 }
 
 /**
- * Create new Buffer Observable linked to the given Adaptation.
+ * Create new AdaptationBuffer Observable, which task will be to download the
+ * media data for a given Adaptation (i.e. "track").
  *
  * It will rely on the ABRManager to choose at any time the best Representation
  * for this Adaptation and then run the logic to download and push the
  * corresponding segments in the SourceBuffer.
  *
- * It will emit various events to report its status to the caller.
+ * After being subscribed to, it will start running and will emit various events
+ * to report its current status.
  *
  * @param {Object} args
  * @returns {Observable}
@@ -125,18 +159,23 @@ export default function AdaptationBuffer<T>({
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
 
-  // The buffer goal ratio limits the wanted buffer ahead to determine the
-  // buffer goal.
-  //
-  // It can help in cases such as : the current browser has issues with
-  // buffering and tells us that we should try to bufferize less data :
-  // https://developers.google.com/web/updates/2017/10/quotaexceedederror
+  /**
+   * The buffer goal ratio base itself on the value given by `wantedBufferAhead`
+   * to determine a more dynamic buffer goal for a given Representation.
+   *
+   * It can help in cases such as : the current browser has issues with
+   * buffering and tells us that we should try to bufferize less data :
+   * https://developers.google.com/web/updates/2017/10/quotaexceedederror
+   */
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
-  // emit when the current RepresentationBuffer should be stopped right now
+  /** Emit when the current RepresentationBuffer should be stopped right now. */
   const killCurrentBuffer$ = new Subject<void>();
 
-  // emit when the current RepresentationBuffer should stop making new downloads
+  /**
+   * Emit when the current RepresentationBuffer should stop making new
+   * downloads, and terminate itself when done.
+   */
   const terminateCurrentBuffer$ = new Subject<void>();
 
   // use ABRManager for choosing the Representation
@@ -145,10 +184,9 @@ export default function AdaptationBuffer<T>({
   const requestsEvents$ = new Subject<IABRMetric | IABRRequest>();
   const abrEvents$ = observableMerge(bufferEvents$, requestsEvents$);
 
-  const decipherableRepresentations = adaptation.representations
-    .filter((representation) => representation.decipherable !== false);
+  const playableRepresentations = adaptation.getPlayableRepresentations();
 
-  if (decipherableRepresentations.length <= 0) {
+  if (playableRepresentations.length <= 0) {
     const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
                                     "No Representation in the chosen " +
                                     "Adaptation can be played");
@@ -156,7 +194,7 @@ export default function AdaptationBuffer<T>({
   }
 
   const abr$ : Observable<IABREstimate> = abrManager.get$(adaptation.type,
-                                                          decipherableRepresentations,
+                                                          playableRepresentations,
                                                           clock$,
                                                           abrEvents$)
       .pipe(deferSubscriptions(), share());
@@ -196,8 +234,7 @@ export default function AdaptationBuffer<T>({
         // A manual bitrate switch might need an immediate feedback.
         // To do that properly, we need to reload the MediaSource
         if (directManualBitrateSwitching && estimate.manual && i !== 0) {
-          return clock$.pipe(take(1),
-                             map(t => EVENTS.needsMediaSourceReload(t)));
+          return clock$.pipe(map(t => EVENTS.needsMediaSourceReload(period, t)));
         }
 
         const representationChange$ =
@@ -292,7 +329,7 @@ export default function AdaptationBuffer<T>({
   }
 }
 
-// Re-export RepresentationBuffer events used by the AdaptationBufferManager
+// Re-export RepresentationBuffer events used by the AdaptationBuffer
 export {
   IBufferEventAddedSegment,
   IBufferNeedsDiscontinuitySeek,

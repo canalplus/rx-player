@@ -165,6 +165,7 @@ This property is <code>undefined</code> if we do not known whether it is in an o
 language.</p>
 </li>
 </ul>
+<p>This event only concerns the currently-playing Period.</p>
 <p><a name="events-availableVideoTracksChange"></a>
 <a name="subchapter-availableVideoTracksChange"></a></p>
 <h3>availableVideoTracksChange</h3>
@@ -210,6 +211,7 @@ format.</p>
 </ul>
 </li>
 </ul>
+<p>This event only concerns the currently-playing Period.</p>
 <p><a name="events-availableTextTracksChange"></a>
 <a name="subchapter-availableTextTracksChange"></a></p>
 <h3>availableTextTracksChange</h3>
@@ -243,6 +245,7 @@ the hard of hearing or not.</p>
 not.</p>
 </li>
 </ul>
+<p>This event only concerns the currently-playing Period.</p>
 <p><a name="events-audioTrackChange"></a>
 <a name="subchapter-audioTrackChange"></a></p>
 <h3>audioTrackChange</h3>
@@ -263,6 +266,7 @@ If set to <code>false</code>, we know that this audio track is in an original la
 This property is <code>undefined</code> if we do not known whether it is in an original
 language.</li>
 </ul>
+<p>This event only concerns the currently-playing Period.</p>
 <p><a name="events-textTrackChange"></a>
 <a name="subchapter-textTrackChange"></a></p>
 <h3>textTrackChange</h3>
@@ -278,6 +282,7 @@ properties:</p>
 <li><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
 the hard of hearing or not.</li>
 </ul>
+<p>This event only concerns the currently-playing Period.</p>
 <p><a name="events-videoTrackChange"></a>
 <a name="subchapter-videoTrackChange"></a></p>
 <h3>videoTrackChange</h3>
@@ -320,6 +325,13 @@ format.</p>
 </ul>
 </li>
 </ul>
+<p>A <code>null</code> payload means that video track has been disabled.</p>
+<p>This event only concerns the currently-playing Period.</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> In <em>DirectFile</em> mode, a <code>null</code> payload may be received even if the
+video track is still visually active.
+This seems due to difficult-to-detect browser bugs. We recommend not disabling
+the video track when in directfile mode to avoid that case (this is documented
+in the corresponding APIs).</p>
 <p><a name="events-availableAudioBitratesChange"></a>
 <a name="subchapter-availableAudioBitratesChange"></a></p>
 <h3>availableAudioBitratesChange</h3>
@@ -333,6 +345,7 @@ beginning of the content, when switching the current audio track, when period
 changes&#x2026;).</p>
 <p>The payload is an array of the different bitrates available, in bits per
 seconds.</p>
+<p>This event only concerns the currently-playing Period.</p>
 <p><a name="events-availableVideoBitratesChange"></a>
 <a name="subchapter-availableVideoBitratesChange"></a></p>
 <h3>availableVideoBitratesChange</h3>
@@ -346,6 +359,7 @@ beginning of the content, when switching the current video track, when period
 changes&#x2026;).</p>
 <p>The payload is an array of the different bitrates available, in bits per
 seconds.</p>
+<p>This event only concerns the currently-playing Period.</p>
 <p><a name="events-audioBitrateChange"></a>
 <a name="subchapter-audioBitrateChange"></a></p>
 <h3>audioBitrateChange</h3>
@@ -357,6 +371,7 @@ options</a>).</p>
 <p>The payload is the new audio bitrate, in bits per seconds. It is emitted every
 time it changes (based on the last received segment).</p>
 <p><code>-1</code> when the bitrate is not known.</p>
+<p>This event only concerns the currently-playing Period.</p>
 <p><a name="events-videoBitrateChange"></a>
 <a name="subchapter-videoBitrateChange"></a></p>
 <h3>videoBitrateChange</h3>
@@ -368,6 +383,7 @@ options</a>).</p>
 <p>The payload is the new video bitrate, in bits per seconds. It is emitted every
 time it changes (based on the last received segment).</p>
 <p><code>-1</code> when the bitrate is not known.</p>
+<p>This event only concerns the currently-playing Period.</p>
 <p><a name="events-bitrateEstimationChange"></a>
 <a name="subchapter-bitrateEstimationChange"></a></p>
 <h3>bitrateEstimationChange</h3>

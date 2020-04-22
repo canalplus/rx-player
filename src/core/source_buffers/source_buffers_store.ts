@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import { ICustomSourceBuffer } from "../../compat";
 import { MediaError } from "../../errors";
 import features from "../../features";
@@ -72,22 +76,30 @@ type INativeSourceBufferType = "audio" | "video";
  *
  * Only one SourceBuffer per type is allowed at the same time:
  *
- *   - source buffers for native types (which depends on the native
- *     SourceBuffer implementation), are reused if one is re-created.
+ *   - source buffers for native types (which are "audio" and "video" and which
+ *     depend on the native SourceBuffer implementation) are reused if one is
+ *     re-created.
  *
  *   - source buffers for custom types are aborted each time a new one of the
  *     same type is created.
  *
  * The returned SourceBuffer is actually a QueuedSourceBuffer instance which
- * wrap a SourceBuffer implementation to queue all its actions.
+ * wrap a SourceBuffer implementation and queue all its actions.
+ *
+ * To be able to use a native SourceBuffer, you will first need to create it,
+ * but also wait until the other one is either created or explicitely
+ * disabled through the `disableSourceBuffer` method.
+ * The Observable returned by `waitForUsableSourceBuffers` will emit when
+ * that is the case.
  *
  * @class SourceBuffersStore
  */
 export default class SourceBuffersStore {
   /**
-   * Returns true if the SourceBuffer is "native" (has to be attached to the
-   * mediaSource before playback).
-   * @static
+   * Returns true if the SourceBuffer is "native".
+   * Native SourceBuffers needed for the current content must all be created
+   * before the content begins to be played and cannot be disposed during
+   * playback.
    * @param {string} bufferType
    * @returns {Boolean}
    */
@@ -95,15 +107,48 @@ export default class SourceBuffersStore {
     return shouldHaveNativeSourceBuffer(bufferType);
   }
 
+  /**
+   * HTMLMediaElement on which the MediaSource (on which wanted SourceBuffers
+   * will be created) is attached.
+   */
   private readonly _mediaElement : HTMLMediaElement;
+
+  /** MediaSource on which the SourceBuffers will be created. */
   private readonly _mediaSource : MediaSource;
 
+  /**
+   * List of initialized and explicitely disabled SourceBuffers.
+   * SourceBuffers are actually wrapped in QueuedSourceBuffer objects for easier
+   * exploitation.
+   * A `null` value indicates that this SourceBuffers has been explicitely
+   * disabled. This means that the corresponding type (e.g. audio, video etc.)
+   * won't be needed when playing the current content.
+   */
   private _initializedSourceBuffers : {
-    audio? : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null>;
-    video? : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null>;
-    text? : QueuedSourceBuffer<unknown>;
-    image? : QueuedSourceBuffer<unknown>;
+    audio? : QueuedSourceBuffer<ArrayBuffer |
+                                ArrayBufferView |
+                                TypedArray |
+                                DataView |
+                                null> |
+             null;
+    video? : QueuedSourceBuffer<ArrayBuffer |
+                                ArrayBufferView |
+                                TypedArray |
+                                DataView |
+                                null> |
+              null;
+    text? : QueuedSourceBuffer<unknown> |
+            null;
+    image? : QueuedSourceBuffer<unknown> |
+             null;
   };
+
+  /**
+   * Callbacks called when a native SourceBuffers is either created or disabled.
+   * Used for example to trigger the `this.waitForUsableSourceBuffers`
+   * Observable.
+   */
+  private _onNativeSourceBufferAddedOrDisabled : Array<() => void>;
 
   /**
    * @param {HTMLMediaElement} mediaElement
@@ -114,25 +159,99 @@ export default class SourceBuffersStore {
     this._mediaElement = mediaElement;
     this._mediaSource = mediaSource;
     this._initializedSourceBuffers = {};
+    this._onNativeSourceBufferAddedOrDisabled = [];
   }
 
   /**
-   * Returns the created QueuedSourceBuffer for the given type.
-   * Returns null if no QueuedSourceBuffer were created for the given type.
+   * Returns the current "status" of the buffer in the SourceBuffer.
+   *
+   * This function will return  an object containing a key named `type` which
+   * can be equal to either one of those three value:
+   *
+   *   - "initialized": A SourceBuffer has been created. You will in this case
+   *     also have a second key, `value`, which will contain the related
+   *     QueuedSourceBuffer instance.
+   *     Please note that you will need to wait until
+   *     `this.waitForUsableSourceBuffers()` has emitted before pushing segment
+   *     data to a native QueuedSourceBuffer.
+   *
+   *   - "disabled": The SourceBuffer has been explicitely disabled for this
+   *     type.
+   *
+   *   - "uninitialized": No action has yet been yet for that SourceBuffer.
    *
    * @param {string} bufferType
    * @returns {QueuedSourceBuffer|null}
    */
-  public get(bufferType : IBufferType) : QueuedSourceBuffer<any>|null {
+  public getStatus(bufferType : IBufferType) : { type : "initialized";
+                                                 value : QueuedSourceBuffer<any>; } |
+                                               { type : "uninitialized" } |
+                                               { type : "disabled" }
+  {
     const initializedBuffer = this._initializedSourceBuffers[bufferType];
-    return initializedBuffer != null ? initializedBuffer :
-                                       null;
+    return initializedBuffer === undefined ? { type: "uninitialized" } :
+           initializedBuffer === null      ? { type: "disabled" } :
+                                             { type: "initialized",
+                                               value: initializedBuffer };
+  }
+
+  /**
+   * Native SourceBuffers (audio and video) needed for playing the current
+   * content need to all be created before any one can be used.
+   *
+   * This function will return an Observable emitting when any and all native
+   * Source Buffers through this store can be used.
+   *
+   * From https://w3c.github.io/media-source/#methods
+   *   For example, a user agent may throw a QuotaExceededError
+   *   exception if the media element has reached the HAVE_METADATA
+   *   readyState. This can occur if the user agent's media engine
+   *   does not support adding more tracks during playback.
+   * @return {Observable}
+   */
+  public waitForUsableSourceBuffers() : Observable<void> {
+    if (this._areNativeSourceBuffersUsable()) {
+      return observableOf(undefined);
+    }
+    return new Observable(obs => {
+      this._onNativeSourceBufferAddedOrDisabled.push(() => {
+        if (this._areNativeSourceBuffersUsable()) {
+          obs.next(undefined);
+          obs.complete();
+        }
+      });
+    });
+  }
+
+  /**
+   * Explicitely disable the SourceBuffer for a given buffer type.
+   * A call to this function is needed at least for unused native buffer types
+   * ("audio" and "video"), to be able to emit through
+   * `waitForUsableSourceBuffers` when conditions are met.
+   * @param {string}
+   */
+  public disableSourceBuffer(bufferType : IBufferType) : void {
+    const currentValue = this._initializedSourceBuffers[bufferType];
+    if (currentValue === null) {
+      log.warn(`SBS: The ${bufferType} SourceBuffer was already disabled.`);
+      return;
+    }
+    if (currentValue !== undefined) {
+      throw new Error("Cannot disable an active SourceBuffer.");
+    }
+    this._initializedSourceBuffers[bufferType] = null;
+    if (SourceBuffersStore.isNative(bufferType)) {
+      this._onNativeSourceBufferAddedOrDisabled.forEach(cb => cb());
+    }
   }
 
   /**
    * Creates a new QueuedSourceBuffer for the SourceBuffer type.
    * Reuse an already created one if a QueuedSourceBuffer for the given type
    * already exists.
+   *
+   * Please note that you will need to wait until `this.waitForUsableSourceBuffers()`
+   * has emitted before pushing segment data to a native QueuedSourceBuffer.
    * @param {string} bufferType
    * @param {string} codec
    * @param {Object|undefined} options
@@ -159,6 +278,7 @@ export default class SourceBuffersStore {
                                                                 this._mediaSource,
                                                                 codec);
       this._initializedSourceBuffers[bufferType] = nativeSourceBuffer;
+      this._onNativeSourceBufferAddedOrDisabled.forEach(cb => cb());
       return nativeSourceBuffer;
     }
 
@@ -239,10 +359,26 @@ export default class SourceBuffersStore {
    */
   public disposeAll() {
     POSSIBLE_BUFFER_TYPES.forEach((bufferType : IBufferType) => {
-      if (this.get(bufferType) != null) {
+      if (this.getStatus(bufferType).type === "initialized") {
         this.disposeSourceBuffer(bufferType);
       }
     });
+  }
+
+  /**
+   * Returns `true` when we're ready to push and decode contents through our
+   * created native SourceBuffers.
+   */
+  private _areNativeSourceBuffersUsable() {
+    if (this._initializedSourceBuffers.audio === undefined ||
+        this._initializedSourceBuffers.video === undefined)
+    {
+      return false;
+    }
+    if (this._initializedSourceBuffers.video === null) {
+      return this._initializedSourceBuffers.audio !== null;
+    }
+    return true;
   }
 }
 

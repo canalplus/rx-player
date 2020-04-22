@@ -14,32 +14,14 @@
  * limitations under the License.
  */
 
-import Player from "./public_api";
+import BaseRepresentationIndex from "./base";
+import ListRepresentationIndex from "./list";
+import TemplateRepresentationIndex from "./template";
+import TimelineRepresentationIndex from "./timeline";
+
 export {
-  IConstructorOptions,
-  ILoadVideoOptions,
-
-  // loadVideo arguments:
-  ITransportOptions,
-  IKeySystemOption,
-  ISupplementaryTextTrackOption,
-  ISupplementaryImageTrackOption,
-  IDefaultAudioTrackOption,
-  IDefaultTextTrackOption,
-  INetworkConfigOption,
-  IStartAtOption,
-} from "./option_parsers";
-export {
-  ITMAudioTrackListItem,
-  ITMTextTrackListItem,
-  ITMVideoTrackListItem,
-
-  ITMAudioTrack,
-  ITMTextTrack,
-  ITMVideoTrack,
-
-  IAudioTrackPreference,
-  ITextTrackPreference,
-  IVideoTrackPreference,
-} from "./track_choice_manager";
-export default Player;
+  BaseRepresentationIndex,
+  ListRepresentationIndex,
+  TemplateRepresentationIndex,
+  TimelineRepresentationIndex,
+};

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import Manifest from "../../../../manifest";
 import parseFromDocument from "../index";
 
 describe("parseFromDocument", () => {
@@ -27,14 +28,17 @@ describe("parseFromDocument", () => {
     expect(function() {
       parseFromDocument(doc, {
         url: "",
-        externalClockOffset: 10,
         aggressiveMode: false,
+        externalClockOffset: 10,
+        unsafelyBaseOnPreviousManifest: null,
       });
     }).toThrow("document root should be MPD");
     expect(function() {
+      const prevManifest = {} as any as Manifest;
       parseFromDocument(doc, {
         url: "",
         aggressiveMode: false,
+        unsafelyBaseOnPreviousManifest: prevManifest,
       });
     }).toThrow("document root should be MPD");
   });

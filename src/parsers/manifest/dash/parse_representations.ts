@@ -15,16 +15,22 @@
  */
 
 import log from "../../../log";
+import {
+  Adaptation,
+  Representation,
+} from "../../../manifest";
 import IRepresentationIndex from "../../../manifest/representation_index";
 import {
   IContentProtections,
   IParsedRepresentation,
 } from "../types";
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
-import BaseRepresentationIndex from "./indexes/base";
-import ListRepresentationIndex from "./indexes/list";
-import TemplateRepresentationIndex from "./indexes/template";
-import TimelineRepresentationIndex from "./indexes/timeline";
+import {
+  BaseRepresentationIndex,
+  ListRepresentationIndex,
+  TemplateRepresentationIndex,
+  TimelineRepresentationIndex
+} from "./indexes";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
   IAdaptationSetIntermediateRepresentation
@@ -57,6 +63,15 @@ export interface IAdaptationInfos {
   start : number;
   /** Depth of the buffer for the whole content, in seconds. */
   timeShiftBufferDepth? : number;
+  /**
+   * The parser should take this Adaptation - which is from a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between both, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousAdaptation : Adaptation | null;
 }
 
 /** Base context given to the various indexes. */
@@ -80,6 +95,13 @@ interface IIndexContext {
   representationBitrate? : number;
   /** Depth of the buffer for the whole content, in seconds. */
   timeShiftBufferDepth? : number;
+  /**
+   * The parser should take this Representation - which is the same as this one
+   * parsed at an earlier time - as a base to speed-up the parsing process.
+   * /!\ If unexpected differences exist between both, there is a risk of
+   * de-synchronization with what is actually on the server.
+   */
+  unsafelyBaseOnPreviousRepresentation: Representation | null;
 }
 
 /**
@@ -128,13 +150,46 @@ export default function parseRepresentations(
   adaptation : IAdaptationSetIntermediateRepresentation,
   adaptationInfos : IAdaptationInfos
 ): IParsedRepresentation[] {
-  return representationsIR.map((representation) => {
+  const parsedRepresentations : IParsedRepresentation[] = [];
+  for (let representationIdx = 0;
+       representationIdx < representationsIR.length;
+       representationIdx++)
+  {
+    const representation = representationsIR[representationIdx];
     const representationBaseURLs = resolveBaseURLs(adaptationInfos.baseURLs,
                                                    representation.children.baseURLs);
 
-    // 4-2-1. Find Index
+  // 1. Get ID
+  let representationID = representation.attributes.id != null ?
+    representation.attributes.id :
+    (String(representation.attributes.bitrate) +
+       (representation.attributes.height != null ?
+          (`-${representation.attributes.height}`) :
+          "") +
+       (representation.attributes.width != null ?
+          (`-${representation.attributes.width}`) :
+          "") +
+       (representation.attributes.mimeType != null ?
+          (`-${representation.attributes.mimeType}`) :
+          "") +
+       (representation.attributes.codecs != null ?
+          (`-${representation.attributes.codecs}`) :
+          ""));
+
+    // Avoid duplicate IDs
+    while (parsedRepresentations.some(r => r.id === representationID)) {
+      representationID += "-dup";
+    }
+
+    // 2. Retrieve previous version of the Representation, if one.
+    const unsafelyBaseOnPreviousRepresentation = adaptationInfos
+      .unsafelyBaseOnPreviousAdaptation?.getRepresentation(representationID) ??
+      null;
+
+    // 3. Find Index
     const context = { aggressiveMode: adaptationInfos.aggressiveMode,
                       availabilityTimeOffset: adaptationInfos.availabilityTimeOffset,
+                      unsafelyBaseOnPreviousRepresentation,
                       manifestBoundsCalculator: adaptationInfos.manifestBoundsCalculator,
                       isDynamic: adaptationInfos.isDynamic,
                       periodEnd: adaptationInfos.end,
@@ -170,7 +225,7 @@ export default function parseRepresentations(
       representationIndex = findAdaptationIndex(adaptation, context);
     }
 
-    // 4-2-2. Find bitrate
+    // 3. Find bitrate
     let representationBitrate : number;
     if (representation.attributes.bitrate == null) {
       log.warn("DASH: No usable bitrate found in the Representation.");
@@ -179,28 +234,13 @@ export default function parseRepresentations(
       representationBitrate = representation.attributes.bitrate;
     }
 
-    // 4-2-3. Set ID
-    const representationID = representation.attributes.id != null ?
-      representation.attributes.id :
-      (String(representation.attributes.bitrate) +
-         (representation.attributes.height != null ?
-            (`-${representation.attributes.height}`) :
-            "") +
-         (representation.attributes.width != null ?
-            (`-${representation.attributes.width}`) :
-            "") +
-         (representation.attributes.mimeType != null ?
-            (`-${representation.attributes.mimeType}`) :
-            "") +
-         (representation.attributes.codecs != null ?
-            (`-${representation.attributes.codecs}`) :
-            ""));
-    // 4-2-4. Construct Representation Base
+    // 4. Construct Representation Base
     const parsedRepresentation : IParsedRepresentation =
       { bitrate: representationBitrate,
         index: representationIndex,
         id: representationID };
-    // 4-2-5. Add optional attributes
+
+    // 5. Add optional attributes
     let codecs : string|undefined;
     if (representation.attributes.codecs != null) {
       codecs = representation.attributes.codecs;
@@ -273,6 +313,7 @@ export default function parseRepresentations(
       }
     }
 
-    return parsedRepresentation;
-  });
+    parsedRepresentations.push(parsedRepresentation);
+  }
+  return parsedRepresentations;
 }

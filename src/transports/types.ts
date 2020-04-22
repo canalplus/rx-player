@@ -147,16 +147,34 @@ export type ISegmentLoaderObservable<T> = Observable<ILoaderChunkedDataEvent |
 
 // -- arguments
 
+/** Arguments given to the `parser` function of the Manifest pipeline. */
 export interface IManifestParserArguments {
-  response : ILoaderDataLoadedValue<unknown>; // Response from the loader
-  url? : string; // URL originally requested
-  externalClockOffset? : number; // If set, offset to add to `performance.now()`
-                                 // to obtain the current server's time
-
-  // allow the parser to load supplementary ressources (of type U)
+  /** Response obtained from the loader. */
+  response : ILoaderDataLoadedValue<unknown>;
+  /** URL originally requested. */
+  url? : string;
+  /**
+   * If set, offset to add to `performance.now()` to obtain the current
+   * server's time.
+   */
+  externalClockOffset? : number;
+  /** The previous value of the Manifest (when updating). */
+  previousManifest : Manifest | null;
+  /**
+   * Allow the parser to ask for loading supplementary ressources while still
+   * profiting from the same retries and error management than the loader.
+   */
   scheduleRequest : (request : () =>
     Observable< ILoaderDataLoadedValue< Document | string > >) =>
     Observable< ILoaderDataLoadedValue< Document | string > >;
+  /**
+   * If set to `true`, the Manifest parser can perform advanced optimizations
+   * to speed-up the parsing process. Those optimizations might lead to a
+   * de-synchronization with what is actually on the server, hence the "unsafe"
+   * part.
+   * To use with moderation and only when needed.
+   */
+  unsafeMode : boolean;
 }
 
 export interface ISegmentParserArguments<T> {

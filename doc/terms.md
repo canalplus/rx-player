@@ -36,8 +36,10 @@ obvious right along.
 <a name="adaptation"></a>
 ### Adaptation ##################################################################
 
-An Adaptation is an element of a [Period](#period) (and by extension of the
-[Manifest](#manifest)) which represents a single type of media.
+Simply put, what we call an "Adaptation" is just an audio, video or text track.
+
+More technically, it is an element of a [Period](#period) (and by extension of
+the [Manifest](#manifest)) which represents a single type of media.
 
 An adaptation can be for example any of those things:
   - A video track
@@ -63,37 +65,43 @@ You can find more infos on it [here](./dash_rxplayer_adaptation_difference.md).
 In the RxPlayer, a bitrate of a [Representation](#representation) indicates the
 number of bits per second of content described by that Representation.
 
-For example, a video [Adaptation](#adaptation) could have two Representation:
-  1. one with a bitrate: ``1,000,000``
-  2. the other with the bitrate: ``500,000``
+For example, let's imagine a video [Adaptation](#adaptation) with two
+Representation:
+  1. one with a bitrate at `1,000,000` (which is 1 Megabit)
+  2. the other with a bitrate at `500,000` (which is 500 kilobits)
 
-The first representation here will be considered to encode each second of
-content by a million bits (or 1Mb).
+Each seconds of content described by the first Representation will be
+represented by 1 megabit of data
 
-The second one will represent the same content for the same time and duration
-for hald the bits (500kb).
+Each seconds for the second Representation will be represented by 500 kilobits.
 
-The second one is thus more attracting for situations where the current network
-conditions are too poor to play the first one smoothly. The catch is that most
-often a Representation with a lower bitrate will describe a content of a lower
-quality.
+Both will represent the same data, but the first one will need that the RxPlayer
+fetch more data to show the same amount of content.
+
+In most cases, a higher bitrate means a higher quality. That's why the RxPlayer
+has to compromise between having the best quality and choosing a Representation
+having a low-enough bitrate to be able to play on the user's computer without
+needing to pause due to poor network conditions.
 
 
 <a name="buffer"></a>
 ### Buffer ######################################################################
 
-RxPlayer's Buffer can describe two things, depending on the context:
+When we talk about the "buffer" in the RxPlayer, it most likely mean one of two
+things, depending on the context:
+
+  - The media data currently loaded by the browser, ready to be decoded.
+
+    In the API, that's what we mean when we talk about the buffer.
 
   - modules in the RxPlayer downloading [media segments](#segment) and doing
     what is needed to play them.
 
-  - The part in the browser storing the segments downloaded, waiting for it to
-    be decoded.
-
+    Here you will mostly encounter that term in the architecture documentation.
 
 
 <a name="type"></a>
-### Buffer Type #################################################################
+### Buffer type #################################################################
 
 RxPlayer's buffer types describe a single "type" of media.
 
@@ -101,10 +109,9 @@ Example of such types are:
   - "video": which represents only the video content
   - "audio": the audio content without the video
   - "text": the subtitles, for example
-  - "image": the thumbnail tracks.
 
-Those are called buffer types here (or simply "types") as each type will have a
-single, uncorellated [Buffer](#buffer) in the RxPlayer.
+Those are called buffer types here (or simply "types") as each type will have
+its own [Buffer](#buffer) (in both sense of the term) in the RxPlayer.
 
 
 <a name="chunk"></a>
@@ -115,26 +122,26 @@ Segment](#segment) or the Media segment itself.
 
 
 <a name="init-segment"></a>
-### Initialization Segment ######################################################
+### Initialization segment ######################################################
 
-An initialization Segment is a [Media Segment](#segment), which includes
-metadata necessary to play the other segment of the same
-[Representation](#representation).
+An initialization segment is a specific type of [media segment](#segment), which
+includes metadata necessary to initialize the browser's internal decoder.
 
-This is used by multiple Streaming Technologies to avoid inserting the same
-data in multiple Media Segments.
+Those are sometimes needed before we can actually begin to push any "real" media
+segment from the corresponding [Representation](#representation).
 
-As such initialization Segments are the first segment downloaded, to indicate
-the metadata of the following content.
+As such, when one is needed, the initialization segment is the first segment
+downloaded for a given Representation.
 
 
 <a name="manifest"></a>
 ### Manifest ###################################################################
 
-Document which describes the content you want to play.
+The Manifest is the generic name for the document which describes the content
+you want to play.
 
 This is equivalent to the DASH's _Media Presentation Description_ (or _MPD_),
-the Microsoft Smooth Streaming's Manifest and the HLS' playlist.
+the Microsoft Smooth Streaming's _Manifest_ and the HLS' _Master Playlist_.
 
 Such document can describe for example:
   - multiple qualities for the same video or audio tracks
@@ -147,7 +154,7 @@ file.
 
 
 <a name="segment"></a>
-### Media Segment ###############################################################
+### Media segment ###############################################################
 
 A media segment (or simply segment), is a small chunk of media data.
 
@@ -161,33 +168,48 @@ features:
   - adaptive streaming
 
 When you play a content with the RxPlayer, it will most of the time download
-media segments of different types (audio, video, text...) rather than the whole
-content a single time.
+media segments of different types (audio, video, text...) progressively rather
+than the whole content at a single time.
 
 
 <a name="period"></a>
 ### Period #####################################################################
 
-A Period is an element of the [Manifest](#manifest) which describes the media
-to play at a certain points in time.
+Simply put, a Period defines what the content will be from a starting time to
+an ending time. It is an element contained in the [Manifest](#manifest)) and it
+will contain the [Adaptations](#adaptation) available for the corresponding
+time period.
 
-They are directly a DASH' concept, also called _Period_.
+Depending on the transport used, they correspond to different concepts:
+  - for DASH contents, it is more or less the same thing than an MPD's
+    `<Period>` element
+  - for "local" contents, it corresponds to a single object from the `periods`
+    array.
+  - for "MetaPlaylist" contents, it corresponds to all the Period elements we
+    retrieved after parsing the corresponding [Manifest](#manifest) from the
+    elements of the `contents` array.
+  - any other transport will have a single Period, describing the whole content.
 
-Simply put, it allows to set various types of content successively in the same
-manifest.
+--
 
-For example, let's take a manifest describing a live content with
+As an example, let's take a manifest describing a live content with
 chronologically:
   1. an english TV Show
   2. an old italian film with subtitles
   3. an American blockbuster with closed captions.
 
-Those contents are drastically different (they have different languages, the
-american blockbuster might have more available bitrates than the old italian
-one).
+Let's say that those sub-contents are drastically different:
+  - they are all in different languages
+  - the american blockbuster has more available video bitrates than the old
+    italian one
 
-As such, they have to be considered separately in the Manifest.
-This can be done by putting each in a different Period:
+Because the available tracks and available qualities are different from
+sub-content to sub-content, we cannot just give a single list of Adaptations
+valid for all of them. They have to be in some way separated in the Manifest
+object.
+
+That's a case where Periods will be used.
+Here is a visual representation of how the Periods would be divided here:
 ```
         Period 1                Period 2                Period 3
 08h05              09h00                       10h30                 now
@@ -195,7 +217,8 @@ This can be done by putting each in a different Period:
         TV Show               Italian Film        American Blockbuster
 ```
 
-Each of these Periods will be linked to different audio, video and text tracks.
+Each of these Periods will be linked to different audio, video and text
+Adaptations, themselves linked to different Representations.
 
 
 <a name="representation"></a>
@@ -205,7 +228,7 @@ A Representation is an element of an [Adaptation](#adaptation), and by extension
 of the [Manifest](#manifest)) that describes an interchangeable way to represent
 the parent Adaptation.
 
-For example, a video Adaptation can have several representation, each having
+For example, a video Adaptation can have several Representations, each having
 its own bitrate, its own width or its own height.
 The idea behind a Representation is that it can be changed by any other one in
 the same Adaptation as the content plays.
@@ -218,4 +241,5 @@ A Representation has its equivalent in multiple Streaming technologies. It is
 roughly the same as:
   - DASH's _Representation_
   - Microsoft Smooth Streaming's _QualityIndex_
-  - HLS' _variant_
+  - HLS' _variant_ (the notion of variant is actually a little more complex,
+    so here it's not an exact comparison)
