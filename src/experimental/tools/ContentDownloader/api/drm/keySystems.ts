@@ -13,10 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { IDBPDatabase } from "idb";
-import { map } from "rxjs/operators";
-
 import EMEManager from "../../../../../core/eme/eme_manager";
 import {
   IKeySystemOption,
@@ -33,20 +29,18 @@ import { IUtilsKeySystemsTransaction } from "./types";
  * adding an additional step to catch the licence and resolve a promise with the licence
  * To get the challenge we need to retrieve the licence
  * we are instanciating a minimal rxPlayer
- * @param {ILicenceOptions} KeySystemsOption KeySystems configuration
+ * @param {Object} KeySystemsOption KeySystems configuration
  *  provided at the download call
- * @param {IUtilsKeySystemsTransaction} keySystemsUtils Utils that we need
+ * @param {Object} keySystemsUtils Utils that we need
  *  to create/store encrypted content
- * @param {IDBPDatabase} db The current opened IndexedDB instance
- * @returns {Observable<{...}>} An observable of EME events
+ * @returns {Observable} An observable of EME events
  */
 function EMETransaction(
   KeySystemsOption: IKeySystemOption,
-  keySystemsUtils: IUtilsKeySystemsTransaction,
-  db: IDBPDatabase
+  keySystemsUtils: IUtilsKeySystemsTransaction
 ) {
   const video = document.createElement("video");
-  const { contentID, contentProtection$ } = keySystemsUtils;
+  const { contentID, contentProtection$, db } = keySystemsUtils;
   let id = 0;
   const keySystems = [
     {
@@ -80,9 +74,7 @@ function EMETransaction(
       persistentStateRequired: true,
     },
   ];
-  return EMEManager(video, keySystems, contentProtection$).pipe(
-    map((emeEvt) => ({ emeEvtType: emeEvt.type }))
-  );
+  return EMEManager(video, keySystems, contentProtection$);
 }
 
 export default EMETransaction;

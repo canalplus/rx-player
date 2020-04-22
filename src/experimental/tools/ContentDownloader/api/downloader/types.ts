@@ -72,11 +72,11 @@ export interface IAdaptationStored {
   representations: Representation[];
 }
 
-export interface IAdaptationForPeriodBuilder {
+export interface IAdaptationForPeriod {
   [id: string]: IAdaptationStored[];
 }
 
-export interface ISegmentForRepresentationBuilder {
+export interface ISegmentForRepresentation {
   [id: string]: ILocalIndexSegment[];
 }
 

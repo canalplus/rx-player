@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { IDBPDatabase } from "idb";
 import { Subject } from "rxjs";
 
 import { IContentProtection as IContentProtectionPSSH, IPersistedSessionData } from "../../../../../core/eme";
@@ -42,6 +43,7 @@ export interface IContentProtection {
 export interface IUtilsKeySystemsTransaction {
   contentID: string;
   contentProtection$: Subject<IContentProtectionPSSH>;
+  db: IDBPDatabase;
 }
 
 export interface IEMEOptions {

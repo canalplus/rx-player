@@ -35,8 +35,8 @@ import { SegmentConstuctionError } from "../../utils";
 import { IContentProtection } from "../drm/types";
 import {
   ContentBufferType,
-  IAdaptationForPeriodBuilder,
-  ISegmentForRepresentationBuilder,
+  IAdaptationForPeriod,
+  ISegmentForRepresentation,
   ISegmentStored,
   IUtilsOfflineLoader,
 } from "./types";
@@ -97,15 +97,15 @@ export function manifestLoader(
 /**
  * Get the adaptations for the current period.
  *
- * @param {Pick<IStoredManifest, "builder">} builder The global builder context for each
+ * @param {Object} builder The global builder context for each
  * bufferType we insert in IndexedDB
- * @returns {IAdaptationForPeriodBuilder} Periods associated with an array of adaptations
+ * @returns {Object} Periods associated with an array of adaptations
  *
  */
 export function getBuilderFormattedForAdaptations({
   builder,
-}: Pick<IStoredManifest, "builder">) {
-  return Object.keys(builder).reduce<IAdaptationForPeriodBuilder>(
+}: Pick<IStoredManifest, "builder">): IAdaptationForPeriod {
+  return Object.keys(builder).reduce<IAdaptationForPeriod>(
     (acc, curr) => {
       const ctxs = builder[curr as ContentBufferType];
       if (ctxs == null || ctxs.length === 0) {
@@ -145,14 +145,14 @@ export function getBuilderFormattedForAdaptations({
  *
  * @param {Pick<IStoredManifest, "builder">} builder The global builder context for each
  * bufferType we insert in IndexedDB
- * @returns {ISegmentForRepresentationBuilder} Representation associated
+ * @returns {ISegmentForRepresentation} Representation associated
  *  with an array of segments.
  *
  */
 export function getBuilderFormattedForSegments({
   builder,
 }: Pick<IStoredManifest, "builder">) {
-  return Object.keys(builder).reduce<ISegmentForRepresentationBuilder>(
+  return Object.keys(builder).reduce<ISegmentForRepresentation>(
     (acc, curr) => {
       const ctxs = builder[curr as ContentBufferType];
       if (ctxs == null || ctxs.length === 0) {
@@ -187,7 +187,7 @@ export function getBuilderFormattedForSegments({
  *
  * @param {Pick<IStoredManifest, "builder">} builder The global builder context for each
  * bufferType we insert in IndexedDB
- * @returns {ISegmentForRepresentationBuilder} Representation associated
+ * @returns {ISegmentForRepresentation} Representation associated
  *  with an array of segments.
  *
  */
@@ -222,19 +222,19 @@ export function getKeySystemsSessionsOffline(
  * when we want to play an offline content because we lose every reference
  * when storing in IndexedDB.
  *
- * @param {Manifest} manifest - The Manifest we downloaded when online
- * @param {IAdaptationForPeriodBuilder} adaptationsBuilder Periods associated with
+ * @param {Object} manifest - The Manifest we downloaded when online
+ * @param {Object} adaptationsBuilder Periods associated with
  *  an array of adaptations
- * @param {ISegmentForRepresentationBuilder} representationsBuilder - Representation
+ * @param {Object} representationsBuilder - Representation
  *  associatedwith an array of segments.
- * @param {IUtilsOfflineLoader} Object Additional utils...
- * @returns {ILocalManifest} A ILocalManifest to the RxPlayer transport local
+ * @param {Object} IAdaptationForPeriod Additional utils...
+ * @returns {Object} A ILocalManifest to the RxPlayer transport local
  *
  */
 export function offlineManifestLoader(
   manifest: Manifest,
-  adaptationsBuilder: IAdaptationForPeriodBuilder,
-  representationsBuilder: ISegmentForRepresentationBuilder,
+  adaptations: IAdaptationForPeriod,
+  representations: ISegmentForRepresentation,
   { contentID, duration, isFinished, db }: IUtilsOfflineLoader
 ): ILocalManifest {
   return {
@@ -244,8 +244,8 @@ export function offlineManifestLoader(
     periods: manifest.periods.map<ILocalPeriod>((period): ILocalPeriod => {
       return {
         start: period.start,
-        duration: period.duration !== undefined ? period.duration : 0,
-        adaptations: adaptationsBuilder[period.id].map(
+        duration: period.duration !== undefined ? period.duration : Number.MAX_VALUE,
+        adaptations: adaptations[period.id].map(
           (adaptation): ILocalAdaptation => ({
             type: adaptation.type,
             audioDescription: adaptation.audioDescription,
@@ -299,7 +299,7 @@ export function offlineManifestLoader(
                       })
                       .catch(reject);
                   },
-                  segments: representationsBuilder[id],
+                  segments: representations[id],
                 },
               })
             ),
