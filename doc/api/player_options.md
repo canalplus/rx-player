@@ -466,7 +466,7 @@ const player = new RxPlayer({
     // If not available either, we would prefer an H265 content
     { codec: { all: false, test: /^hvc/ } },
 
-    // Note: If this is also available, we will here still have a video track
+    // Note: If this is also unavailable, we will here still have a video track
     // but which do not respect any of the constraints set here.
   ]
 });
