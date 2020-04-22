@@ -959,17 +959,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   ) : Partial<Record<IBufferType, Representation|null>> | null {
     warnOnce("getCurrentRepresentations is deprecated." +
              " Please open an issue if you used this API.");
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
-    if (currentPeriod === null ||
-        activeRepresentations === null ||
-        activeRepresentations[currentPeriod.id] == null)
-    {
-      return null;
-    }
-    return activeRepresentations[currentPeriod.id];
+    return this._priv_getCurrentRepresentations();
   }
 
   /**
@@ -1232,9 +1222,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number|undefined}
    */
   getVideoBitrate() : number|undefined {
-    /* tslint:disable deprecation */
-    const representations = this.getCurrentRepresentations();
-    /* tslint:enable deprecation */
+    const representations = this._priv_getCurrentRepresentations();
     if (representations === null || representations.video == null) {
       return undefined;
     }
@@ -1246,9 +1234,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number|undefined}
    */
   getAudioBitrate() : number|undefined {
-    /* tslint:disable deprecation */
-    const representations = this.getCurrentRepresentations();
-    /* tslint:enable deprecation */
+    const representations = this._priv_getCurrentRepresentations();
     if (representations === null || representations.audio == null) {
       return undefined;
     }
@@ -2159,14 +2145,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
                                                    this.getAvailableVideoBitrates());
 
-    /* tslint:disable deprecation */
-    const audioBitrate = this.getCurrentRepresentations()?.audio?.bitrate ?? -1;
-    /* tslint:enable deprecation */
+    const audioBitrate = this._priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
     this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
 
-    /* tslint:disable deprecation */
-    const videoBitrate = this.getCurrentRepresentations()?.video?.bitrate ?? -1;
-    /* tslint:enable deprecation */
+    const videoBitrate = this._priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
     this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", videoBitrate);
   }
 
@@ -2531,6 +2513,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_contentEventsMemory[event] = newVal;
       this.trigger(event, newVal);
     }
+  }
+
+  private _priv_getCurrentRepresentations(
+  ) : Partial<Record<IBufferType, Representation|null>> | null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
+    if (currentPeriod === null ||
+        activeRepresentations === null ||
+        activeRepresentations[currentPeriod.id] == null)
+    {
+      return null;
+    }
+    return activeRepresentations[currentPeriod.id];
   }
 }
 Player.version = /*PLAYER_VERSION*/"3.20.0";
