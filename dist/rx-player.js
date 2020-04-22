@@ -32688,20 +32688,7 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
 
   _proto.getCurrentRepresentations = function getCurrentRepresentations() {
     Object(warn_once["a" /* default */])("getCurrentRepresentations is deprecated." + " Please open an issue if you used this API.");
-
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-
-    var _this$_priv_contentIn2 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn2.currentPeriod,
-        activeRepresentations = _this$_priv_contentIn2.activeRepresentations;
-
-    if (currentPeriod === null || activeRepresentations === null || activeRepresentations[currentPeriod.id] == null) {
-      return null;
-    }
-
-    return activeRepresentations[currentPeriod.id];
+    return this._priv_getCurrentRepresentations();
   }
   /**
    * Returns the media DOM element used by the player.
@@ -32760,9 +32747,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return false;
     }
 
-    var _this$_priv_contentIn3 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn3.isDirectFile,
-        manifest = _this$_priv_contentIn3.manifest;
+    var _this$_priv_contentIn2 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn2.isDirectFile,
+        manifest = _this$_priv_contentIn2.manifest;
 
     if (isDirectFile || manifest === null) {
       return false;
@@ -32782,10 +32769,10 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return undefined;
     }
 
-    var _this$_priv_contentIn4 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn4.isDirectFile,
-        manifest = _this$_priv_contentIn4.manifest,
-        url = _this$_priv_contentIn4.url;
+    var _this$_priv_contentIn3 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn3.isDirectFile,
+        manifest = _this$_priv_contentIn3.manifest,
+        url = _this$_priv_contentIn3.url;
 
     if (isDirectFile) {
       return url;
@@ -32884,9 +32871,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return this.videoElement.currentTime;
     }
 
-    var _this$_priv_contentIn5 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn5.isDirectFile,
-        manifest = _this$_priv_contentIn5.manifest;
+    var _this$_priv_contentIn4 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn4.isDirectFile,
+        manifest = _this$_priv_contentIn4.manifest;
 
     if (isDirectFile) {
       return this.videoElement.currentTime;
@@ -32949,9 +32936,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return [];
     }
 
-    var _this$_priv_contentIn6 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn6.currentPeriod,
-        activeAdaptations = _this$_priv_contentIn6.activeAdaptations;
+    var _this$_priv_contentIn5 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn5.currentPeriod,
+        activeAdaptations = _this$_priv_contentIn5.activeAdaptations;
 
     if (currentPeriod === null || activeAdaptations === null) {
       return [];
@@ -32976,9 +32963,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return [];
     }
 
-    var _this$_priv_contentIn7 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn7.currentPeriod,
-        activeAdaptations = _this$_priv_contentIn7.activeAdaptations;
+    var _this$_priv_contentIn6 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn6.currentPeriod,
+        activeAdaptations = _this$_priv_contentIn6.activeAdaptations;
 
     if (currentPeriod === null || activeAdaptations === null) {
       return [];
@@ -33017,9 +33004,7 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
   ;
 
   _proto.getVideoBitrate = function getVideoBitrate() {
-    /* tslint:disable deprecation */
-    var representations = this.getCurrentRepresentations();
-    /* tslint:enable deprecation */
+    var representations = this._priv_getCurrentRepresentations();
 
     if (representations === null || representations.video == null) {
       return undefined;
@@ -33034,9 +33019,7 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
   ;
 
   _proto.getAudioBitrate = function getAudioBitrate() {
-    /* tslint:disable deprecation */
-    var representations = this.getCurrentRepresentations();
-    /* tslint:enable deprecation */
+    var representations = this._priv_getCurrentRepresentations();
 
     if (representations === null || representations.audio == null) {
       return undefined;
@@ -33121,9 +33104,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       throw new Error("player: no content loaded");
     }
 
-    var _this$_priv_contentIn8 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn8.isDirectFile,
-        manifest = _this$_priv_contentIn8.manifest;
+    var _this$_priv_contentIn7 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn7.isDirectFile,
+        manifest = _this$_priv_contentIn7.manifest;
 
     if (!isDirectFile && manifest === null) {
       throw new Error("player: the content did not load yet");
@@ -33386,9 +33369,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return [];
     }
 
-    var _this$_priv_contentIn9 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn9.currentPeriod,
-        isDirectFile = _this$_priv_contentIn9.isDirectFile;
+    var _this$_priv_contentIn8 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn8.currentPeriod,
+        isDirectFile = _this$_priv_contentIn8.isDirectFile;
 
     if (isDirectFile) {
       return (_b = (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.getAvailableAudioTracks()) !== null && _b !== void 0 ? _b : [];
@@ -33413,9 +33396,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return [];
     }
 
-    var _this$_priv_contentIn10 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn10.currentPeriod,
-        isDirectFile = _this$_priv_contentIn10.isDirectFile;
+    var _this$_priv_contentIn9 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn9.currentPeriod,
+        isDirectFile = _this$_priv_contentIn9.isDirectFile;
 
     if (isDirectFile) {
       return (_b = (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.getAvailableTextTracks()) !== null && _b !== void 0 ? _b : [];
@@ -33440,9 +33423,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return [];
     }
 
-    var _this$_priv_contentIn11 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn11.currentPeriod,
-        isDirectFile = _this$_priv_contentIn11.isDirectFile;
+    var _this$_priv_contentIn10 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn10.currentPeriod,
+        isDirectFile = _this$_priv_contentIn10.isDirectFile;
 
     if (isDirectFile) {
       return (_b = (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.getAvailableVideoTracks()) !== null && _b !== void 0 ? _b : [];
@@ -33465,9 +33448,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return undefined;
     }
 
-    var _this$_priv_contentIn12 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn12.currentPeriod,
-        isDirectFile = _this$_priv_contentIn12.isDirectFile;
+    var _this$_priv_contentIn11 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn11.currentPeriod,
+        isDirectFile = _this$_priv_contentIn11.isDirectFile;
 
     if (isDirectFile) {
       if (this._priv_mediaElementTrackChoiceManager === null) {
@@ -33494,9 +33477,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return undefined;
     }
 
-    var _this$_priv_contentIn13 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn13.currentPeriod,
-        isDirectFile = _this$_priv_contentIn13.isDirectFile;
+    var _this$_priv_contentIn12 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn12.currentPeriod,
+        isDirectFile = _this$_priv_contentIn12.isDirectFile;
 
     if (isDirectFile) {
       if (this._priv_mediaElementTrackChoiceManager === null) {
@@ -33523,9 +33506,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return undefined;
     }
 
-    var _this$_priv_contentIn14 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn14.currentPeriod,
-        isDirectFile = _this$_priv_contentIn14.isDirectFile;
+    var _this$_priv_contentIn13 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn13.currentPeriod,
+        isDirectFile = _this$_priv_contentIn13.isDirectFile;
 
     if (isDirectFile) {
       if (this._priv_mediaElementTrackChoiceManager === null) {
@@ -33556,9 +33539,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       throw new Error("No content loaded");
     }
 
-    var _this$_priv_contentIn15 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn15.currentPeriod,
-        isDirectFile = _this$_priv_contentIn15.isDirectFile;
+    var _this$_priv_contentIn14 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn14.currentPeriod,
+        isDirectFile = _this$_priv_contentIn14.isDirectFile;
 
     if (isDirectFile) {
       try {
@@ -33594,9 +33577,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       throw new Error("No content loaded");
     }
 
-    var _this$_priv_contentIn16 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn16.currentPeriod,
-        isDirectFile = _this$_priv_contentIn16.isDirectFile;
+    var _this$_priv_contentIn15 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn15.currentPeriod,
+        isDirectFile = _this$_priv_contentIn15.isDirectFile;
 
     if (isDirectFile) {
       try {
@@ -33629,9 +33612,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return;
     }
 
-    var _this$_priv_contentIn17 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn17.currentPeriod,
-        isDirectFile = _this$_priv_contentIn17.isDirectFile;
+    var _this$_priv_contentIn16 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn16.currentPeriod,
+        isDirectFile = _this$_priv_contentIn16.isDirectFile;
 
     if (isDirectFile) {
       (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.disableTextTrack();
@@ -33659,9 +33642,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       throw new Error("No content loaded");
     }
 
-    var _this$_priv_contentIn18 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn18.currentPeriod,
-        isDirectFile = _this$_priv_contentIn18.isDirectFile;
+    var _this$_priv_contentIn17 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn17.currentPeriod,
+        isDirectFile = _this$_priv_contentIn17.isDirectFile;
 
     if (isDirectFile) {
       try {
@@ -33692,9 +33675,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return;
     }
 
-    var _this$_priv_contentIn19 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn19.currentPeriod,
-        isDirectFile = _this$_priv_contentIn19.isDirectFile;
+    var _this$_priv_contentIn18 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn18.currentPeriod,
+        isDirectFile = _this$_priv_contentIn18.isDirectFile;
 
     if (isDirectFile && this._priv_mediaElementTrackChoiceManager !== null) {
       return this._priv_mediaElementTrackChoiceManager.disableVideoTrack();
@@ -33824,9 +33807,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return null;
     }
 
-    var _this$_priv_contentIn20 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn20.isDirectFile,
-        manifest = _this$_priv_contentIn20.manifest;
+    var _this$_priv_contentIn19 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn19.isDirectFile,
+        manifest = _this$_priv_contentIn19.manifest;
 
     if (isDirectFile) {
       if (this.videoElement === null) {
@@ -34065,9 +34048,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
     }
 
     this._priv_contentInfos.manifest = manifest;
-    var _this$_priv_contentIn21 = this._priv_contentInfos,
-        initialAudioTrack = _this$_priv_contentIn21.initialAudioTrack,
-        initialTextTrack = _this$_priv_contentIn21.initialTextTrack;
+    var _this$_priv_contentIn20 = this._priv_contentInfos,
+        initialAudioTrack = _this$_priv_contentIn20.initialAudioTrack,
+        initialTextTrack = _this$_priv_contentIn20.initialTextTrack;
     this._priv_trackChoiceManager = new track_choice_manager_TrackChoiceManager({
       preferredAudioTracks: initialAudioTrack === undefined ? this._priv_preferredAudioTracks : new BehaviorSubject_BehaviorSubject([initialAudioTrack]),
       preferredTextTracks: initialTextTrack === undefined ? this._priv_preferredTextTracks : new BehaviorSubject_BehaviorSubject([initialTextTrack]),
@@ -34128,18 +34111,12 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
     this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange", this.getAvailableAudioBitrates());
 
     this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange", this.getAvailableVideoBitrates());
-    /* tslint:disable deprecation */
 
-
-    var audioBitrate = (_c = (_b = (_a = this.getCurrentRepresentations()) === null || _a === void 0 ? void 0 : _a.audio) === null || _b === void 0 ? void 0 : _b.bitrate) !== null && _c !== void 0 ? _c : -1;
-    /* tslint:enable deprecation */
+    var audioBitrate = (_c = (_b = (_a = this._priv_getCurrentRepresentations()) === null || _a === void 0 ? void 0 : _a.audio) === null || _b === void 0 ? void 0 : _b.bitrate) !== null && _c !== void 0 ? _c : -1;
 
     this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
-    /* tslint:disable deprecation */
 
-
-    var videoBitrate = (_f = (_e = (_d = this.getCurrentRepresentations()) === null || _d === void 0 ? void 0 : _d.video) === null || _e === void 0 ? void 0 : _e.bitrate) !== null && _f !== void 0 ? _f : -1;
-    /* tslint:enable deprecation */
+    var videoBitrate = (_f = (_e = (_d = this._priv_getCurrentRepresentations()) === null || _d === void 0 ? void 0 : _d.video) === null || _e === void 0 ? void 0 : _e.bitrate) !== null && _f !== void 0 ? _f : -1;
 
     this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", videoBitrate);
   }
@@ -34230,9 +34207,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return;
     }
 
-    var _this$_priv_contentIn22 = this._priv_contentInfos,
-        activeAdaptations = _this$_priv_contentIn22.activeAdaptations,
-        activeRepresentations = _this$_priv_contentIn22.activeRepresentations;
+    var _this$_priv_contentIn21 = this._priv_contentInfos,
+        activeAdaptations = _this$_priv_contentIn21.activeAdaptations,
+        activeRepresentations = _this$_priv_contentIn21.activeRepresentations;
 
     if (activeAdaptations != null && activeAdaptations[period.id] != null) {
       var activePeriodAdaptations = activeAdaptations[period.id];
@@ -34289,9 +34266,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       this._priv_contentInfos.activeAdaptations = {};
     }
 
-    var _this$_priv_contentIn23 = this._priv_contentInfos,
-        activeAdaptations = _this$_priv_contentIn23.activeAdaptations,
-        currentPeriod = _this$_priv_contentIn23.currentPeriod;
+    var _this$_priv_contentIn22 = this._priv_contentInfos,
+        activeAdaptations = _this$_priv_contentIn22.activeAdaptations,
+        currentPeriod = _this$_priv_contentIn22.currentPeriod;
     var activePeriodAdaptations = activeAdaptations[period.id];
 
     if (activePeriodAdaptations == null) {
@@ -34358,9 +34335,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       this._priv_contentInfos.activeRepresentations = {};
     }
 
-    var _this$_priv_contentIn24 = this._priv_contentInfos,
-        activeRepresentations = _this$_priv_contentIn24.activeRepresentations,
-        currentPeriod = _this$_priv_contentIn24.currentPeriod;
+    var _this$_priv_contentIn23 = this._priv_contentInfos,
+        activeRepresentations = _this$_priv_contentIn23.activeRepresentations,
+        currentPeriod = _this$_priv_contentIn23.currentPeriod;
     var activePeriodRepresentations = activeRepresentations[period.id];
 
     if (activePeriodRepresentations == null) {
@@ -34466,9 +34443,9 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       return;
     }
 
-    var _this$_priv_contentIn25 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn25.isDirectFile,
-        manifest = _this$_priv_contentIn25.manifest;
+    var _this$_priv_contentIn24 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn24.isDirectFile,
+        manifest = _this$_priv_contentIn24.manifest;
 
     if (!isDirectFile && manifest === null || clockTick == null) {
       return;
@@ -34521,6 +34498,22 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
       this._priv_contentEventsMemory[event] = newVal;
       this.trigger(event, newVal);
     }
+  };
+
+  _proto._priv_getCurrentRepresentations = function _priv_getCurrentRepresentations() {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+
+    var _this$_priv_contentIn25 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn25.currentPeriod,
+        activeRepresentations = _this$_priv_contentIn25.activeRepresentations;
+
+    if (currentPeriod === null || activeRepresentations === null || activeRepresentations[currentPeriod.id] == null) {
+      return null;
+    }
+
+    return activeRepresentations[currentPeriod.id];
   };
 
   public_api_createClass(Player, null, [{
