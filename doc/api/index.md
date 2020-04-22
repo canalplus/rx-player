@@ -1106,10 +1106,12 @@ This method will only have an effect on the [Period](../terms.md#period) that is
 currently playing.
 If you want to update the track for other Periods as well, you might want to
 either:
-  - update the preferred audio tracks through the
-    [setPreferredAudioTracks](#meth-setPreferredAudioTracks) method.
   - update the current audio track once a `"periodChange"` event has been
     received.
+  - update the preferred audio tracks through the
+    [setPreferredAudioTracks](#meth-setPreferredAudioTracks) method. To ensure
+    that already-loaded Periods also consider that change, you might need to
+    then re-load the content through a new `loadVideo` call.
 
 --
 
@@ -1145,10 +1147,13 @@ This method will only have an effect on the [Period](../terms.md#period) that is
 currently playing.
 If you want to update the track for other Periods as well, you might want to
 either:
-  - update the preferred text tracks through the
-    [setPreferredTextTracks](#meth-setPreferredTextTracks) method.
   - update the current text track once a `"periodChange"` event has been
     received.
+  - update the preferred text tracks through the
+    [setPreferredTextTracks](#meth-setPreferredTextTracks) method. To ensure
+    that already-loaded Periods also consider that change, you might need to
+    then re-load the content through a new `loadVideo` call.
+
 
 
 --
@@ -1181,10 +1186,11 @@ This method will only have an effect on the [Period](../terms.md#period) that is
 currently playing.
 If you want to disable the text track for other Periods as well, you might want
 to either:
-  - update the preferred text tracks through the
-    [setPreferredTextTracks](#meth-setPreferredTextTracks) method to include
-    `null` (which meaning that you want no text track).
   - call `disableTextTrack` once a `"periodChange"` event has been received.
+  - update the preferred text tracks through the
+    [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method. To ensure
+    that already-loaded Periods also consider that change, you might need to
+    then re-load the content through a new `loadVideo` call.
 
 
 <a name="meth-setVideoTrack"></a>
@@ -1227,10 +1233,12 @@ This method will only have an effect on the [Period](../terms.md#period) that is
 currently playing.
 If you want to update the track for other Periods as well, you might want to
 either:
-  - update the preferred video tracks through the
-    [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method.
   - update the current video track once a `"periodChange"` event has been
     received.
+  - update the preferred video tracks through the
+    [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method. To ensure
+    that already-loaded Periods also consider that change, you might need to
+    then re-load the content through a new `loadVideo` call.
 
 --
 
@@ -1257,10 +1265,12 @@ This method will only have an effect on the [Period](../terms.md#period) that is
 currently playing.
 If you want to disable the video track for other Periods as well, you might want
 to either:
+  - call `disableVideoTrack` once a `"periodChange"` event has been received.
   - update the preferred video tracks through the
     [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method to include
-    `null` (which meaning that you want no video track).
-  - call `disableVideoTrack` once a `"periodChange"` event has been received.
+    `null` (which meaning that you want no video track). To ensure that
+    already-loaded Periods also consider that change, you might need to then
+    re-load the content through a new `loadVideo` call.
 
 --
 
