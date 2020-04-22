@@ -967,10 +967,12 @@ currently playing.
 If you want to update the track for other Periods as well, you might want to
 either:</p>
 <ul>
-<li>update the preferred audio tracks through the
-<a href="#meth-setPreferredAudioTracks">setPreferredAudioTracks</a> method.</li>
 <li>update the current audio track once a <code>&quot;periodChange&quot;</code> event has been
 received.</li>
+<li>update the preferred audio tracks through the
+<a href="#meth-setPreferredAudioTracks">setPreferredAudioTracks</a> method. To ensure
+that already-loaded Periods also consider that change, you might need to
+then re-load the content through a new <code>loadVideo</code> call.</li>
 </ul>
 <p>&#x2013;</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> If used on Safari, in <em>DirectFile</em> mode, the track change may change
@@ -1000,10 +1002,12 @@ currently playing.
 If you want to update the track for other Periods as well, you might want to
 either:</p>
 <ul>
-<li>update the preferred text tracks through the
-<a href="#meth-setPreferredTextTracks">setPreferredTextTracks</a> method.</li>
 <li>update the current text track once a <code>&quot;periodChange&quot;</code> event has been
 received.</li>
+<li>update the preferred text tracks through the
+<a href="#meth-setPreferredTextTracks">setPreferredTextTracks</a> method. To ensure
+that already-loaded Periods also consider that change, you might need to
+then re-load the content through a new <code>loadVideo</code> call.</li>
 </ul>
 <p>&#x2013;</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> If used on Safari, in <em>DirectFile</em> mode, the track change may change
@@ -1031,10 +1035,11 @@ currently playing.
 If you want to disable the text track for other Periods as well, you might want
 to either:</p>
 <ul>
-<li>update the preferred text tracks through the
-<a href="#meth-setPreferredTextTracks">setPreferredTextTracks</a> method to include
-<code>null</code> (which meaning that you want no text track).</li>
 <li>call <code>disableTextTrack</code> once a <code>&quot;periodChange&quot;</code> event has been received.</li>
+<li>update the preferred text tracks through the
+<a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> method. To ensure
+that already-loaded Periods also consider that change, you might need to
+then re-load the content through a new <code>loadVideo</code> call.</li>
 </ul>
 <p><a name="meth-setVideoTrack"></a>
 <a name="subchapter-setVideoTrack"></a></p>
@@ -1075,10 +1080,12 @@ currently playing.
 If you want to update the track for other Periods as well, you might want to
 either:</p>
 <ul>
-<li>update the preferred video tracks through the
-<a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> method.</li>
 <li>update the current video track once a <code>&quot;periodChange&quot;</code> event has been
 received.</li>
+<li>update the preferred video tracks through the
+<a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> method. To ensure
+that already-loaded Periods also consider that change, you might need to
+then re-load the content through a new <code>loadVideo</code> call.</li>
 </ul>
 <p>&#x2013;</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect in <em>DirectFile</em> mode
@@ -1100,10 +1107,12 @@ currently playing.
 If you want to disable the video track for other Periods as well, you might want
 to either:</p>
 <ul>
+<li>call <code>disableVideoTrack</code> once a <code>&quot;periodChange&quot;</code> event has been received.</li>
 <li>update the preferred video tracks through the
 <a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> method to include
-<code>null</code> (which meaning that you want no video track).</li>
-<li>call <code>disableVideoTrack</code> once a <code>&quot;periodChange&quot;</code> event has been received.</li>
+<code>null</code> (which meaning that you want no video track). To ensure that
+already-loaded Periods also consider that change, you might need to then
+re-load the content through a new <code>loadVideo</code> call.</li>
 </ul>
 <p>&#x2013;</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option may have no effect in <em>DirectFile</em> mode

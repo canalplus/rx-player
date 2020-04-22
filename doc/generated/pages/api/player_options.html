@@ -367,7 +367,7 @@ We could set both the previous and that new constraint that way:</p>
     <span class="hljs-comment">// If not available either, we would prefer an H265 content</span>
     { <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> } },
 
-    <span class="hljs-comment">// Note: If this is also available, we will here still have a video track</span>
+    <span class="hljs-comment">// Note: If this is also unavailable, we will here still have a video track</span>
     <span class="hljs-comment">// but which do not respect any of the constraints set here.</span>
   ]
 });
