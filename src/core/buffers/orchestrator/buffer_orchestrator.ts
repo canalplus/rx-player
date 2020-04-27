@@ -43,6 +43,7 @@ import Manifest, {
 } from "../../../manifest";
 import deferSubscriptions from "../../../utils/defer_subscriptions";
 import { fromEvent } from "../../../utils/event_emitter";
+import filterMap from "../../../utils/filter_map";
 import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
@@ -143,21 +144,21 @@ export default function BufferOrchestrator(
   // trigger warnings when the wanted time is before or after the manifest's
   // segments
   const outOfManifest$ = clock$.pipe(
-    mergeMap(({ currentTime, wantedTimeOffset }) => {
+    filterMap(({ currentTime, wantedTimeOffset }) => {
       const position = wantedTimeOffset + currentTime;
       if (position < manifest.getMinimumPosition()) {
         const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
                                        "The current position is behind the " +
                                        "earliest time announced in the Manifest.");
-        return observableOf(EVENTS.warning(warning));
+        return EVENTS.warning(warning);
       } else if (position > manifest.getMaximumPosition()) {
         const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
                                        "The current position is after the latest " +
                                        "time announced in the Manifest.");
-        return observableOf(EVENTS.warning(warning));
+        return EVENTS.warning(warning);
       }
-      return EMPTY;
-    }));
+      return null;
+    }, null));
 
   const bufferTypes = getBufferTypes();
 
@@ -220,7 +221,9 @@ export default function BufferOrchestrator(
       period : Period
     ) : Observable<IMultiplePeriodBuffersEvent> {
       return manageConsecutivePeriodBuffers(bufferType, period, destroyBuffers$).pipe(
-        mergeMap((message) => {
+        filterMap<IMultiplePeriodBuffersEvent,
+                  IMultiplePeriodBuffersEvent,
+                  null>((message) => {
           switch (message.type) {
             case "needs-media-source-reload":
               // Only reload the MediaSource when the more immediately required
@@ -229,7 +232,7 @@ export default function BufferOrchestrator(
               if (firstPeriod === undefined ||
                   firstPeriod.id !== message.value.period.id)
               {
-                return EMPTY;
+                return null;
               }
               break;
             case "periodBufferReady":
@@ -240,8 +243,8 @@ export default function BufferOrchestrator(
               periodList.removeElement(message.value.period);
               break;
           }
-          return observableOf(message);
-        }),
+          return message;
+        }, null),
         share()
       );
     }
