@@ -104,7 +104,7 @@ export default class XHRMock {
    * keys:
    *   - ``xhr`` {``Object``} - Corresponding XMLHttpRequest (technically, it is
    *     not an instance of a regular XMLHttpRequest but rather our own
-   *     implementation.
+   *     implementation).
    *   - ``method`` (``string``) - method used when opening the XMLHttpRequest.
    *   - ``url`` (``string``) - URL used when opening the XMLHttpRequest.
    * @returns {Array.<Object>}
