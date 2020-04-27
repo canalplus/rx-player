@@ -163,13 +163,27 @@ export interface IMediaKeysInfos {
 }
 
 // Data stored in a persistent MediaKeySession storage
-export interface IPersistedSessionData { sessionId : string;
-                                         initData : number;
-                                         initDataType? : string|undefined; }
+// Has to be versioned to be able to play sessions persisted in an old
+// RxPlayer version when in a new one.
+export type IPersistedSessionInfo = IPersistedSessionInfoV1 |
+                                    IPersistedSessionInfoV0;
+
+export interface IPersistedSessionInfoV1 { version : 1;
+                                           sessionId : string;
+                                           initData : Uint8Array;
+                                           initDataType? : string | undefined; }
+
+export interface IPersistedSessionInfoV0 { version? : undefined;
+                                           sessionId : string;
+                                           // This initData is a hash of a real
+                                           // one. Here we don't handle
+                                           // collision.
+                                           initData : number;
+                                           initDataType? : string | undefined; }
 
 // MediaKeySession storage interface
-export interface IPersistedSessionStorage { load() : IPersistedSessionData[];
-                                            save(x : IPersistedSessionData[]) : void; }
+export interface IPersistedSessionStorage { load() : IPersistedSessionInfo[];
+                                            save(x : IPersistedSessionInfo[]) : void; }
 
 export type TypedArray = Int8Array |
                          Int16Array |

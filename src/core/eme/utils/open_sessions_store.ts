@@ -32,11 +32,11 @@ import {
 import closeSession$ from "../../../compat/eme/close_session";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
+import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../../../utils/array_find";
-import hashBuffer from "../../../utils/hash_buffer";
 
 // Cached data for a single MediaKeySession
-interface IStoreSessionEntry { initData : number;
+interface IStoreSessionEntry { initData : Uint8Array;
                                initDataType: string|undefined;
                                session : MediaKeySession|ICustomMediaKeySession;
                                sessionType : MediaKeySessionType; }
@@ -85,9 +85,8 @@ export default class MediaKeySessionsStore {
     initData : Uint8Array,
     initDataType: string|undefined
   ) : IStoreSessionData|null {
-    const initDataHash = hashBuffer(initData);
     const foundEntry = arrayFind(this._entries, (entry) => (
-      entry.initData === initDataHash &&
+      areArraysOfNumbersEqual(entry.initData, initData) &&
       entry.initDataType === initDataType));
 
     if (foundEntry != null) {
@@ -117,7 +116,7 @@ export default class MediaKeySessionsStore {
     const session = this._mediaKeys.createSession(sessionType);
     const entry = { session,
                     sessionType,
-                    initData: hashBuffer(initData),
+                    initData,
                     initDataType };
     if (session.closed !== null) {
       session.closed

@@ -16,14 +16,12 @@
 
 import { ICustomMediaKeySession } from "../../../compat";
 import log from "../../../log";
-import arrayFind from "../../../utils/array_find";
-import {
-  assertInterface,
-} from "../../../utils/assert";
+import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
+import { assertInterface } from "../../../utils/assert";
 import hashBuffer from "../../../utils/hash_buffer";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import {
-  IPersistedSessionData,
+  IPersistedSessionInfo,
   IPersistedSessionStorage,
 } from "../types";
 
@@ -44,7 +42,7 @@ function checkStorage(storage : IPersistedSessionStorage) : void {
  */
 export default class PersistedSessionsStore {
   private readonly _storage : IPersistedSessionStorage;
-  private _entries : IPersistedSessionData[];
+  private _entries : IPersistedSessionInfo[];
 
   /**
    * @param {Object} storage
@@ -73,13 +71,10 @@ export default class PersistedSessionsStore {
   public get(
     initData : Uint8Array,
     initDataType : string|undefined
-  ) : IPersistedSessionData | null {
-    const hash = hashBuffer(initData);
-    const entry = arrayFind(this._entries, (e) =>
-                    e.initData === hash &&
-                    e.initDataType === initDataType);
-    return entry == null ? null :
-                           entry;
+  ) : IPersistedSessionInfo | null {
+    const index = this.getIndex(initData, initDataType);
+    return index === -1 ? null :
+                          this._entries[index];
   }
 
   /**
@@ -98,15 +93,16 @@ export default class PersistedSessionsStore {
     }
     const sessionId = session.sessionId;
     const currentEntry = this.get(initData, initDataType);
-    if (currentEntry != null && currentEntry.sessionId === sessionId) {
+    if (currentEntry !== null && currentEntry.sessionId === sessionId) {
       return;
-    } else if (currentEntry != null) { // currentEntry has a different sessionId
+    } else if (currentEntry !== null) { // currentEntry has a different sessionId
       this.delete(initData, initDataType);
     }
 
     log.info("EME-PSS: Add new session", sessionId, session);
-    this._entries.push({ sessionId,
-                         initData: hashBuffer(initData),
+    this._entries.push({ version: 1,
+                         sessionId,
+                         initData,
                          initDataType });
     this._save();
   }
@@ -120,18 +116,14 @@ export default class PersistedSessionsStore {
     initData : Uint8Array,
     initDataType : string|undefined
   ) : void {
-    const hash = hashBuffer(initData);
-
-    const entry = arrayFind(this._entries, (e) =>
-                    e.initData === hash &&
-                    e.initDataType === initDataType);
-    if (entry != null) {
-      log.warn("EME-PSS: Delete session from store", entry);
-
-      const idx = this._entries.indexOf(entry);
-      this._entries.splice(idx, 1);
-      this._save();
+    const index = this.getIndex(initData, initDataType);
+    if (index !== -1) {
+      log.warn("EME-PSS: initData to delete not found.");
     }
+    const entry = this._entries[index];
+    log.warn("EME-PSS: Delete session from store", entry);
+    this._entries.splice(index, 1);
+    this._save();
   }
 
   /**
@@ -140,6 +132,38 @@ export default class PersistedSessionsStore {
   public dispose() : void {
     this._entries = [];
     this._save();
+  }
+
+  /**
+   * Retrieve index of an entry.
+   * Returns `-1` if not found.
+   * @param {Uint8Array}  initData
+   * @param {string|undefined} initDataType
+   * @returns {number}
+   */
+  private getIndex(
+    initData : Uint8Array,
+    initDataType : string|undefined
+  ) : number {
+    let hash : number | undefined;
+    for (let i = 0; i < this._entries.length; i++) {
+      const entry = this._entries[i];
+      if (entry.initDataType === initDataType) {
+        if (entry.version === 1) {
+          if (areArraysOfNumbersEqual(entry.initData, initData)) {
+            return i;
+          }
+        } else {
+          if (hash === undefined) {
+            hash = hashBuffer(initData);
+          }
+          if (entry.initData === hash) {
+            return i;
+          }
+        }
+      }
+    }
+    return -1;
   }
 
   /**

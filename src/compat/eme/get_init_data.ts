@@ -19,8 +19,7 @@ import {
   be4toi,
   concat,
 } from "../../utils/byte_parsing";
-import hashBuffer from "../../utils/hash_buffer";
-import SimpleSet from "../../utils/simple_set";
+import InitDataStorage from "../../utils/init_data_storage";
 import { PSSH_TO_INTEGER } from "./constants";
 
 /**
@@ -37,7 +36,7 @@ import { PSSH_TO_INTEGER } from "./constants";
  */
 function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
   let resInitData = new Uint8Array();
-  const currentHashes = new SimpleSet();
+  const encounteredInitData = new InitDataStorage<true>();
 
   let offset = 0;
   while (offset < initData.length) {
@@ -54,9 +53,7 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
       return initData;
     }
     const currentPSSH = initData.subarray(offset, offset + len);
-    const currentPSSHHash = hashBuffer(currentPSSH);
-    if (!currentHashes.test(currentPSSHHash)) {
-      currentHashes.add(currentPSSHHash);
+    if (encounteredInitData.setIfNone(currentPSSH, true)) {
       resInitData = concat(resInitData, currentPSSH);
     } else {
       log.warn("Compat: Duplicated PSSH found in initialization data, removing it.");

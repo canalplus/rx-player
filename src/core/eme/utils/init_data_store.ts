@@ -14,72 +14,80 @@
  * limitations under the License.
  */
 
-import hashBuffer from "../../../utils/hash_buffer";
+import InitDataStorage from "../../../utils/init_data_storage";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 
 type IDictionary<T> = Partial<Record<string, T>>;
 
 /**
- * Map initialization data to another property.
+ * Map initialization data to a given value.
  * @class InitDataStore
  */
 export default class InitDataStore<T> {
-  private _namedTypeData : IDictionary<IDictionary<T>>;
-  private _unnamedTypeData : IDictionary<T>;
+  private _namedTypeStorage : IDictionary<InitDataStorage<T>>;
+  private _unnamedTypeStorage : InitDataStorage<T>;
 
   constructor() {
-    this._namedTypeData = {};
-    this._unnamedTypeData = {};
+    this._namedTypeStorage = {};
+    this._unnamedTypeStorage = new InitDataStorage<T>();
   }
 
   /**
-   * Returns true if this instance has the given initData stored.
+   * Returns the value stored for a specific initData and a specific
+   * initDataType.
+   * Returns `undefined` if this combination of initData and initDataType is not
+   * stored currently.
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
-   * @returns {boolean}
+   * @returns {*}
    */
   public get(
     initDataType : string|undefined,
     initData : Uint8Array
   ) : T | undefined {
     if (!isNonEmptyString(initDataType)) {
-      return this._unnamedTypeData[hashBuffer(initData)];
+      return this._unnamedTypeStorage.get(initData);
     }
 
-    const forDataType = this._namedTypeData[initDataType];
-    if (forDataType == null) {
+    const storage = this._namedTypeStorage[initDataType];
+    if (storage == null) {
       return undefined;
     }
-    return forDataType[hashBuffer(initData)];
+    return storage.get(initData);
   }
 
   /**
-   * Add initialization data to this memory.
-   * @param {Uint8Array} initData
+   * Store new data, linked to both an initDataType and an initData.
    * @param {string|undefined} initDataType
+   * @param {Uint8Array} initData
+   * @param {*} data
    */
   public set(
     initDataType : string|undefined,
     initData : Uint8Array,
     data : T
   ) {
-    const hashed = hashBuffer(initData);
+    let storage : InitDataStorage<T>;
     if (!isNonEmptyString(initDataType)) {
-      this._unnamedTypeData[hashed] = data;
+      storage = this._unnamedTypeStorage;
       return;
     }
 
-    const forDataType = this._namedTypeData[initDataType];
-    if (forDataType == null) {
-      this._namedTypeData[initDataType] = { [hashed]: data };
+    const storageForInitDataType = this._namedTypeStorage[initDataType];
+    if (storageForInitDataType == null) {
+      storage = new InitDataStorage<T>();
+      this._namedTypeStorage[initDataType] = storage;
     } else {
-      forDataType[hashed] = data;
+      storage = storageForInitDataType;
     }
+    storage.set(initData, data);
   }
 
   /**
-   * Remove the initialization data from this memory.
-   * Returns true if this instance had the given initData stored.
+   * Remove data associated to an init data and an init data type from the
+   * InitDataStore.
+   * Returns `true` if a value associated to both has been found, false
+   * otherwise.
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
    * @returns {boolean}
@@ -89,23 +97,17 @@ export default class InitDataStore<T> {
     initData : Uint8Array
   ) : boolean {
     if (!isNonEmptyString(initDataType)) {
-      const hashed = hashBuffer(initData);
-      if (this._unnamedTypeData.hasOwnProperty(hashed)) {
-        delete this._unnamedTypeData[hashed];
-        return true;
-      }
-      return false;
+      return this._unnamedTypeStorage.remove(initData) !== undefined;
     } else {
-      if (!this._namedTypeData.hasOwnProperty(initDataType)) {
+      if (!this._namedTypeStorage.hasOwnProperty(initDataType)) {
         return false;
       }
-      const dataForType = this._namedTypeData[initDataType] as IDictionary<T>;
-      const hashed = hashBuffer(initData);
-      if (dataForType.hasOwnProperty(hashed)) {
-        delete dataForType[hashed];
-        return true;
+      const storage = this._namedTypeStorage[initDataType] as InitDataStorage<T>;
+      const removedVal = storage.remove(initData) !== undefined;
+      if (storage.isEmpty()) {
+        delete this._namedTypeStorage[initDataType];
       }
-      return false;
+      return removedVal !== undefined;
     }
   }
 }
