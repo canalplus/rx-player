@@ -99,10 +99,12 @@ export default class PersistedSessionsStore {
       this.delete(initData, initDataType);
     }
 
+    const hash = hashBuffer(initData);
     log.info("EME-PSS: Add new session", sessionId, session);
     this._entries.push({ version: 1,
                          sessionId,
                          initData,
+                         initDataHash: hash,
                          initDataType });
     this._save();
   }
@@ -145,18 +147,17 @@ export default class PersistedSessionsStore {
     initData : Uint8Array,
     initDataType : string|undefined
   ) : number {
-    let hash : number | undefined;
+    const hash = hashBuffer(initData);
     for (let i = 0; i < this._entries.length; i++) {
       const entry = this._entries[i];
       if (entry.initDataType === initDataType) {
         if (entry.version === 1) {
-          if (areArraysOfNumbersEqual(entry.initData, initData)) {
-            return i;
+          if (entry.initDataHash === hash) {
+            if (areArraysOfNumbersEqual(entry.initData, initData)) {
+              return i;
+            }
           }
         } else {
-          if (hash === undefined) {
-            hash = hashBuffer(initData);
-          }
           if (entry.initData === hash) {
             return i;
           }

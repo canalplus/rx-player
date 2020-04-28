@@ -17,6 +17,8 @@
 import areArraysOfNumbersEqual from "./are_arrays_of_numbers_equal";
 import hashBuffer from "./hash_buffer";
 
+export type IInitDataMap<T> = Partial<Record<string, Array<[Uint8Array, T]>>>;
+
 /**
  * Associative array implementation which will store an unique value per init
  * data encountered.
@@ -33,11 +35,11 @@ export default class InitDataStorage<T> {
    * Uint8Array).
    * We used a separate chaining method for simplicity sake.
    */
-  private _map : Partial<Record<string, Array<[Uint8Array, T]>>>;
+  private _map : IInitDataMap<T>;
 
   /** Create a new InitDataStorage. */
-  constructor() {
-    this._map = {};
+  constructor(initialMap? : IInitDataMap<T>) {
+    this._map = initialMap ?? {};
   }
 
   /**
@@ -142,5 +144,25 @@ export default class InitDataStorage<T> {
    */
   public isEmpty() : boolean {
     return Object.keys(this._map).length === 0;
+  }
+
+  /**
+   * Returns copy of underlying InitDataStorage HashMap.
+   * It is possible to re-initialize a new InitDataStorage by constructing a
+   * new one with this object in argument.
+   * /!\ The underlying initData share the same reference for performance+memory
+   * reasons. You should not update those Uint8Array.
+   * @returns {Object}
+   */
+  public linearize() : IInitDataMap<T> {
+    return Object.keys(this._map).reduce<IInitDataMap<T>>((acc, key) => {
+      const oldVal = this._map[key];
+      if (oldVal === undefined) {
+        return acc;
+      }
+      acc[key] = oldVal.map((tuple : [Uint8Array, T]) : [Uint8Array, T] =>
+        tuple.slice() as [Uint8Array, T]);
+      return acc;
+    }, {});
   }
 }

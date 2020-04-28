@@ -185,5 +185,57 @@ describe("utils - InitDataStorage", () => {
     expect(initDataStorage.get(initData3)).toEqual(undefined);
     expect(initDataStorage.isEmpty()).toEqual(true);
   });
+
+  it("should return the full HashMap through the `linearize` method", () => {
+    const fakeHash = jest.fn((arr : Uint8Array) => arr.length);
+    jest.mock("../hash_buffer", () =>  ({ __esModule: true,
+                                          default: fakeHash }));
+    const InitDataStorage = require("../init_data_storage").default;
+    const initDataStorage = new InitDataStorage();
+
+    const initData1 = new Uint8Array([1]);
+    const initData2 = new Uint8Array([1, 2]);
+    const initData3 = new Uint8Array([8]);
+    expect(initDataStorage.linearize()).toEqual({});
+    initDataStorage.set(initData1, "foo");
+    initDataStorage.set(initData2, "bar");
+    initDataStorage.set(initData3, "baz");
+    expect(initDataStorage.linearize()).toEqual({ 1: [ [initData1, "foo"],
+                                                         [initData3, "baz"] ],
+                                                  2: [ [initData2, "bar"] ]});
+  });
+
+  /* tslint:disable max-line-length */
+  it("should be able to clone a HashMap by instanciating it with its linearization result", () => {
+  /* tslint:enable max-line-length */
+    const fakeHash = jest.fn((arr : Uint8Array) => arr.length);
+    jest.mock("../hash_buffer", () =>  ({ __esModule: true,
+                                          default: fakeHash }));
+    const InitDataStorage = require("../init_data_storage").default;
+    const initDataStorage1 = new InitDataStorage();
+
+    const initData1 = new Uint8Array([1]);
+    const initData2 = new Uint8Array([1, 2]);
+    const initData3 = new Uint8Array([8]);
+    initDataStorage1.set(initData1, "foo");
+    initDataStorage1.set(initData2, "bar");
+    initDataStorage1.set(initData3, "baz");
+
+    const initDataStorage2 = new InitDataStorage(initDataStorage1.linearize());
+    expect(initDataStorage2.get(initData1)).toEqual(initDataStorage1.get(initData1));
+    expect(initDataStorage2.get(initData2)).toEqual(initDataStorage1.get(initData2));
+    expect(initDataStorage2.get(initData3)).toEqual(initDataStorage1.get(initData3));
+
+    expect(initDataStorage2.linearize()).toEqual(initDataStorage1.linearize());
+
+    initDataStorage2.remove(initData2);
+    expect(initDataStorage2.get(initData2)).toEqual(undefined);
+    expect(initDataStorage1.get(initData2)).not.toEqual(undefined);
+    expect(initDataStorage2.linearize()).not.toEqual(initDataStorage1.linearize());
+
+    initDataStorage2.set(initData1, "toto");
+    expect(initDataStorage2.get(initData1)).toEqual("toto");
+    expect(initDataStorage1.get(initData1)).toEqual("foo");
+  });
 });
 /* tslint:enable no-unsafe-any */

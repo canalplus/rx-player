@@ -168,11 +168,22 @@ export interface IMediaKeysInfos {
 export type IPersistedSessionInfo = IPersistedSessionInfoV1 |
                                     IPersistedSessionInfoV0;
 
+// When created in RxPlayer v3.21.0+.
+// Add sub-par (as in not performant) collision prevention by setting both
+// the hash of the initialization data and the initialization data itself.
+// The hash could be checked first for a fast comparison, then the full data.
+// Had to do this way because this structure is documented in the API as being
+// put in an array with one element per sessionId.
+// We might implement a HashMap in future versions instead.
 export interface IPersistedSessionInfoV1 { version : 1;
                                            sessionId : string;
                                            initData : Uint8Array;
+                                           initDataHash : number;
                                            initDataType? : string | undefined; }
 
+// When created in versions before the RxPlayer v3.21.0
+// Here no collision detection. We could theorically load the wrong persistent
+// session.
 export interface IPersistedSessionInfoV0 { version? : undefined;
                                            sessionId : string;
                                            // This initData is a hash of a real
