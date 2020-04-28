@@ -38,66 +38,38 @@ describe("utils - InitDataStorage", () => {
     expect(fakeHash).toHaveBeenNthCalledWith(1, initData1);
 
     expect(initDataStorage.isEmpty()).toBe(false);
-    expect(initDataStorage.keys).toEqual([initData1]);
-    expect(initDataStorage.values).toEqual(["foo"]);
 
-    expect(initDataStorage.getIndex(initData1)).toEqual(0);
     expect(initDataStorage.get(initData1)).toEqual("foo");
-    expect(initDataStorage.getIndex(initData2)).toEqual(-1);
     expect(initDataStorage.get(initData2)).toEqual(undefined);
-    expect(initDataStorage.getIndex(initData3)).toEqual(-1);
     expect(initDataStorage.get(initData3)).toEqual(undefined);
 
     initDataStorage.set(initData2, "bar");
     expect(initDataStorage.isEmpty()).toBe(false);
-    expect(initDataStorage.keys).toEqual([initData1, initData2]);
-    expect(initDataStorage.values).toEqual(["foo", "bar"]);
 
-    expect(initDataStorage.getIndex(initData1)).toEqual(0);
     expect(initDataStorage.get(initData1)).toEqual("foo");
-    expect(initDataStorage.getIndex(initData2)).toEqual(1);
     expect(initDataStorage.get(initData2)).toEqual("bar");
-    expect(initDataStorage.getIndex(initData3)).toEqual(-1);
     expect(initDataStorage.get(initData3)).toEqual(undefined);
 
     initDataStorage.set(initData3, "foo"); // duplicated value on purpose
     expect(initDataStorage.isEmpty()).toBe(false);
-    expect(initDataStorage.keys).toEqual([initData1,
-                                          initData2,
-                                          initData3]);
-    expect(initDataStorage.values).toEqual(["foo", "bar", "foo"]);
 
-    expect(initDataStorage.getIndex(initData1)).toEqual(0);
     expect(initDataStorage.get(initData1)).toEqual("foo");
-    expect(initDataStorage.getIndex(initData2)).toEqual(1);
     expect(initDataStorage.get(initData2)).toEqual("bar");
-    expect(initDataStorage.getIndex(initData3)).toEqual(2);
     expect(initDataStorage.get(initData3)).toEqual("foo");
 
     const createdInitData : Uint8Array[] = [];
-    const createdValues : string[] = [];
     for (let i = 0; i < 100; i++) {
       const newInitData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, i]);
       initDataStorage.set(newInitData, "foo");
       createdInitData.push(newInitData);
-      createdValues.push("foo");
 
       expect(initDataStorage.isEmpty()).toBe(false);
-      expect(initDataStorage.keys).toEqual([initData1,
-                                            initData2,
-                                            initData3,
-                                            ...createdInitData]);
-      expect(initDataStorage.values).toEqual(["foo", "bar", "foo", ...createdValues]);
 
-      expect(initDataStorage.getIndex(initData1)).toEqual(0);
       expect(initDataStorage.get(initData1)).toEqual("foo");
-      expect(initDataStorage.getIndex(initData2)).toEqual(1);
       expect(initDataStorage.get(initData2)).toEqual("bar");
-      expect(initDataStorage.getIndex(initData3)).toEqual(2);
       expect(initDataStorage.get(initData3)).toEqual("foo");
 
       for (let j = 0; j < createdInitData.length; j++) {
-        expect(initDataStorage.getIndex(createdInitData[j])).toEqual(j + 3);
         expect(initDataStorage.get(createdInitData[j])).toEqual("foo");
       }
     }
@@ -117,13 +89,8 @@ describe("utils - InitDataStorage", () => {
     initDataStorage.set(initData1, "foo");
     initDataStorage.set(initData2, "bar");
     initDataStorage.set(initData3, "baz");
-    expect(initDataStorage.keys).toEqual([initData1, initData2, initData3]);
-    expect(initDataStorage.values).toEqual(["foo", "bar", "baz"]);
-    expect(initDataStorage.getIndex(initData1)).toEqual(0);
     expect(initDataStorage.get(initData1)).toEqual("foo");
-    expect(initDataStorage.getIndex(initData2)).toEqual(1);
     expect(initDataStorage.get(initData2)).toEqual("bar");
-    expect(initDataStorage.getIndex(initData3)).toEqual(2);
     expect(initDataStorage.get(initData3)).toEqual("baz");
 
     const createdInitData : Uint8Array[] = [];
@@ -134,17 +101,8 @@ describe("utils - InitDataStorage", () => {
       createdInitData.push(newInitData);
       createdValues.push(i * 2);
     }
-    expect(initDataStorage.keys).toEqual([ initData1,
-                                           initData2,
-                                           initData3,
-                                           ...createdInitData ]);
-    expect(initDataStorage.values).toEqual([ "foo",
-                                             "bar",
-                                             "baz",
-                                             ...createdValues ]);
     for (let i = 0; i < createdInitData.length; i++) {
       const initData = createdInitData[i];
-      expect(initDataStorage.getIndex(initData)).toEqual(i + 3);
       expect(initDataStorage.get(initData)).toEqual(createdValues[i]);
     }
   });
@@ -165,9 +123,6 @@ describe("utils - InitDataStorage", () => {
     initDataStorage.set(initData3, "bar");
     initDataStorage.set(initData1, "c");
 
-    expect(initDataStorage.keys).toEqual([initData1, initData2, initData3]);
-    expect(initDataStorage.values).toEqual(["c", "foo", "bar"]);
-    expect(initDataStorage.getIndex(initData1)).toEqual(0);
     expect(initDataStorage.get(initData1)).toEqual("c");
   });
 
@@ -187,9 +142,6 @@ describe("utils - InitDataStorage", () => {
     expect(initDataStorage.setIfNone(initData3, "bar")).toEqual(true);
     expect(initDataStorage.setIfNone(initData1, "c")).toEqual(false);
 
-    expect(initDataStorage.keys).toEqual([initData1, initData2, initData3]);
-    expect(initDataStorage.values).toEqual(["a", "foo", "bar"]);
-    expect(initDataStorage.getIndex(initData1)).toEqual(0);
     expect(initDataStorage.get(initData1)).toEqual("a");
   });
 
@@ -209,17 +161,29 @@ describe("utils - InitDataStorage", () => {
     initDataStorage.set(initData3, "baz");
 
     expect(initDataStorage.remove(initData2)).toEqual("bar");
-    expect(initDataStorage.keys).toEqual([initData1, initData3]);
-    expect(initDataStorage.values).toEqual(["foo", "baz"]);
+    expect(initDataStorage.get(initData1)).toEqual("foo");
+    expect(initDataStorage.get(initData2)).toEqual(undefined);
+    expect(initDataStorage.get(initData3)).toEqual("baz");
 
     expect(initDataStorage.remove(initData2)).toEqual(undefined);
-    expect(initDataStorage.keys).toEqual([initData1, initData3]);
-    expect(initDataStorage.values).toEqual(["foo", "baz"]);
+    expect(initDataStorage.get(initData1)).toEqual("foo");
+    expect(initDataStorage.get(initData2)).toEqual(undefined);
+    expect(initDataStorage.get(initData3)).toEqual("baz");
+
+    expect(initDataStorage.remove(new Uint8Array([5]))).toEqual(undefined);
+    expect(initDataStorage.get(initData1)).toEqual("foo");
+    expect(initDataStorage.get(initData2)).toEqual(undefined);
+    expect(initDataStorage.get(initData3)).toEqual("baz");
 
     expect(initDataStorage.remove(initData1)).toEqual("foo");
+    expect(initDataStorage.get(initData1)).toEqual(undefined);
+    expect(initDataStorage.get(initData2)).toEqual(undefined);
+    expect(initDataStorage.get(initData3)).toEqual("baz");
     expect(initDataStorage.remove(initData3)).toEqual("baz");
-    expect(initDataStorage.keys).toEqual([]);
-    expect(initDataStorage.values).toEqual([]);
+    expect(initDataStorage.get(initData1)).toEqual(undefined);
+    expect(initDataStorage.get(initData2)).toEqual(undefined);
+    expect(initDataStorage.get(initData3)).toEqual(undefined);
+    expect(initDataStorage.isEmpty()).toEqual(true);
   });
 });
 /* tslint:enable no-unsafe-any */

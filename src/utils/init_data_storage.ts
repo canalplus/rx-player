@@ -20,27 +20,9 @@ import hashBuffer from "./hash_buffer";
 /**
  * Associative array implementation which will store an unique value per init
  * data encountered.
- *
- * It is specifically written for typical initialization data storage where very
- * few (most of the time only one) initialization data will be stored at a time.
- * In this case, just using an array of tuple makes sense.
- * When more initialization data become involved, we switch to a sort of HashMap
- * implementation with separate chaining collision resolution (chosen because
- * really simple to implement in JavaScript).
- * This double implementation allows for faster checks when there is few / a lot
- * of data in this storage compared to choosing just one.
- *
- * This may seem overkill though, as initialization data stay fairly short.
  * @class InitDataStorage
  */
 export default class InitDataStorage<T> {
-  /** Every initialization data stored. */
-  public keys : Uint8Array[];
-  /**
-   * Corresponding values for each initialization data stored. In the same order
-   * than for the `keys` array.
-   */
-  public values : T[];
   /**
    * HashMap linking initialization data to the corresponding index in the
    * `values` (or `keys`) array.
@@ -51,46 +33,11 @@ export default class InitDataStorage<T> {
    * Uint8Array).
    * We used a separate chaining method for simplicity sake.
    */
-  private _map : Partial<Record<string, Array<[Uint8Array, number]>>>;
+  private _map : Partial<Record<string, Array<[Uint8Array, T]>>>;
 
   /** Create a new InitDataStorage. */
   constructor() {
-    this.keys = [];
-    this.values = [];
     this._map = {};
-  }
-
-  /**
-   * Returns index for a particular key in the `keys` array - which is the same
-   * index than its associated value in the `values array.
-   * Returns `-1` if not found.
-   * @param {Uint8Array} key
-   * @returns {number}
-   */
-  public getIndex(key : Uint8Array) : number {
-    // Perform linear search on the very frequent simpler cases
-    if (this.keys.length <= 3) {
-      for (let i = 0; i < this.keys.length; i++) {
-        if (areArraysOfNumbersEqual(key, this.keys[i])) {
-          return i;
-        }
-      }
-      return -1;
-    }
-
-    // on more complex cases, reduce the number of checks by hashing and
-    // checking `this._map`
-    const hashed = hashBuffer(key);
-    const mapped = this._map[hashed];
-    if (mapped === undefined) {
-      return -1;
-    }
-    for (let i = 0; i < mapped.length; i++) {
-      if (areArraysOfNumbersEqual(key, mapped[i][0])) {
-        return mapped[i][1];
-      }
-    }
-    return -1;
   }
 
   /**
@@ -99,11 +46,17 @@ export default class InitDataStorage<T> {
    * @returns {*}
    */
   public get(key : Uint8Array) : T | undefined {
-    const index = this.getIndex(key);
-    if (index === -1) {
+    const hashed = hashBuffer(key);
+    const mapped = this._map[hashed];
+    if (mapped === undefined) {
       return undefined;
     }
-    return this.values[index];
+    for (let i = 0; i < mapped.length; i++) {
+      if (areArraysOfNumbersEqual(key, mapped[i][0])) {
+        return mapped[i][1];
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -117,19 +70,16 @@ export default class InitDataStorage<T> {
     if (val !== undefined) {
       for (let i = 0; i < val.length; i++) {
         if (areArraysOfNumbersEqual(key, val[i][0])) {
-          const index = val[i][1];
-          this.values[index] = value;
+          val[i][1] = value;
           return;
         }
       }
     }
 
-    this.keys.push(key);
-    this.values.push(value);
     if (val !== undefined) {
-      val.push([key, this.keys.length - 1]);
+      val.push([key, value]);
     } else {
-      this._map[hashed] = [[key, this.keys.length - 1]];
+      this._map[hashed] = [[key, value]];
     }
   }
 
@@ -152,12 +102,10 @@ export default class InitDataStorage<T> {
       }
     }
 
-    this.keys.push(key);
-    this.values.push(value);
     if (val !== undefined) {
-      val.push([key, this.keys.length - 1]);
+      val.push([key, value]);
     } else {
-      this._map[hashed] = [[key, this.keys.length - 1]];
+      this._map[hashed] = [[key, value]];
     }
     return true;
   }
@@ -176,9 +124,7 @@ export default class InitDataStorage<T> {
     }
     for (let i = 0; i < mapped.length; i++) {
       if (areArraysOfNumbersEqual(key, mapped[i][0])) {
-        const idx = mapped[i][1];
-        const val = this.values.splice(idx, 1)[0];
-        this.keys.splice(idx, 1);
+        const val = mapped[i][1];
         mapped.splice(i, 1);
         if (mapped.length === 0) {
           delete this._map[hashed];
@@ -195,6 +141,6 @@ export default class InitDataStorage<T> {
    * @returns {boolean}
    */
   public isEmpty() : boolean {
-    return this.keys.length === 0;
+    return Object.keys(this._map).length === 0;
   }
 }
