@@ -20,7 +20,7 @@ import {
 } from "rxjs";
 import filterMap from "../filter_map";
 
-describe("utils - concatMapLatest", () => {
+describe("utils - filterMap", () => {
   it("should filter when the token given is mapped", (done) => {
     const counter$ : Observable<number> = observableOf(0);
     let itemReceived = false;
