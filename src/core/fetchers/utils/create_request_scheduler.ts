@@ -15,19 +15,16 @@
  */
 
 import {
-  EMPTY,
   Observable,
-  of as observableOf,
   Subject,
 } from "rxjs";
-import {
-  catchError,
-  mergeMap,
-} from "rxjs/operators";
+import { catchError } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
+import filterMap from "../../../utils/filter_map";
 import tryCatch from "../../../utils/rx-try_catch";
 import errorSelector from "./error_selector";
 import {
+  IBackoffEvent,
   IBackoffOptions,
   tryRequestObservableWithBackoff,
 } from "./try_urls_with_backoff";
@@ -45,13 +42,13 @@ export default function createRequestScheduler<T>(
   return function scheduleRequest(request : () => Observable<T>) : Observable<T> {
     return tryRequestObservableWithBackoff(tryCatch(request, undefined),
                                            backoffOptions).pipe(
-      mergeMap(evt => {
+      filterMap<IBackoffEvent<T>, T, null>((evt) => {
         if (evt.type === "retry") {
           warning$.next(errorSelector(evt.value));
-          return EMPTY;
+          return null;
         }
-        return observableOf(evt.value);
-      }),
+        return evt.value;
+      }, null),
       catchError((error : unknown) : Observable<never> => {
         throw errorSelector(error);
       }));

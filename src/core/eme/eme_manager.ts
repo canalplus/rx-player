@@ -39,6 +39,7 @@ import {
 } from "../../compat/";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
+import filterMap from "../../utils/filter_map";
 import getSession, {
   IEncryptedEvent,
 } from "./get_session";
@@ -101,13 +102,13 @@ export default function EMEManager(
     tap((evt) => {
       log.debug("EME: Encrypted event received from media element.", evt);
     }),
-    mergeMap((evt) : Observable<IEncryptedEvent> => {
+    filterMap<MediaEncryptedEvent, IEncryptedEvent, null>((evt) => {
       const { initData, initDataType } = getInitData(evt);
       if (initData == null) {
-        return EMPTY;
+        return null;
       }
-      return observableOf({ type: initDataType, data: initData });
-    }),
+      return { type: initDataType, data: initData };
+    }, null),
     shareReplay({ refCount: true })); // multiple Observables listen to that one
                                       // as soon as the EMEManager is subscribed
 
