@@ -19,7 +19,6 @@
  * It always should be imported through the `features` object.
  */
 
-import { BehaviorSubject } from "rxjs";
 import {
   ICompatAudioTrack,
   ICompatAudioTrackList,
@@ -183,19 +182,19 @@ export default class MediaElementTrackChoiceManager
    * Array of preferred settings for audio tracks.
    * Sorted by order of preference descending.
    */
-  private _preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
+  private _preferredAudioTracks : IAudioTrackPreference[];
 
   /**
    * Array of preferred languages for text tracks.
    * Sorted by order of preference descending.
    */
-  private _preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
+  private _preferredTextTracks : ITextTrackPreference[];
 
   /**
    * Array of preferred settings for video tracks.
    * Sorted by order of preference descending.
    */
-  private _preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
+  private _preferredVideoTracks : IVideoTrackPreference[];
 
   /** List every available audio tracks available on the media element. */
   private _audioTracks : Array<{ track: ITMAudioTrack; nativeTrack: ICompatAudioTrack }>;
@@ -247,17 +246,12 @@ export default class MediaElementTrackChoiceManager
    */
   private _videoTrackLockedOn : ICompatVideoTrack | undefined | null;
 
-  constructor(
-    defaults : { preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
-                 preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
-                 preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>; },
-    mediaElement: HTMLMediaElement
-  ) {
+  constructor(mediaElement: HTMLMediaElement) {
     super();
 
-    this._preferredAudioTracks = defaults.preferredAudioTracks;
-    this._preferredTextTracks = defaults.preferredTextTracks;
-    this._preferredVideoTracks = defaults.preferredVideoTracks;
+    this._preferredAudioTracks = [];
+    this._preferredTextTracks = [];
+    this._preferredVideoTracks = [];
 
     // TODO In practice, the audio/video/text tracks API are not always implemented on
     // the media element, although Typescript HTMLMediaElement types tend to mean
@@ -281,6 +275,57 @@ export default class MediaElementTrackChoiceManager
     this._lastEmittedNativeTextTrack = this._getPrivateChosenTextTrack()?.nativeTrack;
 
     this._handleNativeTracksCallbacks();
+  }
+
+  /**
+   * Set the list of preferred audio tracks, in preference order.
+   * @param {Array.<Object>} preferredAudioTracks
+   * @param {boolean} shouldApply - `true` if those preferences should be
+   * applied on the currently loaded Period. `false` if it should only
+   * be applied to new content.
+   */
+  public setPreferredAudioTracks(
+    preferredAudioTracks : IAudioTrackPreference[],
+    shouldApply : boolean
+  ) : void {
+    this._preferredAudioTracks = preferredAudioTracks;
+    if (shouldApply) {
+      this._applyAudioPreferences();
+    }
+  }
+
+  /**
+   * Set the list of preferred text tracks, in preference order.
+   * @param {Array.<Object>} preferredTextTracks
+   * @param {boolean} shouldApply - `true` if those preferences should be
+   * applied on the currently loaded Period. `false` if it should only
+   * be applied to new content.
+   */
+  public setPreferredTextTracks(
+    preferredTextTracks : ITextTrackPreference[],
+    shouldApply : boolean
+  ) : void {
+    this._preferredTextTracks = preferredTextTracks;
+    if (shouldApply) {
+      this._applyTextPreferences();
+    }
+  }
+
+  /**
+   * Set the list of preferred video tracks, in preference order.
+   * @param {Array.<Object>} preferredVideoTracks
+   * @param {boolean} shouldApply - `true` if those preferences should be
+   * applied on the currently loaded Period. `false` if it should only
+   * be applied to new content.
+   */
+  public setPreferredVideoTracks(
+    preferredVideoTracks : IVideoTrackPreference[],
+    shouldApply : boolean
+  ) : void {
+    this._preferredVideoTracks = preferredVideoTracks;
+    if (shouldApply) {
+      this._applyVideoPreferences();
+    }
   }
 
   /**
@@ -539,7 +584,7 @@ export default class MediaElementTrackChoiceManager
    *   - if we still do not find an optimal track, let the one chosen by default
    */
   private _setOptimalAudioTrack() : void {
-    // 1. first check if the last set track is available, set it if that's the case
+    // First check if the last set track is available, set it if that's the case
     if (this._audioTrackLockedOn !== undefined) {
       for (let i = 0; i < this._audioTracks.length; i++) {
         const { nativeTrack } = this._audioTracks[i];
@@ -549,12 +594,19 @@ export default class MediaElementTrackChoiceManager
         }
       }
     }
+    this._applyAudioPreferences();
+  }
 
-    // Else set the preferred one
-    // Also reset the set audio track, for a behavior easier to understand
+  /**
+   * Try to find a track corresponding to the audio track preferences:
+   *   - if found, set it as the active track
+   *   - if not found, let the chosen audio track by default
+   */
+  private _applyAudioPreferences() : void {
+    // Re-set the last manually set audio track
     this._audioTrackLockedOn = undefined;
 
-    const preferredAudioTracks = this._preferredAudioTracks.getValue();
+    const preferredAudioTracks = this._preferredAudioTracks;
     for (let i = 0; i < preferredAudioTracks.length; i++) {
       const track = preferredAudioTracks[i];
       if (track !== null && track.language !== undefined) {
@@ -562,7 +614,7 @@ export default class MediaElementTrackChoiceManager
         for (let j = 0; j < this._audioTracks.length; j++) {
           const audioTrack = this._audioTracks[j];
           if (audioTrack.track.normalized === normalized &&
-              audioTrack.track.audioDescription === track.audioDescription
+            audioTrack.track.audioDescription === track.audioDescription
           ) {
             audioTrack.nativeTrack.enabled = true;
             return;
@@ -581,7 +633,7 @@ export default class MediaElementTrackChoiceManager
    *   - if we still do not find an optimal track, just disable it.
    */
   private _setOptimalTextTrack() : void {
-    // 1. first check if the last set track is available, set it if that's the case
+    // First check if the last set track is available, set it if that's the case
     if (this._textTrackLockedOn === null) {
       disableTextTracks(this._textTracks);
       return;
@@ -601,10 +653,19 @@ export default class MediaElementTrackChoiceManager
     }
 
     // Else set the preferred one
-    // Also reset the set text track, for a behavior easier to understand
+    this._applyTextPreferences();
+  }
+
+  /**
+   * Try to find a track corresponding to the text track preferences:
+   *   - if found, set it as the active track
+   *   - if not found, let the chosen text track by default
+   */
+  private _applyTextPreferences() : void {
+    // Re-set the last manually set audio track
     this._textTrackLockedOn = undefined;
 
-    const preferredTextTracks = this._preferredTextTracks.getValue();
+    const preferredTextTracks = this._preferredTextTracks;
     for (let i = 0; i < preferredTextTracks.length; i++) {
       const track = preferredTextTracks[i];
       if (track === null) {
@@ -654,7 +715,16 @@ export default class MediaElementTrackChoiceManager
     }
 
     // Else set the preferred one
-    // Also reset the set text track, for a behavior easier to understand
+    this._applyVideoPreferences();
+  }
+
+  /**
+   * Try to find a track corresponding to the text track preferences:
+   *   - if found, set it as the active track
+   *   - if not found, let the chosen text track by default
+   */
+  private _applyVideoPreferences() : void {
+    // Re-set the last manually set video track
     this._videoTrackLockedOn = undefined;
 
     // NOTE: As we cannot access either codec information or sign interpretation
@@ -664,7 +734,7 @@ export default class MediaElementTrackChoiceManager
     // set preferrence is "no video track" (i.e. `null`) as this is the only
     // constraint that we know we can respect.
     // Else, just chose the first track.
-    const preferredVideoTracks = this._preferredVideoTracks.getValue();
+    const preferredVideoTracks = this._preferredVideoTracks;
     const hasNullPreference = preferredVideoTracks.some(p => p === null);
     if (hasNullPreference) {
       disableVideoTracks(this._videoTracks);
@@ -698,7 +768,6 @@ export default class MediaElementTrackChoiceManager
           const newAudioTracks = createAudioTracks(this._nativeAudioTracks);
           if (areTrackArraysDifferent(this._audioTracks, newAudioTracks)) {
             this._audioTracks = newAudioTracks;
-            this._setOptimalAudioTrack();
             this.trigger("availableAudioTracksChange", this.getAvailableAudioTracks());
             const chosenAudioTrack = this._getPrivateChosenAudioTrack();
             if (chosenAudioTrack?.nativeTrack !== this._lastEmittedNativeAudioTrack) {
