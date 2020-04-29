@@ -20,12 +20,17 @@ import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal"
 import { assertInterface } from "../../../utils/assert";
 import hashBuffer from "../../../utils/hash_buffer";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import {
-  IPersistedSessionInfo,
-  IPersistedSessionStorage,
+  IPersistentSessionInfo,
+  IPersistentSessionStorage,
 } from "../types";
 
-function checkStorage(storage : IPersistedSessionStorage) : void {
+/**
+ * Throw if the given storage does not respect the right interface.
+ * @param {Object} storage
+ */
+function checkStorage(storage : IPersistentSessionStorage) : void {
   assertInterface(storage,
                   { save: "function", load: "function" },
                   "licenseStorage");
@@ -38,16 +43,17 @@ function checkStorage(storage : IPersistedSessionStorage) : void {
  *
  * This set is used only for a cdm/keysystem with license persistency
  * supported.
- * @class PersistedSessionsStore
+ * @class PersistentSessionsStore
  */
-export default class PersistedSessionsStore {
-  private readonly _storage : IPersistedSessionStorage;
-  private _entries : IPersistedSessionInfo[];
+export default class PersistentSessionsStore {
+  private readonly _storage : IPersistentSessionStorage;
+  private _entries : IPersistentSessionInfo[];
 
   /**
+   * Create a new PersistentSessionsStore.
    * @param {Object} storage
    */
-  constructor(storage : IPersistedSessionStorage) {
+  constructor(storage : IPersistentSessionStorage) {
     checkStorage(storage);
     this._entries = [];
     this._storage = storage;
@@ -63,7 +69,7 @@ export default class PersistedSessionsStore {
   }
 
   /**
-   * Retrieve entry (sessionId + initData) based on its initData.
+   * Retrieve an entry based on its initialization data.
    * @param {Uint8Array}  initData
    * @param {string|undefined} initDataType
    * @returns {Object|null}
@@ -71,14 +77,14 @@ export default class PersistedSessionsStore {
   public get(
     initData : Uint8Array,
     initDataType : string|undefined
-  ) : IPersistedSessionInfo | null {
+  ) : IPersistentSessionInfo | null {
     const index = this.getIndex(initData, initDataType);
     return index === -1 ? null :
                           this._entries[index];
   }
 
   /**
-   * Add a new entry in the storage.
+   * Add a new entry in the PersistentSessionsStore.
    * @param {Uint8Array}  initData
    * @param {string|undefined} initDataType
    * @param {MediaKeySession} session
@@ -88,10 +94,11 @@ export default class PersistedSessionsStore {
     initDataType : string|undefined,
     session : MediaKeySession|ICustomMediaKeySession
   ) : void {
-    if (session == null || !isNonEmptyString(session.sessionId)) {
+    if (isNullOrUndefined(session) || !isNonEmptyString(session.sessionId)) {
+      log.warn("EME-PSS: Invalid Persisten Session given.");
       return;
     }
-    const sessionId = session.sessionId;
+    const { sessionId } = session;
     const currentEntry = this.get(initData, initDataType);
     if (currentEntry !== null && currentEntry.sessionId === sessionId) {
       return;
@@ -110,7 +117,8 @@ export default class PersistedSessionsStore {
   }
 
   /**
-   * Delete entry (sessionId + initData) based on its initData.
+   * Delete stored MediaKeySession information based on its initialization
+   * data.
    * @param {Uint8Array}  initData
    * @param {string|undefined} initDataType
    */
@@ -121,6 +129,7 @@ export default class PersistedSessionsStore {
     const index = this.getIndex(initData, initDataType);
     if (index !== -1) {
       log.warn("EME-PSS: initData to delete not found.");
+      return;
     }
     const entry = this._entries[index];
     log.warn("EME-PSS: Delete session from store", entry);

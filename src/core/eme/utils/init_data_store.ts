@@ -14,100 +14,149 @@
  * limitations under the License.
  */
 
-import InitDataStorage from "../../../utils/init_data_storage";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-
-type IDictionary<T> = Partial<Record<string, T>>;
+import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
+import hashBuffer from "../../../utils/hash_buffer";
 
 /**
- * Map initialization data to a given value.
+ * Store a unique value associated to an initData and initDataType.
  * @class InitDataStore
  */
 export default class InitDataStore<T> {
-  private _namedTypeStorage : IDictionary<InitDataStorage<T>>;
-  private _unnamedTypeStorage : InitDataStorage<T>;
+  /**
+   * Contains every stored elements alongside the corresponding initialization
+   * data, in storage chronological order (from first stored to last stored).
+   */
+  private _storage : Array<{ initDataType : string | undefined;
+                             initDataHash : number;
+                             initData: Uint8Array;
+                             value : T; }>;
 
+  /** Construct a new InitDataStore.  */
   constructor() {
-    this._namedTypeStorage = {};
-    this._unnamedTypeStorage = new InitDataStorage<T>();
+    this._storage = [];
   }
 
   /**
-   * Returns the value stored for a specific initData and a specific
-   * initDataType.
-   * Returns `undefined` if this combination of initData and initDataType is not
-   * stored currently.
+   * Returns all stored value, in the order in which they have been stored.
+   * @returns {Array}
+   */
+  public getAll() : T[] {
+    return this._storage.map(item => item.value);
+  }
+
+  /**
+   * Returns the number of stored values.
+   * @returns {number}
+   */
+  public getLength() : number {
+    return this._storage.length;
+  }
+
+  /**
+   * Returns the element associated with the given initData and initDataType.
+   * Returns `undefined` if not found.
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
    * @returns {*}
    */
   public get(
-    initDataType : string|undefined,
-    initData : Uint8Array
-  ) : T | undefined {
-    if (!isNonEmptyString(initDataType)) {
-      return this._unnamedTypeStorage.get(initData);
-    }
-
-    const storage = this._namedTypeStorage[initDataType];
-    if (storage == null) {
-      return undefined;
-    }
-    return storage.get(initData);
-  }
-
-  /**
-   * Store new data, linked to both an initDataType and an initData.
-   * @param {string|undefined} initDataType
-   * @param {Uint8Array} initData
-   * @param {*} data
-   */
-  public set(
-    initDataType : string|undefined,
     initData : Uint8Array,
-    data : T
-  ) {
-    let storage : InitDataStorage<T>;
-    if (!isNonEmptyString(initDataType)) {
-      storage = this._unnamedTypeStorage;
-      return;
-    }
-
-    const storageForInitDataType = this._namedTypeStorage[initDataType];
-    if (storageForInitDataType == null) {
-      storage = new InitDataStorage<T>();
-      this._namedTypeStorage[initDataType] = storage;
-    } else {
-      storage = storageForInitDataType;
-    }
-    storage.set(initData, data);
+    initDataType : string|undefined
+  ) : T|undefined {
+    const initDataHash = hashBuffer(initData);
+    const index = this._findIndex(initData, initDataType, initDataHash);
+    return index >= 0 ? this._storage[index].value :
+                        undefined;
   }
 
   /**
-   * Remove data associated to an init data and an init data type from the
-   * InitDataStore.
-   * Returns `true` if a value associated to both has been found, false
-   * otherwise.
+   * Add to the store a value linked to the corresponding initData and
+   * initDataType.
+   * If a value was already stored linked to those, replace it.
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
    * @returns {boolean}
    */
-  public remove(
-    initDataType : string|undefined,
-    initData : Uint8Array
-  ) : boolean {
-    if (!isNonEmptyString(initDataType)) {
-      return this._unnamedTypeStorage.remove(initData) !== undefined;
-    } else {
-      if (!this._namedTypeStorage.hasOwnProperty(initDataType)) {
-        return false;
-      }
-      const storage = this._namedTypeStorage[initDataType] as InitDataStorage<T>;
-      const removedVal = storage.remove(initData) !== undefined;
-      if (storage.isEmpty()) {
-        delete this._namedTypeStorage[initDataType];
-      }
-      return removedVal !== undefined;
+  public store(
+    initData : Uint8Array,
+    initDataType : string | undefined,
+    value : T
+  ) : void {
+    const initDataHash = hashBuffer(initData);
+    const indexOf = this._findIndex(initData, initDataType, initDataHash);
+    if (indexOf >= 0) {
+      // this._storage contains the stored value in the same order they have
+      // been put. So here we want to remove the previous element and re-push
+      // it to the end.
+      this._storage.splice(indexOf, 1);
     }
+    this._storage.push({ initData, initDataType, initDataHash, value });
+  }
+
+  /**
+   * Add to the store a value linked to the corresponding initData and
+   * initDataType.
+   * If a value linked to those was already stored, do nothing and returns
+   * `false`.
+   * If not, add the value and return `true`.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @returns {boolean}
+   */
+  public storeIfNone(
+    initData : Uint8Array,
+    initDataType : string | undefined,
+    value : T
+  ) : boolean {
+    const initDataHash = hashBuffer(initData);
+    const indexOf = this._findIndex(initData, initDataType, initDataHash);
+    if (indexOf >= 0) {
+      return false;
+    }
+    this._storage.push({ initData, initDataType, initDataHash, value });
+    return true;
+  }
+
+  /**
+   * Remove an initDataType and initData combination from this store.
+   * Returns the associated value if it has been found, `undefined` otherwise.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @returns {*}
+   */
+  public remove(
+    initData : Uint8Array,
+    initDataType : string | undefined
+  ) : T | undefined {
+    const initDataHash = hashBuffer(initData);
+    const indexOf = this._findIndex(initData, initDataType, initDataHash);
+    if (indexOf === -1) {
+      return undefined;
+    }
+    return this._storage.splice(indexOf, 1)[0].value;
+  }
+
+  /**
+   * Find the index of the corresponding initData and initDataType in
+   * `this._storage`. Returns `-1` if not found.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @param {number} initDataHash
+   * @returns {boolean}
+   */
+  private _findIndex(
+    initData : Uint8Array,
+    initDataType : string|undefined,
+    initDataHash : number
+  ) : number {
+    for (let i = 0; i < this._storage.length; i++) {
+      const stored = this._storage[i];
+      if (initDataHash === stored.initDataHash && initDataType === stored.initDataType) {
+        if (areArraysOfNumbersEqual(initData, stored.initData)) {
+          return i;
+        }
+      }
+    }
+    return -1;
   }
 }

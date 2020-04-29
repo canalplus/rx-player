@@ -37,8 +37,8 @@ describe("core - init - isEMEReadyEvent", () => {
           getLicense() : never { throw new Error(); },
         },
         mediaKeys: {} as any,
-        sessionsStore: {} as any,
-        sessionStorage: null,
+        loadedSessionsStore: {} as any,
+        persistentSessionsStore: null,
       },
     })).toBe(false);
     expect(isEMEReadyEvent({
@@ -51,8 +51,8 @@ describe("core - init - isEMEReadyEvent", () => {
           disableMediaKeysAttachmentLock: false,
         },
         mediaKeys: {} as any,
-        sessionsStore: {} as any,
-        sessionStorage: null,
+        loadedSessionsStore: {} as any,
+        persistentSessionsStore: null,
       },
     })).toBe(false);
   });
@@ -70,8 +70,8 @@ describe("core - init - isEMEReadyEvent", () => {
           disableMediaKeysAttachmentLock: true,
         },
         mediaKeys: {} as any,
-        sessionsStore: {} as any,
-        sessionStorage: null,
+        loadedSessionsStore: {} as any,
+        persistentSessionsStore: null,
       },
     })).toBe(true);
   });
@@ -86,8 +86,8 @@ describe("core - init - isEMEReadyEvent", () => {
           getLicense() : never { throw new Error(); },
         },
         mediaKeys: {} as any,
-        sessionsStore: {} as any,
-        sessionStorage: null,
+        loadedSessionsStore: {} as any,
+        persistentSessionsStore: null,
       },
     })).toBe(true);
     expect(isEMEReadyEvent({
@@ -100,8 +100,8 @@ describe("core - init - isEMEReadyEvent", () => {
           disableMediaKeysAttachmentLock: true,
         },
         mediaKeys: {} as any,
-        sessionsStore: {} as any,
-        sessionStorage: null,
+        loadedSessionsStore: {} as any,
+        persistentSessionsStore: null,
       },
     })).toBe(true);
   });

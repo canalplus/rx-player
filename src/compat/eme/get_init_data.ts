@@ -15,12 +15,27 @@
  */
 
 import log from "../../log";
+import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import {
   be4toi,
   concat,
 } from "../../utils/byte_parsing";
-import InitDataStorage from "../../utils/init_data_storage";
+import hashBuffer from "../../utils/hash_buffer";
 import { PSSH_TO_INTEGER } from "./constants";
+
+/** Entry in the IPSSHCache array. */
+interface IPSSHCacheEntry {
+  /** An encountered PSSH box. */
+  pssh : Uint8Array;
+  /** The PSSH box hashed. */
+  psshHash : number;
+}
+
+/**
+ * Allows to easily detect duplicate PSSH by storing each one of them alongside
+ * its hashed value.
+ */
+type IPSSHCache = IPSSHCacheEntry[];
 
 /**
  * As we observed on some browsers (IE and Edge), the initialization data on
@@ -36,7 +51,7 @@ import { PSSH_TO_INTEGER } from "./constants";
  */
 function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
   let resInitData = new Uint8Array();
-  const encounteredInitData = new InitDataStorage<true>();
+  const encounteredPSSHs : IPSSHCache = [];
 
   let offset = 0;
   while (offset < initData.length) {
@@ -53,10 +68,10 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
       return initData;
     }
     const currentPSSH = initData.subarray(offset, offset + len);
-    if (encounteredInitData.setIfNone(currentPSSH, true)) {
-      resInitData = concat(resInitData, currentPSSH);
-    } else {
+    if (isPSSHAlreadyEncountered(encounteredPSSHs, currentPSSH)) {
       log.warn("Compat: Duplicated PSSH found in initialization data, removing it.");
+    } else {
+      resInitData = concat(resInitData, currentPSSH);
     }
     offset += len;
   }
@@ -66,6 +81,33 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
     return initData;
   }
   return resInitData;
+}
+
+/**
+ * Returns `true` if the given PSSH has already been stored in the
+ * `encounteredPSSHs` cache given.
+ * Returns `false` otherwise.
+ * @param {Array.<Object>} encounteredPSSHs
+ * @param {Uint8Array} pssh
+ * @returns {boolean}
+ */
+function isPSSHAlreadyEncountered(
+  encounteredPSSHs : IPSSHCache,
+  pssh : Uint8Array
+) : boolean {
+  if (encounteredPSSHs.length === 0) {
+    return false;
+  }
+  const psshHash = hashBuffer(pssh);
+  for (let i = 0; i < encounteredPSSHs.length; i++) {
+    const item = encounteredPSSHs[i];
+    if (psshHash === item.psshHash &&
+        areArraysOfNumbersEqual(pssh, item.pssh))
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
