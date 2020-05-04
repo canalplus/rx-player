@@ -17,11 +17,14 @@
 import createStyleAttribute from "../create_style_attribute";
 
 describe("parsers - webvtt - createStyleAttribute", () => {
-  const baseStyle = "position: absolute; margin:0;";
-  const baseWidth = "width:100%;";
-  const baseLeft = "left:50%;";
-  const baseTransform = "transform:translate(-50%,0%);";
-  const style = baseStyle + baseWidth + baseLeft + baseTransform;
+  const alwaysAppliedStyle = "position: absolute; margin:0;";
+  const defaultWidth = "width:100%;";
+  const defaultLeft = "left:50%;";
+  const defaultTransform = "transform:translate(-50%,0%);";
+  const defaultTop = "top:auto;";
+  const defaultTextAlign = "text-align:center;";
+  const style = alwaysAppliedStyle + defaultWidth + defaultLeft +
+    defaultTop + defaultTextAlign + defaultTransform;
 
   it("should set width", () => {
     const settings = {
@@ -30,7 +33,9 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = baseStyle + baseLeft + baseTransform + "width:30%;";
+    const expected =
+      alwaysAppliedStyle + defaultLeft + defaultTop + defaultTextAlign +
+      defaultTransform + "width:30%;";
     isEqualStyle(attribute.value, expected);
   });
 
@@ -41,7 +46,9 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = baseStyle + baseWidth + baseTransform + "left:10%;";
+    const expected =
+      alwaysAppliedStyle + defaultWidth + defaultTop + defaultTextAlign +
+      defaultTransform + "left:10%;";
     isEqualStyle(attribute.value, expected);
   });
 
@@ -52,7 +59,7 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = baseStyle + baseWidth + "transform:translate(0%, 0%);" + "left:10%;";
+    const expected = alwaysAppliedStyle + defaultWidth + defaultTop + defaultTextAlign + "transform:translate(0%, 0%);" + "left:10%;";
     isEqualStyle(attribute.value, expected);
   });
 
@@ -63,7 +70,7 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = baseStyle + baseWidth + "left:100%;" + "transform:translate(-100%, 0%);" + "text-align:right;";
+    const expected = alwaysAppliedStyle + defaultWidth + defaultTop + "left:100%;" + "transform:translate(-100%, 0%);" + "text-align:right;";
     isEqualStyle(attribute.value, expected);
   });
 
@@ -74,7 +81,7 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = baseStyle + baseLeft + baseWidth + "top:0%;" + "transform:translate(-50%, 0%);";
+    const expected = alwaysAppliedStyle + defaultWidth + defaultLeft + defaultTextAlign + "top:0%;" + "transform:translate(-50%, 0%);" ;
     isEqualStyle(attribute.value, expected);
   });
 
@@ -85,7 +92,7 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = baseStyle + baseLeft + baseWidth + "top:10%;" + "transform:translate(-50%, -50%);";
+    const expected = alwaysAppliedStyle + defaultWidth + defaultLeft + defaultTextAlign + "top:10%;" + "transform:translate(-50%, -50%);";
     isEqualStyle(attribute.value, expected);
   });
 
@@ -96,8 +103,7 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = style + "text-align:center";
-    isEqualStyle(attribute.value, expected);
+    isEqualStyle(attribute.value, style);
   });
 });
 

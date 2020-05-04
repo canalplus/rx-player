@@ -35,14 +35,17 @@ const getAttrValue = (settings: Partial<Record<string, string>>) => {
     return "text-align:center";
   }
 
+  const xPositioning = getPositioningX(settings);
+  const yPositioning = getPositioningY(settings);
+
   return (
     "position: absolute;" +
     "margin: 0;" +
-    `${getTransformStyle(settings)}` +
-    `${getSizeStyle(settings.size)}` +
-    `${getPositionStyle(settings)}` +
-    `${getLineStyle(settings.line)}` +
-    `${getAlignStyle(settings.align)}`
+    `transform: translate(${xPositioning.offset}%,${yPositioning.offset}%);` +
+    `width: ${getSizePercentage(settings.size)}%;` +
+    `left: ${xPositioning.position}%;` +
+    `top: ${yPositioning.position !== null ? `${yPositioning.position}%` : "auto"};` +
+    `text-align: ${getAlignValue(settings.align)};`
   );
 };
 
@@ -64,15 +67,46 @@ enum LineAlignment {
   END = "end",
 }
 
-/**
- * Used to shift cue box origin in order to define
- * what the position and line values are relating to.
- */
-const getTransformStyle = (settings: Partial<Record<string, string>>) => {
-  return `transform: translate(${getTransformX(settings)}%,${getTransformY(settings.line)}%);`;
+interface IXPosition {
+  position: number;
+  offset: number;
+}
+
+const getPositioningX = (settings: Partial<Record<string, string>>): IXPosition => {
+  return {
+    position: getXPositionPercentage(settings),
+    offset: getXOffsetPercentage(settings),
+  };
 };
 
-const getTransformX = (settings: Partial<Record<string, string>>) => {
+const getXPositionPercentage = (settings: Partial<Record<string, string>>): number => {
+  const positionPercentage = getPercentageValue(settings.position);
+  if (positionPercentage !== null) {
+    return positionPercentage;
+  }
+
+  const align = getAlignValue(settings.align);
+  const alignMap = {
+    [Align.LEFT]: 0,
+    [Align.CENTER]: 50,
+    [Align.RIGHT]: 100,
+  };
+
+  return alignMap[align];
+};
+
+const getXOffsetPercentage = (settings: Partial<Record<string, string>>): number => {
+  const getPositionAlignment = (positionSetting: string): PositionAlignment | null => {
+    const positionRegex = /,(line-left|line-right|center)/;
+    const matches = positionRegex.exec(positionSetting);
+
+    if (!Array.isArray(matches) || matches.length < 2) {
+      return null;
+    }
+
+    return matches[1] as PositionAlignment;
+  };
+
   const positionAlignmentMap = {
     [PositionAlignment.LINE_LEFT]: 0,
     [PositionAlignment.CENTER]: -50,
@@ -94,13 +128,40 @@ const getTransformX = (settings: Partial<Record<string, string>>) => {
   };
 
   const align = settings.align !== undefined ?
-    getAlign(settings.align)
+    getAlignValue(settings.align)
     : Align.CENTER;
 
   return alignMap[align];
 };
 
-const getTransformY = (lineSetting: string | undefined) => {
+interface IYPosition {
+  position: number | null;
+  offset: number;
+}
+
+const getPositioningY = (settings: Partial<Record<string, string>>): IYPosition => {
+  return {
+    position: getYPositionPercentage(settings.line),
+    offset: getYOffsetPercentage(settings.line),
+  };
+};
+
+const getYPositionPercentage = (lineSetting: string | undefined): number | null => {
+  return getPercentageValue(lineSetting);
+};
+
+const getYOffsetPercentage = (lineSetting: string | undefined) => {
+  const getLineAlignment = (line: string): LineAlignment | null => {
+    const positionRegex = /,(start|center|end)/;
+    const matches = positionRegex.exec(line);
+
+    if (!Array.isArray(matches) || matches.length < 2) {
+      return null;
+    }
+
+    return matches[1] as LineAlignment;
+  };
+
   const lineAlignmentMap = {
     [LineAlignment.START]: 0,
     [LineAlignment.CENTER]: -50,
@@ -118,59 +179,7 @@ const getTransformY = (lineSetting: string | undefined) => {
     lineAlignmentMap[LineAlignment.START];
 };
 
-const getPositionAlignment = (positionSetting: string): PositionAlignment | null => {
-  const positionRegex = /,(line-left|line-right|center)/;
-  const matches = positionRegex.exec(positionSetting);
-
-  if (!Array.isArray(matches) || matches.length < 2) {
-    return null;
-  }
-
-  return matches[1] as PositionAlignment;
-};
-
-const getLineAlignment = (lineSetting: string): LineAlignment | null => {
-  const positionRegex = /,(start|center|end)/;
-  const matches = positionRegex.exec(lineSetting);
-
-  if (!Array.isArray(matches) || matches.length < 2) {
-    return null;
-  }
-
-  return matches[1] as LineAlignment;
-};
-
-const getSizeStyle = (sizeSetting: string | undefined) => {
-  const defaultSize = 100;
-  const size = getPercentageValueOrDefault(sizeSetting, defaultSize);
-  return `width:${size}%;`;
-};
-
-const getPositionStyle = (settings: Partial<Record<string, string>>) => {
-  const positionStyle = (value: number) => `left:${value}%;`;
-
-  const position = getPercentageValue(settings.position);
-  if (position !== null) {
-    return positionStyle(position);
-  }
-
-  const align = getAlign(settings.align);
-  const alignMap = {
-    [Align.LEFT]: 0,
-    [Align.CENTER]: 50,
-    [Align.RIGHT]: 100,
-  };
-
-  return positionStyle(alignMap[align]);
-};
-
-const getAlignStyle = (alignSetting: string | undefined) => {
-  return alignSetting !== undefined ?
-    `text-align:${getAlign(alignSetting)};` :
-    "";
-};
-
-const getAlign = (alignSetting: string | undefined): Align => {
+const getAlignValue = (alignSetting: string | undefined): Align => {
   switch (alignSetting) {
     case "left":
     case "start":
@@ -183,15 +192,9 @@ const getAlign = (alignSetting: string | undefined): Align => {
   }
 };
 
-const getLineStyle = (lineSetting: string | undefined) => {
-  if (lineSetting === undefined) {
-    return "";
-  }
-
-  const line = getPercentageValue(lineSetting);
-  return line !== null ?
-    `top:${line}%;` :
-    "";
+const getSizePercentage = (sizeSetting: string | undefined) => {
+  const defaultSize = 100;
+  return getPercentageValueOrDefault(sizeSetting, defaultSize);
 };
 
 const getPercentageValueOrDefault = (
