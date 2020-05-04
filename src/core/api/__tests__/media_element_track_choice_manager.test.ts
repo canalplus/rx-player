@@ -63,6 +63,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
         language: "fr",
         audioDescription: false,
         normalized: "fra",
+        representations: [],
       });
       expect(chosenVideoTrack).toEqual({
         id: "gen_video_nolang_1",
@@ -93,6 +94,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
         language: "en",
         audioDescription: false,
         normalized: "eng",
+        representations: [],
       });
 
       trackManager.setTextTrackById("gen_text_en_1");

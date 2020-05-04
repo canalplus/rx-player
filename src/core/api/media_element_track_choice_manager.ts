@@ -21,6 +21,7 @@
 
 import { BehaviorSubject } from "rxjs";
 import { ICompatTextTrackList } from "../../compat/browser_compatibility_types";
+import { Representation } from "../../manifest";
 import EventEmitter from "../../utils/event_emitter";
 import normalizeLanguage from "../../utils/languages";
 import {
@@ -76,7 +77,8 @@ function createAudioTracks(
 ): Array<{ track: { id: string;
                     normalized: string;
                     language: string;
-                    audioDescription: boolean; };
+                    audioDescription: boolean;
+                    representations: Representation[]; };
            nativeTrack: AudioTrack; }> {
   const newAudioTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
@@ -93,7 +95,8 @@ function createAudioTracks(
     const track = { language: audioTrack.language,
                     id,
                     normalized: normalizeLanguage(audioTrack.language),
-                    audioDescription: false };
+                    audioDescription: false,
+                    representations: [] as Representation[] };
     newAudioTracks.push({ track,
                           nativeTrack: audioTrack });
   }
@@ -142,7 +145,7 @@ function createTextTracks(
 function createVideoTracks(
   videoTracks: VideoTrackList
 ): Array<{ track: { id: string;
-                    representations: []; };
+                    representations: Representation[]; };
            nativeTrack: VideoTrack; }> {
   const newVideoTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
@@ -157,7 +160,7 @@ function createVideoTracks(
                occurences.toString();
     languagesOccurences[language] = occurences + 1;
     newVideoTracks.push({ track: { id,
-                                   representations: [] as [] },
+                                   representations: [] as Representation[] },
                           nativeTrack: videoTrack });
   }
   return newVideoTracks;
@@ -372,7 +375,8 @@ export default class MediaElementTrackChoiceManager
                language: track.language,
                normalized: track.normalized,
                audioDescription: track.audioDescription,
-               active: nativeTrack.enabled };
+               active: nativeTrack.enabled,
+               representations: track.representations };
     });
   }
 
