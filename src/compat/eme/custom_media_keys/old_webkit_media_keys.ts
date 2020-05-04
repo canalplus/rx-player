@@ -184,8 +184,16 @@ export default function getOldWebKitMediaKeysCallbacks() {
   };
   const createCustomMediaKeys =
     (keyType: string) => new OldWebKitCustomMediaKeys(keyType);
+  const customSetMediaKeys = (elt: HTMLMediaElement,
+                              mediaKeys: ICustomMediaKeys|null): void => {
+    if (mediaKeys === null) {
+      return;
+    }
+    return mediaKeys._setVideo(elt);
+  };
   return {
     isTypeSupported,
     createCustomMediaKeys,
+    customSetMediaKeys,
   };
 }

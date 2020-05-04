@@ -51,6 +51,9 @@ let requestMediaKeySystemAccess : null |
                                                     CustomMediaKeySystemAccess>)
                                 = null;
 
+let customSetMediaKeys : ((elt: HTMLMediaElement,
+                          mediaKeys: ICustomMediaKeys | null) => void) | null = null;
+
 /**
  * Since Safari 12.1, EME APIs are available without webkit prefix.
  * However, it seems that since fairplay CDM implementation within the browser is not
@@ -85,6 +88,7 @@ if (isNode ||
     const callbacks = getOldKitWebKitMediaKeyCallbacks();
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
+    customSetMediaKeys = callbacks.customSetMediaKeys;
   // This is for WebKit with prefixed EME api
   } else if (WebKitMediaKeysConstructor !== undefined) {
     const callbacks = getWebKitMediaKeysCallbacks();
@@ -92,6 +96,7 @@ if (isNode ||
     isTypeSupported = callbacks.isTypeSupported;
     /* tslint:enable no-unsafe-any */
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
+    customSetMediaKeys = callbacks.customSetMediaKeys;
   } else if (isIE11 && MSMediaKeysConstructor !== undefined)
     {
       const callbacks = getIE11MediaKeysCallbacks();
@@ -99,6 +104,7 @@ if (isNode ||
       isTypeSupported = callbacks.isTypeSupported;
       /* tslint:enable no-unsafe-any */
       createCustomMediaKeys = callbacks.createCustomMediaKeys;
+      customSetMediaKeys = callbacks.customSetMediaKeys;
     }
 
   requestMediaKeySystemAccess = function(
@@ -151,6 +157,7 @@ if (isNode ||
 
 export {
   requestMediaKeySystemAccess,
+  customSetMediaKeys,
   ICustomMediaKeys,
   ICustomMediaKeySession,
 };

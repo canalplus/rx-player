@@ -146,9 +146,17 @@ export default function getIE11MediaKeysCallbacks() {
     return MSMediaKeysConstructor.isTypeSupported(keySystem);
   };
   const createCustomMediaKeys = (keyType: string) => new IE11CustomMediaKeys(keyType);
+  const customSetMediaKeys = (elt: HTMLMediaElement,
+                              mediaKeys: ICustomMediaKeys|null): void => {
+    if (mediaKeys === null) {
+      return;
+    }
+    return mediaKeys._setVideo(elt);
+  };
   return {
     isTypeSupported,
     createCustomMediaKeys,
+    customSetMediaKeys,
   };
 }
 

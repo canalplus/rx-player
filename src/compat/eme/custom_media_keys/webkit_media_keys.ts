@@ -25,6 +25,7 @@ import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import {
+  ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeyStatusMap,
   IMediaKeySessionEvents,
@@ -220,8 +221,21 @@ export default function getWebKitMediaKeysCallbacks() {
   }
   const isTypeSupported = WebKitMediaKeysConstructor.isTypeSupported;
   const createCustomMediaKeys = (keyType: string) => new WebKitCustomMediaKeys(keyType);
+  const customSetMediaKeys = (elt: HTMLMediaElement,
+                              mediaKeys: ICustomMediaKeys|null): void => {
+    if (mediaKeys === null) {
+      if ((elt as any).webkitSetMediaKeys === undefined) {
+        throw new Error("No webkitSetMediaKeys method.");
+      }
+      /* tslint:disable no-unsafe-any */
+      return (elt as any).webkitSetMediaKeys(null);
+      /* tslint:enable no-unsafe-any */
+    }
+    return mediaKeys._setVideo(elt);
+  };
   return {
     isTypeSupported,
     createCustomMediaKeys,
+    customSetMediaKeys,
   };
 }

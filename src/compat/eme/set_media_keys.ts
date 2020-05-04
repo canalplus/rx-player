@@ -19,13 +19,11 @@ import {
   Observable
 } from "rxjs";
 import castToObservable from "../../utils/cast_to_observable";
-import { ICustomMediaKeys } from "./custom_media_keys";
-
-function isCustomMediaKeys(
-  mediaKeys: MediaKeys|ICustomMediaKeys
-): mediaKeys is ICustomMediaKeys {
-  return (mediaKeys as ICustomMediaKeys)._setVideo !== undefined;
-}
+import {
+  customSetMediaKeys,
+  ICustomMediaKeys,
+} from "./custom_media_keys";
+import { isCustomMediaKeys } from "./custom_media_keys/is_custom_media_keys";
 
 /**
  * Set the MediaKeys given on the media element.
@@ -37,12 +35,15 @@ function _setMediaKeys(
   elt : HTMLMediaElement,
   mediaKeys : MediaKeys|ICustomMediaKeys|null
 ) : any {
-  if (mediaKeys === null) {
-    return;
+  if (customSetMediaKeys !== null) {
+    if (mediaKeys !== null && !isCustomMediaKeys(mediaKeys)) {
+      throw new Error("Can't use native set media keys with custom set media keys.");
+    }
+    return customSetMediaKeys(elt, mediaKeys);
   }
 
-  if (isCustomMediaKeys(mediaKeys)) {
-    return mediaKeys._setVideo(elt);
+  if (mediaKeys !== null && isCustomMediaKeys(mediaKeys)) {
+    throw new Error("Can't use custom set media keys with native set media keys.");
   }
 
   /* tslint:disable no-unbound-method */
@@ -55,6 +56,10 @@ function _setMediaKeys(
     /* tslint:disable no-unsafe-any */
     return (elt as any).WebkitSetMediaKeys(mediaKeys);
     /* tslint:enable no-unsafe-any */
+  }
+
+  if (mediaKeys === null) {
+    return;
   }
 
   if ((elt as any).mozSetMediaKeys) {
