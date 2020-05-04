@@ -37,13 +37,13 @@ function _setMediaKeys(
 ) : any {
   if (customSetMediaKeys !== null) {
     if (mediaKeys !== null && !isCustomMediaKeys(mediaKeys)) {
-      throw new Error("Can't use native set media keys with custom set media keys.");
+      throw new Error("Can't use standard set media keys with custom set media keys.");
     }
     return customSetMediaKeys(elt, mediaKeys);
   }
 
   if (mediaKeys !== null && isCustomMediaKeys(mediaKeys)) {
-    throw new Error("Can't use custom set media keys with native set media keys.");
+    throw new Error("Can't use custom set media keys with standard set media keys.");
   }
 
   /* tslint:disable no-unbound-method */
