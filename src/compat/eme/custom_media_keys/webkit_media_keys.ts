@@ -24,6 +24,7 @@ import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
+import { isCustomMediaKeys } from "./is_custom_media_keys";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
@@ -220,9 +221,10 @@ export default function getWebKitMediaKeysCallbacks() {
     throw new Error("No WebKitMediaKeys API.");
   }
   const isTypeSupported = WebKitMediaKeysConstructor.isTypeSupported;
-  const createCustomMediaKeys = (keyType: string) => new WebKitCustomMediaKeys(keyType);
-  const customSetMediaKeys = (elt: HTMLMediaElement,
-                              mediaKeys: ICustomMediaKeys|null): void => {
+  const createCustomMediaKeys = (keyType: string) =>
+    new WebKitCustomMediaKeys(keyType);
+  const setMediaKeys = (elt: HTMLMediaElement,
+                        mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
     if (mediaKeys === null) {
       if ((elt as any).webkitSetMediaKeys === undefined) {
         throw new Error("No webkitSetMediaKeys method.");
@@ -231,11 +233,15 @@ export default function getWebKitMediaKeysCallbacks() {
       return (elt as any).webkitSetMediaKeys(null);
       /* tslint:enable no-unsafe-any */
     }
+    if (!isCustomMediaKeys(mediaKeys)) {
+      throw new Error("Custom setMediaKeys not supposed to be called with" +
+                      "WebKit MediaKeys direclty.");
+    }
     return mediaKeys._setVideo(elt);
   };
   return {
     isTypeSupported,
     createCustomMediaKeys,
-    customSetMediaKeys,
+    setMediaKeys,
   };
 }

@@ -15,6 +15,7 @@
  */
 
 import {
+  defer as observableDefer,
   Observable,
   of as observableOf,
   throwError as observableThrow,
@@ -34,6 +35,7 @@ import CustomMediaKeySystemAccess from "./../custom_key_system_access";
 import getIE11MediaKeysCallbacks, {
   MSMediaKeysConstructor
 } from "./ie11_media_keys";
+import { isCustomMediaKeys } from "./is_custom_media_keys";
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement
 } from "./old_webkit_media_keys";
@@ -51,8 +53,40 @@ let requestMediaKeySystemAccess : null |
                                                     CustomMediaKeySystemAccess>)
                                 = null;
 
-let customSetMediaKeys : ((elt: HTMLMediaElement,
-                          mediaKeys: ICustomMediaKeys | null) => void) | null = null;
+let _setMediaKeys : ((elt: HTMLMediaElement,
+                      mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =
+  function defaultSetMediaKeys(elt: HTMLMediaElement,
+                               mediaKeys: MediaKeys | ICustomMediaKeys | null) {
+    if (mediaKeys !== null && isCustomMediaKeys(mediaKeys)) {
+      throw new Error("No custom set media keys was defined.");
+    }
+      /* tslint:disable no-unbound-method */
+    if (typeof elt.setMediaKeys === "function") {
+      /* tslint:enable no-unbound-method */
+      return elt.setMediaKeys(mediaKeys);
+    }
+
+    // If we get in the following code, it means that no compat case has been
+    // found and no standard setMediaKeys API exists. This case is particulary
+    // rare. We will try to call each API with native media keys.
+    if ((elt as any).webkitSetMediaKeys) {
+      /* tslint:disable no-unsafe-any */
+      return (elt as any).webkitSetMediaKeys(mediaKeys);
+      /* tslint:enable no-unsafe-any */
+    }
+
+    if ((elt as any).mozSetMediaKeys) {
+      /* tslint:disable no-unsafe-any */
+      return (elt as any).mozSetMediaKeys(mediaKeys);
+      /* tslint:enable no-unsafe-any */
+    }
+
+    if ((elt as any).msSetMediaKeys && mediaKeys !== null) {
+      /* tslint:disable no-unsafe-any */
+      return (elt as any).msSetMediaKeys(mediaKeys);
+      /* tslint:enable no-unsafe-any */
+    }
+  };
 
 /**
  * Since Safari 12.1, EME APIs are available without webkit prefix.
@@ -88,7 +122,7 @@ if (isNode ||
     const callbacks = getOldKitWebKitMediaKeyCallbacks();
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
-    customSetMediaKeys = callbacks.customSetMediaKeys;
+    _setMediaKeys = callbacks.setMediaKeys;
   // This is for WebKit with prefixed EME api
   } else if (WebKitMediaKeysConstructor !== undefined) {
     const callbacks = getWebKitMediaKeysCallbacks();
@@ -96,7 +130,7 @@ if (isNode ||
     isTypeSupported = callbacks.isTypeSupported;
     /* tslint:enable no-unsafe-any */
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
-    customSetMediaKeys = callbacks.customSetMediaKeys;
+    _setMediaKeys = callbacks.setMediaKeys;
   } else if (isIE11 && MSMediaKeysConstructor !== undefined)
     {
       const callbacks = getIE11MediaKeysCallbacks();
@@ -104,7 +138,7 @@ if (isNode ||
       isTypeSupported = callbacks.isTypeSupported;
       /* tslint:enable no-unsafe-any */
       createCustomMediaKeys = callbacks.createCustomMediaKeys;
-      customSetMediaKeys = callbacks.customSetMediaKeys;
+      _setMediaKeys = callbacks.setMediaKeys;
     }
 
   requestMediaKeySystemAccess = function(
@@ -155,9 +189,23 @@ if (isNode ||
   };
 }
 
+/**
+ * Set the given MediaKeys on the given HTMLMediaElement.
+ * Emits null when done then complete.
+ * @param {HTMLMediaElement} elt
+ * @param {Object} mediaKeys
+ * @returns {Observable}
+ */
+function setMediaKeys(
+  elt : HTMLMediaElement,
+  mediaKeys : MediaKeys|ICustomMediaKeys|null
+) : Observable<unknown> {
+  return observableDefer(() => castToObservable(_setMediaKeys(elt, mediaKeys)));
+}
+
 export {
   requestMediaKeySystemAccess,
-  customSetMediaKeys,
+  setMediaKeys,
   ICustomMediaKeys,
   ICustomMediaKeySession,
 };

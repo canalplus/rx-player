@@ -21,10 +21,10 @@ import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
   requestMediaKeySystemAccess,
+  setMediaKeys,
 } from "./custom_media_keys";
 import generateKeyRequest from "./generate_key_request";
 import getInitData from "./get_init_data";
-import setMediaKeys from "./set_media_keys";
 
 export {
   CustomMediaKeySystemAccess,

@@ -22,6 +22,7 @@ import { takeUntil } from "rxjs/operators";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
+import { isCustomMediaKeys } from "./is_custom_media_keys";
 import { MSMediaKeysConstructor } from "./ms_media_keys_constructor";
 import {
   ICustomMediaKeys,
@@ -145,18 +146,23 @@ export default function getIE11MediaKeysCallbacks() {
     }
     return MSMediaKeysConstructor.isTypeSupported(keySystem);
   };
-  const createCustomMediaKeys = (keyType: string) => new IE11CustomMediaKeys(keyType);
-  const customSetMediaKeys = (elt: HTMLMediaElement,
-                              mediaKeys: ICustomMediaKeys|null): void => {
+  const createCustomMediaKeys = (keyType: string) =>
+    new IE11CustomMediaKeys(keyType);
+  const setMediaKeys = (elt: HTMLMediaElement,
+                        mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
     if (mediaKeys === null) {
       return;
+    }
+    if (!isCustomMediaKeys(mediaKeys)) {
+      throw new Error("Custom setMediaKeys not supposed to be called" +
+                      "with IE11 MediaKeys direclty.");
     }
     return mediaKeys._setVideo(elt);
   };
   return {
     isTypeSupported,
     createCustomMediaKeys,
-    customSetMediaKeys,
+    setMediaKeys,
   };
 }
 
