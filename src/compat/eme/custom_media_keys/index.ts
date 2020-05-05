@@ -15,6 +15,7 @@
  */
 
 import {
+  defer as observableDefer,
   Observable,
   of as observableOf,
   throwError as observableThrow,
@@ -51,6 +52,38 @@ let requestMediaKeySystemAccess : null |
                                                     CustomMediaKeySystemAccess>)
                                 = null;
 
+let _setMediaKeys : ((elt: HTMLMediaElement,
+                      mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =
+  function defaultSetMediaKeys(elt: HTMLMediaElement,
+                               mediaKeys: MediaKeys | ICustomMediaKeys | null) {
+    /* tslint:disable no-unbound-method */
+    if (typeof elt.setMediaKeys === "function") {
+      return elt.setMediaKeys(mediaKeys as MediaKeys);
+    }
+    /* tslint:enable no-unbound-method */
+
+    // If we get in the following code, it means that no compat case has been
+    // found and no standard setMediaKeys API exists. This case is particulary
+    // rare. We will try to call each API with native media keys.
+    if ((elt as any).webkitSetMediaKeys) {
+      /* tslint:disable no-unsafe-any */
+      return (elt as any).webkitSetMediaKeys(mediaKeys);
+      /* tslint:enable no-unsafe-any */
+    }
+
+    if ((elt as any).mozSetMediaKeys) {
+      /* tslint:disable no-unsafe-any */
+      return (elt as any).mozSetMediaKeys(mediaKeys);
+      /* tslint:enable no-unsafe-any */
+    }
+
+    if ((elt as any).msSetMediaKeys && mediaKeys !== null) {
+      /* tslint:disable no-unsafe-any */
+      return (elt as any).msSetMediaKeys(mediaKeys);
+      /* tslint:enable no-unsafe-any */
+    }
+  };
+
 /**
  * Since Safari 12.1, EME APIs are available without webkit prefix.
  * However, it seems that since fairplay CDM implementation within the browser is not
@@ -85,6 +118,7 @@ if (isNode ||
     const callbacks = getOldKitWebKitMediaKeyCallbacks();
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
+    _setMediaKeys = callbacks.setMediaKeys;
   // This is for WebKit with prefixed EME api
   } else if (WebKitMediaKeysConstructor !== undefined) {
     const callbacks = getWebKitMediaKeysCallbacks();
@@ -92,6 +126,7 @@ if (isNode ||
     isTypeSupported = callbacks.isTypeSupported;
     /* tslint:enable no-unsafe-any */
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
+    _setMediaKeys = callbacks.setMediaKeys;
   } else if (isIE11 && MSMediaKeysConstructor !== undefined)
     {
       const callbacks = getIE11MediaKeysCallbacks();
@@ -99,6 +134,7 @@ if (isNode ||
       isTypeSupported = callbacks.isTypeSupported;
       /* tslint:enable no-unsafe-any */
       createCustomMediaKeys = callbacks.createCustomMediaKeys;
+      _setMediaKeys = callbacks.setMediaKeys;
     }
 
   requestMediaKeySystemAccess = function(
@@ -149,8 +185,23 @@ if (isNode ||
   };
 }
 
+/**
+ * Set the given MediaKeys on the given HTMLMediaElement.
+ * Emits null when done then complete.
+ * @param {HTMLMediaElement} elt
+ * @param {Object} mediaKeys
+ * @returns {Observable}
+ */
+function setMediaKeys(
+  elt : HTMLMediaElement,
+  mediaKeys : MediaKeys|ICustomMediaKeys|null
+) : Observable<unknown> {
+  return observableDefer(() => castToObservable(_setMediaKeys(elt, mediaKeys)));
+}
+
 export {
   requestMediaKeySystemAccess,
+  setMediaKeys,
   ICustomMediaKeys,
   ICustomMediaKeySession,
 };

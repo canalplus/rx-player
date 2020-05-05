@@ -25,6 +25,7 @@ import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import {
+  ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeyStatusMap,
   IMediaKeySessionEvents,
@@ -48,6 +49,22 @@ export interface ICustomWebKitMediaKeys {
 function isFairplayKeyType(keyType: string): boolean {
   return keyType === "com.apple.fps.1_0" ||
          keyType === "com.apple.fps.2_0";
+}
+
+/**
+ * Set media keys on video element using native HTMLMediaElement
+ * setMediaKeys from WebKit.
+ * @param {HTMLMediaElement} videoElement
+ * @param {Object|null} mediaKeys
+ */
+function setWebKitMediaKeys(videoElement: HTMLMediaElement,
+                            mediaKeys: IWebKitMediaKeys|null): void {
+  /* tslint:disable no-unsafe-any */
+  if ((videoElement as any).webkitSetMediaKeys === undefined) {
+    throw new Error("No webKitMediaKeys API.");
+  }
+  return (videoElement as any).webkitSetMediaKeys(mediaKeys);
+  /* tslint:enable no-unsafe-any */
 }
 
 /**
@@ -189,12 +206,7 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
     if (this._videoElement === undefined) {
       throw new Error("Video not attached to the MediaKeys");
     }
-    /* tslint:disable no-unsafe-any */
-    if ((this._videoElement as any).webkitSetMediaKeys === undefined) {
-      throw new Error("No webKitMediaKeys API.");
-    }
-    (this._videoElement as any).webkitSetMediaKeys(this._mediaKeys);
-    /* tslint:enable no-unsafe-any */
+    return setWebKitMediaKeys(this._videoElement, this._mediaKeys);
   }
 
   createSession(/* sessionType */): ICustomMediaKeySession {
@@ -219,9 +231,22 @@ export default function getWebKitMediaKeysCallbacks() {
     throw new Error("No WebKitMediaKeys API.");
   }
   const isTypeSupported = WebKitMediaKeysConstructor.isTypeSupported;
-  const createCustomMediaKeys = (keyType: string) => new WebKitCustomMediaKeys(keyType);
+  const createCustomMediaKeys = (keyType: string) =>
+    new WebKitCustomMediaKeys(keyType);
+  const setMediaKeys = (elt: HTMLMediaElement,
+                        mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
+    if (mediaKeys === null) {
+      return setWebKitMediaKeys(elt, mediaKeys);
+    }
+    if (!(mediaKeys instanceof WebKitCustomMediaKeys)) {
+      throw new Error("Custom setMediaKeys is supposed to be called " +
+                      "with webkit custom MediaKeys.");
+    }
+    return mediaKeys._setVideo(elt);
+  };
   return {
     isTypeSupported,
     createCustomMediaKeys,
+    setMediaKeys,
   };
 }

@@ -145,10 +145,26 @@ export default function getIE11MediaKeysCallbacks() {
     }
     return MSMediaKeysConstructor.isTypeSupported(keySystem);
   };
-  const createCustomMediaKeys = (keyType: string) => new IE11CustomMediaKeys(keyType);
+  const createCustomMediaKeys = (keyType: string) =>
+    new IE11CustomMediaKeys(keyType);
+  const setMediaKeys = (elt: HTMLMediaElement,
+                        mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
+    if (mediaKeys === null) {
+      // msSetMediaKeys only accepts native MSMediaKeys as argument.
+      // Calling it with null or undefined will raise an exception.
+      // There is no way to unset the mediakeys in that case, so return here.
+      return;
+    }
+    if (!(mediaKeys instanceof IE11CustomMediaKeys)) {
+      throw new Error("Custom setMediaKeys is supposed to be called " +
+                      "with IE11 custom MediaKeys.");
+    }
+    return mediaKeys._setVideo(elt);
+  };
   return {
     isTypeSupported,
     createCustomMediaKeys,
+    setMediaKeys,
   };
 }
 
