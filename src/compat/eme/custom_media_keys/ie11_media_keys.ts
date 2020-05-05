@@ -150,6 +150,9 @@ export default function getIE11MediaKeysCallbacks() {
   const setMediaKeys = (elt: HTMLMediaElement,
                         mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
     if (mediaKeys === null) {
+      // msSetMediaKeys only accepts native MSMediaKeys as argument.
+      // Calling it with null or undefined will raise an exception.
+      // There is no way to unset the mediakeys in that case, so return here.
       return;
     }
     if (!(mediaKeys instanceof IE11CustomMediaKeys)) {
