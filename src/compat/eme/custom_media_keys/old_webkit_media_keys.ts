@@ -27,7 +27,6 @@ import {
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
-import { isCustomMediaKeys } from "./is_custom_media_keys";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
@@ -190,9 +189,9 @@ export default function getOldWebKitMediaKeysCallbacks() {
     if (mediaKeys === null) {
       return;
     }
-    if (!isCustomMediaKeys(mediaKeys)) {
-      throw new Error("Custom setMediaKeys not supposed to be called with old " +
-                      "WebKit MediaKeys direclty.");
+    if (!(mediaKeys instanceof OldWebKitCustomMediaKeys)) {
+      throw new Error("Custom setMediaKeys is supposed to be called " +
+                      "with old webkit custom MediaKeys.");
     }
     return mediaKeys._setVideo(elt);
   };

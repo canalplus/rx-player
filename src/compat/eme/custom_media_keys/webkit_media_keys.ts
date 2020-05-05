@@ -24,7 +24,6 @@ import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
-import { isCustomMediaKeys } from "./is_custom_media_keys";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
@@ -239,9 +238,9 @@ export default function getWebKitMediaKeysCallbacks() {
     if (mediaKeys === null) {
       return setWebKitMediaKeys(elt, mediaKeys);
     }
-    if (mediaKeys !== null && !isCustomMediaKeys(mediaKeys)) {
-      throw new Error("Custom setMediaKeys not supposed to be called with " +
-                      "WebKit MediaKeys direclty.");
+    if (!(mediaKeys instanceof WebKitCustomMediaKeys)) {
+      throw new Error("Custom setMediaKeys is supposed to be called " +
+                      "with webkit custom MediaKeys.");
     }
     return mediaKeys._setVideo(elt);
   };

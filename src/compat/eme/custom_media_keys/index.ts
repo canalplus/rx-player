@@ -35,7 +35,6 @@ import CustomMediaKeySystemAccess from "./../custom_key_system_access";
 import getIE11MediaKeysCallbacks, {
   MSMediaKeysConstructor
 } from "./ie11_media_keys";
-import { isCustomMediaKeys } from "./is_custom_media_keys";
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement
 } from "./old_webkit_media_keys";
@@ -57,14 +56,11 @@ let _setMediaKeys : ((elt: HTMLMediaElement,
                       mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =
   function defaultSetMediaKeys(elt: HTMLMediaElement,
                                mediaKeys: MediaKeys | ICustomMediaKeys | null) {
-    if (mediaKeys !== null && isCustomMediaKeys(mediaKeys)) {
-      throw new Error("No custom set media keys was defined.");
-    }
-      /* tslint:disable no-unbound-method */
+    /* tslint:disable no-unbound-method */
     if (typeof elt.setMediaKeys === "function") {
-      /* tslint:enable no-unbound-method */
-      return elt.setMediaKeys(mediaKeys);
+      return elt.setMediaKeys(mediaKeys as MediaKeys);
     }
+    /* tslint:enable no-unbound-method */
 
     // If we get in the following code, it means that no compat case has been
     // found and no standard setMediaKeys API exists. This case is particulary

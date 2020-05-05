@@ -22,7 +22,6 @@ import { takeUntil } from "rxjs/operators";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
-import { isCustomMediaKeys } from "./is_custom_media_keys";
 import { MSMediaKeysConstructor } from "./ms_media_keys_constructor";
 import {
   ICustomMediaKeys,
@@ -153,9 +152,9 @@ export default function getIE11MediaKeysCallbacks() {
     if (mediaKeys === null) {
       return;
     }
-    if (!isCustomMediaKeys(mediaKeys)) {
-      throw new Error("Custom setMediaKeys not supposed to be called " +
-                      "with IE11 MediaKeys direclty.");
+    if (!(mediaKeys instanceof IE11CustomMediaKeys)) {
+      throw new Error("Custom setMediaKeys is supposed to be called " +
+                      "with IE11 custom MediaKeys.");
     }
     return mediaKeys._setVideo(elt);
   };
