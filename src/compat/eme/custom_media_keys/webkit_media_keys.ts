@@ -53,6 +53,22 @@ function isFairplayKeyType(keyType: string): boolean {
 }
 
 /**
+ * Set media keys on video element using native HTMLMediaElement
+ * setMediaKeys from WebKit.
+ * @param {HTMLMediaElement} videoElement
+ * @param {Object|null} mediaKeys
+ */
+function setWebKitMediaKeys(videoElement: HTMLMediaElement,
+                            mediaKeys: IWebKitMediaKeys|null): void {
+  /* tslint:disable no-unsafe-any */
+  if ((videoElement as any).webkitSetMediaKeys === undefined) {
+    throw new Error("No webKitMediaKeys API.");
+  }
+  return (videoElement as any).webkitSetMediaKeys(mediaKeys);
+  /* tslint:enable no-unsafe-any */
+}
+
+/**
  * On Safari browsers (>= 9), there are specific webkit prefixed APIs for cyphered
  * content playback. Standard EME APIs are therefore available since Safari 12.1, but they
  * don't allow to play fairplay cyphered content.
@@ -191,12 +207,7 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
     if (this._videoElement === undefined) {
       throw new Error("Video not attached to the MediaKeys");
     }
-    /* tslint:disable no-unsafe-any */
-    if ((this._videoElement as any).webkitSetMediaKeys === undefined) {
-      throw new Error("No webKitMediaKeys API.");
-    }
-    (this._videoElement as any).webkitSetMediaKeys(this._mediaKeys);
-    /* tslint:enable no-unsafe-any */
+    return setWebKitMediaKeys(this._videoElement, this._mediaKeys);
   }
 
   createSession(/* sessionType */): ICustomMediaKeySession {
@@ -226,12 +237,7 @@ export default function getWebKitMediaKeysCallbacks() {
   const setMediaKeys = (elt: HTMLMediaElement,
                         mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
     if (mediaKeys === null) {
-      if ((elt as any).webkitSetMediaKeys === undefined) {
-        throw new Error("No webkitSetMediaKeys method.");
-      }
-      /* tslint:disable no-unsafe-any */
-      return (elt as any).webkitSetMediaKeys(null);
-      /* tslint:enable no-unsafe-any */
+      return setWebKitMediaKeys(elt, mediaKeys);
     }
     if (mediaKeys !== null && !isCustomMediaKeys(mediaKeys)) {
       throw new Error("Custom setMediaKeys not supposed to be called with " +
