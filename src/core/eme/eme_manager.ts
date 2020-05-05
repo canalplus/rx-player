@@ -169,7 +169,8 @@ export default function EMEManager(
           if (evt.type === "cleaning-old-session") {
             handledInitData.remove(evt.value.initData, evt.value.initDataType);
           }
-          return { type: evt.type,
+          return {
+            type: evt.type,
             value: objectAssign({
               keySystemOptions: mediaKeysInfos.keySystemOptions,
               persistentSessionsStore: mediaKeysInfos.persistentSessionsStore,
