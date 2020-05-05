@@ -161,10 +161,10 @@ export default class PersistentSessionsStore {
       const entry = this._entries[i];
       if (entry.initDataType === initDataType) {
         if (entry.version === 1) {
-          if (entry.initDataHash === hash) {
-            if (areArraysOfNumbersEqual(entry.initData, initData)) {
+          if (entry.initDataHash === hash &&
+              areArraysOfNumbersEqual(entry.initData, initData))
+          {
               return i;
-            }
           }
         } else {
           if (entry.initData === hash) {
