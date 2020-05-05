@@ -154,7 +154,7 @@ export default function getIE11MediaKeysCallbacks() {
       return;
     }
     if (!isCustomMediaKeys(mediaKeys)) {
-      throw new Error("Custom setMediaKeys not supposed to be called" +
+      throw new Error("Custom setMediaKeys not supposed to be called " +
                       "with IE11 MediaKeys direclty.");
     }
     return mediaKeys._setVideo(elt);

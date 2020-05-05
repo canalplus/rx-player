@@ -233,8 +233,8 @@ export default function getWebKitMediaKeysCallbacks() {
       return (elt as any).webkitSetMediaKeys(null);
       /* tslint:enable no-unsafe-any */
     }
-    if (!isCustomMediaKeys(mediaKeys)) {
-      throw new Error("Custom setMediaKeys not supposed to be called with" +
+    if (mediaKeys !== null && !isCustomMediaKeys(mediaKeys)) {
+      throw new Error("Custom setMediaKeys not supposed to be called with " +
                       "WebKit MediaKeys direclty.");
     }
     return mediaKeys._setVideo(elt);

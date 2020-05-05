@@ -191,7 +191,7 @@ export default function getOldWebKitMediaKeysCallbacks() {
       return;
     }
     if (!isCustomMediaKeys(mediaKeys)) {
-      throw new Error("Custom setMediaKeys not supposed to be called with old" +
+      throw new Error("Custom setMediaKeys not supposed to be called with old " +
                       "WebKit MediaKeys direclty.");
     }
     return mediaKeys._setVideo(elt);
