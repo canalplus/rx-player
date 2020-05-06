@@ -76,6 +76,7 @@ export default function checkKeyStatuses(
         }
         warnings.push({ type: "warning", value: error });
         blacklistedKeyIDs.push(keyId);
+        break;
       }
 
       case KEY_STATUSES.OUTPUT_RESTRICTED: {
@@ -87,6 +88,7 @@ export default function checkKeyStatuses(
         }
         warnings.push({ type: "warning", value: error });
         blacklistedKeyIDs.push(keyId);
+        break;
       }
     }
   });
