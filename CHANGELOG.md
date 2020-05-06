@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.20.1 (2020/05/06)
+
+### Bug fixes
+
+  - eme: fix `OTHER_ERROR` issue arising when loading a new encrypted media when a previous since-disposed instance of the RxPlayer-played encrypted contents on the same media element
+  - eme: fix `OTHER_ERROR` issue arising on Internet Explorer 11 when playing more than one encrypted content
+  - eme: fix issue where more than 50 active MediaKeySessions at the same time could lead to infinite rebuffering when playing back a previous content with multiple encryption keys
+  - directfile: for directfile contents, don't reset to the preferred audio, text or video track when the track list changes
+  - eme: remove any possibility of collision in the storage of EME initialization data. The previous behavior could theorically lead some initialization data to be ignored.
+  - eme: fix typo which conflated an EME "internal-error" key status and an "output-restricted" one.
+
+
 ## v3.20.0 (2020/04/22)
 
 ### Features
