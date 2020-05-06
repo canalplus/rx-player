@@ -38,9 +38,9 @@ export default function disposeMediaKeys(
     }
 
     log.debug("EME: Disposing of the current MediaKeys");
-    const { sessionsStore } = currentState;
+    const { loadedSessionsStore } = currentState;
     MediaKeysInfosStore.clearState(mediaElement);
-    return sessionsStore.closeAllSessions()
+    return loadedSessionsStore.closeAllSessions()
       .pipe(mergeMapTo(setMediaKeys(mediaElement, null)));
   });
 }

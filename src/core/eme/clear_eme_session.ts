@@ -43,7 +43,7 @@ export default function clearEMESession(
     if (currentState != null &&
         currentState.keySystemOptions.closeSessionsOnStop === true)
     {
-      return currentState.sessionsStore.closeAllSessions()
+      return currentState.loadedSessionsStore.closeAllSessions()
         .pipe(ignoreElements());
     }
     return EMPTY;

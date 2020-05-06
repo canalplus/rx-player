@@ -35,17 +35,17 @@ import {
   IKeySystemOption,
   IMediaKeysInfos,
 } from "./types";
-import SessionsStore from "./utils/open_sessions_store";
-import PersistedSessionsStore from "./utils/persisted_session_store";
+import LoadedSessionsStore from "./utils/loaded_sessions_store";
+import PersistentSessionsStore from "./utils/persistent_sessions_store";
 
 /**
  * @throws {EncryptedMediaError}
  * @param {Object} keySystemOptions
  * @returns {Object|null}
  */
-function createSessionStorage(
+function createPersistentSessionsStorage(
   keySystemOptions : IKeySystemOption
-) : PersistedSessionsStore|null {
+) : PersistentSessionsStore|null {
   if (keySystemOptions.persistentLicense !== true) {
     return null;
   }
@@ -57,7 +57,7 @@ function createSessionStorage(
   }
 
   log.info("EME: Set the given license storage");
-  return new PersistedSessionsStore(licenseStorage);
+  return new PersistentSessionsStore(licenseStorage);
 }
 
 /**
@@ -74,15 +74,15 @@ export default function getMediaKeysInfos(
     ).pipe(mergeMap((evt) => {
       const { options, mediaKeySystemAccess } = evt.value;
       const currentState = MediaKeysInfosStore.getState(mediaElement);
-      const sessionStorage = createSessionStorage(options);
+      const persistentSessionsStore = createPersistentSessionsStorage(options);
 
       if (currentState != null && evt.type === "reuse-media-key-system-access") {
-        const { mediaKeys, sessionsStore } = currentState;
+        const { mediaKeys, loadedSessionsStore } = currentState;
         return observableOf({ mediaKeys,
-                              sessionsStore,
+                              loadedSessionsStore,
                               mediaKeySystemAccess,
                               keySystemOptions: options,
-                              sessionStorage });
+                              persistentSessionsStore });
       }
 
       log.debug("EME: Calling createMediaKeys on the MediaKeySystemAccess");
@@ -95,9 +95,9 @@ export default function getMediaKeysInfos(
           throw new EncryptedMediaError("CREATE_MEDIA_KEYS_ERROR", message);
         }),
         map((mediaKeys) => ({ mediaKeys,
-                              sessionsStore: new SessionsStore(mediaKeys),
+                              loadedSessionsStore: new LoadedSessionsStore(mediaKeys),
                               mediaKeySystemAccess,
                               keySystemOptions: options,
-                              sessionStorage })));
+                              persistentSessionsStore })));
     }));
 }

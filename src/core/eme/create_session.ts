@@ -73,7 +73,7 @@ function loadPersistentSession(
  * retry.
  *
  * /!\ This only creates new sessions.
- * It will fail if sessionsStore already has a MediaKeySession with
+ * It will fail if loadedSessionsStore already has a MediaKeySession with
  * the given initializationData.
  * @param {Uint8Array} initData
  * @param {string|undefined} initDataType
@@ -88,8 +88,8 @@ export default function createSession(
   return observableDefer(() => {
     const { keySystemOptions,
             mediaKeySystemAccess,
-            sessionsStore,
-            sessionStorage } = mediaKeysInfos;
+            loadedSessionsStore,
+            persistentSessionsStore } = mediaKeysInfos;
 
     const mksConfig = mediaKeySystemAccess.getConfiguration();
     const sessionTypes = mksConfig.sessionTypes;
@@ -98,24 +98,25 @@ export default function createSession(
 
     const sessionType : MediaKeySessionType =
       hasPersistence &&
-      sessionStorage != null &&
+      persistentSessionsStore != null &&
       keySystemOptions.persistentLicense === true ? "persistent-license" :
                                                     "temporary";
 
     log.debug(`EME: Create a new ${sessionType} session`);
 
-    const session = sessionsStore.createSession(initData, initDataType, sessionType);
+    const session = loadedSessionsStore
+      .createSession(initData, initDataType, sessionType);
 
     // Re-check for Dumb typescript. Equivalent to `sessionType === "temporary"`.
     if (!hasPersistence ||
-        sessionStorage == null ||
+        persistentSessionsStore == null ||
         keySystemOptions.persistentLicense !== true)
     {
       return observableOf({ type: "created-session" as "created-session",
                             value: { mediaKeySession: session, sessionType } });
     }
 
-    const storedEntry = sessionStorage.get(initData, initDataType);
+    const storedEntry = persistentSessionsStore.get(initData, initDataType);
     if (storedEntry === null) {
       return observableOf({ type: "created-session" as "created-session",
                             value: { mediaKeySession: session, sessionType } });
@@ -128,14 +129,14 @@ export default function createSession(
      */
     const recreatePersistentSession = () : Observable<INewSessionCreatedEvent> => {
       log.info("EME: Removing previous persistent session.");
-      if (sessionStorage.get(initData, initDataType) !== null) {
-        sessionStorage.delete(initData, initDataType);
+      if (persistentSessionsStore.get(initData, initDataType) !== null) {
+        persistentSessionsStore.delete(initData, initDataType);
       }
-      return sessionsStore.deleteAndCloseSession(session)
+      return loadedSessionsStore.closeSession(initData, initDataType)
         .pipe(map(() => {
-          const newSession = sessionsStore.createSession(initData,
-                                                         initDataType,
-                                                         sessionType);
+          const newSession = loadedSessionsStore.createSession(initData,
+                                                               initDataType,
+                                                               sessionType);
           return { type: "created-session" as "created-session",
                    value: { mediaKeySession: newSession, sessionType } };
         }));
@@ -145,13 +146,13 @@ export default function createSession(
       mergeMap((hasLoadedSession) : Observable<ICreateSessionEvent> => {
         if (!hasLoadedSession) {
           log.warn("EME: No data stored for the loaded session");
-          sessionStorage.delete(initData, initDataType);
+          persistentSessionsStore.delete(initData, initDataType);
           return observableOf({ type: "created-session" as "created-session",
                                 value: { mediaKeySession: session, sessionType } });
         }
 
         if (hasLoadedSession && isSessionUsable(session)) {
-          sessionStorage.add(initData, initDataType, session);
+          persistentSessionsStore.add(initData, initDataType, session);
           log.info("EME: Succeeded to load persistent session.");
           return observableOf({ type: "loaded-persistent-session" as const,
                                 value: { mediaKeySession: session, sessionType } });

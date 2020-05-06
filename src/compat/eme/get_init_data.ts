@@ -15,12 +15,11 @@
  */
 
 import log from "../../log";
+import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import {
   be4toi,
   concat,
 } from "../../utils/byte_parsing";
-import hashBuffer from "../../utils/hash_buffer";
-import SimpleSet from "../../utils/simple_set";
 import { PSSH_TO_INTEGER } from "./constants";
 
 /**
@@ -37,7 +36,7 @@ import { PSSH_TO_INTEGER } from "./constants";
  */
 function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
   let resInitData = new Uint8Array();
-  const currentHashes = new SimpleSet();
+  const encounteredPSSHs : Uint8Array[] = [];
 
   let offset = 0;
   while (offset < initData.length) {
@@ -54,12 +53,11 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
       return initData;
     }
     const currentPSSH = initData.subarray(offset, offset + len);
-    const currentPSSHHash = hashBuffer(currentPSSH);
-    if (!currentHashes.test(currentPSSHHash)) {
-      currentHashes.add(currentPSSHHash);
-      resInitData = concat(resInitData, currentPSSH);
-    } else {
+    if (isPSSHAlreadyEncountered(encounteredPSSHs, currentPSSH)) {
       log.warn("Compat: Duplicated PSSH found in initialization data, removing it.");
+    } else {
+      resInitData = concat(resInitData, currentPSSH);
+      encounteredPSSHs.push(initData);
     }
     offset += len;
   }
@@ -69,6 +67,27 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
     return initData;
   }
   return resInitData;
+}
+
+/**
+ * Returns `true` if the given PSSH has already been stored in the
+ * `encounteredPSSHs` cache given.
+ * Returns `false` otherwise.
+ * @param {Array.<Object>} encounteredPSSHs
+ * @param {Uint8Array} pssh
+ * @returns {boolean}
+ */
+function isPSSHAlreadyEncountered(
+  encounteredPSSHs : Uint8Array[],
+  pssh : Uint8Array
+) : boolean {
+  for (let i = 0; i < encounteredPSSHs.length; i++) {
+    const item = encounteredPSSHs[i];
+    if (areArraysOfNumbersEqual(pssh, item)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
