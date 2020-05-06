@@ -141,8 +141,7 @@ export default function SessionEventsListener(
                ISessionMessageEvent |
                INoUpdateEvent |
                ISessionUpdatedEvent |
-               IBlacklistKeysEvent |
-               IEMEWarningEvent> {
+               IBlacklistKeysEvent> {
   log.debug("EME: Binding session events", session);
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
   const { getLicenseConfig = {} } = keySystem;
