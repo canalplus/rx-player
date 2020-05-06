@@ -1,0 +1,502 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>MediaCapabilitiesProber - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-MediaCapabilitiesProber">MediaCapabilitiesProber</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-How%20to%20use%20it">How to use it</a></li>
+<li><a href="#chapter-Properties">Properties</a>
+<ul>
+<li><a href="#subchapter-LogLevel">LogLevel</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Functions">Functions</a>
+<ul>
+<li><a href="#subchapter-getCompatibleDRMConfigurations">getCompatibleDRMConfigurations</a></li>
+<li><a href="#subchapter-getStatusForHDCP">getStatusForHDCP</a></li>
+<li><a href="#subchapter-getDecodingCapabilities">getDecodingCapabilities</a></li>
+<li><a href="#subchapter-getDisplayCapabilities">getDisplayCapabilities</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Exploited%20browser%20APIs">Exploited browser APIs</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-MediaCapabilitiesProber"></a></p>
+<h1>MediaCapabilitiesProber</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The MediaCapabilitiesProber is a tool probing what your browser can do,
+especially:</p>
+<ul>
+<li>
+<p>Which DRM system is supported</p>
+</li>
+<li>
+<p>Check for HDCP support</p>
+</li>
+<li>
+<p>which codecs are available</p>
+</li>
+<li>
+<p>Check the color space support</p>
+</li>
+</ul>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This tool is still in an experimental phase, meaning that its API can
+change at any new release. This is not because it is not stable (it is actually)
+or should not be used in production. This is just because we want to receive
+your feedbacks before locking definitely the API.</p>
+<p>We can for example add supplementary information of even explode the
+MediaCapabilitiesProber into several tools to lower the size of the import.
+We&#x2019;re waiting for your feedbacks!</p>
+<p><a name="chapter-How%20to%20use%20it"></a></p>
+<h2>How to use it</h2>
+<p>As an experimental tool, the MediaCapabilitiesProber won&#x2019;t be included in a
+default RxPlayer build.</p>
+<p>Instead, it should be imported by adding the RxPlayer through a dependency
+trough the npm registry (e.g. by doing something like <code>npm install rx-player</code>) and then specifically importing this tool from
+<code>&quot;rx-player/experimental/tools&quot;</code>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools&quot;</span>;
+
+mediaCapabilitiesProber.getStatusForHDCP(<span class="hljs-string">&quot;1.1&quot;</span>)
+  .then(<span class="hljs-function">(<span class="hljs-params">hdcp11Status</span>) =&gt;</span> {
+    <span class="hljs-keyword">if</span> (hdcp11Status === <span class="hljs-string">&quot;Supported&quot;</span>) {
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;HDCP 1.1 is supported&quot;</span>);
+    }
+  });
+</code></pre>
+<p><a name="chapter-Properties"></a></p>
+<h2>Properties</h2>
+<p><a name="subchapter-LogLevel"></a></p>
+<h3>LogLevel</h3>
+<p><em>type</em>: <code>string</code></p>
+<p><em>default</em>: <code>&quot;WARNING&quot;</code></p>
+<p>The current level of verbosity for this prober logs. Those logs all use the
+console.</p>
+<p>From the less verbose to the most:</p>
+<ul>
+<li>
+<p><code>&quot;NONE&quot;</code>: no log</p>
+</li>
+<li>
+<p><code>&quot;ERROR&quot;</code>: unexpected errors (via <code>console.error</code>)</p>
+</li>
+<li>
+<p><code>&quot;WARNING&quot;</code>: The previous level + minor problems encountered (via
+<code>console.warn</code>)</p>
+</li>
+<li>
+<p><code>&quot;INFO&quot;</code>: The previous levels + noteworthy events (via <code>console.info</code>)</p>
+</li>
+<li>
+<p><code>&quot;DEBUG&quot;</code>: The previous levels + normal events of the prober (via
+<code>console.log</code>)</p>
+</li>
+</ul>
+<p>If the value set to this property is different than those, it will be
+automatically set to <code>&quot;NONE&quot;</code>.</p>
+<p>It is set to <code>&quot;WARNING&quot;</code> by default as it allows you to know if you forgot to
+set required information on each APIs, if some APIs are missing in your
+browser, etc.</p>
+<p>You might want to set it to <code>&quot;NONE&quot;</code> when in production.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools&quot;</span>;
+mediaCapabilitiesProber.LogLevel = <span class="hljs-string">&quot;NONE&quot;</span>;
+</code></pre>
+<p><a name="chapter-Functions"></a></p>
+<h2>Functions</h2>
+<p><a name="subchapter-getCompatibleDRMConfigurations"></a></p>
+<h3>getCompatibleDRMConfigurations</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li>
+<p><em>keySystems</em> (<code>Array.&lt;Object&gt;</code>): An array of key system
+configurations. Those objects have the following properties:</p>
+<ul>
+<li>
+<p><em>type</em> (<code>string</code>): Key system string identifying it in the browser.
+Always a reverse domain name (e.g. &#x201C;org.w3.clearkey&#x201D;).</p>
+</li>
+<li>
+<p><em>configuration</em> (<code>Object</code>): Wanted MediaKeySystemConfiguration for this
+key system, as defined in <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration">the EME w3c
+specification.</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<p><em>return value</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Probe the support of various key sytems and for each compatible ones, returns
+the corresponding configuration that will be used.</p>
+<h4>Return value</h4>
+<p>The returned value is an array of object with the same number of elements than
+the one given in argument.</p>
+<p>It indicates the support for each Key System given in argument in the same
+order.</p>
+<p>Due to that, the objects in this array look like the ones given in argument (but
+with an added property):</p>
+<ul>
+<li>
+<p><em>type</em> (<code>string</code>): Corresponding key system string given in input.</p>
+</li>
+<li>
+<p><em>configuration</em> (<code>Object</code>): Corresponding wanted
+MediaKeySystemConfiguration given in input.</p>
+</li>
+<li>
+<p><em>compatibleConfiguration</em> (<code>undefined|Object</code>):</p>
+<p>if the type and configuration are both compatible with the browser, this
+is the corresponding actual MediaKeySystemConfiguration that will be
+effectively used.
+It will often correspond to a subset of the inputted <em>configuration</em>
+object (for example, you might have there fewer <em>videoCapabilities</em> that
+in the <em>configuration</em> object).</p>
+<p>If the type and/or the configuration are not compatible, this property
+will not be defined.</p>
+</li>
+</ul>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools&quot;</span>;
+
+<span class="hljs-keyword">const</span> mksConfiguration = {
+  <span class="hljs-attr">initDataTypes</span>: [<span class="hljs-string">&quot;cenc&quot;</span>],
+  <span class="hljs-attr">videoCapabilities</span>: [
+    {
+      <span class="hljs-attr">contentType</span>: <span class="hljs-string">&quot;video/mp4;codecs=\&quot;avc1.4d401e\&quot;&quot;</span>, <span class="hljs-comment">// standard mp4 codec</span>
+      <span class="hljs-attr">robustness</span>: <span class="hljs-string">&quot;HW_SECURE_CRYPTO&quot;</span>,
+    },
+    {
+      <span class="hljs-attr">contentType</span>: <span class="hljs-string">&quot;video/mp4;codecs=\&quot;avc1.4d401e\&quot;&quot;</span>,
+      <span class="hljs-attr">robustness</span>: <span class="hljs-string">&quot;SW_SECURE_DECODE&quot;</span>,
+    }
+  ]
+};
+
+<span class="hljs-keyword">const</span> keySystems = [
+  <span class="hljs-comment">// Let&apos;s consider this one as a compatible key system configuration</span>
+  { <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;com.widevine.alpha&quot;</span>, <span class="hljs-attr">configuration</span>: mksConfiguration },
+
+  <span class="hljs-comment">// Let&apos;s consider this one as not compatible</span>
+  { <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;com.microsoft.playready&quot;</span>, <span class="hljs-attr">configuration</span>: mksConfiguration },
+];
+
+mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems)
+  .then(<span class="hljs-function">(<span class="hljs-params">drmConfigs</span>) =&gt;</span> {
+    drmConfigs.forEach(<span class="hljs-function">(<span class="hljs-params">config</span>) =&gt;</span> {
+      <span class="hljs-keyword">const</span> {
+        type,
+        configuration,
+        compatibleConfiguration
+      } = config;
+
+      <span class="hljs-keyword">if</span> (compatibleConfiguration !== <span class="hljs-literal">undefined</span>) {
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;# Compatible configuration #############################&quot;</span>);
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;Key System:&quot;</span>, type);
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;Wanted configuration:&quot;</span>, configuration);
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;Compatible configuration:&quot;</span>, compatibleConfiguration);
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;########################################################&quot;</span>);
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;&quot;</span>);
+      } <span class="hljs-keyword">else</span> {
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;# Incompatible configuration ###########################&quot;</span>);
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;Key System:&quot;</span>, type);
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;Wanted configuration:&quot;</span>, configuration);
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;########################################################&quot;</span>);
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;&quot;</span>);
+      }
+    });
+  });
+
+<span class="hljs-comment">// Example output (please note that in this example, one of the widevine</span>
+<span class="hljs-comment">// robustness is not supported):</span>
+<span class="hljs-comment">//</span>
+<span class="hljs-comment">// # Compatible configuration #############################</span>
+<span class="hljs-comment">// Key System: com.widevine.alpha</span>
+<span class="hljs-comment">// Wanted configuration:</span>
+<span class="hljs-comment">// {</span>
+<span class="hljs-comment">//   &quot;initDataTypes&quot;:[&quot;cenc&quot;],</span>
+<span class="hljs-comment">//   &quot;videoCapabilities&quot;: [</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       &quot;contentType&quot;: &quot;video/mp4;codecs=\&quot;avc1.4d401e\&quot;&quot;,</span>
+<span class="hljs-comment">//       &quot;robustness&quot;: &quot;HW_SECURE_CRYPTO&quot;</span>
+<span class="hljs-comment">//     },</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       &quot;contentType&quot;: &quot;video/mp4;codecs=\&quot;avc1.4d401e\&quot;&quot;,</span>
+<span class="hljs-comment">//       &quot;robustness&quot;: &quot;SW_SECURE_DECODE&quot;</span>
+<span class="hljs-comment">//     }</span>
+<span class="hljs-comment">//   ]</span>
+<span class="hljs-comment">// }</span>
+<span class="hljs-comment">// Compatible configuration:</span>
+<span class="hljs-comment">// {</span>
+<span class="hljs-comment">//   &quot;audioCapabilities&quot;: [],</span>
+<span class="hljs-comment">//   &quot;distinctiveIdentifier&quot;: &quot;not-allowed&quot;,</span>
+<span class="hljs-comment">//   &quot;initDataTypes&quot;: [&quot;cenc&quot;],</span>
+<span class="hljs-comment">//   &quot;label&quot;: &quot;&quot;,</span>
+<span class="hljs-comment">//   &quot;persistentState&quot;: &quot;not-allowed&quot;,</span>
+<span class="hljs-comment">//   &quot;sessionTypes&quot;: [&quot;temporary&quot;],</span>
+<span class="hljs-comment">//   &quot;videoCapabilities&quot;: [</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       &quot;contentType&quot;: &quot;video/mp4;codecs=\&quot;avc1.4d401e\&quot;&quot;,</span>
+<span class="hljs-comment">//       &quot;robustness&quot;:&quot;SW_SECURE_DECODE&quot;</span>
+<span class="hljs-comment">//     }</span>
+<span class="hljs-comment">//   ]</span>
+<span class="hljs-comment">// }</span>
+<span class="hljs-comment">// ########################################################</span>
+<span class="hljs-comment">//</span>
+<span class="hljs-comment">// # Incompatible configuration ###########################</span>
+<span class="hljs-comment">// Key System: com.microsoft.playready</span>
+<span class="hljs-comment">// Wanted configuration:</span>
+<span class="hljs-comment">// {</span>
+<span class="hljs-comment">//   &quot;initDataTypes&quot;:[&quot;cenc&quot;],</span>
+<span class="hljs-comment">//   &quot;videoCapabilities&quot;: [</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       &quot;contentType&quot;: &quot;video/mp4;codecs=\&quot;avc1.4d401e\&quot;&quot;,</span>
+<span class="hljs-comment">//       &quot;robustness&quot;: &quot;HW_SECURE_CRYPTO&quot;</span>
+<span class="hljs-comment">//     },</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       &quot;contentType&quot;: &quot;video/mp4;codecs=\&quot;avc1.4d401e\&quot;&quot;,</span>
+<span class="hljs-comment">//       &quot;robustness&quot;: &quot;SW_SECURE_DECODE&quot;</span>
+<span class="hljs-comment">//     }</span>
+<span class="hljs-comment">//   ]</span>
+<span class="hljs-comment">// }</span>
+<span class="hljs-comment">// ########################################################</span>
+</code></pre>
+<p><a name="subchapter-getStatusForHDCP"></a></p>
+<h3>getStatusForHDCP</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>type</em> (<code>string</code>): The HDCP type (e.g. &#x201C;1.0&#x201D;, &#x201C;1.1&#x201D; or &#x201C;2.0&#x201D;)</li>
+</ul>
+<p><em>return value</em>: <code>string</code></p>
+<p>Test for an HDCP configuration.</p>
+<p>The returned string of this function is either:</p>
+<ul>
+<li>
+<p><code>&quot;Supported&quot;</code>: This HDCP configuration is supported.</p>
+</li>
+<li>
+<p><code>&quot;NotSupported&quot;</code>: The HDCP configuration is not supported.</p>
+</li>
+<li>
+<p><code>&quot;Unknown&quot;</code>: The API is not available or it is but could not check if the
+HDCP type is supported.</p>
+</li>
+</ul>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> As of the 2018-july-03, this feature is very poorly supported (with only
+some support on the EDGE browser).
+We should have a real support of it in the coming months on
+<a href="https://www.chromestatus.com/feature/5652917147140096">Chrome</a> and
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1404230">Firefox</a>.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools&quot;</span>;
+
+mediaCapabilitiesProber.getStatusForHDCP(<span class="hljs-string">&quot;1.1&quot;</span>)
+  .then(<span class="hljs-function">(<span class="hljs-params">hdcpStatus</span>) =&gt;</span> {
+    <span class="hljs-keyword">switch</span> (hdcpStatus) {
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;Supported&quot;</span>:
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;This HDCP version is supported&quot;</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;NotSupported&quot;</span>:
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;This HDCP version is not supported&quot;</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;Unknown&quot;</span>:
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;We could&apos;nt tell if this HDCP version is supported.&quot;</span>);
+        <span class="hljs-keyword">break</span>;
+    }
+  });
+</code></pre>
+<p><a name="subchapter-getDecodingCapabilities"></a></p>
+<h3>getDecodingCapabilities</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>config</em> (<code>Object</code>): Object with type, video and audio configuration.</li>
+</ul>
+<p><em>return value</em>: <code>string</code></p>
+<p>Probe for audio/video decoding capabilities.</p>
+<h4>Argument</h4>
+<p>The object in argument is inspired from the concerned API configurations.
+All its properties are optional, here are what you can set.</p>
+<ul>
+<li>
+<p><em>type</em> (<code>string</code>): The media is either buffered in MediaSource, or
+directly as a file.
+As such, you can specify which one you want to probe through one of the
+following strings:</p>
+<ul>
+<li>&#x201C;media-source&#x201D;</li>
+<li>&#x201C;file&#x201D;.</li>
+</ul>
+</li>
+<li>
+<p><em>video</em> (<code>Object</code>): The video capabilities you want to probe.</p>
+<ul>
+<li><em>contentType</em> (<code>string</code>): Media codec in mimeType format.</li>
+<li><em>width</em> (<code>number</code>): Video width.</li>
+<li><em>height</em> (<code>number</code>): Video Height.</li>
+<li><em>bitrate</em> (<code>number</code>): Bitrate of the video (in bits per second).</li>
+<li><em>framerate</em> (<code>string</code>): Number of frames used in one second.</li>
+<li><em>bitsPerComponent</em> (<code>number</code>): Number of bits used to encode one
+component par pixel.</li>
+</ul>
+</li>
+<li>
+<p><em>audio</em> (<code>Object</code>): The video capabilities you want to probe.</p>
+<ul>
+<li><em>contentType</em> (<code>string</code>): Media codec in mimeType format.</li>
+<li><em>channels</em> (<code>string</code>): Audio channels used by the track.</li>
+<li><em>bitrate</em> (<code>number</code>): Bitrate from stream (bits/second).</li>
+<li><em>samplerate</em> (<code>number</code>): Number of samples of audio carried per second.</li>
+</ul>
+</li>
+</ul>
+<h4>Return value</h4>
+<p>The returned string of this function is either:</p>
+<ul>
+<li>
+<p><code>&quot;Supported&quot;</code>: This configuration is supported.</p>
+</li>
+<li>
+<p><code>&quot;MaybeSupported&quot;</code>: Some set configuration could not be probed because
+not enough information was provided, but what has been probed is supported.</p>
+</li>
+<li>
+<p><code>&quot;NotSupported&quot;</code>: The configuration is not supported.</p>
+</li>
+</ul>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools&quot;</span>;
+
+mediaCapabilitiesProber.getDecodingCapabilities({
+  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;media-source&quot;</span>,
+  <span class="hljs-attr">video</span>: {
+    <span class="hljs-attr">contentType</span>: <span class="hljs-string">&quot;video/webm; codecs=\&quot;vp09.00.10.08\&quot;&quot;</span>,
+    <span class="hljs-attr">width</span>: <span class="hljs-number">1920</span>,
+    <span class="hljs-attr">height</span>: <span class="hljs-number">1080</span>,
+    <span class="hljs-attr">bitrate</span>: <span class="hljs-number">3450000</span>,
+    <span class="hljs-attr">framerate</span>: <span class="hljs-string">&apos;25&apos;</span>,
+    <span class="hljs-attr">bitsPerComponent</span>: <span class="hljs-number">8</span>,
+  },
+  <span class="hljs-attr">audio</span>: {
+    <span class="hljs-attr">contentType</span>: <span class="hljs-string">&quot;audio/webm; codecs=\&quot;opus\&quot;&quot;</span>,
+    <span class="hljs-attr">channels</span>: <span class="hljs-number">6</span>,
+    <span class="hljs-attr">bitrate</span>: <span class="hljs-number">1200</span>,
+    <span class="hljs-attr">samplerate</span>: <span class="hljs-number">44100</span>,
+  },
+}).then(<span class="hljs-function">(<span class="hljs-params">status</span>) =&gt;</span> {
+  <span class="hljs-keyword">switch</span> (status) {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;Supported&quot;</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The configuration is supported&quot;</span>);
+      <span class="hljs-keyword">break</span>;
+
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;MaybeSupported&quot;</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The configuration may be supported&quot;</span>);
+      <span class="hljs-keyword">break</span>;
+
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;NotSupported&quot;</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The configuration is not supported&quot;</span>);
+      <span class="hljs-keyword">break</span>;
+  }
+});
+</code></pre>
+<p><a name="subchapter-getDisplayCapabilities"></a></p>
+<h3>getDisplayCapabilities</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>config</em> (<code>Object</code>): Object with display configuration.</li>
+</ul>
+<p><em>return value</em>: <code>string</code></p>
+<p>Probe what can be displayed on the screen.</p>
+<h4>Argument</h4>
+<p>The object in argument is inspired from the concerned API configurations.
+All its properties are optional, here are what you can set.</p>
+<ul>
+<li><em>colorSpace</em> (<code>string</code>): Wanted color space (&#x201C;srgb&#x201D;, &#x201C;p3&#x201D;, etc).</li>
+<li><em>width</em> (<code>number</code>): Wanted display horizontal resolution.</li>
+<li><em>height</em> (<code>number</code>): Wanted display vertical resolution.</li>
+<li><em>bitsPerComponent</em> (<code>number</code>): Wanted display bpc capability.</li>
+</ul>
+<h4>Return Value</h4>
+<p>The returned string of this function is either:</p>
+<ul>
+<li>
+<p><code>&quot;Supported&quot;</code>: This configuration is supported.</p>
+</li>
+<li>
+<p><code>&quot;MaybeSupported&quot;</code>: Some set configuration could not be probed because
+not enough information was provided, but what has been probed is supported.</p>
+</li>
+<li>
+<p><code>&quot;NotSupported&quot;</code>: The configuration is not supported.</p>
+</li>
+</ul>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools&quot;</span>;
+
+mediaCapabilitiesProber.getDisplayCapabilities({
+  <span class="hljs-attr">colorSpace</span>: <span class="hljs-string">&quot;p3&quot;</span>,
+  <span class="hljs-attr">width</span>: <span class="hljs-number">3840</span>,
+  <span class="hljs-attr">height</span>: <span class="hljs-number">2160</span>,
+  <span class="hljs-attr">bitsPerComponent</span>: <span class="hljs-number">10</span>,
+}).then(<span class="hljs-function">(<span class="hljs-params">status</span>) =&gt;</span> {
+  <span class="hljs-keyword">switch</span> (status) {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;Supported&quot;</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The configuration is supported&quot;</span>);
+      <span class="hljs-keyword">break</span>;
+
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;MaybeSupported&quot;</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The configuration may be supported&quot;</span>);
+      <span class="hljs-keyword">break</span>;
+
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;NotSupported&quot;</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The configuration is not supported&quot;</span>);
+      <span class="hljs-keyword">break</span>;
+  }
+});
+</code></pre>
+<p><a name="chapter-Exploited%20browser%20APIs"></a></p>
+<h2>Exploited browser APIs</h2>
+<p>The tool probes media capabilities from browsers (Chrome, Firefox, etc.)
+exploiting current available media API:</p>
+<ul>
+<li>
+<p><strong>mediaCapabilities</strong> - Chrome &gt;= 64
+(<a href="https://github.com/WICG/media-capabilities">https://github.com/WICG/media-capabilities</a>)</p>
+<ul>
+<li>Check for decoding capabilites from video and audio attributes.</li>
+</ul>
+</li>
+<li>
+<p><strong>isTypeSupportedWithFeatures</strong> - Microsoft EDGE</p>
+<ul>
+<li>Check for DRM support + decoding and displaying capabilites from video,
+audio, display and media protection configuration.</li>
+</ul>
+</li>
+<li>
+<p><strong>isTypeSupported</strong> - Chrome &gt;= 31 / Firefox &gt;= 41 / EDGE / IE &gt;= 11 / Safari</p>
+<blockquote>
+<p>= 8
+(<a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/isTypeSupported">https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/isTypeSupported</a>)</p>
+</blockquote>
+<ul>
+<li>Check for video and audio decoding support from content type.</li>
+</ul>
+</li>
+<li>
+<p><strong>matchMedia</strong> (with color gamut support) - Chrome &gt;= 58.</p>
+<ul>
+<li>Check for color space support.</li>
+</ul>
+</li>
+<li>
+<p><strong>requestMediaKeySystemAccess</strong> - Chrome &gt;= 42 / Firefox / EDGE / Safari
+(<a href="https://developer.mozilla.org/fr/docs/Web/API/Navigator/requestMediaKeySystemAccess">https://developer.mozilla.org/fr/docs/Web/API/Navigator/requestMediaKeySystemAccess</a>)</p>
+<ul>
+<li>Check for DRM support.</li>
+</ul>
+</li>
+<li>
+<p><strong>getStatusForPolicy</strong> - ?
+(<a href="https://github.com/WICG/hdcp-detection/blob/master/explainer.md">https://github.com/WICG/hdcp-detection/blob/master/explainer.md</a>)</p>
+<ul>
+<li>Query a hypothetical status associated with an HDCP policy.</li>
+</ul>
+</li>
+</ul>
+</body></html></div></div></div></body>
