@@ -96,6 +96,7 @@ export interface IAdaptationSetAttributes {
   minWidth? : number;
   par? : string;
   profiles? : string;
+  selectionPriority? : number;
   segmentAlignment? : number|boolean;
   segmentProfiles? : string;
   subsegmentAlignment? : number|boolean;
@@ -304,6 +305,12 @@ function parseAdaptationSetAttributes(
 
       case "maxFrameRate":
         parsedAdaptation.maxFrameRate = attribute.value;
+        break;
+
+      case "selectionPriority":
+        parseValue(attribute.value, { asKey: "segmentAlignment",
+                                      parser: parseMPDInteger,
+                                      dashName: "segmentAlignment" });
         break;
 
       case "segmentAlignment":
