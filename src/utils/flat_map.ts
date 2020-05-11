@@ -33,10 +33,12 @@ export default function flatMap<T, U>(
   }
 
   return originalArray.reduce((acc : U[], arg : T) : U[] => {
-      const r = fn(arg);
-      if (Array.isArray(r)) {
-        return [...acc, ...r];
-      }
-      return [...acc, r];
-    }, []);
+    const r = fn(arg);
+    if (Array.isArray(r)) {
+      acc.push(...r);
+      return acc;
+    }
+    acc.push(r);
+    return acc;
+  }, []);
 }
