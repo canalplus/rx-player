@@ -105,6 +105,28 @@ export default class LoadedSessionsStore {
   }
 
   /**
+   * Like `get` but also moves the corresponding MediaKeySession to the end of
+   * its internal storage, as returned by the `getAll` method.
+   *
+   * This can be used for example to tell when a previously-stored
+   * MediaKeySession is re-used to then be able to implement a caching
+   * replacement algorithm based on the least-recently-used values by just
+   * evicting the first values returned by `getAll`.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @returns {Object|null}
+   */
+  public getAndReuse(
+    initData : Uint8Array,
+    initDataType: string|undefined
+  ) : IStoredSessionData | null {
+    const entry = this._storage.getAndReuse(initData, initDataType);
+    return entry === undefined ? null :
+                                 { mediaKeySession: entry.mediaKeySession,
+                                   sessionType: entry.sessionType };
+  }
+
+  /**
    * Create a new MediaKeySession and store it in this store.
    * @throws {EncryptedMediaError}
    * @param {Uint8Array} initData

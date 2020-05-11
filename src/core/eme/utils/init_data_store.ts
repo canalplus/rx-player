@@ -38,6 +38,8 @@ export default class InitDataStore<T> {
 
   /**
    * Returns all stored value, in the order in which they have been stored.
+   * Note: it is possible to move a value to the end of this array by calling
+   * the `getAndReuse` method.
    * @returns {Array}
    */
   public getAll() : T[] {
@@ -70,6 +72,31 @@ export default class InitDataStore<T> {
   }
 
   /**
+   * Like `get`, but also move the corresponding value at the end of the store
+   * (as returned by `getAll`) if found.
+   * This can be used for example to tell when a previously-stored value is
+   * re-used to then be able to implement a caching replacement algorithm based
+   * on the least-recently-used values by just evicting the first values
+   * returned by `getAll`.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @returns {*}
+   */
+  public getAndReuse(
+    initData : Uint8Array,
+    initDataType : string | undefined
+  ) : T | undefined {
+    const initDataHash = hashBuffer(initData);
+    const index = this._findIndex(initData, initDataType, initDataHash);
+    if (index === -1) {
+      return undefined;
+    }
+    const item = this._storage.splice(index, 1)[0];
+    this._storage.push(item);
+    return item.value;
+  }
+
+  /**
    * Add to the store a value linked to the corresponding initData and
    * initDataType.
    * If a value was already stored linked to those, replace it.
@@ -99,6 +126,11 @@ export default class InitDataStore<T> {
    * If a value linked to those was already stored, do nothing and returns
    * `false`.
    * If not, add the value and return `true`.
+   *
+   * This can be used as a more performant version of doing both a `get` call -
+   * to see if a value is stored linked to that data - and then if not doing a
+   * store. `storeIfNone` is more performant as it will only perform hashing
+   * and a look-up a single time.
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
    * @returns {boolean}

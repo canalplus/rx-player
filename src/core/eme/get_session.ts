@@ -133,7 +133,7 @@ export default function getSession(
                                 null = null;
 
     const { loadedSessionsStore } = mediaKeysInfos;
-    const entry = loadedSessionsStore.get(initData, initDataType);
+    const entry = loadedSessionsStore.getAndReuse(initData, initDataType);
     if (entry !== null) {
       previousLoadedSession = entry.mediaKeySession;
       if (isSessionUsable(previousLoadedSession)) {
