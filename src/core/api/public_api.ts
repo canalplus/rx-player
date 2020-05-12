@@ -125,6 +125,7 @@ import TrackChoiceManager, {
   ITMVideoTrackListItem,
   IVideoTrackPreference,
 } from "./track_choice_manager";
+import { IEmittedStreamEvent, IScheduleEvent } from "../init/stream_events_emitter";
 
 const { DEFAULT_UNMUTED_VOLUME } = config;
 
@@ -194,6 +195,8 @@ interface IPublicAPIEvent {
                                   representation : Representation; }>;
   seeking : null;
   seeked : null;
+  goingInEventStream : IScheduleEvent;
+  goingOutEventStream : IScheduleEvent;
 }
 
 /**
@@ -1960,6 +1963,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
+      case "going-in":
+      case "going-out":
+        this._priv_onStreamEvent(event);
+        break;
       case "activePeriodChanged":
         this._priv_onActivePeriodChanged(event.value);
         break;
@@ -2101,6 +2108,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_trackChoiceManager.update();
         }
       });
+  }
+
+  private _priv_onStreamEvent(event: IEmittedStreamEvent) {
+    this.trigger(event.type === "going-in" ?
+                  "goingInEventStream" :
+                  "goingOutEventStream",
+                event.value);
   }
 
   /**
