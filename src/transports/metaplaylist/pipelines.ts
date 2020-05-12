@@ -16,6 +16,7 @@
 
 import {
   combineLatest,
+  merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -23,6 +24,7 @@ import {
   filter,
   map,
   mergeMap,
+  share,
 } from "rxjs/operators";
 import features from "../../features";
 import Manifest, {
@@ -36,6 +38,7 @@ import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
 } from "../../parsers/manifest/metaplaylist";
 import { IParsedManifest } from "../../parsers/manifest/types";
+import deferSubscriptions from "../../utils/defer_subscriptions";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
 import {
@@ -46,6 +49,8 @@ import {
   ILoaderDataLoadedValue,
   IManifestParserArguments,
   IManifestParserObservable,
+  IManifestParserResponseEvent,
+  IManifestParserWarningEvent,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentParserParsedSegment,
@@ -184,10 +189,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                                response.url;
       const { responseData } = response;
 
-      const parserOptions = {
-        url,
-        serverSyncInfos: options.serverSyncInfos,
-      };
+      const parserOptions = { url,
+                              serverSyncInfos: options.serverSyncInfos };
 
       return handleParsedResult(parseMetaPlaylist(responseData, parserOptions));
 
@@ -196,10 +199,11 @@ export default function(options : ITransportOptions): ITransportPipelines {
       ) : IManifestParserObservable {
         if (parsedResult.type === "done") {
           const manifest = new Manifest(parsedResult.value, options);
-          return observableOf({ manifest });
+          return observableOf({ type: "parsed",
+                                value: { manifest } });
         }
 
-        const loaders$ : Array<Observable<Manifest>> =
+        const loaders$ : IManifestParserObservable[] =
           parsedResult.value.ressources.map((ressource) => {
             const transport = getTransportPipelines(transports,
                                                     ressource.transportType,
@@ -218,14 +222,26 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                                  scheduleRequest,
                                                  previousManifest,
                                                  unsafeMode,
-                                                 externalClockOffset })
-                .pipe(map((parserData) : Manifest => parserData.manifest));
-            }));
+                                                 externalClockOffset });
+            })).pipe(deferSubscriptions(), share());
           });
 
-        return combineLatest(loaders$).pipe(mergeMap((loadedRessources) =>
-          handleParsedResult(parsedResult.value.continue(loadedRessources))
-        ));
+        const warnings$ : Array<Observable<IManifestParserWarningEvent>> =
+          loaders$.map(loader =>
+            loader.pipe(filter((evt) : evt is IManifestParserWarningEvent =>
+              evt.type === "warning")));
+
+        const responses$ : Array<Observable<IManifestParserResponseEvent>> =
+          loaders$.map(loader =>
+            loader.pipe(filter((evt) : evt is IManifestParserResponseEvent =>
+              evt.type === "parsed")));
+
+        return observableMerge(
+          combineLatest(responses$).pipe(mergeMap((evt) => {
+            const loadedRessources = evt.map(e => e.value.manifest);
+            return handleParsedResult(parsedResult.value.continue(loadedRessources));
+          })),
+          ...warnings$);
       }
     },
   };

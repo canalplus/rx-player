@@ -67,6 +67,7 @@ import {
   replaceToken,
   resolveManifest,
 } from "./utils";
+import returnParsedManifest from "../utils/return_parsed_manifest";
 
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
 
@@ -144,7 +145,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         supplementaryImageTracks: options.supplementaryImageTracks,
         supplementaryTextTracks: options.supplementaryTextTracks,
       });
-      return observableOf({ manifest, url });
+      return returnParsedManifest(manifest, url);
     },
   };
 

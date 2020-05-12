@@ -196,13 +196,29 @@ export interface ISegmentParserArguments<T> {
 
 // -- response
 
-// Response object returned by the Manifest's parser
-export interface IManifestParserResponse {
-  manifest : Manifest; // the manifest itself
-  url? : string; // final URL of the manifest
+/** Event emitted when a Manifest object has been parsed. */
+export interface IManifestParserResponseEvent {
+  type : "parsed";
+  value: {
+    /** The parsed Manifest Object itself. */
+    manifest : Manifest;
+    /** Final - real - URL (post-redirection) of the Manifest. */
+    url? : string;
+  };
 }
 
-export type IManifestParserObservable = Observable<IManifestParserResponse>;
+/** Event emitted when a minor error was encountered when parsing the Manifest. */
+export interface IManifestParserWarningEvent {
+  type : "warning";
+  value : Error;
+}
+
+/** Events emitted by the Manifest parser. */
+export type IManifestParserEvent = IManifestParserResponseEvent |
+                                   IManifestParserWarningEvent;
+
+/** Observable returned by the Manifest parser. */
+export type IManifestParserObservable = Observable<IManifestParserEvent>;
 
 // Format of a parsed initialization segment
 export interface ISegmentParserParsedInitSegment<T> {

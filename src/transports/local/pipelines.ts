@@ -19,7 +19,6 @@
  * It always should be imported through the `features` object.
  */
 
-import { of as observableOf } from "rxjs";
 import Manifest from "../../manifest";
 import parseLocalManifest, {
   ILocalManifest,
@@ -34,6 +33,7 @@ import {
   ITransportPipelines,
 } from "../types";
 import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
+import returnParsedManifest from "../utils/return_parsed_manifest";
 import segmentLoader from "./segment_loader";
 import segmentParser from "./segment_parser";
 import textTrackParser from "./text_parser";
@@ -72,7 +72,7 @@ export default function getLocalManifestPipelines(
       }
       const parsed = parseLocalManifest(response.responseData as ILocalManifest);
       const manifest = new Manifest(parsed, options);
-      return observableOf({ manifest, url: undefined });
+      return returnParsedManifest(manifest);
     },
   };
 
