@@ -16,6 +16,16 @@
 
 import { IRepresentationIndex } from "../../manifest";
 
+/**
+ *
+ */
+export interface IStreamEvent {
+  presentationTime?: number;
+  duration?: number;
+  id?: string;
+  element: Node | Element;
+}
+
 /** Describes information about an encryption Key ID of a given media. */
 export interface IContentProtectionKID { keyId : Uint8Array;
                                          systemId?: string; }
@@ -162,6 +172,10 @@ export interface IParsedPeriod {
    * being updated.
    */
   end? : number;
+  /**
+   *
+   */
+  streamEvents?: IStreamEvent[];
 }
 
 /** Information on the whole content */

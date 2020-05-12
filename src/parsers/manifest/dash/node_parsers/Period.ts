@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { IStreamEvent } from "../../types";
 import {
   createAdaptationSetIntermediateRepresentation,
   IAdaptationSetIntermediateRepresentation,
@@ -37,6 +38,7 @@ export interface IPeriodChildren {
   // required
   adaptations : IAdaptationSetIntermediateRepresentation[];
   baseURLs : IBaseURL[];
+  streamEvents? : IStreamEvent[];
 }
 
 // intermediate representation for a Period's attributes
@@ -51,6 +53,71 @@ export interface IPeriodAttributes {
 }
 
 /**
+ * Parse the EventStream node to extract Event nodes and their
+ * content.
+ * @param {Element} element
+ */
+function parseEventStream(element: Element): IStreamEvent[] {
+  const streamEvents: IStreamEvent[] = [];
+  const attributes: { schemeId?: string;
+                      timescale: number;
+                      value?: string; } =
+                      { timescale: 1 };
+
+  for (let i = 0; i < element.attributes.length; i++) {
+    const attribute = element.attributes[i];
+    switch (attribute.name) {
+      case "schemeIdUri":
+        attributes.schemeId = attribute.value;
+        break;
+      case "timescale":
+        attributes.timescale = parseInt(attribute.value, 10);
+        break;
+      case "value":
+        attributes.value = attribute.value;
+        break;
+      default:
+        break;
+    }
+  }
+
+  for (let k = 0; k < element.childNodes.length; k++) {
+    const node = element.childNodes[k];
+    if (node.nodeName === "Event" &&
+        node.nodeType === Node.ELEMENT_NODE) {
+      let presentationTime;
+      let duration;
+      let id;
+      const eventAttributes = (node as Element).attributes;
+      for (let j = 0; j < eventAttributes.length; j++) {
+        const attribute = eventAttributes[j];
+        switch (attribute.name) {
+          case "presentationTime":
+            const pts = parseInt(attribute.value, 10);
+            presentationTime = pts / attributes.timescale;
+            break;
+          case "duration":
+            const eventDuration = parseInt(attribute.value, 10);
+            duration = eventDuration / attributes.timescale;
+            break;
+          case "id":
+            id = attribute.value;
+            break;
+          default:
+            break;
+        }
+      }
+      const streamEvent = { presentationTime,
+                            duration,
+                            id,
+                            element: node };
+      streamEvents.push(streamEvent);
+    }
+  }
+  return streamEvents;
+}
+
+/**
  * @param {NodeList} periodChildren
  * @returns {Array}
  */
@@ -59,6 +126,7 @@ function parsePeriodChildren(periodChildren : NodeList) : [IPeriodChildren, Erro
   const adaptations : IAdaptationSetIntermediateRepresentation[] = [];
 
   let warnings : Error[] = [];
+  const streamEvents = [];
   for (let i = 0; i < periodChildren.length; i++) {
     if (periodChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = periodChildren[i] as Element;
@@ -79,6 +147,11 @@ function parsePeriodChildren(periodChildren : NodeList) : [IPeriodChildren, Erro
           adaptations.push(adaptation);
           warnings = warnings.concat(adaptationWarnings);
           break;
+
+        case "EventStream":
+          const newStreamEvents =
+            parseEventStream(currentElement);
+          streamEvents.push(...newStreamEvents);
       }
     }
   }

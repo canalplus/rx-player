@@ -74,6 +74,9 @@ import createMediaSourceLoader, {
 import manifestUpdateScheduler, {
   IManifestRefreshSchedulerEvent,
 } from "./manifest_update_scheduler";
+import streamEventsEmitter, {
+  IEmittedStreamEvent
+} from "./stream_events_emitter";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IDecipherabilityUpdateEvent,
@@ -147,7 +150,8 @@ export type IInitEvent = IManifestReadyEvent |
                          IEMEDisabledEvent |
                          IReloadingMediaSourceEvent |
                          IDecipherabilityUpdateEvent |
-                         IWarningEvent;
+                         IWarningEvent |
+                         IEmittedStreamEvent;
 
 /**
  * Play a content described by the given Manifest.
@@ -248,6 +252,10 @@ export default function InitializeOnMediaSource(
     .pipe(filter((evt) : evt is IWarningEvent => evt.type === "warning"));
   const initialManifest$ = initialManifestRequest$
     .pipe(filter((evt) : evt is IManifestFetcherParsedResult => evt.type === "parsed"));
+
+  const streamEvents$ = initialManifest$.pipe(
+    mergeMap(({ manifest }) => streamEventsEmitter(manifest, mediaElement))
+  );
 
   /** Load and play the content asked. */
   const loadContent$ = observableCombineLatest([initialManifest$,
@@ -381,5 +389,6 @@ export default function InitializeOnMediaSource(
   return observableMerge(initialManifestRequestWarnings$,
                          loadContent$,
                          mediaError$,
-                         emeManager$);
+                         emeManager$,
+                         streamEvents$);
 }

@@ -145,11 +145,13 @@ export interface IPeriodsContextInfos {
                           unsafelyBaseOnPreviousPeriod };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
                                             periodInfos);
+    const streamEvents = periodIR.children.streamEvents;
     const parsedPeriod : IParsedPeriod = { id: periodID,
                                            start: periodStart,
                                            end: periodEnd,
                                            duration: periodDuration,
-                                           adaptations };
+                                           adaptations,
+                                           streamEvents };
     parsedPeriods.unshift(parsedPeriod);
 
     if (!manifestBoundsCalculator.lastPositionIsKnown()) {

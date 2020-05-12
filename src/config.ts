@@ -892,4 +892,7 @@ export default {
     video: 50,
     audio: 10,
   },
+
+  /** Interval we will use to poll for checking if an event shall be emitted */
+  STREAM_EVENT_EMITTER_POLL_INTERVAL: 250,
 };
