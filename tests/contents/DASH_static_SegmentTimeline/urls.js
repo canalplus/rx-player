@@ -25,6 +25,14 @@ const audioSegments = [
   };
 });
 
+const textSegments = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(time => {
+  return {
+    url: BASE_URL + `dash/ateam-text-${time}.dash`,
+    path: path.join(__dirname, `./media/dash/ateam-text-${time}.dash`),
+    contentType: "text/plain",
+  };
+});
+
 const videoQualities = flatMap(
   [400000, 795000, 1193000, 1996000],
   quality => {
@@ -73,6 +81,11 @@ module.exports = [
     path: path.join(__dirname, "media/not_starting_at_0.mpd"),
     contentType: "application/dash+xml",
   },
+  {
+    url: BASE_URL + "multi-AdaptationSets.mpd",
+    path: path.join(__dirname, "media/multi-AdaptationSets.mpd"),
+    contentType: "application/dash+xml",
+  },
 
   // Audio initialization segment
   {
@@ -81,5 +94,6 @@ module.exports = [
     contentType: "audio/mp4",
   },
   ...audioSegments, // remaining audio segments
+  ...textSegments, // every text segments
   ...videoQualities, // every video segments
 ];
