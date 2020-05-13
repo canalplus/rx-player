@@ -45,8 +45,8 @@ export default function addTextTrack(
     const tracksLength = mediaElement.textTracks.length;
     track = tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] :
                                mediaElement.addTextTrack(kind);
-    track.mode = hidden ? track.HIDDEN :
-                          track.SHOWING;
+    track.mode = hidden ? ((track as any).HIDDEN ?? "hidden") :
+                          ((track as any).SHOWING ?? "showing");
   } else {
     trackElement = document.createElement("track");
     mediaElement.appendChild(trackElement);

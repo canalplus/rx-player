@@ -25,6 +25,9 @@ import { isFirefox } from "./browser_detection";
  */
 function isActiveCue(track: TextTrack, cue: TextTrackCue): boolean {
   const { activeCues } = track;
+  if (activeCues === null) {
+    return false;
+  }
   for (let i = 0; i < activeCues.length; i++) {
     if (activeCues[i] === cue) {
       return true;
