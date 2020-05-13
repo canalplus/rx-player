@@ -52,6 +52,8 @@ interface ICompatVTTCue { align : string;
 interface ICompatTextTrack extends TextTrack {
   addCue(cue: TextTrackCue | ICompatVTTCue) : void;
   removeCue(cue: TextTrackCue | ICompatVTTCue) : void;
+  HIDDEN? : "hidden";
+  SHOWING? :  "showing";
 }
 
 /**

@@ -43,10 +43,10 @@ export default function addTextTrack(
 
   if (isIEOrEdge) {
     const tracksLength = mediaElement.textTracks.length;
-    track = tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] :
-                               mediaElement.addTextTrack(kind);
-    track.mode = hidden ? ((track as any).HIDDEN ?? "hidden") :
-                          ((track as any).SHOWING ?? "showing");
+    track = (tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] :
+                                mediaElement.addTextTrack(kind)) as ICompatTextTrack;
+    track.mode = hidden ? (track.HIDDEN ?? "hidden") :
+                          (track.SHOWING ?? "showing");
   } else {
     trackElement = document.createElement("track");
     mediaElement.appendChild(trackElement);
