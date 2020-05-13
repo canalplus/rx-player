@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
-import { parseByteRange } from "./utils";
+import {
+  parseByteRange,
+  ValueParser,
+} from "./utils";
 
 export interface IParsedSegmentURL { media?: string;
                                      mediaRange?: [number, number];
@@ -23,39 +25,37 @@ export interface IParsedSegmentURL { media?: string;
                                      indexRange?: [number, number]; }
 
 /**
- * @param {Element} root
- * @returns {Object}
+ * Parse a SegmentURL element into a SegmentURL intermediate
+ * representation.
+ * @param {Element} root - The SegmentURL root element.
+ * @returns {Array}
  */
-export default function parseSegmentURL(root : Element) : IParsedSegmentURL {
+export default function parseSegmentURL(
+  root : Element
+) : [IParsedSegmentURL, Error[]] {
   const parsedSegmentURL : IParsedSegmentURL = {};
+  const warnings : Error[] = [];
+  const parseValue = ValueParser(parsedSegmentURL, warnings);
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
     switch (attribute.name) {
+
       case "media":
         parsedSegmentURL.media = attribute.value;
         break;
-      case "indexRange": {
-        const indexRange = parseByteRange(attribute.value);
-        if (!Array.isArray(indexRange)) {
-          log.warn(`DASH: invalid indexRange ("${attribute.value}")`);
-        } else {
-          parsedSegmentURL.indexRange = indexRange;
-        }
-      }
+
+      case "indexRange":
+        parseValue("indexRange", attribute.value, parseByteRange, "indexRange");
         break;
+
       case "index":
         parsedSegmentURL.index = attribute.value;
         break;
-      case "mediaRange": {
-        const mediaRange = parseByteRange(attribute.value);
-        if (!Array.isArray(mediaRange)) {
-          log.warn(`DASH: invalid mediaRange ("${attribute.value}")`);
-        } else {
-          parsedSegmentURL.mediaRange = mediaRange;
-        }
-      }
+
+      case "mediaRange":
+        parseValue("mediaRange", attribute.value, parseByteRange, "mediaRange");
         break;
     }
   }
-  return parsedSegmentURL;
+  return [parsedSegmentURL, warnings];
 }

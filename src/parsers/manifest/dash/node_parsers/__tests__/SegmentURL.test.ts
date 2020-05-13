@@ -21,255 +21,179 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with no known attribute", () => {
-    const utils = {
-      __esModule: true,
-      parseByteRange: () => [0, 1],
-    };
-    const log = {
-      __esModule: true,
-      default: { warn: () => null },
-    };
-    jest.mock("../utils", () => utils);
+    const log = { __esModule: true,
+                  default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
-    const utilsSpy = jest.spyOn(utils, "parseByteRange");
     const logSpy = jest.spyOn(log.default, "warn");
 
     const parseSegmentURL = require("../SegmentURL").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element1)).toEqual({});
+    expect(parseSegmentURL(element1)).toEqual([{}, []]);
 
     const element2 = new DOMParser()
       .parseFromString("<Foo test=\"\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element2)).toEqual({});
+    expect(parseSegmentURL(element2)).toEqual([{}, []]);
 
-    expect(utilsSpy).not.toHaveBeenCalled();
     expect(logSpy).not.toHaveBeenCalled();
-    utilsSpy.mockRestore();
     logSpy.mockRestore();
   });
 
   /* tslint:disable max-line-length */
   it("should correctly parse an element with a well-formed `mediaRange` attribute", () => {
   /* tslint:enable max-line-length */
-    const utils = {
-      __esModule: true,
-      parseByteRange: () => [0, 1],
-    };
-    const log = {
-      __esModule: true,
-      default: { warn: () => null },
-    };
-    jest.mock("../utils", () => utils);
+    const log = { __esModule: true,
+                  default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
-    const utilsSpy = jest.spyOn(utils, "parseByteRange");
     const logSpy = jest.spyOn(log.default, "warn");
 
     const parseSegmentURL = require("../SegmentURL").default;
     const element1 = new DOMParser()
-      .parseFromString("<Foo mediaRange=\"a\" />", "text/xml")
+      .parseFromString("<Foo mediaRange=\"10-100\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element1)).toEqual({ mediaRange: [0, 1] });
-
-    expect(utilsSpy).toHaveBeenCalledTimes(1);
-    expect(utilsSpy).toHaveBeenCalledWith("a");
+    expect(parseSegmentURL(element1)).toEqual([{ mediaRange: [10, 100] }, []]);
 
     const element2 = new DOMParser()
-      .parseFromString("<Foo mediaRange=\"\" />", "text/xml")
+      .parseFromString("<Foo mediaRange=\"0-1\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element2)).toEqual({ mediaRange: [0, 1] });
-
-    expect(utilsSpy).toHaveBeenCalledTimes(2);
-    expect(utilsSpy).toHaveBeenCalledWith("");
+    expect(parseSegmentURL(element2)).toEqual([{ mediaRange: [0, 1] }, []]);
 
     expect(logSpy).not.toHaveBeenCalled();
-    utilsSpy.mockRestore();
     logSpy.mockRestore();
   });
 
   it("should correctly parse an element with an incorrect `mediaRange` attribute", () => {
-    const utils = {
-      __esModule: true,
-      parseByteRange: () => null,
-    };
-    const log = {
-      __esModule: true,
-      default: { warn: () => null },
-    };
-    jest.mock("../utils", () => utils);
+    const log = { __esModule: true,
+                  default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
-    const utilsSpy = jest.spyOn(utils, "parseByteRange");
     const logSpy = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
 
     const parseSegmentURL = require("../SegmentURL").default;
+    const MPDError = require("../utils").MPDError;
     const element1 = new DOMParser()
       .parseFromString("<Foo mediaRange=\"a\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element1)).toEqual({});
+    const error1 = new MPDError(
+      "`mediaRange` property has an unrecognized format \"a\""
+    );
+    expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
 
-    expect(utilsSpy).toHaveBeenCalledTimes(1);
-    expect(utilsSpy).toHaveBeenCalledWith("a");
     expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith("DASH: invalid mediaRange (\"a\")");
+    expect(logSpy).toHaveBeenCalledWith(error1.message);
 
     const element2 = new DOMParser()
       .parseFromString("<Foo mediaRange=\"\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element2)).toEqual({});
+    const error2 = new MPDError(
+      "`mediaRange` property has an unrecognized format \"\""
+    );
+    expect(parseSegmentURL(element2)).toEqual([{}, [error2]]);
 
-    expect(utilsSpy).toHaveBeenCalledTimes(2);
-    expect(utilsSpy).toHaveBeenCalledWith("");
     expect(logSpy).toHaveBeenCalledTimes(2);
-    expect(logSpy).toHaveBeenCalledWith("DASH: invalid mediaRange (\"\")");
+    expect(logSpy).toHaveBeenCalledWith(error2.message);
 
-    utilsSpy.mockRestore();
     logSpy.mockRestore();
   });
 
   /* tslint:disable max-line-length */
   it("should correctly parse an element with a well-formed `indexRange` attribute", () => {
   /* tslint:enable max-line-length */
-    const utils = {
-      __esModule: true,
-      parseByteRange: () => [0, 1],
-    };
     const log = {
       __esModule: true,
       default: { warn: () => null },
     };
-    jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
-    const utilsSpy = jest.spyOn(utils, "parseByteRange");
     const logSpy = jest.spyOn(log.default, "warn");
 
     const parseSegmentURL = require("../SegmentURL").default;
     const element1 = new DOMParser()
-      .parseFromString("<Foo indexRange=\"a\" />", "text/xml")
+      .parseFromString("<Foo indexRange=\"0-100\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element1)).toEqual({ indexRange: [0, 1] });
-
-    expect(utilsSpy).toHaveBeenCalledTimes(1);
-    expect(utilsSpy).toHaveBeenCalledWith("a");
+    expect(parseSegmentURL(element1)).toEqual([{ indexRange: [0, 100] }, []]);
 
     const element2 = new DOMParser()
-      .parseFromString("<Foo indexRange=\"\" />", "text/xml")
+      .parseFromString("<Foo indexRange=\"72-47\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element2)).toEqual({ indexRange: [0, 1] });
-
-    expect(utilsSpy).toHaveBeenCalledTimes(2);
-    expect(utilsSpy).toHaveBeenCalledWith("");
+    expect(parseSegmentURL(element2)).toEqual([{ indexRange: [72, 47] }, []]);
 
     expect(logSpy).not.toHaveBeenCalled();
-    utilsSpy.mockRestore();
     logSpy.mockRestore();
   });
 
   it("should correctly parse an element with an incorrect `indexRange` attribute", () => {
-    const utils = {
-      __esModule: true,
-      parseByteRange: () => null,
-    };
-    const log = {
-      __esModule: true,
-      default: { warn: () => null },
-    };
-    jest.mock("../utils", () => utils);
+    const log = { __esModule: true,
+                  default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
-    const utilsSpy = jest.spyOn(utils, "parseByteRange");
     const logSpy = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
 
     const parseSegmentURL = require("../SegmentURL").default;
+    const MPDError = require("../utils").MPDError;
     const element1 = new DOMParser()
       .parseFromString("<Foo indexRange=\"a\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element1)).toEqual({});
+    const error1 = new MPDError(
+      "`indexRange` property has an unrecognized format \"a\""
+    );
+    expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
 
-    expect(utilsSpy).toHaveBeenCalledTimes(1);
-    expect(utilsSpy).toHaveBeenCalledWith("a");
     expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith("DASH: invalid indexRange (\"a\")");
+    expect(logSpy).toHaveBeenCalledWith(error1.message);
 
     const element2 = new DOMParser()
       .parseFromString("<Foo indexRange=\"\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element2)).toEqual({});
+    const error2 = new MPDError(
+      "`indexRange` property has an unrecognized format \"\""
+    );
+    expect(parseSegmentURL(element2)).toEqual([{}, [error2]]);
 
-    expect(utilsSpy).toHaveBeenCalledTimes(2);
-    expect(utilsSpy).toHaveBeenCalledWith("");
     expect(logSpy).toHaveBeenCalledTimes(2);
-    expect(logSpy).toHaveBeenCalledWith("DASH: invalid indexRange (\"\")");
+    expect(logSpy).toHaveBeenCalledWith(error2.message);
 
-    utilsSpy.mockRestore();
     logSpy.mockRestore();
   });
 
   it("should correctly parse an element with a media attribute", () => {
-    const utils = {
-      __esModule: true,
-      parseByteRange: () => [0, 1],
-    };
-    const log = {
-      __esModule: true,
-      default: { warn: () => null },
-    };
-    jest.mock("../utils", () => utils);
+    const log = { __esModule: true,
+                  default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
-    const utilsSpy = jest.spyOn(utils, "parseByteRange");
     const logSpy = jest.spyOn(log.default, "warn");
 
     const parseSegmentURL = require("../SegmentURL").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo media=\"a\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element1)).toEqual({ media: "a" });
-
-    expect(utilsSpy).not.toHaveBeenCalled();
+    expect(parseSegmentURL(element1)).toEqual([{ media: "a" }, []]);
 
     const element2 = new DOMParser()
       .parseFromString("<Foo media=\"\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element2)).toEqual({ media: "" });
-
-    expect(utilsSpy).not.toHaveBeenCalled();
+    expect(parseSegmentURL(element2)).toEqual([{ media: "" }, []]);
 
     expect(logSpy).not.toHaveBeenCalled();
-    utilsSpy.mockRestore();
     logSpy.mockRestore();
   });
 
   it("should correctly parse an element with a index attribute", () => {
-    const utils = {
-      __esModule: true,
-      parseByteRange: () => [0, 1],
-    };
-    const log = {
-      __esModule: true,
-      default: { warn: () => null },
-    };
-    jest.mock("../utils", () => utils);
+    const log = { __esModule: true,
+                  default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
-    const utilsSpy = jest.spyOn(utils, "parseByteRange");
     const logSpy = jest.spyOn(log.default, "warn");
 
     const parseSegmentURL = require("../SegmentURL").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo index=\"a\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element1)).toEqual({ index: "a" });
-
-    expect(utilsSpy).not.toHaveBeenCalled();
+    expect(parseSegmentURL(element1)).toEqual([{ index: "a" }, []]);
 
     const element2 = new DOMParser()
       .parseFromString("<Foo index=\"\" />", "text/xml")
       .childNodes[0] as Element;
-    expect(parseSegmentURL(element2)).toEqual({ index: "" });
-
-    expect(utilsSpy).not.toHaveBeenCalled();
+    expect(parseSegmentURL(element2)).toEqual([{ index: "" }, []]);
 
     expect(logSpy).not.toHaveBeenCalled();
-    utilsSpy.mockRestore();
     logSpy.mockRestore();
   });
 });

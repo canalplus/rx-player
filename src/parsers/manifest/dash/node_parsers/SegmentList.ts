@@ -29,10 +29,14 @@ export interface IParsedSegmentList extends IParsedSegmentBase {
 
 /**
  * @param {Element} root
- * @returns {Object}
+ * @returns {Array}
  */
-export default function parseSegmentList(root: Element) : IParsedSegmentList {
-  const base = parseSegmentBase(root);
+export default function parseSegmentList(
+  root: Element
+) : [IParsedSegmentList, Error[]] {
+  const [base, baseWarnings] = parseSegmentBase(root);
+  let warnings : Error[] = baseWarnings;
+
   const list : IParsedSegmentURL[] = [];
 
   const segmentListChildren = root.childNodes;
@@ -40,8 +44,9 @@ export default function parseSegmentList(root: Element) : IParsedSegmentList {
     if (segmentListChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentNode = segmentListChildren[i] as Element;
       if (currentNode.nodeName === "SegmentURL") {
-        const segmentURL = parseSegmentURL(currentNode);
+        const [segmentURL, segmentURLWarnings] = parseSegmentURL(currentNode);
         list.push(segmentURL);
+        warnings = warnings.concat(segmentURLWarnings);
       }
     }
   }
@@ -52,8 +57,8 @@ export default function parseSegmentList(root: Element) : IParsedSegmentList {
     throw new Error("Invalid SegmentList: no duration");
   }
 
-  return objectAssign(base, {
-    list,
-    duration: baseDuration, // Ugly but TS is too dumb there
-  });
+  const ret = objectAssign(base, { list,
+                                   // Ugly but TS is too dumb there
+                                   duration: baseDuration });
+  return [ret, warnings];
 }

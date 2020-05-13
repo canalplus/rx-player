@@ -16,9 +16,52 @@
 
 import { Observable, throwError } from "rxjs";
 import { map } from "rxjs/operators";
-import { parseDuration } from "../../../parsers/manifest/dash/node_parsers/utils";
 import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import request from "../../../utils/request/xhr";
+
+const iso8601Duration =
+  /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
+
+/**
+ * Parse MPD ISO8601 duration attributes into seconds.
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed value - or `null` if we could not parse
+ *      it
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ * @param {string} val - The value to parse
+ * @param {string} displayName - The name of the property. Used for error
+ * formatting.
+ * @returns {Array.<number | Error | null>}
+ */
+function parseDuration(val : string) : number | null {
+
+  if (!isNonEmptyString(val)) {
+    return null;
+  }
+
+  const match = iso8601Duration.exec(val) as RegExpExecArray;
+  if (match === null) {
+    return null;
+  }
+
+  const duration =
+    (parseFloat(isNonEmptyString(match[2]) ? match[2] :
+                                             "0") * 365 * 24 * 60 * 60 +
+     parseFloat(isNonEmptyString(match[4]) ? match[4] :
+                                             "0") * 30 * 24 * 60 * 60 +
+     parseFloat(isNonEmptyString(match[6]) ? match[6] :
+                                             "0") * 24 * 60 * 60 +
+     parseFloat(isNonEmptyString(match[8]) ? match[8] :
+                                             "0") * 60 * 60 +
+     parseFloat(isNonEmptyString(match[10]) ? match[10] :
+                                              "0") * 60 +
+     parseFloat(isNonEmptyString(match[12]) ? match[12] :
+                                              "0"));
+  return duration;
+}
 
 /**
  * Load manifest and get duration from it.
@@ -51,7 +94,12 @@ function getDurationFromManifest(url: string,
           const firstDASHStart =
             firstDASHStartAttribute !== null ? parseDuration(firstDASHStartAttribute) :
                                                0;
-          return parseDuration(dashDurationAttribute) - firstDASHStart;
+          const dashDuration = parseDuration(dashDurationAttribute);
+          if (firstDASHStart === null || dashDuration === null) {
+            throw new Error("createMetaplaylist: Cannot parse " +
+                            "the duration from a DASH content.");
+          }
+          return dashDuration - firstDASHStart;
         }
         // smooth
         const smoothDurationAttribute = root.getAttribute("Duration");

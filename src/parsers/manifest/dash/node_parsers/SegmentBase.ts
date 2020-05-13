@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
 import objectAssign from "../../../../utils/object_assign";
 import parseInitialization, {
   IParsedInitialization,
@@ -22,6 +21,9 @@ import parseInitialization, {
 import {
   parseBoolean,
   parseByteRange,
+  parseMPDFloat,
+  parseMPDInteger,
+  ValueParser,
 } from "./utils";
 
 export interface ISegmentBaseAttributes { availabilityTimeComplete?: boolean;
@@ -48,83 +50,75 @@ export interface IParsedSegmentBase extends ISegmentBaseAttributes {
 }
 
 /**
- * @param {Element} root
- * @returns {Object}
+ * Parse a SegmentBase element into a SegmentBase intermediate representation.
+ * @param {Element} root - The SegmentBase root element.
+ * @returns {Array}
  */
-export default function parseSegmentBase(root: Element) : IParsedSegmentBase {
+export default function parseSegmentBase(
+  root: Element
+) : [IParsedSegmentBase, Error[]] {
   const attributes : ISegmentBaseAttributes = {};
 
+  let warnings : Error[] = [];
+  const parseValue = ValueParser(attributes, warnings);
   const segmentBaseChildren = root.childNodes;
   for (let i = 0; i < segmentBaseChildren.length; i++) {
     if (segmentBaseChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentNode = segmentBaseChildren[i] as Element;
       if (currentNode.nodeName === "Initialization") {
-        attributes.initialization = parseInitialization(currentNode);
+        const [initialization, initializationWarnings] =
+          parseInitialization(currentNode);
+        attributes.initialization = initialization;
+        warnings = warnings.concat(initializationWarnings);
       }
     }
   }
 
   for (let i = 0; i < root.attributes.length; i++) {
-    const attribute = root.attributes[i];
-    switch (attribute.name) {
-      case "timescale": {
-        const _timescale = parseInt(attribute.value, 10);
-        if (isNaN(_timescale)) {
-          log.warn(`DASH: invalid timescale ("${attribute.value}")`);
-        } else {
-          attributes.timescale = _timescale;
-        }
-      }
+    const attr = root.attributes[i];
+    switch (attr.name) {
+      case "timescale":
+        parseValue("timescale", attr.value, parseMPDInteger, "timescale");
         break;
-      case "presentationTimeOffset": {
-        const _presentationTimeOffset = parseFloat(attribute.value);
-        if (isNaN(_presentationTimeOffset)) {
-          log.warn(`DASH: invalid presentationTimeOffset ("${attribute.value}")`);
-        } else {
-          attributes.presentationTimeOffset = _presentationTimeOffset;
-        }
-      }
+
+      case "presentationTimeOffset":
+        parseValue("presentationTimeOffset",
+                   attr.value,
+                   parseMPDFloat,
+                   "presentationTimeOffset");
         break;
+
       case "indexRange":
-        const indexRange = parseByteRange(attribute.value);
-        if (!Array.isArray(indexRange)) {
-          log.warn(`DASH: invalid indexRange ("${attribute.value}")`);
-        } else {
-          attributes.indexRange = indexRange;
-        }
+        parseValue("indexRange", attr.value, parseByteRange, "indexRange");
         break;
+
       case "indexRangeExact":
-        attributes.indexRangeExact = parseBoolean(attribute.value);
+        parseValue("indexRangeExact",
+                   attr.value,
+                   parseBoolean,
+                   "indexRangeExact");
         break;
-      case "availabilityTimeOffset": {
-        const availabilityTimeOffset = parseFloat(attribute.value);
-        if (isNaN(availabilityTimeOffset)) {
-          log.warn(`DASH: invalid availabilityTimeOffset ("${attribute.value}")`);
-        } else {
-          attributes.availabilityTimeOffset = availabilityTimeOffset;
-        }
-      }
+
+      case "availabilityTimeOffset":
+        parseValue("availabilityTimeOffset",
+                   attr.value,
+                   parseMPDFloat,
+                   "availabilityTimeOffset");
         break;
+
       case "availabilityTimeComplete":
-        attributes.availabilityTimeComplete = parseBoolean(attribute.value);
+        parseValue("availabilityTimeComplete",
+                   attr.value,
+                   parseBoolean,
+                   "availabilityTimeComplete");
         break;
-      case "duration": {
-        const duration = parseInt(attribute.value, 10);
-        if (isNaN(duration)) {
-          log.warn(`DASH: invalid duration ("${attribute.value}")`);
-        } else {
-          attributes.duration = duration;
-        }
-      }
+
+      case "duration":
+        parseValue("duration", attr.value, parseMPDInteger, "duration");
         break;
-      case "startNumber": {
-        const startNumber = parseInt(attribute.value, 10);
-        if (isNaN(startNumber)) {
-          log.warn(`DASH: invalid startNumber ("${attribute.value}")`);
-        } else {
-          attributes.startNumber = startNumber;
-        }
-      }
+
+      case "startNumber":
+        parseValue("startNumber", attr.value, parseMPDInteger, "startNumber");
         break;
     }
   }
@@ -136,9 +130,10 @@ export default function parseSegmentBase(root: Element) : IParsedSegmentBase {
     true :
     attributes.availabilityTimeComplete;
 
-  return objectAssign(attributes,
-                      { availabilityTimeComplete,
-                        indexRangeExact,
-                        timeline: [],
-                        timescale, });
+  const ret = objectAssign(attributes,
+                           { availabilityTimeComplete,
+                             indexRangeExact,
+                             timeline: [],
+                             timescale, });
+  return [ret, warnings];
 }

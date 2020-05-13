@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
 import parseBaseURL, {
   IBaseURL
 } from "./BaseURL";
@@ -42,9 +41,13 @@ import {
   IScheme,
   parseBoolean,
   parseIntOrBoolean,
+  parseMPDFloat,
+  parseMPDInteger,
   parseScheme,
+  ValueParser,
 } from "./utils";
 
+/** AdaptationSet once parsed into its intermediate representation. */
 export interface IAdaptationSetIntermediateRepresentation {
   children : IAdaptationSetChildren;
   attributes : IAdaptationSetAttributes;
@@ -99,14 +102,20 @@ export interface IAdaptationSetAttributes {
   width? : number;
 }
 
+/**
+ * Parse child nodes from an AdaptationSet.
+ * @param {NodeList} adaptationSetChildren - The AdaptationSet child nodes.
+ * @returns {Array.<Object>}
+ */
 function parseAdaptationSetChildren(
   adaptationSetChildren : NodeList
-) : IAdaptationSetChildren {
+) : [IAdaptationSetChildren, Error[]] {
   const children : IAdaptationSetChildren = {
     baseURLs: [],
     representations: [],
   };
   const contentProtections = [];
+  let warnings : Error[] = [];
   for (let i = 0; i < adaptationSetChildren.length; i++) {
     if (adaptationSetChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = adaptationSetChildren[i] as Element;
@@ -118,9 +127,12 @@ function parseAdaptationSetChildren(
           break;
 
         case "BaseURL":
-          const baseURLObj = parseBaseURL(currentElement);
+          const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
           if (baseURLObj !== undefined) {
             children.baseURLs.push(baseURLObj);
+          }
+          if (baseURLWarnings.length > 0) {
+            warnings = warnings.concat(baseURLWarnings);
           }
           break;
 
@@ -137,9 +149,12 @@ function parseAdaptationSetChildren(
           break;
 
         case "Representation":
-          const representation =
+          const [representation, representationWarnings] =
             createRepresentationIntermediateRepresentation(currentElement);
           children.representations.push(representation);
+          if (representationWarnings.length > 0) {
+            warnings = warnings.concat(representationWarnings);
+          }
           break;
 
         case "Role":
@@ -159,15 +174,28 @@ function parseAdaptationSetChildren(
           break;
 
         case "SegmentBase":
-          children.segmentBase = parseSegmentBase(currentElement);
+          const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
+          children.segmentBase = segmentBase;
+          if (segmentBaseWarnings.length > 0) {
+            warnings = warnings.concat(segmentBaseWarnings);
+          }
           break;
 
         case "SegmentList":
-          children.segmentList = parseSegmentList(currentElement);
+          const [segmentList, segmentListWarnings] = parseSegmentList(currentElement);
+          children.segmentList = segmentList;
+          if (segmentListWarnings.length > 0) {
+            warnings = warnings.concat(segmentListWarnings);
+          }
           break;
 
         case "SegmentTemplate":
-          children.segmentTemplate = parseSegmentTemplate(currentElement);
+          const [segmentTemplate, segmentTemplateWarnings] =
+            parseSegmentTemplate(currentElement);
+          children.segmentTemplate = segmentTemplate;
+          if (segmentTemplateWarnings.length > 0) {
+            warnings = warnings.concat(segmentTemplateWarnings);
+          }
           break;
 
         case "ContentProtection":
@@ -190,13 +218,21 @@ function parseAdaptationSetChildren(
   if (contentProtections.length > 0) {
     children.contentProtections = contentProtections;
   }
-  return children;
+  return [children, warnings];
 }
 
+/**
+ * Parse every attributes from an AdaptationSet root element into a simple JS
+ * object.
+ * @param {Element} root - The AdaptationSet root element.
+ * @returns {Array.<Object>}
+ */
 function parseAdaptationSetAttributes(
   root : Element
-) : IAdaptationSetAttributes {
+) : [IAdaptationSetAttributes, Error[]] {
   const parsedAdaptation : IAdaptationSetAttributes = {};
+  const warnings : Error[] = [];
+  const parseValue = ValueParser(parsedAdaptation, warnings);
 
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
@@ -207,14 +243,8 @@ function parseAdaptationSetAttributes(
         parsedAdaptation.id = attribute.value;
         break;
 
-      case "group": {
-        const group = parseInt(attribute.value, 10);
-        if (isNaN(group)) {
-          log.warn(`DASH: invalid group ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.group = group;
-        }
-      }
+      case "group":
+        parseValue("group", attribute.value, parseMPDInteger, "group");
         break;
 
       case "lang":
@@ -229,64 +259,28 @@ function parseAdaptationSetAttributes(
         parsedAdaptation.par = attribute.value;
         break;
 
-      case "minBandwidth": {
-        const minBitrate = parseInt(attribute.value, 10);
-        if (isNaN(minBitrate)) {
-          log.warn(`DASH: invalid minBandwidth ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.minBitrate = minBitrate;
-        }
-      }
+      case "minBandwidth":
+        parseValue("minBitrate", attribute.value, parseMPDInteger, "minBandwidth");
         break;
 
-      case "maxBandwidth": {
-        const maxBitrate = parseInt(attribute.value, 10);
-        if (isNaN(maxBitrate)) {
-          log.warn(`DASH: invalid maxBandwidth ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.maxBitrate = maxBitrate;
-        }
-      }
+      case "maxBandwidth":
+        parseValue("maxBitrate", attribute.value, parseMPDInteger, "maxBandwidth");
         break;
 
-      case "minWidth": {
-        const minWidth = parseInt(attribute.value, 10);
-        if (isNaN(minWidth)) {
-          log.warn(`DASH: invalid minWidth ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.minWidth = minWidth;
-        }
-      }
+      case "minWidth":
+        parseValue("minWidth", attribute.value, parseMPDInteger, "minWidth");
         break;
 
-      case "maxWidth": {
-        const maxWidth = parseInt(attribute.value, 10);
-        if (isNaN(maxWidth)) {
-          log.warn(`DASH: invalid maxWidth ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.maxWidth = maxWidth;
-        }
-      }
+      case "maxWidth":
+        parseValue("maxWidth", attribute.value, parseMPDInteger, "maxWidth");
         break;
 
-      case "minHeight": {
-        const minHeight = parseInt(attribute.value, 10);
-        if (isNaN(minHeight)) {
-          log.warn(`DASH: invalid minHeight ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.minHeight = minHeight;
-        }
-      }
+      case "minHeight":
+        parseValue("minHeight", attribute.value, parseMPDInteger, "minHeight");
         break;
 
-      case "maxHeight": {
-        const maxHeight = parseInt(attribute.value, 10);
-        if (isNaN(maxHeight)) {
-          log.warn(`DASH: invalid maxHeight ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.maxHeight = maxHeight;
-        }
-      }
+      case "maxHeight":
+        parseValue("maxHeight", attribute.value, parseMPDInteger, "maxHeight");
         break;
 
       case "minFrameRate": {
@@ -298,28 +292,25 @@ function parseAdaptationSetAttributes(
         parsedAdaptation.maxFrameRate = attribute.value;
         break;
 
-      case "segmentAlignment": {
-        const segmentAlignment = parseIntOrBoolean(attribute.value);
-        if (typeof segmentAlignment === "number" && isNaN(segmentAlignment)) {
-          log.warn(`DASH: invalid segmentAlignment ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.segmentAlignment = segmentAlignment;
-        }
-      }
+      case "segmentAlignment":
+        parseValue("segmentAlignment",
+                   attribute.value,
+                   parseIntOrBoolean,
+                   "segmentAlignment");
         break;
 
-      case "subsegmentAlignment": {
-        const subsegmentAlignment = parseIntOrBoolean(attribute.value);
-        if (typeof subsegmentAlignment === "number" && isNaN(subsegmentAlignment)) {
-          log.warn(`DASH: invalid subsegmentAlignment ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.subsegmentAlignment = subsegmentAlignment;
-        }
-      }
+      case "subsegmentAlignment":
+        parseValue("subsegmentAlignment",
+                   attribute.value,
+                   parseIntOrBoolean,
+                   "subsegmentAlignment");
         break;
 
       case "bitstreamSwitching":
-        parsedAdaptation.bitstreamSwitching = parseBoolean(attribute.value);
+        parseValue("bitstreamSwitching",
+                   attribute.value,
+                   parseBoolean,
+                   "bitstreamSwitching");
         break;
 
       case "audioSamplingRate":
@@ -331,41 +322,29 @@ function parseAdaptationSetAttributes(
         break;
 
       case "codingDependency":
-        parsedAdaptation.codingDependency = parseBoolean(attribute.value);
+        parseValue("codingDependency", attribute.value, parseBoolean, "codingDependency");
         break;
 
       case "frameRate":
         parsedAdaptation.frameRate = attribute.value;
         break;
 
-      case "height": {
-        const height = parseInt(attribute.value, 10);
-        if (isNaN(height)) {
-          log.warn(`DASH: invalid height ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.height = height;
-        }
-      }
+      case "height":
+        parseValue("height", attribute.value, parseMPDInteger, "height");
         break;
 
-      case "maxPlayoutRate": {
-        const maxPlayoutRate = parseFloat(attribute.value);
-        if (isNaN(maxPlayoutRate)) {
-          log.warn(`DASH: invalid maxPlayoutRate ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.maxPlayoutRate = maxPlayoutRate;
-        }
-      }
+      case "maxPlayoutRate":
+        parseValue("maxPlayoutRate",
+                   attribute.value,
+                   parseMPDFloat,
+                   "maxPlayoutRate");
         break;
 
-      case "maximumSAPPeriod": {
-        const maximumSAPPeriod = parseFloat(attribute.value);
-        if (isNaN(maximumSAPPeriod)) {
-          log.warn(`DASH: invalid maximumSAPPeriod ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.maximumSAPPeriod = maximumSAPPeriod;
-        }
-      }
+      case "maximumSAPPeriod":
+        parseValue("maximumSAPPeriod",
+                   attribute.value,
+                   parseMPDFloat,
+                   "maximumSAPPeriod");
         break;
 
       case "mimeType":
@@ -380,26 +359,28 @@ function parseAdaptationSetAttributes(
         parsedAdaptation.segmentProfiles = attribute.value;
         break;
 
-      case "width": {
-        const width = parseInt(attribute.value, 10);
-        if (isNaN(width)) {
-          log.warn(`DASH: invalid width ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.width = width;
-        }
-      }
+      case "width":
+        parseValue("width", attribute.value, parseMPDInteger, "width");
         break;
     }
   }
 
-  return parsedAdaptation;
+  return [parsedAdaptation, warnings];
 }
 
+/**
+ * Parse an AdaptationSet element into an AdaptationSet intermediate
+ * representation.
+ * @param {Element} adaptationSetElement - The AdaptationSet root element.
+ * @returns {Array.<Object>}
+ */
 export function createAdaptationSetIntermediateRepresentation(
   adaptationSetElement : Element
-) : IAdaptationSetIntermediateRepresentation {
-  return {
-    children: parseAdaptationSetChildren(adaptationSetElement.childNodes),
-    attributes: parseAdaptationSetAttributes(adaptationSetElement),
-  };
+) : [IAdaptationSetIntermediateRepresentation, Error[]] {
+  const childNodes = adaptationSetElement.childNodes;
+  const [ children, childrenWarnings ] = parseAdaptationSetChildren(childNodes);
+  const [ attributes, attrsWarnings ] =
+    parseAdaptationSetAttributes(adaptationSetElement);
+  const warnings = childrenWarnings.concat(attrsWarnings);
+  return [{ children, attributes }, warnings];
 }

@@ -16,7 +16,9 @@
 
 import {
   combineLatest as observableCombineLatest,
+  concat as observableConcat,
   Observable,
+  of as observableOf,
 } from "rxjs";
 import {
   filter,
@@ -93,8 +95,12 @@ export default function generateManifestParser(
       parserResponse : IMPDParserResponse
     ) : IManifestParserObservable {
       if (parserResponse.type === "done") {
-        const manifest = new Manifest(parserResponse.value, options);
-        return returnParsedManifest(manifest, url);
+        const { warnings, parsed } = parserResponse.value;
+        const warningEvents = warnings.map(warning => ({ type: "warning" as const,
+                                                         value: warning }));
+        const manifest = new Manifest(parsed, options);
+        return observableConcat(observableOf(...warningEvents),
+                                returnParsedManifest(manifest, url));
       }
 
       const { ressources, continue: continueParsing } = parserResponse.value;

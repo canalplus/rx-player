@@ -14,36 +14,57 @@
  * limitations under the License.
  */
 
+import {
+  parseMPDInteger,
+  ValueParser,
+} from "./utils";
+
+/** BaseURL element once parsed. */
 export interface IBaseURL {
+  /** The URL itself. */
   value: string;
+
+  /** Attributes assiociated to the BaseURL. */
   attributes: {
+    /** availabilityTimeOffset assiociated to that URL. */
     availabilityTimeOffset?: number;
   };
 }
 
 /**
- * Parse "BaseURL" Element attributes in a DASH MPD.
- * @param {Element} root
- * @returns {Object}
+ * Parse an BaseURL element into an BaseURL intermediate
+ * representation.
+ * @param {Element} adaptationSetElement - The BaseURL root element.
+ * @returns {Array.<Object|undefined>}
  */
-export default function parseBaseURL(root: Element) : IBaseURL | undefined {
-  const attributes: { availabilityTimeOffset?: number } = {};
+export default function parseBaseURL(
+  root: Element
+) : [IBaseURL | undefined, Error[]] {
+  const attributes : { availabilityTimeOffset?: number } = {};
   const value = root.textContent;
+
+  const warnings : Error[] = [];
+  const parseValue = ValueParser(attributes, warnings);
   if (value === null || value.length === 0) {
-    return undefined;
+    return [undefined, warnings];
   }
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
     switch (attribute.name) {
       case "availabilityTimeOffset":
-        attributes.availabilityTimeOffset =
-          attribute.value === "INF" ? Infinity :
-                                      parseInt(attribute.value, 10);
+        if (attribute.value === "INF") {
+          attributes.availabilityTimeOffset = Infinity;
+        } else {
+          parseValue("availabilityTimeOffset",
+                     attribute.value,
+                     parseMPDInteger,
+                     "availabilityTimeOffset");
+        }
         break;
     }
   }
 
-  return { value,
-           attributes };
+  return [ { value, attributes },
+           warnings ];
 }

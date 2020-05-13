@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
 import parseBaseURL, {
   IBaseURL
 } from "./BaseURL";
@@ -28,7 +27,13 @@ import parseSegmentTemplate, {
   IParsedSegmentTemplate,
   IParsedSegmentTimeline,
 } from "./SegmentTemplate";
-import { parseBoolean } from "./utils";
+import {
+  MPDError,
+  parseBoolean,
+  parseMPDFloat,
+  parseMPDInteger,
+  ValueParser,
+} from "./utils";
 
 export interface IRepresentationIntermediateRepresentation {
   children : IRepresentationChildren;
@@ -69,151 +74,150 @@ export interface IRepresentationAttributes {
  */
 function parseRepresentationChildren(
   representationChildren : NodeList
-) : IRepresentationChildren {
+) : [IRepresentationChildren, Error[]] {
   const children : IRepresentationChildren = {
     baseURLs: [],
   };
 
+  let warnings : Error[] = [];
   for (let i = 0; i < representationChildren.length; i++) {
     if (representationChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = representationChildren[i] as Element;
 
       switch (currentElement.nodeName) {
         case "BaseURL":
-          const baseURLObj = parseBaseURL(currentElement);
+          const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
           if (baseURLObj !== undefined) {
             children.baseURLs.push(baseURLObj);
           }
+          warnings = warnings.concat(baseURLWarnings);
           break;
         case "SegmentBase":
-          children.segmentBase = parseSegmentBase(currentElement);
+          const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
+          children.segmentBase = segmentBase;
+          if (segmentBaseWarnings.length > 0) {
+            warnings = warnings.concat(segmentBaseWarnings);
+          }
           break;
         case "SegmentList":
-          children.segmentList = parseSegmentList(currentElement);
+          const [segmentList, segmentListWarnings] = parseSegmentList(currentElement);
+          warnings = warnings.concat(segmentListWarnings);
+          children.segmentList = segmentList;
           break;
         case "SegmentTemplate":
-          children.segmentTemplate = parseSegmentTemplate(currentElement);
+          const [ segmentTemplate,
+                  segmentTemplateWarnings ] = parseSegmentTemplate(currentElement);
+          warnings = warnings.concat(segmentTemplateWarnings);
+          children.segmentTemplate = segmentTemplate;
           break;
       }
     }
   }
-  return children;
+  return [children, warnings];
 }
 
 /**
  * @param {Element} representationElement
- * @returns {Object}
+ * @returns {Array}
  */
 function parseRepresentationAttributes(
   representationElement : Element
-) : IRepresentationAttributes {
+) : [IRepresentationAttributes, Error[]] {
   const attributes : IRepresentationAttributes = {};
+  const warnings : Error[] = [];
+  const parseValue = ValueParser(attributes, warnings);
   for (let i = 0; i < representationElement.attributes.length; i++) {
-    const attribute = representationElement.attributes[i];
+    const attr = representationElement.attributes[i];
 
-    switch (attribute.name) {
+    switch (attr.name) {
 
       case "audioSamplingRate":
-        attributes.audioSamplingRate = attribute.value;
+        attributes.audioSamplingRate = attr.value;
         break;
 
-      case "bandwidth": {
-        const bitrate = parseInt(attribute.value, 10);
-        if (isNaN(bitrate)) {
-          log.warn(`DASH: invalid bandwidth ("${attribute.value}")`);
-        } else {
-          attributes.bitrate = bitrate;
-        }
-      }
+      case "bandwidth":
+        parseValue("bitrate", attr.value, parseMPDInteger, "bandwidth");
         break;
 
       case "codecs":
-        attributes.codecs = attribute.value;
+        attributes.codecs = attr.value;
         break;
 
       case "codingDependency":
-        attributes.codingDependency = parseBoolean(attribute.value);
+        parseValue("codingDependency",
+                   attr.value,
+                   parseBoolean,
+                   "codingDependency");
         break;
 
       case "frameRate":
-        attributes.frameRate = attribute.value;
+        attributes.frameRate = attr.value;
         break;
 
-      case "height": {
-        const height = parseInt(attribute.value, 10);
-        if (isNaN(height)) {
-          log.warn(`DASH: invalid height ("${attribute.value}")`);
-        } else {
-          attributes.height = height;
-        }
-      }
+      case "height":
+        parseValue("height", attr.value, parseMPDInteger, "height");
         break;
 
       case "id":
-        attributes.id = attribute.value;
+        attributes.id = attr.value;
         break;
 
-      case "maxPlayoutRate": {
-        const maxPlayoutRate = parseFloat(attribute.value);
-        if (isNaN(maxPlayoutRate)) {
-          log.warn(`DASH: invalid maxPlayoutRate ("${attribute.value}")`);
-        } else {
-          attributes.maxPlayoutRate = maxPlayoutRate;
-        }
-      }
+      case "maxPlayoutRate":
+        parseValue("maxPlayoutRate",
+                   attr.value,
+                   parseMPDFloat,
+                   "maxPlayoutRate");
         break;
 
-      case "maximumSAPPeriod": {
-        const maximumSAPPeriod = parseFloat(attribute.value);
-        if (isNaN(maximumSAPPeriod)) {
-          log.warn(`DASH: invalid maximumSAPPeriod ("${attribute.value}")`);
-        } else {
-          attributes.maximumSAPPeriod = maximumSAPPeriod;
-        }
-      }
+      case "maximumSAPPeriod":
+        parseValue("maximumSAPPeriod",
+                   attr.value,
+                   parseMPDFloat,
+                   "maximumSAPPeriod");
         break;
 
       case "mimeType":
-        attributes.mimeType = attribute.value;
+        attributes.mimeType = attr.value;
         break;
 
       case "profiles":
-        attributes.profiles = attribute.value;
+        attributes.profiles = attr.value;
         break;
 
-      case "qualityRanking": {
-        const qualityRanking = parseInt(attribute.value, 10);
-        if (isNaN(qualityRanking)) {
-          log.warn(`DASH: invalid qualityRanking ("${attribute.value}")`);
-        } else {
-          attributes.qualityRanking = qualityRanking;
-        }
-      }
+      case "qualityRanking":
+        parseValue("qualityRanking",
+                   attr.value,
+                   parseMPDInteger,
+                   "qualityRanking");
         break;
 
       case "segmentProfiles":
-        attributes.segmentProfiles = attribute.value;
+        attributes.segmentProfiles = attr.value;
         break;
 
-      case "width": {
-        const width = parseInt(attribute.value, 10);
-        if (isNaN(width)) {
-          log.warn(`DASH: invalid width ("${attribute.value}")`);
-        } else {
-          attributes.width = width;
-        }
-      }
+      case "width":
+        parseValue("width", attr.value, parseMPDInteger, "width");
         break;
     }
   }
-  return attributes;
+  if (attributes.bitrate === undefined) {
+    warnings.push(
+      new MPDError("No bitrate found on a Representation"));
+  }
+  return [attributes, warnings];
 }
 
+/**
+ * @param {Element} representationElement
+ * @returns {Array}
+ */
 export function createRepresentationIntermediateRepresentation(
   representationElement : Element
-) : IRepresentationIntermediateRepresentation {
-  return {
-    children: parseRepresentationChildren(representationElement.childNodes),
-    attributes: parseRepresentationAttributes(representationElement),
-  };
+) : [IRepresentationIntermediateRepresentation, Error[]] {
+  const [children, childrenWarnings] =
+    parseRepresentationChildren(representationElement.childNodes);
+  const [attributes, attrsWarnings] =
+    parseRepresentationAttributes(representationElement);
+  const warnings = childrenWarnings.concat(attrsWarnings);
+  return [{ children, attributes }, warnings];
 }

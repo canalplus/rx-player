@@ -56,7 +56,6 @@ function parseContentProtectionChildren(
 }
 
 /**
- * Parse the "ContentProtection" node of a MPD.
  * @param {Element} root
  * @returns {Object}
  */

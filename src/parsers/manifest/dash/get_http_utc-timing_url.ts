@@ -29,9 +29,9 @@ export default function getHTTPUTCTimingURL(
       value : string;
     } =>
       utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014" &&
-      utcTiming.value != null
+      utcTiming.value !== undefined
     );
 
-  return UTCTimingHTTP.length > 0 ?
-    UTCTimingHTTP[0].value : undefined;
+  return UTCTimingHTTP.length > 0 ? UTCTimingHTTP[0].value :
+                                    undefined;
 }

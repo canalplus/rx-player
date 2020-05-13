@@ -18,6 +18,7 @@ import log from "../../../../../log";
 import {
   createAdaptationSetIntermediateRepresentation,
 } from "../AdaptationSet";
+import { MPDError } from "../utils";
 
 function testBooleanAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
@@ -30,19 +31,17 @@ function testBooleanAttribute(attributeName : string, variableName? : string) : 
       .parseFromString(`<AdaptationSet ${attributeName}="true" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: { [_variableName]: true },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: true },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
 
     const element2 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}=\"false\" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: { [_variableName]: false },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: false },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
 
     expect(spyLog).not.toHaveBeenCalled();
     spyLog.mockRestore();
@@ -55,22 +54,26 @@ function testBooleanAttribute(attributeName : string, variableName? : string) : 
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="foobar" />`, "text/xml")
       .childNodes[0] as Element;
+    const error1 = new MPDError(
+      `\`${attributeName}\` property is not a boolean value but "foobar"`);
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: { [_variableName]: false },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: false },
+                   children: { baseURLs: [], representations: [] } },
+                 [error1] ]);
+    expect(spyLog).toHaveBeenCalledTimes(1);
+    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
 
     const element2 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="" />`, "text/xml")
       .childNodes[0] as Element;
+    const error2 = new MPDError(
+      `\`${attributeName}\` property is not a boolean value but ""`);
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: { [_variableName]: false },
-        children: { baseURLs: [], representations: [] },
-      });
-
-    expect(spyLog).not.toHaveBeenCalled();
+      .toEqual([ { attributes: { [_variableName]: false },
+                   children: { baseURLs: [], representations: [] } },
+                 [error2] ]);
+    expect(spyLog).toHaveBeenCalledTimes(2);
+    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
     spyLog.mockRestore();
   });
 }
@@ -86,19 +89,17 @@ function testStringAttribute(attributeName : string, variableName? : string) : v
       .parseFromString(`<AdaptationSet ${attributeName}="foobar" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: { [_variableName]: "foobar" },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: "foobar" },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
 
     const element2 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}=\"\" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: { [_variableName]: "" },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: "" },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
     expect(spyLog).not.toHaveBeenCalled();
     spyLog.mockRestore();
   });
@@ -115,27 +116,26 @@ function testNumberAttribute(attributeName : string, variableName? : string) : v
       .parseFromString(`<AdaptationSet ${attributeName}="012" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: { [_variableName]: 12 },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: 12 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
 
     const element2 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="0" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: { [_variableName]: 0 },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: 0 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
     const element3 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="-50" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element3))
-      .toEqual({
-        attributes: { [_variableName]: -50 },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: -50 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
     expect(spyLog).not.toHaveBeenCalled();
     spyLog.mockRestore();
   });
@@ -147,36 +147,42 @@ function testNumberAttribute(attributeName : string, variableName? : string) : v
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="toto" />`, "text/xml")
       .childNodes[0] as Element;
+    const error1 = new MPDError(
+      `\`${attributeName}\` property is not an integer value but "toto"`);
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error1] ]);
+
     expect(spyLog).toHaveBeenCalledTimes(1);
-    expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("toto")`);
+    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
 
     const element2 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="PT5M" />`, "text/xml")
       .childNodes[0] as Element;
+    const error2 = new MPDError(
+      `\`${attributeName}\` property is not an integer value but "PT5M"`);
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error2] ]);
+
     expect(spyLog).toHaveBeenCalledTimes(2);
-    expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("PT5M")`);
+    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
 
     const element3 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="" />`, "text/xml")
       .childNodes[0] as Element;
+    const error3 = new MPDError(
+      `\`${attributeName}\` property is not an integer value but ""`);
 
     expect(createAdaptationSetIntermediateRepresentation(element3))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error3] ]);
+
     expect(spyLog).toHaveBeenCalledTimes(3);
-    expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("")`);
+    expect(spyLog).toHaveBeenNthCalledWith(3, error3.message);
     spyLog.mockRestore();
   });
 }
@@ -195,27 +201,26 @@ function testNumberOrBooleanAttribute(
       .parseFromString(`<AdaptationSet ${attributeName}="012" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: { [_variableName]: 12 },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: 12 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
 
     const element2 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="0" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: { [_variableName]: 0 },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: 0 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
     const element3 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="-50" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element3))
-      .toEqual({
-        attributes: { [_variableName]: -50 },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: -50 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
     expect(spyLog).not.toHaveBeenCalled();
     spyLog.mockRestore();
   });
@@ -227,36 +232,42 @@ function testNumberOrBooleanAttribute(
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="toto" />`, "text/xml")
       .childNodes[0] as Element;
+    const error1 = new MPDError(
+      `\`${attributeName}\` property is not a boolean nor an integer but "toto"`);
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error1] ]);
+
     expect(spyLog).toHaveBeenCalledTimes(1);
-    expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("toto")`);
+    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
 
     const element2 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="PT5M" />`, "text/xml")
       .childNodes[0] as Element;
+    const error2 = new MPDError(
+      `\`${attributeName}\` property is not a boolean nor an integer but "PT5M"`);
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error2] ]);
+
     expect(spyLog).toHaveBeenCalledTimes(2);
-    expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("PT5M")`);
+    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
 
     const element3 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="" />`, "text/xml")
       .childNodes[0] as Element;
+    const error3 = new MPDError(
+      `\`${attributeName}\` property is not a boolean nor an integer but ""`);
 
     expect(createAdaptationSetIntermediateRepresentation(element3))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error3] ]);
+
     expect(spyLog).toHaveBeenCalledTimes(3);
-    expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("")`);
+    expect(spyLog).toHaveBeenNthCalledWith(3, error3.message);
     spyLog.mockRestore();
   });
 
@@ -268,19 +279,17 @@ function testNumberOrBooleanAttribute(
       .parseFromString(`<AdaptationSet ${attributeName}="true" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: { [_variableName]: true },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: true },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
 
     const element2 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}=\"false\" />`, "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: { [_variableName]: false },
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: { [_variableName]: false },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
 
     expect(spyLog).not.toHaveBeenCalled();
     spyLog.mockRestore();
@@ -288,6 +297,7 @@ function testNumberOrBooleanAttribute(
 }
 
 describe("DASH Node Parsers - AdaptationSet", () => {
+
   /* tslint:disable max-line-length */
   it("should correctly parse an AdaptationSet element without attributes nor children", () => {
   /* tslint:enable max-line-length */
@@ -295,11 +305,11 @@ describe("DASH Node Parsers - AdaptationSet", () => {
       .parseFromString("<AdaptationSet />", "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
   });
+
   testStringAttribute("audioSamplingRate");
   testBooleanAttribute("bitstreamSwitching");
   testStringAttribute("codecs");
@@ -333,19 +343,17 @@ describe("DASH Node Parsers - AdaptationSet", () => {
       .parseFromString("<AdaptationSet><BaseURL /></AdaptationSet>", "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
 
     const element2 = new DOMParser()
       .parseFromString("<AdaptationSet><BaseURL></BaseURLs</AdaptationSet>", "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [], representations: [] },
-      });
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
   });
 
   it("should correctly parse a non-empty baseURLs", () => {
@@ -353,12 +361,15 @@ describe("DASH Node Parsers - AdaptationSet", () => {
       .parseFromString("<AdaptationSet><BaseURL availabilityTimeOffset=\"INF\">a</BaseURL></AdaptationSet>", "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [{ attributes: { availabilityTimeOffset: Infinity },
-                                 value: "a" }],
-                    representations: [] },
-      });
+      .toEqual([
+        {
+          attributes: {},
+          children: { baseURLs: [{ attributes: { availabilityTimeOffset: Infinity },
+                                   value: "a" }],
+                      representations: [] },
+        },
+        [],
+      ]);
 
     const element2 = new DOMParser()
       .parseFromString(
@@ -366,12 +377,15 @@ describe("DASH Node Parsers - AdaptationSet", () => {
         "text/xml"
       ).childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [{ attributes: { availabilityTimeOffset: 4 },
-                                 value: "foo bar" }],
-                    representations: [] },
-      });
+      .toEqual([
+        {
+          attributes: {},
+          children: { baseURLs: [{ attributes: { availabilityTimeOffset: 4 },
+                                   value: "foo bar" }],
+                      representations: [] },
+        },
+        [],
+      ]);
   });
 
   it("should correctly parse multiple non-empty baseURLs", () => {
@@ -379,15 +393,18 @@ describe("DASH Node Parsers - AdaptationSet", () => {
       .parseFromString("<AdaptationSet><BaseURL availabilityTimeOffset=\"INF\">a</BaseURL><BaseURL availabilityTimeOffset=\"12\">b</BaseURL></AdaptationSet>", "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
-      .toEqual({
-        attributes: {},
-        children: { baseURLs: [
-                                { attributes: { availabilityTimeOffset: Infinity },
-                                  value: "a" },
-                                { attributes: { availabilityTimeOffset: 12 },
-                                  value: "b" },
-                              ],
-                    representations: [] },
-      });
+      .toEqual([
+        {
+          attributes: {},
+          children: { baseURLs: [
+                                  { attributes: { availabilityTimeOffset: Infinity },
+                                    value: "a" },
+                                  { attributes: { availabilityTimeOffset: 12 },
+                                    value: "b" },
+                                ],
+                      representations: [] },
+        },
+        [],
+      ]);
   });
 });

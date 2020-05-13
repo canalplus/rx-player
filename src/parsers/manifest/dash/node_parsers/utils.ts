@@ -19,6 +19,7 @@
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 /* tslint:enable:max-line-length */
 
+import log from "../../../../log";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 
 export interface IScheme { schemeIdUri? : string;
@@ -30,78 +31,223 @@ const rangeRe = /([0-9]+)-([0-9]+)/;
 
 /**
  * Parse MPD boolean attributes.
- * @param {string} str
- * @returns {Boolean}
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed boolean - or `null` if we could not parse
+ *      it
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ * @param {string} val - The value to parse
+ * @param {string} displayName - The name of the property. Used for error
+ * formatting.
+ * @returns {Array.<Boolean | Error | null>}
  */
-function parseBoolean(str : string) : boolean {
-  return str === "true";
+function parseBoolean(
+  val : string,
+  displayName : string
+) : [boolean,
+     MPDError | null]
+{
+  if (val === "true") {
+    return [true, null];
+  }
+  if (val === "false") {
+    return [false, null];
+  }
+  const error = new MPDError(
+    `\`${displayName}\` property is not a boolean value but "${val}"`);
+  return [false, error];
 }
 
 /**
- * Parse some MPD attributes.
- * @param {string} str
- * @returns {Boolean|Number}
+ * Parse MPD integer attributes.
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed boolean - or `null` if we could not parse
+ *      it
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ * @param {string} val - The value to parse
+ * @param {string} displayName - The name of the property. Used for error
+ * formatting.
+ * @returns {Array.<number | Error | null>}
  */
-function parseIntOrBoolean(str : string) : boolean|number {
-  if (str === "true") {
-    return true;
+function parseMPDInteger(
+  val : string,
+  displayName : string
+) : [number | null,
+     MPDError | null]
+{
+  const toInt = parseInt(val, 10);
+  if (isNaN(toInt)) {
+    const error = new MPDError(
+      `\`${displayName}\` property is not an integer value but "${val}"`);
+    return [null, error];
+
   }
-  if (str === "false") {
-    return false;
+  return [toInt, null];
+}
+
+/**
+ * Parse MPD float attributes.
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed boolean - or `null` if we could not parse
+ *      it
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ * @param {string} val - The value to parse
+ * @param {string} displayName - The name of the property. Used for error
+ * formatting.
+ * @returns {Array.<number | Error | null>}
+ */
+function parseMPDFloat(
+  val : string,
+  displayName : string
+) : [number | null,
+     MPDError | null]
+{
+  const toInt = parseFloat(val);
+  if (isNaN(toInt)) {
+    const error = new MPDError(
+      `\`${displayName}\` property is not an integer value but "${val}"`);
+    return [null, error];
+
   }
-  return parseInt(str, 10);
+  return [toInt, null];
+}
+
+/**
+ * Parse MPD attributes which are either integer or boolean values.
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed value - or `null` if we could not parse
+ *      it
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ * @param {string} val - The value to parse
+ * @param {string} displayName - The name of the property. Used for error
+ * formatting.
+ * @returns {Array.<Boolean | number | Error | null>}
+ */
+function parseIntOrBoolean(
+  val : string,
+  displayName : string
+) : [ boolean | number | null,
+      MPDError | null ] {
+  if (val === "true") {
+    return [true, null];
+  }
+  if (val === "false") {
+    return [false, null];
+  }
+  const toInt = parseInt(val, 10);
+  if (isNaN(toInt)) {
+    const error = new MPDError(
+      `\`${displayName}\` property is not a boolean nor an integer but "${val}"`);
+    return [null, error];
+  }
+  return [toInt, null];
 }
 
 /**
  * Parse MPD date attributes.
- * @param {string} str
- * @returns {Date}
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed value - or `null` if we could not parse
+ *      it
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ * @param {string} val - The value to parse
+ * @param {string} displayName - The name of the property. Used for error
+ * formatting.
+ * @returns {Array.<Date | null | Error>}
  */
-function parseDateTime(str : string) : number {
-  return new Date(Date.parse(str)).getTime() / 1000;
+function parseDateTime(
+  val : string,
+  displayName : string
+) : [number | null,
+     MPDError | null ] {
+  const parsed = Date.parse(val);
+  if (isNaN(parsed)) {
+    const error = new MPDError(
+      `\`${displayName}\` is in an invalid date format: "${val}"`);
+    return [null, error];
+  }
+  return [new Date(Date.parse(val)).getTime() / 1000, null];
 }
 
 /**
  * Parse MPD ISO8601 duration attributes into seconds.
- * @param {string} date
- * @returns {Number}
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed value - or `null` if we could not parse
+ *      it
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ * @param {string} val - The value to parse
+ * @param {string} displayName - The name of the property. Used for error
+ * formatting.
+ * @returns {Array.<number | Error | null>}
  */
-function parseDuration(date : string) : number {
-  if (!isNonEmptyString(date)) {
-    return 0;
+function parseDuration(
+  val : string,
+  displayName : string
+) : [number | null,
+     MPDError | null] {
+
+  if (!isNonEmptyString(val)) {
+    const error = new MPDError(`\`${displayName}\` property is empty`);
+    return [0, error];
   }
 
-  const match = iso8601Duration.exec(date) as RegExpExecArray;
-  if (match == null) {
-    throw new Error(`${date} is not a valid ISO8601 duration`);
+  const match = iso8601Duration.exec(val) as RegExpExecArray;
+  if (match === null) {
+    const error = new MPDError(
+      `\`${displayName}\` property has an unrecognized format "${val}"`);
+    return [null, error];
   }
 
-  return (parseFloat(isNonEmptyString(match[2]) ? match[2] :
-                                                  "0") * 365 * 24 * 60 * 60 +
-          parseFloat(isNonEmptyString(match[4]) ? match[4] :
-                                                  "0") * 30 * 24 * 60 * 60 +
-          parseFloat(isNonEmptyString(match[6]) ? match[6] :
-                                                  "0") * 24 * 60 * 60 +
-          parseFloat(isNonEmptyString(match[8]) ? match[8] :
-                                                  "0") * 60 * 60 +
-          parseFloat(isNonEmptyString(match[10]) ? match[10] :
-                                                   "0") * 60 +
-          parseFloat(isNonEmptyString(match[12]) ? match[12] :
-                                                   "0"));
+  const duration =
+    (parseFloat(isNonEmptyString(match[2]) ? match[2] :
+                                             "0") * 365 * 24 * 60 * 60 +
+     parseFloat(isNonEmptyString(match[4]) ? match[4] :
+                                             "0") * 30 * 24 * 60 * 60 +
+     parseFloat(isNonEmptyString(match[6]) ? match[6] :
+                                             "0") * 24 * 60 * 60 +
+     parseFloat(isNonEmptyString(match[8]) ? match[8] :
+                                             "0") * 60 * 60 +
+     parseFloat(isNonEmptyString(match[10]) ? match[10] :
+                                              "0") * 60 +
+     parseFloat(isNonEmptyString(match[12]) ? match[12] :
+                                              "0"));
+  return [duration, null];
 }
 
 /**
  * Parse MPD byterange attributes into arrays of two elements: the start and
  * the end.
- * @param {string} str
- * @returns {Array.<Number>}
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed value - or `null` if we could not parse
+ *      it
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ * @param {string} val
+ * @param {string} displayName
+ * @returns {Array.<Array.<number> | Error | null>}
  */
-function parseByteRange(str : string) : [number, number]|null {
-  const match = rangeRe.exec(str);
-  if (match == null) {
-    return null;
+function parseByteRange(
+  val : string,
+  displayName : string
+) : [ [number, number] | null, MPDError | null ] {
+  const match = rangeRe.exec(val);
+  if (match === null) {
+    const error = new MPDError(
+      `\`${displayName}\` property has an unrecognized format "${val}"`);
+    return [null, error];
   } else {
-    return [+match[1], +match[2]];
+    return [[+match[1], +match[2]], null];
   }
 }
 
@@ -129,11 +275,77 @@ function parseScheme(root: Element) : IScheme {
            value };
 }
 
+/**
+ * Create a function to factorize the MPD parsing logic.
+ * @param {Object} dest - The destination object which will contain the parsed
+ * values.
+ * @param {Array.<Error>} warnings - An array which will contain every parsing
+ * error encountered.
+ * @return {Function}
+ */
+function ValueParser<T>(
+  dest : T,
+  warnings : Error[]
+) {
+  /**
+   * Parse a single value and add it to the `dest` objects.
+   * If an error arised while parsing, add it at the end of the `warnings` array.
+   * @param {string} objKey - The key which will be added to the `dest` object.
+   * @param {string} val - The value found in the MPD which we should parse.
+   * @param {Function} parsingFn - The parsing function adapted for this value.
+   * @param {string} displayName - The name of the key as it appears in the MPD.
+   * This is used only in error formatting,
+   */
+  return function(
+    objKey : keyof T,
+    val : string,
+    parsingFn : (val : string,
+                 displayName : string) => [T[keyof T] | null, MPDError | null],
+    displayName : string
+  ) : void {
+    const [parsingResult, parsingError] = parsingFn(val, displayName);
+    if (parsingError !== null) {
+      log.warn(parsingError.message);
+      warnings.push(parsingError);
+    }
+
+    if (parsingResult !== null) {
+      dest[objKey] = parsingResult;
+    }
+  };
+}
+
+/**
+ * Error arising when parsing the MPD.
+ * @class MPDError
+ * @extends Error
+ */
+class MPDError extends Error {
+  public readonly name : "MPDError";
+  public readonly message : string;
+
+  /**
+   * @param {string} message
+   */
+  constructor(message : string) {
+    super();
+    // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+    Object.setPrototypeOf(this, MPDError.prototype);
+
+    this.name = "MPDError";
+    this.message = message;
+  }
+}
+
 export {
+  MPDError,
+  ValueParser,
   parseBoolean,
   parseByteRange,
   parseDateTime,
   parseDuration,
   parseIntOrBoolean,
+  parseMPDFloat,
+  parseMPDInteger,
   parseScheme,
 };

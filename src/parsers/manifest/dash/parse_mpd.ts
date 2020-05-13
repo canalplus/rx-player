@@ -76,7 +76,8 @@ export type IParserResponse<T> = { type : "needs-ressources";
                                                loadedRessources : ILoadedResource[]
                                              ) => IParserResponse<T>; }; } |
                                  { type : "done";
-                                   value : T; };
+                                   value : { parsed : T;
+                                             warnings : Error[]; }; };
 /**
  * @param {Element} root - The MPD root.
  * @param {Object} args
@@ -87,19 +88,22 @@ export default function parseMPD(
   args : IMPDParserArguments
 ) : IParserResponse<IParsedManifest> {
   // Transform whole MPD into a parsed JS object representation
-  const mpdIR = createMPDIntermediateRepresentation(root);
-  return loadExternalRessourcesAndParse(mpdIR, args);
+  const [mpdIR,
+         warnings] = createMPDIntermediateRepresentation(root);
+  return loadExternalRessourcesAndParse(mpdIR, args, warnings);
 }
 
 /**
  * Checks if xlinks needs to be loaded before actually parsing the manifest.
  * @param {Object} mpdIR
  * @param {Object} args
+ * @param {Array.<Object>} warnings
  * @returns {Object}
  */
 function loadExternalRessourcesAndParse(
   mpdIR : IMPDIntermediateRepresentation,
   args : IMPDParserArguments,
+  warnings : Error[],
   hasLoadedClock? : boolean
 ) : IParserResponse<IParsedManifest> {
   const { children: rootChildren,
@@ -139,7 +143,7 @@ function loadExternalRessourcesAndParse(
               }
               clockOffset = getClockOffset(loadedRessources[0].responseData);
               args.externalClockOffset = clockOffset;
-              return loadExternalRessourcesAndParse(mpdIR, args, true);
+              return loadExternalRessourcesAndParse(mpdIR, args, warnings, true);
             },
           },
         };
@@ -156,7 +160,7 @@ function loadExternalRessourcesAndParse(
   }
 
   if (xlinksToLoad.length === 0) {
-    return parseCompleteIntermediateRepresentation(mpdIR, args, xlinkInfos);
+    return parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInfos);
   }
 
   return {
@@ -185,16 +189,20 @@ function loadExternalRessourcesAndParse(
           const periodsIR : IPeriodIntermediateRepresentation[] = [];
           for (let j = 0; j < periods.length; j++) {
             if (periods[j].nodeType === Node.ELEMENT_NODE) {
-              const periodIR = createPeriodIntermediateRepresentation(periods[j]);
+              const [periodIR,
+                     periodWarnings] = createPeriodIntermediateRepresentation(periods[j]);
               xlinkInfos.set(periodIR, { receivedTime, sendingTime, url });
               periodsIR.push(periodIR);
+              if (periodWarnings.length > 0) {
+                warnings.push(...periodWarnings);
+              }
             }
           }
 
           // replace original "xlinked" periods by the real deal
           rootChildren.periods.splice(index, 1, ...periodsIR);
         }
-        return loadExternalRessourcesAndParse(mpdIR, args);
+        return loadExternalRessourcesAndParse(mpdIR, args, warnings);
       },
     },
   };
@@ -204,11 +212,14 @@ function loadExternalRessourcesAndParse(
  * Parse the MPD intermediate representation into a regular Manifest.
  * @param {Object} mpdIR
  * @param {Object} args
+ * @param {Array.<Object>} warnings
+ * @param {Object} xlinkInfos
  * @returns {Object}
  */
 function parseCompleteIntermediateRepresentation(
   mpdIR : IMPDIntermediateRepresentation,
   args : IMPDParserArguments,
+  warnings : Error[],
   xlinkInfos : IXLinkInfos
 ) : IParserResponse<IParsedManifest> {
   const { children: rootChildren,
@@ -310,5 +321,5 @@ function parseCompleteIntermediateRepresentation(
     }
   }
 
-  return { type: "done", value: parsedMPD };
+  return { type: "done", value: { parsed: parsedMPD, warnings } };
 }
