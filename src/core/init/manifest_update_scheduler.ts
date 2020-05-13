@@ -32,7 +32,6 @@ import {
 import config from "../../config";
 import log from "../../log";
 import Manifest from "../../manifest";
-import isNonEmptyString from "../../utils/is_non_empty_string";
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
@@ -203,10 +202,6 @@ export default function manifestUpdateScheduler({
      const fullRefresh = completeRefresh || manifestUpdateUrl === undefined;
      const refreshURL = fullRefresh ? manifest.getUrl() :
                                       manifestUpdateUrl;
-     if (!isNonEmptyString(refreshURL)) {
-       log.warn("Init: Cannot refresh the manifest: no url");
-       return EMPTY;
-     }
      const externalClockOffset = manifest.clockOffset;
 
      if (unsafeMode) {
