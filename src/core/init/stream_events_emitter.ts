@@ -30,6 +30,7 @@ import Manifest from "../../manifest";
 import arrayFindIndex from "../../utils/array_find_index";
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
+const boundsShift = (STREAM_EVENT_EMITTER_POLL_INTERVAL * 0.6) / 1000;
 
 export interface IStreamEventData {
   start: number;
@@ -73,37 +74,56 @@ function streamEventsEmitter(manifest: Manifest,
                              mediaElement: HTMLMediaElement
 ): Observable<IStreamEvent> {
   let scheduledEvents: IStreamEventData[] = [];
-  const currentEventsIn: IStreamEventData[] = [];
+  let currentEventsIn: IStreamEventData[] = [];
 
   /**
    * Refresh local scheduled events list
    */
   function updateScheduledEvents(): void {
     scheduledEvents = [];
+    const newCurrentEventsIn: IStreamEventData[] = [];
     const { periods } = manifest;
     for (let i = 0; i < periods.length; i++) {
       const period = periods[i];
       const { streamEvents } = period;
       if (streamEvents !== undefined) {
         streamEvents.forEach((event) => {
-          const start = period.start + (event.presentationTime ?? 0);
+          const eventStart = (event.presentationTime ?? 0) / event.timescale;
+          const start = period.start + eventStart;
           const end = event.duration !== undefined ?
-            start + event.duration :
+            eventStart + (event.duration / event.timescale) :
             undefined;
-          scheduledEvents.push({ start,
-                                 end,
-                                 id: event.id,
-                                 element: event.element });
+          const newScheduledEvent = { start,
+                                      end,
+                                      id: event.id,
+                                      element: event.element };
+          if (currentEventsIn.length > 0) {
+            for (let j = 0; j < currentEventsIn.length; j++) {
+              const currentEventIn = currentEventsIn[j];
+              if (areSameStreamEvents(currentEventIn, newScheduledEvent)) {
+                newCurrentEventsIn.push(currentEventIn);
+                currentEventsIn.splice(j, 1);
+                break;
+              }
+            }
+          }
+          if (newScheduledEvent.end === undefined ||
+              scheduledEvents.length === 0) {
+            scheduledEvents.splice(0, 0, newScheduledEvent);
+          } else {
+            for (let k = scheduledEvents.length - 1; k >= 0; k--) {
+              const scheduledEvent = scheduledEvents[k];
+              if (scheduledEvent.end === undefined) {
+                scheduledEvents.splice(k, 0, newScheduledEvent);
+              } else if (scheduledEvent.end < newScheduledEvent.end) {
+                scheduledEvents.splice(k + 1, 0, newScheduledEvent);
+              }
+            }
+          }
         });
       }
     }
-    for (let j = 0; j < currentEventsIn.length; j++) {
-      const evt = currentEventsIn[j];
-      if (!scheduledEvents.some((s) => areSameStreamEvents(s, evt))) {
-        currentEventsIn.splice(j, 1);
-        j--;
-      }
-    }
+    currentEventsIn = newCurrentEventsIn;
   }
 
   updateScheduledEvents();
@@ -115,40 +135,39 @@ function streamEventsEmitter(manifest: Manifest,
       mergeMap(() => {
         const { currentTime } = mediaElement;
         const eventsToSend: IStreamEvent[] = [];
-        for (let i = 0; i < scheduledEvents.length; i++) {
+        for (let i = scheduledEvents.length - 1; i >= 0; i--) {
           const event = scheduledEvents[i];
           const currentEventIdx = arrayFindIndex(currentEventsIn,
                                                  (e) => areSameStreamEvents(e, event));
           const { start, end } = event;
+          // We shift the start and end in case an event shall last less than
+          // STREAM_EVENT_EMITTER_POLL_INTERVAL
+          // Thus, we may trigger each in and out event with a tiny time shift.
+          const shouldShift = end === undefined ||
+                              (end - start) < STREAM_EVENT_EMITTER_POLL_INTERVAL;
+          const shiftedStart = shouldShift ? start - boundsShift :
+                                             start;
+          const shiftedEnd = end === undefined ? end :
+                                                 shouldShift ? (end + boundsShift) :
+                                                               end;
 
-          if (end === undefined) {
-            if (start <= currentTime) {
-              eventsToSend.push({ type: "stream-event-in",
-                                  value: event });
-              currentEventsIn.push(event);
-            }
-            if (start > currentTime &&
-                currentEventIdx !== -1) {
-              currentEventsIn.splice(currentEventIdx, 1);
-            }
-          } else {
-            if (start < currentTime &&
-                end > currentTime &&
-                currentEventIdx === -1) {
-              eventsToSend.push({ type: "stream-event-in",
-                                  value: event });
-              currentEventsIn.push(event);
-            }
-            if ((end < currentTime ||
-                 start > currentTime) &&
-                areSameStreamEvents(currentEventsIn[currentEventIdx], event)) {
-              eventsToSend.push({ type: "stream-event-out",
-                                  value: event });
-              currentEventsIn.splice(currentEventIdx, 1);
-            }
+          if (currentEventIdx !== -1 &&
+              shiftedStart > currentTime // If currentTime before the start of event
+              ||
+              (shiftedEnd !== undefined && // If currentTime after the end of event
+               currentTime >= shiftedEnd)
+          ) {
+            eventsToSend.push({ type: "stream-event-out",
+                                value: event });
+            currentEventsIn.splice(currentEventIdx, 1);
+          } else if (shiftedStart <= currentTime &&
+                     currentEventIdx === -1) {
+            eventsToSend.push({ type: "stream-event-in",
+                                value: event });
+            currentEventsIn.push(event);
           }
-
         }
+
         return eventsToSend.length > 0 ? observableOf(...eventsToSend) :
                                          EMPTY;
       }),

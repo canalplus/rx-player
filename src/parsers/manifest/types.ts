@@ -22,6 +22,7 @@ import { IRepresentationIndex } from "../../manifest";
 export interface IManifestStreamEvent {
   presentationTime?: number;
   duration?: number;
+  timescale: number;
   id?: string;
   element: Node | Element;
 }
