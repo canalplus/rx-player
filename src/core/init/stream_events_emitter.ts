@@ -31,25 +31,25 @@ import arrayFindIndex from "../../utils/array_find_index";
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
 
-export interface IScheduleEvent {
+export interface IStreamEventData {
   start: number;
   end?: number;
   id?: string;
   element: Node | Element;
 }
 
-interface IGoingInStreamEvent {
-  type: "going-in";
-  value: IScheduleEvent;
+interface IStreamEventIn {
+  type: "stream-event-in";
+  value: IStreamEventData;
 }
 
-interface IGoingOutStreamEvent {
-  type: "going-out";
-  value: IScheduleEvent;
+interface IStreamEventOut {
+  type: "stream-event-out";
+  value: IStreamEventData;
 }
 
-export type IEmittedStreamEvent = IGoingInStreamEvent |
-                                  IGoingOutStreamEvent;
+export type IStreamEvent = IStreamEventIn |
+                           IStreamEventOut;
 
 /**
  * Compare 2 events.
@@ -57,8 +57,8 @@ export type IEmittedStreamEvent = IGoingInStreamEvent |
  * @param {Object} evt2
  * @returns {Boolean}
  */
-function areSameStreamEvents(evt1: IScheduleEvent,
-                             evt2: IScheduleEvent): boolean {
+function areSameStreamEvents(evt1: IStreamEventData,
+                             evt2: IStreamEventData): boolean {
   return evt1.id === evt2.id &&
          evt1.start === evt2.start &&
          evt1.end === evt2.end;
@@ -71,9 +71,9 @@ function areSameStreamEvents(evt1: IScheduleEvent,
  */
 function streamEventsEmitter(manifest: Manifest,
                              mediaElement: HTMLMediaElement
-): Observable<IEmittedStreamEvent> {
-  let scheduledEvents: IScheduleEvent[] = [];
-  const currentEventsIn: IScheduleEvent[] = [];
+): Observable<IStreamEvent> {
+  let scheduledEvents: IStreamEventData[] = [];
+  const currentEventsIn: IStreamEventData[] = [];
 
   /**
    * Refresh local scheduled events list
@@ -114,7 +114,7 @@ function streamEventsEmitter(manifest: Manifest,
       filter(() => scheduledEvents.length !== 0),
       mergeMap(() => {
         const { currentTime } = mediaElement;
-        const eventsToSend: IEmittedStreamEvent[] = [];
+        const eventsToSend: IStreamEvent[] = [];
         for (let i = 0; i < scheduledEvents.length; i++) {
           const event = scheduledEvents[i];
           const currentEventIdx = arrayFindIndex(currentEventsIn,
@@ -123,7 +123,7 @@ function streamEventsEmitter(manifest: Manifest,
 
           if (end === undefined) {
             if (start <= currentTime) {
-              eventsToSend.push({ type: "going-in",
+              eventsToSend.push({ type: "stream-event-in",
                                   value: event });
               currentEventsIn.push(event);
             }
@@ -135,14 +135,14 @@ function streamEventsEmitter(manifest: Manifest,
             if (start < currentTime &&
                 end > currentTime &&
                 currentEventIdx === -1) {
-              eventsToSend.push({ type: "going-in",
+              eventsToSend.push({ type: "stream-event-in",
                                   value: event });
               currentEventsIn.push(event);
             }
             if ((end < currentTime ||
                  start > currentTime) &&
                 areSameStreamEvents(currentEventsIn[currentEventIdx], event)) {
-              eventsToSend.push({ type: "going-out",
+              eventsToSend.push({ type: "stream-event-out",
                                   value: event });
               currentEventsIn.splice(currentEventIdx, 1);
             }

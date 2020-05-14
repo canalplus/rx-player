@@ -96,6 +96,10 @@ import initializeMediaSourcePlayback, {
   IReloadingMediaSourceEvent,
   IStalledEvent,
 } from "../init";
+import {
+  IStreamEvent,
+  IStreamEventData
+} from "../init/stream_events_emitter";
 import SourceBuffersStore, {
   IBufferedChunk,
   IBufferType,
@@ -125,7 +129,6 @@ import TrackChoiceManager, {
   ITMVideoTrackListItem,
   IVideoTrackPreference,
 } from "./track_choice_manager";
-import { IEmittedStreamEvent, IScheduleEvent } from "../init/stream_events_emitter";
 
 const { DEFAULT_UNMUTED_VOLUME } = config;
 
@@ -195,8 +198,8 @@ interface IPublicAPIEvent {
                                   representation : Representation; }>;
   seeking : null;
   seeked : null;
-  goingInEventStream : IScheduleEvent;
-  goingOutEventStream : IScheduleEvent;
+  streamEventIn : IStreamEventData;
+  streamEventOut : IStreamEventData;
 }
 
 /**
@@ -1963,8 +1966,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
-      case "going-in":
-      case "going-out":
+      case "stream-event-in":
+      case "stream-event-out":
         this._priv_onStreamEvent(event);
         break;
       case "activePeriodChanged":
@@ -2110,10 +2113,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       });
   }
 
-  private _priv_onStreamEvent(event: IEmittedStreamEvent) {
-    this.trigger(event.type === "going-in" ?
-                  "goingInEventStream" :
-                  "goingOutEventStream",
+  private _priv_onStreamEvent(event: IStreamEvent) {
+    this.trigger(event.type === "stream-event-in" ? "streamEventIn" :
+                                                    "streamEventOut",
                 event.value);
   }
 

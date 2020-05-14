@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IStreamEvent } from "../../types";
+import { IManifestStreamEvent } from "../../types";
 import {
   createAdaptationSetIntermediateRepresentation,
   IAdaptationSetIntermediateRepresentation,
@@ -38,7 +38,7 @@ export interface IPeriodChildren {
   // required
   adaptations : IAdaptationSetIntermediateRepresentation[];
   baseURLs : IBaseURL[];
-  streamEvents? : IStreamEvent[];
+  streamEvents? : IManifestStreamEvent[];
 }
 
 // intermediate representation for a Period's attributes
@@ -57,8 +57,8 @@ export interface IPeriodAttributes {
  * content.
  * @param {Element} element
  */
-function parseEventStream(element: Element): IStreamEvent[] {
-  const streamEvents: IStreamEvent[] = [];
+function parseEventStream(element: Element): IManifestStreamEvent[] {
+  const streamEvents: IManifestStreamEvent[] = [];
   const attributes: { schemeId?: string;
                       timescale: number;
                       value?: string; } =

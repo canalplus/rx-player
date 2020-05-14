@@ -19,7 +19,7 @@ import { IRepresentationIndex } from "../../manifest";
 /**
  *
  */
-export interface IStreamEvent {
+export interface IManifestStreamEvent {
   presentationTime?: number;
   duration?: number;
   id?: string;
@@ -175,7 +175,7 @@ export interface IParsedPeriod {
   /**
    *
    */
-  streamEvents?: IStreamEvent[];
+  streamEvents?: IManifestStreamEvent[];
 }
 
 /** Information on the whole content */

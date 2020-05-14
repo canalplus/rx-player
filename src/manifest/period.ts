@@ -19,8 +19,8 @@ import {
   MediaError,
 } from "../errors";
 import {
+  IManifestStreamEvent,
   IParsedPeriod,
-  IStreamEvent
 } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
@@ -68,7 +68,7 @@ export default class Period {
   /**
    *
    */
-  public streamEvents? : IStreamEvent[];
+  public streamEvents? : IManifestStreamEvent[];
 
   /**
    * @constructor
