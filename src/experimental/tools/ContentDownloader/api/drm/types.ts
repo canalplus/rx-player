@@ -17,7 +17,7 @@
 import { IDBPDatabase } from "idb";
 import { Subject } from "rxjs";
 
-import { IContentProtection as IContentProtectionPSSH, IPersistedSessionData } from "../../../../../core/eme";
+import { IContentProtection as IContentProtectionPSSH, IPersistentSessionInfo } from "../../../../../core/eme";
 import { ContentBufferType } from "../downloader/types";
 
 export type ITypedArray =
@@ -35,7 +35,7 @@ export interface IContentProtection {
   contentID: string;
   drmKey: string;
   keySystems: {
-    sessionsIDS: IPersistedSessionData[];
+    sessionsIDS: IPersistentSessionInfo[];
     type: string;
   };
 }

@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-import { Observable, Subject } from "rxjs";
-import { map, mergeMap } from "rxjs/operators";
+import { Observable } from "rxjs";
+import { filter, map, mergeMap } from "rxjs/operators";
 
 import features from "../../../../../features/";
 
-import { IPersistedSessionData } from "../../../../../core/eme";
-import { createManifestPipeline } from "../../../../../core/pipelines";
+import { IPersistentSessionInfo } from "../../../../../core/eme";
+import createManifestFetcher, {
+  IManifestFetcherParsedResult,
+  IManifestFetcherResponse,
+} from "../../../../../core/fetchers/manifest/create_manifest_fetcher";
 import Manifest, { ISegment } from "../../../../../manifest";
 import { ILocalManifest } from "../../../../../parsers/manifest/local";
 import {
@@ -74,24 +77,22 @@ export function manifestLoader(
   transport: string
 ): Observable<{ manifest: Manifest; transportPipelines: ITransportPipelines }> {
   const transportPipelines = getTransportPipelineByTransport(transport);
-  const manifestPipeline = createManifestPipeline(
+  const manifestPipeline = createManifestFetcher(
     transportPipelines,
     {
       lowLatencyMode: false,
-      manifestRetry: 5,
-      offlineRetry: 5,
-    },
-    new Subject()
+      maxRetryRegular: 5,
+      maxRetryOffline: 5,
+    }
   );
   return manifestPipeline
-    .fetch(manifestURL)
-    .pipe(
-      mergeMap(response =>
-        manifestPipeline
-          .parse(response.value, manifestURL)
-          .pipe(map(({ manifest }) => ({ manifest, transportPipelines })))
-      )
-    );
+  .fetch(manifestURL)
+  .pipe(
+    filter((evt): evt is IManifestFetcherResponse => evt.type === "response"),
+    mergeMap((response) => response.parse({ previousManifest: null, unsafeMode: false })),
+    filter((res): res is IManifestFetcherParsedResult  => res.type === "parsed"),
+    map(({ manifest }) => ({ manifest, transportPipelines }))
+  );
 }
 
 /**
@@ -198,7 +199,7 @@ export function getKeySystemsSessionsOffline(
     return undefined;
   }
   const flattenedSessionsIDS = contentsProtection
-    .reduce<{ sessionsIDS: IPersistedSessionData[]; type: string}>((acc, curr) => {
+    .reduce<{ sessionsIDS: IPersistentSessionInfo[]; type: string}>((acc, curr) => {
     acc.type = curr.keySystems.type;
     for (let i = 0; i < curr.keySystems.sessionsIDS.length; ++i) {
       acc.sessionsIDS.push(...curr.keySystems.sessionsIDS);

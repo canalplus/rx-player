@@ -18,7 +18,7 @@ import { IDBPDatabase } from "idb";
 import { AsyncSubject } from "rxjs";
 
 import { TypedArray } from "../../../../../core/eme";
-import { SegmentPipelineCreator } from "../../../../../core/pipelines";
+import SegmentPipelineCreator from "../../../../../core/fetchers/segment/segment_fetcher_creator";
 import Manifest, {
   Adaptation,
   ISegment,

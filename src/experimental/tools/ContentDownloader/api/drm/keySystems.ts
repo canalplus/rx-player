@@ -16,7 +16,7 @@
 import EMEManager from "../../../../../core/eme/eme_manager";
 import {
   IKeySystemOption,
-  IPersistedSessionData,
+  IPersistentSessionInfo,
 } from "../../../../../core/eme/types";
 import { IndexedDBError } from "../../utils";
 import { IUtilsKeySystemsTransaction } from "./types";
@@ -46,7 +46,7 @@ function EMETransaction(
     {
       ...KeySystemsOption,
       licenseStorage: {
-        save(sessionsIDS: IPersistedSessionData[]) {
+        save(sessionsIDS: IPersistentSessionInfo[]) {
           db.add("contentsProtection", {
             contentID,
             drmKey: `${contentID}--${id}`,

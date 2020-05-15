@@ -66,7 +66,7 @@ export function handleSegmentPipelineFromContexts<
     type,
   }: ISegmentPipelineContext
 ): Observable<ICustomSegment> {
-  const segmentFetcherForCurrentContentType = segmentPipelineCreator.createPipeline(
+  const segmentFetcherForCurrentContentType = segmentPipelineCreator.createSegmentFetcher(
     contentType,
     new Subject()
   );

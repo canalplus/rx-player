@@ -18,7 +18,7 @@ import { IDBPDatabase } from "idb";
 import { AsyncSubject, combineLatest, of } from "rxjs";
 import { filter, startWith, tap } from "rxjs/operators";
 
-import { SegmentPipelineCreator } from "../../../../../core/pipelines";
+import SegmentPipelineCreator from "../../../../../core/fetchers/segment/segment_fetcher_creator";
 import { ICallbacks, IInitSettings, IStoredManifest } from "../../types";
 import { initDownloader$ } from "./initSegment";
 import { getTransportPipelineByTransport } from "./manifest";
@@ -79,6 +79,8 @@ class DownloadManager {
       getTransportPipelineByTransport(transport),
       {
         lowLatencyMode: false,
+        maxRetryOffline: 5,
+        maxRetryRegular: 5,
       }
     );
     const builderInit = {
