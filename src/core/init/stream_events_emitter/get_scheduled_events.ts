@@ -39,13 +39,12 @@ function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
                                     end,
                                     id: event.id,
                                     isBeingPlayed: false,
-                                    element: event.element };
+                                    data: event.data };
         if (currentScheduledEvents.length > 0) {
           for (let j = 0; j < currentScheduledEvents.length; j++) {
             const currentScheduleEvent = currentScheduledEvents[j];
-            if (areSameStreamEvents(currentScheduleEvent, newScheduledEvent) &&
-                currentScheduleEvent.isBeingPlayed) {
-              newScheduledEvent.isBeingPlayed = true;
+            if (areSameStreamEvents(currentScheduleEvent, newScheduledEvent)) {
+              newScheduledEvent.isBeingPlayed = currentScheduleEvent.isBeingPlayed;
               break;
             }
           }

@@ -19,7 +19,7 @@ export interface IStreamEventData {
   end?: number;
   id?: string;
   isBeingPlayed: boolean;
-  element: Node | Element;
+  data: unknown;
 }
 
 interface IStreamEventIn {

@@ -91,7 +91,7 @@ function parsePeriodChildren(periodChildren : NodeList) : [IPeriodChildren, Erro
     }
   }
 
-  return [{ baseURLs, adaptations }, warnings];
+  return [{ baseURLs, adaptations, streamEvents }, warnings];
 }
 
 /**

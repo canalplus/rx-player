@@ -24,7 +24,7 @@ export interface IManifestStreamEvent {
   duration?: number;
   timescale: number;
   id?: string;
-  element: Node | Element;
+  data: unknown;
 }
 
 /** Describes information about an encryption Key ID of a given media. */

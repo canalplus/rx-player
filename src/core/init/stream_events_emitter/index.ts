@@ -81,15 +81,16 @@ function streamEventsEmitter(manifest: Manifest,
                                                                end;
 
           if (isBeingPlayed &&
-              shiftedStart > currentTime // If currentTime before the start of event
-              ||
-              (shiftedEnd !== undefined && // If currentTime after the end of event
-               currentTime >= shiftedEnd)
+              (
+                shiftedStart > currentTime ||
+                (shiftedEnd !== undefined && currentTime >= shiftedEnd)
+              )
           ) {
             eventsToSend.push({ type: "stream-event-out",
                                 value: event });
             event.isBeingPlayed = false;
           } else if (shiftedStart <= currentTime &&
+                     (shiftedEnd === undefined || currentTime < shiftedEnd) &&
                      !isBeingPlayed) {
             eventsToSend.push({ type: "stream-event-in",
                                 value: event });
