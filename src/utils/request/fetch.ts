@@ -151,36 +151,36 @@ function fetchRequest(
 
       return readBufferAndSendEvents();
 
-      async function readBufferAndSendEvents() : Promise<undefined> {
-        const data = await reader.read();
-
-        if (!data.done && !isNullOrUndefined(data.value)) {
-          size += data.value.byteLength;
-          const currentTime = performance.now();
-          const dataChunk = { type: "data-chunk" as const,
-                              value: { url: response.url,
-                                       currentTime,
-                                       duration: currentTime - sendingTime,
-                                       sendingTime,
-                                       chunkSize: data.value.byteLength,
-                                       chunk: data.value.buffer,
-                                       size,
-                                       totalSize: contentLength } };
-          obs.next(dataChunk);
-          return readBufferAndSendEvents();
-        } else if (data.done) {
-          const receivedTime = performance.now();
-          const duration = receivedTime - sendingTime;
-          isDone = true;
-          obs.next({ type: "data-complete" as const,
-                     value: { duration,
-                              receivedTime,
-                              sendingTime,
-                              size,
-                              status: response.status,
-                              url: response.url } });
-          obs.complete();
-        }
+      function readBufferAndSendEvents() : Promise<undefined> {
+        return reader.read().then((data) => {
+          if (!data.done && !isNullOrUndefined(data.value)) {
+            size += data.value.byteLength;
+            const currentTime = performance.now();
+            const dataChunk = { type: "data-chunk" as const,
+                                value: { url: response.url,
+                                         currentTime,
+                                         duration: currentTime - sendingTime,
+                                         sendingTime,
+                                         chunkSize: data.value.byteLength,
+                                         chunk: data.value.buffer,
+                                         size,
+                                         totalSize: contentLength } };
+            obs.next(dataChunk);
+            return readBufferAndSendEvents();
+          } else if (data.done) {
+            const receivedTime = performance.now();
+            const duration = receivedTime - sendingTime;
+            isDone = true;
+            obs.next({ type: "data-complete" as const,
+                       value: { duration,
+                                receivedTime,
+                                sendingTime,
+                                size,
+                                status: response.status,
+                                url: response.url } });
+            obs.complete();
+          }
+        });
       }
     }).catch((err : unknown) => {
       if (hasAborted) {
