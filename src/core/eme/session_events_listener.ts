@@ -274,6 +274,11 @@ export default function SessionEventsListener(
                                                     "`session.update` failed";
             throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
           }),
+          mergeMap(() => {
+            // TODO: Works for Local Manifest for playing encrypted content but does not work for the rest...
+            // Have to find the right way the close the mediasKeysSessions when we have to...
+            return castToObservable(session.close());
+          }),
           mapTo({ type: "session-updated" as const,
                   value: { session, license, initData, initDataType } })
         );

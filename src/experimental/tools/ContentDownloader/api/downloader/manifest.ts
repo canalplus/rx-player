@@ -25,6 +25,7 @@ import createManifestFetcher, {
   IManifestFetcherResponse,
 } from "../../../../../core/fetchers/manifest/create_manifest_fetcher";
 import Manifest, { ISegment } from "../../../../../manifest";
+import { takePSSHOut } from "../../../../../parsers/containers/isobmff";
 import { ILocalManifest } from "../../../../../parsers/manifest/local";
 import {
   ILocalAdaptation,
@@ -131,7 +132,17 @@ export function getBuilderFormattedForAdaptations({
           audioDescription: ctx.adaptation.isAudioDescription,
           closedCaption: ctx.adaptation.isClosedCaption,
           language: ctx.adaptation.language,
-          representations: [ctx.representation],
+          representations: [ctx.representation].map<any>((value) => {
+            return {
+              ...value,
+              contentProtections: {
+                keyIds: value.contentProtections?.keyIds || [],
+                initData: {
+                  cenc: takePSSHOut(ctx.chunkData?.contentProtection || new Uint8Array()),
+                },
+              },
+            };
+          }),
         });
         return acc;
       }
@@ -253,8 +264,14 @@ export function offlineManifestLoader(
             closedCaption: adaptation.closedCaption,
             language: adaptation.language,
             representations: adaptation.representations.map(
-              ({ mimeType, codec, id, ...representation }): ILocalRepresentation => ({
+              ({
+                mimeType,
+                codec,
+                id,
+                contentProtections,
+                ...representation }): ILocalRepresentation => ({
                 bitrate: representation.bitrate,
+                contentProtections,
                 mimeType: mimeType !== undefined ? mimeType : "",
                 codecs: codec !== undefined ? codec : "",
                 width: representation.width,

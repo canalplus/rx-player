@@ -62,6 +62,7 @@ export interface IContextRicher {
   adaptation: Adaptation;
   representation: Representation;
   id: string;
+  chunkData?: ISegmentData;
 }
 
 export interface IAdaptationStored {
@@ -85,6 +86,7 @@ export interface IInitSegment {
   ctx: IContext;
   contentType: ContentBufferType;
   segmentPipelineCreator: SegmentPipelineCreator<any>;
+  chunkData?: ISegmentData;
 }
 
 export interface IInitGroupedSegments {

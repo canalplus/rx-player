@@ -76,7 +76,7 @@ export function handleSegmentPipelineFromContexts<
         if (Array.isArray(ctx.segment)) {
           return EMPTY;
         }
-        return segmentFetcherForCurrentContentType.createRequest(ctx).pipe(
+        return segmentFetcherForCurrentContentType.createRequest(ctx, 0).pipe(
           mergeMap(evt => {
             switch (evt.type) {
               case "chunk":

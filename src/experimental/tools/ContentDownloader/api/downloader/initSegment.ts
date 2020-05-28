@@ -136,7 +136,7 @@ export function initDownloader$(initSettings: IInitSettings, db: IDBPDatabase) {
             map(() => initSegmentCustomSegment)
           );
         }),
-        map(({ ctx, contentType }) => {
+        map(({ ctx, contentType, chunkData }) => {
           const durationForCurrentPeriod = ctx.period.duration;
           const nextSegments = ctx.representation.index.getSegments(
             0,
@@ -149,6 +149,7 @@ export function initDownloader$(initSettings: IInitSettings, db: IDBPDatabase) {
             ctx,
             segmentPipelineCreator,
             contentType,
+            chunkData,
           };
         })
       );
@@ -161,6 +162,7 @@ export function initDownloader$(initSettings: IInitSettings, db: IDBPDatabase) {
           ctx: { period, adaptation, representation, manifest },
           contentType,
           segmentPipelineCreator,
+          chunkData,
         }
       ) => {
         acc.progress.totalSegments += nextSegments.length;
@@ -170,6 +172,7 @@ export function initDownloader$(initSettings: IInitSettings, db: IDBPDatabase) {
           adaptation,
           representation,
           id: representation.id as string,
+          chunkData,
         });
         return { ...acc, segmentPipelineCreator, manifest };
       },

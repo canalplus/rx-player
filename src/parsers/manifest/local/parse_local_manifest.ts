@@ -62,7 +62,7 @@ export default function parseLocalManifest(
   if (maximumPosition !== undefined) {
     manifest.maximumTime = {
         isContinuous : false,
-        value : maximumPosition,
+        value : localManifest.duration,
         time : performance.now(),
     };
   }
