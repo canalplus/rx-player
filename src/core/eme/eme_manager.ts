@@ -39,6 +39,7 @@ import {
 } from "../../compat/";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
+import assertUnreachable from "../../utils/assert_unreachable";
 import filterMap from "../../utils/filter_map";
 import objectAssign from "../../utils/object_assign";
 import getSession, {
@@ -197,6 +198,19 @@ export default function EMEManager(
         case "blacklist-protection-data":
         case "init-data-ignored":
           return observableOf(sessionInfosEvt);
+
+        case "cleaned-old-session":
+        case "cleaning-old-session":
+          return EMPTY;
+
+        case "created-session":
+        case "loaded-open-session":
+        case "loaded-persistent-session":
+          // Do nothing, just to check every possibility is taken
+          break;
+
+        default: // Use TypeScript to check if all possibilities have been checked
+          assertUnreachable(sessionInfosEvt);
       }
       const { initData,
               initDataType,

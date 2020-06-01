@@ -271,8 +271,10 @@ export default function createSegmentLoader<T>(
             const _complete$ = observableOf({ type: "chunk-complete" as const,
                                               value: null });
             return observableConcat(_complete$, metrics$);
+
+          default:
+            assertUnreachable(arg);
         }
-        return assertUnreachable(arg);
       }));
   };
 }

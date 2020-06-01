@@ -142,7 +142,7 @@ function getResumeGap(stalled : IStalledStatus, lowLatencyMode : boolean) : numb
       return RESUME_GAP_AFTER_SEEKING[suffix];
     case "not-ready":
       return RESUME_GAP_AFTER_NOT_ENOUGH_DATA[suffix];
-    default:
+    case "buffering":
       return RESUME_GAP_AFTER_BUFFERING[suffix];
   }
 }

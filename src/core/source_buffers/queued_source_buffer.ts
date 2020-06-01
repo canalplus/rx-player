@@ -38,6 +38,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
+import assertUnreachable from "../../utils/assert_unreachable";
 import objectAssign from "../../utils/object_assign";
 import SegmentInventory, {
   IBufferedChunk,
@@ -451,6 +452,8 @@ export default class QueuedSourceBuffer<T> {
           case SourceBufferAction.Remove:
             this.synchronizeInventory();
             break;
+          default:
+            assertUnreachable(this._pendingTask);
         }
         const { subject } = this._pendingTask;
         this._pendingTask = null;
@@ -488,6 +491,7 @@ export default class QueuedSourceBuffer<T> {
           log.debug("QSB: Acknowledging complete segment", task.value);
           this._flush();
           return;
+
         case SourceBufferAction.Push:
           const nextStep = task.steps.shift();
           if (nextStep == null ||
@@ -507,6 +511,9 @@ export default class QueuedSourceBuffer<T> {
                     end);
           this._sourceBuffer.remove(start, end);
           break;
+
+        default:
+          assertUnreachable(task);
       }
     } catch (e) {
       this._onError(e);
@@ -645,8 +652,9 @@ function convertQueueItemToTask<T>(
     case SourceBufferAction.Remove:
     case SourceBufferAction.EndOfSegment:
       return item;
+    default:
+      assertUnreachable(item);
   }
-  return null;
 }
 
 export { IBufferedChunk };
