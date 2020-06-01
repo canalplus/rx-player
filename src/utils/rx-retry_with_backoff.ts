@@ -26,7 +26,7 @@ import { ICustomError } from "../errors";
 import getFuzzedDelay from "./get_fuzzed_delay";
 import isNullOrUndefined from "./is_null_or_undefined";
 
-interface IBackoffOptions {
+export interface IBackoffOptions {
   baseDelay : number;
   maxDelay : number;
   totalRetry : number;
