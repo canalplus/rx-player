@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import base64ToUint8Array from "../../../../utils/base64_to_uint8array";
+import log from "../../../../log";
+import { base64ToBytes } from "../../../../utils/base64";
 import { hexToBytes } from "../../../../utils/byte_parsing";
 
 export interface IParsedContentProtection {
@@ -47,7 +48,12 @@ function parseContentProtectionChildren(
       if (currentElement.nodeName === "cenc:pssh") {
         const content = currentElement.textContent;
         if (content !== null && content.length > 0) {
-          cencPssh.push(base64ToUint8Array(content));
+          try {
+            cencPssh.push(base64ToBytes(content));
+          } catch (_) {
+            log.warn("DASH Parser: could not decode ContentProtection base64 string",
+                     content);
+          }
         }
       }
     }
