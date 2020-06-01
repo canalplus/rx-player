@@ -22,7 +22,6 @@ import {
 /**
  * Request fullScreen action on a given element.
  * @param {HTMLElement} elt
- * rs-detect)
  */
 function requestFullscreen(element : HTMLMediaElement) : void {
   if (!isFullscreen()) {

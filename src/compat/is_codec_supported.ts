@@ -19,9 +19,13 @@ import { MediaSource_ } from "./browser_compatibility_types";
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
+ * @param {string} mimeType - The MIME media type that you want to test support
+ * for in the current browser.
+ * This may include the codecs parameter to provide added details about the
+ * codecs used within the file.
  * @returns {Boolean}
  */
-export default function isCodecSupported(codec : string) : boolean {
+export default function isCodecSupported(mimeType : string) : boolean {
   if (MediaSource_ == null) {
     return false;
   }
@@ -29,7 +33,7 @@ export default function isCodecSupported(codec : string) : boolean {
   /* tslint:disable no-unbound-method */
   if (typeof MediaSource_.isTypeSupported === "function") {
   /* tslint:enable no-unbound-method */
-    return MediaSource_.isTypeSupported(codec);
+    return MediaSource_.isTypeSupported(mimeType);
   }
 
   return true;

@@ -19,20 +19,22 @@ import { isIEOrEdge } from "./browser_detection";
 
 /**
  * Add text track to the given media element.
+ *
  * Returns an object with the following properties:
  *   - track {TextTrack}: the added text track
  *   - trackElement {HTMLElement|undefined}: the added <track> element.
  *     undefined if no trackElement was added.
  *
  * @param {HTMLMediaElement} mediaElement
- * @param {Boolean} hidden
+ * @param {Boolean} hidden - If `true`, the text track will be hidden by
+ * default. If `false`, the text track will be directly showing.
  * @returns {Object}
  */
 export default function addTextTrack(
   mediaElement : HTMLMediaElement,
   hidden : boolean
 ) : { track : ICompatTextTrack;
-      trackElement? : HTMLTrackElement; }
+      trackElement : HTMLTrackElement | undefined; }
 {
   let track;
   let trackElement;

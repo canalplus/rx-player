@@ -35,9 +35,7 @@ export interface IImageTrackSegmentData {
  * Image SourceBuffer implementation.
  * @class ImageSourceBuffer
  */
-class ImageSourceBuffer
-      extends AbstractSourceBuffer<IImageTrackSegmentData>
-{
+class ImageSourceBuffer extends AbstractSourceBuffer<IImageTrackSegmentData> {
   /**
    * @param {Object} data
    */
@@ -62,10 +60,13 @@ class ImageSourceBuffer
   _remove(from : number, to : number) : void {
     log.info("ImageSourceBuffer: ignored image data remove order", from, to);
 
-    // TODO once a better strategy for image cleaning has been set (surely done
-    // when we will work for live thumbnails), restore this implementation.
-    // log.debug("ImageSourceBuffer: removing image data", from, to);
-    // this.buffered.remove(from, to);
+    // Logic removed as it caused more problems than it resolved:
+    // Image thumbnails are always downloaded as a single BIF file, meaning that
+    // any removing might necessitate to re-load the whole file in the future
+    // which seems pointless.
+    // In any case, image handling through the regular RxPlayer APIs has been
+    // completely deprecated now for several reasons, and should disappear in
+    // the next major version.
   }
 
   _abort() {

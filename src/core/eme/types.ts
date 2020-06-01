@@ -24,22 +24,26 @@ import { ICustomError } from "../../errors";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
 
-// Emitted when a minor error happened.
+/** Event emitted when a minor - recoverable - error happened. */
 export interface IEMEWarningEvent { type : "warning";
                                     value : ICustomError; }
 
-// Emitted when we receive an "encrypted" event from the browser.
-// This is usually sent when pushing an initialization segment, if it stores
-// encryption information.
+/**
+ * Event emitted when we receive an "encrypted" event from the browser.
+ * This is usually sent when pushing an initialization segment, if it stores
+ * encryption information.
+ */
 export interface IEncryptedEvent { type: "encrypted-event-received";
                                    value: { type? : string;
                                             data : ArrayBuffer |
                                                    Uint8Array; }; }
 
-// Sent when a MediaKeys has been created (or is already created) for the
-// current content.
-// This is necessary before creating a MediaKeySession which will allow
-// encryption keys to be communicated.
+/**
+ * Sent when a MediaKeys has been created (or is already created) for the
+ * current content.
+ * This is necessary before creating a MediaKeySession which will allow
+ * encryption keys to be communicated.
+ */
 export interface ICreatedMediaKeysEvent { type: "created-media-keys";
                                           value: IMediaKeysInfos; }
 

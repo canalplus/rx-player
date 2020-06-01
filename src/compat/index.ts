@@ -63,7 +63,9 @@ import shouldWaitForDataBeforeLoaded from "./should_wait_for_data_before_loaded"
 import whenLoadedMetadata$ from "./when_loaded_metadata";
 import whenMediaSourceOpen$ from "./when_media_source_open";
 
-// TODO TO REMOVE
+// TODO To remove. This seems to be the only side-effect done on import, which
+// we  would prefer to disallow (both for the understandability of the code and
+// to better exploit tree shaking.
 patchWebkitSourceBuffer();
 
 export {

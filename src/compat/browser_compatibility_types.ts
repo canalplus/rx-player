@@ -15,63 +15,84 @@
  */
 
 import { MediaError } from "../errors";
+import isNullOrUndefined from "../utils/is_null_or_undefined";
 import isNode from "./is_node";
 
-// regular MediaKeys type + optional functions present in IE11
+/** Regular MediaKeys type + optional functions present in IE11. */
 interface ICompatMediaKeysConstructor {
   isTypeSupported? : (type : string) => boolean; // IE11 only
   new(keyType? : string) : MediaKeys; // argument for IE11 only
 }
 
-// Regular VTTCue as present in most browsers
-// TODO open TypeScript issue about it?
+/**
+ * Browser implementation of a VTTCue constructor.
+ * TODO open TypeScript issue about it?
+ */
 type ICompatVTTCueConstructor = new(start : number,
                                     end : number,
                                     cueText : string) => ICompatVTTCue;
 
+/** Browser implementation for a single VTTCue. */
 interface ICompatVTTCue { align : string;
                           endTime : number;
                           id : string;
-                          line : number|"auto";
+                          line : number | "auto";
                           lineAlign : string;
-                          position : number|"auto";
+                          position : number | "auto";
                           positionAlign : string;
-                          size : number|string;
+                          size : number | string;
                           snapToLines : boolean;
                           startTime : number;
                           vertical : string; }
 
-// surcharge TextTrack to allow adding ICompatVTTCue to it
+/**
+ * Overriden TextTrack browser implementation, to also include our own
+ * definition of a VTTCue.
+ */
 interface ICompatTextTrack extends TextTrack {
-  addCue(cue: TextTrackCue|ICompatVTTCue) : void;
-  removeCue(cue: TextTrackCue|ICompatVTTCue) : void;
+  addCue(cue: TextTrackCue | ICompatVTTCue) : void;
+  removeCue(cue: TextTrackCue | ICompatVTTCue) : void;
 }
 
-// Document with added optional functions for old browsers
+/**
+ * Browser implementation of the `document` object with added optional vendored
+ * functions for some "old" browsers.
+ */
 interface ICompatDocument extends Document { mozCancelFullScreen? : () => void;
                                              mozFullScreenElement? : HTMLElement;
                                              mozHidden? : boolean;
                                              msExitFullscreen? : () => void;
                                              webkitExitFullscreen : () => void;
-                                             fullscreenElement : Element|null;
-                                             msFullscreenElement? : Element|null;
-                                             webkitFullscreenElement : Element|null;
+                                             fullscreenElement : Element | null;
+                                             msFullscreenElement? : Element | null;
+                                             webkitFullscreenElement : Element | null;
                                              msHidden? : boolean;
                                              webkitHidden? : boolean; }
 
-// Element with added optional functions for old browsers
+/**
+ * HTMLMediaElement with added optional vendored functions used by "old"
+ * browsers.
+ */
 interface ICompatHTMLMediaElement extends HTMLMediaElement {
   mozRequestFullScreen? : () => void;
   msRequestFullscreen? : () => void;
   webkitRequestFullscreen : () => void;
 }
 
-// for some reasons, Typescript seem to forget about SessionTypes
-// XXX TODO remove when the issue is resolved
-// https://github.com/Microsoft/TypeScript/issues/19189
+/**
+ * MediaKeySystemAccess browser implementation.
+ * For some reasons, Typescript seem to forget about SessionTypes.
+ * XXX TODO remove when the issue is resolved:
+ * https://github.com/Microsoft/TypeScript/issues/19189
+ */
 interface ICompatMediaKeySystemAccess extends MediaKeySystemAccess {
   getConfiguration() : ICompatMediaKeySystemConfiguration;
 }
+
+/**
+ * MediaKeySystemConfiguration as returned by an EME-compliant
+ * MediaKeySystemAccess implementation.
+ */
 interface ICompatMediaKeySystemConfiguration {
   audioCapabilities?: MediaKeySystemMediaCapability[];
   distinctiveIdentifier?: MediaKeysRequirement;
@@ -81,32 +102,51 @@ interface ICompatMediaKeySystemConfiguration {
   sessionTypes?: string[];
 }
 
-// Draft from W3C https://wicg.github.io/picture-in-picture/#pictureinpicturewindow
+/**
+ * Browser implementation of a Picture in picture window, as defined in the the
+ * draft from the W3C:
+ * https://wicg.github.io/picture-in-picture/#pictureinpicturewindow
+ */
 export interface ICompatPictureInPictureWindow
   extends EventTarget { width: number;
                         height: number; }
 
+/**
+ * Shortcut to the global browser object `window`. Set to an empty object in
+ * non-browser platforms
+ */
 const win = isNode ? {} :
                      window as any;
 /* tslint:disable no-unsafe-any */
+
+/** Browser implementation of an HTMLElement. */
 const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
-const VTTCue_ : ICompatVTTCueConstructor|undefined =
-  win.VTTCue != null ? win.VTTCue :
-                       win.TextTrackCue;
+
+/** TextTrack cue constructor, as implemented by the browser. */
+const VTTCue_ : ICompatVTTCueConstructor | undefined =
+  !isNullOrUndefined(win.VTTCue) ? win.VTTCue :
+                                   win.TextTrackCue;
 /* tslint:enable no-unsafe-any */
 
 /* tslint:disable no-unsafe-any */
-const MediaSource_ : typeof MediaSource|undefined =
-  win.MediaSource != null ? win.MediaSource :
-  win.MozMediaSource != null ? win.MozMediaSource :
-  win.WebKitMediaSource != null ? win.WebKitMediaSource :
-                                  win.MSMediaSource;
+/** MediaSource implementation, including vendored implementations. */
+const MediaSource_ : typeof MediaSource | undefined =
+  !isNullOrUndefined(win.MediaSource)       ? win.MediaSource :
+  !isNullOrUndefined(win.MozMediaSource)    ? win.MozMediaSource :
+  !isNullOrUndefined(win.WebKitMediaSource) ? win.WebKitMediaSource :
+                                              win.MSMediaSource;
 /* tslint:enable no-unsafe-any */
 
+/**
+ * MediaKeys implementation, including vendored implementations and a fallback
+ * one which will throw when calling one of its methods.
+ */
 const MediaKeys_ : ICompatMediaKeysConstructor = (() => {
   /* tslint:disable no-unsafe-any */
-  return win.MediaKeys != null ? win.MediaKeys :
-         win.MozMediaKeys != null ? win.MozMediaKeys :
+  return !isNullOrUndefined(win.MediaKeys)    ? win.MediaKeys :
+         !isNullOrUndefined(win.MozMediaKeys) ? win.MozMediaKeys :
+
+         // fallback implementation if not supported
          class {
            public readonly create : () => never;
            public readonly isTypeSupported : () => never;
@@ -127,14 +167,18 @@ const MediaKeys_ : ICompatMediaKeysConstructor = (() => {
   /* tslint:enable no-unsafe-any */
 })();
 
+/** List an HTMLMediaElement's possible values for its readyState property. */
 const READY_STATES = { HAVE_NOTHING: 0,
                        HAVE_METADATA: 1,
                        HAVE_CURRENT_DATA: 2,
                        HAVE_FUTURE_DATA: 3,
                        HAVE_ENOUGH_DATA: 4 };
 
-// TODO w3c defines onremovetrack and onchange attributes which are not present on
-// ts type definition
+/**
+ * TextTrackList browser implementation.
+ * TODO W3C defines onremovetrack and onchange attributes which are not present on
+ * ts type definition, open a TS issue?
+ */
 export interface ICompatTextTrackList extends TextTrackList {
   onremovetrack: ((ev: TrackEvent) => void) | null;
   onchange: (() => void) | null;

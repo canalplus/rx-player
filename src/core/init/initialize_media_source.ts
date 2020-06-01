@@ -358,6 +358,7 @@ export default function InitializeOnMediaSource(
                       break;
                     case "protected-segment":
                       protectedSegments$.next(evt.value);
+                      break;
                   }
                 }));
 
