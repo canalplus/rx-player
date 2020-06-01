@@ -498,7 +498,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
-    this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
   }
 
   _addSegments() : void {
