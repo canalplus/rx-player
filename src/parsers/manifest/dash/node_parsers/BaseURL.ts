@@ -56,10 +56,9 @@ export default function parseBaseURL(
         if (attribute.value === "INF") {
           attributes.availabilityTimeOffset = Infinity;
         } else {
-          parseValue("availabilityTimeOffset",
-                     attribute.value,
-                     parseMPDInteger,
-                     "availabilityTimeOffset");
+          parseValue(attribute.value, { asKey: "availabilityTimeOffset",
+                                        parser: parseMPDInteger,
+                                        dashName: "availabilityTimeOffset" });
         }
         break;
     }

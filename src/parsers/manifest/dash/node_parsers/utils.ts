@@ -297,20 +297,22 @@ function ValueParser<T>(
    * This is used only in error formatting,
    */
   return function(
-    objKey : keyof T,
     val : string,
-    parsingFn : (val : string,
-                 displayName : string) => [T[keyof T] | null, MPDError | null],
-    displayName : string
+    { asKey, parser, dashName } : {
+      asKey : keyof T;
+      parser : (val : string,
+                displayName : string) => [T[keyof T] | null, MPDError | null];
+      dashName : string;
+    }
   ) : void {
-    const [parsingResult, parsingError] = parsingFn(val, displayName);
+    const [parsingResult, parsingError] = parser(val, dashName);
     if (parsingError !== null) {
       log.warn(parsingError.message);
       warnings.push(parsingError);
     }
 
     if (parsingResult !== null) {
-      dest[objKey] = parsingResult;
+      dest[asKey] = parsingResult;
     }
   };
 }

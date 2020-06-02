@@ -136,64 +136,54 @@ function parseMPDAttributes(root : Element) : [IMPDAttributes, Error[]] {
         break;
 
       case "availabilityStartTime":
-        parseValue("availabilityStartTime",
-                   attribute.value,
-                   parseDateTime,
-                   "availabilityStartTime");
+        parseValue(attribute.value, { asKey: "availabilityStartTime",
+                                      parser: parseDateTime,
+                                      dashName: "availabilityStartTime" });
         break;
       case "availabilityEndTime":
-        parseValue("availabilityEndTime",
-                   attribute.value,
-                   parseDateTime,
-                   "availabilityEndTime");
+        parseValue(attribute.value, { asKey: "availabilityEndTime",
+                                      parser: parseDateTime,
+                                      dashName: "availabilityEndTime" });
         break;
       case "publishTime":
-        parseValue("publishTime",
-                   attribute.value,
-                   parseDateTime,
-                   "publishTime");
+        parseValue(attribute.value, { asKey: "publishTime",
+                                      parser: parseDateTime,
+                                      dashName: "publishTime" });
         break;
       case "mediaPresentationDuration":
-        parseValue("duration",
-                   attribute.value,
-                   parseDuration,
-                   "mediaPresentationDuration");
+        parseValue(attribute.value, { asKey: "duration",
+                                      parser: parseDuration,
+                                      dashName: "mediaPresentationDuration" });
         break;
       case "minimumUpdatePeriod":
-        parseValue("minimumUpdatePeriod",
-                   attribute.value,
-                   parseDuration,
-                   "minimumUpdatePeriod");
+        parseValue(attribute.value, { asKey: "minimumUpdatePeriod",
+                                      parser: parseDuration,
+                                      dashName: "minimumUpdatePeriod" });
         break;
       case "minBufferTime":
-        parseValue("minBufferTime",
-                   attribute.value,
-                   parseDuration,
-                   "minBufferTime");
+        parseValue(attribute.value, { asKey: "minBufferTime",
+                                      parser: parseDuration,
+                                      dashName: "minBufferTime" });
         break;
       case "timeShiftBufferDepth":
-        parseValue("timeShiftBufferDepth",
-                   attribute.value,
-                   parseDuration,
-                   "timeShiftBufferDepth");
+        parseValue(attribute.value, { asKey: "timeShiftBufferDepth",
+                                      parser: parseDuration,
+                                      dashName: "timeShiftBufferDepth" });
         break;
       case "suggestedPresentationDelay":
-        parseValue("suggestedPresentationDelay",
-                   attribute.value,
-                   parseDuration,
-                   "suggestedPresentationDelay");
+        parseValue(attribute.value, { asKey: "suggestedPresentationDelay",
+                                      parser: parseDuration,
+                                      dashName: "suggestedPresentationDelay" });
         break;
       case "maxSegmentDuration":
-        parseValue("maxSegmentDuration",
-                   attribute.value,
-                   parseDuration,
-                   "maxSegmentDuration");
+        parseValue(attribute.value, { asKey: "maxSegmentDuration",
+                                      parser: parseDuration,
+                                      dashName: "maxSegmentDuration" });
         break;
       case "maxSubsegmentDuration":
-        parseValue("maxSubsegmentDuration",
-                   attribute.value,
-                   parseDuration,
-                   "maxSubsegmentDuration");
+        parseValue(attribute.value, { asKey: "maxSubsegmentDuration",
+                                      parser: parseDuration,
+                                      dashName: "maxSubsegmentDuration" });
         break;
     }
   }

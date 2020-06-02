@@ -244,7 +244,9 @@ function parseAdaptationSetAttributes(
         break;
 
       case "group":
-        parseValue("group", attribute.value, parseMPDInteger, "group");
+        parseValue(attribute.value, { asKey: "group",
+                                      parser: parseMPDInteger,
+                                      dashName: "group" });
         break;
 
       case "lang":
@@ -260,27 +262,39 @@ function parseAdaptationSetAttributes(
         break;
 
       case "minBandwidth":
-        parseValue("minBitrate", attribute.value, parseMPDInteger, "minBandwidth");
+        parseValue(attribute.value, { asKey: "minBitrate",
+                                      parser: parseMPDInteger,
+                                      dashName: "minBandwidth" });
         break;
 
       case "maxBandwidth":
-        parseValue("maxBitrate", attribute.value, parseMPDInteger, "maxBandwidth");
+        parseValue(attribute.value, { asKey: "maxBitrate",
+                                      parser: parseMPDInteger,
+                                      dashName: "maxBandwidth" });
         break;
 
       case "minWidth":
-        parseValue("minWidth", attribute.value, parseMPDInteger, "minWidth");
+        parseValue(attribute.value, { asKey: "minWidth",
+                                      parser: parseMPDInteger,
+                                      dashName: "minWidth" });
         break;
 
       case "maxWidth":
-        parseValue("maxWidth", attribute.value, parseMPDInteger, "maxWidth");
+        parseValue(attribute.value, { asKey: "maxWidth",
+                                      parser: parseMPDInteger,
+                                      dashName: "maxWidth" });
         break;
 
       case "minHeight":
-        parseValue("minHeight", attribute.value, parseMPDInteger, "minHeight");
+        parseValue(attribute.value, { asKey: "minHeight",
+                                      parser: parseMPDInteger,
+                                      dashName: "minHeight" });
         break;
 
       case "maxHeight":
-        parseValue("maxHeight", attribute.value, parseMPDInteger, "maxHeight");
+        parseValue(attribute.value, { asKey: "maxHeight",
+                                      parser: parseMPDInteger,
+                                      dashName: "maxHeight" });
         break;
 
       case "minFrameRate": {
@@ -293,24 +307,21 @@ function parseAdaptationSetAttributes(
         break;
 
       case "segmentAlignment":
-        parseValue("segmentAlignment",
-                   attribute.value,
-                   parseIntOrBoolean,
-                   "segmentAlignment");
+        parseValue(attribute.value, { asKey: "segmentAlignment",
+                                      parser: parseIntOrBoolean,
+                                      dashName: "segmentAlignment" });
         break;
 
       case "subsegmentAlignment":
-        parseValue("subsegmentAlignment",
-                   attribute.value,
-                   parseIntOrBoolean,
-                   "subsegmentAlignment");
+        parseValue(attribute.value, { asKey: "subsegmentAlignment",
+                                      parser: parseIntOrBoolean,
+                                      dashName: "subsegmentAlignment" });
         break;
 
       case "bitstreamSwitching":
-        parseValue("bitstreamSwitching",
-                   attribute.value,
-                   parseBoolean,
-                   "bitstreamSwitching");
+        parseValue(attribute.value, { asKey: "bitstreamSwitching",
+                                      parser: parseBoolean,
+                                      dashName: "bitstreamSwitching" });
         break;
 
       case "audioSamplingRate":
@@ -322,7 +333,9 @@ function parseAdaptationSetAttributes(
         break;
 
       case "codingDependency":
-        parseValue("codingDependency", attribute.value, parseBoolean, "codingDependency");
+        parseValue(attribute.value, { asKey: "codingDependency",
+          parser: parseBoolean,
+          dashName: "codingDependency" });
         break;
 
       case "frameRate":
@@ -330,21 +343,21 @@ function parseAdaptationSetAttributes(
         break;
 
       case "height":
-        parseValue("height", attribute.value, parseMPDInteger, "height");
+        parseValue(attribute.value, { asKey: "height",
+                                      parser: parseMPDInteger,
+                                      dashName: "height" });
         break;
 
       case "maxPlayoutRate":
-        parseValue("maxPlayoutRate",
-                   attribute.value,
-                   parseMPDFloat,
-                   "maxPlayoutRate");
+        parseValue(attribute.value, { asKey: "maxPlayoutRate",
+                                      parser: parseMPDFloat,
+                                      dashName: "maxPlayoutRate" });
         break;
 
       case "maximumSAPPeriod":
-        parseValue("maximumSAPPeriod",
-                   attribute.value,
-                   parseMPDFloat,
-                   "maximumSAPPeriod");
+        parseValue(attribute.value, { asKey: "maximumSAPPeriod",
+                                      parser: parseMPDFloat,
+                                      dashName: "maximumSAPPeriod" });
         break;
 
       case "mimeType":
@@ -360,7 +373,9 @@ function parseAdaptationSetAttributes(
         break;
 
       case "width":
-        parseValue("width", attribute.value, parseMPDInteger, "width");
+        parseValue(attribute.value, { asKey: "width",
+                                      parser: parseMPDInteger,
+                                      dashName: "width" });
         break;
     }
   }

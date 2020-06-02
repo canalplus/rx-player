@@ -104,15 +104,21 @@ function parsePeriodAttributes(periodElement : Element) : [IPeriodAttributes, Er
         break;
 
       case "start":
-        parseValue("start", attr.value, parseDuration, "start");
+        parseValue(attr.value, { asKey: "start",
+                                      parser: parseDuration,
+                                      dashName: "start" });
         break;
 
       case "duration":
-        parseValue("duration", attr.value, parseDuration, "duration");
+        parseValue(attr.value, { asKey: "duration",
+                                      parser: parseDuration,
+                                      dashName: "duration" });
         break;
 
       case "bitstreamSwitching":
-        parseValue("bitstreamSwitching", attr.value, parseBoolean, "bitstreamSwitching");
+        parseValue(attr.value, { asKey: "bitstreamSwitching",
+                                      parser: parseBoolean,
+                                      dashName: "bitstreamSwitching" });
         break;
 
       case "xlink:href":

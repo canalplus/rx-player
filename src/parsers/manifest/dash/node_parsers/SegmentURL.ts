@@ -45,7 +45,9 @@ export default function parseSegmentURL(
         break;
 
       case "indexRange":
-        parseValue("indexRange", attribute.value, parseByteRange, "indexRange");
+        parseValue(attribute.value, { asKey: "indexRange",
+                                      parser: parseByteRange,
+                                      dashName: "indexRange" });
         break;
 
       case "index":
@@ -53,7 +55,9 @@ export default function parseSegmentURL(
         break;
 
       case "mediaRange":
-        parseValue("mediaRange", attribute.value, parseByteRange, "mediaRange");
+        parseValue(attribute.value, { asKey: "mediaRange",
+                                      parser: parseByteRange,
+                                      dashName: "mediaRange" });
         break;
     }
   }

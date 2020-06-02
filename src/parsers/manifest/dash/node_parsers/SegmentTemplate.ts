@@ -132,10 +132,9 @@ export default function parseSegmentTemplate(
         if (attribute.value === "INF") {
           ret.availabilityTimeOffset = Infinity;
         }
-        parseValue("availabilityTimeOffset",
-                   attribute.value,
-                   parseMPDInteger,
-                   "availabilityTimeOffset");
+        parseValue(attribute.value, { asKey: "availabilityTimeOffset",
+                                      parser: parseMPDInteger,
+                                      dashName: "availabilityTimeOffset" });
         break;
 
       case "media":
@@ -143,10 +142,9 @@ export default function parseSegmentTemplate(
         break;
 
       case "bitstreamSwitching":
-        parseValue("bitstreamSwitching",
-                   attribute.value,
-                   parseBoolean,
-                   "bitstreamSwitching");
+        parseValue(attribute.value, { asKey: "bitstreamSwitching",
+                                      parser: parseBoolean,
+                                      dashName: "bitstreamSwitching" });
         break;
     }
   }

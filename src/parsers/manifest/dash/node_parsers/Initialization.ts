@@ -39,7 +39,9 @@ export default function parseInitialization(
     const attribute = root.attributes[i];
     switch (attribute.name) {
       case "range":
-        parseValue("range", attribute.value, parseByteRange, "range");
+        parseValue(attribute.value, { asKey: "range",
+                                      parser: parseByteRange,
+                                      dashName: "range" });
         break;
 
       case "sourceURL":
