@@ -16,14 +16,12 @@
 
 import {
   concat as observableConcat,
-  EMPTY,
   Observable,
   of as observableOf,
 } from "rxjs";
 import Manifest from "../../manifest";
 import {
   IManifestParserEvent,
-  IManifestParserWarningEvent,
 } from "../../transports";
 
 /**
@@ -38,13 +36,10 @@ export default function returnParsedManifest(
   manifest : Manifest,
   url? : string
 ) : Observable<IManifestParserEvent> {
-  let warningEvts$ : Observable<IManifestParserWarningEvent> = EMPTY;
-  for (let i = 0; i < manifest.parsingErrors.length; i++) {
-    const warning = manifest.parsingErrors[i];
-    warningEvts$ = observableConcat(warningEvts$,
-                                    observableOf({ type: "warning" as const,
-                                                   value: warning }));
-  }
+  const warningEvts$ = observableOf(...manifest.parsingErrors.map(error => ({
+    type: "warning" as const,
+    value: error,
+  })));
   return observableConcat(warningEvts$,
                           observableOf({ type: "parsed" as const,
                                          value: { manifest, url } }));
