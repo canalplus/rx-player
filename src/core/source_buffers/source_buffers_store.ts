@@ -41,24 +41,6 @@ const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
                                                 "text",
                                                 "image" ];
 
-/**
- * Get all currently available buffer types.
- * /!\ This list can evolve at runtime depending on feature switching.
- * @returns {Array.<string>}
- */
-export function getBufferTypes() : IBufferType[] {
-  const bufferTypes : IBufferType[] = ["audio", "video"];
-  if (features.nativeTextTracksBuffer != null ||
-      features.htmlTextTracksBuffer != null
-  ) {
-    bufferTypes.push("text");
-  }
-  if (features.imageBuffer != null) {
-    bufferTypes.push("image");
-  }
-  return bufferTypes;
-}
-
 // Options available for a "text" SourceBuffer
 export type ITextTrackSourceBufferOptions = { textTrackMode? : "native";
                                               hideNativeSubtitle? : boolean; } |
@@ -163,6 +145,34 @@ export default class SourceBuffersStore {
   }
 
   /**
+   * Get all currently available buffer types.
+   * /!\ This list can evolve at runtime depending on feature switching.
+   * @returns {Array.<string>}
+   */
+  public getBufferTypes() : IBufferType[] {
+    const bufferTypes : IBufferType[] = this.getNativeBufferTypes();
+    if (features.nativeTextTracksBuffer != null ||
+        features.htmlTextTracksBuffer != null
+    ) {
+      bufferTypes.push("text");
+    }
+    if (features.imageBuffer != null) {
+      bufferTypes.push("image");
+    }
+    return bufferTypes;
+  }
+
+  /**
+   * Get all "native" buffer types that should be created before beginning to
+   * push contents.
+   * @returns {Array.<string>}
+   */
+  public getNativeBufferTypes() : IBufferType[] {
+    return this._mediaElement.nodeName === "AUDIO" ? ["audio"] :
+                                                     ["video", "audio"];
+  }
+
+  /**
    * Returns the current "status" of the buffer in the SourceBuffer.
    *
    * This function will return  an object containing a key named `type` which
@@ -226,7 +236,7 @@ export default class SourceBuffersStore {
   /**
    * Explicitely disable the SourceBuffer for a given buffer type.
    * A call to this function is needed at least for unused native buffer types
-   * ("audio" and "video"), to be able to emit through
+   * (usually "audio" and "video"), to be able to emit through
    * `waitForUsableSourceBuffers` when conditions are met.
    * @param {string}
    */
@@ -370,13 +380,20 @@ export default class SourceBuffersStore {
    * created native SourceBuffers.
    */
   private _areNativeSourceBuffersUsable() {
-    if (this._initializedSourceBuffers.audio === undefined ||
-        this._initializedSourceBuffers.video === undefined)
+    const nativeBufferTypes = this.getNativeBufferTypes();
+
+    if (nativeBufferTypes.some(sbType =>
+          this._initializedSourceBuffers[sbType] === undefined))
     {
+      // one is not yet initialized/disabled
       return false;
     }
-    if (this._initializedSourceBuffers.video === null) {
-      return this._initializedSourceBuffers.audio !== null;
+
+    if (nativeBufferTypes.every(sbType =>
+          this._initializedSourceBuffers[sbType] === null))
+    {
+      // they all are disabled: we can't play the content
+      return false;
     }
     return true;
   }
