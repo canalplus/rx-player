@@ -20,7 +20,14 @@
  */
 
 import { BehaviorSubject } from "rxjs";
-import { ICompatTextTrackList } from "../../compat/browser_compatibility_types";
+import {
+  ICompatAudioTrack,
+  ICompatAudioTrackList,
+  ICompatHTMLMediaElement,
+  ICompatTextTrackList,
+  ICompatVideoTrack,
+  ICompatVideoTrackList,
+} from "../../compat/browser_compatibility_types";
 import EventEmitter from "../../utils/event_emitter";
 import normalizeLanguage from "../../utils/languages";
 import {
@@ -52,8 +59,8 @@ interface IMediaElementTrackChoiceManagerEvents {
  * @returns {boolean}
  */
 function areTrackArraysDifferent(
-  oldTrackArray: Array<{ nativeTrack: VideoTrack|AudioTrack|TextTrack }>,
-  newTrackArray: Array<{ nativeTrack: VideoTrack|AudioTrack|TextTrack }>
+  oldTrackArray: Array<{ nativeTrack: ICompatVideoTrack|ICompatAudioTrack|TextTrack }>,
+  newTrackArray: Array<{ nativeTrack: ICompatVideoTrack|ICompatAudioTrack|TextTrack }>
 ): boolean {
   if (newTrackArray.length !== oldTrackArray.length) {
     return true;
@@ -72,12 +79,12 @@ function areTrackArraysDifferent(
  * @returns {Array.<Object>}
  */
 function createAudioTracks(
-  audioTracks: AudioTrackList
+  audioTracks: ICompatAudioTrackList
 ): Array<{ track: { id: string;
                     normalized: string;
                     language: string;
                     audioDescription: boolean; };
-           nativeTrack: AudioTrack; }> {
+           nativeTrack: ICompatAudioTrack; }> {
   const newAudioTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
   for (let i = 0; i < audioTracks.length; i++) {
@@ -140,10 +147,10 @@ function createTextTracks(
  * @returns {Array.<Object>}
  */
 function createVideoTracks(
-  videoTracks: VideoTrackList
+  videoTracks: ICompatVideoTrackList
 ): Array<{ track: { id: string;
                     representations: []; };
-           nativeTrack: VideoTrack; }> {
+           nativeTrack: ICompatVideoTrack; }> {
   const newVideoTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
   for (let i = 0; i < videoTracks.length; i++) {
@@ -188,23 +195,23 @@ export default class MediaElementTrackChoiceManager
   private _preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
 
   /** List every available audio tracks available on the media element. */
-  private _audioTracks : Array<{ track: ITMAudioTrack; nativeTrack: AudioTrack }>;
+  private _audioTracks : Array<{ track: ITMAudioTrack; nativeTrack: ICompatAudioTrack }>;
   /** List every available text tracks available on the media element. */
   private _textTracks : Array<{ track: ITMTextTrack; nativeTrack: TextTrack }>;
   /** List every available video tracks available on the media element. */
-  private _videoTracks : Array<{ track: ITMVideoTrack; nativeTrack: VideoTrack }>;
+  private _videoTracks : Array<{ track: ITMVideoTrack; nativeTrack: ICompatVideoTrack }>;
 
   /** Last audio track emitted as active. */
-  private _lastEmittedNativeAudioTrack : AudioTrack | null | undefined;
+  private _lastEmittedNativeAudioTrack : ICompatAudioTrack | null | undefined;
   /** Last video track emitted as active. */
-  private _lastEmittedNativeVideoTrack : VideoTrack | null | undefined;
+  private _lastEmittedNativeVideoTrack : ICompatVideoTrack | null | undefined;
   /** Last text track emitted as active. */
   private _lastEmittedNativeTextTrack : TextTrack | null | undefined;
 
   /** Native `AudioTrackList` implemented on the media element. */
-  private _nativeAudioTracks : AudioTrackList|undefined;
+  private _nativeAudioTracks : ICompatAudioTrackList | undefined;
   /** Native `VideoTrackList` implemented on the media element. */
-  private _nativeVideoTracks : VideoTrackList|undefined;
+  private _nativeVideoTracks : ICompatVideoTrackList | undefined;
   /** Native `TextTrackList` implemented on the media element. */
   private _nativeTextTracks : ICompatTextTrackList|undefined;
 
@@ -215,7 +222,7 @@ export default class MediaElementTrackChoiceManager
    * through audio track list updates, as long as it is still available.
    * `undefined` if the audio track was not manually set.
    */
-  private _audioTrackLockedOn : AudioTrack | undefined;
+  private _audioTrackLockedOn : ICompatAudioTrack | undefined;
 
   /**
    * Last text track manually set active through the corresponding
@@ -235,7 +242,7 @@ export default class MediaElementTrackChoiceManager
    * `null` if the video track was disabled.
    * `undefined` if the video track was not manually set.
    */
-  private _videoTrackLockedOn : VideoTrack | undefined | null;
+  private _videoTrackLockedOn : ICompatVideoTrack | undefined | null;
 
   constructor(
     defaults : { preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
@@ -252,8 +259,8 @@ export default class MediaElementTrackChoiceManager
     // TODO In practice, the audio/video/text tracks API are not always implemented on
     // the media element, although Typescript HTMLMediaElement types tend to mean
     // that can't be undefined.
-    this._nativeAudioTracks = mediaElement.audioTracks as AudioTrackList|undefined;
-    this._nativeVideoTracks = mediaElement.videoTracks as VideoTrackList|undefined;
+    this._nativeAudioTracks = (mediaElement as ICompatHTMLMediaElement).audioTracks;
+    this._nativeVideoTracks = (mediaElement as ICompatHTMLMediaElement).videoTracks;
     this._nativeTextTracks = mediaElement.textTracks as ICompatTextTrackList|undefined;
 
     this._audioTracks =
@@ -462,7 +469,7 @@ export default class MediaElementTrackChoiceManager
    * @returns {Object|undefined|null}
    */
   private _getPrivateChosenAudioTrack(): { track: ITMAudioTrack;
-                                           nativeTrack: AudioTrack; } |
+                                           nativeTrack: ICompatAudioTrack; } |
                                          undefined |
                                          null {
     if (this._nativeAudioTracks === undefined) {
@@ -484,7 +491,7 @@ export default class MediaElementTrackChoiceManager
    * @returns {Object|undefined|null}
    */
   private _getPrivateChosenVideoTrack(): { track: ITMVideoTrack;
-                                           nativeTrack: VideoTrack; } |
+                                           nativeTrack: ICompatVideoTrack; } |
                                          undefined |
                                          null {
     if (this._nativeVideoTracks === undefined) {
@@ -863,7 +870,7 @@ function disableAllTextTracksBut(
  * @param {Array.<Object>} videoTracks
  */
 function disableVideoTracks(
-  videoTracks : Array<{ nativeTrack : VideoTrack }>
+  videoTracks : Array<{ nativeTrack : ICompatVideoTrack }>
 ) {
   for (let i = 0; i < videoTracks.length; i++) {
     const { nativeTrack } = videoTracks[i];
