@@ -50,7 +50,6 @@ import ABRManager from "../../abr";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SourceBuffersStore, {
   BufferGarbageCollector,
-  getBufferTypes,
   IBufferType,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
@@ -160,7 +159,7 @@ export default function BufferOrchestrator(
       return null;
     }, null));
 
-  const bufferTypes = getBufferTypes();
+  const bufferTypes = sourceBuffersStore.getBufferTypes();
 
   // Every PeriodBuffers for every possible types
   const buffersArray = bufferTypes.map((bufferType) => {
