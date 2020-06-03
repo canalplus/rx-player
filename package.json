@@ -125,8 +125,8 @@
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
+    "@babel/plugin-transform-runtime": "7.10.1",
     "@babel/polyfill": "7.8.7",
-    "@babel/plugin-transform-runtime": "^7.10.0",
     "@babel/preset-env": "7.9.5",
     "@babel/preset-react": "7.9.4",
     "@types/chai": "4.2.11",
