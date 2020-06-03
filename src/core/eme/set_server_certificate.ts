@@ -37,9 +37,9 @@ import {
 
 /**
  * Call the setServerCertificate API with the given certificate.
- * Complete when worked, throw when failed.
+ * Complete observable on success, throw when failed.
  *
- * TODO Manage success?
+ * TODO Handle returned value?
  * From the spec:
  *   - setServerCertificate resolves with true if everything worked
  *   - it resolves with false if the CDM does not support server
@@ -76,17 +76,18 @@ export default function trySettingServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
 ) : Observable<IEMEWarningEvent> {
-  if (typeof mediaKeys.setServerCertificate === "function") {
+  return observableDefer(() => {
+    if (typeof mediaKeys.setServerCertificate !== "function") {
+      log.warn("EME: Could not set the server certificate." +
+               " mediaKeys.setServerCertificate is not a function");
+      return EMPTY;
+    }
+
     log.debug("EME: Setting server certificate on the MediaKeys");
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
       ignoreElements(),
-      catchError(error => {
-        return observableOf({ type: "warning" as const, value: error });
-      }));
-  }
-  log.warn("EME: Could not set the server certificate." +
-           " mediaKeys.setServerCertificate is not a function");
-  return EMPTY;
+      catchError(error => observableOf({ type: "warning" as const, value: error })));
+  });
 }
 
 export {

@@ -46,8 +46,10 @@ import {
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
 import isNonEmptyString from "../../utils/is_non_empty_string";
-import retryObsWithBackoff from "../../utils/rx-retry_with_backoff";
-import tryCatch from "../../utils/rx-try_catch";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import retryObsWithBackoff, {
+  IBackoffOptions,
+} from "../../utils/rx-retry_with_backoff";
 import checkKeyStatuses from "./check_key_statuses";
 import {
   IBlacklistKeysEvent,
@@ -83,48 +85,6 @@ export class BlacklistedSessionError extends Error {
 }
 
 /**
- * @param {Error|Object} error
- * @returns {Error|Object}
- */
-function formatGetLicenseError(error: unknown) : ICustomError {
-  if (error instanceof TimeoutError) {
-     return new EncryptedMediaError("KEY_LOAD_TIMEOUT",
-                                    "The license server took too much time to " +
-                                    "respond.");
-  }
-
-  const err = new EncryptedMediaError("KEY_LOAD_ERROR",
-                                      "An error occured when calling `getLicense`.");
-  if (error != null &&
-      isNonEmptyString((error as { message : string }).message))
-  {
-    err.message = (error as { message : string }).message;
-  }
-  return err;
-}
-
-/**
- * @param {MediaKeySession} session - The MediaKeySession concerned.
- * @param {Object} keySystem - The key system configuration.
- * @returns {Observable}
- */
-function getKeyStatusesEvents(
-  session : MediaKeySession | ICustomMediaKeySession,
-  keySystem : IKeySystemOption
-) : Observable<IEMEWarningEvent | IBlacklistKeysEvent> {
-  const [warnings, blacklistedKeyIDs] = checkKeyStatuses(session, keySystem);
-
-  const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
-                                          EMPTY;
-
-  const blackListUpdate$ = blacklistedKeyIDs.length > 0 ?
-    observableOf({ type: "blacklist-keys" as const,
-                   value: blacklistedKeyIDs }) :
-    EMPTY;
-  return observableConcat(warnings$, blackListUpdate$);
-}
-
-/**
  * listen to various events from a MediaKeySession and react accordingly
  * depending on the configuration given.
  * @param {MediaKeySession} session - The MediaKeySession concerned.
@@ -141,58 +101,20 @@ export default function SessionEventsListener(
                ISessionMessageEvent |
                INoUpdateEvent |
                ISessionUpdatedEvent |
-               IBlacklistKeysEvent> {
+               IBlacklistKeysEvent>
+{
   log.debug("EME: Binding session events", session);
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
   const { getLicenseConfig = {} } = keySystem;
-  const getLicenseRetryOptions = {
-    totalRetry: getLicenseConfig.retry ?? 2,
-    baseDelay: 200,
-    maxDelay: 3000,
-    shouldRetry: (error : unknown) =>
-      error instanceof TimeoutError ||
-      error === undefined || error === null ||
-      (error as { noRetry? : boolean }).noRetry !== true,
-    onRetry: (error : unknown) =>
-      sessionWarningSubject$.next({ type: "warning",
-                                    value: formatGetLicenseError(error) }) };
 
   const keyErrors : Observable<never> = onKeyError$(session)
-    .pipe(map((error) => {
-      throw new EncryptedMediaError("KEY_ERROR", error.type);
-    }));
+    .pipe(map((error) => { throw new EncryptedMediaError("KEY_ERROR", error.type); }));
 
-  const keyStatusesChanges : Observable< IKeyStatusChangeHandledEvent |
-                                         IBlacklistKeysEvent |
-                                         IEMEWarningEvent > =
-    onKeyStatusesChange$(session)
-      .pipe(mergeMap((keyStatusesEvent: Event) => {
-        log.debug("EME: keystatuseschange event", session, keyStatusesEvent);
-
-        const keyStatusesEvents$ = getKeyStatusesEvents(session, keySystem);
-
-        const handledKeyStatusesChange$ = tryCatch(() => {
-          return typeof keySystem.onKeyStatusesChange === "function" ?
-                   castToObservable(
-                     keySystem.onKeyStatusesChange(keyStatusesEvent, session)
-                   ) as Observable<TypedArray|ArrayBuffer|null> :
-                   EMPTY;
-        }, undefined).pipe(
-          map(licenseObject => ({ type: "key-status-change-handled" as const,
-                                  value : { session, license: licenseObject } })),
-          catchError((error: unknown) => {
-            const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                                "Unknown `onKeyStatusesChange` error");
-            if  (error != null &&
-                 isNonEmptyString((error as { message : string }).message))
-            {
-              err.message = (error as { message : string }).message;
-            }
-            throw err;
-          })
-        );
-        return observableConcat(keyStatusesEvents$, handledKeyStatusesChange$);
-      }));
+  const keyStatusesChange$ = onKeyStatusesChange$(session)
+    .pipe(mergeMap((keyStatusesEvent: Event) =>
+      handleKeyStatusesChangeEvent(session,
+                                   keySystem,
+                                   keyStatusesEvent)));
 
   const keyMessages$ : Observable<IEMEWarningEvent |
                                   ISessionMessageEvent |
@@ -207,89 +129,219 @@ export default function SessionEventsListener(
 
       const getLicense$ = observableDefer(() => {
         const getLicense = keySystem.getLicense(message, messageType);
-        const getLicenseTimeout = getLicenseConfig.timeout != null ?
-          getLicenseConfig.timeout :
-          10 * 1000;
-        return (castToObservable(getLicense) as Observable<TypedArray|ArrayBuffer|null>)
+        const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
+          10 * 1000 :
+          getLicenseConfig.timeout;
+        return (castToObservable(getLicense) as Observable< TypedArray |
+                                                            ArrayBuffer |
+                                                            null >)
           .pipe(getLicenseTimeout >= 0 ? timeout(getLicenseTimeout) :
                                          identity /* noop */);
       });
 
-      return retryObsWithBackoff(getLicense$, getLicenseRetryOptions)
-        .pipe(
-          map(licenseObject => ({
-            type: "key-message-handled" as const,
-            value : { session, license: licenseObject },
-          })),
+      const backoffOptions = getLicenseBackoffOptions(sessionWarningSubject$,
+                                                      getLicenseConfig.retry);
+      return retryObsWithBackoff(getLicense$, backoffOptions).pipe(
+        map(licenseObject => ({
+          type: "key-message-handled" as const,
+          value : { session, license: licenseObject },
+        })),
 
-          catchError((err : unknown) => {
-            const formattedError = formatGetLicenseError(err);
+        catchError((err : unknown) => {
+          const formattedError = formatGetLicenseError(err);
 
-            if (err != null) {
-              const { fallbackOnLastTry } = (err as { fallbackOnLastTry? : boolean });
-              if (fallbackOnLastTry === true) {
-                log.warn("EME: Last `getLicense` attempt failed. " +
-                         "Blacklisting the current session.");
-                throw new BlacklistedSessionError(formattedError);
-              }
+          if (!isNullOrUndefined(err)) {
+            const { fallbackOnLastTry } = (err as { fallbackOnLastTry? : boolean });
+            if (fallbackOnLastTry === true) {
+              log.warn("EME: Last `getLicense` attempt failed. " +
+                       "Blacklisting the current session.");
+              throw new BlacklistedSessionError(formattedError);
             }
-            throw formattedError;
-          }),
-          startWith({ type: "session-message" as const,
-                      value: { messageType, initData, initDataType } })
-        );
+          }
+          throw formattedError;
+        }),
+        startWith({ type: "session-message" as const,
+                    value: { messageType, initData, initDataType } })
+      );
     }));
 
-  const sessionUpdates = observableMerge(keyMessages$, keyStatusesChanges)
-    .pipe(
-      concatMap((
-        evt : IEMEWarningEvent |
-              ISessionMessageEvent |
-              IKeyMessageHandledEvent |
-              IKeyStatusChangeHandledEvent |
-              IBlacklistKeysEvent
-      ) : Observable< IEMEWarningEvent |
-                      ISessionMessageEvent |
-                      INoUpdateEvent |
-                      ISessionUpdatedEvent |
-                      IBlacklistKeysEvent > => {
-        switch (evt.type) {
-          case "warning":
-          case "blacklist-keys":
-          case "session-message":
-            return observableOf(evt);
-        }
+  const sessionUpdates = observableMerge(keyMessages$, keyStatusesChange$)
+    .pipe(concatMap((
+      evt : IEMEWarningEvent |
+            ISessionMessageEvent |
+            IKeyMessageHandledEvent |
+            IKeyStatusChangeHandledEvent |
+            IBlacklistKeysEvent
+    ) : Observable< IEMEWarningEvent |
+                    ISessionMessageEvent |
+                    INoUpdateEvent |
+                    ISessionUpdatedEvent |
+                    IBlacklistKeysEvent > => {
+      switch (evt.type) {
+        case "key-message-handled":
+        case "key-status-change-handled":
+          return updateSessionWithMessage(session,
+                                          evt.value.license,
+                                          initData,
+                                          initDataType);
+        default:
+          return observableOf(evt);
+      }
+    }));
 
-        const license = evt.value.license;
-        if (license == null) {
-          log.info("EME: No license given, skipping session.update");
-          return observableOf({ type: "no-update" as const,
-                                value: { initData, initDataType }});
-        }
+  const sessionEvents = observableMerge(getKeyStatusesEvents(session, keySystem),
+                                        sessionUpdates,
+                                        keyErrors,
+                                        sessionWarningSubject$);
 
-        log.debug("EME: Update session", evt);
-        return castToObservable(session.update(license)).pipe(
-          catchError((error: unknown) => {
-            const reason = error instanceof Error ? error.toString() :
-                                                    "`session.update` failed";
-            throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
-          }),
-          mapTo({ type: "session-updated" as const,
-                  value: { session, license, initData, initDataType } })
-        );
-      }));
-
-  const sessionEvents : Observable< IEMEWarningEvent |
-                                    ISessionMessageEvent |
-                                    INoUpdateEvent |
-                                    ISessionUpdatedEvent |
-                                    IBlacklistKeysEvent > =
-    observableMerge(getKeyStatusesEvents(session, keySystem),
-                    sessionUpdates,
-                    keyErrors,
-                    sessionWarningSubject$);
-
-  return session.closed != null ?
+  return !isNullOrUndefined(session.closed) ?
            sessionEvents.pipe(takeUntil(castToObservable(session.closed))) :
            sessionEvents;
+}
+
+/**
+ * Check current MediaKeyStatus for each key in the given MediaKeySession and
+ * return an Observable which either:
+ *    - throw if at least one status is a non-recoverable error
+ *    - emit warning events for recoverable errors
+ *    - emit blacklist-keys events for key IDs that are not decipherable
+ * @param {MediaKeySession} session - The MediaKeySession concerned.
+ * @param {Object} keySystem - The key system configuration.
+ * @returns {Observable}
+ */
+function getKeyStatusesEvents(
+  session : MediaKeySession | ICustomMediaKeySession,
+  keySystem : IKeySystemOption
+) : Observable<IEMEWarningEvent | IBlacklistKeysEvent> {
+  return observableDefer(() => {
+    const [warnings, blacklistedKeyIDs] = checkKeyStatuses(session, keySystem);
+
+    const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
+      EMPTY;
+
+    const blackListUpdate$ = blacklistedKeyIDs.length > 0 ?
+      observableOf({ type: "blacklist-keys" as const,
+                     value: blacklistedKeyIDs }) :
+      EMPTY;
+    return observableConcat(warnings$, blackListUpdate$);
+  });
+}
+
+/**
+ * Format an error returned by a `getLicense` call to a proper form as defined
+ * by the RxPlayer's API.
+ * @param {*} error
+ * @returns {Error}
+ */
+function formatGetLicenseError(error: unknown) : ICustomError {
+  if (error instanceof TimeoutError) {
+     return new EncryptedMediaError("KEY_LOAD_TIMEOUT",
+                                    "The license server took too much time to " +
+                                    "respond.");
+  }
+
+  const err = new EncryptedMediaError("KEY_LOAD_ERROR",
+                                      "An error occured when calling `getLicense`.");
+  if (!isNullOrUndefined(error) &&
+      isNonEmptyString((error as { message? : unknown }).message))
+  {
+    err.message = (error as { message : string }).message;
+  }
+  return err;
+}
+
+/**
+ * Call MediaKeySession.update with the given `message`, if defined.
+ * Returns the right event depending on the action taken.
+ * @param {MediaKeySession} session
+ * @param {ArrayBuffer|TypedArray|null} message
+ * @param {Uint8Array} initData
+ * @param {string|undefined} initDataType
+ * @returns {Observable}
+ */
+function updateSessionWithMessage(
+  session : MediaKeySession | ICustomMediaKeySession,
+  message : ArrayBuffer | TypedArray | null,
+  initData : Uint8Array,
+  initDataType : string | undefined
+) : Observable<INoUpdateEvent | ISessionUpdatedEvent> {
+  if (isNullOrUndefined(message)) {
+    log.info("EME: No message given, skipping session.update");
+    return observableOf({ type: "no-update" as const,
+                          value: { initData, initDataType }});
+  }
+
+  log.debug("EME: Updating session");
+  return castToObservable(session.update(message)).pipe(
+    catchError((error: unknown) => {
+      const reason = error instanceof Error ? error.toString() :
+                                              "`session.update` failed";
+      throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
+    }),
+    mapTo({ type: "session-updated" as const,
+            value: { session, license: message, initData, initDataType } })
+  );
+}
+
+/**
+ * @param {MediaKeySession}
+ * @param {Object} keySystem
+ * @param {Event} keyStatusesEvent
+ * @returns {Observable}
+ */
+function handleKeyStatusesChangeEvent(
+  session : MediaKeySession | ICustomMediaKeySession,
+  keySystem : IKeySystemOption,
+  keyStatusesEvent : Event
+) : Observable<IKeyStatusChangeHandledEvent | IBlacklistKeysEvent | IEMEWarningEvent> {
+  log.debug("EME: handling keystatuseschange event", session, keyStatusesEvent);
+  const callback$ = observableDefer(() => {
+    if (typeof keySystem.onKeyStatusesChange !== "function") {
+      return EMPTY;
+    }
+    return castToObservable(
+               keySystem.onKeyStatusesChange(keyStatusesEvent, session)
+             ) as Observable< TypedArray | ArrayBuffer | null >;
+  }).pipe(
+    map(licenseObject => ({ type: "key-status-change-handled" as const,
+                            value : { session, license: licenseObject } })),
+    catchError((error: unknown) => {
+      const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+                                          "Unknown `onKeyStatusesChange` error");
+      if  (!isNullOrUndefined(error) &&
+           isNonEmptyString((error as { message? : unknown }).message))
+      {
+        err.message = (error as { message : string }).message;
+      }
+      throw err;
+    })
+  );
+  return observableConcat(getKeyStatusesEvents(session, keySystem),
+                          callback$);
+}
+
+/**
+ * Construct backoff options for the getLicense call.
+ * @param {Subject} sessionWarningSubject$ - Subject through which retry
+ * warnings will be sent.
+ * @param {number|undefined} numberOfRetry - Maximum of amount retried.
+ * Equal to `2` if not defined.
+ * @returns {Object}
+ */
+function getLicenseBackoffOptions(
+  sessionWarningSubject$ : Subject<IEMEWarningEvent>,
+  numberOfRetry : number | undefined
+) : IBackoffOptions {
+  return {
+    totalRetry: numberOfRetry ?? 2,
+    baseDelay: 200,
+    maxDelay: 3000,
+    shouldRetry: (error : unknown) => error instanceof TimeoutError ||
+                                      isNullOrUndefined(error) ||
+                                      (error as { noRetry? : boolean }).noRetry !== true,
+    onRetry: (error : unknown) => sessionWarningSubject$.next({
+                                    type: "warning",
+                                    value: formatGetLicenseError(error),
+                                  }),
+  };
 }

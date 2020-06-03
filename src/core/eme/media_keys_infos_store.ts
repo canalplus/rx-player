@@ -22,21 +22,32 @@ import {
 import { IKeySystemOption } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 
-export type IMediaElementMediaKeysInfos =
-  { keySystemOptions : IKeySystemOption;
+/** EME-related state that can be associated to a single HTMLMediaElement. */
+export interface IMediaElementMediaKeysInfos {
+  /** Last keySystemOptions used with that HTMLMediaElement. */
+  keySystemOptions : IKeySystemOption;
 
-    mediaKeySystemAccess : ICustomMediaKeySystemAccess |
-                           ICompatMediaKeySystemAccess;
+  /**
+   * Last MediaKeySystemAccess used to create a MediaKeys bound to that
+   * HTMLMediaElement.
+   */
+  mediaKeySystemAccess : ICustomMediaKeySystemAccess |
+                         ICompatMediaKeySystemAccess;
 
-    mediaKeys : MediaKeys |
-                ICustomMediaKeys;
+  /** Last MediaKeys instance bound to that HTMLMediaElement. */
+  mediaKeys : MediaKeys |
+              ICustomMediaKeys;
 
-    loadedSessionsStore : LoadedSessionsStore;
-  } |
-  null;
+  /**
+   * Store containing information about every MediaKeySession active on the
+   * MediaKeys instance bound to that HTMLMediaElement.
+   */
+  loadedSessionsStore : LoadedSessionsStore;
+}
 
 // Store the MediaKeys infos attached to a media element.
-const currentMediaState = new WeakMap<HTMLMediaElement, IMediaElementMediaKeysInfos>();
+const currentMediaState = new WeakMap<HTMLMediaElement, IMediaElementMediaKeysInfos |
+                                                        null >();
 
 export default {
   /**
@@ -46,7 +57,7 @@ export default {
    */
   setState(
     mediaElement : HTMLMediaElement,
-    state : IMediaElementMediaKeysInfos
+    state : IMediaElementMediaKeysInfos | null
   ) : void {
     currentMediaState.set(mediaElement, state);
   },
@@ -56,7 +67,7 @@ export default {
    * @param {HTMLMediaElement} mediaElement
    * @returns {Object}
    */
-  getState(mediaElement : HTMLMediaElement) : IMediaElementMediaKeysInfos {
+  getState(mediaElement : HTMLMediaElement) : IMediaElementMediaKeysInfos | null {
     const currentState = currentMediaState.get(mediaElement);
     return currentState == null ? null :
                                   currentState;
