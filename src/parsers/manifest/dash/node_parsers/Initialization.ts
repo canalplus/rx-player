@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
-import { parseByteRange } from "./utils";
+import {
+  parseByteRange,
+  ValueParser,
+} from "./utils";
 
 export interface IParsedInitialization {
   range?: [number, number];
@@ -25,21 +27,21 @@ export interface IParsedInitialization {
 
 /**
  * @param {Element} root
- * @returns {Object}
+ * @returns {Array.<Object>}
  */
-export default function parseInitialization(root: Element) : IParsedInitialization {
+export default function parseInitialization(
+  root: Element
+) : [IParsedInitialization, Error[]] {
   const parsedInitialization : IParsedInitialization = {};
+  const warnings : Error[] = [];
+  const parseValue = ValueParser(parsedInitialization, warnings);
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
     switch (attribute.name) {
-      case "range": {
-        const range = parseByteRange(attribute.value);
-        if (range == null) {
-          log.warn(`DASH: invalid range ("${attribute.value}")`);
-        } else {
-          parsedInitialization.range = range;
-        }
-      }
+      case "range":
+        parseValue(attribute.value, { asKey: "range",
+                                      parser: parseByteRange,
+                                      dashName: "range" });
         break;
 
       case "sourceURL":
@@ -47,5 +49,5 @@ export default function parseInitialization(root: Element) : IParsedInitializati
         break;
     }
   }
-  return parsedInitialization;
+  return [parsedInitialization, warnings];
 }

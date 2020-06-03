@@ -57,6 +57,7 @@ import {
   ITransportPipelines,
 } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
+import returnParsedManifest from "../utils/return_parsed_manifest";
 import generateManifestLoader from "../utils/text_manifest_loader";
 import extractTimingsInfos from "./extract_timings_infos";
 import { patchSegment } from "./isobmff";
@@ -144,7 +145,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         supplementaryImageTracks: options.supplementaryImageTracks,
         supplementaryTextTracks: options.supplementaryTextTracks,
       });
-      return observableOf({ manifest, url });
+      return returnParsedManifest(manifest, url);
     },
   };
 

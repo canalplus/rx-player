@@ -15,18 +15,14 @@
  */
 
 import {
-  concat as observableConcat,
-  EMPTY,
   merge as observableMerge,
   Observable,
-  of as observableOf,
   Subject,
 } from "rxjs";
 import {
   catchError,
   finalize,
   map,
-  mergeMap,
 } from "rxjs/operators";
 import {
   formatError,
@@ -188,26 +184,23 @@ export default function createManifestFetcher(
                       defaultReason: "Unknown error when parsing the Manifest",
                     });
                   }),
-                  mergeMap(({ manifest }) => {
-                    // 1 - send warnings first
-                    const warnings = manifest.parsingErrors;
-                    let warningEvts$ : Observable<IManifestFetcherWarningEvent> = EMPTY;
-                    for (let i = 0; i < warnings.length; i++) {
-                      const warning = warnings[i];
-                      warningEvts$ =
-                        observableConcat(warningEvts$,
-                                         observableOf({ type: "warning" as const,
-                                                        value: warning }));
+                  map((parsingEvt) => {
+                    if (parsingEvt.type === "warning") {
+                      const formatted = formatError(parsingEvt.value, {
+                        defaultCode: "PIPELINE_PARSE_ERROR",
+                        defaultReason: "Unknown error when parsing the Manifest",
+                      });
+                      return { type: "warning" as const,
+                               value: formatted };
                     }
 
                     // 2 - send response
                     const parsingTime = performance.now() - parsingTimeStart;
-                    return observableConcat(warningEvts$,
-                                            observableOf({ type: "parsed" as const,
-                                                           manifest,
-                                                           sendingTime,
-                                                           receivedTime,
-                                                           parsingTime }));
+                    return { type: "parsed" as const,
+                             manifest: parsingEvt.value.manifest,
+                             sendingTime,
+                             receivedTime,
+                             parsingTime };
 
                   }),
                   finalize(() => { schedulerWarnings$.complete(); })

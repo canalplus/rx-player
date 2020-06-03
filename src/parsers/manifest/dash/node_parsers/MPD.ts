@@ -26,6 +26,7 @@ import {
   parseDateTime,
   parseDuration,
   parseScheme,
+  ValueParser,
 } from "./utils";
 
 export interface IMPDIntermediateRepresentation { children : IMPDChildren;
@@ -61,24 +62,29 @@ export interface IMPDAttributes {
 /**
  * Parse children of the MPD's root into a simple object.
  * @param {NodeList} mpdChildren
- * @returns {Object}
+ * @returns {Array.<Object>}
  */
-function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
+function parseMPDChildren(
+  mpdChildren : NodeList
+) : [IMPDChildren, Error[]] {
   const baseURLs : IBaseURL[] = [];
   const locations : string[] = [];
   const periods : IPeriodIntermediateRepresentation[] = [];
   const utcTimings : IScheme[] = [];
 
+  let warnings : Error[] = [];
   for (let i = 0; i < mpdChildren.length; i++) {
     if (mpdChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentNode = mpdChildren[i] as Element;
       switch (currentNode.nodeName) {
 
         case "BaseURL":
-          const baseURLObj = parseBaseURL(currentNode);
+          const [ baseURLObj,
+                  baseURLWarnings ] = parseBaseURL(currentNode);
           if (baseURLObj !== undefined) {
             baseURLs.push(baseURLObj);
           }
+          warnings = warnings.concat(baseURLWarnings);
           break;
 
         case "Location":
@@ -88,9 +94,10 @@ function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
           break;
 
         case "Period":
-          const period =
+          const [period, periodWarnings] =
             createPeriodIntermediateRepresentation(currentNode);
           periods.push(period);
+          warnings = warnings.concat(periodWarnings);
           break;
 
         case "UTCTiming":
@@ -101,15 +108,19 @@ function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
     }
   }
 
-  return { baseURLs, locations, periods, utcTimings };
+  return [ { baseURLs, locations, periods, utcTimings },
+           warnings ];
 }
 
 /**
  * @param {Element} root
- * @returns {Object}
+ * @returns {Array.<Object>}
  */
-function parseMPDAttributes(root : Element) : IMPDAttributes {
+function parseMPDAttributes(root : Element) : [IMPDAttributes, Error[]] {
   const res : IMPDAttributes = {};
+  const warnings : Error[] = [];
+  const parseValue = ValueParser(res, warnings);
+
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
@@ -123,44 +134,71 @@ function parseMPDAttributes(root : Element) : IMPDAttributes {
       case "type":
         res.type = attribute.value;
         break;
+
       case "availabilityStartTime":
-        res.availabilityStartTime = parseDateTime(attribute.value);
+        parseValue(attribute.value, { asKey: "availabilityStartTime",
+                                      parser: parseDateTime,
+                                      dashName: "availabilityStartTime" });
         break;
       case "availabilityEndTime":
-        res.availabilityEndTime = parseDateTime(attribute.value);
+        parseValue(attribute.value, { asKey: "availabilityEndTime",
+                                      parser: parseDateTime,
+                                      dashName: "availabilityEndTime" });
         break;
       case "publishTime":
-        res.publishTime = parseDateTime(attribute.value);
+        parseValue(attribute.value, { asKey: "publishTime",
+                                      parser: parseDateTime,
+                                      dashName: "publishTime" });
         break;
       case "mediaPresentationDuration":
-        res.duration = parseDuration(attribute.value);
+        parseValue(attribute.value, { asKey: "duration",
+                                      parser: parseDuration,
+                                      dashName: "mediaPresentationDuration" });
         break;
       case "minimumUpdatePeriod":
-        res.minimumUpdatePeriod = parseDuration(attribute.value);
+        parseValue(attribute.value, { asKey: "minimumUpdatePeriod",
+                                      parser: parseDuration,
+                                      dashName: "minimumUpdatePeriod" });
         break;
       case "minBufferTime":
-        res.minBufferTime = parseDuration(attribute.value);
+        parseValue(attribute.value, { asKey: "minBufferTime",
+                                      parser: parseDuration,
+                                      dashName: "minBufferTime" });
         break;
       case "timeShiftBufferDepth":
-        res.timeShiftBufferDepth = parseDuration(attribute.value);
+        parseValue(attribute.value, { asKey: "timeShiftBufferDepth",
+                                      parser: parseDuration,
+                                      dashName: "timeShiftBufferDepth" });
         break;
       case "suggestedPresentationDelay":
-        res.suggestedPresentationDelay = parseDuration(attribute.value);
+        parseValue(attribute.value, { asKey: "suggestedPresentationDelay",
+                                      parser: parseDuration,
+                                      dashName: "suggestedPresentationDelay" });
         break;
       case "maxSegmentDuration":
-        res.maxSegmentDuration = parseDuration(attribute.value);
+        parseValue(attribute.value, { asKey: "maxSegmentDuration",
+                                      parser: parseDuration,
+                                      dashName: "maxSegmentDuration" });
         break;
       case "maxSubsegmentDuration":
-        res.maxSubsegmentDuration = parseDuration(attribute.value);
+        parseValue(attribute.value, { asKey: "maxSubsegmentDuration",
+                                      parser: parseDuration,
+                                      dashName: "maxSubsegmentDuration" });
         break;
     }
   }
-  return res;
+  return [res, warnings];
 }
 
+/**
+ * @param {Element} root
+ * @returns {Array.<Object>}
+ */
 export function createMPDIntermediateRepresentation(
   root : Element
-) : IMPDIntermediateRepresentation {
-  return { children: parseMPDChildren(root.childNodes),
-           attributes: parseMPDAttributes(root) };
+) : [IMPDIntermediateRepresentation, Error[]] {
+  const [ children, childrenWarnings ] = parseMPDChildren(root.childNodes);
+  const [ attributes, attrsWarnings ] = parseMPDAttributes(root);
+  const warnings = childrenWarnings.concat(attrsWarnings);
+  return [{ children, attributes }, warnings];
 }

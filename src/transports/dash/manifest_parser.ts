@@ -16,6 +16,7 @@
 
 import {
   combineLatest as observableCombineLatest,
+  concat as observableConcat,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -36,6 +37,7 @@ import {
   IManifestParserObservable,
   ITransportOptions,
 } from "../types";
+import returnParsedManifest from "../utils/return_parsed_manifest";
 
 /**
  * Request external "xlink" ressource from a MPD.
@@ -93,8 +95,12 @@ export default function generateManifestParser(
       parserResponse : IMPDParserResponse
     ) : IManifestParserObservable {
       if (parserResponse.type === "done") {
-        const manifest = new Manifest(parserResponse.value, options);
-        return observableOf({ manifest, url });
+        const { warnings, parsed } = parserResponse.value;
+        const warningEvents = warnings.map(warning => ({ type: "warning" as const,
+                                                         value: warning }));
+        const manifest = new Manifest(parsed, options);
+        return observableConcat(observableOf(...warningEvents),
+                                returnParsedManifest(manifest, url));
       }
 
       const { ressources, continue: continueParsing } = parserResponse.value;

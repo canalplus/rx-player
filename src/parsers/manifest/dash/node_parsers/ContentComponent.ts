@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/** The ContentComponent once parsed. */
 export interface IParsedContentComponent {
   id?: string;
   language?: string;
