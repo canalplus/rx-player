@@ -53,12 +53,21 @@ export type IVideoTrackPreference = null |
                                                  test: RegExp; };
                                       signInterpreted? : boolean; };
 
+/**
+ * Definition of a single audio Representation as represented by the
+ * TrackChoiceManager.
+ */
+interface ITMAudioRepresentation { id : string|number;
+                                   bitrate : number;
+                                   codec? : string; }
+
 /** Audio track returned by the TrackChoiceManager. */
 export interface ITMAudioTrack { language : string;
                                  normalized : string;
                                  audioDescription : boolean;
                                  dub? : boolean;
-                                 id : number|string; }
+                                 id : number|string;
+                                 representations: ITMAudioRepresentation[]; }
 
 /** Text track returned by the TrackChoiceManager. */
 export interface ITMTextTrack { language : string;
@@ -67,7 +76,7 @@ export interface ITMTextTrack { language : string;
                                 id : number|string; }
 
 /**
- * Definition of a single Video Representation as represented by the
+ * Definition of a single video Representation as represented by the
  * TrackChoiceManager.
  */
 interface ITMVideoRepresentation { id : string|number;
@@ -541,18 +550,19 @@ export default class TrackChoiceManager {
       return null;
     }
 
-    const adaptationChosen = this._audioChoiceMemory.get(period);
-    if (adaptationChosen == null) {
+    const chosenTrack = this._audioChoiceMemory.get(period);
+    if (chosenTrack == null) {
       return null;
     }
 
     const audioTrack : ITMAudioTrack = {
-      language: takeFirstSet<string>(adaptationChosen.language, ""),
-      normalized: takeFirstSet<string>(adaptationChosen.normalizedLanguage, ""),
-      audioDescription: adaptationChosen.isAudioDescription === true,
-      id: adaptationChosen.id,
+      language: takeFirstSet<string>(chosenTrack.language, ""),
+      normalized: takeFirstSet<string>(chosenTrack.normalizedLanguage, ""),
+      audioDescription: chosenTrack.isAudioDescription === true,
+      id: chosenTrack.id,
+      representations: chosenTrack.representations.map(parseAudioRepresentation),
     };
-    if (adaptationChosen.isDub === true) {
+    if (chosenTrack.isDub === true) {
       audioTrack.dub = true;
     }
     return audioTrack;
@@ -611,9 +621,11 @@ export default class TrackChoiceManager {
     if (chosenVideoAdaptation == null) {
       return null;
     }
-    const videoTrack: ITMVideoTrack = { id: chosenVideoAdaptation.id,
-             representations: chosenVideoAdaptation.representations
-                                .map(parseVideoRepresentation) };
+    const videoTrack: ITMVideoTrack = {
+      id: chosenVideoAdaptation.id,
+      representations: chosenVideoAdaptation.representations
+                         .map(parseVideoRepresentation),
+    };
     if (chosenVideoAdaptation.isSignInterpreted === true) {
       videoTrack.signInterpreted = true;
     }
@@ -646,6 +658,7 @@ export default class TrackChoiceManager {
           audioDescription: adaptation.isAudioDescription === true,
           id: adaptation.id,
           active: currentId == null ? false : currentId === adaptation.id,
+          representations: adaptation.representations.map(parseAudioRepresentation),
         };
         if (adaptation.isDub === true) {
           formatted.dub = true;
@@ -1058,10 +1071,16 @@ function getPeriodItem(
 function parseVideoRepresentation(
   { id, bitrate, frameRate, width, height, codec } : Representation
 ) : ITMVideoRepresentation {
-  return { id,
-           bitrate,
-           frameRate,
-           width,
-           height,
-           codec };
+  return { id, bitrate, frameRate, width, height, codec };
+}
+
+/**
+ * Parse audio Representation into a ITMAudioRepresentation.
+ * @param {Object} representation
+ * @returns {Object}
+ */
+function parseAudioRepresentation(
+  { id, bitrate, codec } : Representation
+)  : ITMAudioRepresentation {
+  return { id, bitrate, codec};
 }

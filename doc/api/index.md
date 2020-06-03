@@ -815,6 +815,19 @@ return an object with the following properties:
     This property is `undefined` if we do not known whether it is in an original
     language.
 
+  - ``representations`` (``Array.<Object>``):
+    [Representations](../terms.md#representation) of this video track, with
+    attributes:
+
+    - ``id`` (``string``): The id used to identify this Representation.
+      No other Representation from this track will have the same `id`.
+
+    - ``bitrate`` (``Number``): The bitrate of this Representation, in bits per
+      seconds.
+
+    - ``codec`` (``string|undefined``): The audio codec the Representation is
+      in, as announced in the corresponding Manifest.
+
 
 ``undefined`` if no audio content has been loaded yet or if its information is
 unknown.
@@ -912,8 +925,8 @@ return an object with the following properties:
 
     - ``height`` (``Number|undefined``): The height of video, in pixels.
 
-    - ``codec`` (``string|undefined``): The codec given in standard MIME type
-      format.
+    - ``codec`` (``string|undefined``): The video codec the Representation is
+      in, as announced in the corresponding Manifest.
 
     - ``frameRate`` (``string|undefined``): The video frame rate.
 
@@ -973,6 +986,19 @@ Each of the objects in the returned array have the following properties:
     If set to `false`, we know that this audio track is in an original language.
     This property is `undefined` if we do not known whether it is in an original
     language.
+
+  - ``representations`` (``Array.<Object>``):
+    [Representations](../terms.md#representation) of this video track, with
+    attributes:
+
+    - ``id`` (``string``): The id used to identify this Representation.
+
+    - ``bitrate`` (``Number``): The bitrate of this Representation, in bits per
+      seconds.
+
+    - ``codec`` (``string|undefined``): The audio codec the Representation is
+      in, as announced in the corresponding Manifest.
+
 
 --
 
@@ -1061,8 +1087,8 @@ Each of the objects in the returned array have the following properties:
 
     - ``height`` (``Number|undefined``): The height of video, in pixels.
 
-    - ``codec`` (``string|undefined``): The codec given in standard MIME type
-      format.
+    - ``codec`` (``string|undefined``): The video codec the Representation is
+      in, as announced in the corresponding Manifest.
 
     - ``frameRate`` (``string|undefined``): The video framerate.
 
