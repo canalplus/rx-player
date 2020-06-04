@@ -741,7 +741,7 @@ export default function launchTestsForContent(manifestInfos) {
     describe("setPlaybackRate", () => {
       // TODO handle live contents
       it("should update the speed accordingly", async function() {
-        this.timeout(5000);
+        this.timeout(7000);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -751,9 +751,9 @@ export default function launchTestsForContent(manifestInfos) {
         expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.001);
         player.setPlaybackRate(1);
         player.play();
-        await sleep(1200);
+        await sleep(3000);
         const initialPosition = player.getPosition();
-        expect(initialPosition).to.be.closeTo(minimumPosition + 1.2, 0.3);
+        expect(initialPosition).to.be.closeTo(minimumPosition + 3, 1);
 
         player.setPlaybackRate(3);
         await sleep(2000);
