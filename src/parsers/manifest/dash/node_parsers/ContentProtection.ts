@@ -15,8 +15,8 @@
  */
 
 import log from "../../../../log";
-import { base64ToBytes } from "../../../../utils/base64";
 import { hexToBytes } from "../../../../utils/byte_parsing";
+import { parseBase64 } from "./utils";
 
 export interface IParsedContentProtection {
   children : IContentProtectionChildren;
@@ -40,7 +40,8 @@ export interface IContentProtectionAttributes {
  */
 function parseContentProtectionChildren(
   contentProtectionChildren : NodeList
-) : IContentProtectionChildren {
+) : [IContentProtectionChildren, Error[]] {
+  const warnings : Error[] = [];
   const cencPssh : Uint8Array[] = [];
   for (let i = 0; i < contentProtectionChildren.length; i++) {
     if (contentProtectionChildren[i].nodeType === Node.ELEMENT_NODE) {
@@ -48,17 +49,20 @@ function parseContentProtectionChildren(
       if (currentElement.nodeName === "cenc:pssh") {
         const content = currentElement.textContent;
         if (content !== null && content.length > 0) {
-          try {
-            cencPssh.push(base64ToBytes(content));
-          } catch (_) {
-            log.warn("DASH Parser: could not decode ContentProtection base64 string",
-                     content);
+          const [ toUint8Array,
+                  error ] = parseBase64(content, "cenc:pssh");
+          if (error !== null) {
+            log.warn(error.message);
+            warnings.push(error);
+          }
+          if (toUint8Array !== null) {
+            cencPssh.push(toUint8Array);
           }
         }
       }
     }
   }
-  return { cencPssh };
+  return [{ cencPssh }, warnings];
 }
 
 /**
@@ -68,25 +72,23 @@ function parseContentProtectionChildren(
 function parseContentProtectionAttributes(
   root: Element
 ) : IContentProtectionAttributes {
-  let schemeIdUri : string | undefined;
-  let value : string | undefined;
-  let keyId : Uint8Array | undefined;
+  const ret : IContentProtectionAttributes = {};
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
     switch (attribute.name) {
       case "schemeIdUri":
-        schemeIdUri = attribute.value;
+        ret.schemeIdUri = attribute.value;
         break;
       case "value":
-        value = attribute.value;
+        ret.value = attribute.value;
         break;
       case "cenc:default_KID":
-        keyId = hexToBytes(attribute.value.replace(/-/g, ""));
+        ret.keyId = hexToBytes(attribute.value.replace(/-/g, ""));
     }
   }
 
-  return { schemeIdUri, value, keyId };
+  return ret;
 }
 
 /**
@@ -95,9 +97,9 @@ function parseContentProtectionAttributes(
  */
 export default function parseContentProtection(
   contentProtectionElement : Element
-) : IParsedContentProtection {
-  return {
-    children: parseContentProtectionChildren(contentProtectionElement.childNodes),
-    attributes: parseContentProtectionAttributes(contentProtectionElement),
-  };
+) : [IParsedContentProtection, Error[]] {
+  const [ children, childrenWarnings ] =
+    parseContentProtectionChildren(contentProtectionElement.childNodes);
+  const attributes = parseContentProtectionAttributes(contentProtectionElement);
+  return [ { children, attributes }, childrenWarnings ];
 }

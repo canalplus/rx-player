@@ -20,6 +20,7 @@
 /* tslint:enable:max-line-length */
 
 import log from "../../../../log";
+import { base64ToBytes } from "../../../../utils/base64";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 
 export interface IScheme { schemeIdUri? : string;
@@ -252,6 +253,32 @@ function parseByteRange(
 }
 
 /**
+ * Parse MPD base64 attribute into an Uint8Array.
+ * the end.
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed value - or `null` if we could not parse
+ *      it
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ * @param {string} val
+ * @param {string} displayName
+ * @returns {Uint8Array | Error | null>}
+ */
+function parseBase64(
+  val : string,
+  displayName : string
+) : [ Uint8Array | null, MPDError | null ] {
+  try {
+    return [base64ToBytes(val), null];
+  } catch (_) {
+    const error = new MPDError(
+      `\`${displayName}\` is not a valid base64 string: "${val}"`);
+    return [null, error];
+  }
+}
+
+/**
  * @param {Element} root
  * @returns {Object}
  */
@@ -342,6 +369,7 @@ class MPDError extends Error {
 export {
   MPDError,
   ValueParser,
+  parseBase64,
   parseBoolean,
   parseByteRange,
   parseDateTime,

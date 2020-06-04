@@ -200,7 +200,11 @@ function parseAdaptationSetChildren(
           break;
 
         case "ContentProtection":
-          const contentProtection = parseContentProtection(currentElement);
+          const [ contentProtection,
+                  contentProtectionWarnings ] = parseContentProtection(currentElement);
+          if (contentProtectionWarnings.length > 0) {
+            warnings = warnings.concat(contentProtectionWarnings);
+          }
           if (contentProtection !== undefined) {
             contentProtections.push(contentProtection);
           }
