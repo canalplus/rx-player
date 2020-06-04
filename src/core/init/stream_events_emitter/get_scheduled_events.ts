@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+import config from "../../../config";
 import Manifest from "../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
 import { IStreamEventData } from "./types";
+
+const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
+const boundsShift = (STREAM_EVENT_EMITTER_POLL_INTERVAL * 0.6) / 1000;
 
 /**
  * Refresh local scheduled events list
@@ -35,16 +39,29 @@ function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
         const end = event.duration !== undefined ?
           start + (event.duration / event.timescale) :
           undefined;
+
+        // We shift the start and end in case an event shall last less than
+        // STREAM_EVENT_EMITTER_POLL_INTERVAL
+        // Thus, we may trigger each in and out event with a tiny time shift.
+        const shouldShift = end !== undefined &&
+                            (end - start) < STREAM_EVENT_EMITTER_POLL_INTERVAL / 1000;
+        const _shiftedStart = shouldShift ? start - boundsShift :
+                                            start;
+        const _shiftedEnd = end === undefined ? undefined :
+                                               shouldShift ? (end + boundsShift) :
+                                                             end;
         const newScheduledEvent = { start,
                                     end,
+                                    _shiftedStart,
+                                    _shiftedEnd,
                                     id: event.id,
-                                    isBeingPlayed: false,
+                                    _isBeingPlayed: false,
                                     data: event.data };
         if (currentScheduledEvents.length > 0) {
           for (let j = 0; j < currentScheduledEvents.length; j++) {
             const currentScheduleEvent = currentScheduledEvents[j];
             if (areSameStreamEvents(currentScheduleEvent, newScheduledEvent)) {
-              newScheduledEvent.isBeingPlayed = currentScheduleEvent.isBeingPlayed;
+              newScheduledEvent._isBeingPlayed = currentScheduleEvent._isBeingPlayed;
               break;
             }
           }

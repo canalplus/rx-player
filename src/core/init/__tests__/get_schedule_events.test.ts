@@ -26,11 +26,18 @@ describe("core - init - getScheduledEvents", () => {
                            streamEvents: [{ presentationTime: 1000,
                                             duration: 9000,
                                             timescale: 1000,
-                                            id: "2" }] },
+                                            id: "2" },
+                                          { presentationTime: 2000,
+                                            timescale: 1000,
+                                            id: "3" },
+                                          { presentationTime: 3000,
+                                            duration: 100,
+                                            timescale: 1000,
+                                            id: "4" }] },
                        ] };
     const currentScheduledEvents: any[] = [
-      { start: 1000, end: 1000000, id: "must-disapear", isBeingPlayed: true },
-      { start: 0, end: 1, id: "1", isBeingPlayed: true },
+      { start: 1000, end: 1000000, id: "must-disapear", _isBeingPlayed: true },
+      { start: 0, end: 1, id: "1", _isBeingPlayed: true },
     ];
     /* tslint:disable no-unsafe-any */
     const getScheduledEvents = require("../stream_events_emitter/get_scheduled_events")
@@ -39,8 +46,34 @@ describe("core - init - getScheduledEvents", () => {
     const scheduledEvents = getScheduledEvents(currentScheduledEvents, manifest);
     /* tslint:enable no-unsafe-any */
     expect(scheduledEvents).toEqual([
-      { start: 0, end: 1, id: "1", isBeingPlayed: true },
-      { start: 11, end: 20, id: "2", isBeingPlayed: false },
+      { start: 0,
+        end: 1,
+        _shiftedStart: 0,
+        _shiftedEnd: 1,
+        id: "1",
+        data: undefined,
+        _isBeingPlayed: true },
+      { start: 11,
+        end: 20,
+        _shiftedStart: 11,
+        _shiftedEnd: 20,
+        id: "2",
+        data: undefined,
+        _isBeingPlayed: false },
+      { start: 12,
+        end: undefined,
+        _shiftedStart: 12,
+        _shiftedEnd: undefined,
+        id: "3",
+        data: undefined,
+        _isBeingPlayed: false },
+      { start: 13,
+        end: 13.1,
+        _shiftedStart: 12.85,
+        _shiftedEnd: 13.25,
+        id: "4",
+        data: undefined,
+        _isBeingPlayed: false },
     ]);
   });
 });

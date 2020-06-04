@@ -18,8 +18,11 @@ export interface IStreamEventData {
   start: number;
   end?: number;
   id?: string;
-  isBeingPlayed: boolean;
   data: unknown;
+
+  _isBeingPlayed: boolean;
+  _shiftedStart: number;
+  _shiftedEnd?: number;
 }
 
 interface IStreamEventIn {

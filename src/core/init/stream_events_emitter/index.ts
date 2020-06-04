@@ -22,8 +22,10 @@ import {
 } from "rxjs";
 import {
   filter,
-  finalize,
   mergeMap,
+  scan,
+  startWith,
+  switchMap,
 } from "rxjs/operators";
 import config from "../../../config";
 import Manifest from "../../../manifest";
@@ -34,7 +36,6 @@ import {
 } from "./types";
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
-const boundsShift = (STREAM_EVENT_EMITTER_POLL_INTERVAL * 0.6) / 1000;
 
 /**
  * Get events from manifest and emit each time an event has to be emitted
@@ -45,67 +46,58 @@ const boundsShift = (STREAM_EVENT_EMITTER_POLL_INTERVAL * 0.6) / 1000;
 function streamEventsEmitter(manifest: Manifest,
                              mediaElement: HTMLMediaElement
 ): Observable<IStreamEvent> {
-  let scheduledEvents: IStreamEventData[] = [];
+  const scheduledEvents$ = new Observable((obs) => {
+    const listener = () => obs.next();
+    manifest.addEventListener("manifestUpdate", listener);
+    return () => {
+      manifest.removeEventListener("manifestUpdate", listener);
+    };
+  }).pipe(
+    startWith(null),
+    scan((oldScheduleEvents) => {
+      return getScheduledEvents(oldScheduleEvents, manifest);
+    }, [] as IStreamEventData[])
+  );
 
-  /**
-   * Get new scheduled events, renew current events in and
-   * replace old events.
-   */
-  function updateEvents(): void {
-    const newScheduledEvent = getScheduledEvents(scheduledEvents, manifest);
-    scheduledEvents = newScheduledEvent;
-  }
+  return scheduledEvents$.pipe(switchMap(poll$));
 
-  updateEvents();
-  manifest.addEventListener("manifestUpdate", updateEvents);
+  function poll$(newScheduleEvents: IStreamEventData[]) {
+    if (newScheduleEvents.length === 0) {
+      return EMPTY;
+    }
+    return interval(STREAM_EVENT_EMITTER_POLL_INTERVAL)
+      .pipe(
+        filter(() => newScheduleEvents.length !== 0),
+        mergeMap(() => {
+          const { currentTime } = mediaElement;
+          const eventsToSend: IStreamEvent[] = [];
+          for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
+            const event = newScheduleEvents[i];
+            const { _isBeingPlayed, _shiftedStart, _shiftedEnd } = event;
 
-  return interval(STREAM_EVENT_EMITTER_POLL_INTERVAL)
-    .pipe(
-      filter(() => scheduledEvents.length !== 0),
-      mergeMap(() => {
-        const { currentTime } = mediaElement;
-        const eventsToSend: IStreamEvent[] = [];
-        for (let i = scheduledEvents.length - 1; i >= 0; i--) {
-          const event = scheduledEvents[i];
-          const { isBeingPlayed } = event;
-          const { start, end } = event;
-
-          // We shift the start and end in case an event shall last less than
-          // STREAM_EVENT_EMITTER_POLL_INTERVAL
-          // Thus, we may trigger each in and out event with a tiny time shift.
-          const shouldShift = end === undefined ||
-                              (end - start) < STREAM_EVENT_EMITTER_POLL_INTERVAL;
-          const shiftedStart = shouldShift ? start - boundsShift :
-                                             start;
-          const shiftedEnd = end === undefined ? undefined :
-                                                 shouldShift ? (end + boundsShift) :
-                                                               end;
-
-          if (isBeingPlayed &&
-              (
-                shiftedStart > currentTime ||
-                (shiftedEnd !== undefined && currentTime >= shiftedEnd)
-              )
-          ) {
-            eventsToSend.push({ type: "stream-event-out",
-                                value: event });
-            event.isBeingPlayed = false;
-          } else if (shiftedStart <= currentTime &&
-                     (shiftedEnd === undefined || currentTime < shiftedEnd) &&
-                     !isBeingPlayed) {
-            eventsToSend.push({ type: "stream-event-in",
-                                value: event });
-            event.isBeingPlayed = true;
+            if (_isBeingPlayed &&
+                (
+                  _shiftedStart > currentTime ||
+                  (_shiftedEnd !== undefined && currentTime >= _shiftedEnd)
+                )
+            ) {
+              eventsToSend.push({ type: "stream-event-out",
+                                  value: event });
+              event._isBeingPlayed = false;
+            } else if (_shiftedStart <= currentTime &&
+                       (_shiftedEnd === undefined || currentTime < _shiftedEnd) &&
+                       !_isBeingPlayed) {
+              eventsToSend.push({ type: "stream-event-in",
+                                  value: event });
+              event._isBeingPlayed = true;
+            }
           }
-        }
 
-        return eventsToSend.length > 0 ? observableOf(...eventsToSend) :
-                                         EMPTY;
-      }),
-      finalize(() => {
-        manifest.removeEventListener("manifestUpdate", updateEvents);
-      })
-    );
+          return eventsToSend.length > 0 ? observableOf(...eventsToSend) :
+                                           EMPTY;
+        })
+      );
+  }
 }
 
 export default streamEventsEmitter;
