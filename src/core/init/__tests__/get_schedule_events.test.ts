@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-describe.only("core - init - getScheduledEvents", () => {
+describe("core - init - getScheduledEvents", () => {
   it("should correclty get scheduled events", () => {
     const manifest = { periods: [
                          { start: 0,

@@ -40,6 +40,7 @@ const boundsShift = (STREAM_EVENT_EMITTER_POLL_INTERVAL * 0.6) / 1000;
  * Get events from manifest and emit each time an event has to be emitted
  * @param {Object} manifest
  * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
  */
 function streamEventsEmitter(manifest: Manifest,
                              mediaElement: HTMLMediaElement
@@ -76,7 +77,7 @@ function streamEventsEmitter(manifest: Manifest,
                               (end - start) < STREAM_EVENT_EMITTER_POLL_INTERVAL;
           const shiftedStart = shouldShift ? start - boundsShift :
                                              start;
-          const shiftedEnd = end === undefined ? end :
+          const shiftedEnd = end === undefined ? undefined :
                                                  shouldShift ? (end + boundsShift) :
                                                                end;
 

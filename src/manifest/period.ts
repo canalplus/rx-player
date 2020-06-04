@@ -66,7 +66,7 @@ export default class Period {
   public readonly parsingErrors : ICustomError[];
 
   /**
-   *
+   * Array containing every stream event found in manifest.
    */
   public streamEvents? : IManifestStreamEvent[];
 

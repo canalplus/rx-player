@@ -16,9 +16,6 @@
 
 import { IRepresentationIndex } from "../../manifest";
 
-/**
- *
- */
 export interface IManifestStreamEvent {
   presentationTime?: number;
   duration?: number;
@@ -174,7 +171,7 @@ export interface IParsedPeriod {
    */
   end? : number;
   /**
-   *
+   * Array containing every stream event from period in manifest.
    */
   streamEvents?: IManifestStreamEvent[];
 }
