@@ -24,6 +24,20 @@ import { ICustomError } from "../../errors";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
 
+/** Information concerning a MediaKeySession. */
+export interface IMediaKeySessionInfo {
+  /** The MediaKeySession itself. */
+  mediaKeySession : MediaKeySession |
+                    ICustomMediaKeySession;
+  /** The type of MediaKeySession (e.g. "temporary"). */
+  sessionType : MediaKeySessionType;
+  /** Initialization data assiociated to this MediaKeySession. */
+  initData : Uint8Array;
+  /** Initialization data type for the given initialization data. */
+  initDataType : string |
+                 undefined;
+}
+
 /** Event emitted when a minor - recoverable - error happened. */
 export interface IEMEWarningEvent { type : "warning";
                                     value : ICustomError; }

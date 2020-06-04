@@ -42,6 +42,7 @@ import log from "../../log";
 import assertUnreachable from "../../utils/assert_unreachable";
 import filterMap from "../../utils/filter_map";
 import objectAssign from "../../utils/object_assign";
+import cleanOldStoredPersistentInfo from "./clean_old_stored_persistent_info";
 import getSession, {
   IInitializationDataInfo,
 } from "./get_session";
@@ -226,6 +227,7 @@ export default function EMEManager(
               if (sessionType === "persistent-license" &&
                   persistentSessionsStore !== null)
               {
+                cleanOldStoredPersistentInfo(persistentSessionsStore);
                 persistentSessionsStore.add(initData, initDataType, mediaKeySession);
               }
             }),
