@@ -52,6 +52,8 @@ interface ICompatVTTCue { align : string;
 interface ICompatTextTrack extends TextTrack {
   addCue(cue: TextTrackCue | ICompatVTTCue) : void;
   removeCue(cue: TextTrackCue | ICompatVTTCue) : void;
+  HIDDEN? : "hidden";
+  SHOWING? :  "showing";
 }
 
 /**
@@ -72,11 +74,79 @@ interface ICompatDocument extends Document { mozCancelFullScreen? : () => void;
 /**
  * HTMLMediaElement with added optional vendored functions used by "old"
  * browsers.
+ * And TypeScript forgot to add assiociated AudioTrackList and VideoTrackList
+ * (and yes apparently a HTMLAudioElement can have an assiociated
+ * VideoTrackList).
+ *
+ * Note: I prefer to define my own `ICompatHTMLMediaElement` rather to extend
+ * the original definition to better detect which types have been extended and
+ * are not actually valid TypeScript types.
  */
 interface ICompatHTMLMediaElement extends HTMLMediaElement {
   mozRequestFullScreen? : () => void;
   msRequestFullscreen? : () => void;
   webkitRequestFullscreen : () => void;
+  readonly audioTracks? : ICompatAudioTrackList;
+  readonly videoTracks? : ICompatVideoTrackList;
+}
+
+/**
+ * AudioTrackList implementation (that TS forgot).
+ * Directly taken from the WHATG spec:
+ * https://html.spec.whatwg.org/multipage/media.html#audiotracklist
+ */
+interface ICompatAudioTrackList extends EventTarget {
+  readonly length : number;
+  getTrackById(id : string) : ICompatAudioTrack;
+  onchange? : ((n : Event) => void) | null;
+  onaddtrack? : ((n : Event) => void) | null;
+  onremovetrack? : ((n : Event) => void) | null;
+
+  // It can be indexed
+  [x : number] : ICompatAudioTrack;
+}
+
+/**
+ * AudioTrack implementation (that TS forgot).
+ * Directly taken from the WHATG spec:
+ * https://html.spec.whatwg.org/multipage/media.html#audiotracklist
+ */
+interface ICompatAudioTrack {
+  id : string;
+  kind : string;
+  label : string;
+  language : string;
+  enabled : boolean;
+}
+
+/**
+ * VideoTrackList implementation (that TS forgot).
+ * Directly taken from the WHATG spec:
+ * https://html.spec.whatwg.org/multipage/media.html#audiotracklist
+ */
+interface ICompatVideoTrackList extends EventTarget {
+  readonly length : number;
+  selectedIndex : number;
+  getTrackById(id : string) : ICompatVideoTrack;
+  onchange? : ((n : Event) => void) | null;
+  onaddtrack? : ((n : Event) => void) | null;
+  onremovetrack? : ((n : Event) => void) | null;
+
+  // It can be indexed
+  [x : number] : ICompatVideoTrack;
+}
+
+/**
+ * VideoTrack implementation (that TS forgot).
+ * Directly taken from the WHATG spec:
+ * https://html.spec.whatwg.org/multipage/media.html#audiotracklist
+ */
+interface ICompatVideoTrack {
+  id : string;
+  kind : string;
+  label : string;
+  language : string;
+  selected : boolean;
 }
 
 /**
@@ -188,6 +258,10 @@ export {
   HTMLElement_,
   ICompatDocument,
   ICompatHTMLMediaElement,
+  ICompatAudioTrackList,
+  ICompatVideoTrackList,
+  ICompatAudioTrack,
+  ICompatVideoTrack,
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
   ICompatMediaKeysConstructor,

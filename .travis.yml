@@ -6,7 +6,7 @@ language:
   - java
 
 node_js:
-  - "8"
+  - "12"
 
 # exclusive
 branches: 

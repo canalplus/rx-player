@@ -159,7 +159,7 @@ export default class NativeTextSourceBuffer
     // IE/Edge.
     // TODO Move to compat
     const currentCues = this._track.cues;
-    if (currentCues.length > 0) {
+    if (currentCues !== null && currentCues.length > 0) {
       if (
         firstCue.startTime < currentCues[currentCues.length - 1].startTime
       ) {
