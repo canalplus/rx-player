@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-export interface IStreamEventData {
-  start: number;
-  end?: number;
-  id?: string;
-  data: unknown;
-
-  _isBeingPlayed: boolean;
+export interface IStreamEventPrivateData extends IStreamEventData {
   _shiftedStart: number;
   _shiftedEnd?: number;
+}
+
+export interface IStreamEventData {
+  id?: string;
+  start: number;
+  end?: number;
+  data: { type: "element";
+          value: Element; };
 }
 
 interface IStreamEventIn {

@@ -17,7 +17,7 @@
 import config from "../../../config";
 import Manifest from "../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
-import { IStreamEventData } from "./types";
+import { IStreamEventPrivateData } from "./types";
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
 const boundsShift = (STREAM_EVENT_EMITTER_POLL_INTERVAL * 0.6) / 1000;
@@ -25,9 +25,9 @@ const boundsShift = (STREAM_EVENT_EMITTER_POLL_INTERVAL * 0.6) / 1000;
 /**
  * Refresh local scheduled events list
  */
-function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
-                            manifest: Manifest): IStreamEventData[] {
-  const scheduledEvents: IStreamEventData[] = [];
+function getScheduledEvents(currentScheduledEvents: IStreamEventPrivateData[],
+                            manifest: Manifest): IStreamEventPrivateData[] {
+  const scheduledEvents: IStreamEventPrivateData[] = [];
   const { periods } = manifest;
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];
@@ -39,6 +39,16 @@ function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
         const end = event.duration !== undefined ?
           start + (event.duration / event.timescale) :
           undefined;
+
+        if (currentScheduledEvents.length > 0) {
+          for (let j = 0; j < currentScheduledEvents.length; j++) {
+            const currentScheduleEvent = currentScheduledEvents[j];
+            if (areSameStreamEvents(currentScheduleEvent, { id: event.id, start, end })) {
+              scheduledEvents.push(currentScheduleEvent);
+              return;
+            }
+          }
+        }
 
         // We shift the start and end in case an event shall last less than
         // STREAM_EVENT_EMITTER_POLL_INTERVAL
@@ -57,15 +67,6 @@ function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
                                     id: event.id,
                                     _isBeingPlayed: false,
                                     data: event.data };
-        if (currentScheduledEvents.length > 0) {
-          for (let j = 0; j < currentScheduledEvents.length; j++) {
-            const currentScheduleEvent = currentScheduledEvents[j];
-            if (areSameStreamEvents(currentScheduleEvent, newScheduledEvent)) {
-              newScheduledEvent._isBeingPlayed = currentScheduleEvent._isBeingPlayed;
-              break;
-            }
-          }
-        }
         scheduledEvents.push(newScheduledEvent);
       });
     }

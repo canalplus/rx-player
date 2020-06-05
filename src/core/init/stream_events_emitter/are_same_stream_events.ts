@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { IStreamEventData } from "./types";
-
 /**
  * Compare 2 events.
  * As the payload of two events may be the same, but the JS objects may not
@@ -30,8 +28,12 @@ import { IStreamEventData } from "./types";
  * @param {Object} evt2
  * @returns {Boolean}
  */
-function areSameStreamEvents(evt1: IStreamEventData,
-                             evt2: IStreamEventData): boolean {
+function areSameStreamEvents(evt1: { id?: string;
+                                     start: number;
+                                     end?: number; },
+                             evt2: { id?: string;
+                                     start: number;
+                                     end?: number; }): boolean {
   return evt1.id === evt2.id &&
          evt1.start === evt2.start &&
          evt1.end === evt2.end;

@@ -75,7 +75,8 @@ function parseEventStream(element: Element): IManifestStreamEvent[] {
                             duration,
                             timescale: attributes.timescale,
                             id,
-                            data: node };
+                            data: { type: "element" as const,
+                                    value: node as Element } };
       streamEvents.push(streamEvent);
     }
   }

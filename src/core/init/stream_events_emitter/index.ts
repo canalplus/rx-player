@@ -29,13 +29,34 @@ import {
 } from "rxjs/operators";
 import config from "../../../config";
 import Manifest from "../../../manifest";
+import { fromEvent } from "../../../utils/event_emitter";
 import getScheduledEvents from "./get_scheduled_events";
 import {
   IStreamEvent,
-  IStreamEventData
+  IStreamEventData,
+  IStreamEventPrivateData,
 } from "./types";
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
+
+/**
+ * Deconstruct and send back public properties on
+ * stream event data
+ * @param {Object} streamEvent
+ * @returns {Object}
+ */
+function getStreamEventPublicData(
+  streamEvent: IStreamEventPrivateData
+): IStreamEventData {
+  const { id,
+          data,
+          start,
+          end } = streamEvent;
+  return { id,
+           data,
+           start,
+           end };
+}
 
 /**
  * Get events from manifest and emit each time an event has to be emitted
@@ -46,22 +67,17 @@ const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
 function streamEventsEmitter(manifest: Manifest,
                              mediaElement: HTMLMediaElement
 ): Observable<IStreamEvent> {
-  const scheduledEvents$ = new Observable((obs) => {
-    const listener = () => obs.next();
-    manifest.addEventListener("manifestUpdate", listener);
-    return () => {
-      manifest.removeEventListener("manifestUpdate", listener);
-    };
-  }).pipe(
+  const eventsBeingPlayed = new WeakMap<IStreamEventPrivateData, true>();
+  const scheduledEvents$ = fromEvent(manifest, "manifestUpdate").pipe(
     startWith(null),
     scan((oldScheduleEvents) => {
       return getScheduledEvents(oldScheduleEvents, manifest);
-    }, [] as IStreamEventData[])
+    }, [] as IStreamEventPrivateData[])
   );
 
   return scheduledEvents$.pipe(switchMap(poll$));
 
-  function poll$(newScheduleEvents: IStreamEventData[]) {
+  function poll$(newScheduleEvents: IStreamEventPrivateData[]) {
     if (newScheduleEvents.length === 0) {
       return EMPTY;
     }
@@ -73,23 +89,23 @@ function streamEventsEmitter(manifest: Manifest,
           const eventsToSend: IStreamEvent[] = [];
           for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
             const event = newScheduleEvents[i];
-            const { _isBeingPlayed, _shiftedStart, _shiftedEnd } = event;
-
-            if (_isBeingPlayed &&
+            const { _shiftedStart, _shiftedEnd } = event;
+            const isBeingPlayed = eventsBeingPlayed.get(event);
+            if (isBeingPlayed === true &&
                 (
                   _shiftedStart > currentTime ||
                   (_shiftedEnd !== undefined && currentTime >= _shiftedEnd)
                 )
             ) {
               eventsToSend.push({ type: "stream-event-out",
-                                  value: event });
-              event._isBeingPlayed = false;
+                                  value: getStreamEventPublicData(event) });
+              eventsBeingPlayed.delete(event);
             } else if (_shiftedStart <= currentTime &&
                        (_shiftedEnd === undefined || currentTime < _shiftedEnd) &&
-                       !_isBeingPlayed) {
+                       isBeingPlayed !== true) {
               eventsToSend.push({ type: "stream-event-in",
-                                  value: event });
-              event._isBeingPlayed = true;
+                                  value: getStreamEventPublicData(event) });
+              eventsBeingPlayed.set(event, true);
             }
           }
 

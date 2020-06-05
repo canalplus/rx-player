@@ -67,6 +67,7 @@ export default class Period {
 
   /**
    * Array containing every stream event found in manifest.
+   * `undefined` when stream events does not exist in manifest format.
    */
   public streamEvents? : IManifestStreamEvent[];
 

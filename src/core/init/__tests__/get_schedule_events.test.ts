@@ -37,7 +37,13 @@ describe("core - init - getScheduledEvents", () => {
                        ] };
     const currentScheduledEvents: any[] = [
       { start: 1000, end: 1000000, id: "must-disapear", _isBeingPlayed: true },
-      { start: 0, end: 1, id: "1", _isBeingPlayed: true },
+      { start: 0,
+        end: 1,
+        _shiftedStart: 0,
+        _shiftedEnd: 1,
+        data: undefined,
+        id: "1",
+        _isBeingPlayed: true },
     ];
     /* tslint:disable no-unsafe-any */
     const getScheduledEvents = require("../stream_events_emitter/get_scheduled_events")
