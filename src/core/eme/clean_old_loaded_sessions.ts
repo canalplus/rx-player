@@ -60,7 +60,7 @@ export default function cleanOldLoadedSessions(
   const maxSessions = EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
   const cleaningOldSessions$ : Array<Observable<ICleanedOldSessionEvent |
                                                  ICleaningOldSessionEvent>> = [];
-  if (maxSessions > 0 && maxSessions >= loadedSessionsStore.getLength()) {
+  if (maxSessions > 0 && maxSessions <= loadedSessionsStore.getLength()) {
     const entries = loadedSessionsStore.getAll();
     for (let i = 0; i < entries.length - maxSessions; i++) {
       const entry = entries[i];
