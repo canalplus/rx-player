@@ -308,9 +308,9 @@ function parseAdaptationSetAttributes(
         break;
 
       case "selectionPriority":
-        parseValue(attribute.value, { asKey: "segmentAlignment",
+        parseValue(attribute.value, { asKey: "selectionPriority",
                                       parser: parseMPDInteger,
-                                      dashName: "segmentAlignment" });
+                                      dashName: "selectionPriority" });
         break;
 
       case "segmentAlignment":
