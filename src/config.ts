@@ -825,11 +825,11 @@ export default {
   EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 50,
 
   /**
-   * When playing content with a persistent license, we will usually store
+   * When playing contents with a persistent license, we will usually store some
    * information related to that MediaKeySession, to be able to play it at a
    * later time.
    *
-   * Those information are cleaned-up once a MediaKeySession is not considered
+   * Those information are removed once a MediaKeySession is not considered
    * as "usable" anymore. But to know that, the RxPlayer has to load it.
    *
    * But the RxPlayer does not re-load every persisted MediaKeySession every
