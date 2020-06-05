@@ -25,6 +25,7 @@ import {
   mergeMap,
 } from "rxjs/operators";
 import { ICustomMediaKeySession } from "../../compat";
+import config from "../../config";
 import log from "../../log";
 import cleanOldLoadedSessions, {
   ICleanedOldSessionEvent,
@@ -36,6 +37,8 @@ import {
   IMediaKeysInfos,
 } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
+
+const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS } = config;
 
 /** Information about the encryption initialization data. */
 export interface IInitializationDataInfo {
@@ -124,7 +127,8 @@ export default function getSession(
       observableOf(null)
     ).pipe(mergeMap(() => {
       return observableConcat(
-        cleanOldLoadedSessions(loadedSessionsStore),
+        cleanOldLoadedSessions(loadedSessionsStore,
+                               EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS - 1),
         createSession(initData, initDataType, mediaKeysInfos)
           .pipe(map((evt) => ({ type: evt.type,
                                 value: {

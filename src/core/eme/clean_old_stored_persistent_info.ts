@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-import config from "../../config";
 import log from "../../log";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
 
-const { EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION } = config;
-
 /**
- * Remove old information from a PersistentSessionsStore to prevent its size
- * from growing indefinitely.
+ * Remove old information from a PersistentSessionsStore so that it respects the
+ * given `limit` as a maximum size. This can be used to prevent its size from
+ * growing indefinitely.
  *
  * This is needed because our persistent session information storage is
  * un-bounded in size, adding more data will just add more data without removing
@@ -35,15 +33,13 @@ const { EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION } = config;
  *     will in most cases have a maximum storage size.
  */
 export default function cleanOldStoredPersistentInfo(
-  persistentSessionsStore : PersistentSessionsStore
+  persistentSessionsStore : PersistentSessionsStore,
+  limit : number
 ) : void {
-  const maxPersistentSessions = EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION;
-
   // Clean-up previous persisted sessio
-  if (maxPersistentSessions > 0 &&
-      maxPersistentSessions >= persistentSessionsStore.getLength()) {
+  if (limit > 0 && limit < persistentSessionsStore.getLength()) {
     const numberOfPersistentSessions = persistentSessionsStore.getLength();
-    const toDelete = maxPersistentSessions - numberOfPersistentSessions;
+    const toDelete = numberOfPersistentSessions - limit;
     log.info("EME: Too many stored persistent sessions, removing some.",
              numberOfPersistentSessions,
              toDelete);

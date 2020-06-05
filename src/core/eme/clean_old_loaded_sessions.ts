@@ -23,11 +23,8 @@ import {
   mapTo,
   startWith,
 } from "rxjs/operators";
-import config from "../../config";
 import { IMediaKeySessionInfo } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
-
-const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS } = config;
 
 /**
  * Event emitted when an old MediaKeySession has been closed to respect the
@@ -48,21 +45,25 @@ export interface ICleaningOldSessionEvent {
 }
 
 /**
- * Close sessions to respect the `EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS` limit.
+ * Close sessions from the loadedSessionsStore to allow at maximum `limit`
+ * stored MediaKeySessions in it.
+ *
  * Emit event when a MediaKeySession begin to be closed and another when the
  * MediaKeySession is closed.
  * @param {Object} loadedSessionsStore
  * @returns {Observable}
  */
 export default function cleanOldLoadedSessions(
-  loadedSessionsStore : LoadedSessionsStore
+  loadedSessionsStore : LoadedSessionsStore,
+  limit : number
 ) : Observable<ICleaningOldSessionEvent | ICleanedOldSessionEvent> {
-  const maxSessions = EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
   const cleaningOldSessions$ : Array<Observable<ICleanedOldSessionEvent |
                                                  ICleaningOldSessionEvent>> = [];
-  if (maxSessions > 0 && maxSessions <= loadedSessionsStore.getLength()) {
-    const entries = loadedSessionsStore.getAll();
-    for (let i = 0; i < entries.length - maxSessions; i++) {
+  if (limit >= 0 && limit < loadedSessionsStore.getLength()) {
+    const entries = loadedSessionsStore.getAll()
+                                       .slice(); // clone
+    const toDelete = entries.length - limit;
+    for (let i = 0; i < toDelete; i++) {
       const entry = entries[i];
       const cleaning$ = loadedSessionsStore
         .closeSession(entry.initData, entry.initDataType)

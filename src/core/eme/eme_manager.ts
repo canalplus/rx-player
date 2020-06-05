@@ -37,6 +37,7 @@ import {
   generateKeyRequest,
   getInitData,
 } from "../../compat/";
+import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import assertUnreachable from "../../utils/assert_unreachable";
@@ -59,6 +60,7 @@ import {
 } from "./types";
 import InitDataStore from "./utils/init_data_store";
 
+const { EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION } = config;
 const { onEncrypted$ } = events;
 
 /**
@@ -227,7 +229,9 @@ export default function EMEManager(
               if (sessionType === "persistent-license" &&
                   persistentSessionsStore !== null)
               {
-                cleanOldStoredPersistentInfo(persistentSessionsStore);
+                cleanOldStoredPersistentInfo(
+                  persistentSessionsStore,
+                  EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
                 persistentSessionsStore.add(initData, initDataType, mediaKeySession);
               }
             }),
