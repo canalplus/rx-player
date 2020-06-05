@@ -36,13 +36,13 @@ export default function cleanOldStoredPersistentInfo(
   persistentSessionsStore : PersistentSessionsStore,
   limit : number
 ) : void {
-  // Clean-up previous persisted sessio
-  if (limit > 0 && limit < persistentSessionsStore.getLength()) {
-    const numberOfPersistentSessions = persistentSessionsStore.getLength();
-    const toDelete = numberOfPersistentSessions - limit;
-    log.info("EME: Too many stored persistent sessions, removing some.",
-             numberOfPersistentSessions,
-             toDelete);
-    persistentSessionsStore.deleteLast(toDelete);
+  if (isNaN(limit) || limit < 0 || limit >= persistentSessionsStore.getLength()) {
+    return;
   }
+  const numberOfPersistentSessions = persistentSessionsStore.getLength();
+  const toDelete = numberOfPersistentSessions - limit;
+  log.info("EME: Too many stored persistent sessions, removing some.",
+           numberOfPersistentSessions,
+           toDelete);
+  persistentSessionsStore.deleteLast(toDelete);
 }
