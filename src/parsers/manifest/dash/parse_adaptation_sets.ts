@@ -15,9 +15,7 @@
  */
 
 import log from "../../../log";
-import {
-  Period,
-} from "../../../manifest";
+import { Period } from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
@@ -207,7 +205,10 @@ function getAdaptationSetSwitchingIDs(
 }
 
 /**
- * Process intermediate periods to create final parsed periods.
+ * Process AdaptationSets intermediate representations to return under its final
+ * form.
+ * Note that the AdaptationSets returned are sorted by priority (from the most
+ * priority to the least one).
  * @param {Array.<Object>} periodsIR
  * @param {Object} manifestInfos
  * @returns {Array.<Object>}
@@ -220,6 +221,14 @@ export default function parseAdaptationSets(
   const adaptationSwitchingInfos : IAdaptationSwitchingInfos = {};
   const parsedAdaptationsIDs : string[] = [];
   let videoMainAdaptation : IParsedAdaptation | null = null;
+
+  // first sort AdaptationSets by absolute priority.
+  adaptationsIR.sort((a, b) => {
+    /* As of DASH-IF 4.3, `1` is the default value. */
+    const priority1 = a.attributes.selectionPriority ?? 1;
+    const priority2 = b.attributes.selectionPriority ?? 1;
+    return priority2 - priority1;
+  });
 
   for (let i = 0; i < adaptationsIR.length; i++) {
     const adaptation = adaptationsIR[i];

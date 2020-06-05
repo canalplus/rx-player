@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Created with Unified Streaming Platform(version=1.7.32) -->
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd" type="static" mediaPresentationDuration="PT3M23S" maxSegmentDuration="PT5S" minBufferTime="PT10S" profiles="urn:mpeg:dash:profile:isoff-live:2011">
+  <Period id="1" duration="PT1M41.568367S">
+    <BaseURL>dash/</BaseURL>
+
+    <!-- audio fr mp4a.40.5 -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="fr"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.5"
+      startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio fr mp4a.40.2 priority 10 -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="fr"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      selectionPriority="10"
+      startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio de mp4a.40.5 -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="de"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.5"
+      startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio de mp4a.40.2 priority 100 -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="de"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      selectionPriority="100"
+      startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio fr mp4a.40.5 audioDescription -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="fr"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.5"
+      startWithSAP="1">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio fr mp4a.40.2 audioDescription -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="fr"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      startWithSAP="1">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio de mp4a.40.5 audioDescription -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="de"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.5"
+      startWithSAP="1">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio de mp4a.40.2 audioDescription -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="de"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      startWithSAP="1">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- text fr -->
+    <AdaptationSet
+      id="0"
+      contentType="text"
+      lang="fr"
+      subsegmentAlignment="true">
+      <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="text" bandwidth="256" mimeType="text/vtt"></Representation>
+    </AdaptationSet>
+
+
+    <!-- text de priority 20 -->
+    <AdaptationSet
+      id="0"
+      contentType="text"
+      lang="de"
+      selectionPriority="20"
+      subsegmentAlignment="true">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="text" bandwidth="256" mimeType="text/vtt">
+      </Representation>
+    </AdaptationSet>
+
+
+    <!-- text fr hard-of-hearing -->
+    <AdaptationSet
+      id="0"
+      contentType="text"
+      lang="fr"
+      subsegmentAlignment="true">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "2" />
+      <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="text" bandwidth="256" mimeType="text/vtt"></Representation>
+    </AdaptationSet>
+
+
+    <!-- text de hard-of-hearing priority 50 -->
+    <AdaptationSet
+      id="0"
+      contentType="text"
+      lang="de"
+      selectionPriority="50"
+      subsegmentAlignment="true">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "2" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="text" bandwidth="256" mimeType="text/vtt">
+      </Representation>
+    </AdaptationSet>
+
+
+
+    <!-- video avc1 -->
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      minBandwidth="400000"
+      maxBandwidth="795000"
+      maxWidth="2221"
+      maxHeight="944"
+      segmentAlignment="true"
+      mimeType="video/mp4"
+      startWithSAP="1">
+        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
+      <Representation id="video=795000" bandwidth="795000" width="368" height="208" sar="520:391" codecs="avc1.42C014" scanType="progressive"></Representation>
+    </AdaptationSet>
+
+
+
+    <!-- video main avc1.640028 -->
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      minBandwidth="400000"
+      maxBandwidth="1996000"
+      maxWidth="2221"
+      maxHeight="944"
+      segmentAlignment="true"
+      mimeType="video/mp4"
+      startWithSAP="1">
+        <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=1996000" bandwidth="1996000" width="1680" height="944" sar="472:357" codecs="avc1.640028" scanType="progressive"></Representation>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
+    </AdaptationSet>
+
+
+    <!-- video avc1 + priority 50 + sign interpreted -->
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      minBandwidth="400000"
+      maxBandwidth="795000"
+      maxWidth="2221"
+      maxHeight="944"
+      segmentAlignment="true"
+      mimeType="video/mp4"
+      selectionPriority="50"
+      startWithSAP="1">
+        <Accessibility schemeIdUri="urn:mpeg:dash:role:2011" value= "sign" />
+        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
+      <Representation id="video=795000" bandwidth="795000" width="368" height="208" sar="520:391" codecs="avc1.42C014" scanType="progressive"></Representation>
+    </AdaptationSet>
+
+
+    <!-- video avc1.640028 + priority 2 + sign interpreted -->
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      minBandwidth="400000"
+      maxBandwidth="1996000"
+      maxWidth="2221"
+      maxHeight="944"
+      segmentAlignment="true"
+      mimeType="video/mp4"
+      selectionPriority="2"
+      startWithSAP="1">
+        <Accessibility schemeIdUri="urn:mpeg:dash:role:2011" value= "sign" />
+        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=1996000" bandwidth="1996000" width="1680" height="944" sar="472:357" codecs="avc1.640028" scanType="progressive"></Representation>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
+    </AdaptationSet>
+
+  </Period>
+
+  <Period id="2" duration="PT1M41.568367S">
+    <BaseURL>dash/</BaseURL>
+
+    <!-- audio fr mp4a.40.5 -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="fr"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.5"
+      startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio fr mp4a.40.2 priority 10 -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="fr"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      selectionPriority="10"
+      startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio de mp4a.40.5 -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="de"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.5"
+      startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio de mp4a.40.2 priority 100 -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="de"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      selectionPriority="100"
+      startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio fr mp4a.40.5 audioDescription -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="fr"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.5"
+      startWithSAP="1">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio fr mp4a.40.2 audioDescription -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="fr"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      startWithSAP="1">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio de mp4a.40.5 audioDescription -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="de"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.5"
+      startWithSAP="1">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio de mp4a.40.2 audioDescription -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="de"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      startWithSAP="1">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- text fr -->
+    <AdaptationSet
+      id="0"
+      contentType="text"
+      lang="fr"
+      subsegmentAlignment="true">
+      <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="text" bandwidth="256" mimeType="text/vtt"></Representation>
+    </AdaptationSet>
+
+
+    <!-- text de priority 20 -->
+    <AdaptationSet
+      id="0"
+      contentType="text"
+      lang="de"
+      selectionPriority="20"
+      subsegmentAlignment="true">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="text" bandwidth="256" mimeType="text/vtt">
+      </Representation>
+    </AdaptationSet>
+
+
+    <!-- text fr hard-of-hearing -->
+    <AdaptationSet
+      id="0"
+      contentType="text"
+      lang="fr"
+      subsegmentAlignment="true">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "2" />
+      <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="text" bandwidth="256" mimeType="text/vtt"></Representation>
+    </AdaptationSet>
+
+
+    <!-- text de hard-of-hearing priority 50 -->
+    <AdaptationSet
+      id="0"
+      contentType="text"
+      lang="de"
+      selectionPriority="50"
+      subsegmentAlignment="true">
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "2" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="text" bandwidth="256" mimeType="text/vtt">
+      </Representation>
+    </AdaptationSet>
+
+
+
+    <!-- video avc1 -->
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      minBandwidth="400000"
+      maxBandwidth="795000"
+      maxWidth="2221"
+      maxHeight="944"
+      segmentAlignment="true"
+      mimeType="video/mp4"
+      startWithSAP="1">
+        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
+      <Representation id="video=795000" bandwidth="795000" width="368" height="208" sar="520:391" codecs="avc1.42C014" scanType="progressive"></Representation>
+    </AdaptationSet>
+
+
+
+    <!-- video main avc1.640028 -->
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      minBandwidth="400000"
+      maxBandwidth="1996000"
+      maxWidth="2221"
+      maxHeight="944"
+      segmentAlignment="true"
+      mimeType="video/mp4"
+      startWithSAP="1">
+        <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=1996000" bandwidth="1996000" width="1680" height="944" sar="472:357" codecs="avc1.640028" scanType="progressive"></Representation>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
+    </AdaptationSet>
+
+
+    <!-- video avc1 + priority 50 + sign interpreted -->
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      minBandwidth="400000"
+      maxBandwidth="795000"
+      maxWidth="2221"
+      maxHeight="944"
+      segmentAlignment="true"
+      mimeType="video/mp4"
+      selectionPriority="50"
+      startWithSAP="1">
+        <Accessibility schemeIdUri="urn:mpeg:dash:role:2011" value= "sign" />
+        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
+      <Representation id="video=795000" bandwidth="795000" width="368" height="208" sar="520:391" codecs="avc1.42C014" scanType="progressive"></Representation>
+    </AdaptationSet>
+
+
+    <!-- video avc1.640028 + priority 2 + sign interpreted -->
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      minBandwidth="400000"
+      maxBandwidth="1996000"
+      maxWidth="2221"
+      maxHeight="944"
+      segmentAlignment="true"
+      mimeType="video/mp4"
+      selectionPriority="2"
+      startWithSAP="1">
+        <Accessibility schemeIdUri="urn:mpeg:dash:role:2011" value= "sign" />
+        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=1996000" bandwidth="1996000" width="1680" height="944" sar="472:357" codecs="avc1.640028" scanType="progressive"></Representation>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
+    </AdaptationSet>
+
+  </Period>
+</MPD>
