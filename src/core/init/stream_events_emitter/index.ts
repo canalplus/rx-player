@@ -21,7 +21,6 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  filter,
   mergeMap,
   scan,
   startWith,
@@ -83,7 +82,6 @@ function streamEventsEmitter(manifest: Manifest,
     }
     return interval(STREAM_EVENT_EMITTER_POLL_INTERVAL)
       .pipe(
-        filter(() => newScheduleEvents.length !== 0),
         mergeMap(() => {
           const { currentTime } = mediaElement;
           const eventsToSend: IStreamEvent[] = [];

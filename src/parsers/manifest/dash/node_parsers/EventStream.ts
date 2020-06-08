@@ -58,11 +58,9 @@ function parseEventStream(element: Element): IManifestStreamEvent[] {
         switch (attribute.name) {
           case "presentationTime":
             presentationTime = parseInt(attribute.value, 10);
-            // presentationTime = pts / attributes.timescale;
             break;
           case "duration":
             duration = parseInt(attribute.value, 10);
-            // duration = eventDuration / attributes.timescale;
             break;
           case "id":
             id = attribute.value;

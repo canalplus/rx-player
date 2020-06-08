@@ -42,8 +42,7 @@ describe("core - init - getScheduledEvents", () => {
         _shiftedStart: 0,
         _shiftedEnd: 1,
         data: undefined,
-        id: "1",
-        _isBeingPlayed: true },
+        id: "1" },
     ];
     /* tslint:disable no-unsafe-any */
     const getScheduledEvents = require("../stream_events_emitter/get_scheduled_events")
@@ -57,29 +56,25 @@ describe("core - init - getScheduledEvents", () => {
         _shiftedStart: 0,
         _shiftedEnd: 1,
         id: "1",
-        data: undefined,
-        _isBeingPlayed: true },
+        data: undefined },
       { start: 11,
         end: 20,
         _shiftedStart: 11,
         _shiftedEnd: 20,
         id: "2",
-        data: undefined,
-        _isBeingPlayed: false },
+        data: undefined },
       { start: 12,
         end: undefined,
         _shiftedStart: 12,
         _shiftedEnd: undefined,
         id: "3",
-        data: undefined,
-        _isBeingPlayed: false },
+        data: undefined },
       { start: 13,
         end: 13.1,
         _shiftedStart: 12.85,
         _shiftedEnd: 13.25,
         id: "4",
-        data: undefined,
-        _isBeingPlayed: false },
+        data: undefined },
     ]);
   });
 });

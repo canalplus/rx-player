@@ -40,13 +40,11 @@ function getScheduledEvents(currentScheduledEvents: IStreamEventPrivateData[],
           start + (event.duration / event.timescale) :
           undefined;
 
-        if (currentScheduledEvents.length > 0) {
-          for (let j = 0; j < currentScheduledEvents.length; j++) {
-            const currentScheduleEvent = currentScheduledEvents[j];
-            if (areSameStreamEvents(currentScheduleEvent, { id: event.id, start, end })) {
-              scheduledEvents.push(currentScheduleEvent);
-              return;
-            }
+        for (let j = 0; j < currentScheduledEvents.length; j++) {
+          const currentScheduleEvent = currentScheduledEvents[j];
+          if (areSameStreamEvents(currentScheduleEvent, { id: event.id, start, end })) {
+            scheduledEvents.push(currentScheduleEvent);
+            return;
           }
         }
 
@@ -65,7 +63,6 @@ function getScheduledEvents(currentScheduledEvents: IStreamEventPrivateData[],
                                     _shiftedStart,
                                     _shiftedEnd,
                                     id: event.id,
-                                    _isBeingPlayed: false,
                                     data: event.data };
         scheduledEvents.push(newScheduledEvent);
       });
