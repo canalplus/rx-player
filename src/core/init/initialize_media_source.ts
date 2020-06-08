@@ -254,7 +254,7 @@ export default function InitializeOnMediaSource(
     .pipe(filter((evt) : evt is IManifestFetcherParsedResult => evt.type === "parsed"));
 
   const streamEvents$ = initialManifest$.pipe(
-    mergeMap(({ manifest }) => streamEventsEmitter(manifest, mediaElement))
+    mergeMap(({ manifest }) => streamEventsEmitter(manifest, mediaElement, clock$))
   );
 
   /** Load and play the content asked. */

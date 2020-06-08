@@ -15,13 +15,16 @@
  */
 
 import {
+  combineLatest as observableCombineLatest,
   EMPTY,
   interval,
   Observable,
   of as observableOf,
 } from "rxjs";
 import {
+  map,
   mergeMap,
+  pairwise,
   scan,
   startWith,
   switchMap,
@@ -29,11 +32,11 @@ import {
 import config from "../../../config";
 import Manifest from "../../../manifest";
 import { fromEvent } from "../../../utils/event_emitter";
+import { IInitClockTick } from "../types";
 import getScheduledEvents from "./get_scheduled_events";
 import {
   IStreamEvent,
   IStreamEventData,
-  IStreamEventPrivateData,
 } from "./types";
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
@@ -45,7 +48,7 @@ const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
  * @returns {Object}
  */
 function getStreamEventPublicData(
-  streamEvent: IStreamEventPrivateData
+  streamEvent: IStreamEventData
 ): IStreamEventData {
   const { id,
           data,
@@ -64,46 +67,59 @@ function getStreamEventPublicData(
  * @returns {Observable}
  */
 function streamEventsEmitter(manifest: Manifest,
-                             mediaElement: HTMLMediaElement
+                             mediaElement: HTMLMediaElement,
+                             clock$: Observable<IInitClockTick>
 ): Observable<IStreamEvent> {
-  const eventsBeingPlayed = new WeakMap<IStreamEventPrivateData, true>();
+  const eventsBeingPlayed = new WeakMap<IStreamEventData, true>();
   const scheduledEvents$ = fromEvent(manifest, "manifestUpdate").pipe(
     startWith(null),
     scan((oldScheduleEvents) => {
       return getScheduledEvents(oldScheduleEvents, manifest);
-    }, [] as IStreamEventPrivateData[])
+    }, [] as IStreamEventData[])
   );
 
   return scheduledEvents$.pipe(switchMap(poll$));
 
-  function poll$(newScheduleEvents: IStreamEventPrivateData[]) {
+  function poll$(newScheduleEvents: IStreamEventData[]) {
     if (newScheduleEvents.length === 0) {
       return EMPTY;
     }
-    return interval(STREAM_EVENT_EMITTER_POLL_INTERVAL)
-      .pipe(
-        mergeMap(() => {
-          const { currentTime } = mediaElement;
+    return observableCombineLatest([
+      interval(STREAM_EVENT_EMITTER_POLL_INTERVAL),
+      clock$,
+    ]).pipe(
+        map(() => mediaElement.currentTime),
+        pairwise(),
+        mergeMap(([ oldCurrentTime, currentTime ]) => {
           const eventsToSend: IStreamEvent[] = [];
           for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
             const event = newScheduleEvents[i];
-            const { _shiftedStart, _shiftedEnd } = event;
+            const { start, end } = event;
             const isBeingPlayed = eventsBeingPlayed.get(event);
             if (isBeingPlayed === true &&
                 (
-                  _shiftedStart > currentTime ||
-                  (_shiftedEnd !== undefined && currentTime >= _shiftedEnd)
+                  start > currentTime &&
+                  (end !== undefined && currentTime >= end)
                 )
             ) {
-              eventsToSend.push({ type: "stream-event-out",
-                                  value: getStreamEventPublicData(event) });
               eventsBeingPlayed.delete(event);
-            } else if (_shiftedStart <= currentTime &&
-                       (_shiftedEnd === undefined || currentTime < _shiftedEnd) &&
+            } else if (start <= currentTime &&
+                       end !== undefined &&
+                       currentTime < end &&
                        isBeingPlayed !== true) {
-              eventsToSend.push({ type: "stream-event-in",
+              eventsToSend.push({ type: "stream-event",
                                   value: getStreamEventPublicData(event) });
               eventsBeingPlayed.set(event, true);
+            } else if ((
+                         oldCurrentTime < start &&
+                         currentTime >= (end ?? start)
+                       ) ||
+                       (
+                         currentTime < start &&
+                         oldCurrentTime >= (end ?? start)
+                       )) {
+              eventsToSend.push({ type: "stream-event",
+                                  value: getStreamEventPublicData(event) });
             }
           }
 

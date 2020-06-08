@@ -198,8 +198,7 @@ interface IPublicAPIEvent {
                                   representation : Representation; }>;
   seeking : null;
   seeked : null;
-  streamEventIn : IStreamEventData;
-  streamEventOut : IStreamEventData;
+  streamEvent : IStreamEventData;
 }
 
 /**
@@ -1966,8 +1965,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
-      case "stream-event-in":
-      case "stream-event-out":
+      case "stream-event":
         this._priv_onStreamEvent(event);
         break;
       case "activePeriodChanged":
@@ -2114,9 +2112,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   private _priv_onStreamEvent(event: IStreamEvent) {
-    this.trigger(event.type === "stream-event-in" ? "streamEventIn" :
-                                                    "streamEventOut",
-                event.value);
+    this.trigger("streamEvent", event.value);
   }
 
   /**

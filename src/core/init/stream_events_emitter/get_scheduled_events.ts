@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
 import Manifest from "../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
-import { IStreamEventPrivateData } from "./types";
-
-const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
-const boundsShift = (STREAM_EVENT_EMITTER_POLL_INTERVAL * 0.6) / 1000;
+import { IStreamEventData } from "./types";
 
 /**
  * Refresh local scheduled events list
  */
-function getScheduledEvents(currentScheduledEvents: IStreamEventPrivateData[],
-                            manifest: Manifest): IStreamEventPrivateData[] {
-  const scheduledEvents: IStreamEventPrivateData[] = [];
+function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
+                            manifest: Manifest): IStreamEventData[] {
+  const scheduledEvents: IStreamEventData[] = [];
   const { periods } = manifest;
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];
@@ -42,20 +38,8 @@ function getScheduledEvents(currentScheduledEvents: IStreamEventPrivateData[],
           }
         }
 
-        // We shift the start and end in case an event shall last less than
-        // STREAM_EVENT_EMITTER_POLL_INTERVAL
-        // Thus, we may trigger each in and out event with a tiny time shift.
-        const shouldShift = end !== undefined &&
-                            (end - start) < STREAM_EVENT_EMITTER_POLL_INTERVAL / 1000;
-        const _shiftedStart = shouldShift ? start - boundsShift :
-                                            start;
-        const _shiftedEnd = end === undefined ? undefined :
-                                               shouldShift ? (end + boundsShift) :
-                                                             end;
         const newScheduledEvent = { start,
                                     end,
-                                    _shiftedStart,
-                                    _shiftedEnd,
                                     id,
                                     data };
         scheduledEvents.push(newScheduledEvent);

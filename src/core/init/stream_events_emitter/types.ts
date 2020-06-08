@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-export interface IStreamEventPrivateData extends IStreamEventData {
-  _shiftedStart: number;
-  _shiftedEnd?: number;
-}
-
 export interface IStreamEventData {
   id?: string;
   start: number;
@@ -27,15 +22,7 @@ export interface IStreamEventData {
           value: Element; };
 }
 
-interface IStreamEventIn {
-  type: "stream-event-in";
+export interface IStreamEvent {
+  type: "stream-event";
   value: IStreamEventData;
 }
-
-interface IStreamEventOut {
-  type: "stream-event-out";
-  value: IStreamEventData;
-}
-
-export type IStreamEvent = IStreamEventIn |
-                           IStreamEventOut;
