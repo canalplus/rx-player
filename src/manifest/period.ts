@@ -19,7 +19,6 @@ import {
   MediaError,
 } from "../errors";
 import {
-  IManifestStreamEvent,
   IParsedPeriod,
 } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
@@ -28,6 +27,14 @@ import Adaptation, {
   IRepresentationFilter,
 } from "./adaptation";
 import { IAdaptationType } from "./types";
+
+export interface IManifestStreamEvent {
+  start: number;
+  end?: number;
+  id?: string;
+  data: { type: "element";
+          value: Element; };
+}
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
@@ -65,11 +72,8 @@ export default class Period {
    */
   public readonly parsingErrors : ICustomError[];
 
-  /**
-   * Array containing every stream event found in manifest.
-   * `undefined` when stream events does not exist in manifest format.
-   */
-  public streamEvents? : IManifestStreamEvent[];
+  /** Array containing every stream event happening on the period */
+  public streamEvents : IManifestStreamEvent[];
 
   /**
    * @constructor
@@ -135,7 +139,22 @@ export default class Period {
     if (this.duration != null && this.start != null) {
       this.end = this.start + this.duration;
     }
-    this.streamEvents = args.streamEvents;
+    this.streamEvents = args.streamEvents === undefined ?
+      [] :
+      args.streamEvents.map((streamEvent) => {
+        const { eventPresentationTime,
+                duration,
+                timescale,
+                id,
+                data } = streamEvent;
+        const start = this.start + (eventPresentationTime / timescale);
+        const end = duration !== undefined ? start + (duration / timescale) :
+                                             undefined;
+        return { start,
+                 end,
+                 id,
+                 data };
+      });
   }
 
   /**

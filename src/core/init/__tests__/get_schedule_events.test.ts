@@ -18,21 +18,17 @@ describe("core - init - getScheduledEvents", () => {
   it("should correclty get scheduled events", () => {
     const manifest = { periods: [
                          { start: 0,
-                           streamEvents: [{ presentationTime: 0,
-                                            duration: 1000,
-                                            timescale: 1000,
+                           streamEvents: [{ start: 0,
+                                            end: 1,
                                             id: "1" }] },
                          { start: 10,
-                           streamEvents: [{ presentationTime: 1000,
-                                            duration: 9000,
-                                            timescale: 1000,
+                           streamEvents: [{ start: 11,
+                                            end: 20,
                                             id: "2" },
-                                          { presentationTime: 2000,
-                                            timescale: 1000,
+                                          { start: 12,
                                             id: "3" },
-                                          { presentationTime: 3000,
-                                            duration: 100,
-                                            timescale: 1000,
+                                          { start: 13,
+                                            end: 13.1,
                                             id: "4" }] },
                        ] };
     const currentScheduledEvents: any[] = [

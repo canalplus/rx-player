@@ -15,15 +15,7 @@
  */
 
 import { IRepresentationIndex } from "../../manifest";
-
-export interface IManifestStreamEvent {
-  presentationTime?: number;
-  duration?: number;
-  timescale: number;
-  id?: string;
-  data: { type: "element";
-          value: Element; };
-}
+import { IParsedStreamEvent } from "./dash/node_parsers/EventStream";
 
 /** Describes information about an encryption Key ID of a given media. */
 export interface IContentProtectionKID { keyId : Uint8Array;
@@ -173,8 +165,9 @@ export interface IParsedPeriod {
   end? : number;
   /**
    * Array containing every stream event from period in manifest.
+   * `undefined` if no parsed stream event in manifest.
    */
-  streamEvents?: IManifestStreamEvent[];
+  streamEvents?: IParsedStreamEvent[];
 }
 
 /** Information on the whole content */

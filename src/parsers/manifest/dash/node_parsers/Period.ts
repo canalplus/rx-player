@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { IManifestStreamEvent } from "../../types";
 import {
   createAdaptationSetIntermediateRepresentation,
   IAdaptationSetIntermediateRepresentation,
@@ -22,7 +21,9 @@ import {
 import parseBaseURL, {
   IBaseURL
 } from "./BaseURL";
-import parseEventStream from "./EventStream";
+import parseEventStream, {
+  IParsedStreamEvent
+} from "./EventStream";
 import {
   parseBoolean,
   parseDuration,
@@ -39,7 +40,7 @@ export interface IPeriodChildren {
   // required
   adaptations : IAdaptationSetIntermediateRepresentation[];
   baseURLs : IBaseURL[];
-  streamEvents? : IManifestStreamEvent[];
+  streamEvents? : IParsedStreamEvent[];
 }
 
 // intermediate representation for a Period's attributes

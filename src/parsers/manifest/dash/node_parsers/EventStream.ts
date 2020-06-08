@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-import { IManifestStreamEvent } from "../../types";
+export interface IParsedStreamEvent {
+  eventPresentationTime: number;
+  duration?: number;
+  timescale: number;
+  id?: string;
+  data: { type: "element";
+          value: Element; };
+}
 
 /**
  * Parse the EventStream node to extract Event nodes and their
  * content.
  * @param {Element} element
  */
-function parseEventStream(element: Element): IManifestStreamEvent[] {
-  const streamEvents: IManifestStreamEvent[] = [];
+function parseEventStream(element: Element): IParsedStreamEvent[] {
+  const streamEvents: IParsedStreamEvent[] = [];
   const attributes: { schemeId?: string;
                       timescale: number;
                       value?: string; } =
@@ -49,7 +56,7 @@ function parseEventStream(element: Element): IManifestStreamEvent[] {
     const node = element.childNodes[k];
     if (node.nodeName === "Event" &&
         node.nodeType === Node.ELEMENT_NODE) {
-      let presentationTime;
+      let eventPresentationTime = 0;
       let duration;
       let id;
       const eventAttributes = (node as Element).attributes;
@@ -57,7 +64,7 @@ function parseEventStream(element: Element): IManifestStreamEvent[] {
         const attribute = eventAttributes[j];
         switch (attribute.name) {
           case "presentationTime":
-            presentationTime = parseInt(attribute.value, 10);
+            eventPresentationTime = parseInt(attribute.value, 10);
             break;
           case "duration":
             duration = parseInt(attribute.value, 10);
@@ -69,7 +76,7 @@ function parseEventStream(element: Element): IManifestStreamEvent[] {
             break;
         }
       }
-      const streamEvent = { presentationTime,
+      const streamEvent = { eventPresentationTime,
                             duration,
                             timescale: attributes.timescale,
                             id,
