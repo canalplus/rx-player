@@ -46,7 +46,8 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    initMediaKeys(mediaElement, keySystemsConfigs)
+    const mediaElementReady$ = observableOf(null);
+    initMediaKeys(mediaElement, keySystemsConfigs, mediaElementReady$)
       .pipe(take(1))
       .subscribe((result : unknown) => {
         expect(result).toEqual({
@@ -58,9 +59,7 @@ describe("core - eme - initMediaKeys", () => {
         expect(spyGetMediaKeysInfos)
           .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
 
-        expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
-        expect(spyAttachMediaKeys)
-          .toHaveBeenCalledWith(falseMediaKeys, mediaElement);
+        expect(spyAttachMediaKeys).toHaveBeenCalledTimes(0);
         done();
       });
   });
@@ -85,7 +84,8 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    initMediaKeys(mediaElement, keySystemsConfigs)
+    const mediaElementReady$ = observableOf(null);
+    initMediaKeys(mediaElement, keySystemsConfigs, mediaElementReady$)
       .pipe(skip(1))
       .subscribe((result : unknown) => {
         expect(result).toEqual({
@@ -123,7 +123,8 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    initMediaKeys(mediaElement, keySystemsConfigs)
+    const mediaElementReady$ = observableOf(null);
+    initMediaKeys(mediaElement, keySystemsConfigs, mediaElementReady$)
       .subscribe(null, (e : Error) => {
         expect(e).toBe(err);
 
@@ -159,7 +160,8 @@ describe("core - eme - initMediaKeys", () => {
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
 
     let eventReceived = false;
-    initMediaKeys(mediaElement, keySystemsConfigs)
+    const mediaElementReady$ = observableOf(null);
+    initMediaKeys(mediaElement, keySystemsConfigs, mediaElementReady$)
       .subscribe((evt : unknown) => {
         expect(evt).toEqual({
           type: "created-media-keys",

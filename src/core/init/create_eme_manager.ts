@@ -48,7 +48,8 @@ export interface IEMEDisabledEvent { type: "eme-disabled"; }
 export default function createEMEManager(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
-  contentProtections$ : Observable<IContentProtection>
+  contentProtections$ : Observable<IContentProtection>,
+  openMediaSource$? : Observable<unknown>
 ) : Observable<IEMEManagerEvent|IEMEDisabledEvent> {
   if (features.emeManager == null) {
     return observableMerge(
@@ -81,7 +82,11 @@ export default function createEMEManager(
   }
 
   log.debug("Init: Creating EMEManager");
-  return features.emeManager(mediaElement, keySystems, contentProtections$);
+  const mediaElementReady$ = openMediaSource$ ?? observableOf(null);
+  return features.emeManager(mediaElement,
+                             keySystems,
+                             contentProtections$,
+                             mediaElementReady$);
 }
 
 export { IEMEManagerEvent };

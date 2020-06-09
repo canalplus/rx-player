@@ -20,9 +20,11 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
+  map,
   mapTo,
   mergeMap,
 } from "rxjs/operators";
+import { setMediaKeys } from "../../compat";
 import attachMediaKeys from "./attach_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
 import {
@@ -39,16 +41,29 @@ import {
  */
 export default function initMediaKeys(
   mediaElement : HTMLMediaElement,
-  keySystemsConfigs: IKeySystemOption[]
+  keySystemsConfigs: IKeySystemOption[],
+  mediaElementReady$: Observable<unknown>
 ): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
+      let disableOldMediaKeys$: Observable<unknown> = observableOf(null);
+      if (mediaElement.mediaKeys !== null) {
+        disableOldMediaKeys$ = setMediaKeys(mediaElement, null);
+      }
       return observableConcat(
-        observableOf({ type: "created-media-keys" as const,
-                       value: mediaKeysInfos }),
-        attachMediaKeys(mediaKeysInfos, mediaElement)
-          .pipe(mapTo({ type: "attached-media-keys" as const,
-                        value: mediaKeysInfos, }))
+        disableOldMediaKeys$.pipe(
+          map(() => {
+            return { type: "created-media-keys" as const,
+                     value: mediaKeysInfos };
+          })
+        ),
+        mediaElementReady$.pipe(
+          mergeMap(() => {
+            return attachMediaKeys(mediaKeysInfos, mediaElement)
+              .pipe(mapTo({ type: "attached-media-keys" as const,
+                            value: mediaKeysInfos, }));
+          })
+        )
       );
     }));
 }
