@@ -183,7 +183,7 @@ export default class InitDataStore<T> {
   ) : number {
     // Begin by the last element as we usually re-encounter the last stored
     // initData sooner than the first one.
-    for (let i = this._storage.length - 1; i >= 0; i++) {
+    for (let i = this._storage.length - 1; i >= 0; i--) {
       const stored = this._storage[i];
       if (initDataHash === stored.initDataHash && initDataType === stored.initDataType) {
         if (areArraysOfNumbersEqual(initData, stored.initData)) {
