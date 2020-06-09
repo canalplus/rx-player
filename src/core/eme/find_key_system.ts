@@ -96,7 +96,7 @@ function checkCachedMediaKeySystemAccess(
       return false;
     }
 
-    if (ks.persistentLicense === true &&
+    if ((ks.persistentLicense === true || ks.persistentStateRequired === true) &&
         mksConfiguration.persistentState !== "required")
     {
       return false;
