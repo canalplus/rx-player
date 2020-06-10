@@ -47,7 +47,8 @@ export default function initMediaKeys(
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
       let disableOldMediaKeys$: Observable<unknown> = observableOf(null);
-      if (mediaElement.mediaKeys !== null) {
+      if (mediaElement.mediaKeys !== null &&
+          mediaKeysInfos.mediaKeys !== mediaElement.mediaKeys) {
         disableOldMediaKeys$ = setMediaKeys(mediaElement, null);
       }
       return observableConcat(
