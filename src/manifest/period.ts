@@ -18,9 +18,7 @@ import {
   isKnownError,
   MediaError,
 } from "../errors";
-import {
-  IParsedPeriod,
-} from "../parsers/manifest";
+import { IParsedPeriod } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
 import Adaptation, {

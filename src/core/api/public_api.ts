@@ -1967,8 +1967,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
       case "stream-event":
-      case "stream-event-skip":
         this._priv_onStreamEvent(event);
+      case "stream-event-skip":
+        this._priv_onStreamEventSkip(event);
         break;
       case "activePeriodChanged":
         this._priv_onActivePeriodChanged(event.value);
@@ -2114,8 +2115,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   private _priv_onStreamEvent(event: IStreamEvent) {
-    this.trigger(event.type === "stream-event" ? "streamEvent" :
-                                                 "streamEventSkip", event.value);
+    this.trigger("streamEvent", event.value);
+  }
+
+  private _priv_onStreamEventSkip(event: IStreamEvent) {
+    this.trigger("streamEventSkip", event.value);
   }
 
   /**

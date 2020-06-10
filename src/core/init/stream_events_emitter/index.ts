@@ -97,14 +97,14 @@ function streamEventsEmitter(manifest: Manifest,
         }),
         pairwise(),
         mergeMap(([ oldTick, newTick ]) => {
-          const { isSeeking: wasSeeking, currentTime: oldCurrentTime } = oldTick;
+          const { isSeeking: wasSeeking, currentTime: previousTime } = oldTick;
           const { isSeeking, currentTime } = newTick;
           const eventsToSend: IStreamEvent[] = [];
           for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
             const event = newScheduleEvents[i];
             const { start, end } = event;
-            const isBeingPlayed = eventsBeingPlayed.get(event);
-            if (isBeingPlayed === true &&
+            const isBeingPlayed = eventsBeingPlayed.has(event);
+            if (isBeingPlayed &&
                 (
                   start > currentTime ||
                   (end !== undefined && currentTime >= end)
@@ -118,21 +118,20 @@ function streamEventsEmitter(manifest: Manifest,
             } else if (start <= currentTime &&
                        end !== undefined &&
                        currentTime < end &&
-                       isBeingPlayed !== true) {
+                       !isBeingPlayed) {
               eventsToSend.push({ type: "stream-event",
                                   value: getStreamEventPublicData(event) });
               eventsBeingPlayed.set(event, true);
             } else if ((
-                         oldCurrentTime < start &&
+                         previousTime < start &&
                          currentTime >= (end ?? start)
                        ) ||
                        (
                          currentTime < start &&
-                         oldCurrentTime >= (end ?? start)
+                         previousTime >= (end ?? start)
                        )) {
               if (isSeeking &&
-                  !wasSeeking &&
-                  Math.abs(currentTime - oldCurrentTime) > 1) {
+                  !wasSeeking) {
                 eventsToSend.push({ type: "stream-event-skip",
                                     value: getStreamEventPublicData(event) });
               } else {

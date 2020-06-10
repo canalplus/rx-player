@@ -20,6 +20,9 @@ import { IStreamEventData } from "./types";
 
 /**
  * Refresh local scheduled events list
+ * @param {Array.<Object>} currentScheduledEvents
+ * @param {Object} manifest
+ * @returns {Array.<Object>}
  */
 function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
                             manifest: Manifest): IStreamEventData[] {
@@ -28,23 +31,21 @@ function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];
     const { streamEvents } = period;
-    if (streamEvents !== undefined) {
-      streamEvents.forEach(({ start, end, id, data }) => {
-        for (let j = 0; j < currentScheduledEvents.length; j++) {
-          const currentScheduleEvent = currentScheduledEvents[j];
-          if (areSameStreamEvents(currentScheduleEvent, { id, start, end })) {
-            scheduledEvents.push(currentScheduleEvent);
-            return;
-          }
+    streamEvents.forEach(({ start, end, id, data }) => {
+      for (let j = 0; j < currentScheduledEvents.length; j++) {
+        const currentScheduleEvent = currentScheduledEvents[j];
+        if (areSameStreamEvents(currentScheduleEvent, { id, start, end })) {
+          scheduledEvents.push(currentScheduleEvent);
+          return;
         }
+      }
 
-        const newScheduledEvent = { start,
-                                    end,
-                                    id,
-                                    data };
-        scheduledEvents.push(newScheduledEvent);
-      });
-    }
+      const newScheduledEvent = { start,
+                                  end,
+                                  id,
+                                  data };
+      scheduledEvents.push(newScheduledEvent);
+    });
   }
   return scheduledEvents;
 }
