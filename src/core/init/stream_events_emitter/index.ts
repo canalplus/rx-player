@@ -85,12 +85,20 @@ function streamEventsEmitter(manifest: Manifest,
       return EMPTY;
     }
     return observableCombineLatest([
-      interval(STREAM_EVENT_EMITTER_POLL_INTERVAL),
+      interval(STREAM_EVENT_EMITTER_POLL_INTERVAL)
+        .pipe(map(() => mediaElement.currentTime)),
       clock$,
     ]).pipe(
-        map(() => mediaElement.currentTime),
+        map(([mediaElementCurrentTime, clockTick]) => {
+          const { seeking } = clockTick;
+          return { isSeeking: seeking,
+                   currentTime: Math.max(mediaElementCurrentTime,
+                                         clockTick.currentTime) };
+        }),
         pairwise(),
-        mergeMap(([ oldCurrentTime, currentTime ]) => {
+        mergeMap(([ oldTick, newTick ]) => {
+          const { isSeeking: wasSeeking, currentTime: oldCurrentTime } = oldTick;
+          const { isSeeking, currentTime } = newTick;
           const eventsToSend: IStreamEvent[] = [];
           for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
             const event = newScheduleEvents[i];
@@ -98,7 +106,7 @@ function streamEventsEmitter(manifest: Manifest,
             const isBeingPlayed = eventsBeingPlayed.get(event);
             if (isBeingPlayed === true &&
                 (
-                  start > currentTime &&
+                  start > currentTime ||
                   (end !== undefined && currentTime >= end)
                 )
             ) {
@@ -118,8 +126,15 @@ function streamEventsEmitter(manifest: Manifest,
                          currentTime < start &&
                          oldCurrentTime >= (end ?? start)
                        )) {
-              eventsToSend.push({ type: "stream-event",
-                                  value: getStreamEventPublicData(event) });
+              if (isSeeking &&
+                  !wasSeeking &&
+                  Math.abs(currentTime - oldCurrentTime) > 1) {
+                eventsToSend.push({ type: "stream-event-skip",
+                                    value: getStreamEventPublicData(event) });
+              } else {
+                eventsToSend.push({ type: "stream-event",
+                                    value: getStreamEventPublicData(event) });
+              }
             }
           }
 

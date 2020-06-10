@@ -23,6 +23,6 @@ export interface IStreamEventData {
 }
 
 export interface IStreamEvent {
-  type: "stream-event";
+  type: "stream-event" | "stream-event-skip";
   value: IStreamEventData;
 }
