@@ -16,6 +16,7 @@
 
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import convertPayloadToHTML from "./convert_payload_to_html";
+import createStyleAttribute from "./create_style_attribute";
 import { IStyleElements } from "./parse_style_block";
 
 export interface IVTTHTMLCue { start : number;
@@ -37,12 +38,13 @@ export interface IVTTHTMLCue { start : number;
 export default function toHTML(
   cueObj : { start : number;
              end : number;
+             settings: Partial<Record<string, string>>;
              header? : string;
              payload : string[]; },
   styling : { classes : IStyleElements;
               global? : string; }
 ) : IVTTHTMLCue {
-  const { start, end, header, payload } = cueObj;
+  const { start, end, settings, header, payload } = cueObj;
 
   const region = document.createElement("div");
   const regionAttr = document.createAttribute("style");
@@ -57,8 +59,7 @@ export default function toHTML(
 
   // Get content, format and apply style.
   const pElement = document.createElement("p");
-  const pAttr = document.createAttribute("style");
-  pAttr.value = "text-align:center";
+  const pAttr = createStyleAttribute(settings);
   pElement.setAttributeNode(pAttr);
 
   const spanElement = document.createElement("span");
