@@ -18,6 +18,7 @@ export interface IStreamEventData {
   id?: string;
   start: number;
   end?: number;
+  onLeaving?: () => void;
   data: { type: "element";
           value: Element; };
 }

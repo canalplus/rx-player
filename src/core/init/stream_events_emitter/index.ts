@@ -110,6 +110,10 @@ function streamEventsEmitter(manifest: Manifest,
                   (end !== undefined && currentTime >= end)
                 )
             ) {
+              if (event.onLeaving !== undefined &&
+                  typeof event.onLeaving === "function") {
+                event.onLeaving();
+              }
               eventsBeingPlayed.delete(event);
             } else if (start <= currentTime &&
                        end !== undefined &&
