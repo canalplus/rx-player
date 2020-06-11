@@ -33,7 +33,7 @@ import config from "../../../config";
 import Manifest from "../../../manifest";
 import { fromEvent } from "../../../utils/event_emitter";
 import { IInitClockTick } from "../types";
-import getScheduledEvents from "./get_scheduled_events";
+import refreshScheduledEventsList from "./refresh_scheduled_events_list";
 import {
   IStreamEvent,
   IStreamEventData,
@@ -74,7 +74,7 @@ function streamEventsEmitter(manifest: Manifest,
   const scheduledEvents$ = fromEvent(manifest, "manifestUpdate").pipe(
     startWith(null),
     scan((oldScheduleEvents) => {
-      return getScheduledEvents(oldScheduleEvents, manifest);
+      return refreshScheduledEventsList(oldScheduleEvents, manifest);
     }, [] as IStreamEventData[])
   );
 

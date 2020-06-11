@@ -31,7 +31,7 @@ describe("core - init - getScheduledEvents", () => {
                                             end: 13.1,
                                             id: "4" }] },
                        ] };
-    const currentScheduledEvents: any[] = [
+    const oldScheduledEvents: any[] = [
       { start: 1000, end: 1000000, id: "must-disapear", _isBeingPlayed: true },
       { start: 0,
         end: 1,
@@ -39,10 +39,10 @@ describe("core - init - getScheduledEvents", () => {
         id: "1" },
     ];
     /* tslint:disable no-unsafe-any */
-    const getScheduledEvents = require("../stream_events_emitter/get_scheduled_events")
+    const refreshScheduledEventsList = require("../stream_events_emitter/refresh_scheduled_events_list.ts")
       .default;
 
-    const scheduledEvents = getScheduledEvents(currentScheduledEvents, manifest);
+    const scheduledEvents = refreshScheduledEventsList(oldScheduledEvents, manifest);
     /* tslint:enable no-unsafe-any */
     expect(scheduledEvents).toEqual([
       { start: 0,

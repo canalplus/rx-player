@@ -20,20 +20,20 @@ import { IStreamEventData } from "./types";
 
 /**
  * Refresh local scheduled events list
- * @param {Array.<Object>} currentScheduledEvents
+ * @param {Array.<Object>} oldScheduledEvents
  * @param {Object} manifest
  * @returns {Array.<Object>}
  */
-function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
-                            manifest: Manifest): IStreamEventData[] {
+function refreshScheduledEventsList(oldScheduledEvents: IStreamEventData[],
+                                    manifest: Manifest): IStreamEventData[] {
   const scheduledEvents: IStreamEventData[] = [];
   const { periods } = manifest;
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];
     const { streamEvents } = period;
     streamEvents.forEach(({ start, end, id, data }) => {
-      for (let j = 0; j < currentScheduledEvents.length; j++) {
-        const currentScheduleEvent = currentScheduledEvents[j];
+      for (let j = 0; j < oldScheduledEvents.length; j++) {
+        const currentScheduleEvent = oldScheduledEvents[j];
         if (areSameStreamEvents(currentScheduleEvent, { id, start, end })) {
           scheduledEvents.push(currentScheduleEvent);
           return;
@@ -50,4 +50,4 @@ function getScheduledEvents(currentScheduledEvents: IStreamEventData[],
   return scheduledEvents;
 }
 
-export default getScheduledEvents;
+export default refreshScheduledEventsList;
