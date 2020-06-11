@@ -191,8 +191,10 @@ export default class LoadedSessionsStore {
       const { mediaKeySession } = entry;
       log.debug("EME-LSS: Close MediaKeySession", mediaKeySession);
       return closeSession$(mediaKeySession)
-        .pipe(catchError((err) => {
-          log.error(err);
+        .pipe(catchError((err : unknown) => {
+          log.error("EME-LSS: Could not close MediaKeySession: " +
+                    (err instanceof Error ? err.toString() :
+                                            "Unknown error"));
           return observableOf(null);
         }));
     });

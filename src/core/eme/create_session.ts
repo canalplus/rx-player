@@ -162,8 +162,10 @@ export default function createSession(
         log.warn("EME: Previous persistent session not usable anymore.");
         return recreatePersistentSession();
       }),
-      catchError(() : Observable<INewSessionCreatedEvent> => {
-        log.warn("EME: Unable to load persistent session.");
+      catchError((err : unknown) : Observable<INewSessionCreatedEvent> => {
+        log.warn("EME: Unable to load persistent session: " +
+                 (err instanceof Error ? err.toString() :
+                                         "Unknown Error"));
         return recreatePersistentSession();
       })
     );
