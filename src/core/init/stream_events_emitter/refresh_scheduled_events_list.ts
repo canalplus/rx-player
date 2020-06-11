@@ -17,8 +17,8 @@
 import Manifest from "../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
 import {
+  INonFiniteStreamEventPayload,
   IStreamEventPayload,
-  IUnfiniteStreamEventPayload,
 } from "./types";
 
 /**
@@ -28,10 +28,10 @@ import {
  * @returns {Array.<Object>}
  */
 function refreshScheduledEventsList(
-  oldScheduledEvents: Array<IStreamEventPayload|IUnfiniteStreamEventPayload>,
+  oldScheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload>,
   manifest: Manifest
-): Array<IStreamEventPayload|IUnfiniteStreamEventPayload> {
-  const scheduledEvents: Array<IStreamEventPayload|IUnfiniteStreamEventPayload> = [];
+): Array<IStreamEventPayload|INonFiniteStreamEventPayload> {
+  const scheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload> = [];
   const { periods } = manifest;
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];

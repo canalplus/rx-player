@@ -35,9 +35,9 @@ import { fromEvent } from "../../../utils/event_emitter";
 import { IInitClockTick } from "../types";
 import refreshScheduledEventsList from "./refresh_scheduled_events_list";
 import {
+  INonFiniteStreamEventPayload,
   IStreamEvent,
   IStreamEventPayload,
-  IUnfiniteStreamEventPayload,
 } from "./types";
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
@@ -48,7 +48,7 @@ const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
  * @returns {Boolean}
  */
 function isFiniteStreamEvent(
-  evt: IStreamEventPayload|IUnfiniteStreamEventPayload
+  evt: IStreamEventPayload|INonFiniteStreamEventPayload
 ): evt is IStreamEventPayload {
   return (evt as IStreamEventPayload).end !== undefined;
 }
@@ -62,7 +62,7 @@ function isFiniteStreamEvent(
  * @param {number} timeB
  */
 function isEventIncludedBetweenTimes(
-  event: IStreamEventPayload|IUnfiniteStreamEventPayload,
+  event: IStreamEventPayload|INonFiniteStreamEventPayload,
   timeA: number,
   timeB: number
 ) {
@@ -85,18 +85,16 @@ function streamEventsEmitter(manifest: Manifest,
                              clock$: Observable<IInitClockTick>
 ): Observable<IStreamEvent> {
   const eventsBeingPlayed =
-    new WeakMap<IStreamEventPayload|IUnfiniteStreamEventPayload, true>();
+    new WeakMap<IStreamEventPayload|INonFiniteStreamEventPayload, true>();
   const scheduledEvents$ = fromEvent(manifest, "manifestUpdate").pipe(
     startWith(null),
     scan((oldScheduleEvents) => {
       return refreshScheduledEventsList(oldScheduleEvents, manifest);
-    }, [] as Array<IStreamEventPayload|IUnfiniteStreamEventPayload>)
+    }, [] as Array<IStreamEventPayload|INonFiniteStreamEventPayload>)
   );
 
-  return scheduledEvents$.pipe(switchMap(poll$));
-
   function poll$(
-    newScheduleEvents: Array<IStreamEventPayload|IUnfiniteStreamEventPayload>
+    newScheduleEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload>
   ) {
     if (newScheduleEvents.length === 0) {
       return EMPTY;
@@ -153,11 +151,13 @@ function streamEventsEmitter(manifest: Manifest,
         })
       );
   }
+
+  return scheduledEvents$.pipe(switchMap(poll$));
 }
 
 export default streamEventsEmitter;
 export {
   IStreamEvent,
-  IPublicUnfiniteStreamEvent,
+  IPublicNonFiniteStreamEvent,
   IPublicStreamEvent
 } from "./types";

@@ -31,7 +31,7 @@ export interface IStreamEventPayload {
                  data: IStreamEventData; };
 }
 
-export interface IUnfiniteStreamEventPayload {
+export interface INonFiniteStreamEventPayload {
   id?: string;
   start: number;
   data: IStreamEventData;
@@ -39,7 +39,7 @@ export interface IUnfiniteStreamEventPayload {
                  data: IStreamEventData; };
 }
 
-export interface IPublicUnfiniteStreamEvent {
+export interface IPublicNonFiniteStreamEvent {
   data: IStreamEventData;
   start: number;
 }
@@ -53,5 +53,5 @@ export interface IPublicStreamEvent {
 
 export interface IStreamEvent {
   type: "stream-event" | "stream-event-skip";
-  value: IPublicStreamEvent | IPublicUnfiniteStreamEvent;
+  value: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
 }
