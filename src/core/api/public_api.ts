@@ -1969,6 +1969,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     switch (event.type) {
       case "stream-event":
         this._priv_onStreamEvent(event);
+        break;
       case "stream-event-skip":
         this._priv_onStreamEventSkip(event);
         break;
