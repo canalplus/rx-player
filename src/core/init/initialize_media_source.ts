@@ -76,7 +76,7 @@ import manifestUpdateScheduler, {
 } from "./manifest_update_scheduler";
 import streamEventsEmitter, {
   IStreamEvent
-} from "./stream_events_emitter";
+} from "./stream_events_emitter/stream_events_emitter";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IDecipherabilityUpdateEvent,

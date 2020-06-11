@@ -100,7 +100,7 @@ import {
   IPublicStreamEvent,
   IPublicUnfiniteStreamEvent,
   IStreamEvent,
-} from "../init/stream_events_emitter";
+} from "../init/stream_events_emitter/stream_events_emitter";
 import SourceBuffersStore, {
   IBufferedChunk,
   IBufferType,
