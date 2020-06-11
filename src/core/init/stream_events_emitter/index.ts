@@ -64,7 +64,7 @@ export interface IPublicStreamEvent {
 function getPublicStreamEvent(
   streamEvent: IStreamEventPayload|IUnfiniteStreamEventPayload
 ): IPublicUnfiniteStreamEvent|IPublicStreamEvent {
-  if (isEndedStreamEvent(streamEvent)) {
+  if (isFiniteStreamEvent(streamEvent)) {
     return { data: streamEvent.data,
              start: streamEvent.start,
              end: streamEvent.end,
@@ -74,7 +74,12 @@ function getPublicStreamEvent(
            start: streamEvent.start };
 }
 
-function isEndedStreamEvent(
+/**
+ * Tells if a stream event has a duration
+ * @param {Object} evt
+ * @returns {Boolean}
+ */
+function isFiniteStreamEvent(
   evt: IStreamEventPayload|IUnfiniteStreamEventPayload
 ): evt is IStreamEventPayload {
   return (evt as IStreamEventPayload).end !== undefined;
@@ -126,8 +131,7 @@ function streamEventsEmitter(manifest: Manifest,
           for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
             const event = newScheduleEvents[i];
             const start = event.start;
-            const end = isEndedStreamEvent(event) ? event.end : undefined;
-            // const { start, end } = event;
+            const end = isFiniteStreamEvent(event) ? event.end : undefined;
             const isBeingPlayed = eventsBeingPlayed.has(event);
             if (isBeingPlayed &&
                 (
@@ -135,7 +139,7 @@ function streamEventsEmitter(manifest: Manifest,
                   (end !== undefined && currentTime >= end)
                 )
             ) {
-              if (isEndedStreamEvent(event) &&
+              if (isFiniteStreamEvent(event) &&
                   event.onLeaving !== undefined &&
                   typeof event.onLeaving === "function") {
                 event.onLeaving();
