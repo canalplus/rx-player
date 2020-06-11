@@ -16,7 +16,10 @@
 
 import Manifest from "../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
-import { IStreamEventData } from "./types";
+import {
+  IStreamEventPayload,
+  IUnfiniteStreamEventPayload,
+} from "./types";
 
 /**
  * Refresh local scheduled events list
@@ -24,9 +27,11 @@ import { IStreamEventData } from "./types";
  * @param {Object} manifest
  * @returns {Array.<Object>}
  */
-function refreshScheduledEventsList(oldScheduledEvents: IStreamEventData[],
-                                    manifest: Manifest): IStreamEventData[] {
-  const scheduledEvents: IStreamEventData[] = [];
+function refreshScheduledEventsList(
+  oldScheduledEvents: Array<IStreamEventPayload|IUnfiniteStreamEventPayload>,
+  manifest: Manifest
+): Array<IStreamEventPayload|IUnfiniteStreamEventPayload> {
+  const scheduledEvents: Array<IStreamEventPayload|IUnfiniteStreamEventPayload> = [];
   const { periods } = manifest;
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];

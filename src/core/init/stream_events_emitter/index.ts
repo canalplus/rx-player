@@ -37,9 +37,17 @@ import refreshScheduledEventsList from "./refresh_scheduled_events_list";
 import {
   IStreamEvent,
   IStreamEventData,
+  IStreamEventPayload,
+  IUnfiniteStreamEventPayload,
 } from "./types";
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
+
+export interface IStreamEventPublicData {
+  data: IStreamEventData;
+  start: number;
+  end?: number;
+}
 
 /**
  * Deconstruct and send back public properties on
@@ -48,16 +56,17 @@ const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
  * @returns {Object}
  */
 function getStreamEventPublicData(
-  streamEvent: IStreamEventData
-): IStreamEventData {
-  const { id,
-          data,
-          start,
-          end } = streamEvent;
-  return { id,
-           data,
-           start,
-           end };
+  streamEvent: IStreamEventPayload|IUnfiniteStreamEventPayload
+): IStreamEventPublicData {
+  return { data: streamEvent.data,
+           start: streamEvent.start,
+           end: (streamEvent as IStreamEventPayload).end };
+}
+
+function isEndedStreamEvent(
+  evt: IStreamEventPayload|IUnfiniteStreamEventPayload
+): evt is IStreamEventPayload {
+  return (evt as IStreamEventPayload).end !== undefined;
 }
 
 /**
@@ -70,17 +79,18 @@ function streamEventsEmitter(manifest: Manifest,
                              mediaElement: HTMLMediaElement,
                              clock$: Observable<IInitClockTick>
 ): Observable<IStreamEvent> {
-  const eventsBeingPlayed = new WeakMap<IStreamEventData, true>();
+  const eventsBeingPlayed =
+    new WeakMap<IStreamEventPayload|IUnfiniteStreamEventPayload, true>();
   const scheduledEvents$ = fromEvent(manifest, "manifestUpdate").pipe(
     startWith(null),
     scan((oldScheduleEvents) => {
       return refreshScheduledEventsList(oldScheduleEvents, manifest);
-    }, [] as IStreamEventData[])
+    }, [] as Array<IStreamEventPayload|IUnfiniteStreamEventPayload>)
   );
 
   return scheduledEvents$.pipe(switchMap(poll$));
 
-  function poll$(newScheduleEvents: IStreamEventData[]) {
+  function poll$(newScheduleEvents: Array<IStreamEventPayload|IUnfiniteStreamEventPayload>) {
     if (newScheduleEvents.length === 0) {
       return EMPTY;
     }
@@ -102,7 +112,9 @@ function streamEventsEmitter(manifest: Manifest,
           const eventsToSend: IStreamEvent[] = [];
           for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
             const event = newScheduleEvents[i];
-            const { start, end } = event;
+            const start = event.start;
+            const end = isEndedStreamEvent(event) ? event.end : undefined;
+            // const { start, end } = event;
             const isBeingPlayed = eventsBeingPlayed.has(event);
             if (isBeingPlayed &&
                 (
@@ -110,7 +122,8 @@ function streamEventsEmitter(manifest: Manifest,
                   (end !== undefined && currentTime >= end)
                 )
             ) {
-              if (event.onLeaving !== undefined &&
+              if (isEndedStreamEvent(event) &&
+                  event.onLeaving !== undefined &&
                   typeof event.onLeaving === "function") {
                 event.onLeaving();
               }
@@ -149,7 +162,4 @@ function streamEventsEmitter(manifest: Manifest,
 }
 
 export default streamEventsEmitter;
-export {
-  IStreamEvent,
-  IStreamEventData,
-} from "./types";
+export { IStreamEvent } from "./types";

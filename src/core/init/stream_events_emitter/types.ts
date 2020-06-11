@@ -15,15 +15,25 @@
  */
 
 export interface IStreamEventData {
+  type: "element";
+  value: Element;
+}
+
+export interface IStreamEventPayload {
   id?: string;
   start: number;
-  end?: number;
+  end: number;
   onLeaving?: () => void;
-  data: { type: "element";
-          value: Element; };
+  data: IStreamEventData;
+}
+
+export interface IUnfiniteStreamEventPayload {
+  id?: string;
+  start: number;
+  data: IStreamEventData;
 }
 
 export interface IStreamEvent {
   type: "stream-event" | "stream-event-skip";
-  value: IStreamEventData;
+  value: IStreamEventPayload | IUnfiniteStreamEventPayload;
 }
