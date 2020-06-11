@@ -136,8 +136,3 @@ function streamEventsEmitter(manifest: Manifest,
 }
 
 export default streamEventsEmitter;
-export {
-  IStreamEvent,
-  IPublicNonFiniteStreamEvent,
-  IPublicStreamEvent
-} from "./types";

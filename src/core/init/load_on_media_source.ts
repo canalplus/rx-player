@@ -52,7 +52,7 @@ import handleDiscontinuity from "./handle_discontinuity";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import streamEventsEmitter, {
   IStreamEvent
-} from "./stream_events_emitter/stream_events_emitter";
+} from "./stream_events_emitter";
 import {
   IInitClockTick,
   ILoadedEvent,
