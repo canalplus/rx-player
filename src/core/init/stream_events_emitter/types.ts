@@ -23,7 +23,7 @@ export interface IStreamEventPayload {
   id?: string;
   start: number;
   end: number;
-  onLeaving?: () => void;
+  onExit?: () => void;
   data: IStreamEventData;
 }
 

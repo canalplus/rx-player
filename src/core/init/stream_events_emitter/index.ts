@@ -52,7 +52,7 @@ export interface IPublicStreamEvent {
   data: IStreamEventData;
   start: number;
   end: number;
-  onLeaving?: () => void;
+  onExit?: () => void;
 }
 
 /**
@@ -68,7 +68,7 @@ function getPublicStreamEvent(
     return { data: streamEvent.data,
              start: streamEvent.start,
              end: streamEvent.end,
-             onLeaving: streamEvent.onLeaving };
+             onExit: streamEvent.onExit };
   }
   return { data: streamEvent.data,
            start: streamEvent.start };
@@ -159,9 +159,9 @@ function streamEventsEmitter(manifest: Manifest,
                   (end !== undefined && currentTime >= end)
               ) {
                 if (isFiniteStreamEvent(event) &&
-                    event.onLeaving !== undefined &&
-                    typeof event.onLeaving === "function") {
-                  event.onLeaving();
+                    event.onExit !== undefined &&
+                    typeof event.onExit === "function") {
+                  event.onExit();
                 }
                 eventsBeingPlayed.delete(event);
               }
