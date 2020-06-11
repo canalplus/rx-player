@@ -112,7 +112,7 @@ function streamEventsEmitter(manifest: Manifest,
         }),
         pairwise(),
         mergeMap(([ oldTick, newTick ]) => {
-          const { isSeeking: wasSeeking, currentTime: previousTime } = oldTick;
+          const { currentTime: previousTime } = oldTick;
           const { isSeeking, currentTime } = newTick;
           const eventsToSend: IStreamEvent[] = [];
           for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
@@ -139,7 +139,7 @@ function streamEventsEmitter(manifest: Manifest,
                                   value: event.publicEvent });
               eventsBeingPlayed.set(event, true);
             } else if (isEventIncludedBetweenTimes(event, previousTime, currentTime)) {
-              if (isSeeking && !wasSeeking) {
+              if (isSeeking) {
                 eventsToSend.push({ type: "stream-event-skip",
                                     value: event.publicEvent });
               } else {
