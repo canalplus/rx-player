@@ -74,7 +74,7 @@ import createMediaSourceLoader, {
 import manifestUpdateScheduler, {
   IManifestRefreshSchedulerEvent,
 } from "./manifest_update_scheduler";
-import streamEventsEmitter, {
+import {
   IStreamEvent
 } from "./stream_events_emitter/stream_events_emitter";
 import throwOnMediaError from "./throw_on_media_error";
@@ -382,18 +382,8 @@ export default function InitializeOnMediaSource(
       }
     }));
 
-  const streamEvents$ = loadContent$.pipe(
-    filter((evt) => evt.type === "loaded"),
-    mergeMap(() => {
-      return initialManifest$.pipe(
-        mergeMap(({ manifest }) => streamEventsEmitter(manifest, mediaElement, clock$))
-      );
-    })
-  );
-
   return observableMerge(initialManifestRequestWarnings$,
                          loadContent$,
                          mediaError$,
-                         emeManager$,
-                         streamEvents$);
+                         emeManager$);
 }
