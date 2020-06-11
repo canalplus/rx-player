@@ -97,8 +97,9 @@ import initializeMediaSourcePlayback, {
   IStalledEvent,
 } from "../init";
 import {
+  IPublicStreamEvent,
+  IPublicUnfiniteStreamEvent,
   IStreamEvent,
-  IStreamEventPublicData,
 } from "../init/stream_events_emitter";
 import SourceBuffersStore, {
   IBufferedChunk,
@@ -198,8 +199,8 @@ interface IPublicAPIEvent {
                                   representation : Representation; }>;
   seeking : null;
   seeked : null;
-  streamEvent : IStreamEventPublicData;
-  streamEventSkip : IStreamEventPublicData;
+  streamEvent : IPublicStreamEvent|IPublicUnfiniteStreamEvent;
+  streamEventSkip : IPublicStreamEvent|IPublicUnfiniteStreamEvent;
 }
 
 /**

@@ -43,10 +43,16 @@ import {
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
 
-export interface IStreamEventPublicData {
+export interface IPublicUnfiniteStreamEvent {
   data: IStreamEventData;
   start: number;
-  end?: number;
+}
+
+export interface IPublicStreamEvent {
+  data: IStreamEventData;
+  start: number;
+  end: number;
+  onLeaving?: () => void;
 }
 
 /**
@@ -55,12 +61,17 @@ export interface IStreamEventPublicData {
  * @param {Object} streamEvent
  * @returns {Object}
  */
-function getStreamEventPublicData(
+function getPublicStreamEvent(
   streamEvent: IStreamEventPayload|IUnfiniteStreamEventPayload
-): IStreamEventPublicData {
+): IPublicUnfiniteStreamEvent|IPublicStreamEvent {
+  if (isEndedStreamEvent(streamEvent)) {
+    return { data: streamEvent.data,
+             start: streamEvent.start,
+             end: streamEvent.end,
+             onLeaving: streamEvent.onLeaving };
+  }
   return { data: streamEvent.data,
-           start: streamEvent.start,
-           end: (streamEvent as IStreamEventPayload).end };
+           start: streamEvent.start };
 }
 
 function isEndedStreamEvent(
@@ -90,7 +101,9 @@ function streamEventsEmitter(manifest: Manifest,
 
   return scheduledEvents$.pipe(switchMap(poll$));
 
-  function poll$(newScheduleEvents: Array<IStreamEventPayload|IUnfiniteStreamEventPayload>) {
+  function poll$(
+    newScheduleEvents: Array<IStreamEventPayload|IUnfiniteStreamEventPayload>
+  ) {
     if (newScheduleEvents.length === 0) {
       return EMPTY;
     }
@@ -133,7 +146,7 @@ function streamEventsEmitter(manifest: Manifest,
                        currentTime < end &&
                        !isBeingPlayed) {
               eventsToSend.push({ type: "stream-event",
-                                  value: getStreamEventPublicData(event) });
+                                  value: getPublicStreamEvent(event) });
               eventsBeingPlayed.set(event, true);
             } else if ((
                          previousTime < start &&
@@ -146,10 +159,10 @@ function streamEventsEmitter(manifest: Manifest,
               if (isSeeking &&
                   !wasSeeking) {
                 eventsToSend.push({ type: "stream-event-skip",
-                                    value: getStreamEventPublicData(event) });
+                                    value: getPublicStreamEvent(event) });
               } else {
                 eventsToSend.push({ type: "stream-event",
-                                    value: getStreamEventPublicData(event) });
+                                    value: getPublicStreamEvent(event) });
               }
             }
           }
