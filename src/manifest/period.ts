@@ -18,21 +18,16 @@ import {
   isKnownError,
   MediaError,
 } from "../errors";
-import { IParsedPeriod } from "../parsers/manifest";
 import {
-  IParsedStreamEventData
-} from "../parsers/manifest/dash/node_parsers/EventStream";
+  IManifestStreamEvent,
+  IParsedPeriod,
+} from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
 import Adaptation, {
   IRepresentationFilter,
 } from "./adaptation";
 import { IAdaptationType } from "./types";
-
-export interface IManifestStreamEvent { start: number;
-                                        end?: number;
-                                        id?: string;
-                                        data: IParsedStreamEventData; }
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
@@ -139,20 +134,7 @@ export default class Period {
     }
     this.streamEvents = args.streamEvents === undefined ?
       [] :
-      args.streamEvents.map((streamEvent) => {
-        const { eventPresentationTime,
-                duration,
-                timescale,
-                id,
-                data } = streamEvent;
-        const start = this.start + (eventPresentationTime / timescale);
-        const end = duration !== undefined ? start + (duration / timescale) :
-                                             undefined;
-        return { start,
-                 end,
-                 id,
-                 data };
-      });
+      args.streamEvents;
   }
 
   /**
