@@ -45,11 +45,19 @@ function refreshScheduledEventsList(
         }
       }
 
-      const newScheduledEvent = { start,
-                                  end,
-                                  id,
-                                  data };
-      scheduledEvents.push(newScheduledEvent);
+      if (end === undefined) {
+        const newScheduledEvent = { start,
+                                    id,
+                                    data };
+        scheduledEvents.push(newScheduledEvent);
+      } else {
+        const newScheduledEvent = { start,
+                                    end,
+                                    id,
+                                    data };
+        scheduledEvents.push(newScheduledEvent);
+      }
+
     });
   }
   return scheduledEvents;

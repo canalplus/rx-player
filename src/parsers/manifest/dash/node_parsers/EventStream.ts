@@ -19,13 +19,16 @@ import {
   ValueParser,
 } from "./utils";
 
+export interface IParsedStreamEventData { type: "dash-stream-event";
+                                          value: { schemeIdUri: string;
+                                                   element: Element; }; }
+
 export interface IParsedStreamEvent {
   eventPresentationTime: number;
   duration?: number;
   timescale: number;
   id?: string;
-  data: { type: "element";
-          value: Element; };
+  data: IParsedStreamEventData;
 }
 
 /**
@@ -62,12 +65,15 @@ function parseEventStream(element: Element): [IParsedStreamEvent[], Error[]] {
 
   for (let k = 0; k < element.childNodes.length; k++) {
     const node = element.childNodes[k];
-    const streamEvent: IParsedStreamEvent = { id: undefined,
-                                              eventPresentationTime: 0,
-                                              duration: undefined,
-                                              timescale: attributes.timescale,
-                                              data: { type: "element" as const,
-                                                      value: node as Element } };
+    const streamEvent: IParsedStreamEvent =
+      { id: undefined,
+        eventPresentationTime: 0,
+        duration: undefined,
+        timescale: attributes.timescale,
+        data: { type: "dash-stream-event" as const,
+                value: { schemeIdUri: attributes.schemeId ?? "",
+                         element: node as Element }, }, };
+
     const parseEventValue = ValueParser(streamEvent, warnings);
 
     if (node.nodeName === "Event" &&

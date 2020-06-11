@@ -19,6 +19,9 @@ import {
   MediaError,
 } from "../errors";
 import { IParsedPeriod } from "../parsers/manifest";
+import {
+  IParsedStreamEventData
+} from "../parsers/manifest/dash/node_parsers/EventStream";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
 import Adaptation, {
@@ -26,13 +29,10 @@ import Adaptation, {
 } from "./adaptation";
 import { IAdaptationType } from "./types";
 
-export interface IManifestStreamEvent {
-  start: number;
-  end?: number;
-  id?: string;
-  data: { type: "element";
-          value: Element; };
-}
+export interface IManifestStreamEvent { start: number;
+                                        end?: number;
+                                        id?: string;
+                                        data: IParsedStreamEventData; }
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
