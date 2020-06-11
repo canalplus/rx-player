@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+import {
+  parseMPDInteger,
+  ValueParser,
+} from "./utils";
+
 export interface IParsedStreamEvent {
   eventPresentationTime: number;
   duration?: number;
@@ -28,13 +33,14 @@ export interface IParsedStreamEvent {
  * content.
  * @param {Element} element
  */
-function parseEventStream(element: Element): IParsedStreamEvent[] {
+function parseEventStream(element: Element): [IParsedStreamEvent[], Error[]] {
   const streamEvents: IParsedStreamEvent[] = [];
   const attributes: { schemeId?: string;
                       timescale: number;
-                      value?: string; } =
-                      { timescale: 1 };
+                      value?: string; } = { timescale: 1 };
 
+  const warnings: Error[] = [];
+  const parseValue = ValueParser(attributes, warnings);
   for (let i = 0; i < element.attributes.length; i++) {
     const attribute = element.attributes[i];
     switch (attribute.name) {
@@ -42,7 +48,9 @@ function parseEventStream(element: Element): IParsedStreamEvent[] {
         attributes.schemeId = attribute.value;
         break;
       case "timescale":
-        attributes.timescale = parseInt(attribute.value, 10);
+        parseValue(attribute.value, { asKey: "timescale",
+                                      parser: parseMPDInteger,
+                                      dashName: "timescale" });
         break;
       case "value":
         attributes.value = attribute.value;
@@ -54,38 +62,41 @@ function parseEventStream(element: Element): IParsedStreamEvent[] {
 
   for (let k = 0; k < element.childNodes.length; k++) {
     const node = element.childNodes[k];
+    const streamEvent: IParsedStreamEvent = { id: undefined,
+                                              eventPresentationTime: 0,
+                                              duration: undefined,
+                                              timescale: attributes.timescale,
+                                              data: { type: "element" as const,
+                                                      value: node as Element } };
+    const parseEventValue = ValueParser(streamEvent, warnings);
+
     if (node.nodeName === "Event" &&
         node.nodeType === Node.ELEMENT_NODE) {
-      let eventPresentationTime = 0;
-      let duration;
-      let id;
       const eventAttributes = (node as Element).attributes;
       for (let j = 0; j < eventAttributes.length; j++) {
         const attribute = eventAttributes[j];
         switch (attribute.name) {
           case "presentationTime":
-            eventPresentationTime = parseInt(attribute.value, 10);
+            parseEventValue(attribute.value, { asKey: "eventPresentationTime",
+                                               parser: parseMPDInteger,
+                                               dashName: "presentationTime" });
             break;
           case "duration":
-            duration = parseInt(attribute.value, 10);
+            parseEventValue(attribute.value, { asKey: "duration",
+                                               parser: parseMPDInteger,
+                                               dashName: "duration" });
             break;
           case "id":
-            id = attribute.value;
+            streamEvent.id = attribute.value;
             break;
           default:
             break;
         }
       }
-      const streamEvent = { eventPresentationTime,
-                            duration,
-                            timescale: attributes.timescale,
-                            id,
-                            data: { type: "element" as const,
-                                    value: node as Element } };
       streamEvents.push(streamEvent);
     }
   }
-  return streamEvents;
+  return [streamEvents, warnings];
 }
 
 export default parseEventStream;

@@ -86,8 +86,10 @@ function parsePeriodChildren(periodChildren : NodeList) : [IPeriodChildren, Erro
           break;
 
         case "EventStream":
-          const newStreamEvents = parseEventStream(currentElement);
+          const [newStreamEvents, eventStreamWarnings] = parseEventStream(currentElement);
           streamEvents.push(...newStreamEvents);
+          warnings = warnings.concat(eventStreamWarnings);
+          break;
       }
     }
   }
