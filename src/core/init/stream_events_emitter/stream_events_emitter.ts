@@ -54,27 +54,6 @@ function isFiniteStreamEvent(
 }
 
 /**
- * Tells if an event is included between two times.
- * We don't know well calling this function which time
- * is inferior to the other.
- * @param {Object} event
- * @param {number} timeA
- * @param {number} timeB
- */
-function isEventIncludedBetweenTimes(
-  event: IStreamEventPayload|INonFiniteStreamEventPayload,
-  timeA: number,
-  timeB: number
-) {
-  const { start } = event;
-  const end = isFiniteStreamEvent(event) ? event.end : undefined;
-  const minTime = Math.min(timeA, timeB);
-  const maxTime = Math.max(timeA, timeB);
-  return minTime < start &&
-         maxTime >= (end ?? start);
-}
-
-/**
  * Get events from manifest and emit each time an event has to be emitted
  * @param {Object} manifest
  * @param {HTMLMediaElement} mediaElement
@@ -135,7 +114,8 @@ function streamEventsEmitter(manifest: Manifest,
               eventsToSend.push({ type: "stream-event",
                                   value: event.publicEvent });
               eventsBeingPlayed.set(event, true);
-            } else if (isEventIncludedBetweenTimes(event, previousTime, currentTime)) {
+            } else if (previousTime < start &&
+                       currentTime >= (end ?? start)) {
               if (isSeeking) {
                 eventsToSend.push({ type: "stream-event-skip",
                                     value: event.publicEvent });
