@@ -86,6 +86,27 @@ function isFiniteStreamEvent(
 }
 
 /**
+ * Tells if an event is included between two times.
+ * We don't know well calling this function which time
+ * is inferior to the other.
+ * @param {Object} event
+ * @param {number} timeA
+ * @param {number} timeB
+ */
+function isEventIncludedBetweenTimes(
+  event: IStreamEventPayload|IUnfiniteStreamEventPayload,
+  timeA: number,
+  timeB: number
+) {
+  const { start } = event;
+  const end = isFiniteStreamEvent(event) ? event.end : undefined;
+  const minTime = Math.min(timeA, timeB);
+  const maxTime = Math.max(timeA, timeB);
+  return minTime < start &&
+         maxTime >= (end ?? start);
+}
+
+/**
  * Get events from manifest and emit each time an event has to be emitted
  * @param {Object} manifest
  * @param {HTMLMediaElement} mediaElement
@@ -133,33 +154,24 @@ function streamEventsEmitter(manifest: Manifest,
             const start = event.start;
             const end = isFiniteStreamEvent(event) ? event.end : undefined;
             const isBeingPlayed = eventsBeingPlayed.has(event);
-            if (isBeingPlayed &&
-                (
-                  start > currentTime ||
+            if (isBeingPlayed) {
+              if (start > currentTime ||
                   (end !== undefined && currentTime >= end)
-                )
-            ) {
-              if (isFiniteStreamEvent(event) &&
-                  event.onLeaving !== undefined &&
-                  typeof event.onLeaving === "function") {
-                event.onLeaving();
+              ) {
+                if (isFiniteStreamEvent(event) &&
+                    event.onLeaving !== undefined &&
+                    typeof event.onLeaving === "function") {
+                  event.onLeaving();
+                }
+                eventsBeingPlayed.delete(event);
               }
-              eventsBeingPlayed.delete(event);
             } else if (start <= currentTime &&
                        end !== undefined &&
-                       currentTime < end &&
-                       !isBeingPlayed) {
+                       currentTime < end) {
               eventsToSend.push({ type: "stream-event",
                                   value: getPublicStreamEvent(event) });
               eventsBeingPlayed.set(event, true);
-            } else if ((
-                         previousTime < start &&
-                         currentTime >= (end ?? start)
-                       ) ||
-                       (
-                         currentTime < start &&
-                         previousTime >= (end ?? start)
-                       )) {
+            } else if (isEventIncludedBetweenTimes(event, previousTime, currentTime)) {
               if (isSeeking &&
                   !wasSeeking) {
                 eventsToSend.push({ type: "stream-event-skip",
