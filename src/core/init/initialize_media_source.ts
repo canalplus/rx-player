@@ -253,10 +253,6 @@ export default function InitializeOnMediaSource(
   const initialManifest$ = initialManifestRequest$
     .pipe(filter((evt) : evt is IManifestFetcherParsedResult => evt.type === "parsed"));
 
-  const streamEvents$ = initialManifest$.pipe(
-    mergeMap(({ manifest }) => streamEventsEmitter(manifest, mediaElement, clock$))
-  );
-
   /** Load and play the content asked. */
   const loadContent$ = observableCombineLatest([initialManifest$,
                                                 openMediaSource$,
@@ -385,6 +381,15 @@ export default function InitializeOnMediaSource(
         return observableMerge(handleReloads$, currentLoad$);
       }
     }));
+
+  const streamEvents$ = loadContent$.pipe(
+    filter((evt) => evt.type === "loaded"),
+    mergeMap(() => {
+      return initialManifest$.pipe(
+        mergeMap(({ manifest }) => streamEventsEmitter(manifest, mediaElement, clock$))
+      );
+    })
+  );
 
   return observableMerge(initialManifestRequestWarnings$,
                          loadContent$,
