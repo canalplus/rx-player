@@ -16,18 +16,21 @@
 
 import {
   combineLatest as observableCombineLatest,
+  concat as observableConcat,
   EMPTY,
   interval,
   Observable,
   of as observableOf,
 } from "rxjs";
 import {
+  ignoreElements,
   map,
   mergeMap,
   pairwise,
   scan,
   startWith,
   switchMap,
+  tap,
 } from "rxjs/operators";
 import config from "../../../config";
 import Manifest from "../../../manifest";
@@ -92,6 +95,7 @@ function streamEventsEmitter(manifest: Manifest,
           const { currentTime: previousTime } = oldTick;
           const { isSeeking, currentTime } = newTick;
           const eventsToSend: IStreamEvent[] = [];
+          const exitCallbacks: Array<(() => void)> = [];
           for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
             const event = newScheduleEvents[i];
             const start = event.start;
@@ -104,7 +108,7 @@ function streamEventsEmitter(manifest: Manifest,
               ) {
                 if (isFiniteStreamEvent(event) &&
                     typeof event.publicEvent.onExit === "function") {
-                  event.publicEvent.onExit();
+                  exitCallbacks.push(event.publicEvent.onExit);
                 }
                 eventsBeingPlayed.delete(event);
               }
@@ -122,12 +126,22 @@ function streamEventsEmitter(manifest: Manifest,
               } else {
                 eventsToSend.push({ type: "stream-event",
                                     value: event.publicEvent });
+                if (isFiniteStreamEvent(event) &&
+                    typeof event.publicEvent.onExit === "function") {
+                  exitCallbacks.push(event.publicEvent.onExit);
+                }
               }
             }
           }
 
-          return eventsToSend.length > 0 ? observableOf(...eventsToSend) :
-                                           EMPTY;
+          return observableConcat(
+            eventsToSend.length > 0 ? observableOf(...eventsToSend) :
+                                      EMPTY,
+            exitCallbacks.length > 0 ? observableOf(...exitCallbacks).pipe(
+              tap((callback) => callback()),
+              ignoreElements()
+            ) : EMPTY
+          );
         })
       );
   }
