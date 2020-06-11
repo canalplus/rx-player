@@ -36,43 +36,11 @@ import { IInitClockTick } from "../types";
 import refreshScheduledEventsList from "./refresh_scheduled_events_list";
 import {
   IStreamEvent,
-  IStreamEventData,
   IStreamEventPayload,
   IUnfiniteStreamEventPayload,
 } from "./types";
 
 const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
-
-export interface IPublicUnfiniteStreamEvent {
-  data: IStreamEventData;
-  start: number;
-}
-
-export interface IPublicStreamEvent {
-  data: IStreamEventData;
-  start: number;
-  end: number;
-  onExit?: () => void;
-}
-
-/**
- * Deconstruct and send back public properties on
- * stream event data
- * @param {Object} streamEvent
- * @returns {Object}
- */
-function getPublicStreamEvent(
-  streamEvent: IStreamEventPayload|IUnfiniteStreamEventPayload
-): IPublicUnfiniteStreamEvent|IPublicStreamEvent {
-  if (isFiniteStreamEvent(streamEvent)) {
-    return { data: streamEvent.data,
-             start: streamEvent.start,
-             end: streamEvent.end,
-             onExit: streamEvent.onExit };
-  }
-  return { data: streamEvent.data,
-           start: streamEvent.start };
-}
 
 /**
  * Tells if a stream event has a duration
@@ -134,15 +102,13 @@ function streamEventsEmitter(manifest: Manifest,
       return EMPTY;
     }
     return observableCombineLatest([
-      interval(STREAM_EVENT_EMITTER_POLL_INTERVAL)
-        .pipe(map(() => mediaElement.currentTime)),
+      interval(STREAM_EVENT_EMITTER_POLL_INTERVAL),
       clock$,
     ]).pipe(
-        map(([mediaElementCurrentTime, clockTick]) => {
+        map(([_, clockTick]) => {
           const { seeking } = clockTick;
           return { isSeeking: seeking,
-                   currentTime: Math.max(mediaElementCurrentTime,
-                                         clockTick.currentTime) };
+                   currentTime: mediaElement.currentTime };
         }),
         pairwise(),
         mergeMap(([ oldTick, newTick ]) => {
@@ -152,16 +118,17 @@ function streamEventsEmitter(manifest: Manifest,
           for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
             const event = newScheduleEvents[i];
             const start = event.start;
-            const end = isFiniteStreamEvent(event) ? event.end : undefined;
+            const end = isFiniteStreamEvent(event) ? event.end :
+                                                     undefined;
             const isBeingPlayed = eventsBeingPlayed.has(event);
             if (isBeingPlayed) {
               if (start > currentTime ||
                   (end !== undefined && currentTime >= end)
               ) {
                 if (isFiniteStreamEvent(event) &&
-                    event.onExit !== undefined &&
-                    typeof event.onExit === "function") {
-                  event.onExit();
+                    event.publicEvent.onExit !== undefined &&
+                    typeof event.publicEvent.onExit === "function") {
+                  event.publicEvent.onExit();
                 }
                 eventsBeingPlayed.delete(event);
               }
@@ -169,16 +136,15 @@ function streamEventsEmitter(manifest: Manifest,
                        end !== undefined &&
                        currentTime < end) {
               eventsToSend.push({ type: "stream-event",
-                                  value: getPublicStreamEvent(event) });
+                                  value: event.publicEvent });
               eventsBeingPlayed.set(event, true);
             } else if (isEventIncludedBetweenTimes(event, previousTime, currentTime)) {
-              if (isSeeking &&
-                  !wasSeeking) {
+              if (isSeeking && !wasSeeking) {
                 eventsToSend.push({ type: "stream-event-skip",
-                                    value: getPublicStreamEvent(event) });
+                                    value: event.publicEvent });
               } else {
                 eventsToSend.push({ type: "stream-event",
-                                    value: getPublicStreamEvent(event) });
+                                    value: event.publicEvent });
               }
             }
           }
@@ -191,4 +157,8 @@ function streamEventsEmitter(manifest: Manifest,
 }
 
 export default streamEventsEmitter;
-export { IStreamEvent } from "./types";
+export {
+  IStreamEvent,
+  IPublicUnfiniteStreamEvent,
+  IPublicStreamEvent
+} from "./types";

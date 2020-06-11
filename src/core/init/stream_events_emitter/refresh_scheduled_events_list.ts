@@ -48,13 +48,18 @@ function refreshScheduledEventsList(
       if (end === undefined) {
         const newScheduledEvent = { start,
                                     id,
-                                    data };
+                                    data,
+                                    publicEvent: { start,
+                                                   data }};
         scheduledEvents.push(newScheduledEvent);
       } else {
         const newScheduledEvent = { start,
                                     end,
                                     id,
-                                    data };
+                                    data,
+                                    publicEvent: { start,
+                                                   end,
+                                                   data }};
         scheduledEvents.push(newScheduledEvent);
       }
 

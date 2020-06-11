@@ -24,17 +24,34 @@ export interface IStreamEventPayload {
   id?: string;
   start: number;
   end: number;
-  onExit?: () => void;
   data: IStreamEventData;
+  publicEvent: { start: number;
+                 end: number;
+                 onExit?: () => void;
+                 data: IStreamEventData; };
 }
 
 export interface IUnfiniteStreamEventPayload {
   id?: string;
   start: number;
   data: IStreamEventData;
+  publicEvent: { start: number;
+                 data: IStreamEventData; };
+}
+
+export interface IPublicUnfiniteStreamEvent {
+  data: IStreamEventData;
+  start: number;
+}
+
+export interface IPublicStreamEvent {
+  data: IStreamEventData;
+  start: number;
+  end: number;
+  onExit?: () => void;
 }
 
 export interface IStreamEvent {
   type: "stream-event" | "stream-event-skip";
-  value: IStreamEventPayload | IUnfiniteStreamEventPayload;
+  value: IPublicStreamEvent | IPublicUnfiniteStreamEvent;
 }
