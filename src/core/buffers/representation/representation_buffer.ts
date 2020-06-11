@@ -61,6 +61,7 @@ import {
   ISegmentParserParsedInitSegment,
   ISegmentParserSegment,
 } from "../../../transports";
+import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
 import SimpleSet from "../../../utils/simple_set";
 import {
@@ -454,7 +455,7 @@ export default function RepresentationBuffer<T>({
             } else if (index.canBeOutOfSyncError(evt.value.error, retriedSegment)) {
               return observableOf(EVENTS.manifestMightBeOufOfSync());
             }
-            return EMPTY;
+            return EMPTY; // else, ignore.
           }));
 
       case "parsed-init-segment":
@@ -489,6 +490,9 @@ export default function RepresentationBuffer<T>({
               loadedSegmentPendingPush.remove(segment.id);
             }));
       }
+
+      default:
+        assertUnreachable(evt);
     }
   }
 }
