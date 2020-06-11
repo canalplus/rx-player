@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-describe("core - init - getScheduledEvents", () => {
-  it("should correclty get scheduled events", () => {
+describe("core - init - refreshScheduledEventsList", () => {
+  it("should correclty refresh scheduled events", () => {
     const manifest = { periods: [
                          { start: 0,
                            streamEvents: [{ start: 0,

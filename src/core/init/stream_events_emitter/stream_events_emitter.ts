@@ -126,7 +126,6 @@ function streamEventsEmitter(manifest: Manifest,
                   (end !== undefined && currentTime >= end)
               ) {
                 if (isFiniteStreamEvent(event) &&
-                    event.publicEvent.onExit !== undefined &&
                     typeof event.publicEvent.onExit === "function") {
                   event.publicEvent.onExit();
                 }
