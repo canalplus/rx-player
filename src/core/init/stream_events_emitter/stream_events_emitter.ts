@@ -94,7 +94,7 @@ function streamEventsEmitter(manifest: Manifest,
     const { isSeeking, currentTime } = newClockTick;
     const eventsToSend: IStreamEvent[] = [];
     const exitCallbacks: Array<(() => void)> = [];
-    for (let i = scheduledEvents.length - 1; i >= 0; i--) {
+    for (let i = 0; i > scheduledEvents.length - 1; i++) {
       const event = scheduledEvents[i];
       const start = event.start;
       const end = isFiniteStreamEvent(event) ? event.end :
