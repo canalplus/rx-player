@@ -32,7 +32,6 @@ import {
   Subscription,
 } from "rxjs";
 import {
-  catchError,
   distinctUntilChanged,
   filter,
   map,
@@ -1928,6 +1927,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Reset all state properties relative to a playing content.
    */
   private _priv_cleanUpCurrentContentState() : void {
+    log.debug("Locking `contentLock` to clean-up the current content.");
+
     // lock playback of new contents while cleaning up is pending
     this._priv_contentLock$.next(true);
 
@@ -1940,13 +1941,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // EME cleaning
     const freeUpContentLock = () => {
+      log.debug("Unlocking `contentLock`. Next content can begin.");
       this._priv_contentLock$.next(false);
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
       clearEMESession(this.videoElement)
-        .pipe(catchError(() => EMPTY))
-        .subscribe(noop, freeUpContentLock, freeUpContentLock);
+        .subscribe(
+          noop,
+          (err : unknown) => {
+            log.error("API: An error arised when trying to clean-up the EME session:" +
+                      (err instanceof Error ? err.toString() :
+                                              "Unknown Error"));
+            freeUpContentLock();
+          },
+          () => {
+            log.debug("API: EME session cleaned-up with success!");
+            freeUpContentLock();
+          });
     } else {
       freeUpContentLock();
     }
@@ -2054,6 +2066,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Clean-up ressources and signal that the content has ended.
    */
   private _priv_onPlaybackFinished() : void {
+    log.info("API: Previous playback finished. Stopping and cleaning-up...");
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
     this._priv_setPlayerState(PLAYER_STATES.ENDED);
