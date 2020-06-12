@@ -124,10 +124,12 @@ function streamEventsEmitter(manifest: Manifest,
         } else {
           eventsToSend.push({ type: "stream-event",
                               value: event.publicEvent });
-          if (isFiniteStreamEvent(event) &&
-              typeof event.publicEvent.onExit === "function") {
-            exitCallbacks.push(event.publicEvent.onExit);
-          }
+          exitCallbacks.push(() => {
+            if (isFiniteStreamEvent(event) &&
+                typeof event.publicEvent.onExit === "function") {
+              event.publicEvent.onExit();
+            }
+          });
         }
       }
     }
