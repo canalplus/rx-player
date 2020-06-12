@@ -52,6 +52,7 @@ import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
   fromEvent,
 } from "../../utils/event_emitter";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Logger from "../../utils/logger";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
@@ -723,7 +724,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       playback$ = publish<IInitEvent>()(init$);
     } else {
-      if (features.directfile == null) {
+      if (features.directfile === null) {
         throw new Error("DirectFile feature not activated in your build.");
       }
 
@@ -941,7 +942,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
     if (currentPeriod === null ||
         activeAdaptations === null ||
-        activeAdaptations[currentPeriod.id] == null)
+        isNullOrUndefined(activeAdaptations[currentPeriod.id]))
     {
       return null;
     }
@@ -1031,7 +1032,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (isDirectFile) {
       return url;
     }
-    if (manifest != null) {
+    if (manifest !== null) {
       return manifest.getUrl();
     }
     return undefined;
@@ -1117,7 +1118,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (isDirectFile) {
       return this.videoElement.currentTime;
     }
-    if (manifest != null) {
+    if (manifest !== null) {
       const currentTime = this.videoElement.currentTime;
       const ast = manifest.availabilityStartTime !== undefined ?
         manifest.availabilityStartTime :
@@ -1174,7 +1175,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return [];
     }
     const adaptations = activeAdaptations[currentPeriod.id];
-    if (adaptations === undefined || adaptations.video == null) {
+    if (adaptations === undefined || isNullOrUndefined(adaptations.video)) {
       return [];
     }
 
@@ -1194,7 +1195,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return [];
     }
     const adaptations = activeAdaptations[currentPeriod.id];
-    if (adaptations === undefined || adaptations.audio == null) {
+    if (adaptations === undefined || isNullOrUndefined(adaptations.audio)) {
       return [];
     }
 
@@ -1223,7 +1224,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getVideoBitrate() : number|undefined {
     const representations = this._priv_getCurrentRepresentations();
-    if (representations === null || representations.video == null) {
+    if (representations === null || isNullOrUndefined(representations.video)) {
       return undefined;
     }
     return representations.video.bitrate;
@@ -1235,7 +1236,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getAudioBitrate() : number|undefined {
     const representations = this._priv_getCurrentRepresentations();
-    if (representations === null || representations.audio == null) {
+    if (representations === null || isNullOrUndefined(representations.audio)) {
       return undefined;
     }
     return representations.audio.bitrate;
@@ -1268,7 +1269,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const playPromise = this.videoElement.play();
     /* tslint:disable no-unbound-method */
-    if (playPromise == null || typeof playPromise.catch !== "function") {
+    if (isNullOrUndefined(playPromise) || typeof playPromise.catch !== "function") {
     /* tslint:enable no-unbound-method */
       return PPromise.resolve();
     }
@@ -1323,11 +1324,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                         position? : number;
                         wallClockTime? : number; } = time;
       const currentTs = this.videoElement.currentTime;
-      if (timeObj.relative != null) {
+      if (!isNullOrUndefined(timeObj.relative)) {
         positionWanted = currentTs + timeObj.relative;
-      } else if (timeObj.position != null) {
+      } else if (!isNullOrUndefined(timeObj.position)) {
         positionWanted = timeObj.position;
-      } else if (timeObj.wallClockTime != null) {
+      } else if (!isNullOrUndefined(timeObj.wallClockTime)) {
         positionWanted = (isDirectFile || manifest === null) ?
           timeObj.wallClockTime :
           timeObj.wallClockTime - (
@@ -1872,7 +1873,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const { manifest } = this._priv_contentInfos;
-    if (manifest != null) {
+    if (manifest !== null) {
       return manifest.getMinimumPosition();
     }
     return null;
@@ -1896,7 +1897,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return this.videoElement.duration;
     }
 
-    if (manifest != null) {
+    if (manifest !== null) {
       return manifest.getMaximumPosition();
     }
     return null;
@@ -1942,7 +1943,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_contentLock$.next(false);
     };
 
-    if (this.videoElement != null) {
+    if (!isNullOrUndefined(this.videoElement)) {
       clearEMESession(this.videoElement)
         .pipe(catchError(() => EMPTY))
         .subscribe(noop, freeUpContentLock, freeUpContentLock);
@@ -2007,7 +2008,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         // @deprecated
         const { content, segmentData } = event.value;
         if (content.adaptation.type === "image") {
-          if (segmentData != null && (segmentData as { type : string }).type === "bif") {
+          if (!isNullOrUndefined(segmentData) &&
+              (segmentData as { type : string }).type === "bif")
+          {
             const imageData = (segmentData as { data : IBifThumbnail[] }).data;
             /* tslint:disable deprecation */
             this._priv_contentInfos.thumbnails = imageData;
@@ -2097,7 +2100,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(() => {
         // Update the tracks chosen if it changed
-        if (this._priv_trackChoiceManager != null) {
+        if (this._priv_trackChoiceManager !== null) {
           this._priv_trackChoiceManager.update();
         }
       });
@@ -2126,7 +2129,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.trigger("availableVideoTracksChange", this.getAvailableVideoTracks());
 
     // Emit intial events for the Period
-    if (this._priv_trackChoiceManager != null) {
+    if (this._priv_trackChoiceManager !== null) {
       const audioTrack = this._priv_trackChoiceManager.getChosenAudioTrack(period);
       const textTrack = this._priv_trackChoiceManager.getChosenTextTrack(period);
       const videoTrack = this._priv_trackChoiceManager.getChosenVideoTrack(period);
@@ -2198,7 +2201,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       default:
         const adaptations = period.adaptations[type];
-        if (adaptations != null && adaptations.length > 0) {
+        if (!isNullOrUndefined(adaptations) && adaptations.length > 0) {
           adaptation$.next(adaptations[0]);
         } else {
           adaptation$.next(null);
@@ -2222,7 +2225,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "audio":
       case "text":
       case "video":
-        if (this._priv_trackChoiceManager != null) {
+        if (this._priv_trackChoiceManager !== null) {
           this._priv_trackChoiceManager.removePeriod(type, period);
         }
         break;
@@ -2233,7 +2236,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return ;
     }
     const { activeAdaptations, activeRepresentations } = this._priv_contentInfos;
-    if (activeAdaptations != null && activeAdaptations[period.id] != null) {
+    if (!isNullOrUndefined(activeAdaptations) &&
+        !isNullOrUndefined(activeAdaptations[period.id]))
+    {
       const activePeriodAdaptations = activeAdaptations[period.id];
       delete activePeriodAdaptations[type];
       if (Object.keys(activePeriodAdaptations).length === 0) {
@@ -2241,7 +2246,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
     }
 
-    if (activeRepresentations != null && activeRepresentations[period.id] != null) {
+    if (!isNullOrUndefined(activeRepresentations) &&
+        !isNullOrUndefined(activeRepresentations[period.id]))
+    {
       const activePeriodRepresentations = activeRepresentations[period.id];
       delete activePeriodRepresentations[type];
       if (Object.keys(activePeriodRepresentations).length === 0) {
@@ -2289,16 +2296,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { activeAdaptations, currentPeriod } = this._priv_contentInfos;
     const activePeriodAdaptations = activeAdaptations[period.id];
-    if (activePeriodAdaptations == null) {
+    if (isNullOrUndefined(activePeriodAdaptations)) {
       activeAdaptations[period.id] = { [type]: adaptation };
     } else {
       activePeriodAdaptations[type] = adaptation;
     }
 
-    if (this._priv_trackChoiceManager != null &&
-        currentPeriod != null && period != null &&
-        period.id === currentPeriod.id
-    ) {
+    if (this._priv_trackChoiceManager !== null &&
+        currentPeriod !== null && !isNullOrUndefined(period) &&
+        period.id === currentPeriod.id)
+    {
       switch (type) {
         case "audio":
           const audioTrack = this._priv_trackChoiceManager
@@ -2356,14 +2363,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const { activeRepresentations, currentPeriod } = this._priv_contentInfos;
 
     const activePeriodRepresentations = activeRepresentations[period.id];
-    if (activePeriodRepresentations == null) {
+    if (isNullOrUndefined(activePeriodRepresentations)) {
       activeRepresentations[period.id] = { [type]: representation };
     } else {
       activePeriodRepresentations[type] = representation;
     }
 
     const bitrate = representation?.bitrate ?? -1;
-    if (period != null && currentPeriod != null && currentPeriod.id === period.id) {
+    if (!isNullOrUndefined(period) &&
+        currentPeriod !== null &&
+        currentPeriod.id === period.id)
+    {
       if (type === "video") {
         this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", bitrate);
       } else if (type === "audio") {
@@ -2385,7 +2395,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   } : { type : IBufferType;
         bitrate : number|undefined; }
   ) : void {
-    if (bitrate != null) {
+    if (bitrate !== undefined) {
       this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
     this.trigger("bitrateEstimationChange", { type, bitrate });
@@ -2450,7 +2460,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
-    if ((!isDirectFile && manifest === null) || clockTick == null) {
+    if ((!isDirectFile && manifest === null) || isNullOrUndefined(clockTick)) {
       return;
     }
 
@@ -2468,13 +2478,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     };
 
     if (manifest !== null &&
-        maximumPosition != null &&
+        maximumPosition !== undefined &&
         manifest.isLive &&
         clockTick.currentTime > 0
     ) {
-      const ast = manifest.availabilityStartTime == null ?
-        0 :
-        manifest.availabilityStartTime;
+      const ast = manifest.availabilityStartTime ?? 0;
       positionData.wallClockTime = clockTick.currentTime + ast;
       positionData.liveGap = maximumPosition - clockTick.currentTime;
     }
@@ -2523,7 +2531,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
     if (currentPeriod === null ||
         activeRepresentations === null ||
-        activeRepresentations[currentPeriod.id] == null)
+        isNullOrUndefined(activeRepresentations[currentPeriod.id]))
     {
       return null;
     }
