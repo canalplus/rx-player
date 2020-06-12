@@ -40,6 +40,7 @@ import { IInitClockTick } from "../types";
 import refreshScheduledEventsList from "./refresh_scheduled_events_list";
 import {
   INonFiniteStreamEventPayload,
+  IPublicStreamEvent,
   IStreamEvent,
   IStreamEventPayload,
 } from "./types";
@@ -93,8 +94,9 @@ function streamEventsEmitter(manifest: Manifest,
     const { currentTime: previousTime } = oldClockTick;
     const { isSeeking, currentTime } = newClockTick;
     const eventsToSend: IStreamEvent[] = [];
-    const exitCallbacks: Array<(() => void)> = [];
-    for (let i = 0; i > scheduledEvents.length - 1; i++) {
+    const eventsToExit: IPublicStreamEvent[] = [];
+
+    for (let i = 0; i < scheduledEvents.length; i++) {
       const event = scheduledEvents[i];
       const start = event.start;
       const end = isFiniteStreamEvent(event) ? event.end :
@@ -104,9 +106,8 @@ function streamEventsEmitter(manifest: Manifest,
         if (start > currentTime ||
             (end !== undefined && currentTime >= end)
         ) {
-          if (isFiniteStreamEvent(event) &&
-              typeof event.publicEvent.onExit === "function") {
-            exitCallbacks.push(event.publicEvent.onExit);
+          if (isFiniteStreamEvent(event)) {
+            eventsToExit.push(event.publicEvent);
           }
           eventsBeingPlayed.delete(event);
         }
@@ -124,12 +125,9 @@ function streamEventsEmitter(manifest: Manifest,
         } else {
           eventsToSend.push({ type: "stream-event",
                               value: event.publicEvent });
-          exitCallbacks.push(() => {
-            if (isFiniteStreamEvent(event) &&
-                typeof event.publicEvent.onExit === "function") {
-              event.publicEvent.onExit();
-            }
-          });
+          if (isFiniteStreamEvent(event)) {
+            eventsToExit.push(event.publicEvent);
+          }
         }
       }
     }
@@ -137,8 +135,12 @@ function streamEventsEmitter(manifest: Manifest,
     return observableConcat(
       eventsToSend.length > 0 ? observableOf(...eventsToSend) :
                                 EMPTY,
-      exitCallbacks.length > 0 ? observableOf(...exitCallbacks).pipe(
-        tap((callback) => callback()),
+      eventsToExit.length > 0 ? observableOf(...eventsToExit).pipe(
+        tap((evt) => {
+          if (typeof evt.onExit === "function") {
+            evt.onExit();
+          }
+        }),
         ignoreElements()
       ) : EMPTY
     );

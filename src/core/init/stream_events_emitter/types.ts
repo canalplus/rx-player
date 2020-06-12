@@ -26,25 +26,23 @@ export interface IStreamEventPayload {
   start: number;
   end: number;
   data: IStreamEventData;
-  publicEvent: { start: number;
-                 end: number;
-                 onExit?: () => void;
-                 data: IStreamEventData; };
+  publicEvent: IPublicStreamEvent;
 }
 
 export interface INonFiniteStreamEventPayload {
   id?: string;
   start: number;
   data: IStreamEventData;
-  publicEvent: { start: number;
-                 data: IStreamEventData; };
+  publicEvent: IPublicNonFiniteStreamEvent;
 }
 
+/** The `value` of the event actually sent for an event with no associated end. */
 export interface IPublicNonFiniteStreamEvent {
   data: IStreamEventData;
   start: number;
 }
 
+/** The `value` of the event actually sent for an event with an associated end. */
 export interface IPublicStreamEvent {
   data: IStreamEventData;
   start: number;
@@ -52,6 +50,7 @@ export interface IPublicStreamEvent {
   onExit?: () => void;
 }
 
+/** Events sent by the `streamEventsEmitter`. */
 export interface IStreamEvent {
   type: "stream-event" | "stream-event-skip";
   value: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
