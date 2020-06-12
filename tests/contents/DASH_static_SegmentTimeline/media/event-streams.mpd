@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Created with Unified Streaming Platform(version=1.7.32) -->
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  type="static"
+  mediaPresentationDuration="PT1M41.568367S"
+  maxSegmentDuration="PT5S"
+  minBufferTime="PT10S"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011">
+  <Period
+    id="1"
+    duration="PT1M41.568367S">
+
+    <EventStream schemeIdUri="urn:uuid:XYZY" timescale="10000" value="call">
+      <Event presentationTime="50000" duration="30000" id="0">
+        <data> 5 - 8 </data>
+      </Event>
+      <Event presentationTime="200000" id="1">
+        20
+      </Event>
+      <Event presentationTime="400000" duration="100000" id="2">
+        40 - 50
+      </Event>
+      <Event presentationTime="450000" duration="90000" id="3">
+        45 - 55
+      </Event>
+    </EventStream>
+
+    <BaseURL>dash/</BaseURL>
+    <AdaptationSet group="1" contentType="audio" segmentAlignment="true" audioSamplingRate="44100" mimeType="audio/mp4" codecs="mp4a.40.2" startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" r="1" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" r="1" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" r="1" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000" />
+    </AdaptationSet>
+    <AdaptationSet group="2" contentType="video" par="40:17" minBandwidth="400000" maxBandwidth="1996000" maxWidth="2221" maxHeight="944" segmentAlignment="true" mimeType="video/mp4" startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive" />
+      <Representation id="video=795000" bandwidth="795000" width="368" height="208" sar="520:391" codecs="avc1.42C014" scanType="progressive" />
+      <Representation id="video=1193000" bandwidth="1193000" width="768" height="432" sar="45:34" codecs="avc1.42C01E" scanType="progressive" />
+      <Representation id="video=1996000" bandwidth="1996000" width="1680" height="944" sar="472:357" codecs="avc1.640028" scanType="progressive" />
+    </AdaptationSet>
+  </Period>
+
+  <Period
+    id="2"
+    duration="PT1M41.568367S">
+
+    <EventStream schemeIdUri="urn:uuid:XYZ" timescale="1000" value="call">
+      <Event id="foo" />
+      <Event presentationTime="0" id="bar">
+        <data>0</data>
+      </Event>
+      <Event presentationTime="4000" duration="5000" id="0">
+        <data>4 - 9</data>
+      </Event>
+      <Event presentationTime="20000" id="1">
+        20
+      </Event>
+      <Event presentationTime="40000" duration="3000" id="2">
+        40-43
+      </Event>
+      <Event presentationTime="60000" duration="1" id="4">
+        60-60.001
+      </Event>
+    </EventStream>
+
+    <BaseURL>dash/</BaseURL>
+    <AdaptationSet group="1" contentType="audio" segmentAlignment="true" audioSamplingRate="44100" mimeType="audio/mp4" codecs="mp4a.40.2" startWithSAP="1">
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" r="1" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" r="1" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="177152" />
+          <S d="176128" r="1" />
+          <S d="177152" />
+          <S d="176128" />
+          <S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000" />
+    </AdaptationSet>
+    <AdaptationSet group="2" contentType="video" par="40:17" minBandwidth="400000" maxBandwidth="1996000" maxWidth="2221" maxHeight="944" segmentAlignment="true" mimeType="video/mp4" startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive" />
+      <Representation id="video=795000" bandwidth="795000" width="368" height="208" sar="520:391" codecs="avc1.42C014" scanType="progressive" />
+      <Representation id="video=1193000" bandwidth="1193000" width="768" height="432" sar="45:34" codecs="avc1.42C01E" scanType="progressive" />
+      <Representation id="video=1996000" bandwidth="1996000" width="1680" height="944" sar="472:357" codecs="avc1.640028" scanType="progressive" />
+    </AdaptationSet>
+  </Period>
+</MPD>

@@ -71,7 +71,7 @@ const karmaConf = {
     path.resolve(__dirname, "./index.js"),
   ],
   client: {
-    captureConsole: false,
+    captureConsole: true,
     mocha: { reporter: "html" },
   },
 };
