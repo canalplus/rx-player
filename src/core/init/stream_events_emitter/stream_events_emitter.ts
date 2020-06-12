@@ -155,7 +155,7 @@ function streamEventsEmitter(manifest: Manifest,
         return EMPTY;
       }
       return observableCombineLatest([
-        interval(STREAM_EVENT_EMITTER_POLL_INTERVAL),
+        interval(STREAM_EVENT_EMITTER_POLL_INTERVAL).pipe(startWith(null)),
         clock$,
       ]).pipe(
           map(([_, clockTick]) => {
