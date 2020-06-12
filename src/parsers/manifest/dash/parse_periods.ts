@@ -146,7 +146,7 @@ export interface IPeriodsContextInfos {
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
                                             periodInfos);
     const streamEvents = periodIR.children.streamEvents?.map((event) => {
-      const start = (event.eventPresentationTime ?? 0) + periodStart;
+      const start = ((event.eventPresentationTime ?? 0) / event.timescale) + periodStart;
       const end =
         event.duration !== undefined ? start + event.duration / event.timescale :
                                        undefined;
