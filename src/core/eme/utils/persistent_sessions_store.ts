@@ -18,6 +18,10 @@ import { ICustomMediaKeySession } from "../../../compat";
 import log from "../../../log";
 import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
 import { assertInterface } from "../../../utils/assert";
+import {
+  base64ToBytes,
+  bytesToBase64,
+} from "../../../utils/base64";
 import hashBuffer from "../../../utils/hash_buffer";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
@@ -34,6 +38,42 @@ function checkStorage(storage : IPersistentSessionStorage) : void {
   assertInterface(storage,
                   { save: "function", load: "function" },
                   "licenseStorage");
+}
+
+/** Wrap initialization data and allow linearization of it into base64. */
+class InitDataContainer {
+  /** The initData itself. */
+  public initData : Uint8Array;
+
+  /**
+   * Create a new container, wrapping the initialization data given and allowing
+   * linearization into base64.
+   * @param {Uint8Array}
+   */
+  constructor(initData : Uint8Array) {
+    this.initData = initData;
+  }
+
+  /**
+   * Convert it to base64.
+   * `toJSON` is specially interpreted by JavaScript engines to be able to rely
+   * on it when calling `JSON.stringify` on it or any of its parent objects:
+   * https://tc39.es/ecma262/#sec-serializejsonproperty
+   * @returns {string}
+   */
+  toJSON() : string {
+    return bytesToBase64(this.initData);
+  }
+
+  /**
+   * Decode a base64 sequence representing an initialization data back to an
+   * Uint8Array.
+   * @param {string}
+   * @returns {Uint8Array}
+   */
+  static decode(base64 : string) : Uint8Array {
+    return base64ToBytes(base64);
+  }
 }
 
 /**
@@ -108,9 +148,10 @@ export default class PersistentSessionsStore {
 
     const hash = hashBuffer(initData);
     log.info("EME-PSS: Add new session", sessionId, session);
-    this._entries.push({ version: 1,
+
+    this._entries.push({ version: 2,
                          sessionId,
-                         initData,
+                         initData: new InitDataContainer(initData),
                          initDataHash: hash,
                          initDataType });
     this._save();
@@ -160,11 +201,30 @@ export default class PersistentSessionsStore {
     for (let i = 0; i < this._entries.length; i++) {
       const entry = this._entries[i];
       if (entry.initDataType === initDataType) {
-        if (entry.version === 1) {
-          if (entry.initDataHash === hash &&
-              areArraysOfNumbersEqual(entry.initData, initData))
-          {
+        if (entry.version === 2) {
+          if (entry.initDataHash === hash) {
+            try {
+              const decodedInitData : Uint8Array = typeof entry.initData === "string" ?
+                InitDataContainer.decode(entry.initData) :
+                entry.initData.initData;
+              if (areArraysOfNumbersEqual(decodedInitData, initData)) {
+                return i;
+              }
+            } catch (e) {
+              log.warn("EME-PSS: Could not decode initialization data.", e);
+            }
+          }
+        } else if (entry.version === 1) {
+          if (entry.initDataHash === hash) {
+            if (typeof entry.initData.length === "undefined") {
+              // If length is undefined, it has been linearized. We could still
+              // convert it back to an Uint8Array but this would necessitate some
+              // ugly unreadable logic for a very very minor possibility.
+              // Just consider that it is a match based on the hash.
               return i;
+            } else if (areArraysOfNumbersEqual(entry.initData, initData)) {
+              return i;
+            }
           }
         } else {
           if (entry.initData === hash) {
