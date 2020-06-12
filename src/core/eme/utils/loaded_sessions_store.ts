@@ -226,6 +226,7 @@ export default class LoadedSessionsStore {
     return observableDefer(() => {
       const closing$ = this._storage.getAll()
         .map((entry) => this.closeSession(entry.initData, entry.initDataType));
+      log.debug("EME-LSS: Closing all current MediaKeySessions", closing$.length);
 
       // re-initialize the storage
       this._storage = new InitDataStore<IStoredSessionEntry>();
