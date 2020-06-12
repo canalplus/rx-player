@@ -23,6 +23,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
+  distinctUntilChanged,
   ignoreElements,
   map,
   mergeMap,
@@ -68,85 +69,106 @@ function streamEventsEmitter(manifest: Manifest,
 ): Observable<IStreamEvent> {
   const eventsBeingPlayed =
     new WeakMap<IStreamEventPayload|INonFiniteStreamEventPayload, true>();
+  let lastScheduledEvents : Array<IStreamEventPayload|INonFiniteStreamEventPayload> = [];
   const scheduledEvents$ = fromEvent(manifest, "manifestUpdate").pipe(
     startWith(null),
-    scan((oldScheduleEvents) => {
-      return refreshScheduledEventsList(oldScheduleEvents, manifest);
+    scan((oldScheduledEvents) => {
+      return refreshScheduledEventsList(oldScheduledEvents, manifest);
     }, [] as Array<IStreamEventPayload|INonFiniteStreamEventPayload>)
   );
 
-  function poll$(
-    newScheduleEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload>
-  ) {
-    if (newScheduleEvents.length === 0) {
-      return EMPTY;
-    }
-    return observableCombineLatest([
-      interval(STREAM_EVENT_EMITTER_POLL_INTERVAL),
-      clock$,
-    ]).pipe(
-        map(([_, clockTick]) => {
-          const { seeking } = clockTick;
-          return { isSeeking: seeking,
-                   currentTime: mediaElement.currentTime };
-        }),
-        pairwise(),
-        mergeMap(([ oldTick, newTick ]) => {
-          const { currentTime: previousTime } = oldTick;
-          const { isSeeking, currentTime } = newTick;
-          const eventsToSend: IStreamEvent[] = [];
-          const exitCallbacks: Array<(() => void)> = [];
-          for (let i = newScheduleEvents.length - 1; i >= 0; i--) {
-            const event = newScheduleEvents[i];
-            const start = event.start;
-            const end = isFiniteStreamEvent(event) ? event.end :
-                                                     undefined;
-            const isBeingPlayed = eventsBeingPlayed.has(event);
-            if (isBeingPlayed) {
-              if (start > currentTime ||
-                  (end !== undefined && currentTime >= end)
-              ) {
-                if (isFiniteStreamEvent(event) &&
-                    typeof event.publicEvent.onExit === "function") {
-                  exitCallbacks.push(event.publicEvent.onExit);
-                }
-                eventsBeingPlayed.delete(event);
-              }
-            } else if (start <= currentTime &&
-                       end !== undefined &&
-                       currentTime < end) {
-              eventsToSend.push({ type: "stream-event",
-                                  value: event.publicEvent });
-              eventsBeingPlayed.set(event, true);
-            } else if (previousTime < start &&
-                       currentTime >= (end ?? start)) {
-              if (isSeeking) {
-                eventsToSend.push({ type: "stream-event-skip",
-                                    value: event.publicEvent });
-              } else {
-                eventsToSend.push({ type: "stream-event",
-                                    value: event.publicEvent });
-                if (isFiniteStreamEvent(event) &&
-                    typeof event.publicEvent.onExit === "function") {
-                  exitCallbacks.push(event.publicEvent.onExit);
-                }
-              }
-            }
+  /**
+   * Examine playback situation from clock ticks to emit stream events and
+   * prepare set onExit callbacks if needed.
+   * @param {Array.<Object>} scheduledEvents
+   * @param {Object} oldTick
+   * @param {Object} newTick
+   * @returns {Observable}
+   */
+  function emitStreamEvents$(
+    scheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload>,
+    oldClockTick: { currentTime: number; isSeeking: boolean },
+    newClockTick: { currentTime: number; isSeeking: boolean }
+  ): Observable<IStreamEvent> {
+    const { currentTime: previousTime } = oldClockTick;
+    const { isSeeking, currentTime } = newClockTick;
+    const eventsToSend: IStreamEvent[] = [];
+    const exitCallbacks: Array<(() => void)> = [];
+    for (let i = scheduledEvents.length - 1; i >= 0; i--) {
+      const event = scheduledEvents[i];
+      const start = event.start;
+      const end = isFiniteStreamEvent(event) ? event.end :
+                                               undefined;
+      const isBeingPlayed = eventsBeingPlayed.has(event);
+      if (isBeingPlayed) {
+        if (start > currentTime ||
+            (end !== undefined && currentTime >= end)
+        ) {
+          if (isFiniteStreamEvent(event) &&
+              typeof event.publicEvent.onExit === "function") {
+            exitCallbacks.push(event.publicEvent.onExit);
           }
+          eventsBeingPlayed.delete(event);
+        }
+      } else if (start <= currentTime &&
+                 end !== undefined &&
+                 currentTime < end) {
+        eventsToSend.push({ type: "stream-event",
+                            value: event.publicEvent });
+        eventsBeingPlayed.set(event, true);
+      } else if (previousTime < start &&
+                 currentTime >= (end ?? start)) {
+        if (isSeeking) {
+          eventsToSend.push({ type: "stream-event-skip",
+                              value: event.publicEvent });
+        } else {
+          eventsToSend.push({ type: "stream-event",
+                              value: event.publicEvent });
+          if (isFiniteStreamEvent(event) &&
+              typeof event.publicEvent.onExit === "function") {
+            exitCallbacks.push(event.publicEvent.onExit);
+          }
+        }
+      }
+    }
 
-          return observableConcat(
-            eventsToSend.length > 0 ? observableOf(...eventsToSend) :
-                                      EMPTY,
-            exitCallbacks.length > 0 ? observableOf(...exitCallbacks).pipe(
-              tap((callback) => callback()),
-              ignoreElements()
-            ) : EMPTY
-          );
-        })
-      );
+    return observableConcat(
+      eventsToSend.length > 0 ? observableOf(...eventsToSend) :
+                                EMPTY,
+      exitCallbacks.length > 0 ? observableOf(...exitCallbacks).pipe(
+        tap((callback) => callback()),
+        ignoreElements()
+      ) : EMPTY
+    );
   }
 
-  return scheduledEvents$.pipe(switchMap(poll$));
+  /**
+   * This pipe allows to control wether the polling should occur, if there
+   * are scheduledEvents, or not.
+   */
+  return scheduledEvents$.pipe(
+    tap((scheduledEvents) => lastScheduledEvents = scheduledEvents),
+    map((evt): boolean => evt.length > 0),
+    distinctUntilChanged(),
+    switchMap((hasEvents: boolean) => {
+      if (!hasEvents) {
+        return EMPTY;
+      }
+      return observableCombineLatest([
+        interval(STREAM_EVENT_EMITTER_POLL_INTERVAL),
+        clock$,
+      ]).pipe(
+          map(([_, clockTick]) => {
+            const { seeking } = clockTick;
+            return { isSeeking: seeking,
+                     currentTime: mediaElement.currentTime };
+          }),
+          pairwise(),
+          mergeMap(([oldTick, newTick]) =>
+            emitStreamEvents$(lastScheduledEvents, oldTick, newTick))
+      );
+    })
+  );
 }
 
 export default streamEventsEmitter;

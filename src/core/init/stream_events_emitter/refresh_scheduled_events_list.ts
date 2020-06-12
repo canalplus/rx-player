@@ -38,9 +38,9 @@ function refreshScheduledEventsList(
     const { streamEvents } = period;
     streamEvents.forEach(({ start, end, id, data }) => {
       for (let j = 0; j < oldScheduledEvents.length; j++) {
-        const currentScheduleEvent = oldScheduledEvents[j];
-        if (areSameStreamEvents(currentScheduleEvent, { id, start, end })) {
-          scheduledEvents.push(currentScheduleEvent);
+        const currentScheduledEvent = oldScheduledEvents[j];
+        if (areSameStreamEvents(currentScheduledEvent, { id, start, end })) {
+          scheduledEvents.push(currentScheduledEvent);
           return;
         }
       }
