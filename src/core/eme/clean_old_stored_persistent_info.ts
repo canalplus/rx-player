@@ -44,5 +44,5 @@ export default function cleanOldStoredPersistentInfo(
   log.info("EME: Too many stored persistent sessions, removing some.",
            numberOfPersistentSessions,
            toDelete);
-  persistentSessionsStore.deleteLast(toDelete);
+  persistentSessionsStore.deleteOldSessions(toDelete);
 }

@@ -21,7 +21,7 @@ function createPersistentSessionsStore() {
     getLength() : number {
       return 3;
     },
-    deleteLast() : void {
+    deleteOldSessions() : void {
       return ;
     },
   } as any;
@@ -30,7 +30,7 @@ function createPersistentSessionsStore() {
 const emptyPersistentSessionsStore = {
   getLength() { return 0; },
   getAll() { return []; },
-  deleteLast() : void { return ; },
+  deleteOldSessions() : void { return ; },
 };
 
 /**
@@ -40,7 +40,7 @@ const emptyPersistentSessionsStore = {
  * @param {number} limit
  */
 function checkNothingHappen(persistentSessionsStore : any, limit : number) {
-  const deleteLastSpy = jest.spyOn(persistentSessionsStore, "deleteLast");
+  const deleteLastSpy = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
   const logInfoSpy = jest.fn();
   jest.mock("../../../log", () => ({ __esModule: true,
                                      default: { info: logInfoSpy } }));
@@ -64,7 +64,7 @@ function checkRemoved(
   limit : number,
   numberToRemove : number
 ) {
-  const deleteLastSpy = jest.spyOn(persistentSessionsStore, "deleteLast");
+  const deleteLastSpy = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
   const logInfoSpy = jest.fn();
   jest.mock("../../../log", () => ({ __esModule: true,
                                      default: { info: logInfoSpy } }));

@@ -219,7 +219,7 @@ export default class PersistentSessionsStore {
     this._save();
   }
 
-  deleteLast(sessionsToDelete : number) : void {
+  deleteOldSessions(sessionsToDelete : number) : void {
     log.debug(`EME-PSS: Deleting last ${sessionsToDelete} sessions.`);
     if (sessionsToDelete <= 0) {
       return;
@@ -232,6 +232,7 @@ export default class PersistentSessionsStore {
                this._entries.length);
       this._entries = [];
     }
+    this._save();
   }
 
   /**
