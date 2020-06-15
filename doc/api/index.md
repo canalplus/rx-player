@@ -1134,10 +1134,8 @@ If you want to update the track for other Periods as well, you might want to
 either:
   - update the current audio track once a `"periodChange"` event has been
     received.
-  - update the preferred audio tracks through the
-    [setPreferredAudioTracks](#meth-setPreferredAudioTracks) method. To ensure
-    that already-loaded Periods also consider that change, you might need to
-    then re-load the content through a new `loadVideo` call.
+  - update first the preferred audio tracks through the
+    [setPreferredAudioTracks](#meth-setPreferredAudioTracks) method.
 
 --
 
@@ -1175,11 +1173,8 @@ If you want to update the track for other Periods as well, you might want to
 either:
   - update the current text track once a `"periodChange"` event has been
     received.
-  - update the preferred text tracks through the
-    [setPreferredTextTracks](#meth-setPreferredTextTracks) method. To ensure
-    that already-loaded Periods also consider that change, you might need to
-    then re-load the content through a new `loadVideo` call.
-
+  - update first the preferred text tracks through the
+    [setPreferredTextTracks](#meth-setPreferredTextTracks) method.
 
 
 --
@@ -1210,13 +1205,14 @@ Note for multi-Period contents:
 
 This method will only have an effect on the [Period](../terms.md#period) that is
 currently playing.
+
 If you want to disable the text track for other Periods as well, you might want
-to either:
-  - call `disableTextTrack` once a `"periodChange"` event has been received.
-  - update the preferred text tracks through the
-    [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method. To ensure
-    that already-loaded Periods also consider that change, you might need to
-    then re-load the content through a new `loadVideo` call.
+to call [setPreferredVideoTracks](#meth-setPreferredVideoTracks) instead. With
+this method, you can globally apply a `null` text track preference - which means
+that you would prefer having no text track - by setting its second argument to
+`true`.
+
+More information can be found on that API's documentation.
 
 
 <a name="meth-setVideoTrack"></a>
@@ -1261,10 +1257,8 @@ If you want to update the track for other Periods as well, you might want to
 either:
   - update the current video track once a `"periodChange"` event has been
     received.
-  - update the preferred video tracks through the
-    [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method. To ensure
-    that already-loaded Periods also consider that change, you might need to
-    then re-load the content through a new `loadVideo` call.
+  - update first the preferred video tracks through the
+    [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method.
 
 --
 
@@ -1289,14 +1283,14 @@ Note for multi-Period contents:
 
 This method will only have an effect on the [Period](../terms.md#period) that is
 currently playing.
+
 If you want to disable the video track for other Periods as well, you might want
-to either:
-  - call `disableVideoTrack` once a `"periodChange"` event has been received.
-  - update the preferred video tracks through the
-    [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method to include
-    `null` (which meaning that you want no video track). To ensure that
-    already-loaded Periods also consider that change, you might need to then
-    re-load the content through a new `loadVideo` call.
+to call [setPreferredVideoTracks](#meth-setPreferredVideoTracks) instead. With
+this method, you can globally apply a `null` video track preference - which means
+that you would prefer having no video track - by setting its second argument to
+`true`.
+
+More information can be found on that API's documentation.
 
 --
 
@@ -1320,19 +1314,16 @@ payload) while the video track is still actually active.
 <a name="meth-setPreferredAudioTracks"></a>
 ### setPreferredAudioTracks ####################################################
 
-_arguments_: ``Array.<Object>``
+_argument 1_: ``Array.<Object>``
+_argument 2_: ``Boolean | undefined``
 
 Allows the RxPlayer to choose an initial audio track, based on language
 preferences, codec preferences or both.
 
-It is defined as an array of objects, each object describing constraints a
-track should respect.
+--
 
-If the first object - defining the first set of constraints - cannot be
-respected under the currently available audio tracks, the RxPlayer will skip
-it and check with the second object and so on.
-As such, this array should be sorted by order of preference: from the most
-wanted constraints to the least.
+The first argument should be set as an array of objects, each object describing
+constraints an audio track should respect.
 
 Here is all the possible constraints you can set in any one of those objects
 (note that all properties are optional here, only those set will have an effect
@@ -1367,24 +1358,41 @@ on which tracks will be filtered):
 }
 ```
 
-This logic is ran each time a new `Period` with audio tracks is loaded by the
-RxPlayer. This means at the start of the content, but also when [pre-]loading a
-new DASH `Period` or a new MetaPlaylist `content`.
+When encountering a new content or a new choice of tracks in a given content,
+the RxPlayer will look at each object in that array.
+If the first object in it defines constaints that cannot be respected under the
+currently available audio tracks, the RxPlayer will consider the second object
+in the array and so on.
 
-Please note that those preferences won't be re-applied once the logic was
-already run for a given `Period`.
-Simply put, once set this preference will be applied to all contents but:
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.
 
-  - the current Period being played (or the current loaded content, in the case
-    of single-Period contents such as in Smooth streaming).
-    In that case, the current audio preference will stay in place.
+--
 
-  - the Periods which have already been loaded in the current content.
-    Those will keep their last set audio preferences (e.g. the preferred audio
-    tracks at the time they were first loaded).
+The second argument to that function is an optional boolean which - when set
+to `true` - will apply that preference to the content and Period that have
+already been playing.
 
-To update the current audio track in those cases, you should use the
-`setAudioTrack` method once they are currently playing.
+By setting it to `true`, you might thus change the currently-active track and
+the active track of Periods (in DASH) or sub-contents (in MetaPlaylist) that
+have already been played in the current content.
+
+By setting it to `false`, `undefined` or not setting it, those preferences will
+only be applied each time a __new__ Period or sub-content is loaded by the
+RxPlayer.
+
+Simply put, if you don't set the second argument to `true` those preferences
+won't be applied to:
+
+  - the content being currently played.
+    Here, the current audio preference will stay in place.
+
+  - the Periods or sub-contents which have already been loaded for the current
+    content.
+    Those will keep the audio track chosen at the last time they were loaded.
+
+If you want the preferences to also be applied to those, you can set the second
+argument to `true`.
 
 
 #### Examples
@@ -1462,11 +1470,18 @@ It will return an empty Array if none of those two APIs were used until now.
 <a name="meth-setPreferredTextTracks"></a>
 ### setPreferredTextTracks #####################################################
 
-_arguments_: ``Array.<Object|null>``
+_argument 1_: ``Array.<Object|null>``
+_argument 2_: ``Boolean | undefined``
 
-Update the text track (or subtitles) preferences at any time.
+Allows the RxPlayer to choose an initial text track, based on language
+and accessibility preferences.
 
-This method takes an array of objects describing the languages wanted:
+--
+
+The first argument should be set as an array of objects, each object describing
+constraints a text track should respect.
+
+Here is all the properties that should be set in a single object of that array.
 ```js
 {
   language: "fra", // {string} The wanted language
@@ -1476,28 +1491,48 @@ This method takes an array of objects describing the languages wanted:
 }
 ```
 
-All elements in that Array should be set in preference order: from the most
-preferred to the least preferred. You can set `null` for no subtitles.
+When encountering a new content or a new choice of tracks in a given content,
+the RxPlayer will look at each object in that array.
+If the first object in it defines constaints that cannot be respected under the
+currently available text tracks, the RxPlayer will consider the second object
+in the array and so on.
 
-When encountering a new Period or a new content, the RxPlayer will then try to
-choose its text track by comparing what is available with your current
-preferences (i.e. if the most preferred is not available, it will look if the
-second one is etc.).
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.
 
-Please note that those preferences will only apply either to the next loaded
-content or to the next newly encountered Period.
-Simply put, once set this preference will be applied to all contents but:
+You can set `null` instead of an object to mean that you want no subtitles.
+When reaching that point of the array, the RxPlayer will just disable the
+current text track.
 
-  - the current Period being played (or the current loaded content, in the case
-    of Smooth streaming). In that case, the current text track preference will
-    stay in place.
+As such, if you never want any subtitles, you can just set this argument to
+`[null]` (an array with only the value `null` at the first position).
 
-  - the Periods which have already been played in the current loaded content.
-    Those will keep the last set text track preference at the time it was
-    played.
+--
 
-To update the current text track in those cases, you should use the
-`setTextTrack` method.
+The second argument to that function is an optional boolean which - when set
+to `true` - will apply that preference to the content and Period that have
+already been playing.
+
+By setting it to `true`, you might thus change the currently-active text track
+and the active text track of Periods (in DASH) or sub-contents (in
+MetaPlaylist) that have already been played in the current content.
+
+By setting it to `false`, `undefined` or not setting it, those preferences will
+only be applied each time a __new__ Period or sub-content is loaded by the
+RxPlayer.
+
+Simply put, if you don't set the second argument to `true` those preferences
+won't be applied to:
+
+  - the content being currently played.
+    Here, the current text track preference will stay in place.
+
+  - the Periods or sub-contents which have already been loaded for the current
+    content.
+    Those will keep the text track chosen at the last time they were loaded.
+
+If you want the preferences to also be applied to those, you can set the second
+argument to `true`.
 
 #### Example
 
@@ -1511,7 +1546,18 @@ player.setPreferredTextTracks([
   { language: "fra", closedCaption: false },
   { language: "ita", closedCaption: false },
   null
-])
+]);
+```
+
+This won't apply on the currently loaded content(s), if you also want that, you
+can add `true` as a second argument:
+
+```js
+player.setPreferredTextTracks([
+  { language: "fra", closedCaption: false },
+  { language: "ita", closedCaption: false },
+  null
+], true);
 ```
 
 --
@@ -1541,6 +1587,150 @@ it was called:
                        // caption for the hard of hearing
 }
 ```
+
+
+<a name="meth-setPreferredVideoTracks"></a>
+### setPreferredVideoTracks ####################################################
+
+_argument 1_: ``Array.<Object>``
+_argument 2_: ``Boolean | undefined``
+
+Allows the RxPlayer to choose an initial video track, based on codec
+preferences, accessibility preferences or both.
+
+--
+
+The first argument should be set as an array of objects, each object describing
+constraints a video track should respect.
+
+Here is all the possible constraints you can set in any one of those objects
+(note that all properties are optional here, only those set will have an effect
+on which tracks will be filtered):
+```js
+{
+  codec: { // {Object|undefined} Constraints about the codec wanted.
+           // if not set or set to `undefined` we won't filter based on codecs.
+
+    test: /hvc/, // {RegExp} RegExp validating the type of codec you want.
+
+    all: true, // {Boolean} Whether all the profiles (i.e. Representation) in a
+               // track should be checked against the RegExp given in `test`.
+               // If `true`, we will only choose a track if EVERY profiles for
+               // it have a codec information that is validated by that RegExp.
+               // If `false`, we will choose a track if we know that at least
+               // A SINGLE profile from it has codec information validated by
+               // that RegExp.
+  }
+  signInterpreted: true, // {Boolean|undefined} If set to `true`, only tracks
+                         // which are known to contains a sign language
+                         // interpretation will be considered.
+                         // If set to `false`, only tracks which are known
+                         // to not contain it will be considered.
+                         // if not set or set to `undefined` we won't filter
+                         // based on that status.
+}
+```
+
+If the first defined object in that array - defining the first set of
+constraints - cannot be respected under the currently available video tracks,
+the RxPlayer will check with the second object instead and so on.
+
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.
+
+When the next encountered constraint is set to `null`, the player will simply
+disable the video track. If you want to disable the video track by default,
+you can just set `null` as the first element of this array (e.g. like `[null]`).
+
+--
+
+The second argument to that function is an optional boolean which - when set
+to `true` - will apply that preference to the content and Period that have
+already been playing.
+
+By setting it to `true`, you might thus change the currently-active track and
+the active track of Periods (in DASH) or sub-contents (in MetaPlaylist) that
+have already been played in the current content.
+
+By setting it to `false`, `undefined` or not setting it, those preferences will
+only be applied each time a __new__ Period (or sub-content) is loaded by the
+RxPlayer.
+
+Simply put, if you don't set the second argument to `true` those preferences
+won't be applied to:
+
+  - the content being currently played.
+    Here, the current video preference will stay in place.
+
+  - the Periods or sub-contents which have already been loaded for the current
+    content.
+    Those will keep the video track chosen at the last time they were loaded.
+
+If you want the preferences to also be applied to those, you can set the second
+argument to `true`.
+
+
+#### Examples
+
+Let's imagine that you prefer to have a track which contains only H265
+profiles. You can do:
+```js
+player.setPreferredVideoTracks([ { codec: { all: false, test: /^hvc/ } } ]);
+```
+
+With that same constraint, let's no consider that the current user prefer in any
+case to have a sign language interpretation on screen:
+```js
+player.setPreferredVideoTracks([
+  // first let's consider the best case: H265 + sign language interpretation
+  {
+    codec: { all: false, test: /^hvc/ }
+    signInterpreted: true,
+  },
+
+  // If not available, we still prefer a sign interpreted track without H265
+  { signInterpreted: true },
+
+  // If not available either, we would prefer an H265 content
+  { codec: { all: false, test: /^hvc/ } },
+
+  // Note: If this is also available, we will here still have a video track
+  // but which do not respect any of the constraints set here.
+]);
+would thus prefer the video to contain a sign language interpretation.
+We could set both the previous and that new constraint that way:
+
+---
+
+For a totally different example, let's imagine you want to play without any
+video track enabled (e.g. to start in an audio-only mode). To do that, you can
+simply do:
+```js
+player.setPreferredVideoTracks([null], true);
+```
+
+---
+
+:warning: This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+- No video track API is supported on the current browser
+- The media file tracks are not supported on the browser
+
+---
+
+
+<a name="meth-getPreferredVideoTracks"></a>
+### getPreferredVideoTracks ####################################################
+
+_return value_: ``Array.<Object>``
+
+Returns the current list of preferred video tracks - by order of preference.
+
+This returns the data in the same format that it was given to either the
+`preferredVideoTracks` constructor option or the last `setPreferredVideoTracks`
+if it was called.
+
+It will return an empty Array if none of those two APIs were used until now.
 
 
 
@@ -2050,136 +2240,6 @@ if (url) {
 }
 ```
 
-
-<a name="meth-setPreferredVideoTracks"></a>
-### setPreferredVideoTracks ####################################################
-
-_arguments_: ``Array.<Object|null>``
-
-Allows the RxPlayer to choose an initial video track.
-
-It is defined as an array of objects, each object describing constraints a
-track should respect.
-
-If the first object - defining the first set of constraints - cannot be
-respected under the currently available video tracks, the RxPlayer will skip
-it and check with the second object and so on.
-As such, this array should be sorted by order of preference: from the most
-wanted constraints to the least.
-
-When the next encountered constraint is set to `null`, the player will simply
-disable the video track. If you want to disable the video track by default,
-you can just set `null` as the first element of this array (e.g. `[null]`).
-
-Here is all the possible constraints you can set in any one of those objects
-(note that all properties are optional here, only those set will have an effect
-on which tracks will be filtered):
-```js
-{
-  codec: { // {Object|undefined} Constraints about the codec wanted.
-           // if not set or set to `undefined` we won't filter based on codecs.
-
-    test: /hvc/, // {RegExp} RegExp validating the type of codec you want.
-
-    all: true, // {Boolean} Whether all the profiles (i.e. Representation) in a
-               // track should be checked against the RegExp given in `test`.
-               // If `true`, we will only choose a track if EVERY profiles for
-               // it have a codec information that is validated by that RegExp.
-               // If `false`, we will choose a track if we know that at least
-               // A SINGLE profile from it has codec information validated by
-               // that RegExp.
-  }
-  signInterpreted: true, // {Boolean|undefined} If set to `true`, only tracks
-                         // which are known to contains a sign language
-                         // interpretation will be considered.
-                         // If set to `false`, only tracks which are known
-                         // to not contain it will be considered.
-                         // if not set or set to `undefined` we won't filter
-                         // based on that status.
-}
-```
-
-This logic is ran each time a new `Period` with video tracks is loaded by the
-RxPlayer. This means at the start of the content, but also when [pre-]loading a
-new DASH `Period` or a new MetaPlaylist `content`.
-
-Please note that those preferences won't be re-applied once the logic was
-already run for a given `Period`.
-Simply put, once set this preference will be applied to all contents but:
-
-  - the current Period being played (or the current loaded content, in the case
-    of single-Period contents such as in Smooth streaming).
-    In that case, the current video track preference will stay in place.
-
-  - the Periods which have already been loaded in the current content.
-    Those will keep their last set video track preferences (e.g. the preferred
-    video tracks at the time they were first loaded).
-
-To update the current video track in those cases, you should use the
-`setVideoTrack` method once they are currently played.
-
-
-#### Examples
-
-Let's imagine that you prefer to have a track which contains only H265
-profiles. You can do:
-```js
-player.setPreferredVideoTracks([ { codec: { all: false, test: /^hvc/ } } ]);
-```
-
-With that same constraint, let's no consider that the current user prefer in any
-case to have a sign language interpretation on screen:
-```js
-player.setPreferredVideoTracks([
-  // first let's consider the best case: H265 + sign language interpretation
-  {
-    codec: { all: false, test: /^hvc/ }
-    signInterpreted: true,
-  },
-
-  // If not available, we still prefer a sign interpreted track without H265
-  { signInterpreted: true },
-
-  // If not available either, we would prefer an H265 content
-  { codec: { all: false, test: /^hvc/ } },
-
-  // Note: If this is also available, we will here still have a video track
-  // but which do not respect any of the constraints set here.
-]);
-would thus prefer the video to contain a sign language interpretation.
-We could set both the previous and that new constraint that way:
-
----
-
-For a totally different example, let's imagine you want to start without any
-video track enabled (e.g. to start in an audio-only mode). To do that, you can
-simply do:
-```js
-player.setPreferredVideoTracks([null]);
-```
-
----
-
-:warning: This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
-- No video track API is supported on the current browser
-- The media file tracks are not supported on the browser
-
----
-
-
-<a name="meth-getPreferredVideoTracks"></a>
-### getPreferredVideoTracks ####################################################
-
-_return value_: ``Array.<Object>``
-
-Returns the current list of preferred video tracks - by order of preference.
-
-This returns the data in the same format that it was given to either the
-`preferredVideoTracks` constructor option or the last `setPreferredVideoTracks`
-if it was called.
-
-It will return an empty Array if none of those two APIs were used until now.
 
 <a name="meth-getCurrentKeySystem"></a>
 ### getCurrentKeySystem ########################################################
