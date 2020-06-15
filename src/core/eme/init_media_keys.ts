@@ -42,7 +42,7 @@ import {
 export default function initMediaKeys(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
-  mediaElementReady$: Observable<unknown>
+  mediaElementReady$: Observable<null>
 ): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {

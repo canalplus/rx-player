@@ -80,7 +80,7 @@ export default function EMEManager(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   contentProtections$ : Observable<IContentProtection>,
-  mediaElementReady$ : Observable<unknown>
+  mediaElementReady$ : Observable<null>
 ) : Observable<IEMEManagerEvent> {
   log.debug("EME: Starting EMEManager logic.");
 

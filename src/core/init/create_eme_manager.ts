@@ -19,7 +19,7 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
-import { map } from "rxjs/operators";
+import { map, mapTo } from "rxjs/operators";
 import {
   events,
   hasEMEAPIs,
@@ -49,7 +49,7 @@ export default function createEMEManager(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
   contentProtections$ : Observable<IContentProtection>,
-  openMediaSource$? : Observable<unknown>
+  openMediaSource$? : Observable<MediaSource>
 ) : Observable<IEMEManagerEvent|IEMEDisabledEvent> {
   if (features.emeManager == null) {
     return observableMerge(
@@ -82,7 +82,8 @@ export default function createEMEManager(
   }
 
   log.debug("Init: Creating EMEManager");
-  const mediaElementReady$ = openMediaSource$ ?? observableOf(null);
+  const mediaElementReady$ = openMediaSource$?.pipe(mapTo(null)) ??
+                             observableOf(null);
   return features.emeManager(mediaElement,
                              keySystems,
                              contentProtections$,
