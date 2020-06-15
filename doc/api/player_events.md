@@ -27,6 +27,8 @@
  - [Playback information](#events-playback-infos)
     - [periodChange](#events-periodChange)
     - [decipherabilityUpdate](#events-decipherabilityUpdate)
+    - [streamEvent](events-streamEvent)
+    - [streamEventSkip](events-streamEventSkip)
  - [Deprecated](#events-deprecated)
     - [imageTrackUpdate (deprecated)](#events-imageTrackUpdate)
     - [fullscreenChange (deprecated)](#events-fullscreenChange)
@@ -556,6 +558,93 @@ Each of those objects have the following properties:
 
 You can then know if any of those Representations are becoming decipherable or
 not through their `decipherable` property.
+
+
+<a name="events-streamEvent"></a>
+### streamEvent ################################################################
+
+_payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Event triggered when the player enters the time boundaries of a "stream event".
+
+"Stream events" are metadata that can be defined in various streaming protocols,
+which indicates that an application should trigger some action when a specific
+time is reached in the content.
+
+Those events can either have only a start time or both a start time and an end
+time:
+
+  - in the case where an event only has a start time, the RxPlayer will trigger
+    a `streamEvent` right when the user reaches that time.
+
+    If we return multiple time at that position (for example, when a user seeks
+    back to it), you will receive a `streamEvent` as many times for that same
+    event.
+
+  - in the case where an event has both a start and end time, the RxPlayer will
+    trigger a `streamEvent` when the current position goes inside these time
+    boundaries (between the start and end time).
+    This can happen while reaching the start during regular playback but also
+    when seeking at a position contained between the start and end time.
+
+    The `streamEvent` event will not be re-sent until the current position
+    "exits" those time boundaries. If the current position goes out of the
+    boundaries of that event and then goes into it again (most likely due to the
+    user seeking back into it), you will again receive a `streamEvent` for that
+    same event.
+
+The payload of a `streamEvent` depends on the source of the event. For example,
+it will not have the same format when it comes from a Manifest than when it
+comes from the media container.
+All possible formats are described in the [stream event
+tutorial](../tutorials/stream_events.md).
+
+Note: When an event has both a start and an end time, you can define a `onExit`
+callback on the payload. That callback will automatically be triggered when the
+current position goes after the end time or before the start time of that event.
+The `onExit` callback will only be called a single time at most and will only
+concern this iteration of the event (and not possible subsequent ones).
+
+
+<a name="events-streamEventSkip"></a>
+### streamEventSkip ############################################################
+
+_payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Event triggered when the player skipped the time boundaries of a "stream event"
+(you can refer to the [`streamEvent` event](#events-streamEvent) for a
+definition of what a "stream event" is).
+
+This means that the current position the player plays at, immediately changed
+from a time before the start time of a "stream event" to after its end time (or
+just after its end time for "stream event" without an end time).
+
+This is most likely due to the user seeking in the content. A "regular" content
+playback which continuously plays the content without seeking shouldn't trigger
+any `streamEventSkip` event.
+
+The payload of a `streamEventSkip` is the same than for a `streamEvent` and as
+such depends on the source of the event.
+All possible formats are described in the [stream event
+tutorial](../tutorials/stream_events.md).
+
+Note that unlike `streamEvent` events, there's no point to define an `onExit`
+callback on the payload of a `streamEventSkip` event. This is because this event
+was not entered, and will thus not be exited.
 
 
 
