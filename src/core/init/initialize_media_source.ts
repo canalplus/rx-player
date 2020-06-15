@@ -74,6 +74,9 @@ import createMediaSourceLoader, {
 import manifestUpdateScheduler, {
   IManifestRefreshSchedulerEvent,
 } from "./manifest_update_scheduler";
+import {
+  IStreamEvent
+} from "./stream_events_emitter";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IDecipherabilityUpdateEvent,
@@ -147,7 +150,8 @@ export type IInitEvent = IManifestReadyEvent |
                          IEMEDisabledEvent |
                          IReloadingMediaSourceEvent |
                          IDecipherabilityUpdateEvent |
-                         IWarningEvent;
+                         IWarningEvent |
+                         IStreamEvent;
 
 /**
  * Play a content described by the given Manifest.

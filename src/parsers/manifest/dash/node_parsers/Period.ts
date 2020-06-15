@@ -21,6 +21,9 @@ import {
 import parseBaseURL, {
   IBaseURL
 } from "./BaseURL";
+import parseEventStream, {
+  IParsedStreamEvent
+} from "./EventStream";
 import {
   parseBoolean,
   parseDuration,
@@ -37,6 +40,7 @@ export interface IPeriodChildren {
   // required
   adaptations : IAdaptationSetIntermediateRepresentation[];
   baseURLs : IBaseURL[];
+  streamEvents? : IParsedStreamEvent[];
 }
 
 // intermediate representation for a Period's attributes
@@ -59,6 +63,7 @@ function parsePeriodChildren(periodChildren : NodeList) : [IPeriodChildren, Erro
   const adaptations : IAdaptationSetIntermediateRepresentation[] = [];
 
   let warnings : Error[] = [];
+  const streamEvents = [];
   for (let i = 0; i < periodChildren.length; i++) {
     if (periodChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = periodChildren[i] as Element;
@@ -79,11 +84,17 @@ function parsePeriodChildren(periodChildren : NodeList) : [IPeriodChildren, Erro
           adaptations.push(adaptation);
           warnings = warnings.concat(adaptationWarnings);
           break;
+
+        case "EventStream":
+          const [newStreamEvents, eventStreamWarnings] = parseEventStream(currentElement);
+          streamEvents.push(...newStreamEvents);
+          warnings = warnings.concat(eventStreamWarnings);
+          break;
       }
     }
   }
 
-  return [{ baseURLs, adaptations }, warnings];
+  return [{ baseURLs, adaptations, streamEvents }, warnings];
 }
 
 /**

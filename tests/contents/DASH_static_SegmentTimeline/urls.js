@@ -86,6 +86,11 @@ module.exports = [
     path: path.join(__dirname, "media/multi-AdaptationSets.mpd"),
     contentType: "application/dash+xml",
   },
+  {
+    url: BASE_URL + "event-streams.mpd",
+    path: path.join(__dirname, "media/event-streams.mpd"),
+    contentType: "application/dash+xml",
+  },
 
   // Audio initialization segment
   {

@@ -96,6 +96,11 @@ import initializeMediaSourcePlayback, {
   IReloadingMediaSourceEvent,
   IStalledEvent,
 } from "../init";
+import {
+  IPublicNonFiniteStreamEvent,
+  IPublicStreamEvent,
+  IStreamEvent,
+} from "../init/stream_events_emitter";
 import SourceBuffersStore, {
   IBufferedChunk,
   IBufferType,
@@ -194,6 +199,8 @@ interface IPublicAPIEvent {
                                   representation : Representation; }>;
   seeking : null;
   seeked : null;
+  streamEvent : IPublicStreamEvent|IPublicNonFiniteStreamEvent;
+  streamEventSkip : IPublicStreamEvent|IPublicNonFiniteStreamEvent;
 }
 
 /**
@@ -1973,6 +1980,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
+      case "stream-event":
+        this._priv_onStreamEvent(event);
+        break;
+      case "stream-event-skip":
+        this._priv_onStreamEventSkip(event);
+        break;
       case "activePeriodChanged":
         this._priv_onActivePeriodChanged(event.value);
         break;
@@ -2117,6 +2130,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_trackChoiceManager.update();
         }
       });
+  }
+
+  private _priv_onStreamEvent(event: IStreamEvent) {
+    this.trigger("streamEvent", event.value);
+  }
+
+  private _priv_onStreamEventSkip(event: IStreamEvent) {
+    this.trigger("streamEventSkip", event.value);
   }
 
   /**
