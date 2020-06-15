@@ -192,13 +192,13 @@ export default class TrackChoiceManager {
    */
   private _preferredVideoTracks : IVideoTrackPreference[];
 
-  /** Memoization of the previously-chosen audio Adaptation for each Period. */
+  /** Memorization of the previously-chosen audio Adaptation for each Period. */
   private _audioChoiceMemory : WeakMap<Period, Adaptation|null>;
 
-  /** Memoization of the previously-chosen text Adaptation for each Period. */
+  /** Memorization of the previously-chosen text Adaptation for each Period. */
   private _textChoiceMemory : WeakMap<Period, Adaptation|null>;
 
-  /** Memoization of the previously-chosen video Adaptation for each Period. */
+  /** Memorization of the previously-chosen video Adaptation for each Period. */
   private _videoChoiceMemory : WeakMap<Period, Adaptation|null>;
 
   constructor() {
@@ -772,7 +772,7 @@ export default class TrackChoiceManager {
    * Reset all audio tracks choices to corresponds to the current preferences.
    */
   private _applyAudioPreferences() : void {
-    // Remove all memoized choices and start over
+    // Remove all memorized choices and start over
     this._audioChoiceMemory = new WeakMap();
     this._resetChosenAudioTracks();
   }
@@ -781,7 +781,7 @@ export default class TrackChoiceManager {
    * Reset all text tracks choices to corresponds to the current preferences.
    */
   private _applyTextPreferences() : void {
-    // Remove all memoized choices and start over
+    // Remove all memorized choices and start over
     this._textChoiceMemory = new WeakMap();
     this._resetChosenTextTracks();
   }
@@ -790,7 +790,7 @@ export default class TrackChoiceManager {
    * Reset all video tracks choices to corresponds to the current preferences.
    */
   private _applyVideoPreferences() : void {
-    // Remove all memoized choices and start over
+    // Remove all memorized choices and start over
     this._videoChoiceMemory = new WeakMap();
     this._resetChosenVideoTracks();
   }
