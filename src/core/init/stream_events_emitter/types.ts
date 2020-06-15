@@ -15,7 +15,7 @@
  */
 
 export interface IStreamEventData {
-  type: "dash-stream-event";
+  type: "dash-event-stream";
   value: { schemeIdUri: string;
            timescale: number;
            element: Element; };

@@ -19,7 +19,7 @@ import {
   ValueParser,
 } from "./utils";
 
-export interface IParsedStreamEventData { type: "dash-stream-event";
+export interface IParsedStreamEventData { type: "dash-event-stream";
                                           value: { schemeIdUri: string;
                                                    timescale: number;
                                                    element: Element; }; }
@@ -71,7 +71,7 @@ function parseEventStream(element: Element): [IParsedStreamEvent[], Error[]] {
         eventPresentationTime: 0,
         duration: undefined,
         timescale: attributes.timescale,
-        data: { type: "dash-stream-event" as const,
+        data: { type: "dash-event-stream" as const,
                 value: { schemeIdUri: attributes.schemeId ?? "",
                          timescale: attributes.timescale,
                          element: node as Element }, }, };
