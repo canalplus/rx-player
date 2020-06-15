@@ -138,7 +138,7 @@ page](./player_options.md).
 
 
 
-<a name="meth"></a>
+<a name="meth-group-basic"></a>
 ## Basic methods ###############################################################
 
 In this chapter, we will go through the basic methods you will need to use when
