@@ -57,23 +57,24 @@ export default function cleanOldLoadedSessions(
   loadedSessionsStore : LoadedSessionsStore,
   limit : number
 ) : Observable<ICleaningOldSessionEvent | ICleanedOldSessionEvent> {
+  if (limit < 0 || limit >= loadedSessionsStore.getLength()) {
+    return EMPTY;
+  }
+
   const cleaningOldSessions$ : Array<Observable<ICleanedOldSessionEvent |
                                                  ICleaningOldSessionEvent>> = [];
-  if (limit >= 0 && limit < loadedSessionsStore.getLength()) {
-    const entries = loadedSessionsStore.getAll()
-                                       .slice(); // clone
-    const toDelete = entries.length - limit;
-    for (let i = 0; i < toDelete; i++) {
-      const entry = entries[i];
-      const cleaning$ = loadedSessionsStore
-        .closeSession(entry.initData, entry.initDataType)
-          .pipe(mapTo({ type: "cleaned-old-session" as const,
-                        value: entry }),
-                startWith({ type: "cleaning-old-session" as const,
-                            value: entry }));
-      cleaningOldSessions$.push(cleaning$);
-    }
+  const entries = loadedSessionsStore.getAll()
+                                     .slice(); // clone
+  const toDelete = entries.length - limit;
+  for (let i = 0; i < toDelete; i++) {
+    const entry = entries[i];
+    const cleaning$ = loadedSessionsStore
+      .closeSession(entry.initData, entry.initDataType)
+        .pipe(mapTo({ type: "cleaned-old-session" as const,
+                      value: entry }),
+              startWith({ type: "cleaning-old-session" as const,
+                          value: entry }));
+    cleaningOldSessions$.push(cleaning$);
   }
-  return cleaningOldSessions$.length !== 0 ? observableMerge(...cleaningOldSessions$) :
-                                             EMPTY;
+  return observableMerge(...cleaningOldSessions$);
 }
