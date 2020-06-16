@@ -191,7 +191,7 @@ The array emitted contains object describing each available audio track:
     value of ``language``
 
   - ``audioDescription`` (``Boolean``): Whether the track is an audio
-    description (for the visually impaired or not).
+    description of what is happening at the screen.
 
   - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
     "dub", meaning it was recorded in another language than the original.
@@ -291,7 +291,7 @@ properties:
   - ``id`` (``Number|string``): The id used to identify the track.
   - ``language`` (``string``): The language the audio track is in.
   - ``audioDescription`` (``Boolean``): Whether the track is an audio
-    description (for the visually impaired or not).
+    description of what is happening at the screen.
   - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
     "dub", meaning it was recorded in another language than the original.
     If set to `false`, we know that this audio track is in an original language.

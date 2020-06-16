@@ -807,7 +807,7 @@ return an object with the following properties:
     value of ``language``
 
   - ``audioDescription`` (``Boolean``): Whether the track is an audio
-    description (for the visually impaired or not).
+    description of what is happening at the screen.
 
   - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
     "dub", meaning it was recorded in another language than the original.
@@ -979,7 +979,7 @@ Each of the objects in the returned array have the following properties:
     value of ``language``
 
   - ``audioDescription`` (``Boolean``): Whether the track is an audio
-    description (for the visually impaired or not).
+    description of what is happening at the screen.
 
   - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
     "dub", meaning it was recorded in another language than the original.
