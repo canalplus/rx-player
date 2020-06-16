@@ -19,10 +19,7 @@
  * switching for an easier API management.
  */
 
-import {
-  BehaviorSubject,
-  Subject,
-} from "rxjs";
+import { Subject } from "rxjs";
 import log from "../../log";
 import {
   Adaptation,
@@ -167,7 +164,7 @@ function normalizeTextTracks(
 
 /**
  * Manage audio and text tracks for all active periods.
- * Chose the audio and text tracks for each period and record this choice.
+ * Choose the audio and text tracks for each period and record this choice.
  * @class TrackChoiceManager
  */
 export default class TrackChoiceManager {
@@ -181,49 +178,90 @@ export default class TrackChoiceManager {
    * Array of preferred settings for audio tracks.
    * Sorted by order of preference descending.
    */
-  private _preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
+  private _preferredAudioTracks : IAudioTrackPreference[];
 
   /**
    * Array of preferred languages for text tracks.
    * Sorted by order of preference descending.
    */
-  private _preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
+  private _preferredTextTracks : ITextTrackPreference[];
 
   /**
    * Array of preferred settings for video tracks.
    * Sorted by order of preference descending.
    */
-  private _preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
+  private _preferredVideoTracks : IVideoTrackPreference[];
 
-  /** Memoization of the previously-chosen audio Adaptation for each Period. */
+  /** Memorization of the previously-chosen audio Adaptation for each Period. */
   private _audioChoiceMemory : WeakMap<Period, Adaptation|null>;
 
-  /** Memoization of the previously-chosen text Adaptation for each Period. */
+  /** Memorization of the previously-chosen text Adaptation for each Period. */
   private _textChoiceMemory : WeakMap<Period, Adaptation|null>;
 
-  /** Memoization of the previously-chosen video Adaptation for each Period. */
+  /** Memorization of the previously-chosen video Adaptation for each Period. */
   private _videoChoiceMemory : WeakMap<Period, Adaptation|null>;
 
-  /**
-   * @param {BehaviorSubject<Array.<Object|null>>} preferredAudioTracks - Array
-   * of audio track preferences
-   * @param {BehaviorSubject<Array.<Object|null>>} preferredAudioTracks - Array
-   * of text track preferences
-   */
-  constructor(defaults : {
-    preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
-    preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
-    preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
-  }) {
+  constructor() {
     this._periods = new SortedList((a, b) => a.period.start - b.period.start);
 
     this._audioChoiceMemory = new WeakMap();
     this._textChoiceMemory = new WeakMap();
     this._videoChoiceMemory = new WeakMap();
 
-    this._preferredAudioTracks = defaults.preferredAudioTracks;
-    this._preferredTextTracks = defaults.preferredTextTracks;
-    this._preferredVideoTracks = defaults.preferredVideoTracks;
+    this._preferredAudioTracks = [];
+    this._preferredTextTracks = [];
+    this._preferredVideoTracks = [];
+  }
+
+  /**
+   * Set the list of preferred audio tracks, in preference order.
+   * @param {Array.<Object>} preferredAudioTracks
+   * @param {boolean} shouldApply - `true` if those preferences should be
+   * applied on the currently loaded Period. `false` if it should only
+   * be applied to new content.
+   */
+  public setPreferredAudioTracks(
+    preferredAudioTracks : IAudioTrackPreference[],
+    shouldApply : boolean
+  ) : void {
+    this._preferredAudioTracks = preferredAudioTracks;
+    if (shouldApply) {
+      this._applyAudioPreferences();
+    }
+  }
+
+  /**
+   * Set the list of preferred text tracks, in preference order.
+   * @param {Array.<Object>} preferredTextTracks
+   * @param {boolean} shouldApply - `true` if those preferences should be
+   * applied on the currently loaded Periods. `false` if it should only
+   * be applied to new content.
+   */
+  public setPreferredTextTracks(
+    preferredTextTracks : ITextTrackPreference[],
+    shouldApply : boolean
+  ) : void {
+    this._preferredTextTracks = preferredTextTracks;
+    if (shouldApply) {
+      this._applyTextPreferences();
+    }
+  }
+
+  /**
+   * Set the list of preferred text tracks, in preference order.
+   * @param {Array.<Object>} tracks
+   * @param {boolean} shouldApply - `true` if those preferences should be
+   * applied on the currently loaded Period. `false` if it should only
+   * be applied to new content.
+   */
+  public setPreferredVideoTracks(
+    preferredVideoTracks : IVideoTrackPreference[],
+    shouldApply : boolean
+  ) : void {
+    this._preferredVideoTracks = preferredVideoTracks;
+    if (shouldApply) {
+      this._applyVideoPreferences();
+    }
   }
 
   /**
@@ -295,9 +333,9 @@ export default class TrackChoiceManager {
    *   2. If not found, the preferences
    */
   public update() : void {
-    this._updateAudioTrackChoices();
-    this._updateTextTrackChoices();
-    this._updateVideoTrackChoices();
+    this._resetChosenAudioTracks();
+    this._resetChosenTextTracks();
+    this._resetChosenVideoTracks();
   }
 
   /**
@@ -314,7 +352,6 @@ export default class TrackChoiceManager {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
-    const preferredAudioTracks = this._preferredAudioTracks.getValue();
     const audioAdaptations = period.getPlayableAdaptations("audio");
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
@@ -325,6 +362,7 @@ export default class TrackChoiceManager {
                !arrayIncludes(audioAdaptations, chosenAudioAdaptation)
     ) {
       // Find the optimal audio Adaptation
+      const preferredAudioTracks = this._preferredAudioTracks;
       const normalizedPref = normalizeAudioTracks(preferredAudioTracks);
       const optimalAdaptation = findFirstOptimalAudioAdaptation(audioAdaptations,
                                                                 normalizedPref);
@@ -350,7 +388,6 @@ export default class TrackChoiceManager {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
-    const preferredTextTracks = this._preferredTextTracks.getValue();
     const textAdaptations = period.getPlayableAdaptations("text");
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (chosenTextAdaptation === null) {
@@ -360,6 +397,7 @@ export default class TrackChoiceManager {
                !arrayIncludes(textAdaptations, chosenTextAdaptation)
     ) {
       // Find the optimal text Adaptation
+      const preferredTextTracks = this._preferredTextTracks;
       const normalizedPref = normalizeTextTracks(preferredTextTracks);
       const optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations,
                                                                normalizedPref);
@@ -384,7 +422,6 @@ export default class TrackChoiceManager {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
-    const preferredVideoTracks = this._preferredVideoTracks.getValue();
     const videoAdaptations = period.getPlayableAdaptations("video");
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
@@ -394,6 +431,7 @@ export default class TrackChoiceManager {
     } else if (chosenVideoAdaptation === undefined ||
                !arrayIncludes(videoAdaptations, chosenVideoAdaptation)
     ) {
+      const preferredVideoTracks = this._preferredVideoTracks;
       const optimalAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations,
                                                                 preferredVideoTracks);
       this._videoChoiceMemory.set(period, optimalAdaptation);
@@ -730,8 +768,43 @@ export default class TrackChoiceManager {
     });
   }
 
-  private _updateAudioTrackChoices() {
-    const preferredAudioTracks = this._preferredAudioTracks.getValue();
+  /**
+   * Reset all audio tracks choices to corresponds to the current preferences.
+   */
+  private _applyAudioPreferences() : void {
+    // Remove all memorized choices and start over
+    this._audioChoiceMemory = new WeakMap();
+    this._resetChosenAudioTracks();
+  }
+
+  /**
+   * Reset all text tracks choices to corresponds to the current preferences.
+   */
+  private _applyTextPreferences() : void {
+    // Remove all memorized choices and start over
+    this._textChoiceMemory = new WeakMap();
+    this._resetChosenTextTracks();
+  }
+
+  /**
+   * Reset all video tracks choices to corresponds to the current preferences.
+   */
+  private _applyVideoPreferences() : void {
+    // Remove all memorized choices and start over
+    this._videoChoiceMemory = new WeakMap();
+    this._resetChosenVideoTracks();
+  }
+
+  /**
+   * Choose again the best audio tracks for all current Periods.
+   * This is based on two things:
+   *   1. what was the track previously chosen for that Period (by checking
+   *      `this._audioChoiceMemory`).
+   *   2. If no track were previously chosen or if it is not available anymore
+   *      we check the audio preferences.
+   */
+  private _resetChosenAudioTracks() {
+    const preferredAudioTracks = this._preferredAudioTracks;
     const normalizedPref = normalizeAudioTracks(preferredAudioTracks);
 
     const recursiveUpdateAudioTrack = (index : number) : void => {
@@ -776,8 +849,16 @@ export default class TrackChoiceManager {
     recursiveUpdateAudioTrack(0);
   }
 
-  private _updateTextTrackChoices() {
-    const preferredTextTracks = this._preferredTextTracks.getValue();
+  /**
+   * Choose again the best text tracks for all current Periods.
+   * This is based on two things:
+   *   1. what was the track previously chosen for that Period (by checking
+   *      `this._textChoiceMemory`).
+   *   2. If no track were previously chosen or if it is not available anymore
+   *      we check the text preferences.
+   */
+  private _resetChosenTextTracks() {
+    const preferredTextTracks = this._preferredTextTracks;
     const normalizedPref = normalizeTextTracks(preferredTextTracks);
 
     const recursiveUpdateTextTrack = (index : number) : void => {
@@ -822,8 +903,16 @@ export default class TrackChoiceManager {
     recursiveUpdateTextTrack(0);
   }
 
-  private _updateVideoTrackChoices() {
-    const preferredVideoTracks = this._preferredVideoTracks.getValue();
+  /**
+   * Choose again the best video tracks for all current Periods.
+   * This is based on two things:
+   *   1. what was the track previously chosen for that Period (by checking
+   *      `this._videoChoiceMemory`).
+   *   2. If no track were previously chosen or if it is not available anymore
+   *      we check the video preferences.
+   */
+  private _resetChosenVideoTracks() {
+    const preferredVideoTracks = this._preferredVideoTracks;
     const recursiveUpdateVideoTrack = (index : number) : void => {
       if (index >= this._periods.length()) {
         // we did all video Buffers, exit
