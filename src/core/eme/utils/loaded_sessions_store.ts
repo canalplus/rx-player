@@ -188,15 +188,7 @@ export default class LoadedSessionsStore {
                  "the given initData and initDataType");
         return EMPTY;
       }
-      const { mediaKeySession } = entry;
-      log.debug("EME-LSS: Close MediaKeySession", mediaKeySession);
-      return closeSession$(mediaKeySession)
-        .pipe(catchError((err : unknown) => {
-          log.error("EME-LSS: Could not close MediaKeySession: " +
-                    (err instanceof Error ? err.toString() :
-                                            "Unknown error"));
-          return observableOf(null);
-        }));
+      return safelyCloseMediaKeySession(entry.mediaKeySession);
     });
   }
 
@@ -225,13 +217,34 @@ export default class LoadedSessionsStore {
   public closeAllSessions() : Observable<null> {
     return observableDefer(() => {
       const closing$ = this._storage.getAll()
-        .map((entry) => this.closeSession(entry.initData, entry.initDataType));
+        .map((entry) => safelyCloseMediaKeySession(entry.mediaKeySession));
 
-      // re-initialize the storage
+      // re-initialize the storage, so that new interactions with the
+      // `LoadedSessionsStore` do not rely on MediaKeySessions we're in the
+      // process of removing
       this._storage = new InitDataStore<IStoredSessionEntry>();
 
       return observableConcat(observableMerge(...closing$).pipe(ignoreElements()),
                               observableOf(null));
     });
   }
+
+}
+
+/**
+ * Close a MediaKeySession and do not throw if this action throws an error.
+ * @param {MediaKeySession} mediaKeySession
+ * @returns {Observable}
+ */
+function safelyCloseMediaKeySession(
+  mediaKeySession : MediaKeySession | ICustomMediaKeySession
+) : Observable<unknown> {
+  log.debug("EME-LSS: Close MediaKeySession", mediaKeySession);
+  return closeSession$(mediaKeySession)
+    .pipe(catchError((err : unknown) => {
+      log.error("EME-LSS: Could not close MediaKeySession: " +
+                (err instanceof Error ? err.toString() :
+                                        "Unknown error"));
+      return observableOf(null);
+    }));
 }

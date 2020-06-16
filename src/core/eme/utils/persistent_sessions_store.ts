@@ -168,7 +168,7 @@ export default class PersistentSessionsStore {
     initDataType : string|undefined
   ) : void {
     const index = this.getIndex(initData, initDataType);
-    if (index !== -1) {
+    if (index === -1) {
       log.warn("EME-PSS: initData to delete not found.");
       return;
     }
