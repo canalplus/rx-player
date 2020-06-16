@@ -16,6 +16,7 @@
   - dash: do not reduce the minimum position when using the `manifestUpdateUrl` `transportOptions` in `loadVideo`
   - local-manifest: consider `language` property from a "local" Manifest
   - local-manifest: refresh the Manifest even if we dont have a Manifest URL, as is often the case when playing locally-stored contents
+  - local-manifest: allow the "expired" property of a local-manifest to be updated
   - compat/eme/fairplay: for fairplay contents, better format the initialization data given to the CDM. The previous behavior could lead to invalid license requests
   - eme: re-allow serialization into a JSON string of the persisted session data, as presented in the DRM tutorial
   - compat/low-latency: fix compilation of async/await when playing low-latency contents with the default bundled builds
