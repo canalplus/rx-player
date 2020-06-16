@@ -92,6 +92,7 @@ tutorials](https://canalplus.github.io/rx-player/doc/pages/tutorials/index.html)
 to help you familiarize with the RxPlayer API:
   - [Quick start into the API](https://canalplus.github.io/rx-player/doc/pages/tutorials/quick_start.html).
   - [Playing contents with DRMs](https://canalplus.github.io/rx-player/doc/pages/tutorials/contents_with_DRM.html).
+  - [Selecting a track](./track_selection.md)
   - [Listening to events contained in the content](https://canalplus.github.io/rx-player/doc/pages/tutorials/stream_events.html)
 
 
