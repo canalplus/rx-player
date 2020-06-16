@@ -16,6 +16,10 @@
 
 import Player from "./public_api";
 export {
+  IStreamEvent,
+  IStreamEventData,
+} from "./public_api";
+export {
   IConstructorOptions,
   ILoadVideoOptions,
 

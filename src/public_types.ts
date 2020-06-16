@@ -44,4 +44,7 @@ export {
   IAudioTrackPreference,
   ITextTrackPreference,
   IVideoTrackPreference,
+
+  IStreamEvent,
+  IStreamEventData,
 } from "./core/api";
