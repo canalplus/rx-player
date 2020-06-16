@@ -125,7 +125,7 @@ exported:
     ``loadVideo``.
 
 
-### getAvailableAudioTracks ####################################################
+### getAvailableAudioTracks method / availableAudioTracksChange event ##########
 
 The return type of the `getAvailableAudioTracks` method is an array of objects.
 Each of this objects corresponds to the `IAvailableAudioTrack` interface.
@@ -148,7 +148,7 @@ function getAvailableAudioTracks() : IAvailableAudioTrack[] {
 ```
 
 
-### getAvailableTextTracks #####################################################
+### getAvailableTextTracks method / availabletextTracksChange event ############
 
 The return type of the `getAvailableTextTracks` method is an array of objects.
 Each of this objects corresponds to the `IAvailableTextTrack` interface.
@@ -171,7 +171,7 @@ function getAvailableTextTracks() : IAvailableTextTrack[] {
 ```
 
 
-### getAvailableVideoTracks ####################################################
+### getAvailableVideoTracks method / availableVideoTracksChange event ##########
 
 The return type of the `getAvailableVideoTracks` method is an array of objects.
 Each of this objects corresponds to the `IAvailableVideoTrack` interface.
@@ -194,7 +194,7 @@ function getAvailableVideoTracks() : IAvailableVideoTrack[] {
 ```
 
 
-### getAudioTrack/audioTrackChange #############################################
+### getAudioTrack method /audioTrackChange event ###############################
 
 The `IAudioTrack` corresponds to both the type returned by the `getAudioTrack`
 method and emitted as the payload of the `audioTrackChange` event.
@@ -221,7 +221,7 @@ function getCurrentlyDownloadedAudioTrack() : IAudioTrack {
 ```
 
 
-### getTextTrack/textTrackChange ###############################################
+### getTextTrack method / textTrackChange event ###############################3
 
 The `ITextTrack` corresponds to both the type returned by the `getTextTrack`
 method and emitted as the payload of the `textTrackChange` event.
@@ -248,7 +248,7 @@ function getCurrentlyDownloadedTextTrack() : ITextTrack {
 ```
 
 
-### getVideoTrack/videoTrackChange #############################################
+### getVideoTrack method / videoTrackChange event ##############################
 
 The `IVideoTrack` corresponds to both the type returned by the `getVideoTrack`
 method and emitted as the payload of the `videoTrackChange` event.
@@ -272,4 +272,31 @@ rxPlayer.addEventListener("videoTrackChange", (track : IVideoTrack) => {
 function getCurrentlyDownloadedVideoTrack() : IVideoTrack {
   return rxPlayer.getVideoTrack();
 }
+```
+
+### streamEvent / streamEventSkip events #######################################
+
+The type `IStreamEvent` corresponds to the payload of either a `streamEvent` or
+a `streamEventSkip` event.
+
+The type `IStreamEventData` is the type of its `data` property.
+
+Example:
+
+```js
+// the type(s) wanted
+import { IStreamEvent, IStreamEventData } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+function processEventData(eventData : IStreamEventData) {
+  if (eventData.type === "dash-event-stream") {
+    console.log("DASH EventStream's event received!");
+  }
+}
+
+rxPlayer.addEventListener("streamEvent", (evt : IStreamEvent) {
+  processEventData(evt.data);
+});
 ```

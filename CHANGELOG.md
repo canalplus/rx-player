@@ -6,6 +6,7 @@
 
   - api/events: add `"streamEvent"` event for when a DASH EventStream's event is reached
   - api/events: add `"streamEventSkip"` event for when a DASH EventStream's event is "skipped"
+  - types/events: add `IStreamEvent` and `IStreamEventData` - which define the payload emitted by both a `"streamEvent"` and `"streamEventSkip"` events to the exported types
   - api/tracks: add second argument to `setPreferredAudioTracks`, `setPreferredTextTracks` and `setPreferredVideoTracks` to be able to also apply them to the currently loaded Periods / content
   - text/webvtt: parse settings attributes of WebVTT subtitles when in HTML mode
   - api/tracks: add codec information to `getAvailableAudioTracks` and `getAudioTrack`

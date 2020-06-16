@@ -19,10 +19,12 @@ import {
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
   IStreamEvent,
+  IStreamEventData,
 } from "./types";
 
 export {
   IStreamEvent,
+  IStreamEventData,
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent
 };
