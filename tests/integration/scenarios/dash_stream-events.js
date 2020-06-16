@@ -391,7 +391,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     await sleep(leftToWait * 700);
     expect(player.getPosition()).to.be.within(45, 49, "The position 2 is not right");
 
-    expect(hasExited1).to.equal(false);
+    expect(hasExited1).to.equal(false, "should not have exited the first event");
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(2);
 
@@ -407,8 +407,8 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     await sleep(leftToWait * 700);
     expect(player.getPosition()).to.be.within(50, 54, "The position 3 is not right");
 
-    expect(hasExited1).to.equal(true);
-    expect(hasExited2).to.equal(false);
+    expect(hasExited1).to.equal(true, "should have exited the first event");
+    expect(hasExited2).to.equal(false, "should not have exited the second event");
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(2);
 
@@ -416,7 +416,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     await sleep(leftToWait * 700);
     expect(player.getPosition()).to.be.within(54, 58, "The position 4 is not right");
 
-    expect(hasExited2).to.equal(true);
+    expect(hasExited2).to.equal(true, "should have exited the second event");
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(2);
   });
