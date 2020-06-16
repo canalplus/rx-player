@@ -550,10 +550,12 @@ browser API:</p>
       <span class="hljs-attr">persistentLicense</span>: <span class="hljs-literal">true</span>,
       <span class="hljs-attr">licenseStorage</span>: {
         save(data) {
-          localStorage.setItem(<span class="hljs-string">&quot;RxPlayer-licenseStorage&quot;</span>, data);
+          localStorage.setItem(<span class="hljs-string">&quot;RxPlayer-licenseStorage&quot;</span>, <span class="hljs-built_in">JSON</span>.stringify(data));
         },
         load() {
-          <span class="hljs-keyword">return</span> localStorage.getItem(<span class="hljs-string">&quot;RxPlayer-licenseStorage&quot;</span>, data);
+          <span class="hljs-keyword">const</span> item = localStorage.getItem(<span class="hljs-string">&quot;RxPlayer-licenseStorage&quot;</span>);
+          <span class="hljs-keyword">return</span> item === <span class="hljs-literal">null</span> ? [] :
+                                 <span class="hljs-built_in">JSON</span>.parse(item);
         }
       },
     },
@@ -565,9 +567,9 @@ does not help to identify a user.</p>
 <p>You can also use every storage API at your disposition (some embedded devices
 might have their own).</p>
 <p>As a nice bonus, you can note that the data given is perfectly &#x201C;serializable&#x201D;
-through the JSON.stringify browser API. This means that:</p>
-<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(data === <span class="hljs-built_in">JSON</span>.parse(<span class="hljs-built_in">JSON</span>.stringify(data))); <span class="hljs-comment">// displays &quot;true&quot;</span>
-</code></pre>
+through the JSON.stringify browser API. This means that, as the example shown
+above, you can call <code>JSON.stringify</code> on that data and retrieve it through a
+<code>JSON.parse</code> call.</p>
 <p>This is very useful for storage APIs which cannot store JavaScript objects.</p>
 <p><a name="chapter-Playback%20issues%20related%20to%20DRMs"></a></p>
 <h2>Playback issues related to DRMs</h2>
