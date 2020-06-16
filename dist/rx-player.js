@@ -49301,13 +49301,11 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
   _proto._priv_onPlaybackEvent = function _priv_onPlaybackEvent(event) {
     switch (event.type) {
       case "stream-event":
-        this._priv_onStreamEvent(event);
-
+        this.trigger("streamEvent", event.value);
         break;
 
       case "stream-event-skip":
-        this._priv_onStreamEventSkip(event);
-
+        this.trigger("streamEventSkip", event.value);
         break;
 
       case "activePeriodChanged":
@@ -49494,14 +49492,6 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
         _this5._priv_trackChoiceManager.update();
       }
     });
-  };
-
-  _proto._priv_onStreamEvent = function _priv_onStreamEvent(event) {
-    this.trigger("streamEvent", event.value);
-  };
-
-  _proto._priv_onStreamEventSkip = function _priv_onStreamEventSkip(event) {
-    this.trigger("streamEventSkip", event.value);
   }
   /**
    * Triggered each times the current Period Changed.
