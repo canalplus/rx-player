@@ -17,24 +17,26 @@
 import {
   concat as observableConcat,
   defer as observableDefer,
-  EMPTY,
-  merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
 import {
   map,
-  mapTo,
   mergeMap,
-  startWith,
 } from "rxjs/operators";
 import { ICustomMediaKeySession } from "../../compat";
 import config from "../../config";
 import log from "../../log";
+import cleanOldLoadedSessions, {
+  ICleanedOldSessionEvent,
+  ICleaningOldSessionEvent,
+} from "./clean_old_loaded_sessions";
 import createSession from "./create_session";
-import { IMediaKeysInfos } from "./types";
+import {
+  IMediaKeySessionInfo,
+  IMediaKeysInfos,
+} from "./types";
 import isSessionUsable from "./utils/is_session_usable";
-import LoadedSessionsStore from "./utils/loaded_sessions_store";
 
 const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS } = config;
 
@@ -44,20 +46,6 @@ export interface IInitializationDataInfo {
   type : string | undefined;
   /** Initialization data itself. */
   data : Uint8Array;
-}
-
-/** Information concerning a MediaKeySession. */
-export interface IMediaKeySessionInfo {
-  /** The MediaKeySession itself. */
-  mediaKeySession : MediaKeySession |
-                    ICustomMediaKeySession;
-  /** The type of MediaKeySession (e.g. "temporary"). */
-  sessionType : MediaKeySessionType;
-  /** Initialization data assiociated to this MediaKeySession. */
-  initData : Uint8Array;
-  /** Initialization data type for the given initialization data. */
-  initDataType : string |
-                 undefined;
 }
 
 /** Event emitted when a new MediaKeySession has been created. */
@@ -75,24 +63,6 @@ export interface ILoadedOpenSession {
 /** Event emitted when a persistent MediaKeySession has been loaded. */
 export interface ILoadedPersistentSessionEvent {
   type : "loaded-persistent-session";
-  value : IMediaKeySessionInfo;
-}
-
-/**
- * Event emitted when an old MediaKeySession has been closed to respect the
- * maximum limit of concurrent MediaKeySession active.
- */
-interface ICleanedOldSessionEvent {
-  type : "cleaned-old-session";
-  value : IMediaKeySessionInfo;
-}
-
-/**
- * Event emitted when we are beginning to close an old MediaKeySession to
- * respect the maximum limit of concurrent MediaKeySession active.
- */
-interface ICleaningOldSessionEvent {
-  type : "cleaning-old-session";
   value : IMediaKeySessionInfo;
 }
 
@@ -157,45 +127,17 @@ export default function getSession(
       observableOf(null)
     ).pipe(mergeMap(() => {
       return observableConcat(
-        cleanOldSessions(loadedSessionsStore),
+        cleanOldLoadedSessions(loadedSessionsStore,
+                               EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS - 1),
         createSession(initData, initDataType, mediaKeysInfos)
           .pipe(map((evt) => ({ type: evt.type,
                                 value: {
                                   mediaKeySession: evt.value.mediaKeySession,
                                   sessionType: evt.value.sessionType,
                                   initData,
-                                  initDataType, } })))
+                                  initDataType,
+                                } })))
       );
     }));
   });
-}
-
-/**
- * Close sessions to respect the `EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS` limit.
- * Emit event when a MediaKeySession begin to be closed and another when the
- * MediaKeySession is closed.
- * @param {Object} loadedSessionsStore
- * @returns {Observable}
- */
-function cleanOldSessions(
-  loadedSessionsStore : LoadedSessionsStore
-) : Observable<ICleaningOldSessionEvent | ICleanedOldSessionEvent> {
-  const maxSessions = EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
-  const cleaningOldSessions$ : Array<Observable<ICleanedOldSessionEvent |
-                                                 ICleaningOldSessionEvent>> = [];
-  if (maxSessions > 0 && maxSessions <= loadedSessionsStore.getLength()) {
-    const entries = loadedSessionsStore.getAll();
-    for (let i = 0; i < entries.length - maxSessions; i++) {
-      const entry = entries[i];
-      const cleaning$ = loadedSessionsStore
-        .closeSession(entry.initData, entry.initDataType)
-          .pipe(mapTo({ type: "cleaned-old-session" as const,
-                        value: entry }),
-                startWith({ type: "cleaning-old-session" as const,
-                            value: entry }));
-      cleaningOldSessions$.push(cleaning$);
-    }
-  }
-  return cleaningOldSessions$.length !== 0 ? observableMerge(...cleaningOldSessions$) :
-                                             EMPTY;
 }

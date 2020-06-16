@@ -116,7 +116,7 @@ export default function createSession(
                             value: { mediaKeySession: session, sessionType } });
     }
 
-    const storedEntry = persistentSessionsStore.get(initData, initDataType);
+    const storedEntry = persistentSessionsStore.getAndReuse(initData, initDataType);
     if (storedEntry === null) {
       return observableOf({ type: "created-session" as "created-session",
                             value: { mediaKeySession: session, sessionType } });

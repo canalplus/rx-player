@@ -109,6 +109,23 @@ export default class PersistentSessionsStore {
   }
 
   /**
+   * Returns the number of stored values.
+   * @returns {number}
+   */
+  public getLength() : number {
+    return this._entries.length;
+  }
+
+  /**
+   * Returns information about all stored MediaKeySession, in the order in which
+   * the MediaKeySession have been created.
+   * @returns {Array.<Object>}
+   */
+  public getAll() : IPersistentSessionInfo[] {
+    return this._entries;
+  }
+
+  /**
    * Retrieve an entry based on its initialization data.
    * @param {Uint8Array}  initData
    * @param {string|undefined} initDataType
@@ -121,6 +138,30 @@ export default class PersistentSessionsStore {
     const index = this.getIndex(initData, initDataType);
     return index === -1 ? null :
                           this._entries[index];
+  }
+
+  /**
+   * Like `get`, but also move the corresponding value at the end of the store
+   * (as returned by `getAll`) if found.
+   * This can be used for example to tell when a previously-stored value is
+   * re-used to then be able to implement a caching replacement algorithm based
+   * on the least-recently-used values by just evicting the first values
+   * returned by `getAll`.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @returns {*}
+   */
+  public getAndReuse(
+    initData : Uint8Array,
+    initDataType : string | undefined
+  ) : IPersistentSessionInfo | null {
+    const index = this.getIndex(initData, initDataType);
+    if (index === -1) {
+      return null;
+    }
+    const item = this._entries.splice(index, 1)[0];
+    this._entries.push(item);
+    return item;
   }
 
   /**
@@ -175,6 +216,22 @@ export default class PersistentSessionsStore {
     const entry = this._entries[index];
     log.warn("EME-PSS: Delete session from store", entry);
     this._entries.splice(index, 1);
+    this._save();
+  }
+
+  deleteOldSessions(sessionsToDelete : number) : void {
+    log.debug(`EME-PSS: Deleting last ${sessionsToDelete} sessions.`);
+    if (sessionsToDelete <= 0) {
+      return;
+    }
+    if (sessionsToDelete <= this._entries.length) {
+      this._entries.splice(0, sessionsToDelete);
+    } else {
+      log.warn("EME-PSS: Asked to remove more information that it contains",
+               sessionsToDelete,
+               this._entries.length);
+      this._entries = [];
+    }
     this._save();
   }
 

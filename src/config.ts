@@ -825,6 +825,39 @@ export default {
   EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 50,
 
   /**
+   * When playing contents with a persistent license, we will usually store some
+   * information related to that MediaKeySession, to be able to play it at a
+   * later time.
+   *
+   * Those information are removed once a MediaKeySession is not considered
+   * as "usable" anymore. But to know that, the RxPlayer has to load it.
+   *
+   * But the RxPlayer does not re-load every persisted MediaKeySession every
+   * time to check each one of them one by one, as this would not be a
+   * performant thing to do.
+   *
+   * So this is only done when and if the corresponding content is encountered
+   * again and only if it contains the same initialization data.
+   *
+   * We have to consider that those "information" contain binary data which can
+   * be of arbitrary length. Size taken by an array of them can relatively
+   * rapidly take a lot of space in JS memory.
+   *
+   * So to avoid this storage to take too much space (would it be in the chosen
+   * browser's storage or in JS memory), we now set a higher bound for the
+   * amount of MediaKeySession information that can be stored at the same time.
+   *
+   * I set the value of 1000 here, as it seems big enough to not be considered a
+   * problem (though it can become one, when contents have a lot of keys per
+   * content), and still low enough so it should not cause much problem (my
+   * method to choose that number was to work with power of 10s and choosing the
+   * amount which seemed the most sensible one).
+   *
+   * This wasn't battle-tested however.
+   */
+  EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION: 1000,
+
+  /**
    * The player relies on browser events and properties to update its status to
    * "ENDED".
    *
