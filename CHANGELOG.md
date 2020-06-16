@@ -1,5 +1,35 @@
 # Changelog
 
+## v3.21.0 (2020/06/16)
+
+### Features
+
+  - api/events: add `"streamEvent"` event for when a DASH EventStream's event is reached
+  - api/events: add `"streamEventSkip"` event for when a DASH EventStream's event is "skipped"
+  - api/tracks: add second argument to `setPreferredAudioTracks`, `setPreferredTextTracks` and `setPreferredVideoTracks` to be able to also apply them to the currently loaded Periods / content
+  - text/webvtt: parse settings attributes of WebVTT subtitles when in HTML mode
+  - api/tracks: add codec information to `getAvailableAudioTracks` and `getAudioTrack`
+
+### Bug fixes
+
+  - dash: do not reduce the minimum position when using the `manifestUpdateUrl` `transportOptions` in `loadVideo`
+  - local-manifest: consider `language` property from a "local" Manifest
+  - local-manifest: refresh the Manifest even if we dont have a Manifest URL, as is often the case when playing locally-stored contents
+  - compat/eme/fairplay: for fairplay contents, better format the initialization data given to the CDM. The previous behavior could lead to invalid license requests
+  - eme: re-allow serialization into a JSON string of the persisted session data, as presented in the DRM tutorial
+  - compat/low-latency: fix compilation of async/await when playing low-latency contents with the default bundled builds
+  - eme: ensure that the previous MediaKeySystemAccess used had `persistentState` to "required" when a new content needs it to be
+  - eme: fix `closeSessionsOnStop` `keySystems` option actually not removing any MediaKeySession when stopping a content (v3.20.1 regression).
+
+### Other improvements
+
+  - dash: emit minor errors arising when parsing the DASH MPD through warning events (whose payload will be an error with the `PIPELINE_PARSE_ERROR` code)
+  - dash: consider AdaptationSet@selectionPriority in our initial track choice if the user preferences lead to multiple compatible tracks
+  - misc: do not download video segments when playing on an "audio" element.
+  - eme: replace the MediaKeySession's cache entry based on the least recently used instead of on the least recently created to improve cache effectiveness.
+  - eme/persistent sessions: Limit the maximum of stored persistent MediaKeySessions to 1000 to avoid the storage to grow indefinitely (higher than that, the least-recently used will be evicted)
+
+
 ## v3.20.1 (2020/05/06)
 
 ### Bug fixes
