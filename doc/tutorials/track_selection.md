@@ -154,6 +154,14 @@ All of those events will have the corresponding available tracks as a payload,
 which will be the exact same data that what you would get when calling the
 corresponding `getAvailable...Tracks` method at this point.
 
+Note that no `available...TracksChange` event will be sent when the RxPlayer
+stops the content or temporarly goes through the `RELOADING` player state,
+despite the fact that in those cases there is no available tracks to choose
+from.
+
+Still, calling the `getAvailable...Tracks` methods in those cases will return
+an empty array (as it should). This has to be considered.
+
 
 #### Examples
 
@@ -187,25 +195,23 @@ Both the exposed methods and events return the same data.
 Whether you should rely on the former or on the latter will depend on what
 corresponds the most to your codebase:
 
-  - if you only want to fetch that list when the final user ask for it - for
-    example when he/she clicks on a button - it can be easier to just call the
-    methods.
+  - if you want to fetch that list at a given point in time - such as when the
+    user clicks on a button - it can be easier to just call the methods.
 
-    You just have to make sure that you're not calling those (or that you're
-    hiding the corresponding button) when the player has not loaded any content
-    (when in the `STOPPED`, `LOADING` or `RELOADING` state).
-
-  - if you want to know that list and store it as soon as available, you might
+  - if you want to know that list as soon as available and perform an action
+    right after (such as selecting a track, displaying this list...), you might
     prefer relying on the events.
 
-In both cases, you will obtain the same data, which corresponds to the currently
-available tracks (of the content being watched and/or heard).
+    Here you will also have to re-set that list yourself when the player has no
+    content loaded anymore (in the `STOPPED`, `LOADING` or `RELOADING` player
+    state).
+
 
 
 ## Knowing the current track ###################################################
 
 You might also want to know which track is the one currently selected.
-There are several ways to know that.
+There are several ways to do that.
 
 
 ### Through methods ############################################################
@@ -223,9 +229,9 @@ The RxPlayer has a set of methods that just return the currently active tracks:
 
 Those methods will return an object describing the attributes of the current
 tracks.
-They can also return `null` if no track is enabled (for example, the user could
-have wanted to disable all text tracks) and `undefined` if the track is either
-unknown (which is a very rare possibility) or if no content is currently
+They can also return `null` if no track has been enabled (for example, the user
+could have wanted to disable all text tracks) and `undefined` if the track is
+either unknown (which is a very rare occurence) or if no content is currently
 playing.
 
 Like the `getAvailable...Tracks` methods, the format of the objects returned
@@ -277,6 +283,12 @@ Unlike for the `get...Track` methods however, its payload cannot be set to
 `undefined`: you won't receive any `...TracksChange` event if the track is
 unknown or if there is no content.
 
+This also means that you won't have any event when the RxPlayer stops or
+re-load the current content, despite the fact that you don't have any current
+track in that case.
+Calling the `get...Track` method in those cases will return `undefined`, as it
+should. This has to be considered.
+
 
 #### Example
 
@@ -317,6 +329,7 @@ rxPlayer.addEventListener("availableAudioTracksChange", (tracks) => {
   activeAudioTrack2 = tracks.find(track => track.active);
 });
 ```
+
 
 ### Which one to use? ##########################################################
 
@@ -359,6 +372,7 @@ if (firstAudioTrackWithAD !== undefined) {
 It's important to consider that those APIs only allow to change the current
 track and will have no impact on the other contents you will encounter in the
 future.
+
 Depending on your application, you might also want to set a global preference at
 some point, such as saying that the final user will prefer english audio
 tracks for now on.
@@ -414,8 +428,8 @@ for future contents: the "track preferences APIs".
 
 ## Track preferences APIs ######################################################
 
-All methods and events discussed until now only have an effect for the currently
-played content.
+All methods and events discussed until now only have an effect for the current
+content being played.
 
 This has multiple disadvantages:
 
@@ -433,7 +447,7 @@ This has multiple disadvantages:
     re-download a completely different track.
 
     Even more important, the transition won't be smooth at all because we
-    will have to stop to build some buffer on the wanted track.
+    will have to stop to build some buffer with the wanted track instead.
 
 Thankfully, there exists another set of APIs we call the "track preferences".
 
@@ -454,8 +468,8 @@ classic track selection APIs:
     wants, so that the right track is automatically chosen by the RxPlayer. It
     is also useful for optimizations such as when pre-loading the next content.
 
-    This is the APIs you will use in most other use case, where you want to give
-    the general track settings the user wants to the RxPlayer.
+    This is the APIs you will use in most other use cases, where you want to
+    give the general track settings the user wants to the RxPlayer.
 
 The track preferences can be set in two manners:
   1. During instanciation of the RxPlayer
@@ -537,28 +551,33 @@ But there's another element to consider here.
 When calling the method (unlike when giving an option to the constructor), the
 RxPlayer may already be playing a content. So here, there's a dilemma:
 
-  - should the RxPlayer apply the new preferences to the playing content? It
+  - should the RxPlayer apply the new preferences to the current content? It
     could, but it might be unexpected if a track chosen explicitely by the user
-    is not used anymore because of that.
+    for the current content changes because it does not match the preferences.
 
   - or should the RxPlayer only apply it to new contents? In that case, it could
     also be an unexpected behavior.
-    Especially for contents with multiple track lists - where you could have a
-    track unrelated to your new preferences be active when seeking back to it.
+    Especially for contents with multiple track lists - here you could inversely
+    want your new preferences to be considered when seeking back to an
+    already-played content.
 
 There's no good answer here, it all depends on the implementation you want to
 do.
 
-Because of that those methods all can take a boolean as a second argument.
+Because of that, those methods all can take a boolean as a second argument.
 When this second argument is set to `true`, the RxPlayer will also apply that
 preference to the already-loaded content:
 ```js
 // disable the text tracks from every contents - the current one included
-rxPlayer.setPreferredTextTracks([null]);
+rxPlayer.setPreferredTextTracks([null], true);
 ```
 
 If not set or set to `false`, it will only be applied for content that have not
 been loaded yet.
+```js
+// Only disable the text tracks from the next encountered contents.
+rxPlayer.setPreferredTextTracks([null]);
+```
 
 
 ### Obtaining the last set preferences #########################################
@@ -582,13 +601,13 @@ just an empty array by default when neither was used).
 
 The "classic" track selection APIs (`getAvailable...Tracks`, `get...Track` and
 `set...Track`) are the APIs you should use when explicitely exposing the current
-available tracks and selecting a precize one.
+available tracks and selecting one precizely.
 
 The track preferences APIs should be used for anything else.
 
 This is because the track preferences APIs allow to completely move the task
 of selecting a track out of your code and into the RxPlayer and will allow
-better optimizations to take place.
+some optimizations to take place.
 
 The "classic" track selection APIs still allow to make a much more precize
 choice and allow to know which tracks are currently available.
@@ -604,7 +623,6 @@ want to approach, which is how subtitles will be displayed to the user.
 
 By default, text tracks will be displayed through `<tracks>` elements which
 will be contained in the media element where the content plays.
-
 This allows to display subtitles but may not be sufficient when wanting to
 display richer subtitles (such as closed-captions).
 
@@ -614,7 +632,6 @@ This is why the RxPlayer has a
 By setting the `textTrackMode` to `"html"` in a
 [`loadVideo`](../api/index.md#meth-loadVideo) call, you will be able to profit
 from much richer subtitles than what you could have by default.
-
 If you do that, you also need to set the
 [`textTrackElement`](../api/loadVideo_options.md#prop-textTrackElement) property
 to an HTML element, that the RxPlayer will use to display subtitles into.
