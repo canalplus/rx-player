@@ -490,7 +490,7 @@ The payload is an object with the following properties:
 
 
 <a name="events-playback-infos"></a>
-### Playback information #######################################################
+## Playback information #######################################################
 
 This chapter describes events describing miscellaneous information about the
 current content.
