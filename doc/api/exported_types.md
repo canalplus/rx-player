@@ -221,7 +221,7 @@ function getCurrentlyDownloadedAudioTrack() : IAudioTrack {
 ```
 
 
-### getTextTrack method / textTrackChange event ###############################3
+### getTextTrack method / textTrackChange event ################################
 
 The `ITextTrack` corresponds to both the type returned by the `getTextTrack`
 method and emitted as the payload of the `textTrackChange` event.
