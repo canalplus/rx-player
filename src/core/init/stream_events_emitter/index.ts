@@ -14,36 +14,18 @@
  * limitations under the License.
  */
 
-import Player from "./public_api";
+import streamEventsEmitter from "./stream_events_emitter";
+import {
+  IPublicNonFiniteStreamEvent,
+  IPublicStreamEvent,
+  IStreamEvent,
+  IStreamEventData,
+} from "./types";
+
 export {
   IStreamEvent,
   IStreamEventData,
-} from "./public_api";
-export {
-  IConstructorOptions,
-  ILoadVideoOptions,
-
-  // loadVideo arguments:
-  ITransportOptions,
-  IKeySystemOption,
-  ISupplementaryTextTrackOption,
-  ISupplementaryImageTrackOption,
-  IDefaultAudioTrackOption,
-  IDefaultTextTrackOption,
-  INetworkConfigOption,
-  IStartAtOption,
-} from "./option_parsers";
-export {
-  ITMAudioTrackListItem,
-  ITMTextTrackListItem,
-  ITMVideoTrackListItem,
-
-  ITMAudioTrack,
-  ITMTextTrack,
-  ITMVideoTrack,
-
-  IAudioTrackPreference,
-  ITextTrackPreference,
-  IVideoTrackPreference,
-} from "./track_choice_manager";
-export default Player;
+  IPublicNonFiniteStreamEvent,
+  IPublicStreamEvent
+};
+export default streamEventsEmitter;

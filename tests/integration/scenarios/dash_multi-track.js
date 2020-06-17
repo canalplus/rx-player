@@ -364,15 +364,80 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
                                        audioDescription: true } ]);
     player.setPreferredVideoTracks([ { codec: { all: false,
                                                 test: /avc1\.640028/},
-                                       signInterpreted: true }]);
+                                       signInterpreted: true }], false);
     player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: false } ]);
+                                      closedCaption: false } ], undefined);
     await sleep(100);
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
 
     await goToSecondPeriod();
+    checkAudioTrack("fr", "fra", true);
+    checkTextTrack("de", "deu", false);
+    checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
+  });
+
+  it("should not update the previous tracks for non-applied preferences", async () => {
+    await loadContent();
+    await sleep(100);
+    checkAudioTrack("de", "deu", false);
+    checkNoTextTrack();
+    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+
+    await goToSecondPeriod();
+    player.setPreferredAudioTracks([ { language: "fr",
+                                       audioDescription: true } ]);
+    player.setPreferredVideoTracks([ { codec: { all: false,
+                                                test: /avc1\.640028/},
+                                       signInterpreted: true }], false);
+    player.setPreferredTextTracks([ { language: "de",
+                                      closedCaption: false } ], undefined);
+    await sleep(100);
+    await goToFirstPeriod();
+    checkAudioTrack("de", "deu", false);
+    checkNoTextTrack();
+    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+  });
+
+  it("should update the current tracks for applied preferences", async () => {
+    await loadContent();
+    player.setPreferredAudioTracks([ { language: "fr",
+                                       audioDescription: true } ], true);
+    player.setPreferredVideoTracks([ { codec: { all: false,
+                                                test: /avc1\.640028/},
+                                       signInterpreted: true }], true);
+    player.setPreferredTextTracks([ { language: "de",
+                                      closedCaption: false } ], true);
+    await sleep(100);
+    checkAudioTrack("fr", "fra", true);
+    checkTextTrack("de", "deu", false);
+    checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
+
+    await goToSecondPeriod();
+    checkAudioTrack("fr", "fra", true);
+    checkTextTrack("de", "deu", false);
+    checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
+  });
+
+  it("should update the previous tracks for applied preferences", async () => {
+    await loadContent();
+    await sleep(100);
+    checkAudioTrack("de", "deu", false);
+    checkNoTextTrack();
+    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+
+    await goToSecondPeriod();
+    player.setPreferredAudioTracks([ { language: "fr",
+                                       audioDescription: true } ], true);
+    player.setPreferredVideoTracks([ { codec: { all: false,
+                                                test: /avc1\.640028/},
+                                       signInterpreted: true }], true);
+    player.setPreferredTextTracks([ { language: "de",
+                                      closedCaption: false } ], true);
+    await sleep(100);
+    await goToFirstPeriod();
+    await sleep(100);
     checkAudioTrack("fr", "fra", true);
     checkTextTrack("de", "deu", false);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);

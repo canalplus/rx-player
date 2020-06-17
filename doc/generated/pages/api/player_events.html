@@ -1,7 +1,7 @@
 <head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Player events - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Player%20events">Player events</a></p>
 <ul>
 <li><a href="#chapter-Overview">Overview</a></li>
-<li><a href="#chapter-Events">Events</a>
+<li><a href="#chapter-Basic%20events">Basic events</a>
 <ul>
 <li><a href="#subchapter-playerStateChange">playerStateChange</a></li>
 <li><a href="#subchapter-error">error</a></li>
@@ -9,19 +9,37 @@
 <li><a href="#subchapter-positionUpdate">positionUpdate</a></li>
 <li><a href="#subchapter-seeking">seeking</a></li>
 <li><a href="#subchapter-seeked">seeked</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Track%20selection%20events">Track selection events</a>
+<ul>
 <li><a href="#subchapter-availableAudioTracksChange">availableAudioTracksChange</a></li>
 <li><a href="#subchapter-availableVideoTracksChange">availableVideoTracksChange</a></li>
 <li><a href="#subchapter-availableTextTracksChange">availableTextTracksChange</a></li>
 <li><a href="#subchapter-audioTrackChange">audioTrackChange</a></li>
 <li><a href="#subchapter-textTrackChange">textTrackChange</a></li>
 <li><a href="#subchapter-videoTrackChange">videoTrackChange</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Bitrate%20selection%20events">Bitrate selection events</a>
+<ul>
 <li><a href="#subchapter-availableAudioBitratesChange">availableAudioBitratesChange</a></li>
 <li><a href="#subchapter-availableVideoBitratesChange">availableVideoBitratesChange</a></li>
 <li><a href="#subchapter-audioBitrateChange">audioBitrateChange</a></li>
 <li><a href="#subchapter-videoBitrateChange">videoBitrateChange</a></li>
 <li><a href="#subchapter-bitrateEstimationChange">bitrateEstimationChange</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Playback%20information">Playback information</a>
+<ul>
 <li><a href="#subchapter-periodChange">periodChange</a></li>
 <li><a href="#subchapter-decipherabilityUpdate">decipherabilityUpdate</a></li>
+<li><a href="#subchapter-streamEvent">streamEvent</a></li>
+<li><a href="#subchapter-streamEventSkip">streamEventSkip</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Deprecated">Deprecated</a>
+<ul>
 <li><a href="#subchapter-imageTrackUpdate">imageTrackUpdate</a></li>
 <li><a href="#subchapter-fullscreenChange">fullscreenChange</a></li>
 <li><a href="#subchapter-nativeTextTracksChange">nativeTextTracksChange</a></li>
@@ -43,30 +61,36 @@ bitrate) the player use the event listener pattern.</p>
 </code></pre>
 <p>You can unregister a callback through the <code>removeEventListener</code> API,
 documented <a href="index.html#meth-removeEventListener">here</a>.</p>
-<p><a name="events"></a>
-<a name="chapter-Events"></a></p>
-<h2>Events</h2>
-<p>This chapter describes every event sent by the player. Each event generally
-comes with a payload, which will also be defined here.</p>
+<p><a name="events-basic"></a>
+<a name="chapter-Basic%20events"></a></p>
+<h2>Basic events</h2>
+<p>This chapter describes the most important events sent by the player.</p>
 <p><a name="events-playerStateChange"></a>
 <a name="subchapter-playerStateChange"></a></p>
 <h3>playerStateChange</h3>
 <p><em>payload type</em>: <code>string</code></p>
 <p>Emit the current state of the player, every time it changes.</p>
+<p>This is the event to catch if you want to know when the player is playing, is
+paused, is rebuffering, is ended or is stopped.</p>
 <p>As it is a central part of our API and can be difficult concept to understand,
 we have a special <a href="states.html">page of documentation on player states</a>.</p>
 <p><a name="events-error"></a>
 <a name="subchapter-error"></a></p>
 <h3>error</h3>
 <p><em>payload type</em>: <code>Error</code></p>
-<p>Triggered each time a fatal (for content playback) error happened.</p>
+<p>Triggered when a fatal error happened.</p>
+<p>A fatal error is an error that led the player to stop playing the current
+content.</p>
 <p>The payload is the corresponding error. See <a href="errors.html">the Player Error
 documentation</a> for more information.</p>
 <p><a name="events-warning"></a>
 <a name="subchapter-warning"></a></p>
 <h3>warning</h3>
 <p><em>payload type</em>: <code>Error</code></p>
-<p>Triggered each time a non-fatal (for content playback) error happened.</p>
+<p>Triggered each time a minor error happened.</p>
+<p>This error won&#x2019;t lead the RxPlayer to stop the content. It can for example be
+an HTTP request error, some minor error detected in the content or the current
+position being to far below the minimum playable position.</p>
 <p>The payload is the corresponding error. See <a href="errors.html">the Player Error
 documentation</a> for more information.</p>
 <p><a name="events-positionUpdate"></a>
@@ -125,6 +149,10 @@ on the currently loaded content.</p>
 <h3>seeked</h3>
 <p>Emitted when a &#x201C;seek&#x201D; operation (to &#x201C;move&#x201D;/&#x201C;skip&#x201D; to another position) on the
 currently loaded content has finished</p>
+<p><a name="events-tracks"></a>
+<a name="chapter-Track%20selection%20events"></a></p>
+<h2>Track selection events</h2>
+<p>This chapter describes events linked to the current audio, video or text track.</p>
 <p><a name="events-availableAudioTracksChange"></a>
 <a name="subchapter-availableAudioTracksChange"></a></p>
 <h3>availableAudioTracksChange</h3>
@@ -155,7 +183,7 @@ value of <code>language</code></p>
 </li>
 <li>
 <p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
-description (for the visually impaired or not).</p>
+description of what is happening at the screen.</p>
 </li>
 <li>
 <p><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
@@ -259,7 +287,7 @@ properties:</p>
 <li><code>id</code> (<code>Number|string</code>): The id used to identify the track.</li>
 <li><code>language</code> (<code>string</code>): The language the audio track is in.</li>
 <li><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
-description (for the visually impaired or not).</li>
+description of what is happening at the screen.</li>
 <li><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
 &#x201C;dub&#x201D;, meaning it was recorded in another language than the original.
 If set to <code>false</code>, we know that this audio track is in an original language.
@@ -332,6 +360,10 @@ video track is still visually active.
 This seems due to difficult-to-detect browser bugs. We recommend not disabling
 the video track when in directfile mode to avoid that case (this is documented
 in the corresponding APIs).</p>
+<p><a name="events-bitrates"></a>
+<a name="chapter-Bitrate%20selection%20events"></a></p>
+<h2>Bitrate selection events</h2>
+<p>This chapter describes events linked to audio and/or video bitrates and quality.</p>
 <p><a name="events-availableAudioBitratesChange"></a>
 <a name="subchapter-availableAudioBitratesChange"></a></p>
 <h3>availableAudioBitratesChange</h3>
@@ -409,6 +441,11 @@ This bitrate is smoothed by doing a (complex) mean on an extended period of
 time, so it often does not link directly to the current calculated bitrate.</p>
 </li>
 </ul>
+<p><a name="events-playback-infos"></a>
+<a name="chapter-Playback%20information"></a></p>
+<h2>Playback information</h2>
+<p>This chapter describes events describing miscellaneous information about the
+current content.</p>
 <p><a name="events-periodChange"></a>
 <a name="subchapter-periodChange"></a></p>
 <h3>periodChange</h3>
@@ -461,6 +498,80 @@ Manifest documentation</a>).</li>
 </ul>
 <p>You can then know if any of those Representations are becoming decipherable or
 not through their <code>decipherable</code> property.</p>
+<p><a name="events-streamEvent"></a>
+<a name="subchapter-streamEvent"></a></p>
+<h3>streamEvent</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Event triggered when the player enters the time boundaries of a &#x201C;stream event&#x201D;.</p>
+<p>&#x201C;Stream events&#x201D; are metadata that can be defined in various streaming protocols,
+which indicates that an application should trigger some action when a specific
+time is reached in the content.</p>
+<p>Those events can either have only a start time or both a start time and an end
+time:</p>
+<ul>
+<li>
+<p>in the case where an event only has a start time, the RxPlayer will trigger
+a <code>streamEvent</code> right when the user reaches that time.</p>
+<p>If we return multiple time at that position (for example, when a user seeks
+back to it), you will receive a <code>streamEvent</code> as many times for that same
+event.</p>
+</li>
+<li>
+<p>in the case where an event has both a start and end time, the RxPlayer will
+trigger a <code>streamEvent</code> when the current position goes inside these time
+boundaries (between the start and end time).
+This can happen while reaching the start during regular playback but also
+when seeking at a position contained between the start and end time.</p>
+<p>The <code>streamEvent</code> event will not be re-sent until the current position
+&#x201C;exits&#x201D; those time boundaries. If the current position goes out of the
+boundaries of that event and then goes into it again (most likely due to the
+user seeking back into it), you will again receive a <code>streamEvent</code> for that
+same event.</p>
+</li>
+</ul>
+<p>The payload of a <code>streamEvent</code> depends on the source of the event. For example,
+it will not have the same format when it comes from a Manifest than when it
+comes from the media container.
+All possible formats are described in the <a href="../tutorials/stream_events.html">stream event
+tutorial</a>.</p>
+<p>Note: When an event has both a start and an end time, you can define a <code>onExit</code>
+callback on the payload. That callback will automatically be triggered when the
+current position goes after the end time or before the start time of that event.
+The <code>onExit</code> callback will only be called a single time at most and will only
+concern this iteration of the event (and not possible subsequent ones).</p>
+<p><a name="events-streamEventSkip"></a>
+<a name="subchapter-streamEventSkip"></a></p>
+<h3>streamEventSkip</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Event triggered when the player skipped the time boundaries of a &#x201C;stream event&#x201D;
+(you can refer to the <a href="#events-streamEvent"><code>streamEvent</code> event</a> for a
+definition of what a &#x201C;stream event&#x201D; is).</p>
+<p>This means that the current position the player plays at, immediately changed
+from a time before the start time of a &#x201C;stream event&#x201D; to after its end time (or
+just after its end time for &#x201C;stream event&#x201D; without an end time).</p>
+<p>This is most likely due to the user seeking in the content. A &#x201C;regular&#x201D; content
+playback which continuously plays the content without seeking shouldn&#x2019;t trigger
+any <code>streamEventSkip</code> event.</p>
+<p>The payload of a <code>streamEventSkip</code> is the same than for a <code>streamEvent</code> and as
+such depends on the source of the event.
+All possible formats are described in the <a href="../tutorials/stream_events.html">stream event
+tutorial</a>.</p>
+<p>Note that unlike <code>streamEvent</code> events, there&#x2019;s no point to define an <code>onExit</code>
+callback on the payload of a <code>streamEventSkip</code> event. This is because this event
+was not entered, and will thus not be exited.</p>
+<p><a name="events-deprecated"></a>
+<a name="chapter-Deprecated"></a></p>
+<h2>Deprecated</h2>
+<p>The following events are deprecated. They are still supported but we advise
+users to not use those as they might become not supported in the future.</p>
 <p><a name="events-imageTrackUpdate"></a>
 <a name="subchapter-imageTrackUpdate"></a></p>
 <h3>imageTrackUpdate</h3>

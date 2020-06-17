@@ -50,6 +50,9 @@ import getDiscontinuities from "./get_discontinuities";
 import getStalledEvents from "./get_stalled_events";
 import handleDiscontinuity from "./handle_discontinuity";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
+import streamEventsEmitter, {
+  IStreamEvent
+} from "./stream_events_emitter";
 import {
   IInitClockTick,
   ILoadedEvent,
@@ -86,7 +89,8 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
                                       ISpeedChangedEvent |
                                       ILoadedEvent |
                                       IWarningEvent |
-                                      IBufferOrchestratorEvent;
+                                      IBufferOrchestratorEvent |
+                                      IStreamEvent;
 
 /**
  * Returns a function allowing to load or reload the content in arguments into
@@ -140,6 +144,11 @@ export default function createMediaSourceLoader({
                                                         isDirectfile: false });
 
     const initialPlay$ = load$.pipe(filter((evt) => evt !== "not-loaded-metadata"));
+
+    const streamEvents$ = initialPlay$.pipe(
+      mergeMap(() => streamEventsEmitter(manifest, mediaElement, clock$))
+    );
+
     const bufferClock$ = createBufferClock(clock$, { autoPlay,
                                                      initialPlay$,
                                                      initialSeek$: seek$,
@@ -222,7 +231,8 @@ export default function createMediaSourceLoader({
                            loadedEvent$,
                            playbackRate$,
                            stalled$,
-                           buffers$
+                           buffers$,
+                           streamEvents$
     ).pipe(finalize(() => {
         // clean-up every created SourceBuffers
         sourceBuffersStore.disposeAll();

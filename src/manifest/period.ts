@@ -18,7 +18,10 @@ import {
   isKnownError,
   MediaError,
 } from "../errors";
-import { IParsedPeriod } from "../parsers/manifest";
+import {
+  IManifestStreamEvent,
+  IParsedPeriod,
+} from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
 import Adaptation, {
@@ -61,6 +64,9 @@ export default class Period {
    * created, in the order they have happened.
    */
   public readonly parsingErrors : ICustomError[];
+
+  /** Array containing every stream event happening on the period */
+  public streamEvents : IManifestStreamEvent[];
 
   /**
    * @constructor
@@ -126,6 +132,9 @@ export default class Period {
     if (this.duration != null && this.start != null) {
       this.end = this.start + this.duration;
     }
+    this.streamEvents = args.streamEvents === undefined ?
+      [] :
+      args.streamEvents;
   }
 
   /**

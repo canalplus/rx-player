@@ -219,6 +219,8 @@ export default class LoadedSessionsStore {
       const closing$ = this._storage.getAll()
         .map((entry) => safelyCloseMediaKeySession(entry.mediaKeySession));
 
+      log.debug("EME-LSS: Closing all current MediaKeySessions", closing$.length);
+
       // re-initialize the storage, so that new interactions with the
       // `LoadedSessionsStore` do not rely on MediaKeySessions we're in the
       // process of removing

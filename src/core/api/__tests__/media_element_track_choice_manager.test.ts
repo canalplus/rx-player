@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { BehaviorSubject } from "rxjs";
 import MediaElementTrackChoiceManager from "../media_element_track_choice_manager";
 
 const fakeMediaElement = {
@@ -38,11 +37,6 @@ const fakeMediaElement = {
 describe("API - MediaElementTrackChoiceManager", () => {
   it("should returns correct results for getter", () => {
       const trackManager = new MediaElementTrackChoiceManager(
-        {
-          preferredAudioTracks: new BehaviorSubject([] as any[]),
-          preferredTextTracks: new BehaviorSubject([] as any[]),
-          preferredVideoTracks: new BehaviorSubject([] as any[]),
-        },
         fakeMediaElement as any
       );
       const audioTracks = trackManager.getAvailableAudioTracks();
@@ -63,6 +57,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
         language: "fr",
         audioDescription: false,
         normalized: "fra",
+        representations: [],
       });
       expect(chosenVideoTrack).toEqual({
         id: "gen_video_nolang_1",
@@ -77,11 +72,6 @@ describe("API - MediaElementTrackChoiceManager", () => {
   });
   it("should returns correct results for setters", () => {
       const trackManager = new MediaElementTrackChoiceManager(
-        {
-          preferredAudioTracks: new BehaviorSubject([] as any[]),
-          preferredTextTracks: new BehaviorSubject([] as any[]),
-          preferredVideoTracks: new BehaviorSubject([] as any[]),
-        },
         fakeMediaElement as any
       );
 
@@ -93,6 +83,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
         language: "en",
         audioDescription: false,
         normalized: "eng",
+        representations: [],
       });
 
       trackManager.setTextTrackById("gen_text_en_1");
@@ -107,11 +98,6 @@ describe("API - MediaElementTrackChoiceManager", () => {
   });
   it("should emit available tracks change when changing text contents", (done) => {
     const trackManager = new MediaElementTrackChoiceManager(
-      {
-        preferredAudioTracks: new BehaviorSubject([] as any[]),
-        preferredTextTracks: new BehaviorSubject([] as any[]),
-        preferredVideoTracks: new BehaviorSubject([] as any[]),
-      },
       fakeMediaElement as any
     );
 
@@ -134,11 +120,6 @@ describe("API - MediaElementTrackChoiceManager", () => {
 
   it("should emit available tracks change when changing video contents", (done) => {
     const trackManager = new MediaElementTrackChoiceManager(
-      {
-        preferredAudioTracks: new BehaviorSubject([] as any[]),
-        preferredTextTracks: new BehaviorSubject([] as any[]),
-        preferredVideoTracks: new BehaviorSubject([] as any[]),
-      },
       fakeMediaElement as any
     );
 
@@ -158,11 +139,6 @@ describe("API - MediaElementTrackChoiceManager", () => {
 
   it("should emit available tracks change when changing audio contents", (done) => {
     const trackManager = new MediaElementTrackChoiceManager(
-      {
-        preferredAudioTracks: new BehaviorSubject([] as any[]),
-        preferredTextTracks: new BehaviorSubject([] as any[]),
-        preferredVideoTracks: new BehaviorSubject([] as any[]),
-      },
       fakeMediaElement as any
     );
 
@@ -185,11 +161,6 @@ describe("API - MediaElementTrackChoiceManager", () => {
 
   it("should emit chosen track when changing text content", (done) => {
     const trackManager = new MediaElementTrackChoiceManager(
-      {
-        preferredAudioTracks: new BehaviorSubject([] as any[]),
-        preferredTextTracks: new BehaviorSubject([] as any[]),
-        preferredVideoTracks: new BehaviorSubject([] as any[]),
-      },
       fakeMediaElement as any
     );
 

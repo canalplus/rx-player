@@ -21,6 +21,7 @@ import {
 } from "rxjs";
 import { ignoreElements } from "rxjs/operators";
 import { shouldUnsetMediaKeys } from "../../compat/";
+import log from "../../log";
 import disposeMediaKeys from "./dispose_media_keys";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 
@@ -34,18 +35,23 @@ export default function clearEMESession(
   mediaElement : HTMLMediaElement
 ) : Observable<never> {
   return observableDefer(() => {
+    log.debug("EME: Clearing-up EME session.");
     if (shouldUnsetMediaKeys()) {
+      log.debug("EME: disposing current MediaKeys.");
       return disposeMediaKeys(mediaElement)
         .pipe(ignoreElements());
     }
 
     const currentState = MediaKeysInfosStore.getState(mediaElement);
-    if (currentState != null &&
+    if (currentState !== null &&
         currentState.keySystemOptions.closeSessionsOnStop === true)
     {
+      log.debug("EME: closing all current sessions.");
       return currentState.loadedSessionsStore.closeAllSessions()
         .pipe(ignoreElements());
     }
+    log.debug("EME: Nothing to clear. Returning right away. No state =",
+              currentState === null);
     return EMPTY;
   });
 }

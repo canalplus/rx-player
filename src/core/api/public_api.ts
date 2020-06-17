@@ -32,7 +32,6 @@ import {
   Subscription,
 } from "rxjs";
 import {
-  catchError,
   distinctUntilChanged,
   filter,
   map,
@@ -97,6 +96,7 @@ import initializeMediaSourcePlayback, {
   IReloadingMediaSourceEvent,
   IStalledEvent,
 } from "../init";
+import { IStreamEventData } from "../init/stream_events_emitter";
 import SourceBuffersStore, {
   IBufferedChunk,
   IBufferType,
@@ -167,6 +167,13 @@ interface IBitrateEstimate {
   bitrate : number | undefined;
 }
 
+export type IStreamEvent = { data: IStreamEventData;
+                             start: number;
+                             end: number;
+                             onExit?: () => void; } |
+                           { data: IStreamEventData;
+                             start: number; };
+
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {
   playerStateChange : string;
@@ -195,6 +202,8 @@ interface IPublicAPIEvent {
                                   representation : Representation; }>;
   seeking : null;
   seeked : null;
+  streamEvent : IStreamEvent;
+  streamEventSkip : IStreamEvent;
 }
 
 /**
@@ -350,14 +359,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     sourceBuffersStore : SourceBuffersStore | null;
   };
 
-  /** List of favorite audio tracks, in preference order. */
-  private _priv_preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
+  /** List of favorite audio tracks, in preference order.  */
+  private _priv_preferredAudioTracks : IAudioTrackPreference[];
 
-  /** List of favorite text tracks, in preference order. */
-  private _priv_preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
+  /** List of favorite text tracks, in preference order.  */
+  private _priv_preferredTextTracks : ITextTrackPreference[];
 
   /** List of favorite video tracks, in preference order. */
-  private _priv_preferredVideoTracks : BehaviorSubject<IVideoTrackPreference[]>;
+  private _priv_preferredVideoTracks : IVideoTrackPreference[];
 
   /**
    * TrackChoiceManager instance linked to the current content.
@@ -456,7 +465,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.20.1";
+    this.version = /*PLAYER_VERSION*/"3.21.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -543,9 +552,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
-    this._priv_preferredAudioTracks = new BehaviorSubject(preferredAudioTracks);
-    this._priv_preferredTextTracks = new BehaviorSubject(preferredTextTracks);
-    this._priv_preferredVideoTracks = new BehaviorSubject(preferredVideoTracks);
+    this._priv_preferredAudioTracks = preferredAudioTracks;
+    this._priv_preferredTextTracks = preferredTextTracks;
+    this._priv_preferredVideoTracks = preferredVideoTracks;
   }
 
   /**
@@ -729,16 +738,22 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
 
       this._priv_mediaElementTrackChoiceManager =
-        new features.directfile.mediaElementTrackChoiceManager(
-          { preferredAudioTracks: defaultAudioTrack === undefined ?
-              this._priv_preferredAudioTracks :
-              new BehaviorSubject([defaultAudioTrack]),
-            preferredTextTracks: defaultTextTrack === undefined ?
-              this._priv_preferredTextTracks :
-              new BehaviorSubject([defaultTextTrack]),
-            preferredVideoTracks: this._priv_preferredVideoTracks },
-          this.videoElement
-        );
+        new features.directfile.mediaElementTrackChoiceManager(this.videoElement);
+
+      const preferredAudioTracks = defaultAudioTrack === undefined ?
+        this._priv_preferredAudioTracks :
+        [defaultAudioTrack];
+      this._priv_mediaElementTrackChoiceManager
+        .setPreferredAudioTracks(preferredAudioTracks, true);
+
+      const preferredTextTracks = defaultTextTrack === undefined ?
+        this._priv_preferredTextTracks :
+        [defaultTextTrack];
+      this._priv_mediaElementTrackChoiceManager
+        .setPreferredTextTracks(preferredTextTracks, true);
+
+      this._priv_mediaElementTrackChoiceManager
+        .setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
 
       this.trigger("availableAudioTracksChange",
         this._priv_mediaElementTrackChoiceManager.getAvailableAudioTracks());
@@ -1789,7 +1804,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Array.<Object>}
    */
   getPreferredAudioTracks() : IAudioTrackPreference[] {
-    return this._priv_preferredAudioTracks.getValue();
+    return this._priv_preferredAudioTracks;
   }
 
   /**
@@ -1797,7 +1812,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Array.<Object>}
    */
   getPreferredTextTracks() : ITextTrackPreference[] {
-    return this._priv_preferredTextTracks.getValue();
+    return this._priv_preferredTextTracks;
   }
 
   /**
@@ -1805,43 +1820,79 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Array.<Object>}
    */
   getPreferredVideoTracks() : IVideoTrackPreference[] {
-    return this._priv_preferredVideoTracks.getValue();
+    return this._priv_preferredVideoTracks;
   }
 
   /**
    * Set the list of preferred audio tracks, in preference order.
    * @param {Array.<Object>} tracks
+   * @param {boolean} shouldApply - `true` if those preferences should be
+   * applied on the currently loaded Period. `false` if it should only
+   * be applied to new content.
    */
-  setPreferredAudioTracks(tracks : IAudioTrackPreference[]) : void {
+  setPreferredAudioTracks(
+    tracks : IAudioTrackPreference[],
+    shouldApply : boolean = false
+  ) : void {
     if (!Array.isArray(tracks)) {
       throw new Error("Invalid `setPreferredAudioTracks` argument. " +
                       "Should have been an Array.");
     }
-    return this._priv_preferredAudioTracks.next(tracks);
+    this._priv_preferredAudioTracks = tracks;
+    if (this._priv_trackChoiceManager !== null) {
+      this._priv_trackChoiceManager.setPreferredAudioTracks(tracks, shouldApply);
+    } else if (this._priv_mediaElementTrackChoiceManager !== null) {
+      this._priv_mediaElementTrackChoiceManager.setPreferredAudioTracks(tracks,
+                                                                        shouldApply);
+    }
   }
 
   /**
    * Set the list of preferred text tracks, in preference order.
    * @param {Array.<Object>} tracks
+   * @param {boolean} shouldApply - `true` if those preferences should be
+   * applied on the currently loaded Periods. `false` if it should only
+   * be applied to new content.
    */
-  setPreferredTextTracks(tracks : ITextTrackPreference[]) : void {
+  setPreferredTextTracks(
+    tracks : ITextTrackPreference[],
+    shouldApply : boolean = false
+  ) : void {
     if (!Array.isArray(tracks)) {
       throw new Error("Invalid `setPreferredTextTracks` argument. " +
                       "Should have been an Array.");
     }
-    return this._priv_preferredTextTracks.next(tracks);
+    this._priv_preferredTextTracks = tracks;
+    if (this._priv_trackChoiceManager !== null) {
+      this._priv_trackChoiceManager.setPreferredTextTracks(tracks, shouldApply);
+    } else if (this._priv_mediaElementTrackChoiceManager !== null) {
+      this._priv_mediaElementTrackChoiceManager.setPreferredTextTracks(tracks,
+                                                                       shouldApply);
+    }
   }
 
   /**
    * Set the list of preferred text tracks, in preference order.
    * @param {Array.<Object>} tracks
+   * @param {boolean} shouldApply - `true` if those preferences should be
+   * applied on the currently loaded Period. `false` if it should only
+   * be applied to new content.
    */
-  setPreferredVideoTracks(tracks : IVideoTrackPreference[]) : void {
+  setPreferredVideoTracks(
+    tracks : IVideoTrackPreference[],
+    shouldApply : boolean =  false
+  ) : void {
     if (!Array.isArray(tracks)) {
       throw new Error("Invalid `setPreferredVideoTracks` argument. " +
                       "Should have been an Array.");
     }
-    return this._priv_preferredVideoTracks.next(tracks);
+    this._priv_preferredVideoTracks = tracks;
+    if (this._priv_trackChoiceManager !== null) {
+      this._priv_trackChoiceManager.setPreferredVideoTracks(tracks, shouldApply);
+    } else if (this._priv_mediaElementTrackChoiceManager !== null) {
+      this._priv_mediaElementTrackChoiceManager.setPreferredVideoTracks(tracks,
+                                                                        shouldApply);
+    }
   }
 
   /**
@@ -1928,6 +1979,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Reset all state properties relative to a playing content.
    */
   private _priv_cleanUpCurrentContentState() : void {
+    log.debug("Locking `contentLock` to clean-up the current content.");
+
     // lock playback of new contents while cleaning up is pending
     this._priv_contentLock$.next(true);
 
@@ -1940,13 +1993,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // EME cleaning
     const freeUpContentLock = () => {
+      log.debug("Unlocking `contentLock`. Next content can begin.");
       this._priv_contentLock$.next(false);
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
       clearEMESession(this.videoElement)
-        .pipe(catchError(() => EMPTY))
-        .subscribe(noop, freeUpContentLock, freeUpContentLock);
+        .subscribe(
+          noop,
+          (err : unknown) => {
+            log.error("API: An error arised when trying to clean-up the EME session:" +
+                      (err instanceof Error ? err.toString() :
+                                              "Unknown Error"));
+            freeUpContentLock();
+          },
+          () => {
+            log.debug("API: EME session cleaned-up with success!");
+            freeUpContentLock();
+          });
     } else {
       freeUpContentLock();
     }
@@ -1961,6 +2025,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
+      case "stream-event":
+        this.trigger("streamEvent", event.value);
+        break;
+      case "stream-event-skip":
+        this.trigger("streamEventSkip", event.value);
+        break;
       case "activePeriodChanged":
         this._priv_onActivePeriodChanged(event.value);
         break;
@@ -2054,6 +2124,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Clean-up ressources and signal that the content has ended.
    */
   private _priv_onPlaybackFinished() : void {
+    log.info("API: Previous playback finished. Stopping and cleaning-up...");
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
     this._priv_setPlayerState(PLAYER_STATES.ENDED);
@@ -2086,15 +2157,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_contentInfos.manifest = manifest;
 
     const { initialAudioTrack, initialTextTrack } = this._priv_contentInfos;
-    this._priv_trackChoiceManager = new TrackChoiceManager({
-      preferredAudioTracks: initialAudioTrack === undefined ?
-        this._priv_preferredAudioTracks :
-        new BehaviorSubject([initialAudioTrack]),
-      preferredTextTracks: initialTextTrack === undefined ?
-        this._priv_preferredTextTracks :
-        new BehaviorSubject([initialTextTrack]),
-      preferredVideoTracks: this._priv_preferredVideoTracks,
-    });
+    this._priv_trackChoiceManager = new TrackChoiceManager();
+
+    const preferredAudioTracks = initialAudioTrack === undefined ?
+      this._priv_preferredAudioTracks :
+      [initialAudioTrack];
+    this._priv_trackChoiceManager.setPreferredAudioTracks(preferredAudioTracks, true);
+
+    const preferredTextTracks = initialTextTrack === undefined ?
+      this._priv_preferredTextTracks :
+      [initialTextTrack];
+    this._priv_trackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
+
+    this._priv_trackChoiceManager.setPreferredVideoTracks(this._priv_preferredVideoTracks,
+                                                          true);
 
     fromEvent(manifest, "manifestUpdate")
       .pipe(takeUntil(this._priv_stopCurrentContent$))
@@ -2538,6 +2614,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return activeRepresentations[currentPeriod.id];
   }
 }
-Player.version = /*PLAYER_VERSION*/"3.20.1";
+Player.version = /*PLAYER_VERSION*/"3.21.0";
 
 export default Player;
+export { IStreamEventData };

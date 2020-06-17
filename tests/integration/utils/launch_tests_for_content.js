@@ -419,7 +419,8 @@ export default function launchTestsForContent(manifestInfos) {
         expect(player.getPlayerState()).to.equal("LOADED");
       });
 
-      it("should go to PLAYING when play is called", async () => {
+      it("should go to PLAYING when play is called", async function() {
+        this.timeout(5000);
         expect(player.getPlayerState()).to.equal("STOPPED");
 
         player.loadVideo({

@@ -609,6 +609,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.isDynamic = newManifest.isDynamic;
     this.isLive = newManifest.isLive;
     this.lifetime = newManifest.lifetime;
+    this.expired = newManifest.expired;
     this.maximumTime = newManifest.maximumTime;
 
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {

@@ -5,12 +5,13 @@
 <ul>
 <li><a href="#subchapter-RxPlayer%20Constructor">RxPlayer Constructor</a></li>
 <li><a href="#subchapter-loadVideo">loadVideo</a></li>
-<li><a href="#subchapter-getAvailableAudioTracks">getAvailableAudioTracks</a></li>
-<li><a href="#subchapter-getAvailableTextTracks">getAvailableTextTracks</a></li>
-<li><a href="#subchapter-getAvailableVideoTracks">getAvailableVideoTracks</a></li>
-<li><a href="#subchapter-getAudioTrack/audioTrackChange">getAudioTrack/audioTrackChange</a></li>
-<li><a href="#subchapter-getTextTrack/textTrackChange">getTextTrack/textTrackChange</a></li>
-<li><a href="#subchapter-getVideoTrack/videoTrackChange">getVideoTrack/videoTrackChange</a></li>
+<li><a href="#subchapter-getAvailableAudioTracks%20method%20/%20availableAudioTracksChange%20event">getAvailableAudioTracks method / availableAudioTracksChange event</a></li>
+<li><a href="#subchapter-getAvailableTextTracks%20method%20/%20availabletextTracksChange%20event">getAvailableTextTracks method / availabletextTracksChange event</a></li>
+<li><a href="#subchapter-getAvailableVideoTracks%20method%20/%20availableVideoTracksChange%20event">getAvailableVideoTracks method / availableVideoTracksChange event</a></li>
+<li><a href="#subchapter-getAudioTrack%20method%20/audioTrackChange%20event">getAudioTrack method /audioTrackChange event</a></li>
+<li><a href="#subchapter-getTextTrack%20method%20/%20textTrackChange%20event">getTextTrack method / textTrackChange event</a></li>
+<li><a href="#subchapter-getVideoTrack%20method%20/%20videoTrackChange%20event">getVideoTrack method / videoTrackChange event</a></li>
+<li><a href="#subchapter-streamEvent%20/%20streamEventSkip%20events">streamEvent / streamEventSkip events</a></li>
 </ul>
 </li>
 </ul>
@@ -131,8 +132,8 @@ optionally given to <code>loadVideo</code>.</p>
 <code>loadVideo</code>.</p>
 </li>
 </ul>
-<p><a name="subchapter-getAvailableAudioTracks"></a></p>
-<h3>getAvailableAudioTracks</h3>
+<p><a name="subchapter-getAvailableAudioTracks%20method%20/%20availableAudioTracksChange%20event"></a></p>
+<h3>getAvailableAudioTracks method / availableAudioTracksChange event</h3>
 <p>The return type of the <code>getAvailableAudioTracks</code> method is an array of objects.
 Each of this objects corresponds to the <code>IAvailableAudioTrack</code> interface.</p>
 <p>Example:</p>
@@ -149,8 +150,8 @@ function getAvailableAudioTracks() : IAvailableAudioTrack[] {
   return rxPlayer.getAvailableAudioTracks();
 }
 </code></pre>
-<p><a name="subchapter-getAvailableTextTracks"></a></p>
-<h3>getAvailableTextTracks</h3>
+<p><a name="subchapter-getAvailableTextTracks%20method%20/%20availabletextTracksChange%20event"></a></p>
+<h3>getAvailableTextTracks method / availabletextTracksChange event</h3>
 <p>The return type of the <code>getAvailableTextTracks</code> method is an array of objects.
 Each of this objects corresponds to the <code>IAvailableTextTrack</code> interface.</p>
 <p>Example:</p>
@@ -167,8 +168,8 @@ function getAvailableTextTracks() : IAvailableTextTrack[] {
   return rxPlayer.getAvailableTextTracks();
 }
 </code></pre>
-<p><a name="subchapter-getAvailableVideoTracks"></a></p>
-<h3>getAvailableVideoTracks</h3>
+<p><a name="subchapter-getAvailableVideoTracks%20method%20/%20availableVideoTracksChange%20event"></a></p>
+<h3>getAvailableVideoTracks method / availableVideoTracksChange event</h3>
 <p>The return type of the <code>getAvailableVideoTracks</code> method is an array of objects.
 Each of this objects corresponds to the <code>IAvailableVideoTrack</code> interface.</p>
 <p>Example:</p>
@@ -185,8 +186,8 @@ function getAvailableVideoTracks() : IAvailableVideoTrack[] {
   return rxPlayer.getAvailableVideoTracks();
 }
 </code></pre>
-<p><a name="subchapter-getAudioTrack/audioTrackChange"></a></p>
-<h3>getAudioTrack/audioTrackChange</h3>
+<p><a name="subchapter-getAudioTrack%20method%20/audioTrackChange%20event"></a></p>
+<h3>getAudioTrack method /audioTrackChange event</h3>
 <p>The <code>IAudioTrack</code> corresponds to both the type returned by the <code>getAudioTrack</code>
 method and emitted as the payload of the <code>audioTrackChange</code> event.</p>
 <p>Example:</p>
@@ -207,8 +208,8 @@ rxPlayer.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;
   <span class="hljs-keyword">return</span> rxPlayer.getAudioTrack();
 }
 </code></pre>
-<p><a name="subchapter-getTextTrack/textTrackChange"></a></p>
-<h3>getTextTrack/textTrackChange</h3>
+<p><a name="subchapter-getTextTrack%20method%20/%20textTrackChange%20event"></a></p>
+<h3>getTextTrack method / textTrackChange event</h3>
 <p>The <code>ITextTrack</code> corresponds to both the type returned by the <code>getTextTrack</code>
 method and emitted as the payload of the <code>textTrackChange</code> event.</p>
 <p>Example:</p>
@@ -229,8 +230,8 @@ rxPlayer.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;<
   <span class="hljs-keyword">return</span> rxPlayer.getTextTrack();
 }
 </code></pre>
-<p><a name="subchapter-getVideoTrack/videoTrackChange"></a></p>
-<h3>getVideoTrack/videoTrackChange</h3>
+<p><a name="subchapter-getVideoTrack%20method%20/%20videoTrackChange%20event"></a></p>
+<h3>getVideoTrack method / videoTrackChange event</h3>
 <p>The <code>IVideoTrack</code> corresponds to both the type returned by the <code>getVideoTrack</code>
 method and emitted as the payload of the <code>videoTrackChange</code> event.</p>
 <p>Example:</p>
@@ -250,5 +251,27 @@ rxPlayer.addEventListener(<span class="hljs-string">&quot;videoTrackChange&quot;
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getCurrentlyDownloadedVideoTrack</span>(<span class="hljs-params"></span>) : <span class="hljs-title">IVideoTrack</span> </span>{
   <span class="hljs-keyword">return</span> rxPlayer.getVideoTrack();
 }
+</code></pre>
+<p><a name="subchapter-streamEvent%20/%20streamEventSkip%20events"></a></p>
+<h3>streamEvent / streamEventSkip events</h3>
+<p>The type <code>IStreamEvent</code> corresponds to the payload of either a <code>streamEvent</code> or
+a <code>streamEventSkip</code> event.</p>
+<p>The type <code>IStreamEventData</code> is the type of its <code>data</code> property.</p>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { IStreamEvent, IStreamEventData } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./player&quot;</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processEventData</span>(<span class="hljs-params">eventData : IStreamEventData</span>) </span>{
+  <span class="hljs-keyword">if</span> (eventData.type === <span class="hljs-string">&quot;dash-event-stream&quot;</span>) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;DASH EventStream&apos;s event received!&quot;</span>);
+  }
+}
+
+rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEvent&quot;</span>, (evt : IStreamEvent) {
+  processEventData(evt.data);
+});
 </code></pre>
 </body></html></div></div></div></body>

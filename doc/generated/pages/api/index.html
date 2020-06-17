@@ -54,6 +54,8 @@
 <li><a href="#subchapter-getPreferredAudioTracks">getPreferredAudioTracks</a></li>
 <li><a href="#subchapter-setPreferredTextTracks">setPreferredTextTracks</a></li>
 <li><a href="#subchapter-getPreferredTextTracks">getPreferredTextTracks</a></li>
+<li><a href="#subchapter-setPreferredVideoTracks">setPreferredVideoTracks</a></li>
+<li><a href="#subchapter-getPreferredVideoTracks">getPreferredVideoTracks</a></li>
 </ul>
 </li>
 <li><a href="#chapter-Bitrate%20selection">Bitrate selection</a>
@@ -93,8 +95,6 @@
 <ul>
 <li><a href="#subchapter-isLive">isLive</a></li>
 <li><a href="#subchapter-getUrl">getUrl</a></li>
-<li><a href="#subchapter-setPreferredVideoTracks">setPreferredVideoTracks</a></li>
-<li><a href="#subchapter-getPreferredVideoTracks">getPreferredVideoTracks</a></li>
 <li><a href="#subchapter-getCurrentKeySystem">getCurrentKeySystem</a></li>
 </ul>
 </li>
@@ -159,7 +159,7 @@ Doing so is straightforward:</p>
 </code></pre>
 <p>The options are all&#x2026; optional. They are all defined in the <a href="player_options.html">Player Options
 page</a>.</p>
-<p><a name="meth"></a>
+<p><a name="meth-group-basic"></a>
 <a name="chapter-Basic%20methods"></a></p>
 <h2>Basic methods</h2>
 <p>In this chapter, we will go through the basic methods you will need to use when
@@ -683,7 +683,7 @@ value of <code>language</code></p>
 </li>
 <li>
 <p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
-description (for the visually impaired or not).</p>
+description of what is happening at the screen.</p>
 </li>
 <li>
 <p><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
@@ -691,6 +691,25 @@ description (for the visually impaired or not).</p>
 If set to <code>false</code>, we know that this audio track is in an original language.
 This property is <code>undefined</code> if we do not known whether it is in an original
 language.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../terms.html#representation">Representations</a> of this video track, with
+attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.
+No other Representation from this track will have the same <code>id</code>.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The audio codec the Representation is
+in, as announced in the corresponding Manifest.</p>
+</li>
+</ul>
 </li>
 </ul>
 <p><code>undefined</code> if no audio content has been loaded yet or if its information is
@@ -780,8 +799,8 @@ seconds.</p>
 <p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
 </li>
 <li>
-<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
-format.</p>
+<p><code>codec</code> (<code>string|undefined</code>): The video codec the Representation is
+in, as announced in the corresponding Manifest.</p>
 </li>
 <li>
 <p><code>frameRate</code> (<code>string|undefined</code>): The video frame rate.</p>
@@ -834,7 +853,7 @@ value of <code>language</code></p>
 </li>
 <li>
 <p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
-description (for the visually impaired or not).</p>
+description of what is happening at the screen.</p>
 </li>
 <li>
 <p><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
@@ -842,6 +861,24 @@ description (for the visually impaired or not).</p>
 If set to <code>false</code>, we know that this audio track is in an original language.
 This property is <code>undefined</code> if we do not known whether it is in an original
 language.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../terms.html#representation">Representations</a> of this video track, with
+attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The audio codec the Representation is
+in, as announced in the corresponding Manifest.</p>
+</li>
+</ul>
 </li>
 </ul>
 <p>&#x2013;</p>
@@ -927,8 +964,8 @@ seconds.</p>
 <p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
 </li>
 <li>
-<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
-format.</p>
+<p><code>codec</code> (<code>string|undefined</code>): The video codec the Representation is
+in, as announced in the corresponding Manifest.</p>
 </li>
 <li>
 <p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
@@ -969,10 +1006,8 @@ either:</p>
 <ul>
 <li>update the current audio track once a <code>&quot;periodChange&quot;</code> event has been
 received.</li>
-<li>update the preferred audio tracks through the
-<a href="#meth-setPreferredAudioTracks">setPreferredAudioTracks</a> method. To ensure
-that already-loaded Periods also consider that change, you might need to
-then re-load the content through a new <code>loadVideo</code> call.</li>
+<li>update first the preferred audio tracks through the
+<a href="#meth-setPreferredAudioTracks">setPreferredAudioTracks</a> method.</li>
 </ul>
 <p>&#x2013;</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> If used on Safari, in <em>DirectFile</em> mode, the track change may change
@@ -1004,10 +1039,8 @@ either:</p>
 <ul>
 <li>update the current text track once a <code>&quot;periodChange&quot;</code> event has been
 received.</li>
-<li>update the preferred text tracks through the
-<a href="#meth-setPreferredTextTracks">setPreferredTextTracks</a> method. To ensure
-that already-loaded Periods also consider that change, you might need to
-then re-load the content through a new <code>loadVideo</code> call.</li>
+<li>update first the preferred text tracks through the
+<a href="#meth-setPreferredTextTracks">setPreferredTextTracks</a> method.</li>
 </ul>
 <p>&#x2013;</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> If used on Safari, in <em>DirectFile</em> mode, the track change may change
@@ -1031,16 +1064,13 @@ events that the tracks have changed.</li>
 <p>&#x2013;</p>
 <p>Note for multi-Period contents:</p>
 <p>This method will only have an effect on the <a href="../terms.html#period">Period</a> that is
-currently playing.
-If you want to disable the text track for other Periods as well, you might want
-to either:</p>
-<ul>
-<li>call <code>disableTextTrack</code> once a <code>&quot;periodChange&quot;</code> event has been received.</li>
-<li>update the preferred text tracks through the
-<a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> method. To ensure
-that already-loaded Periods also consider that change, you might need to
-then re-load the content through a new <code>loadVideo</code> call.</li>
-</ul>
+currently playing.</p>
+<p>If you want to disable the text track for other Periods as well, you might want
+to call <a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> instead. With
+this method, you can globally apply a <code>null</code> text track preference - which means
+that you would prefer having no text track - by setting its second argument to
+<code>true</code>.</p>
+<p>More information can be found on that API&#x2019;s documentation.</p>
 <p><a name="meth-setVideoTrack"></a>
 <a name="subchapter-setVideoTrack"></a></p>
 <h3>setVideoTrack</h3>
@@ -1082,10 +1112,8 @@ either:</p>
 <ul>
 <li>update the current video track once a <code>&quot;periodChange&quot;</code> event has been
 received.</li>
-<li>update the preferred video tracks through the
-<a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> method. To ensure
-that already-loaded Periods also consider that change, you might need to
-then re-load the content through a new <code>loadVideo</code> call.</li>
+<li>update first the preferred video tracks through the
+<a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> method.</li>
 </ul>
 <p>&#x2013;</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect in <em>DirectFile</em> mode
@@ -1103,17 +1131,13 @@ then re-load the content through a new <code>loadVideo</code> call.</li>
 <p>&#x2013;</p>
 <p>Note for multi-Period contents:</p>
 <p>This method will only have an effect on the <a href="../terms.html#period">Period</a> that is
-currently playing.
-If you want to disable the video track for other Periods as well, you might want
-to either:</p>
-<ul>
-<li>call <code>disableVideoTrack</code> once a <code>&quot;periodChange&quot;</code> event has been received.</li>
-<li>update the preferred video tracks through the
-<a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> method to include
-<code>null</code> (which meaning that you want no video track). To ensure that
-already-loaded Periods also consider that change, you might need to then
-re-load the content through a new <code>loadVideo</code> call.</li>
-</ul>
+currently playing.</p>
+<p>If you want to disable the video track for other Periods as well, you might want
+to call <a href="#meth-setPreferredVideoTracks">setPreferredVideoTracks</a> instead. With
+this method, you can globally apply a <code>null</code> video track preference - which means
+that you would prefer having no video track - by setting its second argument to
+<code>true</code>.</p>
+<p>More information can be found on that API&#x2019;s documentation.</p>
 <p>&#x2013;</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option may have no effect in <em>DirectFile</em> mode
 (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).
@@ -1132,16 +1156,13 @@ payload) while the video track is still actually active.</p>
 <p><a name="meth-setPreferredAudioTracks"></a>
 <a name="subchapter-setPreferredAudioTracks"></a></p>
 <h3>setPreferredAudioTracks</h3>
-<p><em>arguments</em>: <code>Array.&lt;Object&gt;</code></p>
+<p><em>argument 1</em>: <code>Array.&lt;Object&gt;</code>
+<em>argument 2</em>: <code>Boolean | undefined</code></p>
 <p>Allows the RxPlayer to choose an initial audio track, based on language
 preferences, codec preferences or both.</p>
-<p>It is defined as an array of objects, each object describing constraints a
-track should respect.</p>
-<p>If the first object - defining the first set of constraints - cannot be
-respected under the currently available audio tracks, the RxPlayer will skip
-it and check with the second object and so on.
-As such, this array should be sorted by order of preference: from the most
-wanted constraints to the least.</p>
+<p>&#x2013;</p>
+<p>The first argument should be set as an array of objects, each object describing
+constraints an audio track should respect.</p>
 <p>Here is all the possible constraints you can set in any one of those objects
 (note that all properties are optional here, only those set will have an effect
 on which tracks will be filtered):</p>
@@ -1163,7 +1184,7 @@ on which tracks will be filtered):</p>
 
     <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
 
-    <span class="hljs-attr">all</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
+    all: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
                <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
                <span class="hljs-comment">// If `true`, we will only choose a track if EVERY profiles for</span>
                <span class="hljs-comment">// it have a codec information that is validated by that RegExp.</span>
@@ -1173,26 +1194,38 @@ on which tracks will be filtered):</p>
   }
 }
 </code></pre>
-<p>This logic is ran each time a new <code>Period</code> with audio tracks is loaded by the
-RxPlayer. This means at the start of the content, but also when [pre-]loading a
-new DASH <code>Period</code> or a new MetaPlaylist <code>content</code>.</p>
-<p>Please note that those preferences won&#x2019;t be re-applied once the logic was
-already run for a given <code>Period</code>.
-Simply put, once set this preference will be applied to all contents but:</p>
+<p>When encountering a new content or a new choice of tracks in a given content,
+the RxPlayer will look at each object in that array.
+If the first object in it defines constaints that cannot be respected under the
+currently available audio tracks, the RxPlayer will consider the second object
+in the array and so on.</p>
+<p>As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.</p>
+<p>&#x2013;</p>
+<p>The second argument to that function is an optional boolean which - when set
+to <code>true</code> - will apply that preference to the content and Period that have
+already been playing.</p>
+<p>By setting it to <code>true</code>, you might thus change the currently-active track and
+the active track of Periods (in DASH) or sub-contents (in MetaPlaylist) that
+have already been played in the current content.</p>
+<p>By setting it to <code>false</code>, <code>undefined</code> or not setting it, those preferences will
+only be applied each time a <strong>new</strong> Period or sub-content is loaded by the
+RxPlayer.</p>
+<p>Simply put, if you don&#x2019;t set the second argument to <code>true</code> those preferences
+won&#x2019;t be applied to:</p>
 <ul>
 <li>
-<p>the current Period being played (or the current loaded content, in the case
-of single-Period contents such as in Smooth streaming).
-In that case, the current audio preference will stay in place.</p>
+<p>the content being currently played.
+Here, the current audio preference will stay in place.</p>
 </li>
 <li>
-<p>the Periods which have already been loaded in the current content.
-Those will keep their last set audio preferences (e.g. the preferred audio
-tracks at the time they were first loaded).</p>
+<p>the Periods or sub-contents which have already been loaded for the current
+content.
+Those will keep the audio track chosen at the last time they were loaded.</p>
 </li>
 </ul>
-<p>To update the current audio track in those cases, you should use the
-<code>setAudioTrack</code> method once they are currently playing.</p>
+<p>If you want the preferences to also be applied to those, you can set the second
+argument to <code>true</code>.</p>
 <h4>Examples</h4>
 <p>Let&#x2019;s imagine that you prefer to have french or italian over all other audio
 languages. If not found, you want to fallback to english:</p>
@@ -1254,9 +1287,14 @@ if it was called.</p>
 <p><a name="meth-setPreferredTextTracks"></a>
 <a name="subchapter-setPreferredTextTracks"></a></p>
 <h3>setPreferredTextTracks</h3>
-<p><em>arguments</em>: <code>Array.&lt;Object|null&gt;</code></p>
-<p>Update the text track (or subtitles) preferences at any time.</p>
-<p>This method takes an array of objects describing the languages wanted:</p>
+<p><em>argument 1</em>: <code>Array.&lt;Object|null&gt;</code>
+<em>argument 2</em>: <code>Boolean | undefined</code></p>
+<p>Allows the RxPlayer to choose an initial text track, based on language
+and accessibility preferences.</p>
+<p>&#x2013;</p>
+<p>The first argument should be set as an array of objects, each object describing
+constraints a text track should respect.</p>
+<p>Here is all the properties that should be set in a single object of that array.</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
@@ -1264,29 +1302,43 @@ if it was called.</p>
                        <span class="hljs-comment">// caption for the hard of hearing</span>
 }
 </code></pre>
-<p>All elements in that Array should be set in preference order: from the most
-preferred to the least preferred. You can set <code>null</code> for no subtitles.</p>
-<p>When encountering a new Period or a new content, the RxPlayer will then try to
-choose its text track by comparing what is available with your current
-preferences (i.e. if the most preferred is not available, it will look if the
-second one is etc.).</p>
-<p>Please note that those preferences will only apply either to the next loaded
-content or to the next newly encountered Period.
-Simply put, once set this preference will be applied to all contents but:</p>
+<p>When encountering a new content or a new choice of tracks in a given content,
+the RxPlayer will look at each object in that array.
+If the first object in it defines constaints that cannot be respected under the
+currently available text tracks, the RxPlayer will consider the second object
+in the array and so on.</p>
+<p>As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.</p>
+<p>You can set <code>null</code> instead of an object to mean that you want no subtitles.
+When reaching that point of the array, the RxPlayer will just disable the
+current text track.</p>
+<p>As such, if you never want any subtitles, you can just set this argument to
+<code>[null]</code> (an array with only the value <code>null</code> at the first position).</p>
+<p>&#x2013;</p>
+<p>The second argument to that function is an optional boolean which - when set
+to <code>true</code> - will apply that preference to the content and Period that have
+already been playing.</p>
+<p>By setting it to <code>true</code>, you might thus change the currently-active text track
+and the active text track of Periods (in DASH) or sub-contents (in
+MetaPlaylist) that have already been played in the current content.</p>
+<p>By setting it to <code>false</code>, <code>undefined</code> or not setting it, those preferences will
+only be applied each time a <strong>new</strong> Period or sub-content is loaded by the
+RxPlayer.</p>
+<p>Simply put, if you don&#x2019;t set the second argument to <code>true</code> those preferences
+won&#x2019;t be applied to:</p>
 <ul>
 <li>
-<p>the current Period being played (or the current loaded content, in the case
-of Smooth streaming). In that case, the current text track preference will
-stay in place.</p>
+<p>the content being currently played.
+Here, the current text track preference will stay in place.</p>
 </li>
 <li>
-<p>the Periods which have already been played in the current loaded content.
-Those will keep the last set text track preference at the time it was
-played.</p>
+<p>the Periods or sub-contents which have already been loaded for the current
+content.
+Those will keep the text track chosen at the last time they were loaded.</p>
 </li>
 </ul>
-<p>To update the current text track in those cases, you should use the
-<code>setTextTrack</code> method.</p>
+<p>If you want the preferences to also be applied to those, you can set the second
+argument to <code>true</code>.</p>
 <h4>Example</h4>
 <p>Let&#x2019;s imagine that you prefer to have french or italian subtitles.If not found,
 you want no subtitles at all.</p>
@@ -1295,7 +1347,15 @@ you want no subtitles at all.</p>
   { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
   { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;ita&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
   <span class="hljs-literal">null</span>
-])
+]);
+</code></pre>
+<p>This won&#x2019;t apply on the currently loaded content(s), if you also want that, you
+can add <code>true</code> as a second argument:</p>
+<pre><code class="language-js">player.setPreferredTextTracks([
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;ita&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-literal">null</span>
+], <span class="hljs-literal">true</span>);
 </code></pre>
 <p>&#x2013;</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect in <em>DirectFile</em> mode
@@ -1319,6 +1379,126 @@ it was called:</p>
                        <span class="hljs-comment">// caption for the hard of hearing</span>
 }
 </code></pre>
+<p><a name="meth-setPreferredVideoTracks"></a>
+<a name="subchapter-setPreferredVideoTracks"></a></p>
+<h3>setPreferredVideoTracks</h3>
+<p><em>argument 1</em>: <code>Array.&lt;Object&gt;</code>
+<em>argument 2</em>: <code>Boolean | undefined</code></p>
+<p>Allows the RxPlayer to choose an initial video track, based on codec
+preferences, accessibility preferences or both.</p>
+<p>&#x2013;</p>
+<p>The first argument should be set as an array of objects, each object describing
+constraints a video track should respect.</p>
+<p>Here is all the possible constraints you can set in any one of those objects
+(note that all properties are optional here, only those set will have an effect
+on which tracks will be filtered):</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
+           <span class="hljs-comment">// if not set or set to `undefined` we won&apos;t filter based on codecs.</span>
+
+    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/hvc/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
+
+    all: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
+               <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
+               <span class="hljs-comment">// If `true`, we will only choose a track if EVERY profiles for</span>
+               <span class="hljs-comment">// it have a codec information that is validated by that RegExp.</span>
+               <span class="hljs-comment">// If `false`, we will choose a track if we know that at least</span>
+               <span class="hljs-comment">// A SINGLE profile from it has codec information validated by</span>
+               <span class="hljs-comment">// that RegExp.</span>
+  }
+  <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean|undefined} If set to `true`, only tracks</span>
+                         <span class="hljs-comment">// which are known to contains a sign language</span>
+                         <span class="hljs-comment">// interpretation will be considered.</span>
+                         <span class="hljs-comment">// If set to `false`, only tracks which are known</span>
+                         <span class="hljs-comment">// to not contain it will be considered.</span>
+                         <span class="hljs-comment">// if not set or set to `undefined` we won&apos;t filter</span>
+                         <span class="hljs-comment">// based on that status.</span>
+}
+</code></pre>
+<p>If the first defined object in that array - defining the first set of
+constraints - cannot be respected under the currently available video tracks,
+the RxPlayer will check with the second object instead and so on.</p>
+<p>As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.</p>
+<p>When the next encountered constraint is set to <code>null</code>, the player will simply
+disable the video track. If you want to disable the video track by default,
+you can just set <code>null</code> as the first element of this array (e.g. like <code>[null]</code>).</p>
+<p>&#x2013;</p>
+<p>The second argument to that function is an optional boolean which - when set
+to <code>true</code> - will apply that preference to the content and Period that have
+already been playing.</p>
+<p>By setting it to <code>true</code>, you might thus change the currently-active track and
+the active track of Periods (in DASH) or sub-contents (in MetaPlaylist) that
+have already been played in the current content.</p>
+<p>By setting it to <code>false</code>, <code>undefined</code> or not setting it, those preferences will
+only be applied each time a <strong>new</strong> Period (or sub-content) is loaded by the
+RxPlayer.</p>
+<p>Simply put, if you don&#x2019;t set the second argument to <code>true</code> those preferences
+won&#x2019;t be applied to:</p>
+<ul>
+<li>
+<p>the content being currently played.
+Here, the current video preference will stay in place.</p>
+</li>
+<li>
+<p>the Periods or sub-contents which have already been loaded for the current
+content.
+Those will keep the video track chosen at the last time they were loaded.</p>
+</li>
+</ul>
+<p>If you want the preferences to also be applied to those, you can set the second
+argument to <code>true</code>.</p>
+<h4>Examples</h4>
+<p>Let&#x2019;s imagine that you prefer to have a track which contains only H265
+profiles. You can do:</p>
+<pre><code class="language-js">player.setPreferredVideoTracks([ { <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> } } ]);
+</code></pre>
+<p>With that same constraint, let&#x2019;s no consider that the current user prefer in any
+case to have a sign language interpretation on screen:</p>
+<pre><code class="language-js">player.setPreferredVideoTracks([
+  // first let&apos;s consider the best case: H265 + sign language interpretation
+  {
+    codec: { all: false, test: /^hvc/ }
+    signInterpreted: true,
+  },
+
+  // If not available, we still prefer a sign interpreted track without H265
+  { signInterpreted: true },
+
+  // If not available either, we would prefer an H265 content
+  { codec: { all: false, test: /^hvc/ } },
+
+  // Note: If this is also available, we will here still have a video track
+  // but which do not respect any of the constraints set here.
+]);
+would thus prefer the video to contain a sign language interpretation.
+We could set both the previous and that new constraint that way:
+
+---
+
+For a totally different example, let&apos;s imagine you want to play without any
+video track enabled (e.g. to start in an audio-only mode). To do that, you can
+simply do:
+```js
+player.setPreferredVideoTracks([null], true);
+</code></pre>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect in <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>) when either :</p>
+<ul>
+<li>No video track API is supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
+<hr>
+<p><a name="meth-getPreferredVideoTracks"></a>
+<a name="subchapter-getPreferredVideoTracks"></a></p>
+<h3>getPreferredVideoTracks</h3>
+<p><em>return value</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Returns the current list of preferred video tracks - by order of preference.</p>
+<p>This returns the data in the same format that it was given to either the
+<code>preferredVideoTracks</code> constructor option or the last <code>setPreferredVideoTracks</code>
+if it was called.</p>
+<p>It will return an empty Array if none of those two APIs were used until now.</p>
 <p><a name="meth-group-bitrate-selection"></a>
 <a name="chapter-Bitrate%20selection"></a></p>
 <h2>Bitrate selection</h2>
@@ -1678,118 +1858,6 @@ being played.</p>
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;We are playing the following content:&quot;</span>, url);
 }
 </code></pre>
-<p><a name="meth-setPreferredVideoTracks"></a>
-<a name="subchapter-setPreferredVideoTracks"></a></p>
-<h3>setPreferredVideoTracks</h3>
-<p><em>arguments</em>: <code>Array.&lt;Object|null&gt;</code></p>
-<p>Allows the RxPlayer to choose an initial video track.</p>
-<p>It is defined as an array of objects, each object describing constraints a
-track should respect.</p>
-<p>If the first object - defining the first set of constraints - cannot be
-respected under the currently available video tracks, the RxPlayer will skip
-it and check with the second object and so on.
-As such, this array should be sorted by order of preference: from the most
-wanted constraints to the least.</p>
-<p>When the next encountered constraint is set to <code>null</code>, the player will simply
-disable the video track. If you want to disable the video track by default,
-you can just set <code>null</code> as the first element of this array (e.g. <code>[null]</code>).</p>
-<p>Here is all the possible constraints you can set in any one of those objects
-(note that all properties are optional here, only those set will have an effect
-on which tracks will be filtered):</p>
-<pre><code class="language-js">{
-  <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
-           <span class="hljs-comment">// if not set or set to `undefined` we won&apos;t filter based on codecs.</span>
-
-    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/hvc/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
-
-    <span class="hljs-attr">all</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
-               <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
-               <span class="hljs-comment">// If `true`, we will only choose a track if EVERY profiles for</span>
-               <span class="hljs-comment">// it have a codec information that is validated by that RegExp.</span>
-               <span class="hljs-comment">// If `false`, we will choose a track if we know that at least</span>
-               <span class="hljs-comment">// A SINGLE profile from it has codec information validated by</span>
-               <span class="hljs-comment">// that RegExp.</span>
-  }
-  <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean|undefined} If set to `true`, only tracks</span>
-                         <span class="hljs-comment">// which are known to contains a sign language</span>
-                         <span class="hljs-comment">// interpretation will be considered.</span>
-                         <span class="hljs-comment">// If set to `false`, only tracks which are known</span>
-                         <span class="hljs-comment">// to not contain it will be considered.</span>
-                         <span class="hljs-comment">// if not set or set to `undefined` we won&apos;t filter</span>
-                         <span class="hljs-comment">// based on that status.</span>
-}
-</code></pre>
-<p>This logic is ran each time a new <code>Period</code> with video tracks is loaded by the
-RxPlayer. This means at the start of the content, but also when [pre-]loading a
-new DASH <code>Period</code> or a new MetaPlaylist <code>content</code>.</p>
-<p>Please note that those preferences won&#x2019;t be re-applied once the logic was
-already run for a given <code>Period</code>.
-Simply put, once set this preference will be applied to all contents but:</p>
-<ul>
-<li>
-<p>the current Period being played (or the current loaded content, in the case
-of single-Period contents such as in Smooth streaming).
-In that case, the current video track preference will stay in place.</p>
-</li>
-<li>
-<p>the Periods which have already been loaded in the current content.
-Those will keep their last set video track preferences (e.g. the preferred
-video tracks at the time they were first loaded).</p>
-</li>
-</ul>
-<p>To update the current video track in those cases, you should use the
-<code>setVideoTrack</code> method once they are currently played.</p>
-<h4>Examples</h4>
-<p>Let&#x2019;s imagine that you prefer to have a track which contains only H265
-profiles. You can do:</p>
-<pre><code class="language-js">player.setPreferredVideoTracks([ { <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> } } ]);
-</code></pre>
-<p>With that same constraint, let&#x2019;s no consider that the current user prefer in any
-case to have a sign language interpretation on screen:</p>
-<pre><code class="language-js">player.setPreferredVideoTracks([
-  <span class="hljs-comment">// first let&apos;s consider the best case: H265 + sign language interpretation</span>
-  {
-    <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> }
-    <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span>,
-  },
-
-  <span class="hljs-comment">// If not available, we still prefer a sign interpreted track without H265</span>
-  { <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span> },
-
-  <span class="hljs-comment">// If not available either, we would prefer an H265 content</span>
-  { <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> } },
-
-  <span class="hljs-comment">// Note: If this is also available, we will here still have a video track</span>
-  <span class="hljs-comment">// but which do not respect any of the constraints set here.</span>
-]);
-would thus prefer the video to contain a sign language interpretation.
-We could <span class="hljs-keyword">set</span> both the previous and that new constraint that way:
-
----
-
-For a totally different example, let&apos;s imagine you want to start without any
-video track enabled (e.g. to start in an audio-only mode). To do that, you can
-simply do:
-```js
-player.setPreferredVideoTracks([null]);
-</code></pre>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect in <em>DirectFile</em> mode
-(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>) when either :</p>
-<ul>
-<li>No video track API is supported on the current browser</li>
-<li>The media file tracks are not supported on the browser</li>
-</ul>
-<hr>
-<p><a name="meth-getPreferredVideoTracks"></a>
-<a name="subchapter-getPreferredVideoTracks"></a></p>
-<h3>getPreferredVideoTracks</h3>
-<p><em>return value</em>: <code>Array.&lt;Object&gt;</code></p>
-<p>Returns the current list of preferred video tracks - by order of preference.</p>
-<p>This returns the data in the same format that it was given to either the
-<code>preferredVideoTracks</code> constructor option or the last <code>setPreferredVideoTracks</code>
-if it was called.</p>
-<p>It will return an empty Array if none of those two APIs were used until now.</p>
 <p><a name="meth-getCurrentKeySystem"></a>
 <a name="subchapter-getCurrentKeySystem"></a></p>
 <h3>getCurrentKeySystem</h3>
