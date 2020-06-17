@@ -1,0 +1,316 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>MetaPlaylist v0.1 - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-MetaPlaylist%20v0.1">MetaPlaylist v0.1</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Differences%20with%20plain%20DASH%20contents">Differences with plain DASH contents</a></li>
+<li><a href="#chapter-Structure%20of%20a%20MetaPlaylist">Structure of a MetaPlaylist</a>
+<ul>
+<li><a href="#subchapter-the%20header">the header</a></li>
+<li><a href="#subchapter-The%20contents">The contents</a></li>
+</ul>
+</li>
+<li><a href="#chapter-How%20to%20actually%20play%20a%20MetaPlaylist%20content">How to actually play a MetaPlaylist content</a>
+<ul>
+<li><a href="#subchapter-Importing%20the%20METAPLAYLIST%20feature">Importing the METAPLAYLIST feature</a></li>
+<li><a href="#subchapter-Loading%20a%20MetaPlaylist%20content">Loading a MetaPlaylist content</a></li>
+<li><a href="#subchapter-Defining%20an%20initial%20position%20for%20a%20dynamic%20MetaPlaylist">Defining an initial position for a dynamic MetaPlaylist</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-MetaPlaylist%20v0.1"></a></p>
+<h1>MetaPlaylist v0.1</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The <code>MetaPlaylist</code> is a file allowing to define a content composed of multiple
+DASH or Smooth contents played one after another.</p>
+<p>It allows advanced use cases for an extremely low cost for the server
+infrastructure, the main one being creating a linear (live) contents from
+multiple non-linear (VOD) ones, without touching the original contents.</p>
+<p>You can also construct a new non-linear contents as a concatenation of multiple
+non-linear contents put one after the other. This method allows for example for
+a completely smooth streaming between multiple programs (e.g. when
+binge-watching a serie).</p>
+<p><a name="chapter-Differences%20with%20plain%20DASH%20contents"></a></p>
+<h2>Differences with plain DASH contents</h2>
+<p>The same result could be approximated with some advanced DASH features, but the
+MetaPlaylist has several advantages. Some of them are:</p>
+<ul>
+<li>
+<p>it supports DASH and HSS contents (technically HLS would also be possible)
+without modifying the original MPD/Manifest nor segments.</p>
+</li>
+<li>
+<p>the Manifest/MPD/Playlist corresponding to the original contents can
+be lazy-loaded (loaded only when the content will play).</p>
+<p>This is also possible in DASH with a feature called XLinks but it&#x2019;s not
+always doable on the client-side, depending on the other elements present in
+that MPD.</p>
+<p>A MetaPlaylist file is much more strict in this regard.</p>
+<p>This is still a work-in-progress.</p>
+</li>
+<li>
+<p>it&#x2019;s a format especially intended to be a concatenation of multiple
+contents to be played on the web.</p>
+<p>As such, advanced features such as declaring segments before they
+should be played or avoiding many customers doing the same manifest
+request at the exact same time are much easier to implement.</p>
+</li>
+<li>
+<p>this file rarely needs to be updated, improving the caching of this
+ressource.</p>
+</li>
+<li>
+<p>its format is very simple and in JSON, which is easy to integrate with
+JavaScript codebases. The file can even be very easily generated directly on
+the client&#x2019;s page. This paves the way for contents personalized to a single
+customer.</p>
+</li>
+<li>
+<p>Digital right management is also much more flexible than with a DASH MPD.
+For example, different license servers for different contents could be
+integrated. This is still a work-in-progress.</p>
+</li>
+<li>
+<p>the specification is simple, try to allow no interpretation and is strict on
+what is permitted.</p>
+</li>
+<li>
+<p>All its features have been tested on web applications, meaning that you have
+the guarantee everything will work on most MSE-compatible browsers, even
+IE11.</p>
+</li>
+</ul>
+<p><a name="chapter-Structure%20of%20a%20MetaPlaylist"></a></p>
+<h2>Structure of a MetaPlaylist</h2>
+<p>A MetaPlaylist file is a simple JSON file.</p>
+<p>To jump into it right away, let me introduce some examples.</p>
+<p>For a VOD content:</p>
+<pre><code class="language-json">{
+  <span class="hljs-attr">&quot;type&quot;</span>: <span class="hljs-string">&quot;MPL&quot;</span>,
+  <span class="hljs-attr">&quot;version&quot;</span>: <span class="hljs-string">&quot;0.1&quot;</span>,
+  <span class="hljs-attr">&quot;contents&quot;</span>: [
+    {
+      <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/DASH/first_content.mpd&quot;</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">0</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">100.38</span>,
+      <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;dash&quot;</span>
+    },
+    {
+      <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/DASH/second_content.Manifest&quot;</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">100.38</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">372</span>,
+      <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;smooth&quot;</span>
+    },
+    {
+      <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/Smooth/third_content.mpd&quot;</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">372</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">450.787</span>,
+      <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;dash&quot;</span>
+    }
+  ]
+}
+</code></pre>
+<p>For a live content:</p>
+<pre><code class="language-json">{
+  <span class="hljs-attr">&quot;type&quot;</span>: <span class="hljs-string">&quot;MPL&quot;</span>,
+  <span class="hljs-attr">&quot;version&quot;</span>: <span class="hljs-string">&quot;0.1&quot;</span>,
+  <span class="hljs-attr">&quot;dynamic&quot;</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">&quot;pollInterval&quot;</span>: <span class="hljs-number">5</span>,
+  <span class="hljs-attr">&quot;contents&quot;</span>: [
+    {
+      <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/DASH/content.mpd&quot;</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">1545845950.176</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">1545845985.571</span>,
+      <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;dash&quot;</span>
+    },
+    {
+      <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/other/DASH/content.mpd&quot;</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">1545845985.571</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">1545845998.710</span>,
+      <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;dash&quot;</span>
+    },
+    {
+      <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/Smooth/content.Manifest&quot;</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">1545845998.710</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">1545845117</span>,
+      <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;smooth&quot;</span>
+    }
+  ]
+}
+</code></pre>
+<p>You may already have a basic understanding of it how works.
+Let&#x2019;s define nonetheless every property in that JSON file.</p>
+<p><a name="subchapter-the%20header"></a></p>
+<h3>the header</h3>
+<p>What I call the &#x201C;header&#x201D; here is roughly all root properties but &#x201C;contents&#x201D;.</p>
+<p>Here is an exhaustive list of what you should put there:</p>
+<ul>
+<li>
+<p>type (<code>string</code>): should always be equal to <code>&quot;MPL&quot;</code>, for &#x201C;MetaPlayList&#x201D;.</p>
+<p>The purpose of this value is to facilitate the checks a player might want to
+perform to verify that it is handling a MetaPlaylist file.
+The end goal would be for example to improve error reporting for very
+frequent mistakes like not providing the URL of the right content.</p>
+</li>
+<li>
+<p>version (<code>string</code>): version of the MetaPlaylist file. Separated in two parts
+by a point (&#x2018;.&#x2019;).</p>
+<p>The first part indicates the major version. If its number is higher than
+what the client presently manage, the client should not try to read that
+file.</p>
+<p>The last part indicates the minor version:
+A new feature or fix have been added but its support is not needed by a
+client (a client written for the <code>1.0</code> version can be used even for the
+<code>1.99</code> version).</p>
+<p>Please note that there is an exception for <code>0.x</code> versions, where each minor
+versions could have a breaking change (as it is in that case considered an
+experimental format).</p>
+<p>At the moment, there is only one version the version <code>&quot;0.1&quot;</code>. Thus, this is
+what you have to set in your JSON if you integrate this specification.</p>
+</li>
+<li>
+<p>dynamic (<code>boolean</code>|<code>undefined</code>): If <code>true</code>, the MetaPlaylist file is not
+finished, and might need to be updated. If <code>false</code>, the MetaPlaylist could
+still need to be updated but its current content indicates a finished
+content: A player should end when the end of the last content has been
+reached.</p>
+<p>This property is not mandatory and as such can be omitted. By default, it is
+considered as not dynamic (so <code>false</code>).</p>
+</li>
+<li>
+<p>pollInterval (<code>number</code>|<code>undefined</code>): If not set or set to a negative number,
+the MetaPlaylist file does not need to be reloaded.</p>
+<p>If set to a positive number, this is the maximum interval in seconds at
+which the MetaPlaylist file should be fetched from the server (which means
+that the MetaPlaylist could be refreshed more often depending on the current
+conditions).</p>
+<p>This should only be defined for dynamic contents.</p>
+<p>This property is not mandatory and as such can be omitted. By default, it is
+equivalent to <code>-1</code> (which means no reload).</p>
+</li>
+</ul>
+<p><a name="subchapter-The%20contents"></a></p>
+<h3>The contents</h3>
+<p>The contents are all defined as a property called <code>contents</code> at the top level of
+our MetaPlaylist file.</p>
+<p>It is an array of one or multiple objects (an empty <code>contents</code> array is not a
+valid MetaPlaylist file).</p>
+<p>Each of its objects are linked to a single content, here are the exhaustive
+list of its properties:</p>
+<ul>
+<li>
+<p>url (<code>string</code>): the URL to the original DASH&#x2019;s MPD or Smooth&#x2019;s Manifest.
+For now, only a subset of such contents is supported, mainly:</p>
+<ul>
+<li>DASH contents that have their MPD@type set to <code>&quot;static&quot;</code></li>
+<li>Smooth content that have their <code>isLive</code> attribute not set to <code>true</code>
+(Simply put, only on-demand contents are supported for the moment).</li>
+</ul>
+</li>
+<li>
+<p>startTime (<code>number</code>): time, in seconds, at which the beginning of this
+content should be played.
+This will correspond to the start time of the first Period in DASH or the
+first Chunk defined for Smooth content.</p>
+</li>
+<li>
+<p>endTime (<code>number</code>): time, in seconds, at which the content should end. It
+the original content is longer, it will be finished at that time instead.
+The original content should not be shorter.</p>
+</li>
+<li>
+<p>transport (<code>string</code>): indicates the original streaming protocol.
+Can be either of those values for now:</p>
+<ul>
+<li><code>&quot;dash&quot;</code>: the URL points to a DASH&#x2019;s MPD</li>
+<li><code>&quot;smooth&quot;</code>: the URL points to a Microsoft Smooth Streaming&#x2019;s Manifest.</li>
+<li><code>&quot;metaplaylist&quot;</code>: Yes, it is possible to put MetaPlaylist files inside
+other MetaPlaylist files!</li>
+</ul>
+</li>
+</ul>
+<p>All those contents should be contiguous (meaning that the <code>endTime</code> of one
+should be the same value than the <code>startTime</code> of the following one).</p>
+<p><a name="chapter-How%20to%20actually%20play%20a%20MetaPlaylist%20content"></a></p>
+<h2>How to actually play a MetaPlaylist content</h2>
+<p><a name="subchapter-Importing%20the%20METAPLAYLIST%20feature"></a></p>
+<h3>Importing the METAPLAYLIST feature</h3>
+<p>The <code>&quot;METAPLAYLIST&quot;</code> feature is not included in the default RxPlayer build.</p>
+<p>There&#x2019;s two way you can import it, depending on if you&#x2019;re relying on the minimal
+version or if you prefer to make use of environment variables and build the
+player manually.</p>
+<h4>Through the minimal version of the RxPlayer</h4>
+<p>If you&#x2019;re using the &#x201C;minimal&#x201D; version of the RxPlayer (through the
+<code>&quot;rx-player/minimal&quot;</code> import), you will need to import:</p>
+<ul>
+<li>the <code>METAPLAYLIST</code> experimental feature</li>
+<li>every transport protocol you might want to use.</li>
+</ul>
+<p>For example if you need to use MetaPlaylist with both Smooth and DASH contents,
+you have to import at least all three as such:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/minimal&quot;</span>;
+<span class="hljs-keyword">import</span> { METAPLAYLIST } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/features&quot;</span>;
+<span class="hljs-keyword">import</span> { DASH, SMOOTH } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/features&quot;</span>;
+
+RxPlayer.addFeatures([METAPLAYLIST, DASH, SMOOTH]);
+</code></pre>
+<h4>Through environment variables</h4>
+<p>If you don&#x2019;t want to go the minimal version&#x2019;s route and you have no problem with
+building yourself a new version of the RxPlayer, you can make use of environment
+variables to activate it.</p>
+<p>This can be done through the <code>RXP_METAPLAYLIST</code> environment variable, which you
+have to set to <code>true</code>:</p>
+<pre><code class="language-sh">RXP_METAPLAYLIST=<span class="hljs-literal">true</span> npm run build:min
+</code></pre>
+<p>More information about any of that can be found in the <a href="minimal_player.html">minimal player
+documentation</a>.</p>
+<p><a name="subchapter-Loading%20a%20MetaPlaylist%20content"></a></p>
+<h3>Loading a MetaPlaylist content</h3>
+<p>A MetaPlaylist content can simply be played by setting a <code>&quot;metaplaylist&quot;</code>
+transport in <code>loadVideo</code>:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;http://www.example.com/metaplaylist.json&quot;</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;metaplaylist&quot;</span>
+});
+</code></pre>
+<p>If you declare locally your MetaPlaylist file and do not want to set a URL for
+it, you can serve directly the file through the use of a Manifest Loader:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;metaplaylist&quot;</span>,
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-comment">// Note: `_url` here will be `undefined`</span>
+    manifestLoader(_url, callbacks) {
+      <span class="hljs-comment">// where `myMetaPlaylistObject` is the MetaPlaylist in either Object or</span>
+      <span class="hljs-comment">// String form</span>
+      callbacks.resolve({ <span class="hljs-attr">data</span>: myMetaPlaylistObject });
+    }
+  }
+});
+</code></pre>
+<p>More infos on the <code>manifestLoader</code> can be found
+<a href="plugins.html#manifestLoader">here</a>.</p>
+<p><a name="subchapter-Defining%20an%20initial%20position%20for%20a%20dynamic%20MetaPlaylist"></a></p>
+<h3>Defining an initial position for a dynamic MetaPlaylist</h3>
+<p>As already explained, a MetaPlaylist can either be dynamic or static.</p>
+<p>For calculating the initial position of those contents, the RxPlayer will obey
+<a href="../infos/initial_position.html">the same rules than for other contents</a>.</p>
+<p>As such, dynamic MetaPlaylist contents will by default start just before the end
+of the last defined content which might not be what you want.</p>
+<p>In those cases, you can make usage of the <code>serverSyncInfos</code> transport options
+when calling <code>loadVideo</code> to indicate the current time and construct the
+MetaPlaylist by using unix time for each content&#x2019;s <code>startTime</code> and <code>endTime</code>.</p>
+<p>The <code>serverSyncInfos</code> option is explained <a href="loadVideo_options.html#prop-transportOptions">in the <code>transportOptions</code>
+documentation</a>.</p>
+<p>For example, if you trust the user&#x2019;s system clock to indicate the current live
+time (in most cases this is risky however), you can use the <code>Date.now()</code> api:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> serverSyncInfos = {
+  <span class="hljs-attr">serverTimestamp</span>: <span class="hljs-built_in">Date</span>.now(),
+  <span class="hljs-attr">clientTime</span>: performance.now(),
+};
+
+player.loadVideo({
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;metaplaylist&quot;</span>,
+  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://www.example.com/metaplaylist&quot;</span>,
+  <span class="hljs-attr">transportOptions</span>: { serverSyncInfos },
+});
+</code></pre>
+</body></html></div></div></div></body>

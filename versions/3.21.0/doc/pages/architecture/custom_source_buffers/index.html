@@ -1,0 +1,25 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>Custom SourceBuffers - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Custom%20SourceBuffers">Custom SourceBuffers</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Custom%20SourceBuffers"></a></p>
+<h1>Custom SourceBuffers</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>Technically speaking <code>SourceBuffer</code>s are browser objects allowing JavaScript
+applications to &#x201C;append&#x201D; media segments for them to be decoded at the right time
+through their attached media element (e.g. <code>&lt;audio&gt;</code> or <code>&lt;video&gt;</code> media
+elements).</p>
+<p>The browser usually already defines audio and video <code>SourceBuffers</code>. This
+directory allows us to implement more &#x201C;Custom&#x201D; <code>SourceBuffers</code> such as <code>text</code>
+for subtitles.</p>
+<p>The implementation of those Custom <code>SourceBuffers</code> is done to be the closest
+possible to the ones implemented by the browser.</p>
+<p>Let&#x2019;s say for example that we want to implement a custom SourceBuffer for text
+contents. This custom SourceBuffer will have to:</p>
+<ul>
+<li>update its buffered information</li>
+<li>call the corresponding text parser</li>
+<li>display the right subtitle at the right timecode</li>
+</ul>
+</body></html></div></div></div></body>
