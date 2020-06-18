@@ -71,7 +71,7 @@ function removeEmptyRanges(ranges : IRange[]) : IRange[] {
   for (let index = 0; index < ranges.length; index++) {
     const range = ranges[index];
     if (range.start === range.end) {
-      ranges.splice(index++, 1);
+      ranges.splice(index--, 1);
     }
   }
   return ranges;
