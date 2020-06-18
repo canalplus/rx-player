@@ -288,10 +288,13 @@ export default function BufferOrchestrator(
       mergeMap(({ currentTime, isPaused, wantedTimeOffset }) => {
         const outOfBoundsPeriod = manifest.getPeriodForTime(wantedTimeOffset +
                                                             currentTime);
-        if (shouldReloadAtEachPeriodChange && outOfBoundsPeriod !== basePeriod) {
+        if (shouldReloadAtEachPeriodChange &&
+            outOfBoundsPeriod !== undefined &&
+            outOfBoundsPeriod !== basePeriod) {
           return observableOf({ type: "needs-media-source-reload" as const,
                                 value: { currentTime: currentTime + 0.01,
-                                         isPaused } });
+                                         isPaused,
+                                         period: outOfBoundsPeriod } });
         }
         const newInitialPeriod = manifest
           .getPeriodForTime(currentTime + wantedTimeOffset);
@@ -459,9 +462,14 @@ export default function BufferOrchestrator(
             return EMPTY;
           }
           const newTime = tick.currentTime + 0.01;
+          const period = manifest.getPeriodForTime(newTime);
+          if (period === undefined) {
+            return EMPTY;
+          }
           return observableOf({ type: "needs-media-source-reload" as const,
                                 value: { currentTime: newTime,
-                                         isPaused: tick.isPaused } });
+                                         isPaused: tick.isPaused,
+                                         period } });
         }),
         take(1)
       );
