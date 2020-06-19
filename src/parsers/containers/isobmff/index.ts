@@ -36,8 +36,8 @@ export {
   getPlayReadyKIDFromPrivateData,
   getTrackFragmentDecodeTime,
   getDurationFromTrun,
-  getSegmentsFromSidx,
-  ISidxSegment,
+  getReferencesFromSidx,
+  ISidxReference,
   patchPssh,
 } from "./utils";
 export { takePSSHOut };

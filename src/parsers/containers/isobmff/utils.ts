@@ -70,8 +70,8 @@ function findBox(buf : Uint8Array, wantedName : number) : number {
   return -1;
 }
 
-// Segment information returned from a parsed sidx
-export interface ISidxSegment {
+// Reference information returned from a parsed sidx
+export interface ISidxReference {
   time : number;
   duration : number;
   count : 0;
@@ -85,26 +85,28 @@ export interface ISidxSegment {
  *
  * @param {Uint8Array} buf
  * @param {Number} initialOffset
- * @returns {Object|null} {Array.<Object>} - Information about each subsegment.
- * Contains those keys:
+ * @returns {Array.<Object>|null}
+ * Returns a tuple of : index reference infos and segment reference infos,
+ * this information containing this keys :
  *   - time {Number}: starting _presentation time_ for the subsegment,
  *     timescaled
- *   - duration {Number}: duration of the subsegment, timescaled
+ *   - duration {Number}: duration of a subsegment, or of every subsegments described
+ *     on referenced sidx, timescaled
  *   - timescale {Number}: the timescale in which the time and duration are set
  *   - count {Number}: always at 0
  *   - range {Array.<Number>}: first and last bytes in the media file
  *     from the anchor point (first byte after the sidx box) for the
  *     concerned subsegment.
  */
-function getSegmentsFromSidx(
+function getReferencesFromSidx(
   buf : Uint8Array,
   initialOffset : number
-) : ISidxSegment[]|null {
+) : [ISidxReference[], ISidxReference[]] | null {
   const index = findBox(buf, 0x73696478 /* "sidx" */);
   if (index === -1) {
     return null;
   }
-  let offset = initialOffset;
+  let offset = initialOffset + index;
 
   const size = be4toi(buf, index);
   let pos = index + /* size */4 + /* name */4;
@@ -131,7 +133,8 @@ function getSegmentsFromSidx(
     return null;
   }
 
-  const segments : ISidxSegment[] = [];
+  const referencesToIndex : ISidxReference[] = [];
+  const referencesToSegment : ISidxReference[] = [];
 
   /* reserved(16) */
   /* reference_count(16) */
@@ -147,10 +150,8 @@ function getSegmentsFromSidx(
     pos += 4;
     const refType = (refChunk & 0x80000000) >>> 31;
     const refSize = (refChunk & 0x7FFFFFFF);
-
-    // when set to 1 indicates that the reference is to a sidx, else to media
-    if (refType === 1) {
-      throw new Error("sidx with reference_type `1` not yet implemented");
+    if (refType !== 1 && refType !== 0) {
+        throw new Error("Sidx with wrong reference_type.");
     }
 
     const duration = be4toi(buf, pos);
@@ -163,18 +164,25 @@ function getSegmentsFromSidx(
     // let startsWithSap = (sapChunk & 0x80000000) >>> 31;
     // let sapType = (sapChunk & 0x70000000) >>> 28;
     // let sapDelta = sapChunk & 0x0FFFFFFF;
-
-    segments.push({ time,
-                    duration,
-                    count: 0,
-                    timescale,
-                    range: [offset, offset + refSize - 1] });
+   if (refType === 1) {
+      referencesToIndex.push({ time,
+                               duration,
+                               count: 0,
+                               timescale,
+                               range: [offset, offset + refSize - 1] });
+    } else {
+      referencesToSegment.push({ time,
+                                 duration,
+                                 count: 0,
+                                 timescale,
+                                 range: [offset, offset + refSize - 1] });
+    }
 
     time += duration;
     offset += refSize;
   }
 
-  return segments;
+  return [referencesToIndex, referencesToSegment];
 }
 
 /**
@@ -411,6 +419,6 @@ export {
   getPlayReadyKIDFromPrivateData,
   getTrackFragmentDecodeTime,
   getDurationFromTrun,
-  getSegmentsFromSidx,
+  getReferencesFromSidx,
   patchPssh,
 };

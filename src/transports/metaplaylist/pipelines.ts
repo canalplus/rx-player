@@ -321,7 +321,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { audio } = getTransportPipelinesFromSegment(segment);
       return audio.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => {
-          if (res.type === "parsed-init-segment") {
+          if (res.type === "parsed-init-segment" ||
+              res.type === "retry") {
             return res;
           }
           const timeInfos = offsetTimeInfos(contentStart,
@@ -350,7 +351,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { video } = getTransportPipelinesFromSegment(segment);
       return video.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => {
-          if (res.type === "parsed-init-segment") {
+          if (res.type === "parsed-init-segment" ||
+              res.type === "retry") {
             return res;
           }
           const timeInfos = offsetTimeInfos(contentStart,
@@ -379,7 +381,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { text } = getTransportPipelinesFromSegment(segment);
       return text.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => {
-          if (res.type === "parsed-init-segment") {
+          if (res.type === "parsed-init-segment" ||
+              res.type === "retry") {
             return res;
           }
           const timeInfos = offsetTimeInfos(contentStart,
@@ -408,7 +411,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { image } = getTransportPipelinesFromSegment(segment);
       return image.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => {
-          if (res.type === "parsed-init-segment") {
+          if (res.type === "parsed-init-segment" ||
+              res.type === "retry") {
             return res;
           }
           const timeInfos = offsetTimeInfos(contentStart,

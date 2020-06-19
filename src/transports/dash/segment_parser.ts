@@ -15,14 +15,17 @@
  */
 
 import { of as observableOf } from "rxjs";
+import { mergeMap } from "rxjs/operators";
 import {
   getMDHDTimescale,
-  getSegmentsFromSidx,
+  getReferencesFromSidx,
+  ISidxReference,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import {
   getSegmentsFromCues,
   getTimeCodeScale,
+  ICuesSegment,
 } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
 import {
@@ -31,13 +34,15 @@ import {
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import loadIndexes from "./load_indexes";
 
 export default function parser(
   { content,
     response,
-    initTimescale } : ISegmentParserArguments< Uint8Array |
-                                               ArrayBuffer |
-                                               null >
+    initTimescale,
+    scheduleRequest } : ISegmentParserArguments< Uint8Array |
+                                                 ArrayBuffer |
+                                                 null >
 ) : IAudioVideoParserObservable {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
@@ -60,7 +65,28 @@ export default function parser(
 
   const chunkData = data instanceof Uint8Array ? data :
                                                  new Uint8Array(data);
+  const { range } = segment;
   const isWEBM = isWEBMEmbeddedTrack(representation);
+
+  let nextSegments: null|ICuesSegment[] = [];
+  let indexReferences: ISidxReference[] = [];
+
+  if (isWEBM) {
+    nextSegments = getSegmentsFromCues(chunkData, 0);
+  } else {
+    const indexOffset = Array.isArray(range) ? range[0] : 0;
+    const referencesFromSidx = getReferencesFromSidx(chunkData, indexOffset);
+    if (referencesFromSidx !== null) {
+      if (referencesFromSidx[1].length > 0) {
+        nextSegments = referencesFromSidx[1];
+      }
+      indexReferences = referencesFromSidx[0];
+    }
+  }
+
+  if (nextSegments !== null && nextSegments.length > 0) {
+    representation.index._addSegments(nextSegments);
+  }
 
   if (!segment.isInit) {
     const chunkInfos = isWEBM ? null : // TODO extract time info from webm
@@ -69,24 +95,29 @@ export default function parser(
                                                       segment,
                                                       initTimescale);
     const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-    return observableOf({ type: "parsed-segment",
-                          value: { chunkData,
-                                   chunkInfos,
-                                   chunkOffset,
-                                   appendWindow } });
+    const parserResponse = observableOf({ type: "parsed-segment" as const,
+                                          value: { chunkData,
+                                                   chunkInfos,
+                                                   chunkOffset,
+                                                   appendWindow } });
+
+    if (indexReferences !== undefined && indexReferences.length > 0) {
+      if (scheduleRequest == null) {
+        throw new Error("Can't schedule request for loading indexes.");
+      }
+      return loadIndexes(indexReferences, content, scheduleRequest).pipe(
+        mergeMap((evt) => {
+          if (evt.type === "retry") {
+            return observableOf(evt);
+          }
+          return parserResponse;
+        })
+      );
+    }
+    return parserResponse;
   }
+
   // we're handling an initialization segment
-  const { indexRange } = segment;
-  const nextSegments = isWEBM ? getSegmentsFromCues(chunkData, 0) :
-                                getSegmentsFromSidx(chunkData,
-                                                    Array.isArray(indexRange) ?
-                                                      indexRange[0] :
-                                                      0);
-
-  if (nextSegments !== null && nextSegments.length > 0) {
-    representation.index._addSegments(nextSegments);
-  }
-
   const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
                              getMDHDTimescale(chunkData);
   const parsedTimescale = timescale !== null && timescale > 0 ? timescale :
@@ -100,8 +131,23 @@ export default function parser(
   }
 
   const segmentProtections = representation.getProtectionsInitializationData();
-  return observableOf({ type: "parsed-init-segment",
-                        value: { initializationData: chunkData,
-                                 segmentProtections,
-                                 initTimescale: parsedTimescale } });
+  const initParserResponse = observableOf({ type: "parsed-init-segment" as const,
+                                            value: { initializationData: chunkData,
+                                                     segmentProtections,
+                                                     initTimescale: parsedTimescale } });
+
+  if (indexReferences !== undefined && indexReferences.length > 0) {
+    if (scheduleRequest == null) {
+      throw new Error("Can't schedule request for loading indexes.");
+    }
+    return loadIndexes(indexReferences, content, scheduleRequest).pipe(
+      mergeMap((evt) => {
+        if (evt.type === "retry") {
+          return observableOf(evt);
+        }
+        return initParserResponse;
+      })
+    );
+  }
+  return initParserResponse;
 }

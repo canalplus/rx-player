@@ -28,21 +28,33 @@ import {
   share,
   tap,
 } from "rxjs/operators";
-import { formatError } from "../../../errors";
+import {
+  formatError,
+  ICustomError
+} from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
+  IScheduleRequestResponse,
   ISegmentParserResponse,
   ITransportPipelines,
+  ITransportWarningEvent,
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
+import filterMap from "../../../utils/filter_map";
 import idGenerator from "../../../utils/id_generator";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
+import tryCatch from "../../../utils/rx-try_catch";
 import {
   IABRMetric,
   IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import { IBackoffOptions } from "../utils/try_urls_with_backoff";
+import errorSelector from "../utils/error_selector";
+import {
+  IBackoffEvent,
+  IBackoffOptions,
+  tryRequestObservableWithBackoff,
+} from "../utils/try_urls_with_backoff";
 import createSegmentLoader, {
   ISegmentLoaderChunk,
   ISegmentLoaderChunkComplete,
@@ -53,9 +65,16 @@ import createSegmentLoader, {
 
 export type ISegmentFetcherWarning = ISegmentLoaderWarning;
 
+interface IPipelineRetryEvent {
+  type: "retry";
+  value: { error: ICustomError;
+           segment: ISegment; };
+}
+
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
-  parse : (initTimescale? : number) => Observable<ISegmentParserResponse<T>>;
+  parse : (initTimescale? : number) =>
+    Observable<ISegmentParserResponse<T> | IPipelineRetryEvent>;
 }
 
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
@@ -90,6 +109,33 @@ export default function createSegmentFetcher<T>(
                                                  cache,
                                                  options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
+
+  /**
+   * Allow the parser to schedule a new request.
+   * @param {Function} request - Function performing the request.
+   * @returns {Function}
+   */
+  function scheduleRequest(
+    request : () => Observable<T>
+  ) : Observable<IScheduleRequestResponse<T>|ITransportWarningEvent> {
+    return tryRequestObservableWithBackoff(tryCatch(request, undefined),
+                                           options).pipe(
+      filterMap<IBackoffEvent<T>,
+                IScheduleRequestResponse<T>|ITransportWarningEvent,
+                null
+      >((evt) => {
+        if (evt.type === "retry") {
+          const error = errorSelector(evt.value);
+          return { type: "warning",
+                   value: error };
+        }
+        return { type: "schedule-request-response",
+                 value: evt.value };
+      }, null),
+      catchError((error : unknown) : Observable<never> => {
+        throw errorSelector(error);
+      }));
+  }
 
   /**
    * Process the segmentLoader observable to adapt it to the the rest of the
@@ -189,10 +235,11 @@ export default function createSegmentFetcher<T>(
            * @param {Object} [initTimescale]
            * @returns {Observable}
            */
-          parse(initTimescale? : number) : Observable<ISegmentParserResponse<T>> {
+          parse(initTimescale? : number) :
+            Observable<ISegmentParserResponse<T> | IPipelineRetryEvent> {
             const response = { data: evt.value.responseData, isChunked };
             /* tslint:disable no-unsafe-any */
-            return segmentParser({ response, initTimescale, content })
+            return segmentParser({ response, initTimescale, content, scheduleRequest })
             /* tslint:enable no-unsafe-any */
               .pipe(catchError((error: unknown) => {
                 throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",

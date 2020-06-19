@@ -419,8 +419,11 @@ export default function RepresentationBuffer<T>({
             }
 
             const initTimescale = initSegmentObject?.initTimescale;
-            return evt.parse(initTimescale).pipe(map(parserResponse => {
-              return objectAssign({ segment }, parserResponse);
+            return evt.parse(initTimescale).pipe(map(parserEvent => {
+              if (parserEvent.type === "retry") {
+                return parserEvent;
+              }
+              return objectAssign({ segment }, parserEvent);
             }));
           }));
 

@@ -18,6 +18,7 @@ import {
   Observable,
   Observer,
 } from "rxjs";
+import { ICustomError } from "../errors";
 import Manifest, {
   Adaptation,
   IRepresentationFilter,
@@ -30,6 +31,24 @@ import Manifest, {
 import { IBifThumbnail } from "../parsers/images/bif";
 import { ILocalManifest } from "../parsers/manifest/local";
 import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
+
+export interface ITransportWarningEvent {
+  type: "warning";
+  value: ICustomError;
+}
+
+export interface ITransportRetryEvent {
+  type: "retry";
+  value: {
+    error: ICustomError;
+    segment: ISegment;
+  };
+}
+
+export interface IScheduleRequestResponse<U> {
+  type: "schedule-request-response";
+  value: U;
+}
 
 // Contains timings information on a single segment.
 // Those variables expose the best guess we have on the effective duration and
@@ -192,6 +211,9 @@ export interface ISegmentParserArguments<T> {
     representation : Representation; // Representation related to this segment
     segment : ISegment; // The segment we want to parse
   };
+
+  scheduleRequest?: <U>(request : () => Observable<U>) =>
+    Observable<IScheduleRequestResponse<U> | ITransportWarningEvent>;
 }
 
 // -- response
@@ -331,9 +353,12 @@ export type IImageParserSegmentResponse =
 export type IImageParserResponse = IImageParserInitSegmentResponse |
                                    IImageParserSegmentResponse;
 
-export type IAudioVideoParserObservable = Observable<IAudioVideoParserResponse>;
-export type ITextParserObservable = Observable<ITextParserResponse>;
-export type IImageParserObservable = Observable<IImageParserResponse>;
+export type IAudioVideoParserObservable =
+  Observable<IAudioVideoParserResponse | ITransportRetryEvent>;
+export type ITextParserObservable =
+  Observable<ITextParserResponse | ITransportRetryEvent>;
+export type IImageParserObservable =
+  Observable<IImageParserResponse | ITransportRetryEvent>;
 
 // TODO Remove resolver
 export type IManifestResolverFunction =

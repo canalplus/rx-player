@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import { mergeMap } from "rxjs/operators";
 import {
   getMDHDTimescale,
-  getSegmentsFromSidx,
+  getReferencesFromSidx,
 } from "../../parsers/containers/isobmff";
 import {
   bytesToStr,
@@ -25,8 +29,11 @@ import {
 } from "../../utils/byte_parsing";
 import takeFirstSet from "../../utils/take_first_set";
 import {
+  IScheduleRequestResponse,
   ISegmentParserArguments,
   ITextParserObservable,
+  ITextParserSegmentResponse,
+  ITransportWarningEvent,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
@@ -34,6 +41,7 @@ import {
   getISOBMFFEmbeddedTextTrackData,
   getPlainTextTrackData,
 } from "../utils/parse_text_track";
+import loadIndexes from "./load_indexes";
 
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.
@@ -45,28 +53,50 @@ function parseISOBMFFEmbeddedTextTrack(
     content,
     initTimescale } : ISegmentParserArguments< Uint8Array |
                                                ArrayBuffer |
-                                               string >
+                                               string >,
+  scheduleRequest?: <U>(request : () => Observable<U>) =>
+    Observable<IScheduleRequestResponse<U> |
+               ITransportWarningEvent>
 ) : ITextParserObservable {
   const { period, representation, segment } = content;
-  const { isInit, indexRange } = segment;
+  const { isInit, range } = segment;
   const { data, isChunked } = response;
 
   const chunkBytes = typeof data === "string" ? strToBytes(data) :
                      data instanceof Uint8Array ? data :
                                                   new Uint8Array(data);
+  const indexOffset = Array.isArray(range) ? range[0] : 0;
+  const sidxReferences =
+    getReferencesFromSidx(chunkBytes, indexOffset);
+  const nextSegments = (sidxReferences !== null) ? sidxReferences[1] : null;
+  const indexReferences = (sidxReferences !== null) ? sidxReferences[0] : null;
+
   if (isInit) {
-    const sidxSegments =
-      getSegmentsFromSidx(chunkBytes, Array.isArray(indexRange) ? indexRange[0] :
-                                                                  0);
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    if (sidxSegments !== null && sidxSegments.length > 0) {
-      representation.index._addSegments(sidxSegments);
+    if (nextSegments !== null && nextSegments.length > 0) {
+      representation.index._addSegments(nextSegments);
     }
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: null,
-                                   segmentProtections: [],
-                                   initTimescale: mdhdTimescale > 0 ? mdhdTimescale :
-                                                                       undefined } });
+    const parsedTrackInitInfos =
+      observableOf({ type: "parsed-init-segment" as const,
+                     value: { initializationData: null,
+                              segmentProtections: [],
+                              initTimescale: mdhdTimescale > 0 ? mdhdTimescale :
+                                                                 undefined } });
+
+    if (indexReferences !== null && indexReferences.length > 0) {
+      if (scheduleRequest == null) {
+        throw new Error("Can't schedule request for loading indexes.");
+      }
+      return loadIndexes(indexReferences, content, scheduleRequest).pipe(
+        mergeMap((evt) => {
+          if (evt.type === "retry") {
+            return observableOf(evt);
+          }
+          return parsedTrackInitInfos;
+        })
+      );
+    }
+    return parsedTrackInitInfos;
   }
   const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
                                            isChunked,
@@ -77,11 +107,27 @@ function parseISOBMFFEmbeddedTextTrack(
                                                     chunkInfos,
                                                     isChunked);
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData,
-                                 chunkInfos,
-                                 chunkOffset,
-                                 appendWindow: [period.start, period.end] } });
+  const parsedTrackInfos: Observable<ITextParserSegmentResponse> =
+    observableOf({ type: "parsed-segment" as const,
+                   value: { chunkData,
+                            chunkInfos,
+                            chunkOffset,
+                            appendWindow: [period.start, period.end] } });
+
+  if (indexReferences !== null && indexReferences.length > 0) {
+    if (scheduleRequest == null) {
+      throw new Error("Can't schedule request for loading indexes.");
+    }
+    return loadIndexes(indexReferences, content, scheduleRequest).pipe(
+      mergeMap((evt) => {
+        if (evt.type === "retry") {
+          return observableOf(evt);
+        }
+        return parsedTrackInfos;
+      })
+    );
+  }
+  return parsedTrackInfos;
 }
 
 /**
@@ -129,7 +175,8 @@ function parsePlainTextTrack(
 export default function textTrackParser(
   { response,
     content,
-    initTimescale } : ISegmentParserArguments< Uint8Array |
+    initTimescale,
+    scheduleRequest } : ISegmentParserArguments< Uint8Array |
                                                ArrayBuffer |
                                                string |
                                                null >
@@ -155,7 +202,8 @@ export default function textTrackParser(
   if (isMP4) {
     return parseISOBMFFEmbeddedTextTrack({ response: { data, isChunked },
                                            content,
-                                           initTimescale });
+                                           initTimescale },
+                                           scheduleRequest);
   } else {
     return parsePlainTextTrack({ response: { data, isChunked }, content });
   }
