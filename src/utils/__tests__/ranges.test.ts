@@ -639,6 +639,36 @@ describe("utils - ranges", () => {
         { start: 100, end: 101 },
       ]);
     });
+    it("should clear multiple sequential ranges", () => {
+      expect(removeEmptyRanges([
+        { start: 30, end: 70 },
+        { start: 90, end: 90 },
+        { start: 90, end: 90 },
+        { start: 90, end: 90 },
+        { start: 100, end: 101 },
+      ])).toEqual([
+        { start: 30, end: 70 },
+        { start: 100, end: 101 },
+      ]);
+    });
+    it("should clear the first and last ranges if they are empty", () => {
+      expect(removeEmptyRanges([
+        { start: 30, end: 30 },
+        { start: 90, end: 91 },
+        { start: 95, end: 96 },
+        { start: 100, end: 100 },
+      ])).toEqual([
+        { start: 90, end: 91 },
+        { start: 95, end: 96 },
+      ]);
+    });
+    it("should return empty array if all ranges are empty", () => {
+      expect(removeEmptyRanges([
+        { start: 90, end: 90 },
+        { start: 90, end: 90 },
+        { start: 90, end: 90 },
+      ])).toEqual([]);
+    });
   });
 
   describe("mergeContiguousRanges", () => {
