@@ -2570,8 +2570,8 @@ note).
 
 --
 
-The `parseBifThumbnails` function parses BIF files, which is a format created by
-Canal+ to declare thumbnails linked to a given content.
+The `parseBifThumbnails` function parses BIF files, which is a format used
+to declare thumbnails linked to a given content.
 
 This tool is documented [here](./parseBifThumbnails.md).
 
