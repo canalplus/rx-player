@@ -28,6 +28,7 @@ import tryToChangeSourceBufferType, {
 } from "./change_source_buffer_type";
 import clearElementSrc from "./clear_element_src";
 import {
+  closeSession,
   CustomMediaKeySystemAccess,
   generateKeyRequest,
   getInitData,
@@ -71,6 +72,7 @@ export {
   addTextTrack,
   canPatchISOBMFFSegment,
   clearElementSrc,
+  closeSession,
   CustomMediaKeySystemAccess,
   events,
   exitFullscreen,

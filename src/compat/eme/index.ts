@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import closeSession from "./close_session";
 import CustomMediaKeySystemAccess, {
   ICustomMediaKeySystemAccess,
 } from "./custom_key_system_access";
@@ -27,6 +28,7 @@ import generateKeyRequest from "./generate_key_request";
 import getInitData from "./get_init_data";
 
 export {
+  closeSession,
   CustomMediaKeySystemAccess,
   generateKeyRequest,
   getInitData,

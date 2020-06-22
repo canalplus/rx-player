@@ -239,7 +239,7 @@ export interface IPictureInPictureEvent {
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-export function onPictureInPictureEvent$(
+function onPictureInPictureEvent$(
   mediaElement: HTMLMediaElement
 ): Observable<IPictureInPictureEvent> {
   return observableDefer(() => {
@@ -458,4 +458,5 @@ export {
   onKeyAdded$,
   onKeyError$,
   onKeyStatusesChange$,
+  onPictureInPictureEvent$,
 };

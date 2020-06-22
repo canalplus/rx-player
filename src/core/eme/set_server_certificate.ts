@@ -25,9 +25,7 @@ import {
   ignoreElements,
 } from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat";
-import {
-  EncryptedMediaError,
-} from "../../errors";
+import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
 import {
