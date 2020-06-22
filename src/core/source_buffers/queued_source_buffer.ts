@@ -48,99 +48,182 @@ import SegmentInventory, {
 const { APPEND_WINDOW_SECURITIES,
         SOURCE_BUFFER_FLUSHING_INTERVAL, } = config;
 
-// Every QueuedSourceBuffer types
+/** Every QueuedSourceBuffer types. */
 export type IBufferType = "audio" |
                           "video" |
                           "text" |
                           "image";
 
+/**
+ * Enum used internally by the QueuedSourceBuffer as a discriminant in its
+ * queue of "actions".
+ */
 enum SourceBufferAction { Push,
                           Remove,
                           EndOfSegment }
 
-// Content of the `data` property when pushing a new chunk
-// This will be the real data used with the underlying SourceBuffer.
+/**
+ * Content of the `data` property when pushing a new chunk
+ * This will contain all necessary information to decode the media data.
+ * Type parameter `T` is the format of the chunk's data.
+ */
 export interface IPushedChunkData<T> {
-  initSegment: T|null;  // initialization segment related to the
-                        // chunk. `null` if none.
-  chunk : T | null; // Chunk you want to push. `null` if you just
-                    // want to push the initialization segment.
-  codec : string; // string corresponding to the mime-type + codec to set the
-                  // underlying SourceBuffer to.
-  timestampOffset : number; // time offset in seconds to apply to this segment.
-  appendWindow: [ number | undefined, // start appendWindow for the segment
-                                      // (part of the segment before that time
-                                      // will be ignored)
-                  number | undefined ]; // end appendWindow for the segment
-                                        // (part of the segment after that time
-                                        // will be ignored)
+  /**
+   * The whole initialization segment's data related to the chunk you want to
+   * push.
+   * `null` if none.
+   */
+  initSegment: T | null;
+  /**
+   * Chunk you want to push.
+   * This can be the whole decodable segment's data or just a decodable sub-part
+   * of it.
+   * `null` if you just want to push the initialization segment.
+   */
+  chunk : T | null;
+  /**
+   * String corresponding to the mime-type + codec to set the underlying
+   * SourceBuffer to.
+   * This is then used in "native" SourceBuffers to infer the right codec to use.
+   */
+  codec : string;
+  /**
+   * Time offset in seconds to apply to this segment.
+   * A `timestampOffset` set to `5` will mean that the segment will be decoded
+   * 5 seconds after its decode time which was found from the segment data
+   * itself.
+   */
+  timestampOffset : number;
+  /**
+   * Append windows for the segment. This is a tuple of two elements.
+   *
+   * The first indicates the "start append window". The media data of that
+   * segment that should have been decoded BEFORE that time (after taking the
+   * `timestampOffset` property in consideration) will be ignored.
+   * This can be set to `0` or `undefined` to not apply any start append window
+   * to that chunk.
+   *
+   * The second indicates the "end append window". The media data of that
+   * segment that should have been decoded AFTER that time (after taking the
+   * `timestampOffset` property in consideration) will be ignored.
+   * This can be set to `0` or `undefined` to not apply any end append window
+   * to that chunk.
+   */
+  appendWindow: [ number | undefined,
+                  number | undefined ];
 }
 
-// Content of the `inventoryInfos` property when pushing a new chunk
-// This is what will be registered in the QueuedSourceBuffer's inventory.
-// corresponding to this chunk.
+/**
+ * Content of the `inventoryInfos` property when pushing a new chunk
+ * This data will only be needed for inventory purposes in the QueuedSourceBuffer.
+ */
 export interface IPushedChunkInventoryInfos {
+  /** Adaptation object linked to the chunk. */
   adaptation : Adaptation;
+  /** Period object linked to the chunk. */
   period : Period;
+  /** Representation object linked to the chunk. */
   representation : Representation;
-  segment : ISegment; // The  segment object linked to the chunk.
-  estimatedStart? : number; // Estimated start time, in s, of the chunk
+  /** The segment object linked to the pushed chunk. */
+  segment : ISegment;
+  /**
+   * Estimated precize start time, in seconds, the chunk starts at when decoded
+   * (this should include any possible `timestampOffset` value.
+   */
+  estimatedStart? : number;
+  /**
+   * Estimated precize difference, in seconds, between the last decodable
+   * and the first decodable position in the chunk.
+   * (this should include any possible `timestampOffset` value.
+   */
   estimatedDuration? : number; // Estimated end time, in s, of the chunk
 }
 
-// Information to give when pushing a new chunk via the `pushChunk` method.
+/**
+ * Information to give when pushing a new chunk via the `pushChunk` method.
+ * Type parameter `T` is the format of the chunk's data.
+ */
 export interface IPushChunkInfos<T> { data : IPushedChunkData<T>;
                                       inventoryInfos : IPushedChunkInventoryInfos; }
 
-// Information to give when indicating a whole segment has been pushed via the
-// `endOfSegment` method.
+/**
+ * Information to give when indicating a whole segment has been pushed via the
+ * `endOfSegment` method.
+ */
 export interface IEndOfSegmentInfos {
-  adaptation : Adaptation; // The Adaptation linked to the segment.
-  period : Period; // The Period linked to the segment.
-  representation : Representation; // The Representation linked to the segment.
-  segment : ISegment; // The corresponding Segment object.
+  /** Adaptation object linked to the chunk. */
+  adaptation : Adaptation;
+  /** Period object linked to the chunk. */
+  period : Period;
+  /** Representation object linked to the chunk. */
+  representation : Representation;
+  /** The segment object linked to the pushed chunk. */
+  segment : ISegment;
 }
 
-// Action created by the QueuedSourceBuffer to push a chunk.
-// Will be converted into an `IPushQueueItem` once in the queue
-interface IPushAction<T> { type : SourceBufferAction.Push;
-                           value : IPushChunkInfos<T>; }
+/**
+ * "Action" created by the QueuedSourceBuffer when pushing a chunk.
+ * Will be converted into an `IPushQueueItem` once in the queue.
+ * Type parameter `T` is the format of the chunk's data.
+ */
+interface IPushAction<T> {
+  /** Discriminant (allows to tell its a "Push action"). */
+  type : SourceBufferAction.Push;
+  /** Arguments for that push. */
+  value : IPushChunkInfos<T>;
+}
 
-// Action created by the QueuedSourceBuffer to remove Segment(s).
-// Will be converted into an `IRemoveQueueItem` once in the queue
-interface IRemoveAction { type : SourceBufferAction.Remove;
-                          value : { start : number;
-                                    end : number; }; }
+/**
+ * "Action" created by the QueuedSourceBuffer when removing buffer.
+ * Will be converted into an `IRemoveQueueItem` once in the queue.
+ */
+interface IRemoveAction {
+  /** Discriminant (allows to tell its a "Remove action"). */
+  type : SourceBufferAction.Remove;
+  /** Arguments for that remove (absolute start and end time, in seconds). */
+  value : { start : number;
+            end : number; }; }
 
-// Action created by the QueuedSourceBuffer for validating that a complete
-// Segment has been or is being pushed to it.
-// Will be converted into an `IEndOfSegmentQueueItem` once in the queue
-interface IEndOfSegmentAction { type : SourceBufferAction.EndOfSegment;
-                                value : IEndOfSegmentInfos; }
+/**
+ * "Action" created by the QueuedSourceBuffer for validating that a complete
+ * Segment has been or is being pushed to it.
+ * Will be converted into an `IEndOfSegmentQueueItem` once in the queue.
+ */
+interface IEndOfSegmentAction {
+  /** Discriminant (allows to tell its an "EndOfSegment action"). */
+  type : SourceBufferAction.EndOfSegment;
+  /** Arguments for that action. */
+  value : IEndOfSegmentInfos;
+}
 
-// Actions understood by the QueuedSourceBuffer
+/** "Actions" enumeration that are understood by the QueuedSourceBuffer. */
 type IQSBNewAction<T> = IPushAction<T> |
                         IRemoveAction |
                         IEndOfSegmentAction;
 
-// Item waiting in the queue to push a new chunk to the SourceBuffer.
-// T is the type of the segment pushed.
-interface IPushQueueItem<T> extends IPushAction<T> { subject : Subject<unknown>; }
+/**
+ * Item waiting in the queue to push a new chunk to the SourceBuffer.
+ * Type parameter `T` is the format of the chunk's data.
+ */
+interface IPushQueueItem<T> extends IPushAction<T> { subject : Subject<void>; }
 
-// Item waiting in the queue to remove segment(s) from the SourceBuffer.
-interface IRemoveQueueItem extends IRemoveAction { subject : Subject<unknown>; }
+/** Item waiting in the queue to remove segment(s) from the SourceBuffer. */
+interface IRemoveQueueItem extends IRemoveAction { subject : Subject<void>; }
 
-// Item waiting in the queue to validate that the whole segment has been pushed
+/** Item waiting in the queue to validate that the whole segment has been pushed. */
 interface IEndOfSegmentQueueItem extends IEndOfSegmentAction {
-  subject : Subject<unknown>;
+  subject : Subject<void>;
 }
 
-// Action waiting in the queue.
-// T is the type of the segments pushed.
+/**
+ * Enumeration of every item that can be queued.
+ * Type parameter `T` is the format of the chunk's data.
+ */
 type IQSBQueueItem<T> = IPushQueueItem<T> |
-                         IRemoveQueueItem |
-                         IEndOfSegmentQueueItem;
+                        IRemoveQueueItem |
+                        IEndOfSegmentQueueItem;
 
+/** Data of a push action when transformed into a task. */
 interface IPushData<T> { isInit : boolean;
                          segmentData : T;
                          codec : string;
@@ -148,13 +231,13 @@ interface IPushData<T> { isInit : boolean;
                          appendWindow : [ number | undefined,
                                           number | undefined ]; }
 
-// Once processed, Push queue items are separated into one or multiple tasks
+/** Once processed, Push queue items are separated into one or multiple tasks. */
 interface IPushTask<T> { type : SourceBufferAction.Push;
                          steps : Array<IPushData<T>>;
                          inventoryData : IInsertedChunkInfos;
-                         subject : Subject<unknown>; }
+                         subject : Subject<void>; }
 
-// Type of task currently processed by the QueuedSourceBuffer
+/** Type of task currently processed by the QueuedSourceBuffer. */
 type IPendingTask<T> = IPushTask<T> |
                        IRemoveQueueItem |
                        IEndOfSegmentQueueItem;
@@ -170,33 +253,41 @@ type IPendingTask<T> = IPushTask<T> |
  * @class QueuedSourceBuffer
  */
 export default class QueuedSourceBuffer<T> {
-  // "Type" of the buffer (e.g. "audio", "video", "text", "image")
+  /** "Type" of the buffer (e.g. "audio", "video", "text", "image"). */
   public readonly bufferType : IBufferType;
 
-  // SourceBuffer implementation.
+  /** SourceBuffer implementation. */
   private readonly _sourceBuffer : ICustomSourceBuffer<T>;
 
-  // Inventory of buffered segment
+  /** Inventory of buffered segments. */
   private readonly _segmentInventory : SegmentInventory;
 
-  // Subject triggered when this QueuedSourceBuffer is disposed.
-  // Helps to clean-up Observables created at its creation.
+  /**
+   * Subject triggered when this QueuedSourceBuffer is disposed.
+   * Helps to clean-up Observables created at its creation.
+   */
   private _destroy$ : Subject<void>;
 
-  // Queue of awaited buffer orders.
-  // The first element in this array will be the first performed.
+  /**
+   * Queue of awaited buffer "actions".
+   * The first element in this array will be the first performed.
+   */
   private _queue : Array<IQSBQueueItem<T>>;
 
-  // Information about the current action processed by the QueuedSourceBuffer.
-  // If equal to null, it means that no action from the queue is currently
-  // being processed.
+  /**
+   * Information about the current action processed by the QueuedSourceBuffer.
+   * If equal to null, it means that no action from the queue is currently
+   * being processed.
+   */
   private _pendingTask : IPendingTask<T> | null;
 
-  // Keep track of the latest init segment pushed in the linked SourceBuffer.
+  /** Keep track of the latest init segment pushed in the linked SourceBuffer. */
   private _lastInitSegment : T | null;
 
-  // Current `type` of the underlying SourceBuffer.
-  // Might be changed for codec-switching purposes.
+  /**
+   * Current `type` of the underlying SourceBuffer.
+   * Might be changed for codec-switching purposes.
+   */
   private _currentCodec : string;
 
   /**
@@ -273,7 +364,7 @@ export default class QueuedSourceBuffer<T> {
    * @param {Object} infos
    * @returns {Observable}
    */
-  public pushChunk(infos : IPushChunkInfos<T>) : Observable<unknown> {
+  public pushChunk(infos : IPushChunkInfos<T>) : Observable<void> {
     log.debug("QSB: receiving order to push data to the SourceBuffer",
               this.bufferType,
               infos);
@@ -287,7 +378,7 @@ export default class QueuedSourceBuffer<T> {
    * @param {number} end - end position, in seconds
    * @returns {Observable}
    */
-  public removeBuffer(start : number, end : number) : Observable<unknown> {
+  public removeBuffer(start : number, end : number) : Observable<void> {
     log.debug("QSB: receiving order to remove data from the SourceBuffer",
               this.bufferType,
               start,
@@ -305,7 +396,7 @@ export default class QueuedSourceBuffer<T> {
    * @param {Object} infos
    * @returns {Observable}
    */
-  public endOfSegment(infos : IEndOfSegmentInfos) : Observable<unknown> {
+  public endOfSegment(infos : IEndOfSegmentInfos) : Observable<void> {
     log.debug("QSB: receiving order for validating end of segment",
               this.bufferType,
               infos.segment);
@@ -356,14 +447,14 @@ export default class QueuedSourceBuffer<T> {
     this._destroy$.next();
     this._destroy$.complete();
 
-    if (this._pendingTask != null) {
+    if (this._pendingTask !== null) {
       this._pendingTask.subject.complete();
       this._pendingTask = null;
     }
 
     while (this._queue.length > 0) {
       const nextElement = this._queue.shift();
-      if (nextElement != null) {
+      if (nextElement !== undefined) {
         nextElement.subject.complete();
       }
     }
@@ -390,7 +481,7 @@ export default class QueuedSourceBuffer<T> {
                     err :
                     new Error("An unknown error occured when appending buffer");
     this._lastInitSegment = null; // initialize init segment as a security
-    if (this._pendingTask != null) {
+    if (this._pendingTask !== null) {
       this._pendingTask.subject.error(error);
     }
   }
@@ -405,11 +496,11 @@ export default class QueuedSourceBuffer<T> {
    * @param {Object} action
    * @returns {Observable}
    */
-  private _addToQueue(action : IQSBNewAction<T>) : Observable<unknown> {
-    return new Observable((obs : Observer<unknown>) => {
+  private _addToQueue(action : IQSBNewAction<T>) : Observable<void> {
+    return new Observable((obs : Observer<void>) => {
       const shouldRestartQueue = this._queue.length === 0 &&
-                                 this._pendingTask == null;
-      const subject = new Subject<unknown>();
+                                 this._pendingTask === null;
+      const subject = new Subject<void>();
       const queueItem = objectAssign({ subject }, action);
       this._queue.push(queueItem);
 
@@ -438,7 +529,7 @@ export default class QueuedSourceBuffer<T> {
     }
 
     // handle end of previous task if needed
-    if (this._pendingTask != null) {
+    if (this._pendingTask !== null) {
       if (this._pendingTask.type !== SourceBufferAction.Push ||
           this._pendingTask.steps.length === 0)
       {
@@ -468,13 +559,13 @@ export default class QueuedSourceBuffer<T> {
       return; // we have nothing left to do
     } else {
       const newQueueItem = this._queue.shift();
-      if (newQueueItem == null) {
+      if (newQueueItem === undefined) {
         // TODO TypeScrypt do not get the previous length check. Find solution /
         // open issue
         throw new Error("An item from the QueuedSourceBuffer queue was not defined");
       }
       this._pendingTask = convertQueueItemToTask(newQueueItem);
-      if (this._pendingTask == null) { // nothing to do, complete and go to next item
+      if (this._pendingTask === null) { // nothing to do, complete and go to next item
         newQueueItem.subject.next();
         newQueueItem.subject.complete();
         this._flush();
@@ -494,7 +585,7 @@ export default class QueuedSourceBuffer<T> {
 
         case SourceBufferAction.Push:
           const nextStep = task.steps.shift();
-          if (nextStep == null ||
+          if (nextStep === undefined ||
               (nextStep.isInit && this._lastInitSegment === nextStep.segmentData))
           {
             this._flush();
@@ -551,7 +642,7 @@ export default class QueuedSourceBuffer<T> {
       this._sourceBuffer.timestampOffset = newTimestampOffset;
     }
 
-    if (appendWindow[0] == null) {
+    if (appendWindow[0] === undefined) {
       if (this._sourceBuffer.appendWindowStart > 0) {
         this._sourceBuffer.appendWindowStart = 0;
       }
@@ -562,7 +653,7 @@ export default class QueuedSourceBuffer<T> {
       this._sourceBuffer.appendWindowStart = appendWindow[0];
     }
 
-    if (appendWindow[1] == null) {
+    if (appendWindow[1] === undefined) {
       if (this._sourceBuffer.appendWindowEnd !== Infinity) {
         this._sourceBuffer.appendWindowEnd = Infinity;
       }
