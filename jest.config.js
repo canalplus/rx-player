@@ -8,6 +8,7 @@ module.exports = {
   roots: ["<rootDir>/src"],
   preset: "ts-jest",
   testEnvironment: "jsdom",
+  testRegex: ["src\\/.*\\.test.[jt]s"],
   collectCoverage: coverageIsWanted,
   collectCoverageFrom: [
     "src/**/*.ts",
