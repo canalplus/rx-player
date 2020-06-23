@@ -114,7 +114,7 @@ export default class ManifestBoundsCalculator {
   }
 
   /**
-   * Get minimum bound of content.
+   * Get minimum bound of content (in seconds).
    * @return {number|undefined}
    */
   getMinimumBound(): number | undefined {

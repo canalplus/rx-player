@@ -356,10 +356,27 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-    const timeline = this._index.timeline;
+    const { timescale, timeline } = this._index;
+    const timelineStart = timeline[0].start;
+    const lastPosition = this._manifestBoundsCalculator.getMaximumBound();
+    if (lastPosition !== undefined &&
+        (lastPosition * timescale) < timelineStart) {
+      return null;
+    }
+    const firstPosition = this._manifestBoundsCalculator.getMinimumBound();
+    if (firstPosition !== undefined && (firstPosition * timescale) >= timelineStart) {
+      for (let i = 0; i < timeline.length; i++) {
+        const timelineElement = timeline[i];
+        if (timelineElement !== undefined &&
+            timelineElement.start <= (firstPosition * timescale) &&
+            (timelineElement.start + timelineElement.duration) >
+              (firstPosition * timescale)) {
+          return fromIndexTime(timelineElement.start, this._index);
+        }
+      }
+    }
     return timeline.length === 0 ? null :
-                                   fromIndexTime(timeline[0].start,
-                                                 this._index);
+                                   fromIndexTime(timelineStart, this._index);
   }
 
   /**
@@ -373,10 +390,34 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-    const lastTime = TimelineRepresentationIndex.getIndexEnd(this._index.timeline,
-                                                             this._scaledPeriodStart);
-    return lastTime === null ? null :
-                               fromIndexTime(lastTime, this._index);
+    const { timeline, timescale } = this._index;
+    if (timeline.length === 0) {
+      return null;
+    }
+    const indexSegmentEnd =
+      TimelineRepresentationIndex.getIndexEnd(this._index.timeline,
+                                              this._scaledPeriodStart);
+    if (indexSegmentEnd === null) {
+      return null;
+    }
+    const firstPosition = this._manifestBoundsCalculator.getMinimumBound();
+    if (firstPosition !== undefined &&
+        (firstPosition * timescale) > indexSegmentEnd) {
+      return null;
+    }
+    const maxPos = this._manifestBoundsCalculator.getMaximumBound();
+    if (maxPos !== undefined && (maxPos * timescale) < indexSegmentEnd) {
+      for (let i = 0; i < timeline.length; i++) {
+        const timelineElement = timeline[i];
+        if (timelineElement !== undefined &&
+            timelineElement.start <= (maxPos * timescale) &&
+            (timelineElement.start + timelineElement.duration) > (maxPos * timescale)) {
+          return fromIndexTime(timelineElement.start + timelineElement.duration,
+                               this._index);
+        }
+      }
+    }
+    return fromIndexTime(indexSegmentEnd, this._index);
   }
 
   /**
