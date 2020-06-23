@@ -308,5 +308,5 @@ subdirectory.
 Memory tests are entirely written in the ``tests/memory`` subdirectory.
 
 As for unit tests, they are written alongside the code, in ``__tests__``
-directories, the ``tests/unit`` directory only contains the configuration files
-to launch them.
+directories. All its configuration can be found at the root of the project,
+in `jest.config.js` (we use the jest library for unit tests).
