@@ -128,12 +128,9 @@ function findAdaptationIndex(
       new TimelineRepresentationIndex(segmentTemplate, context) :
       new TemplateRepresentationIndex(segmentTemplate, context);
   } else {
-    adaptationIndex = new TemplateRepresentationIndex({
-      duration: Number.MAX_VALUE,
-      timescale: 1,
-      startNumber: 0,
-      initialization: { media: "" },
-      media: "",
+    adaptationIndex = new BaseRepresentationIndex({
+      timeline: [],
+      timescale: 1, // set to 1 if no timescale was provided in the manifest
     }, context);
   }
   return adaptationIndex;
@@ -191,6 +188,8 @@ export default function parseRepresentations(
                       availabilityTimeOffset: adaptationInfos.availabilityTimeOffset,
                       unsafelyBaseOnPreviousRepresentation,
                       manifestBoundsCalculator: adaptationInfos.manifestBoundsCalculator,
+                      mimeType: representation.attributes.mimeType ??
+                                adaptation.attributes.mimeType,
                       isDynamic: adaptationInfos.isDynamic,
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,

@@ -34,6 +34,7 @@ import {
   getISOBMFFEmbeddedTextTrackData,
   getPlainTextTrackData,
 } from "../utils/parse_text_track";
+import extractCompleteInitChunk from "./extract_complete_init_chunk";
 
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.
@@ -55,18 +56,42 @@ function parseISOBMFFEmbeddedTextTrack(
                      data instanceof Uint8Array ? data :
                                                   new Uint8Array(data);
   if (isInit) {
+    const { privateInfos } = segment;
+    const shouldExtractCompleteInitChunk = privateInfos?.shouldGuessInitRange === true;
+    const completeInitChunk = shouldExtractCompleteInitChunk ?
+      extractCompleteInitChunk(chunkBytes) : chunkBytes;
+
     const sidxSegments =
       getSegmentsFromSidx(chunkBytes, Array.isArray(indexRange) ? indexRange[0] :
                                                                   0);
-    const mdhdTimescale = getMDHDTimescale(chunkBytes);
     if (sidxSegments !== null && sidxSegments.length > 0) {
       representation.index._addSegments(sidxSegments);
     }
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: null,
-                                   segmentProtections: [],
-                                   initTimescale: mdhdTimescale > 0 ? mdhdTimescale :
-                                                                       undefined } });
+
+    if ((sidxSegments === null || sidxSegments.length === 0) &&
+        segment.privateInfos?.mightBeStaticContent === true
+    ) {
+      // There are very high chances that it is a static content, because :
+      // - The segment indicates that content might be static
+      // - We've already loaded the init segment and found no sidx segments in it.
+      // We just add a huge segment, without indicating an URL (which means it will take
+      // the default one)
+      representation.index._addSegments([{ time: 0,
+        duration: Number.MAX_VALUE,
+        timescale: 1 }]);
+    }
+
+    let mdhdTimescale = null;
+    if (completeInitChunk !== null) {
+      mdhdTimescale = getMDHDTimescale(completeInitChunk);
+    }
+
+    return observableOf({
+      type: "parsed-init-segment",
+      value: { initializationData: null,
+               segmentProtections: [],
+               initTimescale: mdhdTimescale !== null && mdhdTimescale > 0 ?
+                 mdhdTimescale : undefined } });
   }
   const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
                                            isChunked,

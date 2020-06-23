@@ -31,6 +31,7 @@ import {
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import extractCompleteInitChunk from "./extract_complete_init_chunk";
 
 export default function parser(
   { content,
@@ -76,21 +77,30 @@ export default function parser(
                                    appendWindow } });
   }
   // we're handling an initialization segment
-  const { indexRange } = segment;
+  const { indexRange, privateInfos } = segment;
   const nextSegments = isWEBM ? getSegmentsFromCues(chunkData, 0) :
                                 getSegmentsFromSidx(chunkData,
                                                     Array.isArray(indexRange) ?
                                                       indexRange[0] :
                                                       0);
 
+  if ((nextSegments === null || nextSegments.length === 0) &&
+      privateInfos?.mightBeStaticContent === true
+  ) {
+    // There are very high chances that it is a static content, because :
+    // - The segment indicates that content might be static
+    // - We've already loaded the init segment and found no sidx segments in it.
+    // We just add a huge segment, without indicating an URL (which means it will take
+    // the default one)
+    representation.index._addSegments([{ time: 0,
+                                         duration: Number.MAX_VALUE,
+                                         timescale: 1 }]);
+  }
+
   if (nextSegments !== null && nextSegments.length > 0) {
     representation.index._addSegments(nextSegments);
   }
 
-  const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
-                             getMDHDTimescale(chunkData);
-  const parsedTimescale = timescale !== null && timescale > 0 ? timescale :
-                                                                undefined;
   if (!isWEBM) { // TODO extract webm protection information
     const psshInfo = takePSSHOut(chunkData);
     for (let i = 0; i < psshInfo.length; i++) {
@@ -99,9 +109,21 @@ export default function parser(
     }
   }
 
+  const completeInitChunk = privateInfos?.shouldGuessInitRange === true ?
+    extractCompleteInitChunk(chunkData) : chunkData;
+
+  let timescale = null;
+  if (completeInitChunk !== null) {
+    timescale = isWEBM ? getTimeCodeScale(completeInitChunk, 0) :
+                         getMDHDTimescale(completeInitChunk);
+  }
+
+  const parsedTimescale = timescale !== null && timescale > 0 ? timescale :
+                                                                undefined;
+
   const segmentProtections = representation.getProtectionsInitializationData();
   return observableOf({ type: "parsed-init-segment",
-                        value: { initializationData: chunkData,
+                        value: { initializationData: completeInitChunk,
                                  segmentProtections,
                                  initTimescale: parsedTimescale } });
 }

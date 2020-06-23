@@ -90,6 +90,12 @@ export interface IPrivateInfos {
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
   localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
   localManifestSegment? : ILocalManifestSegmentPrivateInfos;
+  // There may be an init range but we don't know it.
+  // It should be guessed when fetching.
+  shouldGuessInitRange? : boolean;
+  // If nothing seems to indicate us that content is
+  // fragmented, it might be a static content.
+  mightBeStaticContent? : boolean;
 }
 
 /** Represent a single Segment from a Representation. */

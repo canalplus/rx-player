@@ -33,6 +33,18 @@ export default function initSegmentLoader(
   url : string,
   { segment } : ISegmentLoaderArguments
 ) : ISegmentLoaderObservable<ArrayBuffer> {
+  if (segment.privateInfos?.shouldGuessInitRange === true) {
+    // If no range and index range are given by manifest, we take
+    // as init segment the nth first bytes (where n = 1500).
+    // Therefore, we need to filter on init boxes after the segment
+    // is loaded, to ensure that we push a complete and dry segment
+    // to buffers.
+    return xhr({ url,
+                 headers: { Range: byteRange([0, 1500]) },
+                 responseType: "arraybuffer",
+                 sendProgressEvents: true });
+  }
+
   if (segment.range === undefined) {
     return xhr({ url, responseType: "arraybuffer", sendProgressEvents: true });
   }

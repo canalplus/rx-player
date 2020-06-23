@@ -65,12 +65,12 @@ export interface ITimelineIndex {
    */
   indexTimeOffset : number;
   /** Information on the initialization segment. */
-  initialization? : {
+  initialization : {
     /** URLs to access the initialization segment. */
     mediaURLs: string[] | null;
     /** possible byte range to request it. */
     range?: [number, number];
-  };
+  } | null;
   /**
    * Base URL(s) to access any segment. Can contain tokens to replace to convert
    * it to real URLs.
@@ -276,8 +276,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._parseTimeline = index.parseTimeline;
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: index.initialization == null ?
-                      undefined :
+                    initialization: index.initialization === undefined ?
+                      null :
                       {
                         mediaURLs: createIndexURLs(representationBaseURLs,
                                                   index.initialization.media,
@@ -299,9 +299,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
   /**
    * Construct init Segment.
-   * @returns {Object}
+   * @returns {Object | null}
    */
-  getInitSegment() : ISegment {
+  getInitSegment() : ISegment | null {
     return getInitSegment(this._index);
   }
 

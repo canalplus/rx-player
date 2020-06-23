@@ -19,23 +19,26 @@ import { ISegment } from "../../../../manifest";
 /**
  * Construct init segment for the given index.
  * @param {Object} index
- * @returns {Object}
+ * @returns {Object|null}
  */
 export default function getInitSegment(
   index: { timescale: number;
-           initialization?: { mediaURLs: string[] | null; range?: [number, number] };
+           initialization: { mediaURLs: string[] | null;
+                             range?: [number, number]; } | null;
            indexRange?: [number, number];
            indexTimeOffset : number; }
-) : ISegment {
+) : ISegment | null {
   const { initialization } = index;
+  if (initialization === null) {
+    return null;
+  }
   return { id: "init",
            isInit: true,
            time: 0,
            duration: 0,
-           range: initialization != null ? initialization.range :
-                                           undefined,
+           range: initialization.range,
            indexRange: index.indexRange,
-           mediaURLs: initialization?.mediaURLs ?? null,
+           mediaURLs: initialization.mediaURLs ?? null,
            timescale: index.timescale,
            timestampOffset: -(index.indexTimeOffset / index.timescale) };
 }

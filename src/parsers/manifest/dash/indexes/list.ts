@@ -50,12 +50,12 @@ export interface IListIndex {
    */
   indexTimeOffset : number;
   /** Information on the initialization segment. */
-  initialization? : {
+  initialization : {
     /** URLs to access the initialization segment. */
     mediaURLs: string[] | null;
     /** possible byte range to request it. */
     range?: [number, number];
-  };
+  } | null;
   /** Information on the list of segments for this index. */
   list: Array<{
     /** URLs of the segment. */
@@ -145,8 +145,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
                     duration: index.duration,
                     indexTimeOffset,
                     indexRange: index.indexRange,
-                    initialization: index.initialization == null ?
-                      undefined :
+                    initialization: index.initialization === undefined ?
+                      null :
                       { mediaURLs: createIndexURLs(representationBaseURLs,
                                                   index.initialization.media,
                                                   representationId,
@@ -156,9 +156,9 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Construct init Segment.
-   * @returns {Object}
+   * @returns {Object | null}
    */
-  getInitSegment() : ISegment {
+  getInitSegment() : ISegment | null {
     return getInitSegment(this._index);
   }
 

@@ -51,12 +51,12 @@ export interface IBaseIndex {
    */
   indexTimeOffset : number;
   /** Information on the initialization segment. */
-  initialization? : {
+  initialization : {
     /** URLs to access the initialization segment. */
     mediaURLs: string[] | null;
     /** possible byte range to request it. */
     range?: [number, number];
-  };
+  } | null;
   /**
    * Base URL(s) to access any segment. Can contain tokens to replace to convert
    * it to real URLs.
@@ -114,6 +114,8 @@ export interface IBaseIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
+  /** The adaptation mimeType */
+  mimeType? : string;
 }
 
 /**
@@ -125,16 +127,17 @@ export interface IBaseIndexContextArgument {
  * @returns {Boolean} - true if the segment has been added
  */
 function _addSegmentInfos(
-  index : IBaseIndex,
+  index : { timeline: IIndexSegment[];
+            timescale: number; },
   segmentInfos : { time : number;
                    duration : number;
                    timescale : number;
                    count?: number;
                    range?: [number, number]; }
 ) : boolean {
-  if (segmentInfos.timescale !== index.timescale) {
-    const { timescale } = index;
-    index.timeline.push({ start: (segmentInfos.time / segmentInfos.timescale)
+  const { timescale, timeline } = index;
+  if (segmentInfos.timescale !== timescale) {
+    timeline.push({ start: (segmentInfos.time / segmentInfos.timescale)
                                  * timescale,
                           duration: (segmentInfos.duration / segmentInfos.timescale)
                                     * timescale,
@@ -143,7 +146,7 @@ function _addSegmentInfos(
                             segmentInfos.count,
                           range: segmentInfos.range });
   } else {
-    index.timeline.push({ start: segmentInfos.time,
+    timeline.push({ start: segmentInfos.time,
                           duration: segmentInfos.duration,
                           repeatCount: segmentInfos.count === undefined ?
                             0 :
@@ -169,7 +172,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
             periodEnd,
             representationBaseURLs,
             representationId,
-            representationBitrate } = context;
+            representationBitrate,
+            mimeType } = context;
     const { timescale } = index;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
@@ -184,20 +188,33 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                                     representationId,
                                     representationBitrate);
 
-    // TODO If indexRange is either undefined or behind the initialization segment
-    // the following logic will not work.
-    // However taking the nth first bytes like `dash.js` does (where n = 1500) is
-    // not straightforward as we would need to clean-up the segment after that.
-    // The following logic corresponds to 100% of tested cases, so good enough for
-    // now.
-    const range : [number, number] | undefined =
-      index.initialization !== undefined ? index.initialization.range :
-      index.indexRange !== undefined ? [0, index.indexRange[0] - 1] :
-                                       undefined;
+    let initialization;
+    let range: [number, number]|undefined;
+    if (index.initialization === undefined &&
+      (
+        mimeType === undefined ||
+        /\/mp4$/.exec(mimeType) === null
+      )) {
+        if (index.timeline.length === 0 &&
+            index.indexRange === undefined) {
+          _addSegmentInfos(index,
+                           { time: 0,
+                             duration: Number.MAX_VALUE,
+                             timescale: 1 });
+        }
+        initialization = null;
+    } else {
+      // TODO If indexRange is behind the initialization segment
+      // the following logic will not work.
+      range = index.initialization?.range ??
+        (index.indexRange !== undefined ? [0, index.indexRange[0] - 1] :
+                                          undefined);
+      initialization = { mediaURLs, range }; // there may be an init segment
+    }
 
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: { mediaURLs, range },
+                    initialization,
                     mediaURLs: createIndexURLs(representationBaseURLs,
                                                index.media,
                                                representationId,
@@ -211,10 +228,27 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Construct init Segment.
-   * @returns {Object}
+   * @returns {Object|null}
    */
-  getInitSegment() : ISegment {
-    return getInitSegment(this._index);
+  getInitSegment() : ISegment | null {
+    const initSegment = getInitSegment(this._index);
+    // /!\ This logic is considered good if and only if the init segment
+    // has the same media URL than the rest of the content.
+    // However, in a segment base configuration, we consider that there may
+    // be a unique URL for both because :
+    // - The segment base concept is to rely on a unique segment, with a unique URL,
+    //   for init and index (there may not exist), and content.
+    // - We have never encountered any kind of this special configuration
+    if (initSegment !== null) {
+      const shouldGuessInitRange = initSegment.range === undefined;
+      const mightBeStaticContent = initSegment.indexRange === undefined;
+      if (initSegment.privateInfos === undefined) {
+        initSegment.privateInfos = {};
+      }
+      initSegment.privateInfos.shouldGuessInitRange = shouldGuessInitRange;
+      initSegment.privateInfos.mightBeStaticContent = mightBeStaticContent;
+    }
+    return initSegment;
   }
 
   /**
