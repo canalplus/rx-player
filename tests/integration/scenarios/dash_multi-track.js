@@ -20,7 +20,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   }
 
   async function goToSecondPeriod() {
-    player.seekTo(120);
+    player.seekTo(180);
     await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
     expect(player.getPosition()).to.be.within(118, 122);
   }
