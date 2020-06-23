@@ -1,10 +1,28 @@
-# ![LOGO](./doc/assets/logo.png)
-
-[![rx-player latest release](https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue)](https://github.com/canalplus/rx-player/releases)
-[![Build Status](https://travis-ci.org/canalplus/rx-player.svg?branch=master)](https://travis-ci.org/canalplus/rx-player)
-[![Gitter](https://img.shields.io/gitter/room/canalplus/rx-player.svg)](https://gitter.im/canalplus/rx-player)
-
-[![NPM](https://nodei.co/npm/rx-player.png?compact=true)](https://nodei.co/npm/rx-player/)
+ <p align="center">
+  <img src="./doc/assets/logo.png" />
+  <br /><br />
+  <a href="https://canalplus.github.io/rx-player/doc/pages/api/index.html">📖 <b>API documentation</b></a>
+  -
+  <a href="https://developers.canal-plus.com/rx-player/">⏯ <b>Demo</b></a>
+  -
+  <a href="https://canalplus.github.io/rx-player/doc/pages/tutorials/index.html">🎓 <b>Tutorials</b></a>
+  -
+  <a href="./CONTRIBUTING.md">🔧 <b>Contributing</b></a>
+  <br /><br />
+  <a href="https://github.com/canalplus/rx-player/releases">
+    <img src="https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue" />
+ </a>
+ <a href="https://travis-ci.org/canalplus/rx-player">
+  <img src="https://travis-ci.org/canalplus/rx-player.svg?branch=master" />
+ </a>
+ <a href="https://gitter.im/canalplus/rx-player">
+  <img src="https://img.shields.io/gitter/room/canalplus/rx-player.svg" />
+ </a>
+ <br /><br />
+ <a href="https://nodei.co/npm/rx-player/">
+  <img src="https://nodei.co/npm/rx-player.png?compact=true)" />
+ </a>
+</p>
 
 The RxPlayer is a library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP)
 and [Microsoft Smooth Streaming](https://www.iis.net/downloads/microsoft/smooth-streaming)
