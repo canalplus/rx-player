@@ -1,10 +1,28 @@
-# ![LOGO](./doc/assets/logo.png)
-
-[![rx-player latest release](https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue)](https://github.com/canalplus/rx-player/releases)
-[![Build Status](https://travis-ci.org/canalplus/rx-player.svg?branch=master)](https://travis-ci.org/canalplus/rx-player)
-[![Gitter](https://img.shields.io/gitter/room/canalplus/rx-player.svg)](https://gitter.im/canalplus/rx-player)
-
-[![NPM](https://nodei.co/npm/rx-player.png?compact=true)](https://nodei.co/npm/rx-player/)
+ <p align="center">
+  <img src="./doc/assets/logo.png" />
+  <br /><br />
+  <a href="https://canalplus.github.io/rx-player/doc/pages/api/index.html">📖 <b>API documentation</b></a>
+  -
+  <a href="https://developers.canal-plus.com/rx-player/">⏯ <b>Demo</b></a>
+  -
+  <a href="https://canalplus.github.io/rx-player/doc/pages/tutorials/index.html">🎓 <b>Tutorials</b></a>
+  -
+  <a href="./CONTRIBUTING.md">🔧 <b>Contributing</b></a>
+  <br /><br />
+  <a href="https://github.com/canalplus/rx-player/releases">
+    <img src="https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue" />
+ </a>
+ <a href="https://travis-ci.org/canalplus/rx-player">
+  <img src="https://travis-ci.org/canalplus/rx-player.svg?branch=master" />
+ </a>
+ <a href="https://gitter.im/canalplus/rx-player">
+  <img src="https://img.shields.io/gitter/room/canalplus/rx-player.svg" />
+ </a>
+ <br /><br />
+ <a href="https://nodei.co/npm/rx-player/">
+  <img src="https://nodei.co/npm/rx-player.png?compact=true)" />
+ </a>
+</p>
 
 The RxPlayer is a library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP)
 and [Microsoft Smooth Streaming](https://www.iis.net/downloads/microsoft/smooth-streaming)
@@ -170,36 +188,69 @@ are already included there).
 
 
 
-## Why a new player? Why Rx? ###################################################
+## Why a new player? ###########################################################
 
-Building a streaming video player for the web is a complex task due to the
-numerous interactions with the outside world it has to deal with. Whether they
-come from the user providing an input, network interactions or browser
-capabilities.
-If you also consider the multiplicity of browsers to support and the speed
-with which their APIs are changed and added, you end up with a really important
-(both in the significant and large sense) piece of software.
-The video player being the centerpiece of our applications, it needs to adapt
-very quickly and stay resilient to various errors.
+### A need for an advanced media player ########################################
 
-Many current video player implementations rely mostly on classical
-object-oriented hierarchy and imperative event callbacks with shared mutable
-objects to manage all these asynchronous tasks and states.
-We found that we could profit a lot more from adding a reactive-programming
-approach, with most notably the help of [the RxJS
-library](https://github.com/ReactiveX/rxjs).
+Canal+ Group is a media company which has a lot of advanced requirements: it
+provides both live and VoD stream with many encryption requirements, support a
+very large panel of devices and has many other peculiarities (like adult
+content restrictions, ad-insertion, Peer-To-Peer integration and others).
 
-RxJS provides interfaces and operators to compose asynchronous tasks together
-by representating changing states as observable stream of values.
-It also comes with a **cancelation** contract so that every asynchronous
-side-effect can be properly disposed when discarded by the system.
-This change of paradigm answers to most of our needs.
+Back in 2015, when switching from a plugin-based player approach to an
+HTML5-based approach, no media player had the key features we wanted, and
+including those needs to those players was not straightforward either.
 
-Moreover, writing the RxPlayer in TypeScript instead of plain JavaScript gives
-us more tools and confidence in our codebase.
-All of these elements helps us to build what we think is a _maintainable_ and
-_evolutive_ codebase, allowing us to adapt quickly to changing environments.
+The innovation entity at Canal+ Group thus decided to begin working on a new
+featureful media-player - the RxPlayer - and to share it under a permissive
+open-source licence.
 
+Now, more than 5 years later, the RxPlayer continues to evolve at the same fast
+pace to include a lot of features we don't find in other media players.
+You can look at our
+[API documentation](https://canalplus.github.io/rx-player/doc/pages/api/index.html),
+[tutorials](https://canalplus.github.io/rx-player/doc/pages/tutorials/index.html)
+and our [demo page](https://canalplus.github.io/rx-player/doc/pages/api/index.html)
+(an RxPlayer instance is available in the console through the global `player`
+variable there) to see if it matches your need.
+
+
+### Our approach ###############################################################
+
+As media players rely a lot on asynchronous interactions with the outside world
+(HTTP requests, browser events, CDM messages), we felt that we could profit a
+lot by adopting reactive programming patterns with the help of the RxJS library.
+The abstractions provided by this library and the inclusion of cancellation
+mechanisms (unlike say, ES6 Promises) were perfectly adapted to some of our
+IO-heavy code.
+
+With the help of a carefully-crafted and well-documented architecture, we were
+able to quickly support avanced features when we - or the community - needed
+them. Amongst those:
+
+  - support for live and VoD DASH / Smooth / HLS* / Downloaded contents /
+    MP4* / WebM* contents and more
+
+  - support of advanced encryption configuration, such as multiple keys in a
+    single or separate licences for a given content (with automatic fallbacks
+    when we found an un-decipherable content), persistent licenses, and
+    other device-specific restrictions.
+
+  - support for low-latency DASH streams
+
+  - support of TTML, WebVTT, SAMI and SRT subtitles
+
+  - advanced optimizations for devices with low memory constraints
+
+  - advanced APIs for advanced use-cases (audio-only mode, video track selection
+    manual garbage collection of segments, Peer-To-Peer integration, quality
+    filtering...)
+
+  - advanced adaptive streaming algorithms making use of both a network-based
+    approach (for quick start-up) and a buffer-based one (to provide the best
+    quality possible).
+
+* In "directfile" mode, on compatible browsers
 
 
 ## Target support ##############################################################
