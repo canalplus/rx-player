@@ -60,7 +60,6 @@ import {
   INoUpdateEvent,
   ISessionMessageEvent,
   ISessionUpdatedEvent,
-  TypedArray,
 } from "./types";
 
 const { onKeyError$,
@@ -132,9 +131,7 @@ export default function SessionEventsListener(
         const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
           10 * 1000 :
           getLicenseConfig.timeout;
-        return (castToObservable(getLicense) as Observable< TypedArray |
-                                                            ArrayBuffer |
-                                                            null >)
+        return (castToObservable(getLicense) as Observable<BufferSource|null>)
           .pipe(getLicenseTimeout >= 0 ? timeout(getLicenseTimeout) :
                                          identity /* noop */);
       });
@@ -261,7 +258,7 @@ function formatGetLicenseError(error: unknown) : ICustomError {
  */
 function updateSessionWithMessage(
   session : MediaKeySession | ICustomMediaKeySession,
-  message : ArrayBuffer | TypedArray | null,
+  message : BufferSource | null,
   initData : Uint8Array,
   initDataType : string | undefined
 ) : Observable<INoUpdateEvent | ISessionUpdatedEvent> {
@@ -301,7 +298,7 @@ function handleKeyStatusesChangeEvent(
     }
     return castToObservable(
                keySystem.onKeyStatusesChange(keyStatusesEvent, session)
-             ) as Observable< TypedArray | ArrayBuffer | null >;
+             ) as Observable< BufferSource | null >;
   }).pipe(
     map(licenseObject => ({ type: "key-status-change-handled" as const,
                             value : { session, license: licenseObject } })),

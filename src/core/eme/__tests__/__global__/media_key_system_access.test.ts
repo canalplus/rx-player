@@ -18,91 +18,31 @@
 
 import {
   EMPTY,
-  Observable,
+  of as observableOf,
   Subject,
   throwError as observableThrow,
 } from "rxjs";
 import { takeUntil } from "rxjs/operators";
-import flatMap from "../../../../utils/flat_map";
-import { mockCompat } from "./utils";
+import {
+  defaultKSConfig,
+  defaultWidevineConfig,
+  mockCompat,
+  testEMEManagerImmediateError,
+} from "./utils";
+
+export function requestMediaKeySystemAccessNoMediaKeys(
+  keySystem : string,
+  config : MediaKeySystemConfiguration[]
+) {
+  return observableOf({
+    keySystem,
+    getConfiguration() { return config; },
+    createMediaKeys() { return new Promise(() => { /* noop */ }); },
+  });
+}
 
 const incompatibleMKSAErrorMessage =
   "EncryptedMediaError (INCOMPATIBLE_KEYSYSTEMS) No key system compatible with your wanted configuration has been found in the current browser.";
-
-const defaultKSConfig = [{
-  audioCapabilities: [ { contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
-                         robustness: undefined },
-                       { contentType: "audio/webm;codecs=opus",
-                         robustness: undefined } ],
-  distinctiveIdentifier: "optional",
-  initDataTypes: ["cenc"],
-  persistentState: "optional",
-  sessionTypes: ["temporary"],
-  videoCapabilities: [ { contentType: "video/mp4;codecs=\"avc1.4d401e\"",
-                         robustness: undefined },
-                       { contentType: "video/mp4;codecs=\"avc1.42e01e\"",
-                         robustness: undefined },
-                       { contentType: "video/webm;codecs=\"vp8\"",
-                         robustness: undefined} ],
-}];
-
-const defaultWidevineConfig = (() => {
-  const ROBUSTNESSES = [ "HW_SECURE_ALL",
-                         "HW_SECURE_DECODE",
-                         "HW_SECURE_CRYPTO",
-                         "SW_SECURE_DECODE",
-                         "SW_SECURE_CRYPTO" ];
-  const videoCapabilities = flatMap(ROBUSTNESSES, robustness => {
-    return [{ contentType: "video/mp4;codecs=\"avc1.4d401e\"",
-              robustness },
-            { contentType: "video/mp4;codecs=\"avc1.42e01e\"",
-              robustness },
-            { contentType: "video/webm;codecs=\"vp8\"",
-              robustness } ];
-  });
-  const audioCapabilities = flatMap(ROBUSTNESSES, robustness => {
-    return [{ contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
-              robustness },
-            { contentType: "audio/webm;codecs=opus",
-              robustness } ];
-  });
-  return defaultKSConfig.map(conf => {
-    /* tslint:disable ban */
-    return Object.assign({}, conf, { audioCapabilities, videoCapabilities });
-    /* tslint:enable ban */
-  });
-})();
-const neverCalledFn = jest.fn();
-
-/**
- * Check that the EMEManager, when called with those arguments, throws
- * directly without any event emitted.
- *
- * If that's the case, resolve with the corresponding error.
- * Else, reject.
- * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystemsConfigs
- * @param {Observable} contentProtections$
- * @returns {Promise}
- */
-function testEMEManagerImmediateError(
-  EMEManager : any,
-  mediaElement : HTMLMediaElement,
-  keySystemsConfigs : unknown[],
-  contentProtections$ : Observable<unknown>
-) : Promise<unknown> {
-  return new Promise((res, rej) => {
-    EMEManager(mediaElement, keySystemsConfigs, contentProtections$)
-      .subscribe(
-        (evt : unknown) => {
-           const eventStr = JSON.stringify(evt as any);
-          rej(new Error("Received an EMEManager event: " + eventStr));
-        },
-        (err : unknown) => { res(err); },
-        () => rej(new Error("EMEManager completed."))
-      );
-  });
-}
 
 /**
  * Check that the given `keySystemsConfigs` lead directly to an
@@ -129,10 +69,11 @@ async function checkIncompatibleKeySystemsErrorMessage(
 /* tslint:disable no-unsafe-any */
 describe("core - eme - global tests - media key system access", () => {
   // Used to implement every functions that should never be called.
+  const neverCalledFn = jest.fn();
 
   beforeEach(() => {
     jest.resetModules();
-    jest.resetAllMocks();
+    jest.restoreAllMocks();
     jest.mock("../../set_server_certificate", () => ({ __esModule: true,
                                                        default: neverCalledFn }));
   });
@@ -434,11 +375,101 @@ describe("core - eme - global tests - media key system access", () => {
   /* tslint:enable max-line-length */
     const requestMediaKeySystemAccessSpy = jest.fn(() => observableThrow("nope"));
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
-    await checkIncompatibleKeySystemsErrorMessage([{ type: "com.widevine.alpha",
+    await checkIncompatibleKeySystemsErrorMessage([{ type: "playready",
+                                                     persistentLicense: true,
+                                                     getLicense: neverCalledFn },
+                                                   { type: "clearkey",
+                                                     distinctiveIdentifierRequired: true,
                                                      getLicense: neverCalledFn }]);
-    expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
+    const expectedPersistentConfig = defaultKSConfig.map(conf => {
+      /* tslint:disable ban */
+      return Object.assign({}, conf, { persistentState: "required",
+                                       sessionTypes: ["temporary",
+                                                      "persistent-license"] });
+      /* tslint:enable ban */
+    });
+    const expectedIdentifierConfig = defaultKSConfig.map(conf => {
+      /* tslint:disable ban */
+      return Object.assign({}, conf, { distinctiveIdentifier: "required" });
+      /* tslint:enable ban */
+    });
+    expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(5);
     expect(requestMediaKeySystemAccessSpy)
-      .toHaveBeenCalledWith("com.widevine.alpha", defaultWidevineConfig);
+      .toHaveBeenNthCalledWith(1, "com.microsoft.playready", expectedPersistentConfig);
+    expect(requestMediaKeySystemAccessSpy)
+      .toHaveBeenNthCalledWith(2, "com.chromecast.playready", expectedPersistentConfig);
+    expect(requestMediaKeySystemAccessSpy)
+      .toHaveBeenNthCalledWith(3, "com.youtube.playready", expectedPersistentConfig);
+    expect(requestMediaKeySystemAccessSpy)
+      .toHaveBeenNthCalledWith(4, "webkit-org.w3.clearkey", expectedIdentifierConfig);
+    expect(requestMediaKeySystemAccessSpy)
+      .toHaveBeenNthCalledWith(5, "org.w3.clearkey", expectedIdentifierConfig);
+  });
+
+  /* tslint:disable max-line-length */
+  it("should successfully create a MediaKeySystemAccess if given the right configuration", async () => {
+  /* tslint:enable max-line-length */
+    return new Promise((res, rej) => {
+      const requestMediaKeySystemAccessSpy = jest.fn((keyType, conf) => {
+        return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
+      });
+      mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
+      const config = [{ type: "com.widevine.alpha",
+                        getLicense: neverCalledFn }];
+
+      const mediaElement = document.createElement("video");
+      const EMEManager = require("../../eme_manager").default;
+      EMEManager(mediaElement, config, new Subject())
+        .subscribe(
+          (evt : unknown) => {
+             const eventStr = JSON.stringify(evt as any);
+            rej(new Error("Received an EMEManager event: " + eventStr));
+          },
+          (err : unknown) => { rej(err); },
+          () => rej(new Error("EMEManager completed."))
+        );
+      expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
+      expect(requestMediaKeySystemAccessSpy)
+        .toHaveBeenCalledWith("com.widevine.alpha", defaultWidevineConfig);
+      res();
+    });
+  });
+
+  /* tslint:disable max-line-length */
+  it("should successfully create a MediaKeySystemAccess if given multiple configurations where one works", async () => {
+  /* tslint:enable max-line-length */
+    return new Promise((res, rej) => {
+      let callNb = 0;
+      const requestMediaKeySystemAccessSpy = jest.fn((keyType, conf) => {
+        if (++callNb === 2) {
+          return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
+        }
+        return observableThrow("nope");
+      });
+      mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
+      const config = [{ type: "com.widevine.alpha",
+                        getLicense: neverCalledFn },
+                       { type: "some-other-working-key-system",
+                         getLicense: neverCalledFn }];
+
+      const mediaElement = document.createElement("video");
+      const EMEManager = require("../../eme_manager").default;
+      EMEManager(mediaElement, config, new Subject())
+        .subscribe(
+          (evt : unknown) => {
+             const eventStr = JSON.stringify(evt as any);
+            rej(new Error("Received an EMEManager event: " + eventStr));
+          },
+          (err : unknown) => { rej(err); },
+          () => rej(new Error("EMEManager completed."))
+        );
+      expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(2);
+      expect(requestMediaKeySystemAccessSpy)
+        .toHaveBeenNthCalledWith(1, "com.widevine.alpha", defaultWidevineConfig);
+      expect(requestMediaKeySystemAccessSpy)
+        .toHaveBeenNthCalledWith(2, "some-other-working-key-system", defaultKSConfig);
+      res();
+    });
   });
 
   xit("should not continue to check if the observable is unsubscribed from", () => {

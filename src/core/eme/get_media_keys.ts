@@ -23,9 +23,7 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import {
-  EncryptedMediaError,
-} from "../../errors";
+import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
 import tryCatch from "../../utils/rx-try_catch";

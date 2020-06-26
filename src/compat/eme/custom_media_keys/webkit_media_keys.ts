@@ -19,7 +19,6 @@ import {
   Subject,
 } from "rxjs";
 import { takeUntil } from "rxjs/operators";
-import { TypedArray } from "../../../core/eme";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import * as events from "../../event_listeners";
@@ -38,7 +37,7 @@ import {
 export interface ICustomWebKitMediaKeys {
   _setVideo: (videoElement: HTMLMediaElement) => void;
   createSession(mimeType: string, initData: Uint8Array): ICustomMediaKeySession;
-  setServerCertificate(setServerCertificate: ArrayBuffer | TypedArray): Promise<void>;
+  setServerCertificate(setServerCertificate: BufferSource): Promise<void>;
 }
 
 /**
