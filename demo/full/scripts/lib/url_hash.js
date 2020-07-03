@@ -15,15 +15,15 @@
  * string and two types of value (for the moment?) can be communicated: strings
  * and booleans.
  *
- * The key is designated by a name which is an UTF-16 string coded in any number
- * of bytes. That string should not contain any backslash ("\") or underscore
- * ("_") character as those are reserved, but could technically contain any
- * other characters (we are though usually limited here by URL-encoding).
+ * The key is designated by a name. This is a string of any length which should
+ * not contain any backslash ("\") or underscore ("_") character as those are
+ * reserved, but could technically contain any other characters (we are though
+ * usually limited here by URL-encoding).
  * Each of those keys are prepended by a backslash ("\") character.
  *
  * To communicate a boolean value, that key is immediately either followed by
- * the next key or by the end of the whole string, which indicates the end of
- * the data.
+ * the next key (which is again, prepended by a backslash character) or by
+ * the end of the whole string, which indicates the end of the data.
  * A boolean value encountered is always inferred to be `true`. To set is to
  * `false`, just remove the key from the string. There is no difference between
  * `false` and a not-defined key.
@@ -39,20 +39,22 @@
  *
  * When the key has a string as a value, things are a little different.
  * The key is followed by an underscore ("_") character and then by the length
- * of the data (the communicated string) in terms of UTF-16 bytes. That
- * length itself should be converted in a base-36 number (think 0-9 then a-z).
+ * of the data (the communicated string) in terms of UTF-16 code units (note:
+ * a surrogate pairs is 2 code units).
+ * That length itself is then converted in a base-36 number (think 0-9 then
+ * a-z) to take less space in a URL.
  * Because this length can, depending on the length of the data, need one or
- * more Base-36 numbers, an equal ("=") sign is added to mark its end.
+ * more Base-36 numbers, an equal ("=") sign is added to mark the end of this
+ * length.
  * The data then starts just after that equal sign and ends at the end of the
- * announced length (followed either by the following field or the end of the
- * string).
+ * announced length (followed either by the following field - prepended by a
+ * backslash - or the end of the string).
  * Example with both booleans and strings and a `FIELD_LENGTH` of 4:
  * http://www.example.com/#\lowLatency\manifest_1n=http://www.example.com/streaming/dash_contents/Manifest.mpd\foobar
  * => will get you
  * ```js
  * {
  *   lowLatency: true,
- *   apla: true,
  *   manifest: "http://www.example.com/streaming/dash_contents/Manifest.mpd",
  *   foobar: true
  * }
