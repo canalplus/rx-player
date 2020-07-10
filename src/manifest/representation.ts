@@ -15,13 +15,13 @@
  */
 
 import { isCodecSupported } from "../compat";
+import concatPSSH from "../compat/concatPSSH";
 import log from "../log";
 import {
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
-import { concat } from "../utils/byte_parsing";
 import IRepresentationIndex from "./representation_index";
 import { IAdaptationType } from "./types";
 
@@ -157,7 +157,7 @@ class Representation {
         if (initDataArr === undefined || initDataArr.length === 0) {
           return acc;
         }
-        const initData = concat(...initDataArr.map(({ data }) => data));
+        const initData = concatPSSH(initDataArr);
         acc.push({ type: initDataType,
                    data: initData });
         return acc;

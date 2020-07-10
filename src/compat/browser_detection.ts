@@ -29,6 +29,9 @@ const isIEOrEdge : boolean = isNode ?
   navigator.appName === "Netscape" &&
   /(Trident|Edge)\//.test(navigator.userAgent);
 
+const isEdgeChromium: boolean = navigator.userAgent.toLowerCase().indexOf("edg/") !== 1;
+const isChromecast: boolean = navigator.userAgent.toLowerCase().indexOf("crkey") !== 1;
+
 const isFirefox : boolean = !isNode &&
                             navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
 
@@ -51,6 +54,8 @@ const isSafariMobile : boolean = !isNode &&
                                  /iPad|iPhone|iPod/.test(navigator.platform);
 
 export {
+  isChromecast,
+  isEdgeChromium,
   isIE11,
   isIEOrEdge,
   isFirefox,
