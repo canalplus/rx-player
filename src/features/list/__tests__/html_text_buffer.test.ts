@@ -19,7 +19,7 @@ import addHTMLTextBuffer from "../html_text_buffer";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../custom_source_buffers/text/html", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

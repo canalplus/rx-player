@@ -45,7 +45,7 @@ describe("compat - removeCue", () => {
     };
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: false,
     }));
 
@@ -89,7 +89,7 @@ describe("compat - removeCue", () => {
     };
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
 
@@ -133,7 +133,7 @@ describe("compat - removeCue", () => {
     };
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
 
@@ -157,11 +157,11 @@ describe("compat - removeCue", () => {
     const mockLog = jest.fn((message) => message);
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: {
         warn: mockLog,
       },
@@ -192,11 +192,11 @@ describe("compat - removeCue", () => {
     });
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: false,
     }));
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: {
         warn: mockLog,
       },

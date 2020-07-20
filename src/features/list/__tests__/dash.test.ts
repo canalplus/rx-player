@@ -19,7 +19,7 @@ import addDASHFeature from "../dash";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../transports/dash", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

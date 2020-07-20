@@ -21,7 +21,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with no known attribute", () => {
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn");
@@ -44,7 +44,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   /* tslint:disable max-line-length */
   it("should correctly parse an element with a well-formed `mediaRange` attribute", () => {
   /* tslint:enable max-line-length */
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn");
@@ -65,7 +65,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with an incorrect `mediaRange` attribute", () => {
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
@@ -101,7 +101,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   it("should correctly parse an element with a well-formed `indexRange` attribute", () => {
   /* tslint:enable max-line-length */
     const log = {
-      __esModule: true,
+      __esModule: true as const,
       default: { warn: () => null },
     };
     jest.mock("../../../../../log", () => log);
@@ -123,7 +123,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with an incorrect `indexRange` attribute", () => {
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
@@ -156,7 +156,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with a media attribute", () => {
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn");
@@ -177,7 +177,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with a index attribute", () => {
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn");

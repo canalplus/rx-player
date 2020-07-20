@@ -475,7 +475,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     };
 
     let leftToWait = 50 - player.getPosition();
-    await sleep(leftToWait * 700);
+    await sleep(leftToWait * 1300);
     expect(player.getPosition()).to.be.within(50, 54, "The position 3 is not right");
 
     expect(hasExited1).to.equal(true);
@@ -484,7 +484,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     expect(streamEventsReceived).to.have.lengthOf(2);
 
     leftToWait = 54 - player.getPosition();
-    await sleep(leftToWait * 700);
+    await sleep(leftToWait * 1300);
     expect(player.getPosition()).to.be.within(54, 58, "The position 4 is not right");
 
     expect(hasExited2).to.equal(true);

@@ -23,7 +23,7 @@ describe("compat - canPatchISOBMFFSegment", () => {
   it("should return true if we are not on IE11 nor Edge", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isIEOrEdge: false,
       };
     });
@@ -34,7 +34,7 @@ describe("compat - canPatchISOBMFFSegment", () => {
   it("should return false if we are on IE11 or Edge", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isIEOrEdge: true,
       };
     });

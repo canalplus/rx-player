@@ -21,7 +21,7 @@ describe("Features list - LOCAL_MANIFEST", () => {
 
   it("should add LOCAL_MANIFEST in the current features", () => {
     const feat = {};
-    jest.mock("../../../transports/local", () => ({ __esModule: true,
+    jest.mock("../../../transports/local", () => ({ __esModule: true as const,
                                                     default: feat }));
     /* tslint:disable no-unsafe-any */
     const addDASHFeature = require("../local").default;

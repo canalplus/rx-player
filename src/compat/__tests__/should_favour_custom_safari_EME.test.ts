@@ -28,7 +28,7 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
 
   it("should return false if we are not on Safari", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true,
+      return { __esModule: true as const,
                isSafari: false };
     });
     const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
@@ -41,7 +41,7 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
 
     (window as any).WebKitMediaKeys = undefined;
     jest.mock("../browser_detection", () => {
-      return { __esModule: true,
+      return { __esModule: true as const,
                isSafari: true };
     });
     const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
@@ -60,7 +60,7 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
     };
     (window as any).HTMLMediaElement.prototype.webkitSetMediaKeys = () => ({});
     jest.mock("../browser_detection", () => {
-      return { __esModule: true,
+      return { __esModule: true as const,
                isSafari: true };
     });
     const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");

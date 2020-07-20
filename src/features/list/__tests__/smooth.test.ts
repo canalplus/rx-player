@@ -19,7 +19,7 @@ import addSmoothFeature from "../smooth";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../transports/smooth", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

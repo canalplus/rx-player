@@ -19,7 +19,7 @@ import addEMEFeature from "../eme";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../core/eme", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

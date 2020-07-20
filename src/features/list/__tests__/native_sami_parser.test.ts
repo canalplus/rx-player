@@ -19,7 +19,7 @@ import addNativeSAMIFeature from "../native_sami_parser";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/sami/native", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

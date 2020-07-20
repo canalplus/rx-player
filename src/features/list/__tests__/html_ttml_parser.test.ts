@@ -19,7 +19,7 @@ import addHTMLttmlFeature from "../html_ttml_parser";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/ttml/html", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

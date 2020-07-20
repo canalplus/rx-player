@@ -23,7 +23,7 @@ describe("compat - shouldRenewMediaKeys", () => {
   it("should return false if we are not on IE11", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isIE11: false,
       };
     });
@@ -34,7 +34,7 @@ describe("compat - shouldRenewMediaKeys", () => {
   it("should return true if we are on IE11", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isIE11: true,
       };
     });

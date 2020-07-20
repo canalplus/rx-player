@@ -22,7 +22,7 @@ describe("getEstimateFromBufferLevels", () => {
 
   it("should return the first bitrate if the current bitrate is undefined", () => {
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
                                           .default;
@@ -57,7 +57,7 @@ describe("getEstimateFromBufferLevels", () => {
   it("should log an error and return the first bitrate if the given bitrate does not exist", () => {
   /* tslint:enable max-line-length */
     const logger = { error: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -77,7 +77,7 @@ describe("getEstimateFromBufferLevels", () => {
   it("should log an error and return the first bitrate if the given bitrates and levels are of different length", () => {
   /* tslint:enable max-line-length */
     const logger = { error: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -97,7 +97,7 @@ describe("getEstimateFromBufferLevels", () => {
   it("should go to the next bitrate if the current one is maintainable and we have more buffer than the next level", () => {
   /* tslint:enable max-line-length */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -143,7 +143,7 @@ describe("getEstimateFromBufferLevels", () => {
   it("should go to the next bitrate if the current one is maintainable and we have the buffer corresponding to the next level", () => {
   /* tslint:enable max-line-length */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -189,7 +189,7 @@ describe("getEstimateFromBufferLevels", () => {
   it("should stay at the current bitrate if it is maintainable but we have a buffer inferior to the next level", () => {
   /* tslint:enable max-line-length */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -229,7 +229,7 @@ describe("getEstimateFromBufferLevels", () => {
   it("should stay at the current bitrate if we are currently at the maximum one", () => {
   /* tslint:enable max-line-length */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -251,7 +251,7 @@ describe("getEstimateFromBufferLevels", () => {
   it("should stay at the current bitrate if the current one is not maintainable due to the speed", () => {
   /* tslint:enable max-line-length */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -291,7 +291,7 @@ describe("getEstimateFromBufferLevels", () => {
   it("should not go to the next bitrate if we do not know if it is maintainable", () => {
   /* tslint:enable max-line-length */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;

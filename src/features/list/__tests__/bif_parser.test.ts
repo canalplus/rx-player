@@ -19,7 +19,7 @@ import addBIFParserFeature from "../bif_parser";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/images/bif", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

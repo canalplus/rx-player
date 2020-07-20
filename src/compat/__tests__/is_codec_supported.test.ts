@@ -23,7 +23,7 @@ describe("Compat - isCodecSupported", () => {
   it("should return false if MediaSource is not supported in the current device", () => {
     jest.mock("../browser_compatibility_types", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         MediaSource_: undefined,
       };
     });
@@ -37,7 +37,7 @@ describe("Compat - isCodecSupported", () => {
   /* tslint:enable max-line-length */
     jest.mock("../browser_compatibility_types", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         MediaSource_: { isTypeSupported: undefined },
       };
     });
@@ -49,7 +49,7 @@ describe("Compat - isCodecSupported", () => {
   it("should return true if MediaSource.isTypeSupported returns true", () => {
     jest.mock("../browser_compatibility_types", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         MediaSource_: { isTypeSupported(_codec : string) { return true; } },
       };
     });
@@ -61,7 +61,7 @@ describe("Compat - isCodecSupported", () => {
   it("should return false if MediaSource.isTypeSupported returns false", () => {
     jest.mock("../browser_compatibility_types", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         MediaSource_: { isTypeSupported(_codec : string) { return false; } },
       };
     });

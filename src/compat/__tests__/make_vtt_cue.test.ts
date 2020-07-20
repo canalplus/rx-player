@@ -34,11 +34,11 @@ describe("Compat - makeVTTCue", () => {
   it("should throw if VTTCue are not available", () => {
     const logSpy = { warn: jest.fn() };
     jest.mock("../browser_compatibility_types", () => ({
-      __esModule: true,
+      __esModule: true as const,
       VTTCue_: undefined,
     }));
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: logSpy,
     }));
     const makeCue = require("../make_vtt_cue").default;
@@ -58,11 +58,11 @@ describe("Compat - makeVTTCue", () => {
   it("should warn and not create anything if start time is after end time", () => {
     const logSpy = { warn: jest.fn() };
     jest.mock("../browser_compatibility_types", () => ({
-      __esModule: true,
+      __esModule: true as const,
       VTTCue_: MockVTTCue,
     }));
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: logSpy,
     }));
     const makeCue = require("../make_vtt_cue").default;
@@ -75,11 +75,11 @@ describe("Compat - makeVTTCue", () => {
   it("should create a new VTT Cue in other cases", () => {
     const logSpy = { warn: jest.fn() };
     jest.mock("../browser_compatibility_types", () => ({
-      __esModule: true,
+      __esModule: true as const,
       VTTCue_: MockVTTCue,
     }));
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: logSpy,
     }));
     const makeCue = require("../make_vtt_cue").default;

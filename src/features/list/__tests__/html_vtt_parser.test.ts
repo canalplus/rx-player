@@ -19,7 +19,7 @@ import addHTMLVTTFeature from "../html_vtt_parser";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/webvtt/html", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

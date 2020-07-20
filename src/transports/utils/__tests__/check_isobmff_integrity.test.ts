@@ -22,7 +22,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
 
   it("should check just ftyp and and moov integrity for init segments", () => {
     const findCompleteBoxSpy = jest.fn(() => 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
@@ -34,7 +34,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
 
   it("should check just moof and and mdat integrity for regular segments", () => {
     const findCompleteBoxSpy = jest.fn(() => 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
@@ -46,7 +46,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
 
   it("should throw an other error if an init segment is missing a complete ftyp", () => {
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x66747970 ? -1 : 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
@@ -67,7 +67,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
 
   it("should throw an other error if an init segment is missing a complete moov", () => {
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D6F6F76 ? -1 : 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
@@ -90,7 +90,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
   it("should throw an other error if a regular segment is missing a complete moof", () => {
   /* tslint:enable max-line-length */
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D6F6F66 ? -1 : 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
@@ -113,7 +113,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
   it("should throw an other error if a regular segment is missing a complete mdat", () => {
   /* tslint:enable max-line-length */
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D646174 ? -1 : 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;

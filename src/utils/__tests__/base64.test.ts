@@ -42,7 +42,7 @@ describe("base64ToBytes", () => {
     jest.resetModules();
     logWarn.mockReset();
     jest.mock("../../log", () =>  ({ default: { warn: logWarn },
-                                     __esModule: true }));
+                                     __esModule: true as const }));
   });
 
   it("should return an empty Uint8Array for an empty string", () => {
@@ -115,7 +115,7 @@ describe("bytesToBase64", () => {
     jest.resetModules();
     logWarn.mockReset();
     jest.mock("../../log", () =>  ({ default: { warn: logWarn },
-                                     __esModule: true }));
+                                     __esModule: true as const }));
   });
 
   it("should return an empty string for an empty Uint8Array", () => {

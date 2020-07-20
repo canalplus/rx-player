@@ -21,7 +21,7 @@ describe("errors - formatError", () => {
   });
 
   it("should just return the error if it is a Custom Error", () => {
-    jest.mock("../is_known_error", () => ({ __esModule: true,
+    jest.mock("../is_known_error", () => ({ __esModule: true as const,
                                             default: () => true }));
     const formatError = require("../format_error").default;
     const error1 = new Error("Aaaaaa");
@@ -30,7 +30,7 @@ describe("errors - formatError", () => {
   });
 
   it("should stringify error if it is an Error but not a Custom Error", () => {
-    jest.mock("../is_known_error", () => ({ __esModule: true,
+    jest.mock("../is_known_error", () => ({ __esModule: true as const,
                                             default: () => false }));
     const OtherError = require("../other_error").default;
     const formatError = require("../format_error").default;
@@ -43,7 +43,7 @@ describe("errors - formatError", () => {
   });
 
   it("should stringify error if it is an Error but not a Custom Error", () => {
-    jest.mock("../is_known_error", () => ({ __esModule: true,
+    jest.mock("../is_known_error", () => ({ __esModule: true as const,
                                             default: () => false }));
     const OtherError = require("../other_error").default;
     const formatError = require("../format_error").default;

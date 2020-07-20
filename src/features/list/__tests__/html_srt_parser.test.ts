@@ -19,7 +19,7 @@ import addHTMLsrtFeature from "../html_srt_parser";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/srt/html", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

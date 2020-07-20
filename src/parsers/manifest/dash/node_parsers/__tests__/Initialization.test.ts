@@ -21,7 +21,7 @@ describe("DASH Node Parsers - Initialization", () => {
   });
 
   it("should correctly parse an element with no known attribute", () => {
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn");
@@ -42,7 +42,7 @@ describe("DASH Node Parsers - Initialization", () => {
   });
 
   it("should correctly parse an element with a well-formed `range` attribute", () => {
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn");
@@ -63,7 +63,7 @@ describe("DASH Node Parsers - Initialization", () => {
   });
 
   it("should correctly parse an element with an incorrect `range` attribute", () => {
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
@@ -92,7 +92,7 @@ describe("DASH Node Parsers - Initialization", () => {
   });
 
   it("should correctly parse an element with a sourceURL attribute", () => {
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn");
@@ -115,7 +115,7 @@ describe("DASH Node Parsers - Initialization", () => {
   /* tslint:disable max-line-length */
   it("should correctly parse an element with both a sourceURL and range attributes", () => {
   /* tslint:enable max-line-length */
-    const log = { __esModule: true,
+    const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
     const logSpy = jest.spyOn(log.default, "warn");
