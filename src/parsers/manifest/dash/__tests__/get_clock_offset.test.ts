@@ -23,7 +23,7 @@ describe("DASH Parser - getClockOffset", () => {
   it("should calculate a millisecond offset relatively to performance.now", () => {
     const warnSpy = jest.fn();
     jest.mock("../../../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: { warn: warnSpy },
     }));
 
@@ -39,7 +39,7 @@ describe("DASH Parser - getClockOffset", () => {
   it("should return undefined and warn if an invalid date is given", () => {
     const warnSpy = jest.fn();
     jest.mock("../../../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: { warn: warnSpy },
     }));
     const getClockOffset = require("../get_clock_offset").default;

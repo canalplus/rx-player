@@ -21,7 +21,7 @@ describe("shouldAppendBufferAfterPadding", () => {
 
 it("should be true if on Safari", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true,
+      return { __esModule: true as const,
                isSafari: true };
     });
     /* tslint:disable no-unsafe-any */
@@ -33,7 +33,7 @@ it("should be true if on Safari", () => {
 
 it("should be false if not on Safari", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true,
+      return { __esModule: true as const,
                isSafari: false };
     });
     /* tslint:disable no-unsafe-any */

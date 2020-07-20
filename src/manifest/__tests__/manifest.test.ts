@@ -25,11 +25,11 @@ describe("Manifest - Manifest", () => {
     jest.resetModules();
     fakeLogger.warn.mockClear();
     fakeLogger.info.mockClear();
-    jest.mock("../../log", () =>  ({ __esModule: true,
+    jest.mock("../../log", () =>  ({ __esModule: true as const,
                                      default: fakeLogger }));
     fakeGenerateNewId.mockClear();
     fakeIdGenerator.mockClear();
-    jest.mock("../../utils/id_generator", () => ({ __esModule: true,
+    jest.mock("../../utils/id_generator", () => ({ __esModule: true as const,
                                                    default: fakeIdGenerator }));
 
   });
@@ -78,7 +78,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return { id: `foo${period.id}`, adaptations: {}, parsingErrors: [] };
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
 
     const Manifest = require("../manifest").default;
@@ -116,7 +116,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return { id: `foo${period.id}`, parsingErrors: [] };
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     const Manifest = require("../manifest").default;
 
@@ -148,7 +148,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return { ...period, id: `foo${period.id}`, parsingErrors: [] };
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     const Manifest = require("../manifest").default;
 
@@ -185,7 +185,7 @@ describe("Manifest - Manifest", () => {
                                 new Error(period.id) ] };
     });
     jest.mock("../period", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakePeriod,
     }));
     const Manifest = require("../manifest").default;
@@ -226,7 +226,7 @@ describe("Manifest - Manifest", () => {
                id: `foo${period.id}`,
                parsingErrors: [new Error(period.id)] };
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
@@ -262,7 +262,7 @@ describe("Manifest - Manifest", () => {
       };
     });
     jest.mock("../period", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakePeriod,
     }));
     const Manifest = require("../manifest").default;
@@ -322,11 +322,11 @@ describe("Manifest - Manifest", () => {
       oldPeriod.adaptations = newPeriod.adaptations;
     });
     jest.mock("../period", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakePeriod,
     }));
     jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
 
@@ -435,10 +435,10 @@ describe("Manifest - Manifest", () => {
       oldPeriod.adaptations = newPeriod.adaptations;
       oldPeriod.parsingErrors = newPeriod.parsingErrors;
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
@@ -518,10 +518,10 @@ describe("Manifest - Manifest", () => {
       });
       oldPeriod.id = newPeriod.id;
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
@@ -587,10 +587,10 @@ describe("Manifest - Manifest", () => {
       });
       oldPeriod.id = newPeriod.id;
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
@@ -655,10 +655,10 @@ describe("Manifest - Manifest", () => {
       oldPeriod.id = newPeriod.id;
       oldPeriod.start = newPeriod.start;
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;

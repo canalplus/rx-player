@@ -23,7 +23,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
   it("should return true if we are not on Safari browser nor in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: false,
       };
     });
@@ -35,7 +35,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
   it("should return true if we are not on Safari browser but in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: false,
       };
     });
@@ -49,7 +49,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
   /* tslint:enable max-line-length */
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: true,
       };
     });
@@ -61,7 +61,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
   it("should return false if we are on the Safari browser with no play inline and in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: true,
       };
     });
@@ -73,7 +73,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
   it("should return true if we are on the Safari browser, we should play inline and in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: true,
       };
     });
@@ -85,7 +85,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
   it("should return true if we are on the Safari browser, play inline but no directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: true,
       };
     });
@@ -97,7 +97,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
   it("should return true if we are not on the Safari browser, should not play inline and in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: false,
       };
     });

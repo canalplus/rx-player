@@ -31,7 +31,7 @@ describe("Manifest - replacePeriods", () => {
   it("should remove old period", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -61,7 +61,7 @@ describe("Manifest - replacePeriods", () => {
   it("should add new period", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -92,7 +92,7 @@ describe("Manifest - replacePeriods", () => {
   it("should replace period", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -117,7 +117,7 @@ describe("Manifest - replacePeriods", () => {
   it("should handle more complex period replacement", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -161,7 +161,7 @@ describe("Manifest - replacePeriods", () => {
   it("should add new period before", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -192,7 +192,7 @@ describe("Manifest - replacePeriods", () => {
   it("should remove all periods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -215,7 +215,7 @@ describe("Manifest - replacePeriods", () => {
   it("should add all periods to empty array", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [] as any;
@@ -246,7 +246,7 @@ describe("updatePeriods", () => {
   it("should not remove old period", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [ { id: "p1", start: 50, end: 60 },
@@ -273,7 +273,7 @@ describe("updatePeriods", () => {
   it("should add new period", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [ { id: "p2", start: 60 } ] as any;
@@ -301,7 +301,7 @@ describe("updatePeriods", () => {
   it("should throw when encountering two distant Periods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
@@ -332,7 +332,7 @@ describe("updatePeriods", () => {
   // new periods: p1, a, b, p2, p3
   it("should handle more complex period replacement", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true,
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [ { id: "p0", start: 50, end: 60 },
                          { id: "p1", start: 60, end: 70 },
@@ -368,7 +368,7 @@ describe("updatePeriods", () => {
   // new periods : p1, p2
   it("should throw when the first period is not encountered", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true,
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [ { id: "p2", start: 70 } ] as any;
     const newPeriods = [ { id: "p1", start: 50, end: 70 },
@@ -400,7 +400,7 @@ describe("updatePeriods", () => {
   // new periods : No periods
   it("should keep old periods if no new Period is available", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true,
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [ { id: "p1" }, { id: "p2" } ] as any;
     const newPeriods = [] as any;
@@ -420,7 +420,7 @@ describe("updatePeriods", () => {
   // new periods : p1, p2
   it("should set only new Periods if none were available before", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true,
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [] as any;
     const newPeriods = [ { id: "p1" }, { id: "p2" } ] as any;
@@ -440,7 +440,7 @@ describe("updatePeriods", () => {
   // new periods : p4, p5
   it("should throw if the new periods come strictly after", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true,
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     /* tslint:disable no-unsafe-any */
     const updatePeriods = require("../update_periods").updatePeriods;
@@ -473,7 +473,7 @@ describe("updatePeriods", () => {
   it("should concatenate consecutive periods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
@@ -498,7 +498,7 @@ describe("updatePeriods", () => {
   /* tslint:enable max-line-length */
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
@@ -529,7 +529,7 @@ describe("updatePeriods", () => {
   // new periods: p1, p2, p3
   it("should handle more complex period replacement", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true,
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [ { id: "p0", start: 50, end: 60 },
                          { id: "p1", start: 60, end: 70 },
@@ -566,7 +566,7 @@ describe("updatePeriods", () => {
   // new periods: p1, p3
   it("should handle more complex period replacement", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true,
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [ { id: "p0", start: 50, end: 60 },
                          { id: "p1", start: 60, end: 70 },
@@ -602,7 +602,7 @@ describe("updatePeriods", () => {
   // new periods: p1, p3
   it("should remove periods not included in the new Periods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true,
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [ { id: "p0", start: 50, end: 60 },
                          { id: "p1", start: 60, end: 70 },

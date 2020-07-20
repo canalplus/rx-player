@@ -30,7 +30,7 @@ describe("compat - setElementSrc", () => {
 
     const mockLogInfo = jest.fn((message) => message);
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: {
         info: mockLogInfo,
       },
@@ -39,7 +39,7 @@ describe("compat - setElementSrc", () => {
       fakeMediaElement.src = "";
     });
     jest.mock("../clear_element_src", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: mockClearElementSrc,
     }));
     const fakeURL = "blob:http://fakeURL";

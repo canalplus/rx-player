@@ -19,7 +19,7 @@ import addNativeTextBuffer from "../native_text_buffer";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../custom_source_buffers/text/native", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

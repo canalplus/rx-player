@@ -19,7 +19,7 @@ import addNativesrtFeature from "../native_srt_parser";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/srt/native", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

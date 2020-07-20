@@ -43,7 +43,7 @@ describe("compat - whenLoadedMetadata$", () => {
     });
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onLoadedMetadata$: mockOnLoadedMetadata$,
     }));
 
@@ -68,7 +68,7 @@ describe("compat - whenLoadedMetadata$", () => {
     });
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onLoadedMetadata$: mockOnLoadedMetadata$,
     }));
 
@@ -90,7 +90,7 @@ describe("compat - whenLoadedMetadata$", () => {
     const mockOnLoadedMetadata$ = jest.fn(() => null);
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onLoadedMetadata$: mockOnLoadedMetadata$,
     }));
 

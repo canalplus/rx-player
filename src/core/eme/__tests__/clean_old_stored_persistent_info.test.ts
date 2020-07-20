@@ -42,7 +42,7 @@ const emptyPersistentSessionsStore = {
 function checkNothingHappen(persistentSessionsStore : any, limit : number) {
   const deleteLastSpy = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
   const logInfoSpy = jest.fn();
-  jest.mock("../../../log", () => ({ __esModule: true,
+  jest.mock("../../../log", () => ({ __esModule: true as const,
                                      default: { info: logInfoSpy } }));
   const cleanOldStoredPersistentInfo = require("../clean_old_stored_persistent_info")
     .default;
@@ -66,7 +66,7 @@ function checkRemoved(
 ) {
   const deleteLastSpy = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
   const logInfoSpy = jest.fn();
-  jest.mock("../../../log", () => ({ __esModule: true,
+  jest.mock("../../../log", () => ({ __esModule: true as const,
                                      default: { info: logInfoSpy } }));
   const cleanOldStoredPersistentInfo = require("../clean_old_stored_persistent_info")
     .default;

@@ -43,7 +43,7 @@ describe("compat - whenMediaSourceOpen$", () => {
     });
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onSourceOpen$: mockOnSourceOpen$,
     }));
 
@@ -68,7 +68,7 @@ describe("compat - whenMediaSourceOpen$", () => {
     });
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onSourceOpen$: mockOnSourceOpen$,
     }));
 
@@ -91,7 +91,7 @@ describe("compat - whenMediaSourceOpen$", () => {
     const mockOnSourceOpen$ = jest.fn(() => null);
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onSourceOpen$: mockOnSourceOpen$,
     }));
 

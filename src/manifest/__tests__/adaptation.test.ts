@@ -49,7 +49,7 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should be able to create a minimal Adaptation", () => {
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -71,7 +71,7 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should throw if the given adaptation type is not supported", () => {
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -92,10 +92,10 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should normalize a given language", () => {
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true,
+    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -122,10 +122,10 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should not call normalize if no language is given", () => {
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true,
+    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -139,7 +139,7 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should create and sort the corresponding Representations", () => {
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -182,7 +182,7 @@ describe("Manifest - Adaptation", () => {
                index: arg.index };
     });
 
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: representationSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -242,7 +242,7 @@ describe("Manifest - Adaptation", () => {
                isSupported: false,
                index: arg.index };
     });
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: representationSpy }));
     const Adaptation = require("../adaptation").default;
     const rep1 = { bitrate: 10,
@@ -273,7 +273,7 @@ describe("Manifest - Adaptation", () => {
                isSupported: false,
                index: arg.index };
     });
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: representationSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -289,10 +289,10 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set an isDub value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true,
+    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -319,10 +319,10 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set an isClosedCaption value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true,
+    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -349,11 +349,11 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set an isAudioDescription value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
 
-    jest.mock("../../utils/languages", () => ({ __esModule: true,
+    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -380,10 +380,10 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set a manuallyAdded value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true,
+    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -411,10 +411,10 @@ describe("Manifest - Adaptation", () => {
   it("should filter Representation with duplicate bitrates in getAvailableBitrates", () => {
   /* tslint:enable:max-line-length */
 
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
     const uniqSpy = jest.fn(() => [45, 92]);
-    jest.mock("../../utils/uniq", () => ({ __esModule: true,
+    jest.mock("../../utils/uniq", () => ({ __esModule: true as const,
                                            default: uniqSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -446,7 +446,7 @@ describe("Manifest - Adaptation", () => {
   it("should return the first Representation with the given Id with `getRepresentation`", () => {
   /* tslint:enable:max-line-length */
 
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -471,7 +471,7 @@ describe("Manifest - Adaptation", () => {
   it("should return undefined in `getRepresentation` if no representation is found with this Id", () => {
   /* tslint:enable:max-line-length */
 
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
 
     const Adaptation = require("../adaptation").default;
@@ -504,7 +504,7 @@ describe("Manifest - Adaptation", () => {
                                                  undefined,
                index: arg.index };
     });
-    jest.mock("../representation", () => ({ __esModule: true,
+    jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: representationSpy }));
 
     const Adaptation = require("../adaptation").default;

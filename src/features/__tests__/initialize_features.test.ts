@@ -25,7 +25,8 @@ describe("Features - initializeFeaturesObject", () => {
       get() { return false; },
     });
     const feat = {};
-    jest.mock("../index", () => ({ default: feat }));
+    jest.mock("../index", () => ({ default: feat,
+                                   __esModule: true as const }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect<unknown>(feat).toEqual({});
@@ -69,7 +70,7 @@ describe("Features - initializeFeaturesObject", () => {
       directfile: null,
     };
     jest.mock("../index", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
@@ -126,7 +127,7 @@ describe("Features - initializeFeaturesObject", () => {
       htmlTextTracksParsers: {},
     };
     jest.mock("../index", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
@@ -158,7 +159,7 @@ describe("Features - initializeFeaturesObject", () => {
       htmlTextTracksParsers: {},
     };
     jest.mock("../index", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
@@ -190,7 +191,7 @@ describe("Features - initializeFeaturesObject", () => {
       htmlTextTracksParsers: {},
     };
     jest.mock("../index", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
@@ -222,7 +223,7 @@ describe("Features - initializeFeaturesObject", () => {
       htmlTextTracksParsers: {},
     };
     jest.mock("../index", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
@@ -254,7 +255,7 @@ describe("Features - initializeFeaturesObject", () => {
       nativeTextTracksParsers: {},
     };
     jest.mock("../index", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
@@ -286,7 +287,7 @@ describe("Features - initializeFeaturesObject", () => {
       nativeTextTracksParsers: {},
     };
     jest.mock("../index", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
@@ -318,7 +319,7 @@ describe("Features - initializeFeaturesObject", () => {
       nativeTextTracksParsers: {},
     };
     jest.mock("../index", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
@@ -350,7 +351,7 @@ describe("Features - initializeFeaturesObject", () => {
       nativeTextTracksParsers: {},
     };
     jest.mock("../index", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;

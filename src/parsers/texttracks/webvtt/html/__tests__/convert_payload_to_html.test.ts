@@ -41,7 +41,7 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
 
     const spy = jest.fn();
     jest.mock("../create_styled_element", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spy,
     }));
 
@@ -74,7 +74,7 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
       }
     });
     jest.mock("../create_styled_element", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyCreateStyledElement,
     }));
 

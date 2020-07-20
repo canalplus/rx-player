@@ -20,7 +20,7 @@ import addDirectfileFeature from "../directfile";
 
 /* tslint:disable no-unsafe-any */
 jest.mock("../../../core/init/initialize_directfile", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 

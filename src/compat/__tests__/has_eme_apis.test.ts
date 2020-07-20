@@ -26,7 +26,7 @@ describe("compat - hasEMEAPIs", () => {
 
     jest.mock("../eme", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         requestMediaKeySystemAccess: () => null,
       };
     });
@@ -40,7 +40,7 @@ describe("compat - hasEMEAPIs", () => {
 
     jest.mock("../eme", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         requestMediaKeySystemAccess: null,
       };
     });
