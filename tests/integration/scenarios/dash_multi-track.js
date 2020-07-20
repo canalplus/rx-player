@@ -21,13 +21,19 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   async function goToSecondPeriod() {
     player.seekTo(120);
-    await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    await sleep(300);
+    if (player.getPlayerState() !== "PAUSED") {
+      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    }
     expect(player.getPosition()).to.be.within(118, 122);
   }
 
   async function goToFirstPeriod() {
     player.seekTo(5);
-    await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    await sleep(300);
+    if (player.getPlayerState() !== "PAUSED") {
+      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    }
     expect(player.getPosition()).to.be.within(0, 10);
   }
 
@@ -488,6 +494,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("setting a track should not be persisted between Periods", async () => {
     await loadContent();
+    await sleep(300);
 
     // TODO AUDIO codec
     checkAudioTrack("de", "deu", false);
@@ -498,7 +505,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     setTextTrack("de", false);
     setVideoTrack({ all: false, test: /avc1\.640028/ }, true);
 
-    await sleep(50);
+    await sleep(300);
     checkAudioTrack("fr", "fra", true);
     checkTextTrack("de", "deu", false);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
@@ -533,7 +540,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
   });
 
-  it("preferences should be persisted if already set for a given Period", async () => {
+  it("preferences should be persisted if already set for a given Period", async function() {
     this.timeout(5000);
 
     player.setPreferredAudioTracks([ { language: "fr",
