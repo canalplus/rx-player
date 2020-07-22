@@ -41,7 +41,6 @@ import { ICustomMediaKeySession } from "./custom_media_keys";
  * @returns {Uint8Array} - Initialization data, patched
  */
 export function patchInitData(initData : Uint8Array) : Uint8Array {
-  const initialLength = initData.byteLength;
   log.info("Compat: Trying to move CENC PSSH from init data at the end of it.");
   let cencs = new Uint8Array();
   let resInitData = new Uint8Array();
@@ -93,10 +92,6 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
     throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
   }
 
-  if (resInitData.byteLength === initialLength) {
-    log.warn("Compat: CENC PSSH not found. Cannot patch it");
-    throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
-  }
   return concat(resInitData, cencs);
 }
 
