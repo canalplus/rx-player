@@ -8,6 +8,8 @@ import waitForPlayerState from "../../utils/waitForPlayerState";
 import {
   manifestInfos as segmentTimelineManifestInfos,
   notStartingAt0ManifestInfos,
+  segmentTemplateInheritanceASRep,
+  segmentTemplateInheritancePeriodAS,
 } from "../../contents/DASH_static_SegmentTimeline";
 import brokenCencManifestInfos from "../../contents/DASH_static_broken_cenc_in_MPD";
 import {
@@ -25,6 +27,14 @@ describe("DASH non-linear content multi-codecs (SegmentBase)", function () {
 
 describe("DASH non-linear content not starting at 0 (SegmentTimeline)", function () {
   launchTestsForContent(notStartingAt0ManifestInfos);
+});
+
+describe("DASH non-linear content with SegmentTemplate inheritance (Period-AdaptationSet)", function () {
+  launchTestsForContent(segmentTemplateInheritancePeriodAS);
+});
+
+describe("DASH non-linear content with SegmentTemplate inheritance (AdaptationSet-Representation)", function () {
+  launchTestsForContent(segmentTemplateInheritanceASRep);
 });
 
 describe("DASH content CENC wrong version in MPD", function () {

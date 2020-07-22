@@ -78,6 +78,7 @@ export type IParserResponse<T> = { type : "needs-ressources";
                                  { type : "done";
                                    value : { parsed : T;
                                              warnings : Error[]; }; };
+
 /**
  * @param {Element} root - The MPD root.
  * @param {Object} args

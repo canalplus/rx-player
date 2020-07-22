@@ -29,6 +29,7 @@ import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
   IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
+import { IParsedSegmentTemplate } from "./node_parsers/SegmentTemplate";
 import parseRepresentations, {
   IAdaptationInfos,
 } from "./parse_representations";
@@ -53,6 +54,8 @@ export interface IAdaptationSetsContextInfos {
    * this AdaptationSet was received.
    */
   receivedTime? : number;
+  /** SegmentTemplate parsed in the Period, if found. */
+  segmentTemplate? : IParsedSegmentTemplate;
   /** Start time of the current period, in seconds. */
   start : number;
   /** Depth of the buffer for the whole content, in seconds. */
@@ -209,8 +212,8 @@ function getAdaptationSetSwitchingIDs(
  * form.
  * Note that the AdaptationSets returned are sorted by priority (from the most
  * priority to the least one).
- * @param {Array.<Object>} periodsIR
- * @param {Object} manifestInfos
+ * @param {Array.<Object>} adaptationsIR
+ * @param {Object} periodInfos
  * @returns {Array.<Object>}
  */
 export default function parseAdaptationSets(
@@ -273,6 +276,14 @@ export default function parseAdaptationSets(
     const originalID = adaptation.attributes.id;
     let newID : string;
     const adaptationSetSwitchingIDs = getAdaptationSetSwitchingIDs(adaptation);
+    const parentSegmentTemplates = [];
+    if (periodInfos.segmentTemplate !== undefined) {
+      parentSegmentTemplates.push(periodInfos.segmentTemplate);
+    }
+    if (adaptation.children.segmentTemplate !== undefined) {
+      parentSegmentTemplates.push(adaptation.children.segmentTemplate);
+    }
+
     const adaptationInfos : IAdaptationInfos = {
       aggressiveMode: periodInfos.aggressiveMode,
       availabilityTimeOffset,
@@ -280,6 +291,7 @@ export default function parseAdaptationSets(
       manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
       end: periodInfos.end,
       isDynamic: periodInfos.isDynamic,
+      parentSegmentTemplates,
       receivedTime: periodInfos.receivedTime,
       start: periodInfos.start,
       timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,

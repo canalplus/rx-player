@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "../../../../utils/object_assign";
 import parseInitialization, {
   IParsedInitialization,
 } from "./Initialization";
@@ -42,10 +41,10 @@ interface ISegmentBaseSegment { start: number; // start timestamp
                                 range?: [number, number]; }
 
 export interface IParsedSegmentBase extends ISegmentBaseAttributes {
-  availabilityTimeComplete : boolean;
-  indexRangeExact : boolean;
-  timeline : ISegmentBaseSegment[];
-  timescale : number;
+  availabilityTimeComplete? : boolean;
+  indexRangeExact? : boolean;
+  timeline?: ISegmentBaseSegment[];
+  timescale? : number;
   media?: string;
 }
 
@@ -127,17 +126,5 @@ export default function parseSegmentBase(
     }
   }
 
-  const timescale = attributes.timescale == null ? 1 :
-                                                   attributes.timescale;
-  const indexRangeExact = attributes.indexRangeExact === true;
-  const availabilityTimeComplete = attributes.availabilityTimeComplete == null ?
-    true :
-    attributes.availabilityTimeComplete;
-
-  const ret = objectAssign(attributes,
-                           { availabilityTimeComplete,
-                             indexRangeExact,
-                             timeline: [],
-                             timescale, });
-  return [ret, warnings];
+  return [attributes, warnings];
 }

@@ -140,6 +140,7 @@ export interface IPeriodsContextInfos {
                           end: periodEnd,
                           isDynamic,
                           receivedTime,
+                          segmentTemplate: periodIR.children.segmentTemplate,
                           start: periodStart,
                           timeShiftBufferDepth,
                           unsafelyBaseOnPreviousPeriod };

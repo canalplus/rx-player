@@ -91,6 +91,16 @@ module.exports = [
     path: path.join(__dirname, "media/event-streams.mpd"),
     contentType: "application/dash+xml",
   },
+  {
+    url: BASE_URL + "segment_template_inheritance_period_as.mpd",
+    path: path.join(__dirname, "media/segment_template_inheritance_period_as.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "segment_template_inheritance_as_rep.mpd",
+    path: path.join(__dirname, "media/segment_template_inheritance_as_rep.mpd"),
+    contentType: "application/dash+xml",
+  },
 
   // Audio initialization segment
   {

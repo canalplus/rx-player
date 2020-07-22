@@ -113,8 +113,7 @@ export interface ITimelineIndexIndexArgument {
   initialization? : { media? : string; range?: [number, number] };
   media? : string;
   startNumber? : number;
-  parseTimeline : () => HTMLCollection;
-  timescale : number;
+  timescale? : number;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
    * the media segments and in this index) to the presentationTime (time wanted
@@ -236,6 +235,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   constructor(
     index : ITimelineIndexIndexArgument,
+    timelineParser : () => HTMLCollection,
     context : ITimelineIndexContextArgument
   ) {
     const { manifestBoundsCalculator,
@@ -245,7 +245,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
             representationBitrate,
             periodStart,
             periodEnd } = context;
-    const { timescale } = index;
+    const timescale = index.timescale ?? 1;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
       index.presentationTimeOffset :
@@ -273,7 +273,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
 
     this._isDynamic = isDynamic;
-    this._parseTimeline = index.parseTimeline;
+    this._parseTimeline = timelineParser;
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
                     initialization: index.initialization == null ?

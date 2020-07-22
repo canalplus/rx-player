@@ -29,39 +29,19 @@ import {
 } from "./utils";
 
 export interface IParsedSegmentTemplate extends IParsedSegmentBase {
-  indexType: "template";
-  duration : number;
-  availabilityTimeComplete : boolean;
-  indexRangeExact : boolean;
-  timescale : number;
-
-  presentationTimeOffset? : number;
+  availabilityTimeComplete? : boolean;
   availabilityTimeOffset?: number;
-  indexRange?: [number, number];
-  initialization?: IParsedInitialization;
-  startNumber? : number;
-
-  media? : string;
-  index? : string;
   bitstreamSwitching? : boolean;
-}
-
-export interface IParsedSegmentTimeline {
-  indexType: "timeline";
-  parseTimeline : ITimelineParser;
-  availabilityTimeComplete : boolean;
-  indexRangeExact : boolean;
-  timescale : number;
-
-  presentationTimeOffset? : number;
-  availabilityTimeOffset?: number;
   duration? : number;
-  indexRange?: [number, number];
-  initialization?: IParsedInitialization;
-  startNumber? : number;
-  media? : string;
   index? : string;
-  bitstreamSwitching? : boolean;
+  indexRange?: [number, number];
+  indexRangeExact? : boolean;
+  initialization?: IParsedInitialization;
+  media? : string;
+  presentationTimeOffset? : number;
+  startNumber? : number;
+  timelineParser? : ITimelineParser;
+  timescale? : number;
 }
 
 /**
@@ -82,35 +62,25 @@ function parseInitializationAttribute(attrValue : string) : IParsedInitializatio
  */
 export default function parseSegmentTemplate(
   root: Element
-) : [IParsedSegmentTemplate | IParsedSegmentTimeline, Error[]] {
+) : [IParsedSegmentTemplate, Error[]] {
   const [base, segmentBaseWarnings] = parseSegmentBase(root);
   const warnings : Error[] = segmentBaseWarnings;
 
-  let ret : IParsedSegmentTemplate|IParsedSegmentTimeline;
-  let parseTimeline : ITimelineParser|undefined;
+  let ret : IParsedSegmentTemplate;
+  let timelineParser : ITimelineParser|undefined;
 
   // First look for a possible SegmentTimeline
   for (let i = 0; i < root.childNodes.length; i++) {
     if (root.childNodes[i].nodeType === Node.ELEMENT_NODE) {
       const currentNode = root.childNodes[i] as Element;
       if (currentNode.nodeName === "SegmentTimeline") {
-        parseTimeline = createSegmentTimelineParser(currentNode);
+        timelineParser = createSegmentTimelineParser(currentNode);
       }
     }
   }
 
-  if (parseTimeline != null) {
-    ret = objectAssign({}, base, { indexType: "timeline" as "timeline",
-                                   parseTimeline });
-  } else {
-    const segmentDuration = base.duration;
-
-    if (segmentDuration === undefined) {
-      throw new Error("Invalid SegmentTemplate: no duration");
-    }
-    ret = objectAssign({}, base, { indexType: "template" as "template",
-                                   duration: segmentDuration });
-  }
+  ret = objectAssign({}, base, { duration: base.duration,
+                                 timelineParser });
 
   const parseValue = ValueParser(ret, warnings);
   for (let i = 0; i < root.attributes.length; i++) {

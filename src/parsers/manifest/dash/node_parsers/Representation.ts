@@ -25,7 +25,6 @@ import parseSegmentList, {
 } from "./SegmentList";
 import parseSegmentTemplate, {
   IParsedSegmentTemplate,
-  IParsedSegmentTimeline,
 } from "./SegmentTemplate";
 import {
   MPDError,
@@ -47,7 +46,7 @@ export interface IRepresentationChildren {
   // optional
   segmentBase? : IParsedSegmentBase;
   segmentList? : IParsedSegmentList;
-  segmentTemplate? : IParsedSegmentTemplate|IParsedSegmentTimeline;
+  segmentTemplate? : IParsedSegmentTemplate;
 }
 
 export interface IRepresentationAttributes {

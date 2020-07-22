@@ -24,6 +24,9 @@ import parseBaseURL, {
 import parseEventStream, {
   IParsedStreamEvent
 } from "./EventStream";
+import parseSegmentTemplate, {
+  IParsedSegmentTemplate,
+} from "./SegmentTemplate";
 import {
   parseBoolean,
   parseDuration,
@@ -40,6 +43,7 @@ export interface IPeriodChildren {
   // required
   adaptations : IAdaptationSetIntermediateRepresentation[];
   baseURLs : IBaseURL[];
+  segmentTemplate? : IParsedSegmentTemplate;
   streamEvents? : IParsedStreamEvent[];
 }
 
@@ -61,6 +65,7 @@ export interface IPeriodAttributes {
 function parsePeriodChildren(periodChildren : NodeList) : [IPeriodChildren, Error[]] {
   const baseURLs : IBaseURL[] = [];
   const adaptations : IAdaptationSetIntermediateRepresentation[] = [];
+  let segmentTemplate : IParsedSegmentTemplate | undefined;
 
   let warnings : Error[] = [];
   const streamEvents = [];
@@ -90,11 +95,20 @@ function parsePeriodChildren(periodChildren : NodeList) : [IPeriodChildren, Erro
           streamEvents.push(...newStreamEvents);
           warnings = warnings.concat(eventStreamWarnings);
           break;
+
+        case "SegmentTemplate":
+          const [parsedSegmentTemplate, segmentTemplateWarnings] =
+            parseSegmentTemplate(currentElement);
+          segmentTemplate = parsedSegmentTemplate;
+          if (segmentTemplateWarnings.length > 0) {
+            warnings = warnings.concat(segmentTemplateWarnings);
+          }
+          break;
       }
     }
   }
 
-  return [{ baseURLs, adaptations, streamEvents }, warnings];
+  return [{ baseURLs, adaptations, streamEvents, segmentTemplate }, warnings];
 }
 
 /**
