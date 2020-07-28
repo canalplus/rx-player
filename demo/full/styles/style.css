@@ -24,6 +24,7 @@
 body {
   margin: 0px;
   font-family: "CanalDemiRomain", "Open Sans", sans-serif;
+  background-color: #ececec;
 }
 
 .icon {
@@ -91,7 +92,6 @@ body {
 }
 
 .video-player-section {
-  background-color: #ececec;
   padding: 25px 4px;
 }
 
