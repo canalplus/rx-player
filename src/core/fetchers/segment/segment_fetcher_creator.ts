@@ -15,6 +15,7 @@
  */
 
 import { Subject } from "rxjs";
+import config from "../../../config";
 import { ITransportPipelines } from "../../../transports";
 import {
   IABRMetricsEvent,
@@ -31,6 +32,9 @@ import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
+
+const { MIN_CANCELABLE_PRIORITY,
+        MAX_HIGH_PRIORITY_LEVEL } = config;
 
 /** Options used by the `SegmentFetcherCreator`. */
 export interface ISegmentFetcherCreatorBackoffOptions {
@@ -85,7 +89,10 @@ export default class SegmentFetcherCreator<T> {
     options : ISegmentFetcherCreatorBackoffOptions
   ) {
     this._transport = transport;
-    this._prioritizer = new ObservablePrioritizer();
+    this._prioritizer = new ObservablePrioritizer({
+      prioritySteps: { high: MAX_HIGH_PRIORITY_LEVEL,
+                       low: MIN_CANCELABLE_PRIORITY },
+    });
     this._backoffOptions = options;
   }
 

@@ -713,7 +713,40 @@ export default {
    *
    * @type {Array.<Number>}
    */
-  SEGMENT_PRIORITIES_STEPS : [6, 14],
+  SEGMENT_PRIORITIES_STEPS : [ 2,   // Step 0: 0-2
+                               4,   // Step 1: 2-4 => last high priority
+                               8,   // Step 2: 4-8
+                               12,  // Step 3: 8-12 => first cancellable priority
+                               18,  // Step 4: 12-18
+                               25], // Step 5 18-25
+                                    // Step 6: 25+
+
+  /**
+   * Some segment requests are said to be "high priority".
+   *
+   * Requests in that category once done will cancel any segment request that
+   * has a low priority step (see `SEGMENT_PRIORITIES_STEPS`) - meaning a
+   * priority step equal to `MIN_CANCELABLE_PRIORITY` or more.
+   *
+   * Enter here the last priority step that is considered high priority
+   * (beginning by the step `0`).
+   * @type {number}
+   */
+  MAX_HIGH_PRIORITY_LEVEL: 1, // priority step 1 is the last "high priority"
+
+  /**
+   * Enter here the first priority step (see `SEGMENT_PRIORITIES_STEPS`) that
+   * will be considered as low priority.
+   *
+   * Segment requests with a low priority will be cancelled if a high priority
+   * segment request (see MAX_HIGH_PRIORITY_LEVEL) is scheduled while they are
+   * pending.
+   *
+   * This number should be strictly superior to the value indicated in
+   * `MAX_HIGH_PRIORITY_LEVEL`.
+   * @type {number}
+   */
+  MIN_CANCELABLE_PRIORITY: 3, // priority step 3 onward can be cancelled
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
