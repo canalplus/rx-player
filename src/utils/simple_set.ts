@@ -41,7 +41,7 @@ export default class SimpleSet {
 
   /**
    * Remove an hash entry from the set.
-   * Do not have any effect on already-removed or inexistant hashes
+   * Do not have any effect on already-removed or inexistent hashes
    * @param {string|number} x
    */
   public remove(x : string|number) : void {

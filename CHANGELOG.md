@@ -167,7 +167,7 @@
  - dash/metaplaylist: download the first segment of a new Period when the last downloaded segment from the previous Period ends after that segment ends
  - smooth/metaplaylist: consider `serverSyncInfos` `transportOptions` for Smooth and MetaPlaylist contents
  - buffers: completely clean a previous audio/text track from the SourceBuffer when switching to a different audio/text track
- - dash: avoid requesting an inexistant segment when downloading a multi-Period DASH content with a number-based SegmentTemplate with the `agressiveMode` option set to `true`
+ - dash: avoid requesting an inexistent segment when downloading a multi-Period DASH content with a number-based SegmentTemplate with the `agressiveMode` option set to `true`
  - eme: do not wait for a previous invalid MediaKeySession to be closed before re-creating a valid one for the same content, to work around a widevine issue
  - eme: avoid race condition issue arising when multiple init data are received before the MediaKeys have been attached to the media element
  - dash: do not consider "trickmodes" AdaptationSet as directly playable video tracks
