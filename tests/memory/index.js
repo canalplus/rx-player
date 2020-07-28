@@ -60,7 +60,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(1.5e6);
+    expect(heapDifference).to.be.below(5e6);
   });
 
   it("should not have a sensible memory leak after 1000 LOADED states and adaptive streaming", async function() {
