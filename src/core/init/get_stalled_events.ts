@@ -22,7 +22,8 @@ import {
 } from "rxjs/operators";
 import { IInitClockTick } from "./types";
 
-export interface IStallingItem { reason : "seeking" |
+export interface IStallingItem { reason : "freezing" |
+                                          "seeking" |
                                           "not-ready" |
                                           "buffering";
                                  timestamp : number; }

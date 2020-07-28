@@ -87,7 +87,8 @@ export type IStalledStatus =
   /** Set if the player is stalled. */
   {
     /** What started the player to stall. */
-    reason : "seeking" | // Building buffer after seeking
+    reason : "freezing" | // Playback seems to be frozen
+             "seeking" | // Building buffer after seeking
              "not-ready" | // Building buffer after low readyState
              "buffering"; // Other cases
     /** `performance.now` at the time the stalling happened. */
@@ -144,6 +145,7 @@ function getResumeGap(stalled : IStalledStatus, lowLatencyMode : boolean) : numb
     case "not-ready":
       return RESUME_GAP_AFTER_NOT_ENOUGH_DATA[suffix];
     case "buffering":
+    case "freezing":
       return RESUME_GAP_AFTER_BUFFERING[suffix];
   }
 }
@@ -199,102 +201,141 @@ function getMediaInfos(
 }
 
 /**
- * Infer stalled status of the media based on:
- *   - the return of the function getMediaInfos
- *   - the previous timings object.
- *
- * @param {Object} prevTimings - Previous timings object. See function to know
- * the different properties needed.
- * @param {Object} currentTimings - Current timings object. This does not need
- * to have every single infos, see function to know which properties are needed.
- * @param {Object} options
- * @returns {Object|null}
+ * @returns {function}
  */
-function getStalledStatus(
+function getStallDetector(): (
   prevTimings : IClockTick,
   currentTimings : IMediaInfos,
   { withMediaSource, lowLatencyMode } : IClockOptions
-) : IStalledStatus {
-  const { state: currentState,
-          position: currentTime,
-          bufferGap,
-          currentRange,
-          duration,
-          paused,
-          readyState,
-          ended } = currentTimings;
+) => IStalledStatus {
+  let isFreezingSince: undefined|number;
 
-  const { stalled: prevStalled,
-          state: prevState,
-          position: prevTime } = prevTimings;
+  /**
+   * Infer stalled status of the media based on:
+   *   - the return of the function getMediaInfos
+   *   - the previous timings object.
+   *
+   * @param {Object} prevTimings - Previous timings object. See function to know
+   * the different properties needed.
+   * @param {Object} currentTimings - Current timings object. This does not need
+   * to have every single infos, see function to know which properties are needed.
+   * @param {Object} options
+   * @returns {Object|null}
+   */
+  return function getStalledStatus(
+    prevTimings : IClockTick,
+    currentTimings : IMediaInfos,
+    { withMediaSource, lowLatencyMode } : IClockOptions
+  ) : IStalledStatus {
+    const { state: currentState,
+            position,
+            bufferGap,
+            currentRange,
+            duration,
+            paused,
+            playbackRate,
+            readyState,
+            ended } = currentTimings;
 
-  const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode);
+    const { stalled: prevStalled,
+            state: prevState,
+            position: prevTime } = prevTimings;
 
-  const canStall = (readyState >= 1 &&
-                    currentState !== "loadedmetadata" &&
-                    prevStalled === null &&
-                    !(fullyLoaded || ended));
+    const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode);
 
-  let shouldStall : boolean | undefined;
-  let shouldUnstall : boolean | undefined;
+    const canStall = (readyState >= 1 &&
+                      currentState !== "loadedmetadata" &&
+                      prevStalled === null &&
+                      !(fullyLoaded || ended));
 
-  if (withMediaSource) {
-    if (canStall &&
-        (bufferGap <= (lowLatencyMode ? STALL_GAP.LOW_LATENCY : STALL_GAP.DEFAULT) ||
-         bufferGap === Infinity || readyState === 1)
-    ) {
-      shouldStall = true;
-    } else if (prevStalled !== null &&
-               readyState > 1 &&
-               ((bufferGap < Infinity &&
-                 bufferGap > getResumeGap(prevStalled, lowLatencyMode)) ||
-                fullyLoaded || ended)
-    ) {
-      shouldUnstall = true;
+    let shouldStall : boolean | undefined;
+    let shouldUnstall : boolean | undefined;
+
+    if (withMediaSource) {
+      if (canStall || isFreezingSince !== undefined &&
+          position === prevTime &&
+          !paused &&
+          playbackRate !== 0 &&
+          currentRange !== null &&
+          currentRange.end - position >= 10) {
+        if (isFreezingSince !== undefined) {
+          if (performance.now() - isFreezingSince >= 1000) {
+            if (prevStalled?.reason === "freezing") {
+              return prevStalled;
+            }
+            return { reason: "freezing",
+                     timestamp: performance.now() };
+          }
+        } else {
+          isFreezingSince = performance.now();
+        }
+      } else {
+        isFreezingSince = undefined;
+      }
+      if (canStall &&
+          (bufferGap <= (lowLatencyMode ? STALL_GAP.LOW_LATENCY : STALL_GAP.DEFAULT) ||
+           bufferGap === Infinity || readyState === 1)
+      ) {
+        shouldStall = true;
+      } else if (prevStalled !== null &&
+                 (
+                  prevStalled.reason === "freezing" &&
+                  isFreezingSince === undefined
+                 ) || (
+                   readyState > 1 &&
+                   ((bufferGap < Infinity &&
+                     bufferGap > getResumeGap(prevStalled, lowLatencyMode)) ||
+                    fullyLoaded || ended)
+                 )
+      ) {
+        shouldUnstall = true;
+      }
     }
-  }
 
-  // when using a direct file, the media will stall and unstall on its
-  // own, so we only try to detect when the media timestamp has not changed
-  // between two consecutive timeupdates
-  else {
-    if (canStall &&
-        (!paused && currentState === "timeupdate" &&
-         prevState === "timeupdate" && currentTime === prevTime ||
-         currentState === "seeking" && bufferGap === Infinity)
-    ) {
-      shouldStall = true;
-    } else if (prevStalled !== null &&
-               (currentState !== "seeking" && currentTime !== prevTime ||
-                currentState === "canplay" ||
-                bufferGap < Infinity &&
-                (bufferGap > getResumeGap(prevStalled, lowLatencyMode) ||
-                 fullyLoaded || ended))
-    ) {
-      shouldUnstall = true;
+    // when using a direct file, the media will stall and unstall on its
+    // own, so we only try to detect when the media timestamp has not changed
+    // between two consecutive timeupdates
+    else {
+      if (canStall &&
+          (!paused && currentState === "timeupdate" &&
+           prevState === "timeupdate" && position === prevTime ||
+           currentState === "seeking" && bufferGap === Infinity)
+      ) {
+        shouldStall = true;
+      } else if (prevStalled !== null &&
+                 (currentState !== "seeking" && position !== prevTime ||
+                  currentState === "canplay" ||
+                  bufferGap < Infinity &&
+                  (bufferGap > getResumeGap(prevStalled, lowLatencyMode) ||
+                   fullyLoaded || ended))
+      ) {
+        shouldUnstall = true;
+      }
     }
-  }
 
-  if (shouldUnstall === true) {
+    if (shouldUnstall === true) {
+      return null;
+    } else if (shouldStall === true || prevStalled !== null) {
+      let reason : "seeking" | "not-ready" | "buffering" | "freezing";
+      if (currentState === "seeking" ||
+          currentTimings.seeking ||
+          prevStalled !== null && prevStalled.reason === "seeking") {
+        reason = "seeking";
+      } else if (readyState === 1) {
+        reason = "not-ready";
+      } else if (prevStalled?.reason === "freezing") {
+        reason = "freezing";
+      } else {
+        reason = "buffering";
+      }
+      if (prevStalled !== null && prevStalled.reason === reason) {
+        return prevStalled;
+      }
+      return { reason,
+               timestamp: performance.now() };
+    }
     return null;
-  } else if (shouldStall === true || prevStalled !== null) {
-    let reason : "seeking" | "not-ready" | "buffering";
-    if (currentState === "seeking" ||
-        currentTimings.seeking ||
-        prevStalled !== null && prevStalled.reason === "seeking") {
-      reason = "seeking";
-    } else if (readyState === 1) {
-      reason = "not-ready";
-    } else {
-      reason = "buffering";
-    }
-    if (prevStalled !== null && prevStalled.reason === reason) {
-      return prevStalled;
-    }
-    return { reason,
-             timestamp: performance.now() };
-  }
-  return null;
+  };
 }
 
 export interface IClockOptions {
@@ -329,6 +370,7 @@ function createClock(
   mediaElement : HTMLMediaElement,
   options : IClockOptions
 ) : Observable<IClockTick> {
+  const getStalledStatus = getStallDetector();
   return observableDefer(() : Observable<IClockTick> => {
     let lastTimings : IClockTick = objectAssign(
       getMediaInfos(mediaElement, "init"),

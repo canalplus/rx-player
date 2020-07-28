@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
-import {
-  distinctUntilChanged,
-  filter,
-  map,
-} from "rxjs/operators";
 import { isPlaybackStuck } from "../../compat";
 import config from "../../config";
 import log from "../../log";
@@ -31,56 +25,49 @@ const { BUFFER_DISCONTINUITY_THRESHOLD } = config;
 
 /**
  * Perform various checks about discontinuities during playback.
- * @param {Observable} clock$
+ * @param {Object} tick
  * @param {Object} manifest
- * @returns {Observable}
+ * @returns {Array | undefined}
  */
 export default function getDiscontinuities(
-  clock$: Observable<IInitClockTick>,
+  tick: IInitClockTick,
   manifest: Manifest
-) : Observable< [ number, number ] > {
-  return clock$.pipe(
-    filter(({ stalled }) => stalled !== null),
-    map((tick) : [number, number] | undefined => {
-      const { buffered, position, currentRange, state, stalled } = tick;
-      const nextBufferRangeGap = getNextRangeGap(buffered, position);
-      // 1: Is it a browser bug? -> force seek at the same current time
-      if (isPlaybackStuck(position,
-                          currentRange,
-                          state,
-                          stalled !== null)
-      ) {
-        log.warn("Init: After freeze seek", position, currentRange);
-        return [position, position];
+) : [ number, number ] | undefined {
+  const { buffered, position, currentRange, state, stalled } = tick;
+  const nextBufferRangeGap = getNextRangeGap(buffered, position);
+  // 1: Is it a browser bug? -> force seek at the same current time
+  if (isPlaybackStuck(position,
+                      currentRange,
+                      state,
+                      stalled !== null)
+  ) {
+    log.warn("Init: After freeze seek", position, currentRange);
+    return [position, position];
 
-      // 2. Is it a short discontinuity in buffer ? -> Seek at the beginning of the
-      //                                               next range
-      //
-      // Discontinuity check in case we are close a buffered range but still
-      // calculate a stalled state. This is useful for some
-      // implementation that might drop an injected segment, or in
-      // case of small discontinuity in the content.
-      } else if (nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD) {
-        const seekTo = (position + nextBufferRangeGap + 1 / 60);
-        return [position, seekTo];
-      }
+  // 2. Is it a short discontinuity in buffer ? -> Seek at the beginning of the
+  //                                               next range
+  //
+  // Discontinuity check in case we are close a buffered range but still
+  // calculate a stalled state. This is useful for some
+  // implementation that might drop an injected segment, or in
+  // case of small discontinuity in the content.
+  } else if (nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD) {
+    const seekTo = (position + nextBufferRangeGap + 1 / 60);
+    return [position, seekTo];
+  }
 
-      // 3. Is it a discontinuity between periods ? -> Seek at the beginning of the
-      //                                               next period
-      const currentPeriod = manifest.getPeriodForTime(position);
-      if (currentPeriod != null) {
-        const nextPeriod = manifest.getPeriodAfter(currentPeriod);
-        if (currentPeriod != null &&
-            currentPeriod.end != null &&
-            nextPeriod != null &&
-            position > (currentPeriod.end - 1) &&
-            position <= nextPeriod.start &&
-            nextPeriod.start - currentPeriod.end === 0) {
-          return [currentPeriod.end, nextPeriod.start];
-        }
-      }
-    }),
-    filter((x): x is [number, number] => x !== undefined),
-    distinctUntilChanged()
-  );
+  // 3. Is it a discontinuity between periods ? -> Seek at the beginning of the
+  //                                               next period
+  const currentPeriod = manifest.getPeriodForTime(position);
+  if (currentPeriod != null) {
+    const nextPeriod = manifest.getPeriodAfter(currentPeriod);
+    if (currentPeriod != null &&
+        currentPeriod.end != null &&
+        nextPeriod != null &&
+        position > (currentPeriod.end - 1) &&
+        position <= nextPeriod.start &&
+        nextPeriod.start - currentPeriod.end === 0) {
+      return [currentPeriod.end, nextPeriod.start];
+    }
+  }
 }

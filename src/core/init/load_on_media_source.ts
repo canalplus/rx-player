@@ -45,7 +45,6 @@ import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import getDiscontinuities from "./get_discontinuities";
 import getStalledEvents from "./get_stalled_events";
-import handleDiscontinuity from "./handle_discontinuity";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import streamEventsEmitter from "./stream_events_emitter";
 import {
@@ -163,7 +162,11 @@ export default function createMediaSourceLoader({
           case "discontinuity-encountered":
             const { bufferType, gap } = evt.value;
             if (SegmentBuffersStore.isNative(bufferType)) {
-              handleDiscontinuity(gap[1], mediaElement);
+              const seekTo = gap[1];
+              if (seekTo >= mediaElement.currentTime) {
+                log.warn("Init: discontinuity seek", mediaElement.currentTime, seekTo);
+                mediaElement.currentTime = seekTo;
+              }
             }
             return EMPTY;
           default:
@@ -183,10 +186,22 @@ export default function createMediaSourceLoader({
     const stalled$ = getStalledEvents(clock$)
       .pipe(map(EVENTS.stalled));
 
-    const handledDiscontinuities$ = getDiscontinuities(clock$, manifest).pipe(
-      tap((gap) => {
-        const seekTo = gap[1];
-        handleDiscontinuity(seekTo, mediaElement);
+    const handledSeeks$ = clock$.pipe(
+      tap((clockTick) => {
+        let seekTo;
+        if (clockTick.stalled?.reason === "freezing") {
+          seekTo = clockTick.position + 0.001;
+        } else {
+          const discontinuity = getDiscontinuities(clockTick, manifest);
+          if (discontinuity !== undefined) {
+            seekTo = discontinuity[1];
+          }
+        }
+        if (seekTo !== undefined &&
+            seekTo >= mediaElement.currentTime) {
+          log.warn("Init: discontinuity seek", mediaElement.currentTime, seekTo);
+          mediaElement.currentTime = seekTo;
+        }
       }),
       ignoreElements()
     );
@@ -209,7 +224,7 @@ export default function createMediaSourceLoader({
         return observableOf(EVENTS.loaded(segmentBuffersStore));
       }));
 
-    return observableMerge(handledDiscontinuities$,
+    return observableMerge(handledSeeks$,
                            loadedEvent$,
                            playbackRate$,
                            stalled$,

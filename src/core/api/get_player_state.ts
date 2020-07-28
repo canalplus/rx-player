@@ -41,7 +41,8 @@ export const PLAYER_STATES = { STOPPED: "STOPPED",
 export default function getLoadedContentState(
   mediaElement : HTMLMediaElement,
   isPlaying : boolean,
-  stalledStatus : { reason : "seeking" |
+  stalledStatus : { reason : "freezing" |
+                             "seeking" |
                              "not-ready" |
                              "buffering"; } |
                   null
