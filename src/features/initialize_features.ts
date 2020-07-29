@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import features from "./index";
+import features from "./features_object";
 
 /**
  * Selects the features to include based on environment variables.
