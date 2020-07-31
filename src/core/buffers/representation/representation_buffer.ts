@@ -237,9 +237,12 @@ export default function RepresentationBuffer<T>({
         .map((segment) => ({ priority: getSegmentPriority(segment, timing),
                              segment }));
 
-      if (initSegment !== null && initSegmentObject === null) {
+      if (neededSegments.length > 0 &&
+          initSegment !== null &&
+          initSegmentObject === null)
+      {
         // prepend initialization segment
-        const initSegmentPriority = getSegmentPriority(initSegment, timing);
+        const initSegmentPriority = neededSegments[0].priority;
         neededSegments = [ { segment: initSegment,
                              priority: initSegmentPriority },
                            ...neededSegments ];
