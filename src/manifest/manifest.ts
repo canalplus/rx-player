@@ -606,19 +606,19 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     updateType : MANIFEST_UPDATE_TYPE
   ) : void {
     this.availabilityStartTime = newManifest.availabilityStartTime;
+    this.expired = newManifest.expired;
     this.isDynamic = newManifest.isDynamic;
     this.isLive = newManifest.isLive;
     this.lifetime = newManifest.lifetime;
-    this.expired = newManifest.expired;
     this.maximumTime = newManifest.maximumTime;
-
-    if (updateType === MANIFEST_UPDATE_TYPE.Full) {
-      this.minimumTime = newManifest.minimumTime;
-    }
     this.parsingErrors = newManifest.parsingErrors;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
-    this.uris = newManifest.uris;
+
+    if (updateType === MANIFEST_UPDATE_TYPE.Full) {
+      this.minimumTime = newManifest.minimumTime;
+      this.uris = newManifest.uris;
+    }
 
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       replacePeriods(this.periods, newManifest.periods);
