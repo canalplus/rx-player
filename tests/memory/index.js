@@ -17,7 +17,7 @@ describe("Memory tests", () => {
     }
   });
 
-  it("should not have a sensible memory leak after playing a content", async function() {
+  it.only("should not have a sensible memory leak after playing a content", async function() {
     if (window.performance == null ||
         window.performance.memory == null ||
         window.gc == null)
@@ -44,6 +44,8 @@ describe("Memory tests", () => {
                                                     url: imageInfos.url }],
                        autoPlay: true });
     player.setPlaybackRate(4);
+    await sleep(10000);
+    console.warn(window.performance.memory.usedJSHeapSize);
     await waitForPlayerState(player, "ENDED");
 
     player.stop();
@@ -52,6 +54,7 @@ describe("Memory tests", () => {
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize -
                            initialMemory.usedJSHeapSize;
+    console.warn(initialMemory.usedJSHeapSize, newMemory.usedJSHeapSize);
 
     // eslint-disable-next-line no-console
     console.log(`
