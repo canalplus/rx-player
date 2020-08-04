@@ -17,7 +17,7 @@ describe("Memory tests", () => {
     }
   });
 
-  it.only("should not have a sensible memory leak after playing a content", async function() {
+  it("should not have a sensible memory leak after playing a content", async function() {
     if (window.performance == null ||
         window.performance.memory == null ||
         window.gc == null)
@@ -44,8 +44,6 @@ describe("Memory tests", () => {
                                                     url: imageInfos.url }],
                        autoPlay: true });
     player.setPlaybackRate(1);
-    await sleep(10000);
-    console.warn(window.performance.memory.usedJSHeapSize);
     await waitForPlayerState(player, "ENDED");
 
     player.stop();
@@ -54,7 +52,6 @@ describe("Memory tests", () => {
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize -
                            initialMemory.usedJSHeapSize;
-    console.warn(initialMemory.usedJSHeapSize, newMemory.usedJSHeapSize);
 
     // eslint-disable-next-line no-console
     console.log(`
@@ -63,7 +60,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(5e6);
+    expect(heapDifference).to.be.below(1e7);
   });
 
   it("should not have a sensible memory leak after 1000 LOADED states and adaptive streaming", async function() {
@@ -110,6 +107,6 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(5e6);
+    expect(heapDifference).to.be.below(1e7);
   });
 });
