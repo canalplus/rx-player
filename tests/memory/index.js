@@ -43,7 +43,7 @@ describe("Memory tests", () => {
                        supplementaryImageTracks: [{ mimeType: "application/bif",
                                                     url: imageInfos.url }],
                        autoPlay: true });
-    player.setPlaybackRate(4);
+    player.setPlaybackRate(1);
     await sleep(10000);
     console.warn(window.performance.memory.usedJSHeapSize);
     await waitForPlayerState(player, "ENDED");
