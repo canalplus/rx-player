@@ -24,12 +24,12 @@ import { IInitClockTick } from "./types";
 const { BUFFER_DISCONTINUITY_THRESHOLD } = config;
 
 /**
- * Perform various checks about discontinuities during playback.
+ * Perform various checks about discontinuity.
  * @param {Object} tick
  * @param {Object} manifest
  * @returns {Number | undefined}
  */
-export default function getDiscontinuities(
+export default function getDiscontinuity(
   tick: IInitClockTick,
   manifest: Manifest
 ) : number | undefined {

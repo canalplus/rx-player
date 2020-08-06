@@ -200,16 +200,6 @@ function getMediaInfos(
            state: currentState };
 }
 
-/**
- * @returns {function}
- */
-function getStallDetector(): (
-  prevTimings : IClockTick,
-  currentTimings : IMediaInfos,
-  { withMediaSource, lowLatencyMode } : IClockOptions
-) => IStalledStatus {
-  let isFreezingSince: undefined|number;
-
   /**
    * Infer stalled status of the media based on:
    *   - the return of the function getMediaInfos
@@ -222,7 +212,7 @@ function getStallDetector(): (
    * @param {Object} options
    * @returns {Object|null}
    */
-  return function getStalledStatus(
+  function getStalledStatus(
     prevTimings : IClockTick,
     currentTimings : IMediaInfos,
     { withMediaSource, lowLatencyMode } : IClockOptions
@@ -251,36 +241,23 @@ function getStallDetector(): (
     let shouldStall : boolean | undefined;
     let shouldUnstall : boolean | undefined;
 
+    const isFreezing = position === prevTime &&
+                       playbackRate !== 0 &&
+                       currentRange !== null &&
+                       currentRange.end - position >= 10;
+
     if (withMediaSource) {
-      if (canStall || isFreezingSince !== undefined &&
-          position === prevTime &&
-          !paused &&
-          playbackRate !== 0 &&
-          currentRange !== null &&
-          currentRange.end - position >= 10) {
-        if (isFreezingSince !== undefined) {
-          if (performance.now() - isFreezingSince >= 1000) {
-            if (prevStalled?.reason === "freezing") {
-              return prevStalled;
-            }
-            return { reason: "freezing",
-                     timestamp: performance.now() };
-          }
-        } else {
-          isFreezingSince = performance.now();
-        }
-      } else {
-        isFreezingSince = undefined;
-      }
-      if (canStall &&
-          (bufferGap <= (lowLatencyMode ? STALL_GAP.LOW_LATENCY : STALL_GAP.DEFAULT) ||
-           bufferGap === Infinity || readyState === 1)
+      if (canStall && (
+           isFreezing || (
+             (bufferGap <= (lowLatencyMode ? STALL_GAP.LOW_LATENCY : STALL_GAP.DEFAULT) ||
+              bufferGap === Infinity || readyState === 1)
+            ))
       ) {
         shouldStall = true;
       } else if (prevStalled !== null &&
                  (
-                  prevStalled.reason === "freezing" &&
-                  isFreezingSince === undefined
+                   prevStalled.reason === "freezing" &&
+                   !isFreezing
                  ) || (
                    readyState > 1 &&
                    ((bufferGap < Infinity &&
@@ -319,12 +296,12 @@ function getStallDetector(): (
       let reason : "seeking" | "not-ready" | "buffering" | "freezing";
       if (currentState === "seeking" ||
           currentTimings.seeking ||
-          prevStalled !== null && prevStalled.reason === "seeking") {
+          prevStalled?.reason === "seeking") {
         reason = "seeking";
+      } else if (isFreezing) {
+        reason = "freezing";
       } else if (readyState === 1) {
         reason = "not-ready";
-      } else if (prevStalled?.reason === "freezing") {
-        reason = "freezing";
       } else {
         reason = "buffering";
       }
@@ -335,8 +312,7 @@ function getStallDetector(): (
                timestamp: performance.now() };
     }
     return null;
-  };
-}
+  }
 
 export interface IClockOptions {
   withMediaSource : boolean;
@@ -370,7 +346,6 @@ function createClock(
   mediaElement : HTMLMediaElement,
   options : IClockOptions
 ) : Observable<IClockTick> {
-  const getStalledStatus = getStallDetector();
   return observableDefer(() : Observable<IClockTick> => {
     let lastTimings : IClockTick = objectAssign(
       getMediaInfos(mediaElement, "init"),
