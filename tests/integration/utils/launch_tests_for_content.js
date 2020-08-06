@@ -123,7 +123,8 @@ export default function launchTestsForContent(manifestInfos) {
             (audioRepresentationInfos && audioRepresentationInfos.index.init) &&
             (videoRepresentationInfos && videoRepresentationInfos.index.init)
           ) {
-            expect(xhrMock.getLockedXHR().length).to.equal(2);
+            expect(xhrMock.getLockedXHR().length)
+              .to.equal(2, "should request two init segments");
             const requestsDone = [
               xhrMock.getLockedXHR()[0].url,
               xhrMock.getLockedXHR()[1].url,
