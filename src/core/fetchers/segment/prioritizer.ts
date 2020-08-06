@@ -333,7 +333,7 @@ export default class ObservablePrioritizer<T> {
         this._minPendingPriority <= this._prioritySteps.high)
     {
       // We could need to interrupt this task
-      this._interruptPendingTask(pendingTasksIndex);
+      this._interruptPendingTask(task);
     }
   }
 
@@ -346,7 +346,7 @@ export default class ObservablePrioritizer<T> {
     for (let i = 0; i < this._pendingTasks.length; i++) {
       const pendingObj = this._pendingTasks[i];
       if (pendingObj.priority >= this._prioritySteps.low) {
-        this._interruptPendingTask(i);
+        this._interruptPendingTask(pendingObj);
 
         // The previous call could have a lot of potential side-effects.
         // It is safer to re-start the function to not miss any pending
@@ -367,13 +367,19 @@ export default class ObservablePrioritizer<T> {
   }
 
   /**
-   * Move back pending task - which is at the given index in the _pendingTasks
-   * array - back to the waiting queue and interrupt it.
-   * @param {number} index
+   * Move back pending task to the waiting queue and interrupt it.
+   * @param {object} task
    */
-  private _interruptPendingTask(index : number) : void {
+  private _interruptPendingTask(task : IPrioritizerTask<T>) : void {
+    const pendingTasksIndex = arrayFindIndex(this._pendingTasks,
+                                             (elt) => elt.observable === task.observable);
+    if (pendingTasksIndex < 0) {
+      log.warn("FP: Interrupting a non-existent pending task. Aborting...");
+      return;
+    }
+
     // Stop task and put it back in the waiting queue
-    const task = this._pendingTasks.splice(index, 1)[0];
+    this._pendingTasks.splice(pendingTasksIndex, 1);
     this._waitingQueue.push(task);
     if (this._pendingTasks.length === 0) {
       this._minPendingPriority = null;
