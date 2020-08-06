@@ -249,7 +249,7 @@ export default class ObservablePrioritizer<T> {
         }));
       };
 
-      if (!this._hasPriority(newTask)) {
+      if (!this._canBeStartedNow(newTask)) {
         // This task doesn't have priority yet. Start it on trigger
         this._waitingQueue.push(newTask);
         return trigger.pipe(switchMap(onTrigger));
@@ -293,7 +293,7 @@ export default class ObservablePrioritizer<T> {
 
       waitingQueueElt.priority = priority;
 
-      if (!this._hasPriority(waitingQueueElt)) {
+      if (!this._canBeStartedNow(waitingQueueElt)) {
         return;
       }
 
@@ -443,11 +443,12 @@ export default class ObservablePrioritizer<T> {
   }
 
   /**
-   * Return `true` if the given task should be started immediately.
+   * Return `true` if the given task can be started immediately based on its
+   * priority.
    * @param {Object} task
    * @returns {boolean}
    */
-  private _hasPriority(task : IPrioritizerTask<T>) : boolean {
+  private _canBeStartedNow(task : IPrioritizerTask<T>) : boolean {
     return this._minPendingPriority === null ||
            task.priority <= this._minPendingPriority;
   }
