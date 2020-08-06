@@ -546,10 +546,17 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @returns {Boolean | undefined}
+   * @returns {Boolean}
    */
   isFinished() : boolean {
     return !this._isLive;
+  }
+
+  /**
+   * @returns {Boolean}
+   */
+  isInitialized() : true {
+    return true;
   }
 
   _addSegments(

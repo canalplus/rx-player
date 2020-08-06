@@ -29,6 +29,7 @@ function generateRepresentationIndex(
     checkDiscontinuity() { return -1; },
     isSegmentStillAvailable() : undefined { return ; },
     isFinished() { return false; },
+    isInitialized() : true { return true; },
     canBeOutOfSyncError() : true { return true; },
     _replace() { /* noop */ },
     _update() { /* noop */ },

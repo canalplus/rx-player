@@ -134,50 +134,56 @@ export interface ISegment {
 /** Interface that should be implemented by any Representation's `index` value. */
 export default interface IRepresentationIndex {
   /**
-   * Returns Segment object allowing to do the Init Segment request.
+   * Returns Segment object for the initialization segment, allowing to do the
+   * Init Segment request.
    * @returns {Object}
    */
   getInitSegment() : ISegment|null;
 
   /**
    * Returns an array of Segments needed for the amount of time given.
-   * @param {number} up
-   * @param {number} duration
-   * @returns {Array.<Object>}
+   * @param {number} up - The first wanted position, in seconds.
+   * @param {number} duration - The amount of time in seconds you want from the
+   * starting position given in `up`.
+   * @returns {Array.<Object>} - The list of segments corresponding to your
+   * wanted range.
    */
   getSegments(up : number, duration : number) : ISegment[];
 
   /**
-   * Returns true if, from the given situation, the manifest has to be refreshed
-   * @param {number} up - Beginning timestamp of what you want
-   * @param {number} to - End timestamp of what you want
+   * Returns `true` if, from the given situation, the manifest has to be
+   * refreshed.
+   * @param {number} up - Beginning time in seconds of the range that is
+   * currently wanted by the buffer.
+   * @param {number} to - Ending time in seconds of the range that is
+   * currently wanted by the buffer.
    * @returns {Boolean}
    */
   shouldRefresh(up : number, to : number) : boolean;
 
   /**
    * Returns the starting time, in seconds, of the earliest segment currently
-   * available.
-   * Returns null if nothing is in the index
-   * Returns undefined if we cannot know this value.
+   * available in this index.
+   * Returns `null` if nothing is in the index
+   * Returns `undefined` if we cannot know this value.
    * @returns {Number|null}
    */
   getFirstPosition() : number | null | undefined;
 
   /**
    * Returns the ending time, in seconds, of the last segment currently
-   * available.
-   * Returns null if nothing is in the index
-   * Returns undefined if we cannot know this value.
+   * available in this index.
+   * Returns `null` if nothing is in the index
+   * Returns `undefined` if we cannot know this value.
    * @returns {Number|null|undefined}
    */
   getLastPosition() : number | null | undefined;
 
   /**
-   * Returns true if a Segment returned by this index is still considered
+   * Returns `true` if a Segment returned by this index is still considered
    * available.
-   * Returns false if it is not available anymore.
-   * Returns undefined if we cannot know whether it is still available or not.
+   * Returns `false` if it is not available anymore.
+   * Returns `undefined` if we cannot know whether it is still available or not.
    * @param {Object} segment
    * @returns {Boolean|undefined}
    */
@@ -185,8 +191,13 @@ export default interface IRepresentationIndex {
 
   /**
    * Returns true if the `error` given following the request of `segment` can
-   * indicate that the index became "unsynchronized" with the server.
-   * Some transport cannot become unsynchronized and can return false directly.
+   * indicate that the index became "de-synchronized" with the server.
+   *
+   * Reasons for de-synchronizations includes for example Manifest parsing
+   * optimizations where a newer version will not be totally parsed. In those
+   * conditions, we could be left with doing a segment request for a segment
+   * that does not really exists.
+   *
    * Note: This API assumes that the user first checked that the segment is
    * still available through `isSegmentStillAvailable`.
    * @param {Error} error
@@ -197,9 +208,12 @@ export default interface IRepresentationIndex {
 
   /**
    * Checks if the given time - in seconds - is in a discontinuity. That is:
+   *
    *   - We're on the upper bound of the current range (end of the range - time
    *     is inferior to the timescale)
+   *
    *   - The next range starts after the end of the current range.
+   *
    * @param {Number} _time
    * @returns {Number} - If a discontinuity is present, this is the Starting
    * time for the next (discontinuited) range. If not this is equal to -1.
@@ -207,11 +221,30 @@ export default interface IRepresentationIndex {
   checkDiscontinuity(time : number) : number;
 
   /**
-   * Returns true if the last segments in this index have already been generated
-   * so that we can freely go to the next period.
+   * Returns `true` if the last segments in this index have already been
+   * generated so that we can freely go to the next period.
+   * Returns `false` if the index is still waiting on future segments to be
+   * generated.
    * @returns {boolean}
    */
   isFinished() : boolean;
+
+  /**
+   * Returns `true` if this index has all the data it needs to give the list
+   * of available segments.
+   * Returns `false` if you first should load its initialization segment (or
+   * the initialization segment's associated index file) to get the list of
+   * available segments.
+   *
+   * Most index don't rely on the initialization segment to give an index and
+   * as such, this method should return `true` directly.
+   * However in some index, the segment lists might only be known after the
+   * initialization has been loaded. In those case, it should return `false`
+   * until the corresponding segment list is known (generally through the
+   * `_addSegments` method), at which point it can return `true`.
+   * @returns {boolean}
+   */
+  isInitialized() : boolean;
 
   /**
    * Replace the index with another one, such as after a Manifest update.

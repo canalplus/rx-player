@@ -154,6 +154,13 @@ function _addSegmentInfos(
 }
 
 export default class BaseRepresentationIndex implements IRepresentationIndex {
+  /**
+   * `true` if the list of segments is already known.
+   * `false` if the initialization segment should be loaded (and the segments
+   * added) first.
+   */
+  private _isInitialized : boolean;
+
   /** Underlying structure to retrieve segment information. */
   private _index : IBaseIndex;
 
@@ -207,6 +214,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                     timescale };
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
+    this._isInitialized = index.timeline.length > 0;
   }
 
   /**
@@ -291,6 +299,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     for (let i = 0; i < nextSegments.length; i++) {
       _addSegmentInfos(this._index, nextSegments[i]);
     }
+    if (!this._isInitialized && this._index.timeline.length > 0) {
+      this._isInitialized = true;
+    }
   }
 
   /**
@@ -307,6 +318,13 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    */
   isFinished() : true {
     return true;
+  }
+
+  /**
+   * @returns {Boolean}
+   */
+  isInitialized() : boolean {
+    return this._isInitialized;
   }
 
   /**

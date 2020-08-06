@@ -271,6 +271,13 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * @returns {Boolean}
+   */
+  isInitialized() : true {
+    return true;
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _replace(newIndex : ListRepresentationIndex) : void {
