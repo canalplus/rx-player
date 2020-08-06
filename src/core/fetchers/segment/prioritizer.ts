@@ -227,6 +227,8 @@ export default class ObservablePrioritizer<T> {
     const pObs$ = observableDefer(() => {
       const trigger = new Subject<boolean>();
 
+      const newTask : IPrioritizerTask<T> = { observable: pObs$, priority, trigger };
+
       /**
        * Function executed each time the `trigger` Subject emits.
        * @param {Boolean} shouldRun - If `true`, the observable can run. If
@@ -246,8 +248,6 @@ export default class ObservablePrioritizer<T> {
           this._onTaskEnd(newTask);
         }));
       };
-
-      const newTask : IPrioritizerTask<T> = { observable: pObs$, priority, trigger };
 
       if (!this._hasPriority(newTask)) {
         // This task doesn't have priority yet. Start it on trigger
