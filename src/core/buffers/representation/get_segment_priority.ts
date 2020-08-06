@@ -25,6 +25,9 @@ const { SEGMENT_PRIORITIES_STEPS } = config;
  *
  * The lower is this number, the higher should be the priority of the request.
  *
+ *
+ * Note that a segment starting behind the current time will always have the
+ * highest priority.
  * @param {Object} segment
  * @param {Object} clockTick
  * @returns {number}
@@ -34,9 +37,29 @@ export default function getSegmentPriority(
   clockTick : { currentTime : number;
                 wantedTimeOffset : number; }
 ) : number {
-  const currentTime = clockTick.currentTime + clockTick.wantedTimeOffset;
   const segmentStart = segment.time / segment.timescale;
-  const distance = segmentStart - currentTime;
+  return getPriorityForTime(segmentStart, clockTick);
+}
+
+/**
+ * Calculate the priority number for a given time, in function of the distance
+ * with the current time.
+ *
+ * The lower is this number, the higher should be the priority of the request.
+ *
+ * Note that a `timeWanted` given behind the current time will always have the
+ * highest priority.
+ * @param {number} timeWanted
+ * @param {Object} clockTick
+ * @returns {number}
+ */
+export function getPriorityForTime(
+  timeWanted : number,
+  clockTick : { currentTime : number;
+                wantedTimeOffset : number; }
+) : number {
+  const currentTime = clockTick.currentTime + clockTick.wantedTimeOffset;
+  const distance = timeWanted - currentTime;
 
   for (let priority = 0;
        priority < SEGMENT_PRIORITIES_STEPS.length;

@@ -407,6 +407,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * @returns {Boolean}
+   */
+  isInitialized() : true {
+    return true;
+  }
+
+  /**
    * We do not have to add new segments to SegmentList-based indexes.
    * @returns {Array}
    */

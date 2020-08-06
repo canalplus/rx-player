@@ -113,6 +113,13 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return true;
   }
 
+  /**
+   * @returns {Boolean}
+   */
+  isInitialized() : true {
+    return true;
+  }
+
   _addSegments() : void {
     log.warn("Tried add Segments to a static RepresentationIndex");
   }

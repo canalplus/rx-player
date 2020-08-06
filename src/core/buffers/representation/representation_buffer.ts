@@ -81,7 +81,9 @@ import {
   IRepresentationBufferEvent,
 } from "../types";
 import getNeededSegments from "./get_needed_segments";
-import getSegmentPriority from "./get_segment_priority";
+import getSegmentPriority, {
+  getPriorityForTime
+} from "./get_segment_priority";
 import getWantedRange from "./get_wanted_range";
 import pushInitSegment from "./push_init_segment";
 import pushMediaSegment from "./push_media_segment";
@@ -228,21 +230,37 @@ export default function RepresentationBuffer<T>({
                                            neededRange.end);
 
       const segmentInventory = queuedSourceBuffer.getInventory();
-      let neededSegments = getNeededSegments({ content,
-                                               currentPlaybackTime: timing.currentTime,
-                                               knownStableBitrate,
-                                               loadedSegmentPendingPush,
-                                               neededRange,
-                                               segmentInventory })
-        .map((segment) => ({ priority: getSegmentPriority(segment, timing),
-                             segment }));
+      let neededSegments : IQueuedSegment[] = [];
 
-      if (initSegment !== null && initSegmentObject === null) {
-        // prepend initialization segment
-        const initSegmentPriority = getSegmentPriority(initSegment, timing);
-        neededSegments = [ { segment: initSegment,
-                             priority: initSegmentPriority },
-                           ...neededSegments ];
+      if (!representation.index.isInitialized()) {
+        if (initSegment === null) {
+          log.warn("Buffer: Uninitialized index without an initialization segment");
+        } else if (initSegmentObject !== null) {
+          log.warn("Buffer: Uninitialized index with an already loaded " +
+                   "initialization segment");
+        } else {
+          neededSegments.push({ segment: initSegment,
+                                priority: getPriorityForTime(period.start, timing) });
+        }
+      } else {
+        neededSegments = getNeededSegments({ content,
+                                             currentPlaybackTime: timing.currentTime,
+                                             knownStableBitrate,
+                                             loadedSegmentPendingPush,
+                                             neededRange,
+                                             segmentInventory })
+          .map((segment) => ({ priority: getSegmentPriority(segment, timing),
+                               segment }));
+
+        if (neededSegments.length > 0 &&
+            initSegment !== null && initSegmentObject === null)
+        {
+          // prepend initialization segment
+          const initSegmentPriority = neededSegments[0].priority;
+          neededSegments = [ { segment: initSegment,
+                               priority: initSegmentPriority },
+                             ...neededSegments ];
+        }
       }
 
       let isFull : boolean; // True if the current buffer is full and the one

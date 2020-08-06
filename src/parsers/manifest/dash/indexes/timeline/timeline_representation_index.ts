@@ -534,6 +534,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * @returns {Boolean}
+   */
+  isInitialized() : true {
+    return true;
+  }
+
+  /**
    * Clean-up timeline to remove segment information which should not be
    * available due to timeshifting.
    */

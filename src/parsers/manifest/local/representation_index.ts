@@ -141,6 +141,13 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     return -1;
   }
 
+  /**
+   * @returns {Boolean}
+   */
+  isInitialized() : true {
+    return true;
+  }
+
   _replace(newIndex : LocalRepresentationIndex) : void {
     this._index.segments = newIndex._index.segments;
     this._index.loadSegment = newIndex._index.loadSegment;

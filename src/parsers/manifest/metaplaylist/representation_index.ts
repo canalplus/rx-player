@@ -182,6 +182,13 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * @returns {Boolean}
+   */
+  public isInitialized() : boolean {
+    return this._wrappedIndex.isInitialized();
+  }
+
+  /**
    * @param {Object} newIndex
    */
   public _replace(newIndex : IRepresentationIndex): void {
