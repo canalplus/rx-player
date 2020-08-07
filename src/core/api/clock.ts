@@ -80,7 +80,8 @@ interface IMediaInfos {
   /** Current `seeking` value on the mediaElement. */
   seeking : boolean;
   /** "State" that triggered this clock tick. */
-  state : IMediaInfosState; }
+  state : IMediaInfosState;
+  timestamp: number; }
 
 /** Describes when the player is "stalled" and what event started that status. */
 export type IStalledStatus =
@@ -197,7 +198,8 @@ function getMediaInfos(
            playbackRate,
            readyState,
            seeking,
-           state: currentState };
+           state: currentState,
+           timestamp: performance.now() };
 }
 
   /**
@@ -225,11 +227,15 @@ function getMediaInfos(
             paused,
             playbackRate,
             readyState,
+            timestamp,
             ended } = currentTimings;
 
     const { stalled: prevStalled,
             state: prevState,
-            position: prevTime } = prevTimings;
+            position: prevTime,
+            paused: prevPaused,
+            timestamp: prevTimestamp,
+            playbackRate: prevPlaybackRate } = prevTimings;
 
     const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode);
 
@@ -242,7 +248,9 @@ function getMediaInfos(
     let shouldUnstall : boolean | undefined;
 
     const isFreezing = position === prevTime &&
-                       playbackRate !== 0 &&
+                       prevTimestamp - timestamp > 0.05 &&
+                       !prevPaused && !paused &&
+                       playbackRate !== 0 && prevPlaybackRate !== 0 &&
                        currentRange !== null &&
                        currentRange.end - position >= 10;
 
@@ -358,6 +366,7 @@ function createClock(
       // /!\ Mutate mediaTimings
       return objectAssign(mediaTimings,
                           { stalled: stalledState,
+                            timestamp: performance.now(),
                             getCurrentTime: () => mediaElement.currentTime });
     }
 
