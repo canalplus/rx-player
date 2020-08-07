@@ -48,40 +48,49 @@ import tryURLsWithBackoff, {
   IBackoffOptions,
 } from "../utils/try_urls_with_backoff";
 
-// Data comes from a local cache (no request was done)
+/** Data comes from a local cache (no request was done). */
 interface ISegmentLoaderCachedSegmentEvent<T> { type : "cache";
                                                  value : ILoaderDataLoadedValue<T>; }
+
+/** New information about the progress of the request is available. */
 export type ISegmentLoaderProgress = ILoaderProgress;
 
-// An Error happened while loading (usually a request error)
+/** An Error happened while loading (usually a request error). */
 export interface ISegmentLoaderWarning { type : "warning";
                                          value : ICustomError; }
 
-// Request metrics are available
+/** Request metrics are available. */
 export interface ISegmentLoaderMetrics { type : "metrics";
                                          value : { size? : number;
                                                    duration? : number; }; }
 
-// The request begins to be done
+/** The request begins to be done. */
 export interface ISegmentLoaderRequest { type : "request";
                                          value : ISegmentLoaderArguments; }
 
-// The whole data is available
+/** The whole segment's data (not only a chunk) is available. */
 export interface ISegmentLoaderData<T> { type : "data";
                                          value : { responseData : T }; }
 
-// A chunk of the data is available
+/**
+ * A chunk of the data is available.
+ * You will receive every chunk through such events until a
+ * ISegmentLoaderChunkComplete event is received.
+ */
 export interface ISegmentLoaderChunk { type : "chunk";
                                        value : { responseData : null |
                                                                 ArrayBuffer |
                                                                 Uint8Array; }; }
-// The data has been entirely sent through "chunk" events
+
+/** The data has been entirely sent through "chunk" events. */
 export interface ISegmentLoaderChunkComplete { type : "chunk-complete";
                                                value : null; }
 
-// Events a loader emits
-// Type parameters: T: Argument given to the loader
-//                  U: ResponseType of the request
+/**
+ * Every events the segment loader emits.
+ * Type parameters: T: Argument given to the loader
+ *                  U: ResponseType of the request
+ */
 export type ISegmentLoaderEvent<T> = ISegmentLoaderData<T> |
                                      ISegmentLoaderRequest |
                                      ISegmentLoaderProgress |
@@ -98,6 +107,7 @@ export interface ISegmentLoaderCache<T> {
   get : (obj : ISegmentLoaderContent) => ILoaderDataLoadedValue<T> | null;
 }
 
+/** Abstraction to load a segment in the current transport protocol. */
 export type ISegmentPipelineLoader<T> =
   (x : ISegmentLoaderArguments) => ISegmentLoaderObservable<T>;
 
@@ -109,35 +119,16 @@ export interface ISegmentLoaderContent { manifest : Manifest;
                                          segment : ISegment; }
 
 /**
- * Returns function allowing to download the wanted data through the loader.
+ * Returns a function allowing to load any wanted segment.
  *
- * (The data can be for example: audio and video segments, text,
- * images...)
- *
- * The function returned takes the initial data in arguments and returns an
- * Observable which will emit:
- *
- *   - each time a request begins (type "request").
- *     This is not emitted if the value is retrieved from a local js cache.
- *     This event emits the payload as a value.
- *
- *   - as the request progresses (type "progress").
- *
- *   - each time a request ends (type "metrics").
- *     This event contains information about the metrics of the request.
- *
- *   - each time a minor request error is encountered (type "warning").
- *     With the error as a value.
- *
- *   - Lastly, with the fetched data (type "response").
- *
- *
- * Each of these but "warning" can be emitted at most one time.
+ * The function returned takes in argument information about the wanted segment
+ * and returns an Observable which will emit various events related to the
+ * segment request (see ISegmentLoaderEvent).
  *
  * This observable will throw if, following the options given, the request and
  * possible retry all failed.
  *
- * This observable will complete after emitting the data.
+ * This observable will complete after emitting all the segment's data.
  *
  * Type parameters:
  *   - T: type of the data emitted
@@ -153,11 +144,9 @@ export default function createSegmentLoader<T>(
   backoffOptions : IBackoffOptions
 ) : (x : ISegmentLoaderContent) => Observable<ISegmentLoaderEvent<T>> {
   /**
-   * Load wanted data:
-   *   - get it from cache if present
-   *   - call the transport loader - with an exponential backoff - if not
-   *
-   * @param {Object} loaderArgument - Input given to the loader
+   * Try to retrieve the segment from the cache and if not found call the
+   * pipeline's loader (with possible retries) to load it.
+   * @param {Object} loaderArgument - Context for the wanted segment.
    * @returns {Observable}
    */
   function loadData(
@@ -225,7 +214,7 @@ export default function createSegmentLoader<T>(
   }
 
   /**
-   * Load the corresponding data.
+   * Load the corresponding segment.
    * @param {Object} content
    * @returns {Observable}
    */
