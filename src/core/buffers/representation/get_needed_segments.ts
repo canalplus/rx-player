@@ -47,7 +47,7 @@ export interface ISegmentFilterArgument { content: { adaptation : Adaptation;
                                                      period : Period;
                                                      representation : Representation; };
                                           currentPlaybackTime: number;
-                                          knownStableBitrate : number | undefined;
+                                          fastSwitchThreshold : number | undefined;
                                           loadedSegmentPendingPush : SimpleSet;
                                           neededRange : { start: number;
                                                           end: number; };
@@ -60,7 +60,7 @@ export interface ISegmentFilterArgument { content: { adaptation : Adaptation;
 export default function getNeededSegments({
   content,
   currentPlaybackTime,
-  knownStableBitrate,
+  fastSwitchThreshold,
   loadedSegmentPendingPush,
   neededRange,
   segmentInventory,
@@ -78,7 +78,7 @@ export default function getNeededSegments({
     .filter((bufferedSegment) => !shouldContentBeReplaced(bufferedSegment.infos,
                                                           content,
                                                           currentPlaybackTime,
-                                                          knownStableBitrate));
+                                                          fastSwitchThreshold));
 
   // 3 - remove from that list the segments who appeared to have been GCed
   const completeSegments = filterGarbageCollectedSegments(consideredSegments,
@@ -157,7 +157,7 @@ export default function getNeededSegments({
  * @param {Object} oldContent
  * @param {Object} currentContent
  * @param {number} currentPlaybackTime
- * @param {number} [knownStableBitrate]
+ * @param {number} [fastSwitchThreshold]
  * @returns {boolean}
  */
 function shouldContentBeReplaced(
@@ -169,7 +169,7 @@ function shouldContentBeReplaced(
                      period : Period;
                      representation : Representation; },
   currentPlaybackTime: number,
-  knownStableBitrate? : number
+  fastSwitchThreshold? : number
 ) : boolean {
   if (oldContent.period.id !== currentContent.period.id) {
     return false; // keep segments from another Period by default.
@@ -187,12 +187,12 @@ function shouldContentBeReplaced(
   }
 
   const oldContentBitrate = oldContent.representation.bitrate;
-  if (knownStableBitrate === undefined) {
+  if (fastSwitchThreshold === undefined) {
     // only re-load comparatively-poor bitrates for the same Adaptation.
     const bitrateCeil = oldContentBitrate * BITRATE_REBUFFERING_RATIO;
     return currentContent.representation.bitrate > bitrateCeil;
   }
-  return oldContentBitrate < knownStableBitrate &&
+  return oldContentBitrate < fastSwitchThreshold &&
          currentContent.representation.bitrate > oldContentBitrate;
 }
 

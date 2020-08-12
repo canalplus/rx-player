@@ -114,15 +114,7 @@ export interface IAdaptationBufferArguments<T> {
   content : { manifest : Manifest;
               period : Period;
               adaptation : Adaptation; };
-  /**
-   * Strategy taken when the user switch manually the current Representation:
-   *   - "seamless": the switch will happen smoothly, with the Representation
-   *     with the new bitrate progressively being pushed alongside the old
-   *     Representation.
-   *   - "direct": hard switch. The Representation switch will be directly
-   *     visible but may necessitate the current MediaSource to be reloaded.
-   */
-  options: { manualBitrateSwitchingMode : "seamless" | "direct" };
+  options: IAdaptationBufferOptions;
   /** SourceBuffer wrapper - needed to push media segments. */
   queuedSourceBuffer : QueuedSourceBuffer<T>;
   /** Module used to fetch the wanted media segments. */
@@ -133,6 +125,36 @@ export interface IAdaptationBufferArguments<T> {
    * this AdaptationBuffer won't try to download new segments.
    */
   wantedBufferAhead$ : BehaviorSubject<number>;
+}
+
+/**
+ * Various specific buffer "options" which tweak the behavior of the
+ * AdaptationBuffer.
+ */
+export interface IAdaptationBufferOptions {
+  /**
+   * Strategy taken when the user switch manually the current Representation:
+   *   - "seamless": the switch will happen smoothly, with the Representation
+   *     with the new bitrate progressively being pushed alongside the old
+   *     Representation.
+   *   - "direct": hard switch. The Representation switch will be directly
+   *     visible but may necessitate the current MediaSource to be reloaded.
+   */
+  manualBitrateSwitchingMode : "seamless" | "direct";
+  /**
+   * If `true`, the AdaptationBuffer might replace segments of a lower-quality
+   * (with a lower bitrate) with segments of a higher quality (with a higher
+   * bitrate). This allows to have a fast transition when network conditions
+   * improve.
+   * If `false`, this strategy will be disabled: segments of a lower-quality
+   * will not be replaced.
+   *
+   * Some targeted devices support poorly segment replacement in a
+   * SourceBuffer.
+   * As such, this option can be used to disable that unnecessary behavior on
+   * those devices.
+   */
+  enableFastSwitching : boolean;
 }
 
 /**
@@ -207,15 +229,25 @@ export default function AdaptationBuffer<T>({
   const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type,
                                                                     requestsEvents$);
 
-  // Bitrate higher or equal to this value should not be replaced by segments of
-  // better quality.
-  // undefined means everything can potentially be replaced
-  const knownStableBitrate$ = abr$.pipe(
-    map(({ knownStableBitrate }) => knownStableBitrate),
-    // always emit the last on subscribe
-    multicast(() => new ReplaySubject< number | undefined >(1)),
-    startWith(undefined),
-    distinctUntilChanged());
+  /**
+   * "Fast-switching" is a behavior allowing to replace low-quality segments
+   * (i.e. with a low bitrate) with higher-quality segments (higher bitrate) in
+   * the buffer.
+   * This threshold defines a bitrate from which "fast-switching" is disabled.
+   * For example with a fastSwitchThreshold set to `100`, segments with a
+   * bitrate of `90` can be replaced. But segments with a bitrate of `100`
+   * onward won't be replaced by higher quality segments.
+   * Set to `undefined` to indicate that there's no threshold (anything can be
+   * replaced by higher-quality segments).
+   */
+  const fastSwitchThreshold$ = !options.enableFastSwitching ?
+    observableOf(0) : // Do not fast-switch anything
+    abr$.pipe(
+      map(({ knownStableBitrate }) => knownStableBitrate),
+      // always emit the last on subscribe
+      multicast(() => new ReplaySubject< number | undefined >(1)),
+      startWith(undefined),
+      distinctUntilChanged());
 
   // Emit at each bitrate estimate done by the ABRManager
   const bitrateEstimates$ = abr$.pipe(
@@ -311,7 +343,7 @@ export default function AdaptationBuffer<T>({
                                     segmentFetcher,
                                     terminate$: terminateCurrentBuffer$,
                                     bufferGoal$,
-                                    knownStableBitrate$ })
+                                    fastSwitchThreshold$ })
         .pipe(catchError((err : unknown) => {
           const formattedError = formatError(err, {
             defaultCode: "NONE",

@@ -17,6 +17,7 @@
 import PeriodBuffer, {
   IPeriodBufferArguments,
   IPeriodBufferClockTick,
+  IPeriodBufferOptions,
 } from "./period_buffer";
 
 export default PeriodBuffer;
@@ -24,4 +25,5 @@ export default PeriodBuffer;
 export {
   IPeriodBufferArguments,
   IPeriodBufferClockTick,
+  IPeriodBufferOptions,
 };

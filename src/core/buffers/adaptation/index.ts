@@ -15,8 +15,14 @@
  */
 
 import AdaptationBuffer, {
+  IAdaptationBufferArguments,
   IAdaptationBufferClockTick,
+  IAdaptationBufferOptions,
 } from "./adaptation_buffer";
 
 export default AdaptationBuffer;
-export { IAdaptationBufferClockTick };
+export {
+  IAdaptationBufferArguments,
+  IAdaptationBufferClockTick,
+  IAdaptationBufferOptions,
+};

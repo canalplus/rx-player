@@ -27,6 +27,7 @@ import {
   CustomSegmentLoader,
   ITransportOptions as IParsedTransportOptions,
 } from "../../transports";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
   normalizeAudioTrack,
   normalizeTextTrack,
@@ -41,6 +42,7 @@ import {
 } from "./track_choice_manager";
 
 const { DEFAULT_AUTO_PLAY,
+        DEFAULT_ENABLE_FAST_SWITCHING,
         DEFAULT_INITIAL_BITRATES,
         DEFAULT_LIMIT_VIDEO_WIDTH,
         DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
@@ -239,6 +241,7 @@ export interface ILoadVideoOptions {
   hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
   manualBitrateSwitchingMode? : "seamless"|"direct";
+  enableFastSwitching? : boolean;
 
   /* tslint:disable deprecation */
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
@@ -266,6 +269,7 @@ interface IParsedLoadVideoOptionsBase {
   defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
+  enableFastSwitching : boolean;
 }
 
 /**
@@ -623,6 +627,10 @@ function parseLoadVideoOptions(
       DEFAULT_MANUAL_BITRATE_SWITCHING_MODE :
       options.manualBitrateSwitchingMode;
 
+  const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching) ?
+    DEFAULT_ENABLE_FAST_SWITCHING :
+    options.enableFastSwitching;
+
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
     if (options.textTrackElement == null) {
@@ -668,6 +676,7 @@ function parseLoadVideoOptions(
   return { autoPlay,
            defaultAudioTrack,
            defaultTextTrack,
+           enableFastSwitching,
            hideNativeSubtitle,
            keySystems,
            lowLatencyMode,
