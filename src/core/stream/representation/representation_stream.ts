@@ -152,14 +152,23 @@ export interface IRepresentationStreamArguments<T> {
    */
   bufferGoal$ : Observable<number>;
   /**
-   * The last Representation's bitrate that was known to be "maintainable".
-   * That is, that can be loaded faster that it can be played with the current
-   * playback conditions (i.e. playback rate etc.).
-   * This value will be used to decide when "fast-switching" (replacing
-   * already-loaded segments by segments or higher quality) should be enforced
-   * or not.
+   * Bitrate threshold from which no "fast-switching" should occur on a segment.
+   *
+   * Fast-switching is an optimization allowing to replace segments from a
+   * low-bitrate Representation by segments from a higher-bitrate
+   * Representation. This allows the user to see/hear an improvement in quality
+   * faster, hence "fast-switching".
+   *
+   * This Observable allows to limit this behavior to only allow the replacement
+   * of segments with a bitrate lower than a specific value - the number emitted
+   * by that Observable.
+   *
+   * If set to `undefined`, no threshold is active and any segment can be
+   * replaced by higher quality segment(s).
+   *
+   * `0` can be emitted to disable any kind of fast-switching.
    */
-  knownStableBitrate$: Observable< undefined | number>;
+  fastSwitchThreshold$: Observable< undefined | number>;
 }
 
 /** Information about a Segment waiting to be loaded. */
@@ -220,7 +229,7 @@ export default function RepresentationStream<T>({
   bufferGoal$,
   clock$,
   content,
-  knownStableBitrate$,
+  fastSwitchThreshold$,
   queuedSourceBuffer,
   segmentFetcher,
   terminate$,
@@ -261,10 +270,10 @@ export default function RepresentationStream<T>({
                     startWith(null)),
     reCheckNeededSegments$.pipe(startWith(undefined)) ]
   ).pipe(
-    withLatestFrom(knownStableBitrate$),
+    withLatestFrom(fastSwitchThreshold$),
     map(function getCurrentStatus(
       [ [ timing, bufferGoal, terminate ],
-        knownStableBitrate ]
+        fastSwitchThreshold ]
     ) : { discontinuity : number;
           isFull : boolean;
           terminate : ITerminationOrder | null;
@@ -297,7 +306,7 @@ export default function RepresentationStream<T>({
       } else {
         neededSegments = getNeededSegments({ content,
                                              currentPlaybackTime: timing.currentTime,
-                                             knownStableBitrate,
+                                             fastSwitchThreshold,
                                              neededRange,
                                              queuedSourceBuffer })
           .map((segment) => ({ priority: getSegmentPriority(segment, timing),
