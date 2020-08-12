@@ -112,7 +112,7 @@ export interface IAdaptationStreamArguments<T> {
    *   - "direct": hard switch. The Representation switch will be directly
    *     visible but may necessitate the current MediaSource to be reloaded.
    */
-  options: { manualBitrateSwitchingMode : "seamless" | "direct" };
+  options: IAdaptationStreamOptions;
   /** SourceBuffer wrapper - needed to push media segments. */
   queuedSourceBuffer : QueuedSourceBuffer<T>;
   /** Module used to fetch the wanted media segments. */
@@ -123,6 +123,36 @@ export interface IAdaptationStreamArguments<T> {
    * this AdaptationStream won't try to download new segments.
    */
   wantedBufferAhead$ : BehaviorSubject<number>;
+}
+
+/**
+ * Various specific stream "options" which tweak the behavior of the
+ * AdaptationStream.
+ */
+export interface IAdaptationStreamOptions {
+  /**
+   * Strategy taken when the user switch manually the current Representation:
+   *   - "seamless": the switch will happen smoothly, with the Representation
+   *     with the new bitrate progressively being pushed alongside the old
+   *     Representation.
+   *   - "direct": hard switch. The Representation switch will be directly
+   *     visible but may necessitate the current MediaSource to be reloaded.
+   */
+  manualBitrateSwitchingMode : "seamless" | "direct";
+  /**
+   * If `true`, the AdaptationStream might replace segments of a lower-quality
+   * (with a lower bitrate) with segments of a higher quality (with a higher
+   * bitrate). This allows to have a fast transition when network conditions
+   * improve.
+   * If `false`, this strategy will be disabled: segments of a lower-quality
+   * will not be replaced.
+   *
+   * Some targeted devices support poorly segment replacement in a
+   * SourceBuffer.
+   * As such, this option can be used to disable that unnecessary behavior on
+   * those devices.
+   */
+  enableFastSwitching : boolean;
 }
 
 /**
@@ -250,12 +280,20 @@ export default function AdaptationStream<T>({
         }
       }));
 
-    /**
-     * Bitrate higher or equal to this value should not be replaced by segments of
-     * better quality.
-     * undefined means everything can potentially be replaced
-     */
-    const knownStableBitrate$ = lastEstimate$.pipe(
+  /**
+   * "Fast-switching" is a behavior allowing to replace low-quality segments
+   * (i.e. with a low bitrate) with higher-quality segments (higher bitrate) in
+   * the buffer.
+   * This threshold defines a bitrate from which "fast-switching" is disabled.
+   * For example with a fastSwitchThreshold set to `100`, segments with a
+   * bitrate of `90` can be replaced. But segments with a bitrate of `100`
+   * onward won't be replaced by higher quality segments.
+   * Set to `undefined` to indicate that there's no threshold (anything can be
+   * replaced by higher-quality segments).
+   */
+  const fastSwitchThreshold$ = !options.enableFastSwitching ?
+    observableOf(0) : // Do not fast-switch anything
+    lastEstimate$.pipe(
       map((estimate) => estimate === null ? undefined :
                                             estimate.knownStableBitrate),
       distinctUntilChanged());
@@ -268,7 +306,7 @@ export default function AdaptationStream<T>({
     return observableConcat(representationChange$,
                             createRepresentationStream(representation,
                                                        terminateCurrentStream$,
-                                                       knownStableBitrate$))
+                                                       fastSwitchThreshold$))
     .pipe(
       tap((evt) : void => {
         if (evt.type === "representationChange" ||
@@ -298,7 +336,7 @@ export default function AdaptationStream<T>({
   function createRepresentationStream(
     representation : Representation,
     terminateCurrentStream$ : Observable<ITerminationOrder>,
-    knownStableBitrate$ : Observable<number | undefined>
+    fastSwitchThreshold$ : Observable<number | undefined>
   ) : Observable<IRepresentationStreamEvent<T>> {
     return observableDefer(() => {
       const oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
@@ -320,7 +358,7 @@ export default function AdaptationStream<T>({
                                     segmentFetcher,
                                     terminate$: terminateCurrentStream$,
                                     bufferGoal$,
-                                    knownStableBitrate$ })
+                                    fastSwitchThreshold$ })
         .pipe(catchError((err : unknown) => {
           const formattedError = formatError(err, {
             defaultCode: "NONE",
@@ -337,7 +375,7 @@ export default function AdaptationStream<T>({
             bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
             return createRepresentationStream(representation,
                                               terminateCurrentStream$,
-                                              knownStableBitrate$);
+                                              fastSwitchThreshold$);
           }
           throw formattedError;
         }));

@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -36,11 +35,10 @@ import log from "../../log";
 import Manifest from "../../manifest";
 import ABRManager from "../abr";
 import { SegmentFetcherCreator } from "../fetchers";
-import SourceBuffersStore, {
-  ITextTrackSourceBufferOptions,
-} from "../source_buffers";
+import SourceBuffersStore from "../source_buffers";
 import StreamOrchestrator, {
   IStreamOrchestratorEvent,
+  IStreamOrchestratorOptions,
 } from "../stream";
 import { setDurationToMediaSource } from "./create_media_source";
 import createStreamClock from "./create_stream_clock";
@@ -65,15 +63,7 @@ import updatePlaybackRate from "./update_playback_rate";
 // Arguments needed by `createMediaSourceLoader`
 export interface IMediaSourceLoaderArguments {
   abrManager : ABRManager; // Helps to choose the right Representation
-  bufferOptions : { // Buffers-related options
-    wantedBufferAhead$ : BehaviorSubject<number>; // buffer "goal"
-    maxBufferAhead$ : Observable<number>; // To GC after the current position
-    maxBufferBehind$ : Observable<number>; // to GC before the current position
-    textTrackOptions : ITextTrackSourceBufferOptions; // TextTrack configuration
-
-    // strategy when switching the current bitrate manually
-    manualBitrateSwitchingMode : "seamless"|"direct";
-  };
+  bufferOptions : IStreamOrchestratorOptions;
   clock$ : Observable<IInitClockTick>; // Emit position information
   manifest : Manifest; // Manifest of the content we want to play
   mediaElement : HTMLMediaElement; // Media Element on which the content will be

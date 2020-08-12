@@ -16,6 +16,7 @@
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
     - [lowLatencyMode](#prop-lowLatencyMode)
     - [networkConfig](#prop-networkConfig)
+    - [enableFastSwitching](#prop-enableFastSwitching)
     - [hideNativeSubtitle (deprecated)](#prop-hideNativeSubtitle)
     - [supplementaryImageTracks (deprecated)](#prop-supplementaryImageTracks)
     - [supplementaryTextTracks (deprecated)](#prop-supplementaryTextTracks)
@@ -967,6 +968,57 @@ This object can take the following properties (all are optional):
 
   - the request failed because of an unknown XHR error (might be a
     parsing/interface error)
+
+
+
+<a name="prop-enableFastSwitching"></a>
+### enableFastSwitching ########################################################
+
+_type_: ``boolean``
+
+_defaults_: ``true``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Enable (when set to `true` and by default) or disable (when set to `false`) the
+"fast-switching" feature.
+
+"Fast-switching" is an optimization which allows the RxPlayer to replace
+low-quality segments (i.e.  with a low bitrate) with higher-quality segments
+(higher bitrate) in the buffer in some situations.
+
+This is used for example to obtain a faster quality transition when the user's
+network bandwidth raise up: instead of pushing the new high-quality segments at
+the end of the current buffer, we push them much sooner - "on top" of already
+pushed low-quality segments - so the user can quickly see the better quality.
+
+In most cases, this is a feature you want. On some rare devices however,
+replacing segments is poorly supported.
+We've for example seen on a few devices that old replaced segments were still
+decoded (and not the new better-quality segments that should have replaced
+them). On other devices, replacing segments resulted in visible small decoding
+issues.
+
+Setting `enableFastSwitching` to `false` thus allows to disable the
+fast-switching behavior. Note that it is - sadly - difficult to know when you
+need to disable it.
+In the great majority of cases, enabling fast-switching (the default behavior)
+won't lead to any problem. So we advise to only disable it when you suspect that
+segment replacement when the quality raises is at the source of some issues
+you're having (in which case it will help to see if that's really the case).
+
+It is also important to add that setting `enableFastSwitching` to `false` only
+disable the fast-switching feature and not all the logic where the RxPlayer is
+replacing segments it already pushed to the buffer.
+Forbiding the RxPlayer to replace segments altogether is today not possible and
+would even break playback in some situations: when multi-Period DASH contents
+have overlapping segments, when the browser garbage-collect partially a
+segment...
 
 
 
