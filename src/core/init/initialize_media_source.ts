@@ -107,6 +107,11 @@ export interface IInitializeArguments {
     maxBufferBehind$ : Observable<number>;
     /** Strategy when switching the current bitrate manually (smooth vs reload). */
     manualBitrateSwitchingMode : "seamless" | "direct";
+    /**
+     * Enable/Disable fastSwitching: allow to replace lower-quality segments by
+     * higher-quality ones to have a faster transition.
+     */
+    enableFastSwitching : boolean;
   };
   /** Regularly emit current playback conditions. */
   clock$ : Observable<IInitClockTick>;
