@@ -21,13 +21,7 @@ import {
   throwError as observableThrow,
 } from "rxjs";
 import castToObservable from "../../../utils/cast_to_observable";
-import {
-  // XXX TODO remove when the issue is resolved
-  // https://github.com/Microsoft/TypeScript/issues/19189
-  ICompatMediaKeySystemAccess,
-  ICompatMediaKeySystemConfiguration,
-  MediaKeys_,
-} from "../../browser_compatibility_types";
+import { MediaKeys_ } from "../../browser_compatibility_types";
 import { isIE11 } from "../../browser_detection";
 import isNode from "../../is_node";
 import shouldFavourCustomSafariEME from "../../should_favour_custom_safari_EME";
@@ -47,8 +41,8 @@ import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
 let requestMediaKeySystemAccess : null |
                                   ((keyType : string,
-                                    config : ICompatMediaKeySystemConfiguration[])
-                                      => Observable<ICompatMediaKeySystemAccess |
+                                    config : MediaKeySystemConfiguration[])
+                                      => Observable<MediaKeySystemAccess |
                                                     CustomMediaKeySystemAccess>)
                                 = null;
 
@@ -96,10 +90,8 @@ let _setMediaKeys : ((elt: HTMLMediaElement,
 if (isNode ||
     (navigator.requestMediaKeySystemAccess != null && !shouldFavourCustomSafariEME())
 ) {
-  requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
-    castToObservable(
-      navigator.requestMediaKeySystemAccess(a, b) as Promise<ICompatMediaKeySystemAccess>
-    );
+  requestMediaKeySystemAccess = (a : string, b : MediaKeySystemConfiguration[]) =>
+    castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 } else {
   let isTypeSupported = (keyType: string): boolean => {
     if ((MediaKeys_ as any).isTypeSupported === undefined) {
@@ -139,8 +131,8 @@ if (isNode ||
 
   requestMediaKeySystemAccess = function(
     keyType : string,
-    keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
-  ) : Observable<ICompatMediaKeySystemAccess|CustomMediaKeySystemAccess> {
+    keySystemConfigurations : MediaKeySystemConfiguration[]
+  ) : Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
     // TODO Why TS Do not understand that isTypeSupported exists here?
     /* tslint:disable no-unsafe-any */
     if (!isTypeSupported(keyType)) {

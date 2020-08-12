@@ -15,7 +15,6 @@
  */
 
 import {
-  ICompatMediaKeySystemAccess,
   ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
@@ -164,14 +163,14 @@ export interface IKeyMessageHandledEvent { type: "key-message-handled";
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
-  keySystemAccess: ICompatMediaKeySystemAccess |
+  keySystemAccess: MediaKeySystemAccess |
                    ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption;
 }
 
 // Infos identyfing a single MediaKey
 export interface IMediaKeysInfos {
-  mediaKeySystemAccess: ICompatMediaKeySystemAccess |
+  mediaKeySystemAccess: MediaKeySystemAccess |
                         ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption; // options set by the user
   mediaKeys : MediaKeys |

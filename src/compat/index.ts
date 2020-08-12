@@ -17,8 +17,6 @@
 import addClassName from "./add_class_name";
 import addTextTrack from "./add_text_track";
 import {
-  ICompatMediaKeySystemAccess,
-  ICompatMediaKeySystemConfiguration,
   ICompatTextTrack,
   ICompatVTTCue,
   MediaSource_,
@@ -79,8 +77,6 @@ export {
   generateKeyRequest,
   getInitData,
   hasEMEAPIs,
-  ICompatMediaKeySystemAccess,
-  ICompatMediaKeySystemConfiguration,
   ICompatTextTrack,
   ICompatVTTCue,
   ICustomMediaKeySession,

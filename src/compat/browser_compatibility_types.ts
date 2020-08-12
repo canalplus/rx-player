@@ -150,29 +150,6 @@ interface ICompatVideoTrack {
 }
 
 /**
- * MediaKeySystemAccess browser implementation.
- * For some reasons, Typescript seem to forget about SessionTypes.
- * XXX TODO remove when the issue is resolved:
- * https://github.com/Microsoft/TypeScript/issues/19189
- */
-interface ICompatMediaKeySystemAccess extends MediaKeySystemAccess {
-  getConfiguration() : ICompatMediaKeySystemConfiguration;
-}
-
-/**
- * MediaKeySystemConfiguration as returned by an EME-compliant
- * MediaKeySystemAccess implementation.
- */
-interface ICompatMediaKeySystemConfiguration {
-  audioCapabilities?: MediaKeySystemMediaCapability[];
-  distinctiveIdentifier?: MediaKeysRequirement;
-  initDataTypes?: string[];
-  persistentState?: MediaKeysRequirement;
-  videoCapabilities?: MediaKeySystemMediaCapability[];
-  sessionTypes?: string[];
-}
-
-/**
  * Browser implementation of a Picture in picture window, as defined in the the
  * draft from the W3C:
  * https://wicg.github.io/picture-in-picture/#pictureinpicturewindow
@@ -262,8 +239,6 @@ export {
   ICompatVideoTrackList,
   ICompatAudioTrack,
   ICompatVideoTrack,
-  ICompatMediaKeySystemAccess,
-  ICompatMediaKeySystemConfiguration,
   ICompatMediaKeysConstructor,
   ICompatTextTrack,
   ICompatVTTCue,

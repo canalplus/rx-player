@@ -67,7 +67,6 @@ export default function appendSegmentToSourceBuffer<T>(
           const reason = forcedGCError instanceof Error ? forcedGCError.toString() :
                                                           "Could not clean the buffer";
 
-          // (weird Typing either due to TypeScript or RxJS bug)
           throw new MediaError("BUFFER_FULL_ERROR", reason);
         })
       );

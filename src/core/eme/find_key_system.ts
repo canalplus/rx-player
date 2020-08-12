@@ -21,11 +21,6 @@ import {
   Subscription,
 } from "rxjs";
 import {
-  // XXX TODO remove when the issue is resolved
-  // https://github.com/Microsoft/TypeScript/issues/19189
-  ICompatMediaKeySystemAccess,
-  ICompatMediaKeySystemConfiguration,
-
   ICustomMediaKeySystemAccess,
   requestMediaKeySystemAccess,
   shouldRenewMediaKeys,
@@ -43,7 +38,7 @@ type MediaKeysRequirement = "optional" |
                             "not-allowed";
 
 export interface IMediaKeySystemAccessInfos {
-  mediaKeySystemAccess: ICompatMediaKeySystemAccess |
+  mediaKeySystemAccess: MediaKeySystemAccess |
                         ICustomMediaKeySystemAccess;
   options: IKeySystemOption;
 }
@@ -79,11 +74,11 @@ const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
  */
 function checkCachedMediaKeySystemAccess(
   keySystems: IKeySystemOption[],
-  currentKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess,
+  currentKeySystemAccess: MediaKeySystemAccess|ICustomMediaKeySystemAccess,
   currentKeySystemOptions: IKeySystemOption
 ) : null | {
   keySystemOptions: IKeySystemOption;
-  keySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
+  keySystemAccess: MediaKeySystemAccess|ICustomMediaKeySystemAccess;
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
   if (shouldRenewMediaKeys() || mksConfiguration == null) {
@@ -145,7 +140,7 @@ function findKeySystemCanonicalName(ksType: string)
 function buildKeySystemConfigurations(
   ksName : string | undefined,
   keySystem : IKeySystemOption
-) : ICompatMediaKeySystemConfiguration[] {
+) : MediaKeySystemConfiguration[] {
   const sessionTypes = ["temporary"];
   let persistentState: MediaKeysRequirement = "optional";
   let distinctiveIdentifier: MediaKeysRequirement = "optional";

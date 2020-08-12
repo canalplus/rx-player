@@ -15,7 +15,6 @@
  */
 
 import {
-  ICompatMediaKeySystemAccess,
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
 } from "../../compat";
@@ -32,7 +31,7 @@ export interface IMediaElementMediaKeysInfos {
    * HTMLMediaElement.
    */
   mediaKeySystemAccess : ICustomMediaKeySystemAccess |
-                         ICompatMediaKeySystemAccess;
+                         MediaKeySystemAccess;
 
   /** Last MediaKeys instance bound to that HTMLMediaElement. */
   mediaKeys : MediaKeys |
