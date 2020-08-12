@@ -16,8 +16,12 @@
 
 import StreamOrchestrator, {
   IStreamOrchestratorClockTick,
+  IStreamOrchestratorOptions,
 } from "./orchestrator";
 export * from "./types";
 
 export default StreamOrchestrator;
-export { IStreamOrchestratorClockTick };
+export {
+  IStreamOrchestratorClockTick,
+  IStreamOrchestratorOptions,
+};

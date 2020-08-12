@@ -42,6 +42,7 @@ import {
 } from "./track_choice_manager";
 
 const { DEFAULT_AUTO_PLAY,
+        DEFAULT_ENABLE_FAST_SWITCHING,
         DEFAULT_INITIAL_BITRATES,
         DEFAULT_LIMIT_VIDEO_WIDTH,
         DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
@@ -240,6 +241,7 @@ export interface ILoadVideoOptions {
   hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
   manualBitrateSwitchingMode? : "seamless"|"direct";
+  enableFastSwitching? : boolean;
 
   /* tslint:disable deprecation */
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
@@ -267,6 +269,7 @@ interface IParsedLoadVideoOptionsBase {
   defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
+  enableFastSwitching : boolean;
 }
 
 /**
@@ -626,6 +629,10 @@ function parseLoadVideoOptions(
   const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
                                      DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
+  const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching) ?
+    DEFAULT_ENABLE_FAST_SWITCHING :
+    options.enableFastSwitching;
+
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
     if (isNullOrUndefined(options.textTrackElement)) {
@@ -667,6 +674,7 @@ function parseLoadVideoOptions(
   return { autoPlay,
            defaultAudioTrack,
            defaultTextTrack,
+           enableFastSwitching,
            hideNativeSubtitle,
            keySystems,
            lowLatencyMode,
