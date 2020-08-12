@@ -57,7 +57,10 @@ export default function updatePlaybackRate(
   } else {
     forcePause$ = clock$
       .pipe(
-        map((timing) => timing.stalled !== null),
+        map((timing) => {
+          return timing.stalled !== null &&
+                 timing.stalled.reason !== "freezing";
+        }),
         startWith(false),
         distinctUntilChanged()
       );

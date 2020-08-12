@@ -233,9 +233,10 @@ function getMediaInfos(
     const { stalled: prevStalled,
             state: prevState,
             position: prevTime,
-            paused: prevPaused,
             timestamp: prevTimestamp,
-            playbackRate: prevPlaybackRate } = prevTimings;
+            paused: prevPaused,
+            playbackRate: prevPlaybackRate,
+            readyState: prevReadyState } = prevTimings;
 
     const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode);
 
@@ -247,12 +248,16 @@ function getMediaInfos(
     let shouldStall : boolean | undefined;
     let shouldUnstall : boolean | undefined;
 
-    const isFreezing = position === prevTime &&
-                       prevTimestamp - timestamp > 0.05 &&
-                       !prevPaused && !paused &&
-                       playbackRate !== 0 && prevPlaybackRate !== 0 &&
-                       currentRange !== null &&
-                       currentRange.end - position >= 10;
+    const canFreeze = ((!paused &&
+                        !prevPaused) ||
+                       (readyState === 4 &&
+                        prevReadyState === 4)
+                      ) &&
+                      (playbackRate !== 0 && prevPlaybackRate !== 0);
+
+    const isFreezing = (position === prevTime) &&
+                       (timestamp - prevTimestamp) > 50 &&
+                       canFreeze;
 
     if (withMediaSource) {
       if (canStall && (
@@ -263,10 +268,7 @@ function getMediaInfos(
       ) {
         shouldStall = true;
       } else if (prevStalled !== null &&
-                 (
-                   prevStalled.reason === "freezing" &&
-                   !isFreezing
-                 ) || (
+                 (prevStalled.reason !== "freezing" || !isFreezing) && (
                    readyState > 1 &&
                    ((bufferGap < Infinity &&
                      bufferGap > getResumeGap(prevStalled, lowLatencyMode)) ||
@@ -302,12 +304,12 @@ function getMediaInfos(
       return null;
     } else if (shouldStall === true || prevStalled !== null) {
       let reason : "seeking" | "not-ready" | "buffering" | "freezing";
-      if (currentState === "seeking" ||
-          currentTimings.seeking ||
-          prevStalled?.reason === "seeking") {
-        reason = "seeking";
-      } else if (isFreezing) {
+      if (isFreezing) {
         reason = "freezing";
+      } else if (currentState === "seeking" ||
+                 currentTimings.seeking ||
+                 prevStalled?.reason === "seeking") {
+        reason = "seeking";
       } else if (readyState === 1) {
         reason = "not-ready";
       } else {
