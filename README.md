@@ -192,18 +192,20 @@ are already included there).
 
 ### A need for an advanced media player ########################################
 
-Canal+ Group is a media company which has a lot of advanced requirements: it
-provides both live and VoD stream with many encryption requirements, support a
-very large panel of devices and has many other peculiarities (like adult
-content restrictions, ad-insertion, Peer-To-Peer integration and others).
+Canal+ Group is a media company with many advanced needs when it comes to media
+playback: it provides both live and VoD stream with many encryption
+requirements, supports a very large panel of devices and has many other
+specificities (like adult content restrictions, ad-insertion, Peer-To-Peer
+integration...).
 
-Back in 2015, when switching from a plugin-based player approach to an
-HTML5-based approach, no media player had the key features we wanted, and
-including those needs to those players was not straightforward either.
+When the time came to switch from a plugin-based web player approach to an HTML5
+one back in 2015, no media player had the key features we wanted, and including
+those needs into an already existing media player would not be straightforward
+either.
 
-The innovation entity at Canal+ Group thus decided to begin working on a new
-featureful media-player - the RxPlayer - and to share it under a permissive
-open-source licence.
+The R&D department of Canal+ Group thus started to work on a new featureful
+media-player: the RxPlayer. To both help and profit from the community, it also
+decided to share it to everyone under a permissive open-source licence.
 
 Now, more than 5 years later, the RxPlayer continues to evolve at the same fast
 pace to include a lot of features we don't find in other media players.
@@ -242,15 +244,15 @@ them. Amongst those:
 
   - advanced optimizations for devices with low memory constraints
 
-  - advanced APIs for advanced use-cases (audio-only mode, video track selection
-    manual garbage collection of segments, Peer-To-Peer integration, quality
-    filtering...)
+  - advanced APIs for advanced use-cases (audio-only mode, video track
+    selection, manual garbage collection of segments, Peer-To-Peer
+    integration, quality filtering...)
 
   - advanced adaptive streaming algorithms making use of both a network-based
     approach (for quick start-up) and a buffer-based one (to provide the best
     quality possible).
 
-* In "directfile" mode, on compatible browsers
+\* In "directfile" mode, on compatible browsers
 
 
 ## Target support ##############################################################
