@@ -79,8 +79,7 @@ const { onEncrypted$ } = events;
 export default function EMEManager(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
-  contentProtections$ : Observable<IContentProtection>,
-  mediaElementReady$ : Observable<null>
+  contentProtections$ : Observable<IContentProtection>
 ) : Observable<IEMEManagerEvent> {
   log.debug("EME: Starting EMEManager logic.");
 
@@ -101,8 +100,7 @@ export default function EMEManager(
 
   /** Emit the MediaKeys instance and its related information when ready. */
   const mediaKeysInfos$ = initMediaKeys(mediaElement,
-                                        keySystemsConfigs,
-                                        mediaElementReady$)
+                                        keySystemsConfigs)
     .pipe(shareReplay()); // Share side-effects and cache success
 
   /** Emit when the MediaKeys instance has been attached the HTMLMediaElement. */

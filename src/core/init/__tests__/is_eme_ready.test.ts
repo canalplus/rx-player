@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { Subject } from "rxjs";
 import { OtherError } from "../../../errors";
 import isEMEReadyEvent from "../is_eme_ready";
 
@@ -31,28 +32,34 @@ describe("core - init - isEMEReadyEvent", () => {
     expect(isEMEReadyEvent({
       type: "created-media-keys",
       value: {
-        mediaKeySystemAccess: {} as any,
-        keySystemOptions: {
-          type: "blabla",
-          getLicense() : never { throw new Error(); },
+        mediaKeysInfos: {
+          mediaKeySystemAccess: {} as any,
+          keySystemOptions: {
+            type: "blabla",
+            getLicense() : never { throw new Error(); },
+          },
+          mediaKeys: {} as any,
+          loadedSessionsStore: {} as any,
+          persistentSessionsStore: null,
         },
-        mediaKeys: {} as any,
-        loadedSessionsStore: {} as any,
-        persistentSessionsStore: null,
+        attachMediaKeys$: new Subject(),
       },
     })).toBe(false);
     expect(isEMEReadyEvent({
       type: "created-media-keys",
       value: {
-        mediaKeySystemAccess: {} as any,
-        keySystemOptions: {
-          type: "blabla",
-          getLicense() : never { throw new Error(); },
-          disableMediaKeysAttachmentLock: false,
+        mediaKeysInfos: {
+          mediaKeySystemAccess: {} as any,
+          keySystemOptions: {
+            type: "blabla",
+            getLicense() : never { throw new Error(); },
+            disableMediaKeysAttachmentLock: false,
+          },
+          mediaKeys: {} as any,
+          loadedSessionsStore: {} as any,
+          persistentSessionsStore: null,
         },
-        mediaKeys: {} as any,
-        loadedSessionsStore: {} as any,
-        persistentSessionsStore: null,
+        attachMediaKeys$: new Subject(),
       },
     })).toBe(false);
   });
@@ -63,15 +70,18 @@ describe("core - init - isEMEReadyEvent", () => {
     expect(isEMEReadyEvent({
       type: "created-media-keys",
       value: {
-        mediaKeySystemAccess: {} as any,
-        keySystemOptions: {
-          type: "blabla",
-          getLicense() : never { throw new Error(); },
-          disableMediaKeysAttachmentLock: true,
+        mediaKeysInfos: {
+          mediaKeySystemAccess: {} as any,
+          keySystemOptions: {
+            type: "blabla",
+            getLicense() : never { throw new Error(); },
+            disableMediaKeysAttachmentLock: true,
+          },
+          mediaKeys: {} as any,
+          loadedSessionsStore: {} as any,
+          persistentSessionsStore: null,
         },
-        mediaKeys: {} as any,
-        loadedSessionsStore: {} as any,
-        persistentSessionsStore: null,
+        attachMediaKeys$: new Subject(),
       },
     })).toBe(true);
   });

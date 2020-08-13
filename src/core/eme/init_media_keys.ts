@@ -18,6 +18,7 @@ import {
   concat as observableConcat,
   Observable,
   of as observableOf,
+  Subject,
 } from "rxjs";
 import {
   map,
@@ -41,8 +42,7 @@ import {
  */
 export default function initMediaKeys(
   mediaElement : HTMLMediaElement,
-  keySystemsConfigs: IKeySystemOption[],
-  mediaElementReady$: Observable<null>
+  keySystemsConfigs: IKeySystemOption[]
 ): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
@@ -51,14 +51,16 @@ export default function initMediaKeys(
           mediaKeysInfos.mediaKeys !== mediaElement.mediaKeys) {
         disableOldMediaKeys$ = setMediaKeys(mediaElement, null);
       }
+      const attachMediaKeys$ = new Subject<unknown>();
       return observableConcat(
         disableOldMediaKeys$.pipe(
           map(() => {
             return { type: "created-media-keys" as const,
-                     value: mediaKeysInfos };
+                     value: { mediaKeysInfos,
+                              attachMediaKeys$ } };
           })
         ),
-        mediaElementReady$.pipe(
+        attachMediaKeys$.pipe(
           mergeMap(() => {
             return attachMediaKeys(mediaKeysInfos, mediaElement)
               .pipe(mapTo({ type: "attached-media-keys" as const,

@@ -29,5 +29,6 @@ export default function isEMEReadyEvent(
   return emeEvent.type === "eme-disabled" ||
          emeEvent.type === "attached-media-keys" ||
          (emeEvent.type === "created-media-keys" &&
-          emeEvent.value.keySystemOptions.disableMediaKeysAttachmentLock === true);
+          emeEvent.value.mediaKeysInfos.keySystemOptions
+            .disableMediaKeysAttachmentLock === true);
 }
