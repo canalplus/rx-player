@@ -39,7 +39,6 @@ import {
   finalize,
   ignoreElements,
   map,
-  mapTo,
   mergeMap,
   share,
   startWith,
@@ -111,6 +110,17 @@ export interface IRepresentationBufferClockTick {
   wantedTimeOffset : number;
 }
 
+/** Item emitted by the `terminate$` Observable given to a RepresentationBuffer. */
+export interface ITerminationOrder {
+  /*
+   * If `true`, the RepresentationBuffer should interrupt immediately every long
+   * pending operations such as segment downloads.
+   * If it is set to `false`, it can continue until those operations are
+   * finished.
+   */
+  urgent : boolean;
+}
+
 /** Arguments to give to the RepresentationBuffer. */
 export interface IRepresentationBufferArguments<T> {
   /** Periodically emits the current playback conditions. */
@@ -125,10 +135,15 @@ export interface IRepresentationBufferArguments<T> {
   /** Interface used to load new segments. */
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   /**
-   * Observable emitting when the RepresentationBuffer should complete itself
-   * when all requests have finished.
+   * Observable emitting when the RepresentationBuffer should "terminate".
+   *
+   * When this Observable emits, the RepresentationBuffer will begin a
+   * "termination process": it will, depending on the type of termination
+   * wanted, either stop immediately pending segment requests or wait until they
+   * are finished before fully terminating (completing the
+   * `RepresentationBuffer` Observable).
    */
-  terminate$ : Observable<void>;
+  terminate$ : Observable<ITerminationOrder>;
   /**
    * The buffer size we have to reach in seconds (compared to the current
    * position. When that size is reached, no segments will be loaded until it
@@ -248,8 +263,7 @@ export default function RepresentationBuffer<T>({
     clock$,
     bufferGoal$,
     terminate$.pipe(take(1),
-                    mapTo(true),
-                    startWith(false)),
+                    startWith(null)),
     reCheckNeededSegments$.pipe(startWith(undefined)) ]
   ).pipe(
     withLatestFrom(knownStableBitrate$),
@@ -258,7 +272,7 @@ export default function RepresentationBuffer<T>({
         knownStableBitrate ]
     ) : { discontinuity : number;
           isFull : boolean;
-          terminate : boolean;
+          terminate : ITerminationOrder | null;
           neededSegments : IQueuedSegment[];
           shouldRefreshManifest : boolean; }
     {
@@ -357,9 +371,13 @@ export default function RepresentationBuffer<T>({
       const neededSegments = status.neededSegments;
       const mostNeededSegment = neededSegments[0];
 
-      if (status.terminate) {
+      if (status.terminate !== null) {
         downloadQueue = [];
-        if (currentSegmentRequest == null) {
+        if (status.terminate.urgent) {
+          log.debug("Buffer: urgent termination request, terminate.", bufferType);
+          startDownloadingQueue$.complete(); // complete the downloading queue
+          return observableOf({ type: "terminated" as "terminated" });
+        } else if (currentSegmentRequest === null) {
           log.debug("Buffer: no request, terminate.", bufferType);
           startDownloadingQueue$.complete(); // complete the downloading queue
           return observableOf({ type: "terminated" as "terminated" });
@@ -393,7 +411,7 @@ export default function RepresentationBuffer<T>({
       }
 
       if (mostNeededSegment == null) {
-        if (currentSegmentRequest != null) {
+        if (currentSegmentRequest !== null) {
           log.debug("Buffer: interrupt segment request.", bufferType);
         }
         downloadQueue = [];
@@ -406,7 +424,7 @@ export default function RepresentationBuffer<T>({
         );
       }
 
-      if (currentSegmentRequest == null) {
+      if (currentSegmentRequest === null) {
         log.debug("Buffer: start downloading queue.", bufferType);
         downloadQueue = neededSegments;
         startDownloadingQueue$.next(); // restart the queue

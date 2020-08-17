@@ -906,7 +906,7 @@ export default {
    * SourceBuffer is currently updating.
    * @type {Number}
    */
-  SOURCE_BUFFER_FLUSHING_INTERVAL: 2000,
+  SOURCE_BUFFER_FLUSHING_INTERVAL: 500,
 
   /**
    * Padding under which we should not buffer from the current time, on
