@@ -23,35 +23,40 @@
  * position and what is currently buffered.
  */
 
-// import objectAssign from "object-assign";
 import shouldAppendBufferAfterPadding from "../../../compat/should_append_buffer_after_padding";
 import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
-  // areSameContent,
+  areSameContent,
   ISegment,
   Period,
   Representation,
 } from "../../../manifest";
-import SimpleSet from "../../../utils/simple_set";
-import { IBufferedChunk } from "../../source_buffers";
+import objectAssign from "../../../utils/object_assign";
+import {
+  IBufferedChunk,
+  IEndOfSegmentOperation,
+  QueuedSourceBuffer,
+  SourceBufferOperation,
+} from "../../source_buffers";
 
 const { CONTENT_REPLACEMENT_PADDING,
         BITRATE_REBUFFERING_RATIO,
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
         MINIMUM_SEGMENT_SIZE } = config;
 
-export interface ISegmentFilterArgument { content: { adaptation : Adaptation;
-                                                     manifest : Manifest;
-                                                     period : Period;
-                                                     representation : Representation; };
-                                          currentPlaybackTime: number;
-                                          knownStableBitrate : number | undefined;
-                                          loadedSegmentPendingPush : SimpleSet;
-                                          neededRange : { start: number;
-                                                          end: number; };
-                                          segmentInventory : IBufferedChunk[]; }
+export interface ISegmentFilterArgument {
+  content: { adaptation : Adaptation;
+             manifest : Manifest;
+             period : Period;
+             representation : Representation; };
+  currentPlaybackTime: number;
+  knownStableBitrate : number | undefined;
+  neededRange : { start: number;
+                  end: number; };
+  queuedSourceBuffer : QueuedSourceBuffer<unknown>;
+}
 
 /**
  * @param {Object} segmentFilterArgument
@@ -61,10 +66,19 @@ export default function getNeededSegments({
   content,
   currentPlaybackTime,
   knownStableBitrate,
-  loadedSegmentPendingPush,
   neededRange,
-  segmentInventory,
+  queuedSourceBuffer,
 } : ISegmentFilterArgument) : ISegment[] {
+  const segmentInventory = queuedSourceBuffer.getInventory();
+  /**
+   * Every segment awaiting an "EndOfSegment" operation, which indicates that a
+   * completely-loaded segment is still being pushed to the QueuedSourceBuffer.
+   */
+  const segmentsBeingPushed = queuedSourceBuffer.getPendingOperations()
+    .filter((operation) : operation is IEndOfSegmentOperation =>
+      operation.type === SourceBufferOperation.EndOfSegment
+    ).map(operation => operation.value);
+
   // 1 - construct lists of segments possible and actually pushed
   const segmentsForRange = content.representation.index
     .getSegments(neededRange.start, neededRange.end - neededRange.start);
@@ -87,8 +101,15 @@ export default function getNeededSegments({
   // 4 - now filter the list of segments we can download
   const roundingError = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   return segmentsForRange.filter(segment => {
-    if (loadedSegmentPendingPush.test(segment.id)) {
-      return false; // we're already pushing it
+
+    // First, check that the segment is not already being pushed
+    if (segmentsBeingPushed.length > 0) {
+      const contentObject = objectAssign({ segment }, content);
+      const isAlreadyBeingPushed = segmentsBeingPushed
+        .some((pendingSegment) => areSameContent(contentObject, pendingSegment));
+      if (isAlreadyBeingPushed) {
+        return false;
+      }
     }
 
     const { duration, time, timescale } = segment;

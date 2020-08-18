@@ -55,15 +55,16 @@ export type IBufferType = "audio" |
                           "image";
 
 /**
- * Enum used internally by the QueuedSourceBuffer as a discriminant in its
- * queue of "actions".
+ * Enum used by the QueuedSourceBuffer as a discriminant in its queue of
+ * "operations".
  */
-enum SourceBufferAction { Push,
-                          Remove,
-                          EndOfSegment }
+export enum SourceBufferOperation { Push,
+                                    Remove,
+                                    EndOfSegment }
 
 /**
- * Content of the `data` property when pushing a new chunk
+ * Content of the `data` property when pushing a new chunk.
+ *
  * This will contain all necessary information to decode the media data.
  * Type parameter `T` is the format of the chunk's data.
  */
@@ -128,13 +129,15 @@ export interface IPushedChunkInventoryInfos {
   segment : ISegment;
   /**
    * Estimated precize start time, in seconds, the chunk starts at when decoded
-   * (this should include any possible `timestampOffset` value.
+   * (this should include any possible `timestampOffset` value but should not
+   * take into account the append windows). TODO simplify those rules?
    */
   estimatedStart? : number;
   /**
    * Estimated precize difference, in seconds, between the last decodable
    * and the first decodable position in the chunk.
-   * (this should include any possible `timestampOffset` value.
+   * (this should include any possible `timestampOffset` value but should not
+   * take into account the append windows). TODO simplify those rules?
    */
   estimatedDuration? : number; // Estimated end time, in s, of the chunk
 }
@@ -162,90 +165,110 @@ export interface IEndOfSegmentInfos {
 }
 
 /**
- * "Action" created by the QueuedSourceBuffer when pushing a chunk.
- * Will be converted into an `IPushQueueItem` once in the queue.
- * Type parameter `T` is the format of the chunk's data.
+ * "Operation" created by the `QueuedSourceBuffer` when asked to push a chunk.
+ *
+ * It represents a queued "Push" operation (created due to a `pushChunk` method
+ * call) that is not yet fully processed by the `QueuedSourceBuffer`.
  */
-interface IPushAction<T> {
-  /** Discriminant (allows to tell its a "Push action"). */
-  type : SourceBufferAction.Push;
+export interface IPushOperation<T> {
+  /** Discriminant (allows to tell its a "Push operation"). */
+  type : SourceBufferOperation.Push;
   /** Arguments for that push. */
   value : IPushChunkInfos<T>;
 }
 
 /**
- * "Action" created by the QueuedSourceBuffer when removing buffer.
- * Will be converted into an `IRemoveQueueItem` once in the queue.
+ * "Operation" created by the QueuedSourceBuffer when asked to remove buffer.
+ *
+ * It represents a queued "Remove" operation (created due to a `removeBuffer`
+ * method call) that is not yet fully processed by the QueuedSourceBuffer.
  */
-interface IRemoveAction {
-  /** Discriminant (allows to tell its a "Remove action"). */
-  type : SourceBufferAction.Remove;
+export interface IRemoveOperation {
+  /** Discriminant (allows to tell its a "Remove operation"). */
+  type : SourceBufferOperation.Remove;
   /** Arguments for that remove (absolute start and end time, in seconds). */
   value : { start : number;
             end : number; }; }
 
 /**
- * "Action" created by the QueuedSourceBuffer for validating that a complete
- * Segment has been or is being pushed to it.
- * Will be converted into an `IEndOfSegmentQueueItem` once in the queue.
+ * "Operation" created by the `QueuedSourceBuffer` when asked to validate that
+ * a full segment has been pushed through earlier `Push` operations.
+ *
+ * It represents a queued "EndOfSegment" operation (created due to a
+ * `endOfSegment` method call) that is not yet fully processed by the
+ * `QueuedSourceBuffer.`
  */
-interface IEndOfSegmentAction {
-  /** Discriminant (allows to tell its an "EndOfSegment action"). */
-  type : SourceBufferAction.EndOfSegment;
-  /** Arguments for that action. */
+export interface IEndOfSegmentOperation {
+  /** Discriminant (allows to tell its an "EndOfSegment operation"). */
+  type : SourceBufferOperation.EndOfSegment;
+  /** Arguments for that operation. */
   value : IEndOfSegmentInfos;
 }
 
-/** "Actions" enumeration that are understood by the QueuedSourceBuffer. */
-type IQSBNewAction<T> = IPushAction<T> |
-                        IRemoveAction |
-                        IEndOfSegmentAction;
+/** "Operations" scheduled by the QueuedSourceBuffer. */
+export type IQSBOperation<T> = IPushOperation<T> |
+                               IRemoveOperation |
+                               IEndOfSegmentOperation;
 
 /**
- * Item waiting in the queue to push a new chunk to the SourceBuffer.
+ * Enumeration of every item that can be added to the QueuedSourceBuffer's queue
+ * before being processed into a task (see IQSBPendingTask).
+ *
+ * Here we add the `subject` Subject which will allows the QueuedSourceBuffer to
+ * emit an item when the corresponding queued operation is completely processed.
+ *
  * Type parameter `T` is the format of the chunk's data.
  */
-interface IPushQueueItem<T> extends IPushAction<T> { subject : Subject<void>; }
-
-/** Item waiting in the queue to remove segment(s) from the SourceBuffer. */
-interface IRemoveQueueItem extends IRemoveAction { subject : Subject<void>; }
-
-/** Item waiting in the queue to validate that the whole segment has been pushed. */
-interface IEndOfSegmentQueueItem extends IEndOfSegmentAction {
-  subject : Subject<void>;
-}
-
-/**
- * Enumeration of every item that can be queued.
- * Type parameter `T` is the format of the chunk's data.
- */
-type IQSBQueueItem<T> = IPushQueueItem<T> |
-                        IRemoveQueueItem |
-                        IEndOfSegmentQueueItem;
-
-/** Data of a push action when transformed into a task. */
-interface IPushData<T> { isInit : boolean;
-                         segmentData : T;
-                         codec : string;
-                         timestampOffset : number;
-                         appendWindow : [ number | undefined,
-                                          number | undefined ]; }
-
-/** Once processed, Push queue items are separated into one or multiple tasks. */
-interface IPushTask<T> { type : SourceBufferAction.Push;
-                         steps : Array<IPushData<T>>;
-                         inventoryData : IInsertedChunkInfos;
-                         subject : Subject<void>; }
+type IQSBQueueItem<T> = IQSBOperation<T> & { subject: Subject<void> };
 
 /** Type of task currently processed by the QueuedSourceBuffer. */
-type IPendingTask<T> = IPushTask<T> |
-                       IRemoveQueueItem |
-                       IEndOfSegmentQueueItem;
+type IQSBPendingTask<T> = IPushTask<T> |
+                          IRemoveOperation & { subject: Subject<void> } |
+                          IEndOfSegmentOperation & { subject: Subject<void> };
+
+/** Structure of a `IQSBPendingTask` item corresponding to a "Push" operation. */
+type IPushTask<T> = IPushOperation<T> & {
+  /**
+   * Data that needs to be actually pushed, per sequential steps.
+   * Here it is in plural form because we might need either to push only the
+   * given chunk or both its initialization segment then the chunk (depending on
+   * the last pushed initialization segment).
+   */
+  steps : Array<IPushData<T>>;
+  /**
+   * Processed `inventoryInfos` given through a `pushChunk` method call which
+   * will actually be sent to the SegmentInventory.
+   */
+  inventoryData : IInsertedChunkInfos;
+  /** Subject used to emit an event to the caller when the operation is finished. */
+  subject : Subject<void>;
+};
+
+/** Data of a single chunk/segment the QueuedSourceBuffer needs to push. */
+interface IPushData<T> {
+  /** `true` if it is an initialization segment. `false` otherwise. */
+  isInit : boolean;
+  /** The data of the chunk/segment that needs to be pushed. */
+  segmentData : T;
+  /** The codec used to decode the segment. */
+  codec : string;
+  /**
+   * An offset in seconds that has to be added to the segment's presentation
+   * time before decoding. Can be set to `0` to not set any offset.
+   */
+  timestampOffset : number;
+  /**
+   * Start and end append windows for this chunk/segment, `undefined` if no start
+   * and/or end append windows are wanted.
+   */
+  appendWindow : [ number | undefined,
+                   number | undefined ];
+}
 
 /**
  * Allows to push and remove new Segments to a SourceBuffer in a FIFO queue (not
  * doing so can lead to browser Errors) while keeping an inventory of what has
- * been pushed.
+ * been pushed and what is being pushed.
  *
  * To work correctly, only a single QueuedSourceBuffer per SourceBuffer should
  * be created.
@@ -269,19 +292,22 @@ export default class QueuedSourceBuffer<T> {
   private _destroy$ : Subject<void>;
 
   /**
-   * Queue of awaited buffer "actions".
+   * Queue of awaited buffer "operations".
    * The first element in this array will be the first performed.
    */
   private _queue : Array<IQSBQueueItem<T>>;
 
   /**
-   * Information about the current action processed by the QueuedSourceBuffer.
-   * If equal to null, it means that no action from the queue is currently
+   * Information about the current operation processed by the QueuedSourceBuffer.
+   * If equal to null, it means that no operation from the queue is currently
    * being processed.
    */
-  private _pendingTask : IPendingTask<T> | null;
+  private _pendingTask : IQSBPendingTask<T> | null;
 
-  /** Keep track of the latest init segment pushed in the linked SourceBuffer. */
+  /**
+   * Keep track of the reference of the latest init segment pushed in the
+   * linked SourceBuffer.
+   */
   private _lastInitSegment : T | null;
 
   /**
@@ -347,19 +373,21 @@ export default class QueuedSourceBuffer<T> {
    * should call `endOfSegment` to indicate that the whole Segment has been
    * pushed.
    *
-   * Depending on the type of data appended, this might need an associated
-   * initialization segment.
+   * Depending on the type of data appended, the pushed chunk might rely on an
+   * initialization segment, given through the `data.initSegment` property.
    *
-   * Such initialization segment will be pushed in the SourceBuffer if the
-   * last segment pushed was associated to another initialization segment.
+   * Such initialization segment will be first pushed to the SourceBuffer if the
+   * last pushed segment was associated to another initialization segment.
    * This detection is entirely reference-based so make sure that the same
-   * initSegment argument given share the same reference.
+   * `data.initSegment` argument given share the same reference (in the opposite
+   * case, we would just unnecessarily push again the same initialization
+   * segment).
    *
-   * You can disable the usage of initialization segment by setting the
-   * `infos.data.initSegment` argument to null.
+   * If you don't need any initialization segment to push the wanted chunk, you
+   * can just set `data.initSegment` to `null`.
    *
    * You can also only push an initialization segment by setting the
-   * `infos.data.chunk` argument to null.
+   * `data.chunk` argument to null.
    *
    * @param {Object} infos
    * @returns {Observable}
@@ -368,7 +396,7 @@ export default class QueuedSourceBuffer<T> {
     log.debug("QSB: receiving order to push data to the SourceBuffer",
               this.bufferType,
               infos);
-    return this._addToQueue({ type: SourceBufferAction.Push,
+    return this._addToQueue({ type: SourceBufferOperation.Push,
                               value: infos });
   }
 
@@ -383,7 +411,7 @@ export default class QueuedSourceBuffer<T> {
               this.bufferType,
               start,
               end);
-    return this._addToQueue({ type: SourceBufferAction.Remove,
+    return this._addToQueue({ type: SourceBufferOperation.Remove,
                               value: { start, end } });
   }
 
@@ -400,7 +428,7 @@ export default class QueuedSourceBuffer<T> {
     log.debug("QSB: receiving order for validating end of segment",
               this.bufferType,
               infos.segment);
-    return this._addToQueue({ type: SourceBufferAction.EndOfSegment,
+    return this._addToQueue({ type: SourceBufferOperation.EndOfSegment,
                               value: infos });
   }
 
@@ -434,6 +462,31 @@ export default class QueuedSourceBuffer<T> {
    */
   public getInventory() : IBufferedChunk[] {
     return this._segmentInventory.getInventory();
+  }
+
+  /**
+   * Returns the list of every operations that the `QueuedSourceBuffer` is still
+   * processing. From the one with the highest priority (like the one being
+   * processed)
+   * @returns {Array.<Object>}
+   */
+  public getPendingOperations() : Array<IQSBOperation<T>> {
+    const parseQueuedOperation =
+      (op : IQSBQueueItem<T> | IQSBPendingTask<T>) : IQSBOperation<T> => {
+        // Had to be written that way for TypeScrypt
+        switch (op.type) {
+          case SourceBufferOperation.Push:
+            return { type: op.type, value: op.value };
+          case SourceBufferOperation.Remove:
+            return { type: op.type, value: op.value };
+          case SourceBufferOperation.EndOfSegment:
+            return { type: op.type, value: op.value };
+        }
+      };
+    const queued = this._queue.map(parseQueuedOperation);
+    return this._pendingTask === null ?
+      queued :
+      [parseQueuedOperation(this._pendingTask)].concat(queued);
   }
 
   /**
@@ -488,20 +541,20 @@ export default class QueuedSourceBuffer<T> {
 
   /**
    * When the returned observable is subscribed:
-   *   1. Add your action to the queue.
+   *   1. Add your operation to the queue.
    *   2. Begin the queue if not pending.
    *
-   * Cancel queued action on unsubscription.
+   * Cancel queued operation on unsubscription.
    * @private
-   * @param {Object} action
+   * @param {Object} operation
    * @returns {Observable}
    */
-  private _addToQueue(action : IQSBNewAction<T>) : Observable<void> {
+  private _addToQueue(operation : IQSBOperation<T>) : Observable<void> {
     return new Observable((obs : Observer<void>) => {
       const shouldRestartQueue = this._queue.length === 0 &&
                                  this._pendingTask === null;
       const subject = new Subject<void>();
-      const queueItem = objectAssign({ subject }, action);
+      const queueItem = objectAssign({ subject }, operation);
       this._queue.push(queueItem);
 
       const subscription = subject.subscribe(obs);
@@ -511,6 +564,10 @@ export default class QueuedSourceBuffer<T> {
 
       return () => {
         subscription.unsubscribe();
+
+        // Remove the corresponding element from the QueuedSourceBuffer's queue.
+        // If the operation was a pending task, it should still continue to not
+        // let the QueuedSourceBuffer in a weird state.
         const index = this._queue.indexOf(queueItem);
         if (index >= 0) {
           this._queue.splice(index, 1);
@@ -530,17 +587,17 @@ export default class QueuedSourceBuffer<T> {
 
     // handle end of previous task if needed
     if (this._pendingTask !== null) {
-      if (this._pendingTask.type !== SourceBufferAction.Push ||
+      if (this._pendingTask.type !== SourceBufferOperation.Push ||
           this._pendingTask.steps.length === 0)
       {
         switch (this._pendingTask.type) {
-          case SourceBufferAction.Push:
+          case SourceBufferOperation.Push:
             this._segmentInventory.insertChunk(this._pendingTask.inventoryData);
             break;
-          case SourceBufferAction.EndOfSegment:
+          case SourceBufferOperation.EndOfSegment:
             this._segmentInventory.completeSegment(this._pendingTask.value);
             break;
-          case SourceBufferAction.Remove:
+          case SourceBufferOperation.Remove:
             this.synchronizeInventory();
             break;
           default:
@@ -577,13 +634,13 @@ export default class QueuedSourceBuffer<T> {
     const task = this._pendingTask;
     try {
       switch (task.type) {
-        case SourceBufferAction.EndOfSegment:
+        case SourceBufferOperation.EndOfSegment:
           // nothing to do, we will just acknowledge the segment.
           log.debug("QSB: Acknowledging complete segment", task.value);
           this._flush();
           return;
 
-        case SourceBufferAction.Push:
+        case SourceBufferOperation.Push:
           const nextStep = task.steps.shift();
           if (nextStep === undefined ||
               (nextStep.isInit && this._lastInitSegment === nextStep.segmentData))
@@ -594,7 +651,7 @@ export default class QueuedSourceBuffer<T> {
           this._pushSegmentData(nextStep);
           break;
 
-        case SourceBufferAction.Remove:
+        case SourceBufferOperation.Remove:
           const { start, end } = task.value;
           log.debug("QSB: removing data from SourceBuffer",
                     this.bufferType,
@@ -675,10 +732,10 @@ export default class QueuedSourceBuffer<T> {
  */
 function convertQueueItemToTask<T>(
   item : IQSBQueueItem<T>
-) : IPendingTask<T> | null {
+) : IQSBPendingTask<T> | null {
   switch (item.type) {
-    case SourceBufferAction.Push:
-      // Push actions with both an init segment and a regular segment need
+    case SourceBufferOperation.Push:
+      // Push operation with both an init segment and a regular segment need
       // to be separated into two steps
       const steps = [];
       const itemValue = item.value;
@@ -735,13 +792,10 @@ function convertQueueItemToTask<T>(
                               segment: inventoryInfos.segment,
                               start,
                               end };
-      return { type: SourceBufferAction.Push,
-               steps,
-               inventoryData,
-               subject: item.subject };
+      return objectAssign({ steps, inventoryData }, item);
 
-    case SourceBufferAction.Remove:
-    case SourceBufferAction.EndOfSegment:
+    case SourceBufferOperation.Remove:
+    case SourceBufferOperation.EndOfSegment:
       return item;
     default:
       assertUnreachable(item);
