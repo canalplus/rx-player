@@ -74,7 +74,8 @@ import EVENTS from "../events_generators";
 import {
   IBufferEventAddedSegment,
   IBufferManifestMightBeOutOfSync,
-  IBufferNeededActions,
+  IBufferNeedsDiscontinuitySeek,
+  IBufferNeedsManifestRefresh,
   IBufferStateActive,
   IBufferStateFull,
   IProtectedSegmentEvent,
@@ -149,6 +150,10 @@ interface ISegmentRequestObject<T> {
   request$ : Observable<ISegmentFetcherEvent<T>>; // The request itself
   priority : number; // The current priority of the request
 }
+
+/** Events communicating about actions that need to be taken */
+type IBufferNeededActions = IBufferNeedsManifestRefresh |
+                            IBufferNeedsDiscontinuitySeek;
 
 /**
  * Build up buffer for a single Representation.
