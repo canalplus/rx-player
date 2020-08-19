@@ -79,6 +79,7 @@ import {
   IStreamNeedsManifestRefresh,
   IStreamStateActive,
   IStreamStateFull,
+  IStreamTerminatingEvent,
 } from "../types";
 import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority, {
@@ -139,8 +140,9 @@ export interface IRepresentationStreamArguments<T> {
    * When this Observable emits, the RepresentationStream will begin a
    * "termination process": it will, depending on the type of termination
    * wanted, either stop immediately pending segment requests or wait until they
-   * are finished before fully terminating (completing the
-   * `RepresentationStream` Observable).
+   * are finished before fully terminating (sending the
+   * `IStreamTerminatingEvent` and then completing the `RepresentationStream`
+   * Observable once the corresponding segments have been pushed).
    */
   terminate$ : Observable<ITerminationOrder>;
   /**
@@ -357,7 +359,7 @@ export default function RepresentationStream<T>({
                                                         IStreamNeedsDiscontinuitySeek |
                                                         IStreamStateFull |
                                                         IStreamStateActive |
-                                                        { type : "terminated" }
+                                                        IStreamTerminatingEvent
     > {
       const neededSegments = status.neededSegments;
       const mostNeededSegment = neededSegments[0];
@@ -367,11 +369,11 @@ export default function RepresentationStream<T>({
         if (status.terminate.urgent) {
           log.debug("Stream: urgent termination request, terminate.", bufferType);
           startDownloadingQueue$.complete(); // complete the downloading queue
-          return observableOf({ type: "terminated" as "terminated" });
+          return observableOf(EVENTS.streamTerminating());
         } else if (currentSegmentRequest === null) {
           log.debug("Stream: no request, terminate.", bufferType);
           startDownloadingQueue$.complete(); // complete the downloading queue
-          return observableOf({ type: "terminated" as "terminated" });
+          return observableOf(EVENTS.streamTerminating());
         } else if (
           mostNeededSegment == null ||
           currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
@@ -379,7 +381,7 @@ export default function RepresentationStream<T>({
           log.debug("Stream: cancel request and terminate.", bufferType);
           startDownloadingQueue$.next(); // interrupt the current request
           startDownloadingQueue$.complete(); // complete the downloading queue
-          return observableOf({ type: "terminated" as "terminated" });
+          return observableOf(EVENTS.streamTerminating());
         } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
           const { request$ } = currentSegmentRequest;
           segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
@@ -439,21 +441,19 @@ export default function RepresentationStream<T>({
       return observableConcat(observableOf(...neededActions),
                               observableOf(EVENTS.activeStream(bufferType)));
     }),
-    takeWhile((e) : e is IStreamNeedsManifestRefresh |
-                         IStreamNeedsDiscontinuitySeek |
-                         IStreamStateFull |
-                         IStreamStateActive => e.type !== "terminated"));
+    takeWhile((e) => e.type !== "stream-terminating", true)
+  );
 
   /**
    * Stream Queue:
    *   - download every segments queued sequentially
    *   - when a segment is loaded, append it to the SourceBuffer
    */
-  const bufferQueue$ = startDownloadingQueue$.pipe(
+  const streamQueue$ = startDownloadingQueue$.pipe(
     switchMap(() => downloadQueue.length > 0 ? loadSegmentsFromQueue() : EMPTY),
     mergeMap(onLoaderEvent));
 
-  return observableMerge(status$, bufferQueue$).pipe(share());
+  return observableMerge(status$, streamQueue$).pipe(share());
 
   /**
    * Request every Segment in the ``downloadQueue`` on subscription.

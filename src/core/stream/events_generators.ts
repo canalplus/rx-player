@@ -42,6 +42,7 @@ import {
   IStreamNeedsManifestRefresh,
   IStreamStateActive,
   IStreamStateFull,
+  IStreamTerminatingEvent,
   IStreamWarningEvent,
 } from "./types";
 
@@ -175,6 +176,11 @@ const EVENTS = {
   ) : IRepresentationChangeEvent {
     return { type: "representationChange",
              value: { type, period, representation } };
+  },
+
+  streamTerminating() : IStreamTerminatingEvent {
+    return { type: "stream-terminating",
+             value: undefined };
   },
 
   resumeStream() : IResumeStreamEvent {
