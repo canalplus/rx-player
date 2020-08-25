@@ -14,32 +14,11 @@
  * limitations under the License.
  */
 
-import takePSSHOut from "./take_pssh_out";
-
-export {
-  createBox,
-  createBoxWithChildren,
-} from "./create_box";
-export {
-  getBox,
-  getBoxContent,
-  getNextBoxOffsets,
-  getBoxOffsets,
-  getUuidContent,
-} from "./get_box";
-export {
-  getMDAT,
-  getMDIA,
-  getTRAF,
-} from "./read";
-export {
-  getMDHDTimescale,
-  getPlayReadyKIDFromPrivateData,
-  getTrackFragmentDecodeTime,
-  getDurationFromTrun,
-  getSegmentsFromSidx,
-  ISidxSegment,
-  patchPssh,
-  updateBoxLength,
-} from "./utils";
-export { takePSSHOut };
+/**
+ * Maximum integer that can be stored on 32 bits.
+ *
+ * This can be used for example to know what is the maximum ISOBMFF box size
+ * that can be stored on the first four bytes of a box. Any value higher than
+ * that will need 8 bytes (64 bits) to be stored.
+ */
+export const MAX_32_BIT_INT = Math.pow(2, 32) - 1;
