@@ -95,6 +95,24 @@ export interface ILoaderDataLoadedValue<T> {
   size : number | undefined;
 }
 
+/**
+ * Event emitted by a segment loader when it immediately retries a request from
+ * scratch.
+ *
+ * This should only happen in rare occasions as the RxPlayer already has an
+ * advanced logic when it comes to retrying requests.
+ *
+ * An example of such occasion would be when a segment loader deduced that a
+ * request it just did might not have had the right headers.
+ * Here, the segment loader could send this event and then immediately re-do the
+ * request with the right headers set.
+ *
+ * In most other cases, a segment loader should just throw when encountering an
+ * error. The RxPlayer will handle retries by itself.
+ */
+export interface ISegmentLoaderDirectRetryEvent { type : "direct-retry";
+                                                  value : null; }
+
 /** Form that can take a loaded Manifest once loaded. */
 export type ILoadedManifest = Document |
                               string |
@@ -199,6 +217,7 @@ export type IManifestLoaderEvent = IManifestLoaderDataLoadedEvent;
 
 /** Event emitted by a segment loader. */
 export type ISegmentLoaderEvent<T> = ILoaderProgressEvent |
+                                     ISegmentLoaderDirectRetryEvent |
                                      ISegmentLoaderChunkEvent |
                                      ISegmentLoaderDataLoadedEvent<T> |
                                      ISegmentLoaderDataCreatedEvent<T>;

@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
-import { tap } from "rxjs/operators";
+import {
+  concat as observableConcat,
+  of as observableOf,
+} from "rxjs";
+import {
+  catchError,
+  mergeMap,
+} from "rxjs/operators";
+import log from "../../log";
+import objectAssign from "../../utils/object_assign";
 import {
   ITransportAudioVideoSegmentLoader,
   ITransportImageSegmentLoader,
   ITransportTextSegmentLoader,
 } from "../types";
-import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
+import checkISOBMFFIntegrity, {
+  getMissingBytes,
+} from "../utils/check_isobmff_integrity";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
 
 /**
  * Add multiple checks on the response given by the `segmentLoader` in argument.
- * If the response appear to be corrupted, this Observable will throw an error
- * with an `INTEGRITY_ERROR` code.
+ * If the response appear to be corrupted, various strategy will be employed:
+ * from throwing an integrity error to re-performing the request with updated
+ * context.
  * @param {Function} segmentLoader
  * @returns {Function}
  */
@@ -47,14 +59,56 @@ export default function addSegmentIntegrityChecks(
     ITransportTextSegmentLoader |
     ITransportImageSegmentLoader
 {
-  return (content) => segmentLoader(content).pipe(tap((res) => {
-    if ((res.type === "data-loaded" || res.type === "data-chunk") &&
-        res.value.responseData !== null &&
-        typeof res.value.responseData !== "string" &&
-        !isWEBMEmbeddedTrack(content.representation))
-    {
-      checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
-                            content.segment.isInit);
+  return (content) => segmentLoader(content).pipe(mergeMap((res) => {
+    if (res.type !== "data-loaded" && res.type !== "data-chunk") {
+      return observableOf(res);
     }
+
+    if (res.value.responseData === null ||
+        typeof res.value.responseData === "string" ||
+        isWEBMEmbeddedTrack(content.representation))
+    {
+      return observableOf(res);
+    }
+
+    let responseDataBytes = new Uint8Array(res.value.responseData);
+
+    // Check if we might have done a byte-range request
+    if (content.segment.range !== undefined &&
+        (content.segment.range[1] - content.segment.range[0] + 1)
+          === responseDataBytes.length)
+    {
+      const numberOfMissingBytes = getMissingBytes(responseDataBytes,
+                                                   content.segment.isInit);
+
+      if (numberOfMissingBytes !== undefined && numberOfMissingBytes !== 0) {
+        if (numberOfMissingBytes < 0) {
+          responseDataBytes = responseDataBytes
+            .slice(0, responseDataBytes.length + numberOfMissingBytes);
+        }
+
+        // there's a positive amount of bytes missing.
+        // Redo the request directly with a corrected `segment` object
+        const oldRange = content.segment.range;
+        const newRange = [oldRange[0], oldRange[1] + numberOfMissingBytes];
+        const newSegment = objectAssign({},
+                                        content.segment,
+                                        { range: newRange });
+        const newContent = objectAssign({},
+                                        content,
+                                        { segment: newSegment });
+        const newRequest$ = segmentLoader(newContent).pipe(catchError((err) => {
+          log.warn("DASH: retried segment request with another byte range failed",
+                   err);
+          return observableOf(res); // return orginal response
+        }));
+        return observableConcat(observableOf({ type: "direct-retry" as const,
+                                               value: null }),
+                                newRequest$);
+      }
+    }
+
+    checkISOBMFFIntegrity(responseDataBytes, content.segment.isInit);
+    return observableOf(res);
   }));
 }
