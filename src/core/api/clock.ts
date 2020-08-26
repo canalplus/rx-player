@@ -245,19 +245,30 @@ function getMediaInfos(
                       prevStalled === null &&
                       !(fullyLoaded || ended));
 
-    let shouldStall : boolean | undefined;
-    let shouldUnstall : boolean | undefined;
-
+    /**
+     * On some browsers on specific devices, playback may freeze sometimes
+     * whereas content has been buffered, and engine should be able to play.
+     *
+     * Here if enough data has been buffered, and HTMLMediaElement tells that
+     * content should be playing, another check is performed to see if video
+     * current time has change or not between two clock ticks.
+     *
+     * If so, the playback is considered as freezing.
+     */
     const canFreeze = ((!paused &&
                         !prevPaused) ||
                        (readyState === 4 &&
                         prevReadyState === 4)
                       ) &&
-                      (playbackRate !== 0 && prevPlaybackRate !== 0);
+                      (playbackRate !== 0 && prevPlaybackRate !== 0) &&
+                      currentRange !== null && (currentRange.end - currentTime >= 10);
 
     const isFreezing = (position === prevTime) &&
                        (timestamp - prevTimestamp) > 50 &&
                        canFreeze;
+
+    let shouldStall : boolean | undefined;
+    let shouldUnstall : boolean | undefined;
 
     if (withMediaSource) {
       if (canStall && (
