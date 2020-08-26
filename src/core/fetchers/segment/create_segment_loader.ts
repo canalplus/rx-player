@@ -36,6 +36,7 @@ import {
   ILoaderDataLoadedValue,
   ILoaderProgressEvent,
   ISegmentLoaderArguments,
+  ISegmentLoaderDirectRetryEvent,
   ISegmentLoaderEvent as ITransportSegmentLoaderEvent,
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
@@ -89,7 +90,8 @@ export type ISegmentLoaderEvent<T> = ISegmentLoaderData<T> |
                                      ISegmentLoaderWarning |
                                      ISegmentLoaderChunk |
                                      ISegmentLoaderChunkComplete |
-                                     IABRMetricsEvent;
+                                     IABRMetricsEvent |
+                                     ISegmentLoaderDirectRetryEvent;
 
 /** Cache implementation to avoid re-requesting segment */
 export interface ISegmentLoaderCache<T> {
@@ -228,6 +230,7 @@ export default function createSegmentLoader<T>(
           case "warning":
           case "request":
           case "progress":
+          case "direct-retry":
             return observableOf(arg);
           case "cache":
           case "data-created":

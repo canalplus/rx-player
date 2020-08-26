@@ -133,22 +133,17 @@ export default function createSegmentFetcher<T>(
             break;
           }
 
-          case "request": {
-            const { value } = arg;
-
-            // format it for ABR Handling
-            const segment : ISegment|undefined = value.segment;
-            if (segment == null || segment.duration == null) {
-              return;
+          case "direct-retry": {
+            if (requestBeginSent) {
+              requests$.next({ type: "requestEnd", value: { id } });
             }
+            requests$.next(generateRequestBeginEvent(content.segment, id));
+            break;
+          }
+
+          case "request": {
             requestBeginSent = true;
-            const duration = segment.duration / segment.timescale;
-            const time = segment.time / segment.timescale;
-            requests$.next({ type: "requestBegin",
-                             value: { duration,
-                                      time,
-                                      requestTimestamp: performance.now(),
-                                      id } });
+            requests$.next(generateRequestBeginEvent(content.segment, id));
             break;
           }
 
@@ -186,6 +181,7 @@ export default function createSegmentFetcher<T>(
                             case "progress":
                             case "metrics":
                             case "request":
+                            case "direct-retry":
                               return false;
                             default:
                               assertUnreachable(e);
@@ -228,4 +224,20 @@ export default function createSegmentFetcher<T>(
       share() // avoid multiple side effects if multiple subs
     );
   };
+}
+
+/**
+ * Generate `IRequestBeginEvent` corresponding to the given `segment` and `id`.
+ * @param {Object} segment
+ * @param {string} id
+ * @returns {Object}
+ */
+function generateRequestBeginEvent(
+  segment : ISegment,
+  id : string
+) : IABRRequestBeginEvent {
+  const duration = segment.duration / segment.timescale;
+  const time = segment.time / segment.timescale;
+  return { type: "requestBegin",
+           value: { duration, time, requestTimestamp: performance.now(), id } };
 }
