@@ -28,6 +28,7 @@ import {
 } from "../types";
 import byteRange from "../utils/byte_range";
 import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
+import performSegmentRequest from "../utils/segment_request";
 import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
@@ -58,8 +59,7 @@ export default function generateTextTrackLoader(
     const { url } = args;
 
     if (url === null) {
-      return observableOf({ type: "data-created",
-                            value: { responseData: null } });
+      return observableOf({ type: "data", value: { responseData: null } });
     }
 
     if (args.segment.isInit) {
@@ -79,11 +79,11 @@ export default function generateTextTrackLoader(
     // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
     const responseType = isMP4Embedded ?  "arraybuffer" :
                                           "text";
-    return request<ArrayBuffer|string>({ url,
-                                         responseType,
-                                         headers: Array.isArray(range) ?
-                                           { Range: byteRange(range) } :
-                                           null,
-                                         sendProgressEvents: true });
+    return performSegmentRequest(request({ url,
+                                          responseType,
+                                          headers: Array.isArray(range) ?
+                                            { Range: byteRange(range) } :
+                                            null,
+                                          sendProgressEvents: true }));
   }
 }

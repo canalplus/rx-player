@@ -27,6 +27,7 @@ import {
   ISegmentLoaderEvent,
   ISegmentParserArguments,
 } from "../types";
+import performSegmentRequest from "../utils/segment_request";
 
 /**
  * @param {Object} args
@@ -37,12 +38,11 @@ export function imageLoader(
     url } : ISegmentLoaderArguments
 ) : Observable< ISegmentLoaderEvent< ArrayBuffer | null > > {
   if (segment.isInit || url === null) {
-    return observableOf({ type: "data-created" as const,
-                          value: { responseData: null } });
+    return observableOf({ type: "data" as const, value: { responseData: null } });
   }
-  return request({ url,
-                   responseType: "arraybuffer",
-                   sendProgressEvents: true });
+  return performSegmentRequest(request({ url,
+                                         responseType: "arraybuffer",
+                                         sendProgressEvents: true }));
 }
 
 /**

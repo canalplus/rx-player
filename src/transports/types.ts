@@ -64,70 +64,46 @@ export interface ISegmentLoaderArguments {
 
 // ---- Loader response ----
 
-/** Payload of a "data-loaded" event. */
-export interface ILoaderDataLoadedValue<T> {
-  /** The loaded response data. */
-  responseData : T;
-  /** Duration the request took to be performed, in seconds. */
-  duration : number | undefined;
-  /**
-   * "Real" URL (post-redirection) at which the data can be loaded.
-   *
-   * Note that this doesn't always apply e.g. some data might need multiple
-   * URLs to be fetched, some other might need to fetch no URL.
-   * This property should only be set when a unique URL is sufficient to
-   * retrieve the whole data.
-   */
-  url? : string;
-  /**
-   * Time at which the request began in terms of `performance.now`.
-   * If fetching the corresponding data necessitated to perform multiple
-   * requests, this time corresponds to the first request made.
-   */
-  sendingTime? : number;
-  /**
-   * Time at which the request ended in terms of `performance.now`.
-   * If fetching the corresponding data necessitated to perform multiple
-   * requests, this time corresponds to the last request to end.
-   */
-  receivedTime? : number;
-  /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
-  size : number | undefined;
-}
-
-/**
- * Event emitted by a segment loader when it immediately retries a request from
- * scratch.
- *
- * This should only happen in rare occasions as the RxPlayer already has an
- * advanced logic when it comes to retrying requests.
- *
- * An example of such occasion would be when a segment loader deduced that a
- * request it just did might not have had the right headers.
- * Here, the segment loader could send this event and then immediately re-do the
- * request with the right headers set.
- *
- * In most other cases, a segment loader should just throw when encountering an
- * error. The RxPlayer will handle retries by itself.
- */
-export interface ISegmentLoaderDirectRetryEvent { type : "direct-retry";
-                                                  value : null; }
-
 /** Form that can take a loaded Manifest once loaded. */
 export type ILoadedManifest = Document |
                               string |
                               IMetaPlaylist |
                               ILocalManifest;
 
-/** Event emitted by a Manifest loader when the Manifest is fully available. */
-export interface IManifestLoaderDataLoadedEvent {
-  type : "data-loaded";
-  value : ILoaderDataLoadedValue<ILoadedManifest>;
+/** Manifest data returned by a Manifest loader once the Manifest is loaded. */
+export interface ILoadedManifestResponse {
+  /** The loaded Manifest itself. */
+  responseData : ILoadedManifest;
+  /**
+   * "Real" URL (post-redirection) at which the Manifest can be loaded.
+   *
+   * Note that this doesn't always apply e.g. some Manifest might need multiple
+   * URLs to be fetched, some other might need to fetch no URL.
+   * This property should only be set when a unique URL is sufficient to
+   * retrieve the whole data.
+   */
+  url? : string;
+  /**
+   * Time at which the Manifest request began in terms of `performance.now`.
+   * If fetching the Manifest necessitate multiple requests, this time
+   * corresponds to the first request made.
+   */
+  sendingTime? : number;
+  /**
+   * Time at which the Manifest request ended in terms of `performance.now`.
+   * If fetching the Manifest necessitate multiple requests, this time
+   * corresponds to the last request to end.
+   */
+  receivedTime? : number;
 }
 
-/** Event emitted by a segment loader when the data has been fully loaded. */
-export interface ISegmentLoaderDataLoadedEvent<T> { type : "data-loaded";
-                                                    value : ILoaderDataLoadedValue<T>; }
+/** Event emitted by a Manifest loader when the Manifest is fully available. */
+export interface IManifestLoaderDataLoadedEvent { type : "data-loaded";
+                                                  value : ILoadedManifestResponse; }
+
+/** Event emitted by a segment loader when the data is fully available. */
+export interface ISegmentLoaderDataLoaded<T> { type : "data";
+                                               value : { responseData : T }; }
 
 /**
  * Event emitted by a segment loader when the data is available without needing
@@ -138,25 +114,85 @@ export interface ISegmentLoaderDataLoadedEvent<T> { type : "data-loaded";
  */
 export interface ISegmentLoaderDataCreatedEvent<T> { type : "data-created";
                                                      value : { responseData : T }; }
+/**
+ * Event emitted by a segment loader when it begins a new request.
+ * This event is mandatory if the loader needs to perform a request to fetch the
+ * wanted segment.
+ *
+ * If fetching that segment necessitates multiple requests, as many
+ * `ILoaderRequestBeginEvent` events should be sent.
+ */
+export interface ILoaderRequestBeginEvent {
+  type : "request-begin";
+  value : {
+    /**
+     * ID identifying uniquely a request done by the loader.
+     *
+     * In the case where a loader is doing multiple requests in parallel, this
+     * property allows to tell apart concurrent ones.
+     *
+     * This property can be ignored or set to `undefined` if the segment loader
+     * will only perform a single request at a time.
+     */
+    requestId? : string;
+  };
+}
 
 /**
  * Event emitted by a segment loader when new information on a pending request
  * is available.
+ *
+ * `ILoaderRequestProgressEvent` SHOULD only be emitted for pending requests.
+ * That is, for requests:
+ *   - for which a `ILoaderRequestBeginEvent` event has been sent.
+ *   - for which a `ILoaderRequestEndEvent` event has not yet been sent.
  *
  * Note that this event is not mandatory.
  * It will be used to allow to communicate network metrics to the rest of the
  * player, like to adapt the quality of the content depending on the user's
  * bandwidth.
  */
-export interface ILoaderProgressEvent {
+export interface ILoaderRequestProgressEvent {
   type : "progress";
   value : {
+    /**
+     * This value should be equal to the one of the `requestId` property from
+     * the corresponding `ILoaderRequestBeginEvent` event.
+     */
+    requestId? : string;
     /** Time since the beginning of the request so far, in seconds. */
     duration : number;
     /** Size of the data already downloaded, in bytes. */
     size : number;
     /** Size of whole data to download (data already-loaded included), in bytes. */
     totalSize? : number;
+  };
+}
+
+/**
+ * Event emitted when information about a finished request is available.
+ * This event should be sent just after the request ended.
+ *
+ * Note that this event is not mandatory.
+ * It will be used to allow to communicate network metrics to the rest of the
+ * player, like to adapt the quality of the content depending on the user's
+ */
+export interface ILoaderRequestEndEvent {
+  type : "request-end";
+  value : {
+    /**
+     * This value should be equal to the one of the `requestId` property from
+     * the corresponding `ILoaderRequestBeginEvent` event.
+     */
+    requestId? : string;
+    /** Duration of the request, in seconds. */
+    duration : number | undefined;
+    /** Time at which the request ended, in terms of `performance.now`. */
+    receivedTime : number | undefined;
+    /** Time at which the request began, in terms of `performance.now`. */
+    sendingTime : number | undefined;
+    /** Size in bytes of the downloaded data.  `undefined` if we don't know.  */
+    size : number | undefined;
   };
 }
 
@@ -176,34 +212,13 @@ export interface ISegmentLoaderDataChunkEvent {
  */
 export interface ISegmentLoaderDataChunkCompleteEvent {
   type : "data-chunk-complete";
-  value : {
-    /** Duration the request took to be performed, in seconds. */
-    duration : number | undefined;
-    /**
-     * "Real" URL (post-redirection) at which the segment was loaded.
-     *
-     * Note that this doesn't always apply e.g. some segment might need multiple
-     * URLs to be fetched, some other might need to fetch no URL.
-     * This property should only be set when a unique URL is sufficient to
-     * retrieve the whole data.
-     */
-    url? : string;
-    /**
-     * Time at which the request began in terms of `performance.now`.
-     * If fetching the corresponding data necessitated to perform multiple
-     * requests, this time corresponds to the first request made.
-     */
-    sendingTime? : number;
-    /**
-     * Time at which the request ended in terms of `performance.now`.
-     * If fetching the corresponding data necessitated to perform multiple
-     * requests, this time corresponds to the last request to end.
-     */
-    receivedTime? : number;
-    /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
-    size : number | undefined;
-  };
+  value : null;
 }
+
+/** Event sent by a segment loader concerning segment request. */
+export type ILoaderRequestEvent = ILoaderRequestBeginEvent |
+                                  ILoaderRequestProgressEvent |
+                                  ILoaderRequestEndEvent;
 
 /**
  * Event sent by a segment loader when the corresponding segment is available
@@ -216,18 +231,16 @@ export type ISegmentLoaderChunkEvent = ISegmentLoaderDataChunkEvent |
 export type IManifestLoaderEvent = IManifestLoaderDataLoadedEvent;
 
 /** Event emitted by a segment loader. */
-export type ISegmentLoaderEvent<T> = ILoaderProgressEvent |
-                                     ISegmentLoaderDirectRetryEvent |
+export type ISegmentLoaderEvent<T> = ILoaderRequestEvent |
                                      ISegmentLoaderChunkEvent |
-                                     ISegmentLoaderDataLoadedEvent<T> |
-                                     ISegmentLoaderDataCreatedEvent<T>;
+                                     ISegmentLoaderDataLoaded<T>;
 
 // ---- Parser arguments ----
 
 /** Arguments given to the `parser` function of the Manifest pipeline. */
 export interface IManifestParserArguments {
   /** Response obtained from the loader. */
-  response : ILoaderDataLoadedValue<unknown>;
+  response : ILoadedManifestResponse;
   /** URL originally requested. */
   url? : string;
   /**
@@ -242,8 +255,8 @@ export interface IManifestParserArguments {
    * profiting from the same retries and error management than the loader.
    */
   scheduleRequest : (request : () =>
-    Observable< ILoaderDataLoadedValue< Document | string > >) =>
-    Observable< ILoaderDataLoadedValue< Document | string > >;
+    Observable<ILoadedManifestResponse>) =>
+    Observable<ILoadedManifestResponse>;
   /**
    * If set to `true`, the Manifest parser can perform advanced optimizations
    * to speed-up the parsing process. Those optimizations might lead to a

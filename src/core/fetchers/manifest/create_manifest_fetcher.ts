@@ -30,7 +30,7 @@ import {
 } from "../../../errors";
 import Manifest from "../../../manifest";
 import {
-  ILoaderDataLoadedValue,
+  ILoadedManifestResponse,
   ITransportPipelines,
 } from "../../../transports";
 import createRequestScheduler from "../utils/create_request_scheduler";
@@ -159,7 +159,7 @@ export default function createManifestFetcher(
 
           // Prepare RequestScheduler
           // TODO Remove the need of a subject
-          type IRequestSchedulerData = ILoaderDataLoadedValue<string | Document>;
+          type IRequestSchedulerData = ILoadedManifestResponse;
           const schedulerWarnings$ = new Subject<ICustomError>();
           const scheduleRequest =
             createRequestScheduler<IRequestSchedulerData>(backoffOptions,

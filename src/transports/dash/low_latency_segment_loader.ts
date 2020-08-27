@@ -21,6 +21,7 @@ import {
 import {
   mergeMap,
   scan,
+  startWith,
 } from "rxjs/operators";
 import log from "../../log";
 import { concat } from "../../utils/byte_parsing";
@@ -29,7 +30,7 @@ import fetchRequest, {
   IDataComplete,
 } from "../../utils/request/fetch";
 import {
-  ILoaderProgressEvent,
+  ILoaderRequestEvent,
   ISegmentLoaderArguments,
   ISegmentLoaderChunkEvent,
   ISegmentLoaderEvent,
@@ -37,16 +38,18 @@ import {
 import byteRange from "../utils/byte_range";
 import extractCompleteChunks from "./extract_complete_chunks";
 
+// Items emitted after processing fetch events
+interface IScannedChunk {
+  event: IDataChunk | IDataComplete | null; // Event received from fetch
+  completeChunks: Uint8Array[]; // Complete chunks received on the event
+  partialChunk: Uint8Array | null; // Remaining incomplete chunk received on the event
+}
+
 export default function lowLatencySegmentLoader(
   url : string,
   args : ISegmentLoaderArguments
 ) : Observable< ISegmentLoaderEvent<ArrayBuffer> > {
   // Items emitted after processing fetch events
-  interface IScannedChunk {
-    event: IDataChunk | IDataComplete | null; // Event received from fetch
-    completeChunks: Uint8Array[]; // Complete chunks received on the event
-    partialChunk: Uint8Array | null; // Remaining incomplete chunk received on the event
-  }
 
   const { segment } = args;
   const headers = segment.range !== undefined ? { Range: byteRange(segment.range) } :
@@ -72,8 +75,7 @@ export default function lowLatencySegmentLoader(
       }, { event: null, completeChunks: [], partialChunk: null }),
 
       mergeMap((evt : IScannedChunk) => {
-        const emitted : Array<ISegmentLoaderChunkEvent |
-                              ILoaderProgressEvent> = [];
+        const emitted : Array<ISegmentLoaderChunkEvent | ILoaderRequestEvent> = [];
         for (let i = 0; i < evt.completeChunks.length; i++) {
           emitted.push({ type: "data-chunk",
                          value: { responseData: evt.completeChunks[i] } });
@@ -88,12 +90,15 @@ export default function lowLatencySegmentLoader(
         } else if (event !== null && event.type === "data-complete") {
           const { value } = event;
           emitted.push({ type: "data-chunk-complete",
+                         value: null });
+          emitted.push({ type: "request-end",
                          value: { duration: value.duration,
                                   receivedTime: value.receivedTime,
                                   sendingTime: value.sendingTime,
-                                  size: value.size,
-                                  url: value.url } });
+                                  size: value.size } });
         }
         return observableOf(...emitted);
-      }));
+      }),
+      startWith({ type: "request-begin",
+                  value: {} }));
 }

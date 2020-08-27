@@ -32,7 +32,7 @@ import dashManifestParser, {
 import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import {
-  ILoaderDataLoadedValue,
+  ILoadedManifestResponse,
   IManifestParserArguments,
   IManifestParserObservable,
   ITransportOptions,
@@ -46,7 +46,7 @@ import returnParsedManifest from "../utils/return_parsed_manifest";
  */
 function requestStringResource(
   url : string
-) : Observable< ILoaderDataLoadedValue< string > > {
+) : Observable< ILoadedManifestResponse > {
   return request({ url,
                    responseType: "text" })
   .pipe(
@@ -110,7 +110,7 @@ export default function generateManifestParser(
 
       return observableCombineLatest(externalResources$)
         .pipe(mergeMap(loadedResources => {
-          const resources : Array<ILoaderDataLoadedValue<string>> = [];
+          const resources : Array<{ responseData : string }> = [];
           for (let i = 0; i < loadedResources.length; i++) {
             const resource = loadedResources[i];
             if (typeof resource.responseData !== "string") {

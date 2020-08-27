@@ -45,7 +45,8 @@ import {
   IAudioVideoParserObservable,
   IChunkTimeInfo,
   IImageParserObservable,
-  ILoaderDataLoadedValue,
+  ILoadedManifestResponse,
+  IManifestLoaderDataLoadedEvent,
   IManifestParserArguments,
   IManifestParserObservable,
   IManifestParserResponseEvent,
@@ -209,12 +210,10 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                                     otherTransportOptions);
             const request$ = scheduleRequest(() =>
                 transport.manifest.loader({ url : ressource.url }).pipe(
-                  filter(
-                    (e): e is { type : "data-loaded";
-                                value : ILoaderDataLoadedValue<Document | string>; } =>
+                  filter((e): e is IManifestLoaderDataLoadedEvent =>
                     e.type === "data-loaded"
                   ),
-                  map((e) : ILoaderDataLoadedValue< Document | string > => e.value)
+                  map((e) : ILoadedManifestResponse => e.value)
                 ));
 
             return request$.pipe(mergeMap((responseValue) => {

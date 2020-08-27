@@ -15,7 +15,6 @@
  */
 
 import {
-  concat as observableConcat,
   of as observableOf,
 } from "rxjs";
 import {
@@ -60,7 +59,7 @@ export default function addSegmentIntegrityChecks(
     ITransportImageSegmentLoader
 {
   return (content) => segmentLoader(content).pipe(mergeMap((res) => {
-    if (res.type !== "data-loaded" && res.type !== "data-chunk") {
+    if (res.type !== "data" && res.type !== "data-chunk") {
       return observableOf(res);
     }
 
@@ -74,7 +73,8 @@ export default function addSegmentIntegrityChecks(
     let responseDataBytes = new Uint8Array(res.value.responseData);
 
     // Check if we might have done a byte-range request
-    if (content.segment.range !== undefined &&
+    if (res.type === "data" &&
+        content.segment.range !== undefined &&
         (content.segment.range[1] - content.segment.range[0] + 1)
           === responseDataBytes.length)
     {
@@ -97,14 +97,11 @@ export default function addSegmentIntegrityChecks(
         const newContent = objectAssign({},
                                         content,
                                         { segment: newSegment });
-        const newRequest$ = segmentLoader(newContent).pipe(catchError((err) => {
+        return segmentLoader(newContent).pipe(catchError((err) => {
           log.warn("DASH: retried segment request with another byte range failed",
                    err);
           return observableOf(res); // return orginal response
         }));
-        return observableConcat(observableOf({ type: "direct-retry" as const,
-                                               value: null }),
-                                newRequest$);
       }
     }
 

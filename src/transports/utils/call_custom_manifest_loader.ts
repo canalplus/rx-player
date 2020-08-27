@@ -60,10 +60,9 @@ export default function callCustomManifestLoader(
 
           obs.next({ type: "data-loaded",
                      value: { responseData: _args.data,
-                              size: _args.size,
-                              duration: _args.duration,
                               url: _args.url,
-                              receivedTime, sendingTime } });
+                              receivedTime,
+                              sendingTime } });
           obs.complete();
         }
       };

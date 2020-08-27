@@ -25,7 +25,6 @@ import {
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
   ISegmentLoaderArguments,
-  ISegmentLoaderDataLoadedEvent,
   ISegmentLoaderEvent,
 } from "../types";
 
@@ -35,10 +34,8 @@ import {
  */
 function loadInitSegment(
   customSegmentLoader : ILocalManifestInitSegmentLoader
-) : Observable< ISegmentLoaderDataLoadedEvent<ArrayBuffer | null>> {
-  return new Observable((obs : Observer<
-    ISegmentLoaderDataLoadedEvent< ArrayBuffer | null >
-  >) => {
+) : Observable<ISegmentLoaderEvent<ArrayBuffer | null>> {
+  return new Observable((obs : Observer< ISegmentLoaderEvent< ArrayBuffer | null > >) => {
     let hasFinished = false;
 
     /**
@@ -51,10 +48,12 @@ function loadInitSegment(
       duration? : number;
     }) => {
       hasFinished = true;
-      obs.next({ type: "data-loaded",
-                 value: { responseData: _args.data,
-                          size: _args.size,
-                          duration: _args.duration } });
+      obs.next({ type: "data", value: { responseData: _args.data } });
+      obs.next({ type: "request-end",
+                 value: { size: _args.size,
+                          duration: _args.duration,
+                          receivedTime: undefined,
+                          sendingTime: undefined } });
       obs.complete();
     };
 
@@ -67,6 +66,7 @@ function loadInitSegment(
       obs.error(err);
     };
 
+    obs.next({ type: "request-begin", value: {} });
     const abort = customSegmentLoader({ resolve, reject });
 
     return () => {
@@ -85,10 +85,8 @@ function loadInitSegment(
 function loadSegment(
   segment : { time : number; duration : number; timestampOffset? : number },
   customSegmentLoader : ILocalManifestSegmentLoader
-) : Observable< ISegmentLoaderDataLoadedEvent<ArrayBuffer | null>> {
-  return new Observable((obs : Observer<
-    ISegmentLoaderDataLoadedEvent< ArrayBuffer | null >
-  >) => {
+) : Observable< ISegmentLoaderEvent<ArrayBuffer | null>> {
+  return new Observable((obs : Observer< ISegmentLoaderEvent< ArrayBuffer | null > >) => {
     let hasFinished = false;
 
     /**
@@ -101,10 +99,12 @@ function loadSegment(
       duration? : number;
     }) => {
       hasFinished = true;
-      obs.next({ type: "data-loaded",
-                 value: { responseData: _args.data,
-                          size: _args.size,
-                          duration: _args.duration } });
+      obs.next({ type: "data", value: { responseData: _args.data } });
+      obs.next({ type: "request-end",
+                 value: { size: _args.size,
+                          duration: _args.duration,
+                          receivedTime: undefined,
+                          sendingTime: undefined } });
       obs.complete();
     };
 
@@ -117,6 +117,7 @@ function loadSegment(
       obs.error(err);
     };
 
+    obs.next({ type: "request-begin", value: { } });
     const abort = customSegmentLoader(segment, { resolve, reject });
 
     return () => {

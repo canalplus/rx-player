@@ -23,12 +23,11 @@ import assert from "../../utils/assert";
 import request from "../../utils/request";
 import {
   CustomSegmentLoader,
-  ILoaderProgressEvent,
   ISegmentLoaderArguments,
-  ISegmentLoaderDataLoadedEvent,
   ISegmentLoaderEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
+import performSegmentRequest from "../utils/segment_request";
 import {
   createAudioInitSegment,
   createVideoInitSegment,
@@ -39,8 +38,7 @@ interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
 }
 
 type ICustomSegmentLoaderObserver =
-  Observer<ILoaderProgressEvent |
-           ISegmentLoaderDataLoadedEvent<Uint8Array|ArrayBuffer>>;
+  Observer< ISegmentLoaderEvent< Uint8Array | ArrayBuffer > >;
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
@@ -56,10 +54,11 @@ function regularSegmentLoader(
     headers = { Range: byteRange(range) };
   }
 
-  return request({ url,
-                   responseType: "arraybuffer",
-                   headers,
-                   sendProgressEvents: true });
+  const segmentRequest$ = request({ url,
+                                    responseType: "arraybuffer",
+                                    headers,
+                                    sendProgressEvents: true });
+  return performSegmentRequest(segmentRequest$);
 }
 
 /**
@@ -126,11 +125,11 @@ const generateSegmentLoader = (
         responseData = new Uint8Array(0);
     }
 
-    return observableOf({ type: "data-created" as const,
+    return observableOf({ type: "data" as const,
                           value: { responseData } });
   }
   else if (url === null) {
-    return observableOf({ type: "data-created" as const,
+    return observableOf({ type: "data" as const,
                           value: { responseData: null } });
   } else {
     const args = { adaptation,
@@ -160,10 +159,13 @@ const generateSegmentLoader = (
       }) => {
         if (!hasFallbacked) {
           hasFinished = true;
-          obs.next({ type: "data-loaded",
-                     value: { responseData: _args.data,
-                              size: _args.size,
-                              duration: _args.duration } });
+          obs.next({ type: "data" as const,
+                     value: { responseData: _args.data } });
+          obs.next({ type: "request-end",
+                     value: { size: _args.size,
+                              duration: _args.duration,
+                              receivedTime: undefined,
+                              sendingTime: undefined } });
           obs.complete();
         }
       };
@@ -202,6 +204,11 @@ const generateSegmentLoader = (
       };
 
       const callbacks = { reject, resolve, fallback, progress };
+
+      // We cannot know for sure if `customManifestLoader` will perform a
+      // request or even multiple ones.
+      // Assume it makes a single one starting now as a sensible default.
+      obs.next({ type: "request-begin", value: {} });
       const abort = customSegmentLoader(args, callbacks);
 
       return () => {

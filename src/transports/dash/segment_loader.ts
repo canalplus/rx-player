@@ -25,21 +25,19 @@ import xhr, {
 import warnOnce from "../../utils/warn_once";
 import {
   CustomSegmentLoader,
-  ILoaderProgressEvent,
   ISegmentLoaderArguments,
-  ISegmentLoaderDataLoadedEvent,
   ISegmentLoaderEvent,
   ITransportAudioVideoSegmentLoader,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import performSegmentRequest from "../utils/segment_request";
 import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
 type ICustomSegmentLoaderObserver =
-  Observer<ILoaderProgressEvent |
-           ISegmentLoaderDataLoadedEvent<Uint8Array|ArrayBuffer>>;
+  Observer<ISegmentLoaderEvent<Uint8Array|ArrayBuffer>>;
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
@@ -67,16 +65,19 @@ function regularSegmentLoader(
   }
 
   const { segment } = args;
-  return xhr({ url,
-               responseType: "arraybuffer",
-               sendProgressEvents: true,
-               headers: segment.range !== undefined ?
-                 { Range: byteRange(segment.range) } :
-                 undefined });
+  return performSegmentRequest(xhr({ url,
+                                     responseType: "arraybuffer",
+                                     sendProgressEvents: true,
+                                     headers: segment.range !== undefined ?
+                                       { Range: byteRange(segment.range) } :
+                                       undefined }));
 }
 
 /**
- * @param {Object} config
+ * Generate a segment loader:
+ *   - call a custom SegmentLoader if defined
+ *   - call the regular loader if not
+ * @param {Object} args
  * @returns {Function}
  */
 export default function generateSegmentLoader(
@@ -98,8 +99,7 @@ export default function generateSegmentLoader(
   ) : Observable< ISegmentLoaderEvent< Uint8Array | ArrayBuffer | null > > {
     const { url } = content;
     if (url == null) {
-      return observableOf({ type: "data-created" as const,
-                            value: { responseData: null } });
+      return observableOf({ type: "data" as const, value: { responseData: null } });
     }
 
     if (lowLatencyMode || customSegmentLoader === undefined) {
@@ -129,10 +129,13 @@ export default function generateSegmentLoader(
       ) => {
         if (!hasFallbacked) {
           hasFinished = true;
-          obs.next({ type: "data-loaded" as const,
-                     value: { responseData: _args.data,
-                              size: _args.size,
-                              duration: _args.duration } });
+          obs.next({ type: "data" as const,
+                     value: { responseData: _args.data } });
+          obs.next({ type: "request-end",
+                     value: { size: _args.size,
+                              duration: _args.duration,
+                              receivedTime: undefined,
+                              sendingTime: undefined } });
           obs.complete();
         }
       };
@@ -167,15 +170,15 @@ export default function generateSegmentLoader(
       const fallback = () => {
         hasFallbacked = true;
         const regular$ = regularSegmentLoader(url, content, lowLatencyMode);
-
-        // HACK What is TypeScript/RxJS doing here??????
-        /* tslint:disable deprecation */
-        // @ts-ignore
         regular$.subscribe(obs);
-        /* tslint:enable deprecation */
       };
 
       const callbacks = { reject, resolve, progress, fallback };
+
+      // We cannot know for sure if `customManifestLoader` will perform a
+      // request or even multiple ones.
+      // Assume it makes a single one starting now as a sensible default.
+      obs.next({ type: "request-begin", value: { } });
       const abort = customSegmentLoader(args, callbacks);
 
       return () => {

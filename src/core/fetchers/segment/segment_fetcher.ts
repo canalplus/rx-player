@@ -29,7 +29,6 @@ import {
   tap,
 } from "rxjs/operators";
 import { formatError } from "../../../errors";
-import { ISegment } from "../../../manifest";
 import {
   ISegmentParserResponse,
   ITransportPipelines,
@@ -84,7 +83,7 @@ export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
 export type ISegmentFetcher<T> = (content : ISegmentLoaderContent) =>
                                    Observable<ISegmentFetcherEvent<T>>;
 
-const generateRequestID = idGenerator();
+const generateRequestIdPrefix = idGenerator();
 
 /**
  * Create a function which will fetch and parse segments.
@@ -123,32 +122,29 @@ export default function createSegmentFetcher<T>(
   return function fetchSegment(
     content : ISegmentLoaderContent
   ) : Observable<ISegmentFetcherEvent<T>> {
-    const id = generateRequestID();
-    let requestBeginSent = false;
+    const idPrefix = generateRequestIdPrefix();
+    const sentIds : string[] = [];
     return segmentLoader(content).pipe(
       tap((arg) => {
         switch (arg.type) {
-          case "metrics": {
-            requests$.next(arg);
-            break;
-          }
-
-          case "direct-retry": {
-            if (requestBeginSent) {
-              requests$.next({ type: "requestEnd", value: { id } });
-            }
-            requests$.next(generateRequestBeginEvent(content.segment, id));
-            break;
-          }
-
-          case "request": {
-            requestBeginSent = true;
-            requests$.next(generateRequestBeginEvent(content.segment, id));
+          case "request-begin": {
+            const { requestId } = arg.value;
+            const id = getFetcherId(idPrefix, requestId);
+            sentIds.push(id);
+            const { segment } = content;
+            const duration = segment.duration / segment.timescale;
+            const time = segment.time / segment.timescale;
+            requests$.next({ type: "requestBegin",
+                             value: { duration,
+                                      time,
+                                      requestTimestamp: performance.now(),
+                                      id } });
             break;
           }
 
           case "progress": {
             const { value } = arg;
+            const id = getFetcherId(idPrefix, value.requestId);
             if (value.totalSize != null && value.size < value.totalSize) {
               requests$.next({ type: "progress",
                                value: { duration: value.duration,
@@ -159,12 +155,28 @@ export default function createSegmentFetcher<T>(
             }
             break;
           }
+
+          case "request-end": {
+            const { requestId, size, duration } = arg.value;
+            const id = getFetcherId(idPrefix, requestId);
+            if (size != null && duration != null) {
+              requests$.next({ type: "metrics",
+                              value: { size, duration, content } });
+            }
+            const index = sentIds.indexOf(id);
+            if (index >= 0) {
+              sentIds.splice(index, 1);
+              requests$.next({ type: "requestEnd", value: { id } });
+            }
+            break;
+          }
         }
       }),
 
       finalize(() => {
-        if (requestBeginSent) {
-          requests$.next({ type: "requestEnd", value: { id } });
+        while (sentIds.length > 0) {
+          requests$.next({ type: "requestEnd", value: { id: sentIds[0] } });
+          sentIds.shift();
         }
       }),
 
@@ -179,9 +191,8 @@ export default function createSegmentFetcher<T>(
                             case "data":
                               return true;
                             case "progress":
-                            case "metrics":
-                            case "request":
-                            case "direct-retry":
+                            case "request-begin":
+                            case "request-end":
                               return false;
                             default:
                               assertUnreachable(e);
@@ -227,17 +238,17 @@ export default function createSegmentFetcher<T>(
 }
 
 /**
- * Generate `IRequestBeginEvent` corresponding to the given `segment` and `id`.
- * @param {Object} segment
- * @param {string} id
- * @returns {Object}
+ * Construct unique ID for a single request in the RxPlayer based on a prefix
+ * unique for a given loader and a `requestId` from one of that loader's
+ * request.
+ * @param {string} idPrefix
+ * @param {string | undefined} requestId
+ * @returns {string}
  */
-function generateRequestBeginEvent(
-  segment : ISegment,
-  id : string
-) : IABRRequestBeginEvent {
-  const duration = segment.duration / segment.timescale;
-  const time = segment.time / segment.timescale;
-  return { type: "requestBegin",
-           value: { duration, time, requestTimestamp: performance.now(), id } };
+function getFetcherId(
+  idPrefix : string,
+  requestId : string | undefined
+) : string {
+  return idPrefix + (requestId !== undefined ? "_" + requestId :
+                                                     "");
 }

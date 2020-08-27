@@ -15,8 +15,6 @@
  */
 
 import {
-  concat as observableConcat,
-  EMPTY,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -33,17 +31,16 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import {
-  ILoaderDataLoadedValue,
-  ILoaderProgressEvent,
+  ILoaderRequestBeginEvent,
+  ILoaderRequestEndEvent,
+  ILoaderRequestProgressEvent,
   ISegmentLoaderArguments,
-  ISegmentLoaderDirectRetryEvent,
   ISegmentLoaderEvent as ITransportSegmentLoaderEvent,
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import castToObservable from "../../../utils/cast_to_observable";
 import objectAssign from "../../../utils/object_assign";
 import tryCatch from "../../../utils/rx-try_catch";
-import { IABRMetricsEvent } from "../../abr";
 import errorSelector from "../utils/error_selector";
 import tryURLsWithBackoff, {
   IBackoffOptions,
@@ -51,19 +48,15 @@ import tryURLsWithBackoff, {
 
 /** Data comes from a local JS cache maintained here, no request was done. */
 interface ISegmentLoaderCachedSegmentEvent<T> { type : "cache";
-                                                value : ILoaderDataLoadedValue<T>; }
+                                                value : { responseData: T | null }; }
 
 /** An Error happened while loading (usually a request error). */
 export interface ISegmentLoaderWarning { type : "warning";
                                          value : ICustomError; }
 
-/** The request begins to be done. */
-export interface ISegmentLoaderRequest { type : "request";
-                                         value : ISegmentLoaderArguments; }
-
 /** The whole segment's data (not only a chunk) is available. */
 export interface ISegmentLoaderData<T> { type : "data";
-                                         value : { responseData : T }; }
+                                         value : { responseData : T | null }; }
 
 /**
  * A chunk of the data is available.
@@ -85,20 +78,19 @@ export interface ISegmentLoaderChunkComplete { type : "chunk-complete";
  *                  U: ResponseType of the request
  */
 export type ISegmentLoaderEvent<T> = ISegmentLoaderData<T> |
-                                     ISegmentLoaderRequest |
-                                     ILoaderProgressEvent |
+                                     ILoaderRequestBeginEvent |
+                                     ILoaderRequestProgressEvent |
+                                     ILoaderRequestEndEvent |
                                      ISegmentLoaderWarning |
                                      ISegmentLoaderChunk |
-                                     ISegmentLoaderChunkComplete |
-                                     IABRMetricsEvent |
-                                     ISegmentLoaderDirectRetryEvent;
+                                     ISegmentLoaderChunkComplete;
 
 /** Cache implementation to avoid re-requesting segment */
 export interface ISegmentLoaderCache<T> {
   /** Add a segment to the cache. */
-  add : (obj : ISegmentLoaderContent, arg : ILoaderDataLoadedValue<T>) => void;
+  add : (obj : ISegmentLoaderContent, arg : { responseData: T }) => void;
   /** Retrieve a segment from the cache */
-  get : (obj : ISegmentLoaderContent) => ILoaderDataLoadedValue<T> | null;
+  get : (obj : ISegmentLoaderContent) => { responseData: T | null };
 }
 
 /** Abstraction to load a segment in the current transport protocol. */
@@ -146,7 +138,6 @@ export default function createSegmentLoader<T>(
   function loadData(
     wantedContent : ISegmentLoaderContent
   ) : Observable< ITransportSegmentLoaderEvent<T> |
-                  ISegmentLoaderRequest |
                   ISegmentLoaderWarning |
                   ISegmentLoaderCachedSegmentEvent<T>>
   {
@@ -157,14 +148,11 @@ export default function createSegmentLoader<T>(
      */
     function startLoaderWithBackoff(
     ) : Observable< ITransportSegmentLoaderEvent<T> |
-                    ISegmentLoaderRequest |
                     ISegmentLoaderWarning >
     {
       const request$ = (url : string | null) => {
         const loaderArgument = objectAssign({ url }, wantedContent);
-        return observableConcat(
-          observableOf({ type: "request" as const, value: loaderArgument }),
-          tryCatch(loader, loaderArgument));
+        return tryCatch(loader, loaderArgument);
       };
       return tryURLsWithBackoff(wantedContent.segment.mediaURLs ?? [null],
                                 request$,
@@ -174,17 +162,14 @@ export default function createSegmentLoader<T>(
         }),
 
         map((evt) : ITransportSegmentLoaderEvent<T> |
-                    ISegmentLoaderWarning |
-                    ISegmentLoaderRequest => {
+                    ISegmentLoaderWarning => {
           if (evt.type === "retry") {
             return { type: "warning" as const,
                      value: errorSelector(evt.value) };
-          } else if (evt.value.type === "request") {
-            return evt.value;
           }
 
           const response = evt.value;
-          if (response.type === "data-loaded" && cache != null) {
+          if (response.type === "data" && cache != null) {
             cache.add(wantedContent, response.value);
           }
           return evt.value;
@@ -214,38 +199,26 @@ export default function createSegmentLoader<T>(
   ) : Observable<ISegmentLoaderEvent<T>> {
     return loadData(content).pipe(
       mergeMap((arg) : Observable<ISegmentLoaderEvent<T>> => {
-        let metrics$ : Observable<IABRMetricsEvent>;
-        if ((arg.type === "data-chunk-complete" || arg.type === "data-loaded") &&
-            arg.value.size !== undefined && arg.value.duration !== undefined)
-        {
-          metrics$ = observableOf({ type: "metrics",
-                                    value: { size: arg.value.size,
-                                             duration: arg.value.duration,
-                                             content } });
-        } else {
-          metrics$ = EMPTY;
-        }
-
         switch (arg.type) {
-          case "warning":
-          case "request":
+          case "request-begin":
           case "progress":
-          case "direct-retry":
+          case "request-end":
+          case "warning":
             return observableOf(arg);
           case "cache":
-          case "data-created":
-          case "data-loaded":
-            return observableConcat(observableOf({ type: "data" as const,
-                                                   value: arg.value }),
-                                    metrics$);
+          case "data":
+            return observableOf({
+              type: "data" as const,
+              value: objectAssign({},
+                                  content,
+                                  { responseData: arg.value.responseData }),
+            });
 
           case "data-chunk":
             return observableOf({ type: "chunk", value: arg.value });
           case "data-chunk-complete":
-            return observableConcat(observableOf({ type: "chunk-complete" as const,
-                                                   value: null }),
-                                    metrics$);
-
+            return observableOf({ type: "chunk-complete" as const,
+                                  value: null });
           default:
             assertUnreachable(arg);
         }

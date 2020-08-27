@@ -56,6 +56,7 @@ import {
 } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import returnParsedManifest from "../utils/return_parsed_manifest";
+import performSegmentRequest from "../utils/segment_request";
 import generateManifestLoader from "../utils/text_manifest_loader";
 import extractTimingsInfos, {
   INextSegmentsInfos,
@@ -73,8 +74,8 @@ const WSX_REG = /\.wsx?(\?token=\S+)?/;
 
 /**
  * @param {Object} adaptation
- * @param {Object} dlSegment
  * @param {Object} nextSegments
+ * @param {Object} dlSegment
  */
 function addNextSegments(
   adaptation : Adaptation,
@@ -157,7 +158,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         return segmentLoader(content);
       }
       return segmentLoader(content).pipe(tap(res => {
-        if ((res.type === "data-loaded" || res.type === "data-chunk") &&
+        if ((res.type === "data" || res.type === "data-chunk") &&
             res.value.responseData !== null)
         {
           checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
@@ -235,24 +236,26 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         url } : ISegmentLoaderArguments
     ) : Observable< ISegmentLoaderEvent<string|ArrayBuffer|null> > {
       if (segment.isInit || url === null) {
-        return observableOf({ type: "data-created" as const,
-                              value: { responseData: null } });
+        return observableOf({ type: "data" as const, value: { responseData: null } });
       }
       const isMP4 = isMP4EmbeddedTrack(representation);
       if (!isMP4 || options.checkMediaSegmentIntegrity !== true) {
-        return request({ url,
-                         responseType: isMP4 ? "arraybuffer" : "text",
-                         sendProgressEvents: true });
-      }
-      return request({ url,
-                       responseType: "arraybuffer",
-                       sendProgressEvents: true })
-        .pipe(tap(res => {
-          if (res.type === "data-loaded") {
-            checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
-                                  segment.isInit);
-          }
+        return performSegmentRequest(request({ url,
+                                               responseType: isMP4 ? "arraybuffer" :
+                                                                      "text",
+                                               sendProgressEvents: true,
         }));
+      } else {
+        return performSegmentRequest(request({ url,
+                                               responseType: "arraybuffer",
+                                               sendProgressEvents: true }))
+          .pipe(tap(res => {
+            if (res.type === "data") {
+              checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
+                                    segment.isInit);
+            }
+          }));
+      }
     },
 
     parser({
@@ -404,13 +407,12 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     ) : Observable< ISegmentLoaderEvent<ArrayBuffer|null> > {
       if (segment.isInit || url === null) {
         // image do not need an init segment. Passthrough directly to the parser
-        return observableOf({ type: "data-created" as const,
-                              value: { responseData: null } });
+        return observableOf({ type: "data" as const, value: { responseData: null } });
       }
 
-      return request({ url,
-                       responseType: "arraybuffer",
-                       sendProgressEvents: true });
+      return performSegmentRequest(request({ url,
+                                             responseType: "arraybuffer",
+                                             sendProgressEvents: true }));
     },
 
     parser(
