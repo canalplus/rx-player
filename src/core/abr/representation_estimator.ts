@@ -105,8 +105,28 @@ interface IBeginRequest { type: "requestBegin";
 interface IEndRequest { type: "requestEnd";
                         value: { id: string }; }
 
-export interface IABRFilters { bitrate?: number;
-                               width?: number; }
+/** Object allowing to filter ABR estimations based on different attributes. */
+export interface IABRFiltersObject {
+  /**
+   * Filters out all Representations with a bitrate higher than this value.
+   * If all Representations have a bitrate higher than this value, still
+   * consider the Representation with the lowest bitrate.
+   */
+  bitrate?: number;
+  /**
+   * Consider only Representations with a width either unknown or lower or equal
+   * to that value.
+   *
+   * As a special case, if no Representation has a width exactly equal to that
+   * value, the Representation(s) with the `width` immediately higher will also
+   * be considered.
+   *
+   * _This is usually used to filter out Representations for which the width
+   * is much higher than the maximum width of the screen. In such cases, there
+   * would be no difference between those higher-quality Representations._
+   */
+  width?: number;
+}
 
 // Event emitted each time a segment is added
 interface IBufferEventAddedSegment {
@@ -133,7 +153,7 @@ export interface IRepresentationEstimatorArguments {
   bandwidthEstimator : BandwidthEstimator; // Calculate bandwidth
   bufferEvents$ : Observable<IABRBufferEvents>; // Emit events from the buffer
   clock$ : Observable<IRepresentationEstimatorClockTick>; // current playback situation
-  filters$ : Observable<IABRFilters>; // Filter possible choices
+  filters$ : Observable<IABRFiltersObject>; // Filter possible choices
   initialBitrate?: number; // The initial wanted bitrate
   lowLatencyMode: boolean; // Some settings can depend on wether you're playing a
                            // low-latency content. Set it to `true` if you're playing
@@ -155,7 +175,7 @@ export interface IRepresentationEstimatorArguments {
  */
 function getFilteredRepresentations(
   representations : Representation[],
-  filters : IABRFilters
+  filters : IABRFiltersObject
 ) : Representation[] {
   let _representations = representations;
 
