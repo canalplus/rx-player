@@ -38,8 +38,10 @@ import arrayIncludes from "../../../utils/array_includes";
 import idGenerator from "../../../utils/id_generator";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
 import {
-  IABRMetric,
-  IABRRequest,
+  IABRMetricsEvent,
+  IABRRequestBeginEvent,
+  IABRRequestEndEvent,
+  IABRRequestProgressEvent,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import { IBackoffOptions } from "../utils/try_urls_with_backoff";
@@ -80,7 +82,10 @@ const generateRequestID = idGenerator();
 export default function createSegmentFetcher<T>(
   bufferType : IBufferType,
   transport : ITransportPipelines,
-  requests$ : Subject<IABRMetric | IABRRequest>,
+  requests$ : Subject<IABRMetricsEvent |
+                      IABRRequestBeginEvent |
+                      IABRRequestProgressEvent |
+                      IABRRequestEndEvent>,
   options : IBackoffOptions
 ) : ISegmentFetcher<T> {
   const cache = arrayIncludes(["audio", "video"], bufferType) ?

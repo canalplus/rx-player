@@ -92,7 +92,7 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  * To do this, we dynamically create or destroy buffers as they are needed.
  * @param {Object} content
  * @param {Observable} clock$ - Emit position information
- * @param {Object} abrManager - Emit bitrate estimation and best Representation
+ * @param {Object} abrManager - Emit bitrate estimates and best Representation
  * to play.
  * @param {Object} sourceBuffersStore - Will be used to lazily create
  * SourceBuffer instances associated with the current content.

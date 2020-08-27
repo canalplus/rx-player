@@ -17,8 +17,10 @@
 import { Subject } from "rxjs";
 import { ITransportPipelines } from "../../../transports";
 import {
-  IABRMetric,
-  IABRRequest,
+  IABRMetricsEvent,
+  IABRRequestBeginEvent,
+  IABRRequestEndEvent,
+  IABRRequestProgressEvent,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import getSegmentBackoffOptions from "./get_segment_backoff_options";
@@ -89,13 +91,18 @@ export default class SegmentFetcherCreator<T> {
 
   /**
    * Create a segment fetcher, allowing to easily perform segment requests.
-   * @param {string} bufferType
-   * @param {Object} options
+   * @param {string} bufferType - The type of buffer wanted (e.g. "audio",
+   * "video", etc.)
+   * @param {Subject} requests$ - Subject through which request-related events
+   * (such as those needed by the ABRManager) will be sent.
    * @returns {Object}
    */
   createSegmentFetcher(
     bufferType : IBufferType,
-    requests$ : Subject<IABRRequest | IABRMetric>
+    requests$ : Subject<IABRRequestBeginEvent |
+                        IABRRequestProgressEvent |
+                        IABRRequestEndEvent |
+                        IABRMetricsEvent>
   ) : IPrioritizedSegmentFetcher<T> {
     const backoffOptions = getSegmentBackoffOptions(bufferType, this._backoffOptions);
     const segmentFetcher = createSegmentFetcher<T>(bufferType,

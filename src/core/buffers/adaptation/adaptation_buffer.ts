@@ -61,8 +61,10 @@ import concatMapLatest from "../../../utils/concat_map_latest";
 import deferSubscriptions from "../../../utils/defer_subscriptions";
 import ABRManager, {
   IABREstimate,
-  IABRMetric,
-  IABRRequest,
+  IABRMetricsEvent,
+  IABRRequestBeginEvent,
+  IABRRequestEndEvent,
+  IABRRequestProgressEvent,
 } from "../../abr";
 import { SegmentFetcherCreator } from "../../fetchers";
 import { QueuedSourceBuffer } from "../../source_buffers";
@@ -181,7 +183,10 @@ export default function AdaptationBuffer<T>({
   // use ABRManager for choosing the Representation
   const bufferEvents$ = new Subject<IBufferEventAddedSegment<T> |
                                     IRepresentationChangeEvent>();
-  const requestsEvents$ = new Subject<IABRMetric | IABRRequest>();
+  const requestsEvents$ = new Subject<IABRMetricsEvent |
+                                      IABRRequestBeginEvent |
+                                      IABRRequestProgressEvent |
+                                      IABRRequestEndEvent>();
   const abrEvents$ = observableMerge(bufferEvents$, requestsEvents$);
 
   const playableRepresentations = adaptation.getPlayableRepresentations();
@@ -217,7 +222,7 @@ export default function AdaptationBuffer<T>({
     filter(({ bitrate }) => bitrate != null),
     distinctUntilChanged((old, current) => old.bitrate === current.bitrate),
     map(({ bitrate }) => {
-      log.debug(`Buffer: new ${adaptation.type} bitrate estimation`, bitrate);
+      log.debug(`Buffer: new ${adaptation.type} bitrate estimate`, bitrate);
       return EVENTS.bitrateEstimationChange(adaptation.type, bitrate);
     })
   );
@@ -256,11 +261,11 @@ export default function AdaptationBuffer<T>({
 
     // NOTE: This operator was put in a merge on purpose. It's a "clever"
     // hack to allow it to be called just *AFTER* the concatMapLatest one.
-    newRepresentation$.pipe(map((estimation, i) => {
+    newRepresentation$.pipe(map((estimate, i) => {
       if (i === 0) { // Initial run == no Buffer pending. We have nothing to do:
         return;      // The one just created will be launched right away.
       }
-      if (estimation.urgent) {
+      if (estimate.urgent) {
         log.info("Buffer: urgent Representation switch", adaptation.type);
 
         // Kill current Buffer immediately. The one just chosen take its place.

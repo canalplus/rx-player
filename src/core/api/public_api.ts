@@ -161,7 +161,7 @@ interface IPositionUpdateItem {
 
 /** Payload emitted with a `bitrateEstimationChange` event. */
 interface IBitrateEstimate {
-  /** The type of buffer this estimation was done for (e.g. "audio). */
+  /** The type of buffer this estimate was done for (e.g. "audio). */
   type : IBufferType;
   /** The calculated bitrate, in bits per seconds. */
   bitrate : number | undefined;

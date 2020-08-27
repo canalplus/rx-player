@@ -104,7 +104,7 @@ function estimateRemainingTime(
  * this single request.
  * @param {Object} pendingRequests - Current pending requests.
  * @param {Object} clock - Information on the current playback.
- * @param {Number} lastEstimatedBitrate - Last bitrate estimation emitted.
+ * @param {Number} lastEstimatedBitrate - Last bitrate estimate emitted.
  * @returns {Number|undefined}
  */
 function estimateStarvationModeBitrate(
@@ -258,7 +258,7 @@ export default class NetworkAnalyzer {
 
     // If in starvation mode, check if a quick new estimate can be done
     // from the last requests.
-    // If so, cancel previous estimations and replace it by the new one
+    // If so, cancel previous estimates and replace it by the new one
     if (this._inStarvationMode) {
       bandwidthEstimate = estimateStarvationModeBitrate(currentRequests,
                                                         clockTick,

@@ -113,15 +113,15 @@ export type IRepresentationBufferEvent<T> = IBufferEventAddedSegment<T> |
                                             IBufferNeedsManifestRefresh |
                                             IBufferWarningEvent;
 
-/** Emitted as new bitrate estimations are done. */
+/** Emitted as new bitrate estimates are done. */
 export interface IBitrateEstimationChangeEvent {
   type : "bitrateEstimationChange";
   value : {
     /** The type of buffer for which the estimation is done. */
     type : IBufferType;
     /**
-     * The bitrate estimation, in bits per seconds. `undefined` when no bitrate
-     * estimation is currently available.
+     * The bitrate estimate, in bits per seconds. `undefined` when no bitrate
+     * estimate is currently available.
      */
     bitrate : number|undefined;
   };
