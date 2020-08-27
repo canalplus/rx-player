@@ -236,6 +236,8 @@ export default function createSegmentLoader<T>(
         // "data-loaded": data received through a request
         switch (arg.type) {
           case "warning":
+          case "request":
+          case "progress":
             return observableOf(arg);
           case "cache":
           case "data-created":
@@ -247,9 +249,6 @@ export default function createSegmentLoader<T>(
                                   { responseData: arg.value.responseData }),
             });
             return observableConcat(chunck$, metrics$);
-          case "request":
-          case "progress":
-            return observableOf(arg);
 
           case "data-chunk":
             return observableOf({ type: "chunk" as const,
