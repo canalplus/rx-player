@@ -43,26 +43,19 @@ import assertUnreachable from "../../../utils/assert_unreachable";
 import castToObservable from "../../../utils/cast_to_observable";
 import objectAssign from "../../../utils/object_assign";
 import tryCatch from "../../../utils/rx-try_catch";
+import { IABRMetricsEvent } from "../../abr";
 import errorSelector from "../utils/error_selector";
 import tryURLsWithBackoff, {
   IBackoffOptions,
 } from "../utils/try_urls_with_backoff";
 
-/** Data comes from a local cache (no request was done). */
+/** Data comes from a local JS cache maintained here, no request was done. */
 interface ISegmentLoaderCachedSegmentEvent<T> { type : "cache";
-                                                 value : ILoaderDataLoadedValue<T>; }
-
-/** New information about the progress of the request is available. */
-export type ISegmentLoaderProgress = ILoaderProgress;
+                                                value : ILoaderDataLoadedValue<T>; }
 
 /** An Error happened while loading (usually a request error). */
 export interface ISegmentLoaderWarning { type : "warning";
                                          value : ICustomError; }
-
-/** Request metrics are available. */
-export interface ISegmentLoaderMetrics { type : "metrics";
-                                         value : { size? : number;
-                                                   duration? : number; }; }
 
 /** The request begins to be done. */
 export interface ISegmentLoaderRequest { type : "request";
@@ -93,11 +86,11 @@ export interface ISegmentLoaderChunkComplete { type : "chunk-complete";
  */
 export type ISegmentLoaderEvent<T> = ISegmentLoaderData<T> |
                                      ISegmentLoaderRequest |
-                                     ISegmentLoaderProgress |
+                                     ILoaderProgress |
                                      ISegmentLoaderWarning |
                                      ISegmentLoaderChunk |
                                      ISegmentLoaderChunkComplete |
-                                     ISegmentLoaderMetrics;
+                                     IABRMetricsEvent;
 
 /** Cache implementation to avoid re-requesting segment */
 export interface ISegmentLoaderCache<T> {
@@ -202,10 +195,7 @@ export default function createSegmentLoader<T>(
 
     if (dataFromCache != null) {
       return castToObservable(dataFromCache).pipe(
-        map(response => {
-          return { type: "cache" as const,
-                   value: response };
-        }),
+        map(response => ({ type: "cache" as const, value: response })),
         catchError(startLoaderWithBackoff)
       );
     }
@@ -223,17 +213,18 @@ export default function createSegmentLoader<T>(
   ) : Observable<ISegmentLoaderEvent<T>> {
     return loadData(content).pipe(
       mergeMap((arg) : Observable<ISegmentLoaderEvent<T>> => {
-        const metrics$ =
-          arg.type === "data-chunk-complete" ||
-          arg.type === "data-loaded" ? observableOf({
-                                           type: "metrics" as const,
-                                           value: { size: arg.value.size,
-                                                    duration: arg.value.duration } }) :
-                                       EMPTY;
+        let metrics$ : Observable<IABRMetricsEvent>;
+        if ((arg.type === "data-chunk-complete" || arg.type === "data-loaded") &&
+            arg.value.size !== undefined && arg.value.duration !== undefined)
+        {
+          metrics$ = observableOf({ type: "metrics",
+                                    value: { size: arg.value.size,
+                                             duration: arg.value.duration,
+                                             content } });
+        } else {
+          metrics$ = EMPTY;
+        }
 
-        // "cache": data taken from the SegmentLoader's cache.
-        // "data-created": the data is available but no request has been done
-        // "data-loaded": data received through a request
         switch (arg.type) {
           case "warning":
           case "request":
@@ -242,23 +233,16 @@ export default function createSegmentLoader<T>(
           case "cache":
           case "data-created":
           case "data-loaded":
-            const chunck$ = observableOf({
-              type: "data" as const,
-              value: objectAssign({},
-                                  content,
-                                  { responseData: arg.value.responseData }),
-            });
-            return observableConcat(chunck$, metrics$);
+            return observableConcat(observableOf({ type: "data" as const,
+                                                   value: arg.value }),
+                                    metrics$);
 
           case "data-chunk":
-            return observableOf({ type: "chunk" as const,
-                                  value: objectAssign({}, content, {
-                                    responseData: arg.value.responseData }),
-            });
+            return observableOf({ type: "chunk", value: arg.value });
           case "data-chunk-complete":
-            const _complete$ = observableOf({ type: "chunk-complete" as const,
-                                              value: null });
-            return observableConcat(_complete$, metrics$);
+            return observableConcat(observableOf({ type: "chunk-complete" as const,
+                                                   value: null }),
+                                    metrics$);
 
           default:
             assertUnreachable(arg);

@@ -114,14 +114,7 @@ export default function createSegmentFetcher<T>(
       tap((arg) => {
         switch (arg.type) {
           case "metrics": {
-            const { value } = arg;
-            const { size, duration } = value; // unwrapping for TS
-
-            // format it for ABR Handling
-            if (size != null && duration != null) {
-              requests$.next({ type: "metrics",
-                              value: { size, duration, content } });
-            }
+            requests$.next(arg);
             break;
           }
 
