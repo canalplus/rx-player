@@ -43,9 +43,8 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
 import {
   IAudioVideoParserObservable,
-  IChunkTimingInfos,
+  IChunkTimeInfo,
   IImageParserObservable,
-  ILoaderDataLoaded,
   ILoaderDataLoadedValue,
   IManifestParserArguments,
   IManifestParserObservable,
@@ -210,7 +209,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                                     otherTransportOptions);
             const request$ = scheduleRequest(() =>
                 transport.manifest.loader({ url : ressource.url }).pipe(
-                  filter((e): e is ILoaderDataLoaded< Document | string > =>
+                  filter(
+                    (e): e is { type : "data-loaded";
+                                value : ILoaderDataLoadedValue<Document | string>; } =>
                     e.type === "data-loaded"
                   ),
                   map((e) : ILoaderDataLoadedValue< Document | string > => e.value)
@@ -270,7 +271,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     scaledContentOffset : number,
     contentEnd : number | undefined,
     segmentResponse : ISegmentParserParsedSegment<unknown>
-  ) : { chunkInfos : IChunkTimingInfos | null;
+  ) : { chunkInfos : IChunkTimeInfo | null;
         chunkOffset : number;
         appendWindow : [ number | undefined, number | undefined ]; } {
     const offsetedSegmentOffset = segmentResponse.chunkOffset + contentOffset;

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import {
   mergeMap,
   scan,
@@ -26,9 +29,10 @@ import fetchRequest, {
   IDataComplete,
 } from "../../utils/request/fetch";
 import {
-  ILoaderChunkedDataEvent,
+  ILoaderProgressEvent,
   ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
+  ISegmentLoaderChunkEvent,
+  ISegmentLoaderEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import extractCompleteChunks from "./extract_complete_chunks";
@@ -36,7 +40,7 @@ import extractCompleteChunks from "./extract_complete_chunks";
 export default function lowLatencySegmentLoader(
   url : string,
   args : ISegmentLoaderArguments
-) : ISegmentLoaderObservable<ArrayBuffer> {
+) : Observable< ISegmentLoaderEvent<ArrayBuffer> > {
   // Items emitted after processing fetch events
   interface IScannedChunk {
     event: IDataChunk | IDataComplete | null; // Event received from fetch
@@ -68,7 +72,8 @@ export default function lowLatencySegmentLoader(
       }, { event: null, completeChunks: [], partialChunk: null }),
 
       mergeMap((evt : IScannedChunk) => {
-        const emitted : ILoaderChunkedDataEvent[] = [];
+        const emitted : Array<ISegmentLoaderChunkEvent |
+                              ILoaderProgressEvent> = [];
         for (let i = 0; i < evt.completeChunks.length; i++) {
           emitted.push({ type: "data-chunk",
                          value: { responseData: evt.completeChunks[i] } });
@@ -87,7 +92,6 @@ export default function lowLatencySegmentLoader(
                                   receivedTime: value.receivedTime,
                                   sendingTime: value.sendingTime,
                                   size: value.size,
-                                  status: value.status,
                                   url: value.url } });
         }
         return observableOf(...emitted);

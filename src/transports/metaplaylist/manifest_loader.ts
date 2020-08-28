@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+import { Observable } from "rxjs";
 import request from "../../utils/request";
 import {
   CustomManifestLoader,
   IManifestLoaderArguments,
-  IManifestLoaderObservable,
+  IManifestLoaderEvent,
 } from "../types";
 import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
 
@@ -28,7 +29,7 @@ import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
  */
 function regularManifestLoader(
   { url } : IManifestLoaderArguments
-) : IManifestLoaderObservable {
+) : Observable< IManifestLoaderEvent > {
   if (url === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
@@ -42,7 +43,7 @@ function regularManifestLoader(
  */
 export default function generateManifestLoader(
   options: { customManifestLoader?: CustomManifestLoader }
-) : (args : IManifestLoaderArguments) => IManifestLoaderObservable {
+) : (args : IManifestLoaderArguments) => Observable< IManifestLoaderEvent > {
   const { customManifestLoader } = options;
   if (typeof customManifestLoader !== "function") {
     return regularManifestLoader;

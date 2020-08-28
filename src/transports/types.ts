@@ -16,7 +16,6 @@
 
 import {
   Observable,
-  Observer,
 } from "rxjs";
 import Manifest, {
   Adaptation,
@@ -31,121 +30,180 @@ import { IBifThumbnail } from "../parsers/images/bif";
 import { ILocalManifest } from "../parsers/manifest/local";
 import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
 
-// Contains timings information on a single segment.
-// Those variables expose the best guess we have on the effective duration and
-// starting time that the corresponding segment should have at decoding time.
-export interface IChunkTimingInfos {
-  duration? : number; // duration of the segment in the corresponding timescale
-                      // (see timescale).
-                      // 0 for init segments
-  time : number; // effective start time of the segment at decoding time in the
-                 // corresponding timescale (see timescale).
-                 // -1 for init segments
-  timescale : number; // time unit for seconds conversion.
-                      // e.g.:
-                      //   timeInSeconds = time / timescale
-                      //   durationInSeconds = duration / timescale
-}
+// ---- Loader arguments ----
 
-export interface ISegmentProtection { type : string;
-                                      data : Uint8Array; }
-
-// Contains timing information on new segments indicated in the metadata of
-// a previous segment
-export interface INextSegmentsInfos {
-  duration : number; // duration of the segment, in the corresponding timescale
-  time : number; // start time of the segment, in the corresponding timescale
-  timescale : number; // convert duration and time into seconds
-}
-
-// ---- LOADER ----
-
-// -- arguments
-
-// Arguments for the loader of the manifest pipeline
+/** Arguments for the loader of the manifest pipeline. */
 export interface IManifestLoaderArguments {
-  url? : string; // URL of the concerned manifest
+  /**
+   * URL of the Manifest we want to load.
+   * `undefined` if the Manifest doesn't have an URL linked to it, in which
+   *  case the Manifest should be loaded from another mean.
+   */
+  url : string | undefined;
 }
 
-// Argument for the loader of the segment pipelines
+/** Arguments for the loader of the segment pipelines. */
 export interface ISegmentLoaderArguments {
-  manifest : Manifest; // Manifest related to this segment
-  period : Period; // Period related to this segment
-  adaptation : Adaptation; // Adaptation related to this segment
-  representation : Representation; // Representation related to this segment
-  segment : ISegment; // Segment we want to load
-  url : string | null; // URL at which the segment should be downloaded
+  /** Manifest object related to this segment. */
+  manifest : Manifest;
+  /** Period object related to this segment. */
+  period : Period;
+  /** Adaptation object related to this segment. */
+  adaptation : Adaptation;
+  /** Representation Object related to this segment. */
+  representation : Representation;
+  /** Segment we want to load. */
+  segment : ISegment;
+  /**
+   * URL at which the segment should be downloaded.
+   * `null` if we do not have an URL (in which case the segment should be loaded
+   * through an other mean).
+   */
+  url : string | null;
 }
 
-// -- response
+// ---- Loader response ----
 
-// Value of a "data-loaded" event
+/** Payload of a "data-loaded" event. */
 export interface ILoaderDataLoadedValue<T> {
-  responseData : T; // The response for the request
-  duration? : number; // time in seconds it took to load this content
-  size? : number; // size in bytes of this content
-  url? : string; // real URL (post-redirection) used to download this content
-  sendingTime? : number; // time at which the request was sent (since the time
-                         // origin), in ms
-  receivedTime? : number; // time at which the request was received (since the
-                          // time origin), in ms
+  /** The loaded response data. */
+  responseData : T;
+  /** Duration the request took to be performed, in seconds. */
+  duration : number | undefined;
+  /**
+   * "Real" URL (post-redirection) at which the data can be loaded.
+   *
+   * Note that this doesn't always apply e.g. some data might need multiple
+   * URLs to be fetched, some other might need to fetch no URL.
+   * This property should only be set when a unique URL is sufficient to
+   * retrieve the whole data.
+   */
+  url? : string;
+  /**
+   * Time at which the request began in terms of `performance.now`.
+   * If fetching the corresponding data necessitated to perform multiple
+   * requests, this time corresponds to the first request made.
+   */
+  sendingTime? : number;
+  /**
+   * Time at which the request ended in terms of `performance.now`.
+   * If fetching the corresponding data necessitated to perform multiple
+   * requests, this time corresponds to the last request to end.
+   */
+  receivedTime? : number;
+  /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
+  size : number | undefined;
 }
 
-// Event emitted by a loader with the response after a request completed
-export interface ILoaderDataLoaded<T> { type : "data-loaded";
-                                        value : ILoaderDataLoadedValue<T>; }
-
-// Event emitted by a loader with the response when it did not perform any request
-export interface ILoaderDataCreated<T> { type : "data-created";
-                                         value : { responseData : T }; }
-
-// Event emitted by loaders on xhr progress events
-export interface ILoaderProgress { type : "progress";
-                                   value : { duration : number;
-                                             size : number;
-                                             totalSize? : number; }; }
-
-// Event emitted by loaders when a chunk of the response is available
-export interface ILoaderChunkedData { type : "data-chunk";
-                                      value : {
-                                        responseData: ArrayBuffer|Uint8Array;
-                                      }; }
-
-// Event emitted by loaders when all data has been emitted through chunks
-export interface ILoaderChunkedDataComplete { type : "data-chunk-complete";
-                                              value : { duration : number;
-                                                        receivedTime : number;
-                                                        sendingTime : number;
-                                                        size : number;
-                                                        status : number;
-                                                        url : string; }; }
-
-// Events sent by loaders
-export type ILoaderChunkedDataEvent = ILoaderChunkedData |
-                                      ILoaderProgress |
-                                      ILoaderChunkedDataComplete;
-
-export type ILoaderRegularDataEvent<T> = ILoaderProgress |
-                                         ILoaderDataLoaded<T> |
-                                         ILoaderDataCreated<T>;
-
+/** Form that can take a loaded Manifest once loaded. */
 export type ILoadedManifest = Document |
                               string |
                               IMetaPlaylist |
                               ILocalManifest;
-export type IManifestLoaderEvent = ILoaderDataLoaded<ILoadedManifest>;
-export type IManifestLoaderObservable = Observable<IManifestLoaderEvent>;
-export type IManifestLoaderObserver = Observer<IManifestLoaderEvent>;
 
-export type ISegmentLoaderEvent<T> = ILoaderChunkedDataEvent |
-                                     ILoaderRegularDataEvent<T>;
+/** Event emitted by a Manifest loader when the Manifest is fully available. */
+export interface IManifestLoaderDataLoadedEvent {
+  type : "data-loaded";
+  value : ILoaderDataLoadedValue<ILoadedManifest>;
+}
 
-export type ISegmentLoaderObservable<T> = Observable<ILoaderChunkedDataEvent |
-                                                     ILoaderRegularDataEvent<T>>;
+/** Event emitted by a segment loader when the data has been fully loaded. */
+export interface ISegmentLoaderDataLoadedEvent<T> { type : "data-loaded";
+                                                    value : ILoaderDataLoadedValue<T>; }
 
-// ---- PARSER ----
+/**
+ * Event emitted by a segment loader when the data is available without needing
+ * to perform any request.
+ *
+ * Such data are for example directly generated from already-available data,
+ * such as properties of a Manifest.
+ */
+export interface ISegmentLoaderDataCreatedEvent<T> { type : "data-created";
+                                                     value : { responseData : T }; }
 
-// -- arguments
+/**
+ * Event emitted by a segment loader when new information on a pending request
+ * is available.
+ *
+ * Note that this event is not mandatory.
+ * It will be used to allow to communicate network metrics to the rest of the
+ * player, like to adapt the quality of the content depending on the user's
+ * bandwidth.
+ */
+export interface ILoaderProgressEvent {
+  type : "progress";
+  value : {
+    /** Time since the beginning of the request so far, in seconds. */
+    duration : number;
+    /** Size of the data already downloaded, in bytes. */
+    size : number;
+    /** Size of whole data to download (data already-loaded included), in bytes. */
+    totalSize? : number;
+  };
+}
+
+/** Event emitted by a segment loader when a chunk of the response is available. */
+export interface ISegmentLoaderDataChunkEvent {
+  type : "data-chunk";
+  value : {
+    /** Loaded chunk, as raw data. */
+    responseData: ArrayBuffer |
+                  Uint8Array;
+  };
+}
+
+/**
+ * Event emitted by segment loaders when all data from a segment has been
+ * communicated through `ISegmentLoaderDataChunkEvent` events.
+ */
+export interface ISegmentLoaderDataChunkCompleteEvent {
+  type : "data-chunk-complete";
+  value : {
+    /** Duration the request took to be performed, in seconds. */
+    duration : number | undefined;
+    /**
+     * "Real" URL (post-redirection) at which the segment was loaded.
+     *
+     * Note that this doesn't always apply e.g. some segment might need multiple
+     * URLs to be fetched, some other might need to fetch no URL.
+     * This property should only be set when a unique URL is sufficient to
+     * retrieve the whole data.
+     */
+    url? : string;
+    /**
+     * Time at which the request began in terms of `performance.now`.
+     * If fetching the corresponding data necessitated to perform multiple
+     * requests, this time corresponds to the first request made.
+     */
+    sendingTime? : number;
+    /**
+     * Time at which the request ended in terms of `performance.now`.
+     * If fetching the corresponding data necessitated to perform multiple
+     * requests, this time corresponds to the last request to end.
+     */
+    receivedTime? : number;
+    /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
+    size : number | undefined;
+  };
+}
+
+/**
+ * Event sent by a segment loader when the corresponding segment is available
+ * chunk per chunk.
+ */
+export type ISegmentLoaderChunkEvent = ISegmentLoaderDataChunkEvent |
+                                       ISegmentLoaderDataChunkCompleteEvent;
+
+/** Event emitted by a Manifest loader. */
+export type IManifestLoaderEvent = IManifestLoaderDataLoadedEvent;
+
+/** Event emitted by a segment loader. */
+export type ISegmentLoaderEvent<T> = ILoaderProgressEvent |
+                                     ISegmentLoaderChunkEvent |
+                                     ISegmentLoaderDataLoadedEvent<T> |
+                                     ISegmentLoaderDataCreatedEvent<T>;
+
+// ---- Parser arguments ----
 
 /** Arguments given to the `parser` function of the Manifest pipeline. */
 export interface IManifestParserArguments {
@@ -177,24 +235,45 @@ export interface IManifestParserArguments {
   unsafeMode : boolean;
 }
 
+/** Arguments given to the `parser` function of the segment pipeline. */
 export interface ISegmentParserArguments<T> {
-  response : { data: T; // Segment's data
-               isChunked : boolean; }; // If true, the given response corresponds
-                                       // to a chunk of the whole data.
-                                       // If false, the response is the whole
-                                       // segment.
-  initTimescale? : number; // timescale taken from the init segment which might
-                           // be useful for the following regular segments.
+  /** Attributes of the corresponding loader's response. */
+  response : {
+    /** The loaded data. */
+    data: T;
+    /**
+     * If `true`,`data` is only a "chunk" of the whole segment (which potentially
+     * will contain multiple chunks).
+     * If `false`, `data` is the data for the whole segment.
+     */
+    isChunked : boolean;
+  };
+  /**
+   * "Timescale" obtained from parsing the wanted representation's initialization
+   * segment.
+   *
+   * `undefined` if either no such `timescale` has been parsed yet or if this
+   * value doesn't exist for the wanted segment.
+   *
+   * This value can be useful when parsing the loaded segment's data.
+   */
+  initTimescale? : number;
+  /** Context about the wanted segment. */
   content : {
-    manifest : Manifest; // Manifest related to this segment
-    period : Period; // Period related to this segment
-    adaptation : Adaptation; // Adaptation related to this segment
-    representation : Representation; // Representation related to this segment
-    segment : ISegment; // The segment we want to parse
+    /** Manifest object related to this segment. */
+    manifest : Manifest;
+    /** Period object related to this segment. */
+    period : Period;
+    /** Adaptation object related to this segment. */
+    adaptation : Adaptation;
+    /** Representation Object related to this segment. */
+    representation : Representation;
+    /** Segment we want to parse. */
+    segment : ISegment;
   };
 }
 
-// -- response
+// ---- Parser response ----
 
 /** Event emitted when a Manifest object has been parsed. */
 export interface IManifestParserResponseEvent {
@@ -202,7 +281,14 @@ export interface IManifestParserResponseEvent {
   value: {
     /** The parsed Manifest Object itself. */
     manifest : Manifest;
-    /** Final - real - URL (post-redirection) of the Manifest. */
+    /**
+     * "Real" URL (post-redirection) at which the Manifest can be refreshed.
+     *
+     * Note that this doesn't always apply e.g. some Manifest might need multiple
+     * URLs to be fetched, some other might need to fetch no URL.
+     * This property should only be set when a unique URL is sufficient to
+     * retrieve the whole data.
+     */
     url? : string;
   };
 }
@@ -210,6 +296,7 @@ export interface IManifestParserResponseEvent {
 /** Event emitted when a minor error was encountered when parsing the Manifest. */
 export interface IManifestParserWarningEvent {
   type : "warning";
+  /** Error describing the minor parsing error encountered. */
   value : Error;
 }
 
@@ -219,6 +306,49 @@ export type IManifestParserEvent = IManifestParserResponseEvent |
 
 /** Observable returned by the Manifest parser. */
 export type IManifestParserObservable = Observable<IManifestParserEvent>;
+
+/**
+ * Time information for a single segment.
+ * Those variables expose the best guess we have on the effective duration and
+ * starting time that the corresponding segment should have at decoding time.
+ */
+export interface IChunkTimeInfo {
+  /**
+   * Difference between the latest and the earliest presentation time
+   * available in that segment. The unit is in the corresponding timescale (see
+   * `timescale` property).
+   * Either `undefined` or set to `0` for initialization segment.
+   */
+  duration? : number;
+  /**
+   * Earliest presentation time available in that segment.
+   * The unit is in the corresponding timescale (see `timescale` property).
+   * This should be set to a negative value for initialization segment.
+   */
+  time : number;
+  /**
+   * Allow to convert `duration` and `time` into seconds by dividing them to
+   * that value.
+   * e.g.:
+   *   timeInSeconds = time / timescale
+   *   durationInSeconds = duration / timescale
+   *
+   * Expressing those values relative to a "timescale" allows a greater
+   * precision for the `time` and `duration` values.
+   */
+  timescale : number; // time unit for seconds conversion.
+}
+
+/** Encryption information linked to a segment. */
+export interface ISegmentProtection {
+  /**
+   * The `initialization data type` of that segment protection information.
+   * (https://www.w3.org/TR/encrypted-media/#initialization-data-type)
+   */
+  type : string;
+  /** The segment protection information. */
+  data : Uint8Array;
+}
 
 // Format of a parsed initialization segment
 export interface ISegmentParserParsedInitSegment<T> {
@@ -235,7 +365,7 @@ export interface ISegmentParserParsedInitSegment<T> {
 // Format of a parsed regular (non-initialization) segment
 export interface ISegmentParserParsedSegment<T> {
   chunkData : T | null; // Data to decode
-  chunkInfos : IChunkTimingInfos | null; // Timing infos about the segment
+  chunkInfos : IChunkTimeInfo | null; // Time information about the segment
   chunkOffset : number; // time offset, in seconds, to add to the absolute
                         // timed data defined in `chunkData` to obtain the
                         // "real" wanted effective time.
@@ -335,12 +465,17 @@ export type IAudioVideoParserObservable = Observable<IAudioVideoParserResponse>;
 export type ITextParserObservable = Observable<ITextParserResponse>;
 export type IImageParserObservable = Observable<IImageParserResponse>;
 
-// TODO Remove resolver
+/**
+ * "Resolve" URL of the Manifest.
+ *
+ * This is just here for legacy reasons. It should not be implemented anymore.
+ * TODO Remove resolver
+ */
 export type IManifestResolverFunction =
   (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
 
 export type IManifestLoaderFunction =
-  (x : IManifestLoaderArguments) => IManifestLoaderObservable;
+  (x : IManifestLoaderArguments) => Observable<IManifestLoaderEvent>;
 
 export type IManifestParserFunction =
   (x : IManifestParserArguments) => IManifestParserObservable;
@@ -351,9 +486,9 @@ export interface ITransportManifestPipeline { resolver? : IManifestResolverFunct
                                               parser : IManifestParserFunction; }
 
 export type ITransportAudioVideoSegmentLoader =
-  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                             ArrayBuffer |
-                                                             null >;
+  (x : ISegmentLoaderArguments) => Observable<ISegmentLoaderEvent< Uint8Array |
+                                                                   ArrayBuffer |
+                                                                   null >>;
 export type ITransportAudioVideoSegmentParser =
   (x : ISegmentParserArguments< Uint8Array |
                                 ArrayBuffer |
@@ -366,10 +501,10 @@ export interface ITransportAudioVideoSegmentPipeline {
 
 // Note: The segment's data can be null for init segments
 export type ITransportTextSegmentLoader =
-  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                             ArrayBuffer |
-                                                             string |
-                                                             null >;
+  (x : ISegmentLoaderArguments) => Observable< ISegmentLoaderEvent< Uint8Array |
+                                                                    ArrayBuffer |
+                                                                    string |
+                                                                    null >>;
 
 export type ITransportTextSegmentParser =
   (x : ISegmentParserArguments< Uint8Array |
@@ -384,9 +519,9 @@ export interface ITransportTextSegmentPipeline {
 
 export type ITransportImageSegmentLoader =
   // Note: The segment's data can be null for init segments
-  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                             ArrayBuffer |
-                                                             null >;
+  (x : ISegmentLoaderArguments) => Observable< ISegmentLoaderEvent< Uint8Array |
+                                                                    ArrayBuffer |
+                                                                    null >>;
 
 export type ITransportImageSegmentParser =
   (x : ISegmentParserArguments< Uint8Array |

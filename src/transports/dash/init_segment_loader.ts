@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-import { combineLatest as observableCombineLatest } from "rxjs";
+import {
+  combineLatest as observableCombineLatest,
+  Observable,
+} from "rxjs";
 import { map } from "rxjs/operators";
 import { concat } from "../../utils/byte_parsing";
 import xhr from "../../utils/request";
 import {
   ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
+  ISegmentLoaderEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
 
@@ -32,7 +35,7 @@ import byteRange from "../utils/byte_range";
 export default function initSegmentLoader(
   url : string,
   { segment } : ISegmentLoaderArguments
-) : ISegmentLoaderObservable<ArrayBuffer> {
+) : Observable< ISegmentLoaderEvent< ArrayBuffer >> {
   if (segment.range === undefined) {
     return xhr({ url, responseType: "arraybuffer", sendProgressEvents: true });
   }

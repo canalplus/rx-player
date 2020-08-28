@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import { tap } from "rxjs/operators";
 import request, {
   fetchIsSupported,
@@ -22,7 +25,7 @@ import request, {
 import warnOnce from "../../utils/warn_once";
 import {
   ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
+  ISegmentLoaderEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
@@ -39,9 +42,9 @@ export default function generateTextTrackLoader(
   { lowLatencyMode,
     checkMediaSegmentIntegrity } : { lowLatencyMode : boolean;
                                      checkMediaSegmentIntegrity? : boolean; }
-) : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< ArrayBuffer |
-                                                               string |
-                                                               null > {
+) : (x : ISegmentLoaderArguments) => Observable< ISegmentLoaderEvent< ArrayBuffer |
+                                                                      string |
+                                                                      null > > {
   if (checkMediaSegmentIntegrity !== true) {
     return textTrackLoader;
   }
@@ -61,7 +64,7 @@ export default function generateTextTrackLoader(
    */
   function textTrackLoader(
     args : ISegmentLoaderArguments
-  ) : ISegmentLoaderObservable< ArrayBuffer | string | null > {
+  ) : Observable< ISegmentLoaderEvent< ArrayBuffer | string | null > > {
     const { range } = args.segment;
     const { url } = args;
 

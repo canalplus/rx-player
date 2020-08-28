@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
-
+import {
+  Observable,
+  Observer,
+} from "rxjs";
 import {
   CustomManifestLoader,
   ILoadedManifest,
   IManifestLoaderArguments,
-  IManifestLoaderObservable,
-  IManifestLoaderObserver,
+  IManifestLoaderEvent,
 } from "../types";
 
 export default function callCustomManifestLoader(
   customManifestLoader : CustomManifestLoader,
   fallbackManifestLoader : (x : IManifestLoaderArguments) =>
-                             IManifestLoaderObservable
-) : (x : IManifestLoaderArguments) => IManifestLoaderObservable {
+                             Observable< IManifestLoaderEvent >
+) : (x : IManifestLoaderArguments) => Observable< IManifestLoaderEvent > {
 
-  return (args : IManifestLoaderArguments) : IManifestLoaderObservable => {
-    return new Observable((obs: IManifestLoaderObserver) => {
+  return (args : IManifestLoaderArguments) : Observable< IManifestLoaderEvent > => {
+    return new Observable((obs: Observer<IManifestLoaderEvent>) => {
       const { url } = args;
       const timeAPIsDelta = Date.now() - performance.now();
       let hasFinished = false;

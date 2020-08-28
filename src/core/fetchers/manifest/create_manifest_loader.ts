@@ -25,8 +25,8 @@ import {
 } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
 import {
-  ILoadedManifest,
   IManifestLoaderArguments,
+  IManifestLoaderDataLoadedEvent,
   IManifestLoaderEvent as IManifestPipelineLoaderEvent,
   IManifestLoaderFunction,
   IManifestResolverFunction,
@@ -39,35 +39,44 @@ import {
   tryRequestObservableWithBackoff,
 } from "../utils/try_urls_with_backoff";
 
-// An Error happened while loading (usually a request error)
-export interface IManifestLoaderWarning { type : "warning";
-                                          value : ICustomError; }
-
-export interface IManifestLoaderResponseValue<T> {
-  responseData : T; // The Manifest's data
-  url? : string; // The URL on which the Manifest was loaded (post-redirection)
-  sendingTime? : number; // The time at which the Manifest request was sent
-  receivedTime? : number; // The time at which the Manifest request was
-                          // completely received
+/**
+ * A minor Error happened while loading the Manifest (usually a request error)
+ * and the request will be retried.
+ */
+export interface IManifestLoaderWarning {
+  type : "warning";
+  /** The formatted minor error. */
+  value : ICustomError;
 }
 
-// A response is available from a Manifest's loader
-export interface IManifestLoaderResponse {
-  type : "response";
-  value : IManifestLoaderResponseValue<ILoadedManifest>;
-}
-
-// Events a loader emits
-export type IManifestLoaderEvent = IManifestLoaderResponse |
+/** Event emitted by `createManifestLoader`. */
+export type IManifestLoaderEvent = IManifestLoaderDataLoadedEvent |
                                    IManifestLoaderWarning;
 
-// Options you can pass on to the loader
+/** Options you can use when calling `createManifestLoader`. */
 export interface IManifestLoaderOptions {
-  maxRetry : number; // Maximum number of time a request on error will be retried
-  maxRetryOffline : number; // Maximum number of time a request be retried when
-                            // the user is offline
-  baseDelay : number; // initial delay when retrying a request
-  maxDelay : number; // maximum delay when retrying a request
+  /**
+   * Maximum number of time a given request on error will be retried when the
+   * error is not due to the user being offline.
+   */
+  maxRetry : number;
+  /**
+   * Maximum number of time a given request on error will be retried when the
+   * error is due to the user being offline.
+   */
+  maxRetryOffline : number;
+  /**
+   * Initial delay when retrying a request.
+   * Further delay will grow, usually through powers of 2 relative to the
+   * previous one.
+   */
+  baseDelay : number;
+  /**
+   * Maximum delay that can be reached before a request should be retried.
+   * When the calculated delay goes further than that delay, `maxDelay` will be
+   * used instead before the request will be retried.
+   */
+  maxDelay : number;
 }
 
 /**
@@ -77,14 +86,12 @@ export interface IManifestLoaderOptions {
  * The function returned takes the loader's data in arguments and returns an
  * Observable which will emit:
  *
- *   - each time a minor request error is encountered (type "warning").
- *     With the error as a value.
- *
- *   - The fetched data (type "response").
+ *   - each time a minor request error is encountered (in which case the request
+ *     is usually retried).
+ *   - The loaded Manifest's data
  *
  * This observable will throw if, following the options given, the request and
  * possible retries all failed.
- *
  * @param {Object} manifestPipeline
  * @param {Object} backoffOptions
  * @returns {Function}
@@ -151,20 +158,7 @@ export default function createManifestLoader(
   return function loadManifest(
     loaderArgs : IManifestLoaderArguments
   ) : Observable<IManifestLoaderEvent> {
-    return callResolver(loaderArgs).pipe(
-      mergeMap((resolverResponse : IManifestLoaderArguments) => {
-        return loadData(resolverResponse).pipe(
-          mergeMap((arg) => {
-            if (arg.type === "warning") {
-              return observableOf(arg);
-            }
-            const value = arg.value;
-            return observableOf({ type: "response" as const,
-                                  value: { responseData: value.responseData,
-                                           url: value.url,
-                                           sendingTime: value.sendingTime,
-                                           receivedTime: value.receivedTime } });
-          }));
-      }));
+    return callResolver(loaderArgs)
+      .pipe(mergeMap(loadData));
   };
 }

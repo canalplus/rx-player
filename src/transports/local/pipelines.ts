@@ -19,6 +19,7 @@
  * It always should be imported through the `features` object.
  */
 
+import { Observable } from "rxjs";
 import Manifest from "../../manifest";
 import parseLocalManifest, {
   ILocalManifest,
@@ -26,7 +27,7 @@ import parseLocalManifest, {
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
   IManifestLoaderArguments,
-  IManifestLoaderObservable,
+  IManifestLoaderEvent,
   IManifestParserArguments,
   IManifestParserObservable,
   ITransportOptions,
@@ -49,7 +50,7 @@ export default function getLocalManifestPipelines(
 
   const customManifestLoader = options.manifestLoader;
   const manifestPipeline = {
-    loader(args : IManifestLoaderArguments) : IManifestLoaderObservable {
+    loader(args : IManifestLoaderArguments) : Observable< IManifestLoaderEvent > {
       if (isNullOrUndefined(customManifestLoader)) {
         throw new Error("A local Manifest is not loadable through regular HTTP(S) " +
                         " calls. You have to set a `manifestLoader` when calling " +

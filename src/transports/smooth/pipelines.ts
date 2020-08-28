@@ -43,14 +43,13 @@ import stringFromUTF8 from "../../utils/string_from_utf8";
 import warnOnce from "../../utils/warn_once";
 import {
   IAudioVideoParserObservable,
-  IChunkTimingInfos,
+  IChunkTimeInfo,
   IImageParserObservable,
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
-  INextSegmentsInfos,
   ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
+  ISegmentLoaderEvent,
   ISegmentParserArguments,
   ITextParserObservable,
   ITransportOptions,
@@ -59,7 +58,9 @@ import {
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import returnParsedManifest from "../utils/return_parsed_manifest";
 import generateManifestLoader from "../utils/text_manifest_loader";
-import extractTimingsInfos from "./extract_timings_infos";
+import extractTimingsInfos, {
+  INextSegmentsInfos,
+} from "./extract_timings_infos";
 import { patchSegment } from "./isobmff";
 import generateSegmentLoader from "./segment_loader";
 import {
@@ -79,7 +80,7 @@ const WSX_REG = /\.wsx?(\?token=\S+)?/;
 function addNextSegments(
   adaptation : Adaptation,
   nextSegments : INextSegmentsInfos[],
-  dlSegment? : IChunkTimingInfos
+  dlSegment? : IChunkTimeInfo
 ) : void {
   log.debug("Smooth Parser: update segments information.");
   const representations = adaptation.representations;
@@ -152,7 +153,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   const segmentPipeline = {
     loader(
       content : ISegmentLoaderArguments
-    ) : ISegmentLoaderObservable<ArrayBuffer|Uint8Array|null> {
+    ) : Observable< ISegmentLoaderEvent< ArrayBuffer|Uint8Array|null> > {
       if (content.segment.isInit || options.checkMediaSegmentIntegrity !== true) {
         return segmentLoader(content);
       }
@@ -233,7 +234,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       { segment,
         representation,
         url } : ISegmentLoaderArguments
-    ) : ISegmentLoaderObservable<string|ArrayBuffer|null> {
+    ) : Observable< ISegmentLoaderEvent<string|ArrayBuffer|null> > {
       if (segment.isInit || url === null) {
         return observableOf({ type: "data-created" as const,
                               value: { responseData: null } });
@@ -279,7 +280,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       }
 
       let nextSegments;
-      let chunkInfos : IChunkTimingInfos|null = null;
+      let chunkInfos : IChunkTimeInfo|null = null;
       const isMP4 = mimeType.indexOf("mp4") >= 0;
 
       let _sdStart : number|undefined;
@@ -400,7 +401,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     loader(
       { segment,
         url } : ISegmentLoaderArguments
-    ) : ISegmentLoaderObservable<ArrayBuffer|null> {
+    ) : Observable< ISegmentLoaderEvent<ArrayBuffer|null> > {
       if (segment.isInit || url === null) {
         // image do not need an init segment. Passthrough directly to the parser
         return observableOf({ type: "data-created" as const,

@@ -23,7 +23,7 @@ import {
 import { getMDAT } from "../../parsers/containers/isobmff";
 import stringFromUTF8 from "../../utils/string_from_utf8";
 import {
-  IChunkTimingInfos,
+  IChunkTimeInfo,
   ITextTrackSegmentData,
 } from "../types";
 
@@ -101,7 +101,7 @@ export function getISOBMFFEmbeddedTextTrackData(
                          adaptation : Adaptation;
                          representation : Representation; },
   chunkBytes : Uint8Array,
-  chunkInfos : IChunkTimingInfos | null,
+  chunkInfos : IChunkTimeInfo | null,
   isChunked : boolean
 ) : ITextTrackSegmentData | null {
   if (segment.isInit) {

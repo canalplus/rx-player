@@ -26,9 +26,10 @@ import xhr, {
 import warnOnce from "../../utils/warn_once";
 import {
   CustomSegmentLoader,
-  ILoaderRegularDataEvent,
+  ILoaderProgressEvent,
   ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
+  ISegmentLoaderDataLoadedEvent,
+  ISegmentLoaderEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
@@ -37,7 +38,8 @@ import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
 type ICustomSegmentLoaderObserver =
-  Observer<ILoaderRegularDataEvent<Uint8Array|ArrayBuffer>>;
+  Observer<ILoaderProgressEvent |
+           ISegmentLoaderDataLoadedEvent<Uint8Array|ArrayBuffer>>;
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
@@ -48,7 +50,7 @@ function regularSegmentLoader(
   url : string,
   args : ISegmentLoaderArguments,
   lowLatencyMode : boolean
-) : ISegmentLoaderObservable<ArrayBuffer> {
+) : Observable< ISegmentLoaderEvent<ArrayBuffer>> {
 
   if (args.segment.isInit) {
     return initSegmentLoader(url, args);
@@ -87,9 +89,9 @@ export default function generateSegmentLoader(
     checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
                                      segmentLoader? : CustomSegmentLoader;
                                      checkMediaSegmentIntegrity? : boolean; }
-) : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                               ArrayBuffer |
-                                                               null > {
+) : (x : ISegmentLoaderArguments) => Observable< ISegmentLoaderEvent< Uint8Array |
+                                                                      ArrayBuffer |
+                                                                      null > > {
   if (checkMediaSegmentIntegrity !== true) {
     return segmentLoader;
   }
@@ -109,7 +111,7 @@ export default function generateSegmentLoader(
    */
   function segmentLoader(
     content : ISegmentLoaderArguments
-  ) : ISegmentLoaderObservable< Uint8Array | ArrayBuffer | null > {
+  ) : Observable< ISegmentLoaderEvent< Uint8Array | ArrayBuffer | null > > {
     const { url } = content;
     if (url == null) {
       return observableOf({ type: "data-created" as const,

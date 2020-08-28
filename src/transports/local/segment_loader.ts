@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-import { Observable, Observer } from "rxjs";
+import {
+  Observable,
+  Observer,
+} from "rxjs";
 import {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
-  ILoaderRegularDataEvent,
   ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
+  ISegmentLoaderDataLoadedEvent,
+  ISegmentLoaderEvent,
 } from "../types";
 
 /**
@@ -32,9 +35,9 @@ import {
  */
 function loadInitSegment(
   customSegmentLoader : ILocalManifestInitSegmentLoader
-) : Observable< ILoaderRegularDataEvent<ArrayBuffer | null>> {
+) : Observable< ISegmentLoaderDataLoadedEvent<ArrayBuffer | null>> {
   return new Observable((obs : Observer<
-    ILoaderRegularDataEvent< ArrayBuffer | null >
+    ISegmentLoaderDataLoadedEvent< ArrayBuffer | null >
   >) => {
     let hasFinished = false;
 
@@ -82,9 +85,9 @@ function loadInitSegment(
 function loadSegment(
   segment : { time : number; duration : number; timestampOffset? : number },
   customSegmentLoader : ILocalManifestSegmentLoader
-) : Observable< ILoaderRegularDataEvent<ArrayBuffer | null>> {
+) : Observable< ISegmentLoaderDataLoadedEvent<ArrayBuffer | null>> {
   return new Observable((obs : Observer<
-    ILoaderRegularDataEvent< ArrayBuffer | null >
+    ISegmentLoaderDataLoadedEvent< ArrayBuffer | null >
   >) => {
     let hasFinished = false;
 
@@ -131,7 +134,7 @@ function loadSegment(
  */
 export default function segmentLoader(
   { segment } : ISegmentLoaderArguments
-) : ISegmentLoaderObservable< ArrayBuffer | null > {
+) : Observable< ISegmentLoaderEvent< ArrayBuffer | null > > {
   const privateInfos = segment.privateInfos;
   if (segment.isInit) {
     if (privateInfos === undefined ||

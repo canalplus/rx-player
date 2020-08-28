@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+import { Observable } from "rxjs";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import request from "../../utils/request";
 import {
   CustomManifestLoader,
   IManifestLoaderArguments,
-  IManifestLoaderObservable,
+  IManifestLoaderEvent,
 } from "../types";
 import callCustomManifestLoader from "./call_custom_manifest_loader";
 
@@ -30,7 +31,7 @@ import callCustomManifestLoader from "./call_custom_manifest_loader";
  */
 function regularManifestLoader(
   { url } : IManifestLoaderArguments
-) : IManifestLoaderObservable {
+) : Observable< IManifestLoaderEvent > {
   if (url === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
@@ -44,7 +45,7 @@ function regularManifestLoader(
  */
 export default function generateManifestLoader(
    { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
-) : (x : IManifestLoaderArguments) => IManifestLoaderObservable {
+) : (x : IManifestLoaderArguments) => Observable< IManifestLoaderEvent > {
   if (isNullOrUndefined(customManifestLoader)) {
     return regularManifestLoader;
   }

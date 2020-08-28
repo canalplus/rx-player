@@ -20,7 +20,7 @@ import {
   getTrackFragmentDecodeTime,
 } from "../../parsers/containers/isobmff";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import { IChunkTimingInfos } from "../types";
+import { IChunkTimeInfo } from "../types";
 
 /**
  * Get precize start and duration of a chunk.
@@ -41,7 +41,7 @@ export default function getISOBMFFTimingInfos(
   isChunked : boolean,
   segment : ISegment,
   initTimescale? : number
-) : IChunkTimingInfos | null {
+) : IChunkTimeInfo | null {
   let startTime;
   let duration;
   const trunDuration = getDurationFromTrun(buffer);

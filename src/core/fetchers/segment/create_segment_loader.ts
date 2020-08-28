@@ -34,10 +34,9 @@ import Manifest, {
 } from "../../../manifest";
 import {
   ILoaderDataLoadedValue,
-  ILoaderProgress,
+  ILoaderProgressEvent,
   ISegmentLoaderArguments,
-  ISegmentLoaderEvent as ISegmentPipelineLoaderEvent,
-  ISegmentLoaderObservable,
+  ISegmentLoaderEvent as ITransportSegmentLoaderEvent,
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import castToObservable from "../../../utils/cast_to_observable";
@@ -86,7 +85,7 @@ export interface ISegmentLoaderChunkComplete { type : "chunk-complete";
  */
 export type ISegmentLoaderEvent<T> = ISegmentLoaderData<T> |
                                      ISegmentLoaderRequest |
-                                     ILoaderProgress |
+                                     ILoaderProgressEvent |
                                      ISegmentLoaderWarning |
                                      ISegmentLoaderChunk |
                                      ISegmentLoaderChunkComplete |
@@ -102,7 +101,7 @@ export interface ISegmentLoaderCache<T> {
 
 /** Abstraction to load a segment in the current transport protocol. */
 export type ISegmentPipelineLoader<T> =
-  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable<T>;
+  (x : ISegmentLoaderArguments) => Observable< ITransportSegmentLoaderEvent<T> >;
 
 /** Content used by the segment loader as a context to load a new segment. */
 export interface ISegmentLoaderContent { manifest : Manifest;
@@ -144,7 +143,7 @@ export default function createSegmentLoader<T>(
    */
   function loadData(
     wantedContent : ISegmentLoaderContent
-  ) : Observable< ISegmentPipelineLoaderEvent<T> |
+  ) : Observable< ITransportSegmentLoaderEvent<T> |
                   ISegmentLoaderRequest |
                   ISegmentLoaderWarning |
                   ISegmentLoaderCachedSegmentEvent<T>>
@@ -155,7 +154,7 @@ export default function createSegmentLoader<T>(
      * @returns {Observable}
      */
     function startLoaderWithBackoff(
-    ) : Observable< ISegmentPipelineLoaderEvent<T> |
+    ) : Observable< ITransportSegmentLoaderEvent<T> |
                     ISegmentLoaderRequest |
                     ISegmentLoaderWarning >
     {
@@ -172,7 +171,7 @@ export default function createSegmentLoader<T>(
           throw errorSelector(error);
         }),
 
-        map((evt) : ISegmentPipelineLoaderEvent<T> |
+        map((evt) : ITransportSegmentLoaderEvent<T> |
                     ISegmentLoaderWarning |
                     ISegmentLoaderRequest => {
           if (evt.type === "retry") {

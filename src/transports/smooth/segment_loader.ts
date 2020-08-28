@@ -23,9 +23,10 @@ import assert from "../../utils/assert";
 import request from "../../utils/request";
 import {
   CustomSegmentLoader,
-  ILoaderRegularDataEvent,
+  ILoaderProgressEvent,
   ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
+  ISegmentLoaderDataLoadedEvent,
+  ISegmentLoaderEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import {
@@ -38,7 +39,8 @@ interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
 }
 
 type ICustomSegmentLoaderObserver =
-  Observer< ILoaderRegularDataEvent< Uint8Array | ArrayBuffer > >;
+  Observer<ILoaderProgressEvent |
+           ISegmentLoaderDataLoadedEvent<Uint8Array|ArrayBuffer>>;
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
@@ -47,7 +49,7 @@ type ICustomSegmentLoaderObserver =
  */
 function regularSegmentLoader(
   { url, segment } : IRegularSegmentLoaderArguments
-) : ISegmentLoaderObservable<ArrayBuffer> {
+) : Observable< ISegmentLoaderEvent<ArrayBuffer> > {
   let headers;
   const range = segment.range;
   if (Array.isArray(range)) {
@@ -73,7 +75,8 @@ const generateSegmentLoader = (
   period,
   manifest,
   url,
-} : ISegmentLoaderArguments) : ISegmentLoaderObservable<Uint8Array|ArrayBuffer|null> => {
+} : ISegmentLoaderArguments
+) : Observable< ISegmentLoaderEvent<Uint8Array|ArrayBuffer|null> > => {
   if (segment.isInit) {
     if (segment.privateInfos === undefined ||
         segment.privateInfos.smoothInit === undefined)
