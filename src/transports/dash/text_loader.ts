@@ -18,7 +18,6 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
-import { tap } from "rxjs/operators";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -28,8 +27,8 @@ import {
   ISegmentLoaderEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
-import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
+import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
@@ -45,18 +44,8 @@ export default function generateTextTrackLoader(
 ) : (x : ISegmentLoaderArguments) => Observable< ISegmentLoaderEvent< ArrayBuffer |
                                                                       string |
                                                                       null > > {
-  if (checkMediaSegmentIntegrity !== true) {
-    return textTrackLoader;
-  }
-  return (content) => textTrackLoader(content).pipe(tap(res => {
-    if ((res.type === "data-loaded" || res.type === "data-chunk") &&
-        res.value.responseData !== null &&
-        typeof res.value.responseData !== "string")
-    {
-      checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
-                            content.segment.isInit);
-    }
-  }));
+  return checkMediaSegmentIntegrity !== true ? textTrackLoader :
+                                               addSegmentIntegrityChecks(textTrackLoader);
 
   /**
    * @param {Object} args

@@ -19,7 +19,6 @@ import {
   Observer,
   of as observableOf,
 } from "rxjs";
-import { tap } from "rxjs/operators";
 import xhr, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -30,10 +29,11 @@ import {
   ISegmentLoaderArguments,
   ISegmentLoaderDataLoadedEvent,
   ISegmentLoaderEvent,
+  ITransportAudioVideoSegmentLoader,
 } from "../types";
 import byteRange from "../utils/byte_range";
-import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
@@ -89,21 +89,9 @@ export default function generateSegmentLoader(
     checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
                                      segmentLoader? : CustomSegmentLoader;
                                      checkMediaSegmentIntegrity? : boolean; }
-) : (x : ISegmentLoaderArguments) => Observable< ISegmentLoaderEvent< Uint8Array |
-                                                                      ArrayBuffer |
-                                                                      null > > {
-  if (checkMediaSegmentIntegrity !== true) {
-    return segmentLoader;
-  }
-  return (content) => segmentLoader(content).pipe(tap(res => {
-    if ((res.type === "data-loaded" || res.type === "data-chunk") &&
-        res.value.responseData !== null &&
-        !isWEBMEmbeddedTrack(content.representation))
-    {
-      checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
-                            content.segment.isInit);
-    }
-  }));
+) : ITransportAudioVideoSegmentLoader {
+  return checkMediaSegmentIntegrity !== true ? segmentLoader :
+                                               addSegmentIntegrityChecks(segmentLoader);
 
   /**
    * @param {Object} content

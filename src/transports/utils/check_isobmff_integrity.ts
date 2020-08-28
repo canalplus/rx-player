@@ -18,15 +18,17 @@ import { OtherError } from "../../errors";
 import findCompleteBox from "./find_complete_box";
 
 /**
- * @param {Uint8Array} buffer
- * @param {boolean} isInit
- * @returns {Array}
+ * Check if an ISOBMFF segment has all the right box needed to be decoded.
+ * Throw if that's not the case.
+ * @param {Uint8Array} buffer - The whole ISOBMFF segment
+ * @param {boolean} isInitSegment - `true` if this is an initialization segment,
+ * `false` otherwise.
  */
 export default function checkISOBMFFIntegrity(
   buffer : Uint8Array,
-  isInit : boolean
+  isInitSegment : boolean
 ) : void {
-  if (isInit) {
+  if (isInitSegment) {
     const ftypIndex = findCompleteBox(buffer, 0x66747970 /* ftyp */);
     if (ftypIndex < 0) {
       throw new OtherError("INTEGRITY_ERROR", "Incomplete `ftyp` box");
