@@ -35,6 +35,7 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
+import assertUnreachable from "../../../utils/assert_unreachable";
 import idGenerator from "../../../utils/id_generator";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
 import {
@@ -163,12 +164,17 @@ export default function createSegmentFetcher<T>(
                         ISegmentLoaderData<T> |
                         ISegmentFetcherWarning => {
                           switch (e.type) {
+                            case "warning":
                             case "chunk":
                             case "chunk-complete":
                             case "data":
                               return true;
-                            default:
+                            case "progress":
+                            case "metrics":
+                            case "request":
                               return false;
+                            default:
+                              assertUnreachable(e);
                           }
                         }),
       mergeMap((evt) => {
