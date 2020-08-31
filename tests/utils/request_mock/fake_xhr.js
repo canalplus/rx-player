@@ -160,6 +160,9 @@ Object.assign(FakeXMLHttpRequest.prototype, Events.EventTarget, {
    * @param {string} value
    */
   setRequestHeader(name, value) {
+    if (typeof this._onSetRequestHeader === "function") {
+      this._onSetRequestHeader(name, value);
+    }
     if (typeof value !== "string") {
       throw new TypeError("By RFC7230, section 3.2.4, header values should " +
                           " be strings. Got " + typeof value);
@@ -235,7 +238,7 @@ Object.assign(FakeXMLHttpRequest.prototype, Events.EventTarget, {
           clearInterval(clearIntervalId);
         } else if (typeof self.timeout === "number" && self.timeout > 0) {
           if (Date.now() >= (initiatedTime + self.timeout)) {
-            triggerTimeout(self,);
+            triggerTimeout(self);
             clearInterval(clearIntervalId);
           }
         }
@@ -567,7 +570,6 @@ function setResponseBody(fakeXhr, body) {
 function resetOnOpen(fakeXhr, xhrArgs) {
   const realXHR = new originalXHR();
   const methods = [ "open",
-                    "setRequestHeader",
                     "abort",
                     "getResponseHeader",
                     "getAllResponseHeaders",
@@ -580,6 +582,13 @@ function resetOnOpen(fakeXhr, xhrArgs) {
       return realXHR[method](...args);
     };
   });
+
+  fakeXhr.setRequestHeader = function setRequestHeader(name, value, ...args) {
+    if (typeof fakeXhr._onSetRequestHeader === "function") {
+      fakeXhr._onSetRequestHeader(name, value);
+    }
+    return realXHR.setRequestHeader(name, value, ...args);
+  };
 
   fakeXhr.send = function send(data) {
     if (typeof fakeXhr._onSend === "function") {

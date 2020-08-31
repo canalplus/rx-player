@@ -131,6 +131,22 @@ export interface ISegment {
   timestampOffset? : number;
 }
 
+/**
+ * Information about supplementary segment which might not yet be known to a
+ * `IRepresentationIndex`.
+ */
+export interface ISupplementarySegmentsInfo {
+  /** Estimated start time for the segment, in timescale. */
+  time : number;
+  /** Timescale to convert `time` and `duration` into seconds. */
+  timescale : number;
+  /** Estimated duration of the segment, in timescale. */
+  duration : number;
+  count? : number;
+  /** Optional byte range to retrieve the Segment from its URL(s) */
+  range? : [number, number];
+}
+
 /** Interface that should be implemented by any Representation's `index` value. */
 export interface IRepresentationIndex {
   /**
@@ -265,11 +281,7 @@ export interface IRepresentationIndex {
    * @param {Object} currentSegment
    */
   _addSegments(
-    nextSegments : Array<{ time : number;
-                           duration : number;
-                           timescale : number;
-                           count? : number;
-                           range? : [number, number]; }>,
+    nextSegments : ISupplementarySegmentsInfo[],
     currentSegment? : { duration? : number;
                         time : number;
                         timescale? : number; }

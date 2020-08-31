@@ -76,11 +76,7 @@ function regularSegmentLoader(
 }
 
 /**
- * Generate a segment loader:
- *   - call a custom SegmentLoader if defined
- *   - call the regular loader if not
- * @param {boolean} lowLatencyMode
- * @param {Function} [customSegmentLoader]
+ * @param {Object} config
  * @returns {Function}
  */
 export default function generateSegmentLoader(

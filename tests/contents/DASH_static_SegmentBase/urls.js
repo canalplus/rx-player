@@ -2,7 +2,7 @@
 
 const path = require("path");
 
-const BASE_URL = "/DASH_static_SegmentBase_multi_codecs/media/";
+const BASE_URL = "/DASH_static_SegmentBase/media/";
 
 const mp4AudioSegments = ["deu", "eng", "fra", "ita", "spa"].map((lang) => {
   return {
@@ -49,15 +49,29 @@ const textSegments = ["el", "en", "fr"].map(lang => {
 });
 
 module.exports = [
-  // Manifest
+  // Manifests
   {
-    url: BASE_URL + "dash.mpd",
-    path: path.join(__dirname, "./media/dash.mpd"),
+    url: BASE_URL + "multi_codecs.mpd",
+    path: path.join(__dirname, "./media/multi_codecs.mpd"),
     contentType: "application/dash+xml",
   },
+
+  {
+    url: BASE_URL + "broken_sidx.mpd",
+    path: path.join(__dirname, "./media/broken_sidx.mpd"),
+    contentType: "application/dash+xml",
+  },
+
   ...mp4AudioSegments,
   ...webmAudioSegments,
   ...mp4VideoSegments,
   ...webmVideoSegments,
   ...textSegments,
+
+  // segments with broken sidx
+  {
+    url: BASE_URL + "v-0144p-0100k-libx264_broken_sidx.mp4",
+    path: path.join(__dirname, "./media/v-0144p-0100k-libx264_broken_sidx.mp4"),
+    contentType: "video/mp4",
+  },
 ];
