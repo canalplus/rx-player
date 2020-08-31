@@ -23,7 +23,6 @@ import {
 /**
  * Returns the content of a box based on its name.
  * `null` if not found.
- * /!\ does not work with UUID boxes
  * @param {Uint8Array} buf - the isobmff structure
  * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
  * generated from encoding the corresponding ASCII in big endian.
@@ -38,7 +37,6 @@ function getBoxContent(buf : Uint8Array, boxName : number) : Uint8Array|null {
 /**
  * Returns an ISOBMFF box - size and name included - based on its name.
  * `null` if not found.
- * /!\ does not work with UUID boxes
  * @param {Uint8Array} buf - the isobmff structure
  * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
  * generated from encoding the corresponding ASCII in big endian.
@@ -62,8 +60,6 @@ function getBox(buf : Uint8Array, boxName : number) : Uint8Array|null {
  *      size and the name of the box.
  *   3. The first byte after the end of the box, might be equal to `buf`'s
  *      length if we're considering the last box.
- *
- * /!\ does not work with UUID boxes
  * @param {Uint8Array} buf - the isobmff structure
  * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
  * generated from encoding the corresponding ASCII in big endian.
@@ -104,17 +100,15 @@ function getBoxOffsets(
       throw new Error("ISOBMFF: Size out of range");
     }
     if (name === boxName) {
-      break;
+      if (boxName  === 0x75756964 /* === "uuid" */) {
+        lastOffset += 16; // Skip uuid name
+      }
+      return [boxBaseOffset, lastOffset, boxBaseOffset + lastBoxSize];
     } else {
       boxBaseOffset += lastBoxSize;
     }
   }
-
-  if (boxBaseOffset < len && lastOffset !== undefined) {
-    return [boxBaseOffset, lastOffset, boxBaseOffset + lastBoxSize];
-  } else {
-    return null;
-  }
+  return null;
 }
 
 /**
