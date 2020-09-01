@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { be4toi } from "../../../utils/byte_parsing";
+import log from "../../../log";
+import {
+  be4toi,
+  be8toi,
+} from "../../../utils/byte_parsing";
 
 /**
  * Returns the content of a box based on its name.
@@ -113,9 +117,62 @@ function getUuidContent(
   }
 }
 
+/**
+ * For the next encountered box, return byte offsets corresponding to:
+ *   1. the starting byte offset for the next box (should always be equal to
+ *       `0`).
+ *   2. The beginning of the box content - meaning the first byte after the
+ *      size and the name of the box.
+ *   3. The first byte after the end of the box, might be equal to `buf`'s
+ *      length if we're considering the last box.
+ *
+ * `null` if no box is found.
+ * @param {Uint8Array} buf - the isobmff structure
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
+ * generated from encoding the corresponding ASCII in big endian.
+ */
+function getNextBoxOffsets(buf : Uint8Array
+
+) : [ 0 /* start byte */,
+      number /* First byte after the size and name (where the content begins)*/,
+      number /* end byte, not included. */] |
+    null {
+  const len = buf.length;
+  if (len < 8) {
+    log.warn("ISOBMFF: box inferior to 8 bytes, cannot find offsets");
+    return null;
+  }
+  let lastOffset = 0;
+  let boxSize = be4toi(buf, lastOffset);
+  lastOffset += 4;
+
+  const name = be4toi(buf, lastOffset);
+  lastOffset += 4;
+
+  if (boxSize === 0) {
+    boxSize = len;
+  } else if (boxSize === 1) {
+    if (lastOffset + 8 > len) {
+      log.warn("ISOBMFF: box too short, cannot find offsets");
+      return null;
+    }
+    boxSize = be8toi(buf, lastOffset);
+    lastOffset += 8;
+  }
+
+  if (boxSize < 0) {
+    throw new Error("ISOBMFF: Size out of range");
+  }
+  if (name  === 0x75756964 /* === "uuid" */) {
+    lastOffset += 16; // Skip uuid name
+  }
+  return [0, lastOffset, boxSize];
+}
+
 export {
   getBox,
   getBoxContent,
   getBoxOffsets,
+  getNextBoxOffsets,
   getUuidContent,
 };

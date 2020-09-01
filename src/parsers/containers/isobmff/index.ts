@@ -23,6 +23,7 @@ export {
 export {
   getBox,
   getBoxContent,
+  getNextBoxOffsets,
   getBoxOffsets,
   getUuidContent,
 } from "./get_box";
