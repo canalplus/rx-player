@@ -630,7 +630,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("the attached video element is disposed");
     }
 
-    // now that every check has passed, stop previous content
+    // now that every checks have passed, stop previous content
     this.stop();
 
     const isDirectFile = transport === "directfile";
@@ -647,22 +647,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                 initialAudioTrack: defaultAudioTrack,
                                 initialTextTrack: defaultTextTrack };
 
-    // inilialize to false
+    // inilialize `_priv_playing$` to false (meaning the content is not playing yet)
     this._priv_playing$.next(false);
 
-    // get every properties used from context for clarity
     const videoElement = this.videoElement;
 
-    // Global clock used for the whole application.
+    /** Global "clock" used for content playback */
     const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile,
                                                lowLatencyMode });
 
+    /** Emit when the current content has been stopped. */
     const contentIsStopped$ = observableMerge(
       this._priv_stopCurrentContent$,
       this._priv_stopAtEnd ? onEnded$(videoElement) :
                              EMPTY
     ).pipe(take(1));
 
+    /** Emit playback events. */
     let playback$ : ConnectableObservable<IInitEvent>;
 
     if (!isDirectFile) {
@@ -673,7 +674,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       const transportPipelines = transportFn(transportOptions);
 
-      // Options used by the ABR Manager.
+      /** Options used by the ABR Manager. */
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         lowLatencyMode,
@@ -681,29 +682,31 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
         throttlers: {
           throttle: this._priv_throttleWhenHidden ?
-          { video: isActive()
-              .pipe(
-                map(active => active ? Infinity :
-                                       0),
-                takeUntil(this._priv_stopCurrentContent$)
-              ), } :
-          {},
+            {
+              video: isActive().pipe(
+                  map(active => active ? Infinity :
+                                         0),
+                  takeUntil(this._priv_stopCurrentContent$)),
+            } :
+            {},
           throttleBitrate: this._priv_throttleVideoBitrateWhenHidden ?
-          { video: isVideoVisible(this._priv_pictureInPictureEvent$)
-              .pipe(
+            {
+              video: isVideoVisible(this._priv_pictureInPictureEvent$).pipe(
                 map(active => active ? Infinity :
                                        0),
-                takeUntil(this._priv_stopCurrentContent$)
-              ), } :
-          {},
+                takeUntil(this._priv_stopCurrentContent$)),
+            } :
+            {},
           limitWidth: this._priv_limitVideoWidth ?
-          { video: videoWidth$(videoElement, this._priv_pictureInPictureEvent$)
-              .pipe(takeUntil(this._priv_stopCurrentContent$)), } :
-          {},
+            {
+              video: videoWidth$(videoElement, this._priv_pictureInPictureEvent$)
+                .pipe(takeUntil(this._priv_stopCurrentContent$)),
+            } :
+            {},
         },
       };
 
-      // Options used by the TextTrack SourceBuffer
+      /** Options used by the TextTrack SourceBuffer. */
       const textTrackOptions = options.textTrackMode === "native" ?
         { textTrackMode: "native" as const,
           hideNativeSubtitle: options.hideNativeSubtitle } :
@@ -713,7 +716,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const bufferOptions = objectAssign({ manualBitrateSwitchingMode },
                                          this._priv_bufferOptions);
 
-      // playback$ Observable, through which the content will be launched.
+      // We've every options set up. Start everything now
       const init$ = initializeMediaSourcePlayback({ adaptiveOptions,
                                                     autoPlay,
                                                     bufferOptions,
@@ -802,19 +805,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       playback$ = publish<IInitEvent>()(directfileInit$);
     }
 
-    // Emit an object when the player stalls and null when it unstall
+    /** Emit an object when the player "stalls" and null when it un-stalls */
     const stalled$ = playback$.pipe(
       filter((evt) : evt is IStalledEvent => evt.type === "stalled"),
       map(x => x.value)
     );
 
-    // Emit when the content is considered "loaded".
+    /** Emit when the content is considered "loaded". */
     const loaded$ = playback$.pipe(
       filter((evt) : evt is ILoadedEvent => evt.type === "loaded"),
       share()
     );
 
-    // Emit when we "reload" the MediaSource
+    /** Emit when we will "reload" the MediaSource. */
     const reloading$ = playback$
       .pipe(filter((evt) : evt is IReloadingMediaSourceEvent =>
         evt.type === "reloading-media-source"
@@ -822,13 +825,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       share()
     );
 
-    // Emit when the media element emits an "ended" event.
+    /** Emit when the media element emits an "ended" event. */
     const endedEvent$ = onEnded$(videoElement);
 
-    // Emit when the media element emits a "seeking" event.
+    /** Emit when the media element emits a "seeking" event. */
     const seekingEvent$ = onSeeking$(videoElement);
 
-    // State updates when the content is considered "loaded"
+    /** Emit state updates once the content is considered "loaded". */
     const loadedStateUpdates$ = observableCombineLatest([
       this._priv_playing$,
       stalled$.pipe(startWith(null)),
@@ -841,7 +844,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       )
     );
 
-    // Emit the player state as it changes.
+    /** Emit all player "state" updates. */
     const playerState$ = observableConcat(
       observableOf(PLAYER_STATES.LOADING), // Begin with LOADING
 
@@ -878,14 +881,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
       });
 
+    // Link `_priv_onPlayPauseNext` Observable to "play"/"pause" events
     onPlayPause$(videoElement)
       .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"), noop);
 
+    // Link "positionUpdate" events to the clock
     clock$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(x => this._priv_triggerPositionUpdate(x), noop);
 
+    // Link "seeking" and "seeked" events (once the content is loaded)
     loaded$.pipe(
       switchMapTo(emitSeekEvents(this.videoElement, clock$)),
       takeUntil(this._priv_stopCurrentContent$)
@@ -894,10 +900,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.trigger(evt, null);
     });
 
+    // Handle state updates
     playerState$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(x => this._priv_setPlayerState(x), noop);
 
+    // Link playback events to the corresponding callbacks
     playback$.subscribe(
       (x) => this._priv_onPlaybackEvent(x),
       (err : Error) => this._priv_onPlaybackError(err),
@@ -912,6 +920,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         takeUntil(this._priv_stopCurrentContent$)
       )
       .subscribe(() => {
+        // start playback!
         playbackSubscription = playback$.connect();
       });
   }

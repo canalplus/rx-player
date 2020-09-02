@@ -99,9 +99,6 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  * @param {Object} segmentFetcherCreator - Allow to download segments.
  * @param {Object} options
  * @returns {Observable}
- *
- * TODO Special case for image Buffer, where we want data for EVERY active
- * periods.
  */
 export default function BufferOrchestrator(
   content : { manifest : Manifest;

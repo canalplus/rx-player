@@ -154,15 +154,33 @@ export type IInitEvent = IManifestReadyEvent |
                          IStreamEvent;
 
 /**
- * Play a content described by the given Manifest.
+ * Begin content playback.
  *
- * On subscription:
- *   - Creates the MediaSource and attached sourceBuffers instances.
+ * Returns an Observable emitting notifications about the content lifecycle.
+ * On subscription, it will perform every necessary tasks so the content can
+ * play. Among them:
+ *
+ *   - Creates a MediaSource on the given `mediaElement` and attach to it the
+ *     necessary SourceBuffer instances.
+ *
  *   - download the content's Manifest and handle its refresh logic
+ *
  *   - Perform EME management if needed
- *   - get Buffers for each active adaptations.
- *   - give choice of the adaptation to the caller (e.g. to choose a language)
- *   - returns Observable emitting notifications about the content lifecycle.
+ *
+ *   - ask for the choice of the wanted Adaptation through events (e.g. to
+ *     choose a language)
+ *
+ *   - requests and push the right segments (according to the Adaptation choice,
+ *     the current position, the network conditions etc.)
+ *
+ * This Observable will throw in the case where a fatal error (i.e. which has
+ * stopped content playback) is encountered, with the corresponding error as a
+ * payload.
+ *
+ * This Observable will never complete, it will always run until it is
+ * unsubscribed from.
+ * Unsubscription will stop playback and reset the corresponding state.
+ *
  * @param {Object} args
  * @returns {Observable}
  */
@@ -213,12 +231,24 @@ export default function InitializeOnMediaSource(
   const abrManager = new ABRManager(adaptiveOptions);
 
   /**
-   * Create and open a new MediaSource object on the given media element.
+   * Create and open a new MediaSource object on the given media element on
+   * subscription.
    * The MediaSource will be closed on unsubscription.
    */
   const openMediaSource$ = openMediaSource(mediaElement).pipe(
+    // Because multiple Observables here depend on this Observable as a source,
+    // we prefer deferring Subscription until those Observables are themselves
+    // all subscribed to.
+    // This is needed because `openMediaSource$` might send events synchronously
+    // on subscription. In that case, it might communicate those events directly
+    // after the first Subscription is done, making the next subscription miss
+    // out on those events, even if that second subscription is done
+    // synchronously after the first one.
+    // By calling `deferSubscriptions`, we ensure that subscription to
+    // `openMediaSource$` effectively starts after a very short delay, thus
+    // ensuring that no such race condition can occur.
     deferSubscriptions(),
-    share());
+    share()); // Do not re-start the Observable on further parallel subscriptions
 
   /** Send content protection data to the `EMEManager`. */
   const protectedSegments$ = new Subject<IContentProtection>();
@@ -226,6 +256,7 @@ export default function InitializeOnMediaSource(
   /** Create `EMEManager`, an observable which will handle content DRM. */
   const emeManager$ = openMediaSource$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems, protectedSegments$)),
+    // Defer subscription and share for the same reasons than `openMediaSource$`
     deferSubscriptions(),
     share());
 
@@ -245,6 +276,7 @@ export default function InitializeOnMediaSource(
   /** Do the first Manifest request. */
   const initialManifestRequest$ = fetchManifest(url, { previousManifest: null,
                                                        unsafeMode: false }).pipe(
+    // Defer subscription and share for the same reasons than `openMediaSource$`
     deferSubscriptions(),
     share());
 
