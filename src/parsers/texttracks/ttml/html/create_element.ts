@@ -62,9 +62,8 @@ function applyTextStyle(
 ) {
   // applies to span
   const color = style.color;
-  if (isNonEmptyString(color)) {
-    element.style.color = ttmlColorToCSSColor(color);
-  }
+  element.style.color = isNonEmptyString(color) ? ttmlColorToCSSColor(color) :
+                                                  "white";
 
   // applies to body, div, p, region, span
   const backgroundColor = style.backgroundColor;
