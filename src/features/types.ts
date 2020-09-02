@@ -39,8 +39,7 @@ interface IContentProtection { type : string;
 
 export type IEMEManager = (mediaElement : HTMLMediaElement,
                            keySystems: IKeySystemOption[],
-                           contentProtections$ : Observable<IContentProtection>,
-                           mediaElementReady$: Observable<null>) =>
+                           contentProtections$ : Observable<IContentProtection>) =>
                              Observable<IEMEManagerEvent>;
 
 export type INativeTextTracksBuffer =

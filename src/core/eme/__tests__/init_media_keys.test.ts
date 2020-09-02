@@ -15,10 +15,11 @@
  */
 
 import {
+  isObservable,
   of as observableOf,
   throwError,
 } from "rxjs";
-import { skip, take } from "rxjs/operators";
+import { skip, take, tap } from "rxjs/operators";
 
 /* tslint:disable no-unsafe-any */
 describe("core - eme - initMediaKeys", () => {
@@ -46,14 +47,13 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    const mediaElementReady$ = observableOf(null);
-    initMediaKeys(mediaElement, keySystemsConfigs, mediaElementReady$)
+    initMediaKeys(mediaElement, keySystemsConfigs)
       .pipe(take(1))
-      .subscribe((result : unknown) => {
-        expect(result).toEqual({
-          type: "created-media-keys",
-          value: falseMediaKeys,
-        });
+      .subscribe((result : any) => {
+        expect(result.type).toEqual("created-media-keys");
+        expect(result.value.mediaKeysInfos).toEqual(falseMediaKeys);
+        expect(isObservable(result.value.attachMediaKeys$) &&
+               typeof result.value.attachMediaKeys$.next === "function").toBeTruthy();
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
@@ -84,9 +84,15 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    const mediaElementReady$ = observableOf(null);
-    initMediaKeys(mediaElement, keySystemsConfigs, mediaElementReady$)
-      .pipe(skip(1))
+    initMediaKeys(mediaElement, keySystemsConfigs)
+      .pipe(
+        tap((evt: any) => {
+          if (evt.type === "created-media-keys") {
+            evt.value.attachMediaKeys$.next();
+          }
+        }),
+        skip(1)
+      )
       .subscribe((result : unknown) => {
         expect(result).toEqual({
           type: "attached-media-keys",
@@ -123,8 +129,7 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    const mediaElementReady$ = observableOf(null);
-    initMediaKeys(mediaElement, keySystemsConfigs, mediaElementReady$)
+    initMediaKeys(mediaElement, keySystemsConfigs)
       .subscribe(null, (e : Error) => {
         expect(e).toBe(err);
 
@@ -160,13 +165,13 @@ describe("core - eme - initMediaKeys", () => {
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
 
     let eventReceived = false;
-    const mediaElementReady$ = observableOf(null);
-    initMediaKeys(mediaElement, keySystemsConfigs, mediaElementReady$)
-      .subscribe((evt : unknown) => {
-        expect(evt).toEqual({
-          type: "created-media-keys",
-          value: falseMediaKeys,
-        });
+    initMediaKeys(mediaElement, keySystemsConfigs)
+      .subscribe((evt : any) => {
+        expect(evt.type).toEqual("created-media-keys");
+        expect(evt.value.mediaKeysInfos).toEqual(falseMediaKeys);
+        expect(isObservable(evt.value.attachMediaKeys$) &&
+               typeof evt.value.attachMediaKeys$.next === "function").toBeTruthy();
+        evt.value.attachMediaKeys$.next();
         eventReceived = true;
       }, (e : Error) => {
         expect(eventReceived).toEqual(true);

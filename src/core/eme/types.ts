@@ -61,7 +61,7 @@ export interface IEncryptedEvent { type: "encrypted-event-received";
 export interface ICreatedMediaKeysEvent {
   type: "created-media-keys";
   value: { mediaKeysInfos: IMediaKeysInfos;
-           attachMediaKeys$: Subject<unknown>; }; }
+           attachMediaKeys$: Subject<void>; }; }
 
 // Sent when the created (or already created) MediaKeys is attached to the
 // current HTMLMediaElement element.

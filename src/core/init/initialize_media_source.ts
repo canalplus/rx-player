@@ -257,9 +257,7 @@ export default function InitializeOnMediaSource(
   /** Create `EMEManager`, an observable which will handle content DRM. */
   const emeManager$ = createEMEManager(mediaElement,
                                        keySystems,
-                                       protectedSegments$,
-                                       openMediaSource$).pipe(
-  // Defer subscription and share for the same reasons than `openMediaSource$`
+                                       protectedSegments$).pipe(
     deferSubscriptions(),
     shareReplay()
   );

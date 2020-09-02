@@ -15,15 +15,14 @@
  */
 
 import {
-  concat as observableConcat,
   Observable,
   of as observableOf,
-  Subject,
+  ReplaySubject,
 } from "rxjs";
 import {
-  map,
   mapTo,
   mergeMap,
+  startWith,
 } from "rxjs/operators";
 import { setMediaKeys } from "../../compat";
 import attachMediaKeys from "./attach_media_keys";
@@ -51,22 +50,21 @@ export default function initMediaKeys(
           mediaKeysInfos.mediaKeys !== mediaElement.mediaKeys) {
         disableOldMediaKeys$ = setMediaKeys(mediaElement, null);
       }
-      const attachMediaKeys$ = new Subject<unknown>();
-      return observableConcat(
-        disableOldMediaKeys$.pipe(
-          map(() => {
-            return { type: "created-media-keys" as const,
-                     value: { mediaKeysInfos,
-                              attachMediaKeys$ } };
-          })
-        ),
-        attachMediaKeys$.pipe(
-          mergeMap(() => {
-            return attachMediaKeys(mediaKeysInfos, mediaElement)
-              .pipe(mapTo({ type: "attached-media-keys" as const,
-                            value: mediaKeysInfos, }));
-          })
-        )
+
+      const attachMediaKeys$ = new ReplaySubject<void>(1);
+      return disableOldMediaKeys$.pipe(
+        mergeMap(() => {
+          return attachMediaKeys$.pipe(
+            mergeMap(() => {
+              return attachMediaKeys(mediaKeysInfos, mediaElement)
+                .pipe(mapTo({ type: "attached-media-keys" as const,
+                              value: mediaKeysInfos, }));
+            })
+          );
+        }),
+        startWith({ type: "created-media-keys" as const,
+                    value: { mediaKeysInfos,
+                             attachMediaKeys$ } })
       );
     }));
 }
