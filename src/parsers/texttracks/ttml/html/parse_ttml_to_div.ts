@@ -22,6 +22,7 @@ import getParentElementsByTagName from "../get_parent_elements_by_tag_name";
 import {
   getStylingAttributes,
   getStylingFromElement,
+  IStyleList,
   IStyleObject,
 } from "../get_styling";
 import {
@@ -164,13 +165,23 @@ export default function parseTTMLStringToDIV(
       const paragraph = paragraphNodes[i];
       if (paragraph instanceof Element) {
         const divs = getParentElementsByTagName(paragraph , "div");
-        const paragraphStyle = objectAssign({},
-                                            bodyStyle,
-                                            getStylingAttributes(STYLE_ATTRIBUTES,
-                                                                 [paragraph,
-                                                                  ...divs],
-                                                                 idStyles,
-                                                                 regionStyles));
+
+        // A default paragraphStyle is set and applied if no styles
+        // were defined on TTML.
+        // If either an idStyle or a regionStyle exists, then we shall
+        // not apply any default style, as our changes may disturb the overall
+        // cue style as it was intended to be.
+        let stylingAttributes: IStyleList = { displayAlign: "after",
+                                              extent: "100% 100%",
+                                              textAlign: "center" };
+        if (idStyles.length > 0 || regionStyles.length > 0) {
+          stylingAttributes = getStylingAttributes(STYLE_ATTRIBUTES,
+                                                   [paragraph,
+                                                    ...divs],
+                                                   idStyles,
+                                                   regionStyles);
+        }
+        const paragraphStyle = objectAssign({}, bodyStyle, stylingAttributes);
 
         const paragraphSpaceAttribute = paragraph.getAttribute("xml:space");
         const shouldTrimWhiteSpaceOnParagraph =
