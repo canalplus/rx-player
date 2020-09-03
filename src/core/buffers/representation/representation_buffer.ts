@@ -64,6 +64,7 @@ import {
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
 import SimpleSet from "../../../utils/simple_set";
+import { IStalledStatus } from "../../api";
 import {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
@@ -89,71 +90,103 @@ import getWantedRange from "./get_wanted_range";
 import pushInitSegment from "./push_init_segment";
 import pushMediaSegment from "./push_media_segment";
 
-// Item emitted by the Buffer's clock$
+/** Object emitted by the Buffer's clock$ at each tick. */
 export interface IRepresentationBufferClockTick {
-  currentTime : number; // the current position we are in the video in s
-  liveGap? : number; // gap between the current position and the edge of a
-                     // live content. Not set for non-live contents
-  stalled : object|null; // if set, the player is currently stalled
-  wantedTimeOffset : number; // offset in s to add to currentTime to obtain the
-                             // position we actually want to download from
+  /** The current position, in seconds the media element is in, in seconds. */
+  currentTime : number;
+ /**
+  * Gap between the current position and the edge of a live content.
+  * Not set for non-live contents.
+  */
+  liveGap? : number;
+  /** If set, the player is currently stalled (blocked). */
+  stalled : IStalledStatus|null;
+  /**
+   * Offset in seconds to add to `currentTime` to obtain the position we
+   * actually want to download from.
+   * This is mostly useful when starting to play a content, where `currentTime`
+   * might still be equal to `0` but you actually want to download from a
+   * starting position different from `0`.
+   */
+  wantedTimeOffset : number;
 }
 
-// Arguments to give to the RepresentationBuffer
-// @see RepresentationBuffer for documentation
+/** Arguments to give to the RepresentationBuffer. */
 export interface IRepresentationBufferArguments<T> {
+  /** Periodically emits the current playback conditions. */
   clock$ : Observable<IRepresentationBufferClockTick>;
+  /** The context of the Representation you want to load. */
   content: { adaptation : Adaptation;
              manifest : Manifest;
              period : Period;
              representation : Representation; };
+  /** The `QueuedSourceBuffer` on which segments will be pushed. */
   queuedSourceBuffer : QueuedSourceBuffer<T>;
+  /** Interface used to load new segments. */
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
+  /**
+   * Observable emitting when the RepresentationBuffer should complete itself
+   * when all requests have finished.
+   */
   terminate$ : Observable<void>;
+  /**
+   * The buffer size we have to reach in seconds (compared to the current
+   * position. When that size is reached, no segments will be loaded until it
+   * goes below that size again.
+   */
   bufferGoal$ : Observable<number>;
+  /**
+   * The last Representation's bitrate that was known to be "maintainable".
+   * That is, that can be loaded faster that it can be played with the current
+   * playback conditions (i.e. playback rate etc.).
+   * This value will be used to decide when "fast-switching" (replacing
+   * already-loaded segments by segments or higher quality) should be enforced
+   * or not.
+   */
   knownStableBitrate$: Observable< undefined | number>;
 }
 
-// Information about a Segment waiting for download
+/** Information about a Segment waiting to be loaded. */
 interface IQueuedSegment {
-  priority : number; // Priority of the request (lower number = higher priority)
-  segment : ISegment; // Segment wanted
+  /** Priority of the segment request (lower number = higher priority). */
+  priority : number;
+  /** Segment wanted. */
+  segment : ISegment;
 }
 
-export interface ISegmentProtection { // Describes DRM information
-  type : string;
-  data : Uint8Array;
-}
-
+/** Internal event used to anounce that the initialization segment has been parsed. */
 type IParsedInitSegmentEvent<T> = ISegmentParserInitSegment<T> &
                                   { segment : ISegment };
 
+/** Internal event used to anounce that a media segment has been parsed. */
 type IParsedSegmentEvent<T> = ISegmentParserSegment<T> &
                               { segment : ISegment };
 
+/** Internal event used to anounce that a segment has been fully-loaded. */
 interface IEndOfSegmentEvent { type : "end-of-segment";
                                value: { segment : ISegment }; }
 
+/** Internal event used to anounce that a segment request is retried. */
 interface ILoaderRetryEvent { type : "retry";
                               value : { segment : ISegment;
                                         error : ICustomError; };
 }
 
+/** Internal event sent when loading a segment. */
 type ISegmentLoadingEvent<T> = IParsedSegmentEvent<T> |
                                IParsedInitSegmentEvent<T> |
                                IEndOfSegmentEvent |
                                ILoaderRetryEvent;
 
-// Object describing a pending Segment request
+/** Object describing a pending Segment request. */
 interface ISegmentRequestObject<T> {
+  /** The segment the request is for. */
   segment : ISegment; // The Segment the request is for
-  request$ : Observable<ISegmentFetcherEvent<T>>; // The request itself
+  /** The request Observable itself. Can be used to update its priority. */
+  request$ : Observable<ISegmentFetcherEvent<T>>;
+  /** Last set priority of the segment request (lower number = higher priority). */
   priority : number; // The current priority of the request
 }
-
-/** Events communicating about actions that need to be taken */
-type IBufferNeededActions = IBufferNeedsManifestRefresh |
-                            IBufferNeedsDiscontinuitySeek;
 
 /**
  * Build up buffer for a single Representation.
@@ -168,41 +201,47 @@ type IBufferNeededActions = IBufferNeedsManifestRefresh |
  * @returns {Observable}
  */
 export default function RepresentationBuffer<T>({
-  bufferGoal$, // emit the buffer size we have to reach
-  clock$, // emit current playback information regularly
-  content, // The content we want to play
-  knownStableBitrate$, // Bitrate higher or equal to this value should not be
-                      // replaced by segments of better quality
-  queuedSourceBuffer, // interface to the SourceBuffer
-  segmentFetcher, // allows to download new segments
-  terminate$, // signal the RepresentationBuffer that it should terminate
+  bufferGoal$,
+  clock$,
+  content,
+  knownStableBitrate$,
+  queuedSourceBuffer,
+  segmentFetcher,
+  terminate$,
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   const { manifest, period, adaptation, representation } = content;
   const bufferType = adaptation.type;
   const initSegment = representation.index.getInitSegment();
 
-  // Saved initSegment state for this representation.
-  let initSegmentObject : ISegmentParserParsedInitSegment<T>|null =
+  /**
+   * Saved initialization segment state for this representation.
+   * `null` if the initialization segment hasn't been loaded yet.
+   */
+  let initSegmentObject : ISegmentParserParsedInitSegment<T> | null =
     initSegment == null ? { initializationData: null,
                             segmentProtections: [],
                             initTimescale: undefined } :
                           null;
 
-  // Segments queued for download in the BufferQueue.
+  /** Segments queued for download in this RepresentationBuffer. */
   let downloadQueue : IQueuedSegment[] = [];
 
-  // Subject to start/restart a downloading Queue.
+  /** Emit to start/restart a downloading Queue. */
   const startDownloadingQueue$ = new ReplaySubject<void>(1);
 
-  // Emit when the RepresentationBuffer asks to re-check which segments are needed.
+  /** Emit when the RepresentationBuffer asks to re-check which segments are needed. */
   const reCheckNeededSegments$ = new Subject<void>();
 
-  // Keep track of the information about the pending Segment request.
-  // null if no request is pending.
+  /**
+   * Keep track of the information about the pending segment request.
+   * `null` if no segment request is pending in that RepresentationBuffer.
+   */
   let currentSegmentRequest : ISegmentRequestObject<T>|null = null;
 
-  // Keep track of downloaded segments currently awaiting to be appended to the
-  // QueuedSourceBuffer.
+  /**
+   * Keep track of loaded segments currently awaiting to be appended to the
+   * QueuedSourceBuffer, so we can avoid from loading them again.
+   */
   const loadedSegmentPendingPush = new SimpleSet();
 
   const status$ = observableCombineLatest([
@@ -268,8 +307,11 @@ export default function RepresentationBuffer<T>({
         }
       }
 
-      let isFull : boolean; // True if the current buffer is full and the one
-                            // from the next Period can be created
+      /**
+       * `true` if the current buffer has loaded all the needed segments for
+       * this Representation until the end of the Period.
+       */
+      let isFull : boolean;
       if (neededSegments.length > 0 || period.end == null) {
         // Either we still have segments to download or the current Period is
         // not yet ended: not full
@@ -306,7 +348,8 @@ export default function RepresentationBuffer<T>({
                shouldRefreshManifest };
     }),
 
-    mergeMap(function handleStatus(status) : Observable<IBufferNeededActions |
+    mergeMap(function handleStatus(status) : Observable<IBufferNeedsManifestRefresh |
+                                                        IBufferNeedsDiscontinuitySeek |
                                                         IBufferStateFull |
                                                         IBufferStateActive |
                                                         { type : "terminated" }
@@ -337,7 +380,8 @@ export default function RepresentationBuffer<T>({
         return EMPTY;
       }
 
-      const neededActions : IBufferNeededActions[] = [];
+      const neededActions : Array<IBufferNeedsManifestRefresh |
+                                  IBufferNeedsDiscontinuitySeek> = [];
       if (status.discontinuity > 1) {
         const nextTime = status.discontinuity + 1;
         const gap: [number, number] = [status.discontinuity, nextTime];
@@ -386,18 +430,19 @@ export default function RepresentationBuffer<T>({
       return observableConcat(observableOf(...neededActions),
                               observableOf(EVENTS.activeBuffer(bufferType)));
     }),
-    takeWhile((e) : e is IBufferNeededActions|IBufferStateFull|IBufferStateActive =>
-      e.type !== "terminated"
-    )
-  );
+    takeWhile((e) : e is IBufferNeedsManifestRefresh |
+                         IBufferNeedsDiscontinuitySeek |
+                         IBufferStateFull |
+                         IBufferStateActive => e.type !== "terminated"));
 
-  // Buffer Queue:
-  //   - download every segments queued sequentially
-  //   - append them to the SourceBuffer
+  /**
+   * Buffer Queue:
+   *   - download every segments queued sequentially
+   *   - when a segment is loaded, append it to the SourceBuffer
+   */
   const bufferQueue$ = startDownloadingQueue$.pipe(
     switchMap(() => downloadQueue.length > 0 ? loadSegmentsFromQueue() : EMPTY),
-    mergeMap(onLoaderEvent)
-  );
+    mergeMap(onLoaderEvent));
 
   return observableMerge(status$, bufferQueue$).pipe(share());
 

@@ -97,11 +97,22 @@ export interface IBufferStateFull {
   };
 }
 
+/** Parsed DRM information detected in an initialization segment. */
+export interface ISegmentProtection {
+  /**
+   * The "format" of the DRM initialization data, as specified in:
+   * https://www.w3.org/TR/eme-initdata-registry/
+   */
+  type : string;
+  /** The DRM initialization data itself. */
+  data : Uint8Array;
+}
+
 /** Emitted when a segment with protection information has been encountered. */
 export interface IProtectedSegmentEvent {
   type : "protected-segment";
-  value : { type : string;
-            data : Uint8Array; }; }
+  value : ISegmentProtection;
+}
 
 /** Event sent by a `RepresentationBuffer`. */
 export type IRepresentationBufferEvent<T> = IBufferEventAddedSegment<T> |

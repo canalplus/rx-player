@@ -83,7 +83,7 @@ interface IMediaInfos {
   state : IMediaInfosState; }
 
 /** Describes when the player is "stalled" and what event started that status. */
-type IStalledStatus =
+export type IStalledStatus =
   /** Set if the player is stalled. */
   {
     /** What started the player to stall. */

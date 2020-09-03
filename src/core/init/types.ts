@@ -20,6 +20,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import { IStalledStatus } from "../api";
 import { IRepresentationChangeEvent } from "../buffers";
 import SourceBuffersStore from "../source_buffers";
 import { IStallingItem } from "./get_stalled_events";
@@ -36,10 +37,7 @@ export interface IInitClockTick { currentTime : number;
                                                  null;
                                   readyState : number;
                                   paused : boolean;
-                                  stalled : { reason : "seeking" |
-                                                       "not-ready" |
-                                                       "buffering";
-                                              timestamp : number; } |
+                                  stalled : IStalledStatus |
                                             null;
                                   seeking : boolean; }
 

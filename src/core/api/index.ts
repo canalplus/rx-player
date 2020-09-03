@@ -20,6 +20,9 @@ export {
   IStreamEventData,
 } from "./public_api";
 export {
+  IStalledStatus,
+} from "./clock";
+export {
   IConstructorOptions,
   ILoadVideoOptions,
 

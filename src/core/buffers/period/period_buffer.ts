@@ -43,6 +43,7 @@ import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
+import { IStalledStatus } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SourceBuffersStore, {
   IBufferType,
@@ -67,7 +68,7 @@ export interface IPeriodBufferClockTick {
                      // live content. Not set for non-live contents
   readyState : number; // readyState of the HTMLMediaElement
   speed : number; // playback rate at which the content plays
-  stalled : object|null; // if set, the player is currently stalled
+  stalled : IStalledStatus|null; // if set, the player is currently stalled
   wantedTimeOffset : number; // offset in s to add to currentTime to obtain the
                              // position we actually want to download from
 }
