@@ -15,6 +15,7 @@
  */
 
 import { ICustomMediaKeySession } from "../../compat";
+import getUUIDKidFromKeyStatusKID from "../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../errors";
 import {
   IEMEWarningEvent,
@@ -49,12 +50,14 @@ export default function checkKeyStatuses(
     /* tslint:enable no-unsafe-any */
     // Hack present because the order of the arguments has changed in spec
     // and is not the same between some versions of Edge and Chrome.
-    const [keyStatus, keyId] = (() => {
+    const [keyStatus, keyStatusKeyId] = (() => {
       return (typeof _arg1  === "string" ? [_arg1, _arg2] :
                                            [_arg2, _arg1]
              ) as [MediaKeyStatus, ArrayBuffer];
     })();
 
+    const keyId = getUUIDKidFromKeyStatusKID(keySystem.type,
+                                             new Uint8Array(keyStatusKeyId));
     switch (keyStatus) {
       case KEY_STATUSES.EXPIRED: {
         const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
