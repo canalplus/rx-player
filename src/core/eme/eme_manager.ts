@@ -99,8 +99,7 @@ export default function EMEManager(
   const blacklistedInitData = new InitDataStore<BlacklistedSessionError>();
 
   /** Emit the MediaKeys instance and its related information when ready. */
-  const mediaKeysInfos$ = initMediaKeys(mediaElement,
-                                        keySystemsConfigs)
+  const mediaKeysInfos$ = initMediaKeys(mediaElement, keySystemsConfigs)
     .pipe(shareReplay()); // Share side-effects and cache success
 
   /** Emit when the MediaKeys instance has been attached the HTMLMediaElement. */
