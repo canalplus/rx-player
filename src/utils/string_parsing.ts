@@ -260,23 +260,21 @@ function bytesToHex(bytes : Uint8Array, sep : string = "") : string {
 function guidToUuid(guid : Uint8Array) : Uint8Array {
   assert(guid.length === 16, "GUID length should be 16");
 
-  const p1A = guid[0];
-  const p1B = guid[1];
-  const p1C = guid[2];
-  const p1D = guid[3];
-  const p2A = guid[4];
-  const p2B = guid[5];
-  const p3A = guid[6];
-  const p3B = guid[7];
-  const p4 = guid.subarray(8, 10);
-  const p5 = guid.subarray(10, 16);
+  const [p1A, p1B, p1C, p1D,
+         p2A, p2B,
+         p3A, p3B] = guid;
 
   const uuid = new Uint8Array(16);
+  // swapping byte endian on 4 bytes
+  // [1, 2, 3, 4] => [4, 3, 2, 1]
   uuid[0] = p1D; uuid[1] = p1C; uuid[2] = p1B; uuid[3] = p1A;
+  // swapping byte endian on 2 bytes
+  // [5, 6] => [6, 5]
   uuid[4] = p2B; uuid[5] = p2A;
+  // swapping byte endian on 2 bytes
+  // [7, 8] => [8, 7]
   uuid[6] = p3B; uuid[7] = p3A;
-  uuid.set(p4,  8);
-  uuid.set(p5, 10);
+  uuid.set(guid.subarray(8, 16),  8);
 
   return uuid;
 }
