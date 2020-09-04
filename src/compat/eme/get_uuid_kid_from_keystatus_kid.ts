@@ -27,7 +27,7 @@ import {
  * @param {Uint8Array} baseKeyId
  * @returns {Uint8Array}
  */
-export default function getUUIDKidFromKeyStatusKID(keySystem: string,
+export default function getUUIDKIDFromKeyStatusKID(keySystem: string,
                                                    baseKeyId: Uint8Array): Uint8Array {
   if (keySystem.indexOf("playready") !== -1 &&
       (isIEOrEdge || isChromiumEdge)) {
