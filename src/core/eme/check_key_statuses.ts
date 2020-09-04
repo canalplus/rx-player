@@ -33,17 +33,19 @@ const KEY_STATUSES = { EXPIRED: "expired",
  * Throws if one of the keyID is on an error.
  * @param {MediaKeySession} session - The MediaKeySession from which the keys
  * will be checked.
- * @param {Object} keySystem - Configuration. Used to known on which situations
+ * @param {Object} keySystemOptions - Options. Used to known on which situations
  * we can fallback.
+ * @param {String} keySystem - The configuration keySystem used for deciphering
  * @returns {Array} - Warnings to send and blacklisted key ids.
  */
 export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
-  keySystem: IKeySystemOption
+  keySystemOptions: IKeySystemOption,
+  keySystem: string
 ) : [IEMEWarningEvent[], ArrayBuffer[]] {
   const warnings : IEMEWarningEvent[] = [];
   const blacklistedKeyIDs : ArrayBuffer[] = [];
-  const { fallbackOn = {} } = keySystem;
+  const { fallbackOn = {}, throwOnLicenseExpiration } = keySystemOptions;
 
   /* tslint:disable no-unsafe-any */
   (session.keyStatuses as any).forEach((_arg1 : unknown, _arg2 : unknown) => {
@@ -56,14 +58,14 @@ export default function checkKeyStatuses(
              ) as [MediaKeyStatus, ArrayBuffer];
     })();
 
-    const keyId = getUUIDKidFromKeyStatusKID(keySystem.type,
+    const keyId = getUUIDKidFromKeyStatusKID(keySystem,
                                              new Uint8Array(keyStatusKeyId));
     switch (keyStatus) {
       case KEY_STATUSES.EXPIRED: {
         const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
                                               "A decryption key expired");
 
-        if (keySystem.throwOnLicenseExpiration !== false) {
+        if (throwOnLicenseExpiration !== false) {
           throw error;
         }
         warnings.push({ type: "warning", value: error });

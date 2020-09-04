@@ -87,14 +87,16 @@ export class BlacklistedSessionError extends Error {
  * listen to various events from a MediaKeySession and react accordingly
  * depending on the configuration given.
  * @param {MediaKeySession} session - The MediaKeySession concerned.
- * @param {Object} keySystem - The key system configuration.
+ * @param {Object} keySystemOptions - The key system options.
+ * @param {String} keySystem - The configuration keySystem used for deciphering
  * @param {Object} initDataInfo - The initialization data linked to that
  * session.
  * @returns {Observable}
  */
 export default function SessionEventsListener(
   session: MediaKeySession | ICustomMediaKeySession,
-  keySystem: IKeySystemOption,
+  keySystemOptions: IKeySystemOption,
+  keySystem: string,
   { initData, initDataType } : { initData : Uint8Array; initDataType? : string }
 ) : Observable<IEMEWarningEvent |
                ISessionMessageEvent |
@@ -104,7 +106,7 @@ export default function SessionEventsListener(
 {
   log.debug("EME: Binding session events", session);
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
-  const { getLicenseConfig = {} } = keySystem;
+  const { getLicenseConfig = {} } = keySystemOptions;
 
   const keyErrors : Observable<never> = onKeyError$(session)
     .pipe(map((error) => { throw new EncryptedMediaError("KEY_ERROR", error.type); }));
@@ -112,6 +114,7 @@ export default function SessionEventsListener(
   const keyStatusesChange$ = onKeyStatusesChange$(session)
     .pipe(mergeMap((keyStatusesEvent: Event) =>
       handleKeyStatusesChangeEvent(session,
+                                   keySystemOptions,
                                    keySystem,
                                    keyStatusesEvent)));
 
@@ -127,7 +130,7 @@ export default function SessionEventsListener(
       log.debug(`EME: Event message type ${messageType}`, session, messageEvent);
 
       const getLicense$ = observableDefer(() => {
-        const getLicense = keySystem.getLicense(message, messageType);
+        const getLicense = keySystemOptions.getLicense(message, messageType);
         const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
           10 * 1000 :
           getLicenseConfig.timeout;
@@ -186,10 +189,11 @@ export default function SessionEventsListener(
       }
     }));
 
-  const sessionEvents = observableMerge(getKeyStatusesEvents(session, keySystem),
-                                        sessionUpdates,
-                                        keyErrors,
-                                        sessionWarningSubject$);
+  const sessionEvents = observableMerge(
+    getKeyStatusesEvents(session, keySystemOptions, keySystem),
+    sessionUpdates,
+    keyErrors,
+    sessionWarningSubject$);
 
   return !isNullOrUndefined(session.closed) ?
            sessionEvents.pipe(takeUntil(castToObservable(session.closed))) :
@@ -203,15 +207,18 @@ export default function SessionEventsListener(
  *    - emit warning events for recoverable errors
  *    - emit blacklist-keys events for key IDs that are not decipherable
  * @param {MediaKeySession} session - The MediaKeySession concerned.
- * @param {Object} keySystem - The key system configuration.
+ * @param {Object} keySystemOptions - The key system options.
+ * @param {String} keySystem - The configuration keySystem used for deciphering
  * @returns {Observable}
  */
 function getKeyStatusesEvents(
   session : MediaKeySession | ICustomMediaKeySession,
-  keySystem : IKeySystemOption
+  keySystemOptions : IKeySystemOption,
+  keySystem : string
 ) : Observable<IEMEWarningEvent | IBlacklistKeysEvent> {
   return observableDefer(() => {
-    const [warnings, blacklistedKeyIDs] = checkKeyStatuses(session, keySystem);
+    const [warnings, blacklistedKeyIDs] =
+      checkKeyStatuses(session, keySystemOptions, keySystem);
 
     const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
       EMPTY;
@@ -288,17 +295,18 @@ function updateSessionWithMessage(
  */
 function handleKeyStatusesChangeEvent(
   session : MediaKeySession | ICustomMediaKeySession,
-  keySystem : IKeySystemOption,
+  keySystemOptions : IKeySystemOption,
+  keySystem : string,
   keyStatusesEvent : Event
 ) : Observable<IKeyStatusChangeHandledEvent | IBlacklistKeysEvent | IEMEWarningEvent> {
   log.debug("EME: handling keystatuseschange event", session, keyStatusesEvent);
   const callback$ = observableDefer(() => {
-    if (typeof keySystem.onKeyStatusesChange !== "function") {
+    if (typeof keySystemOptions.onKeyStatusesChange !== "function") {
       return EMPTY;
     }
     return castToObservable(
-               keySystem.onKeyStatusesChange(keyStatusesEvent, session)
-             ) as Observable< BufferSource | null >;
+      keySystemOptions.onKeyStatusesChange(keyStatusesEvent, session)
+    ) as Observable< BufferSource | null >;
   }).pipe(
     map(licenseObject => ({ type: "key-status-change-handled" as const,
                             value : { session, license: licenseObject } })),
@@ -313,7 +321,7 @@ function handleKeyStatusesChangeEvent(
       throw err;
     })
   );
-  return observableConcat(getKeyStatusesEvents(session, keySystem),
+  return observableConcat(getKeyStatusesEvents(session, keySystemOptions, keySystem),
                           callback$);
 }
 

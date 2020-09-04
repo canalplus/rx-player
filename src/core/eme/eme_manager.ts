@@ -178,6 +178,7 @@ export default function EMEManager(
             value: objectAssign({
               keySystemOptions: mediaKeysInfos.keySystemOptions,
               persistentSessionsStore: mediaKeysInfos.persistentSessionsStore,
+              keySystem: mediaKeysInfos.mediaKeySystemAccess.keySystem,
             }, evt.value),
           };
         }));
@@ -220,7 +221,8 @@ export default function EMEManager(
               mediaKeySession,
               sessionType,
               keySystemOptions,
-              persistentSessionsStore } = sessionInfosEvt.value;
+              persistentSessionsStore,
+              keySystem } = sessionInfosEvt.value;
 
       const generateRequest$ = sessionInfosEvt.type !== "created-session" ?
           EMPTY :
@@ -244,6 +246,7 @@ export default function EMEManager(
 
       return observableMerge(SessionEventsListener(mediaKeySession,
                                                    keySystemOptions,
+                                                   keySystem,
                                                    { initData, initDataType }),
                              generateRequest$)
         .pipe(catchError(err => {
