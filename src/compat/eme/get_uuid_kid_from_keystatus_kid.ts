@@ -16,7 +16,7 @@
 
 import { guidToUuid } from "../../utils/string_parsing";
 import {
-  isChromiumEdge,
+  isEdgeChromium,
   isIEOrEdge,
 } from "../browser_detection";
 
@@ -30,7 +30,7 @@ import {
 export default function getUUIDKIDFromKeyStatusKID(keySystem: string,
                                                    baseKeyId: Uint8Array): Uint8Array {
   if (keySystem.indexOf("playready") !== -1 &&
-      (isIEOrEdge || isChromiumEdge)) {
+      (isIEOrEdge || isEdgeChromium)) {
     return guidToUuid(baseKeyId);
   }
   return baseKeyId;
