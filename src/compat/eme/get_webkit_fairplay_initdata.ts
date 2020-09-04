@@ -15,11 +15,13 @@
  */
 
 import {
-  bytesToUTF16Str,
   itole4,
   le4toi,
-  strToUTF16Array,
 } from "../../utils/byte_parsing";
+import {
+  leUtf16ToStr,
+  strToLeUtf16,
+} from "../../utils/string_parsing";
 
 /**
  * Create formatted fairplay initdata for WebKit createSession.
@@ -43,12 +45,12 @@ export default function getWebKitFairPlayInitData(
   if (length + 4 !== initData.length) {
     throw new Error("Unsupported WebKit initData.");
   }
-  const initDataUri = bytesToUTF16Str(initData);
+  const initDataUri = leUtf16ToStr(initData);
   const skdIndexInInitData = initDataUri.indexOf("skd://");
   const contentIdStr = skdIndexInInitData > -1 ?
     initDataUri.substring(skdIndexInInitData + 6) :
     initDataUri;
-  const id = strToUTF16Array(contentIdStr);
+  const id = strToLeUtf16(contentIdStr);
 
   let offset = 0;
   const res =
@@ -62,13 +64,8 @@ export default function getWebKitFairPlayInitData(
   res.set(itole4(id.byteLength), offset);
   offset += 4;
 
-  /**
-   * As the id is formatted in Uint16, we need to represent
-   * it in an Uint8 array to be able to set it in our result bytes
-   * array.
-   */
-  res.set(new Uint8Array(id.buffer), offset);
-  offset += id.length * 2;
+  res.set(id, offset);
+  offset += id.byteLength;
 
   res.set(itole4(serverCertificate.byteLength), offset);
   offset += 4;

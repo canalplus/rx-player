@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  be4toi,
-  strToBytes,
-} from "../../utils/byte_parsing";
+import { be4toi } from "../../utils/byte_parsing";
+import { strToUtf8 } from "../../utils/string_parsing";
 
 // The way "pssh" will be written in ISOBMFF files
-export const PSSH_TO_INTEGER : number = be4toi(strToBytes("pssh"), 0);
+export const PSSH_TO_INTEGER : number = be4toi(strToUtf8("pssh"), 0);

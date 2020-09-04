@@ -14,112 +14,6 @@
  * limitations under the License.
  */
 
-import assert from "./assert";
-
-type TypedArray = Int8Array |
-                  Int16Array |
-                  Int32Array |
-                  Uint8Array |
-                  Uint16Array |
-                  Uint32Array |
-                  Uint8ClampedArray |
-                  Float32Array |
-                  Float64Array;
-
-/**
- * Convert a string to an Uint16Array containing the corresponding
- * UTF-16 code units.
- * @param {string} string
- * @returns {Uint16Array}
- */
-function strToUTF16Array(string: string): Uint16Array {
-  const buffer = new ArrayBuffer(string.length * 2);
-  const array = new Uint16Array(buffer);
-  for (let i = 0, strLen = string.length; i < strLen; i += 1) {
-    array[i] = string.charCodeAt(i);
-  }
-
-  return array;
-}
-
-/**
- * Convert a simple string to an Uint8Array containing the corresponding
- * UTF-8 code units.
- * /!\ its implementation favors simplicity and performance over accuracy.
- * Each character having a code unit higher than 255 in UTF-16 will be
- * truncated (real value % 256).
- * Please take that into consideration when calling this function.
- * @param {string} str
- * @returns {Uint8Array}
- */
-function strToBytes(str : string) : Uint8Array {
-  const len = str.length;
-  const arr = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    arr[i] = str.charCodeAt(i) & 0xFF;
-  }
-  return arr;
-}
-
-/**
- * construct string from the code units given
- * @param {Uint16Array|Uint8Array} bytes
- * @returns {string}
- */
-function bytesToStr(bytes : TypedArray) : string {
-  // NOTE: ugly I know, but TS is problematic here (you can try)
-  return String.fromCharCode.apply(null, bytes as unknown as number[]);
-}
-
-/**
- * construct string from the code units given.
- * Only use every other byte for each UTF-16 character.
- * @param {Uint8Array} bytes
- * @returns {string}
- */
-function bytesToUTF16Str(bytes : TypedArray) : string {
-  let str = "";
-  const len = bytes.length;
-  for (let i = 0; i < len; i += 2) {
-    str += String.fromCharCode(bytes[i]);
-  }
-  return str;
-}
-
-/**
- * Convert hex codes in a string form into the corresponding bytes.
- * @param {string} str
- * @returns {Uint8Array}
- * @throws TypeError - str.length is odd
- */
-function hexToBytes(str : string) : Uint8Array {
-  const len = str.length;
-  const arr = new Uint8Array(len / 2);
-  for (let i = 0, j = 0; i < len; i += 2, j++) {
-    arr[j] = parseInt(str.substring(i, i + 2), 16) & 0xFF;
-  }
-  return arr;
-}
-
-/**
- * Convert bytes into the corresponding hex string, with the possibility
- * to add a separator.
- * @param {Uint8Array} bytes
- * @param {string} [sep=""] - separator. Separate each two hex character.
- * @returns {string}
- */
-function bytesToHex(bytes : Uint8Array, sep : string = "") : string {
-  let hex = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    hex += (bytes[i] >>> 4).toString(16);
-    hex += (bytes[i] & 0xF).toString(16);
-    if (sep.length > 0 && i < bytes.byteLength - 1) {
-      hex += sep;
-    }
-  }
-  return hex;
-}
-
 /**
  * Returns a Uint8Array from the arguments given, in order:
  *   - if the next argument given is a number N set the N next bytes to 0.
@@ -127,7 +21,7 @@ function bytesToHex(bytes : Uint8Array, sep : string = "") : string {
  * @param {...(Number|Uint8Array)} args
  * @returns {Uint8Array}
  */
-function concat(...args : Array<TypedArray|number[]|number>) : Uint8Array {
+function concat(...args : Array<Uint8Array|number[]|number>) : Uint8Array {
   const l = args.length;
   let i = -1;
   let len = 0;
@@ -320,36 +214,6 @@ function itole4(num : number) : Uint8Array {
 }
 
 /**
- * @param {string} uuid
- * @returns {string}
- * @throws AssertionError - The uuid length is not 16
- */
-function guidToUuid(uuid : string) : string {
-  assert(uuid.length === 16, "UUID length should be 16");
-  const buf = strToBytes(uuid);
-
-  const p1A = buf[0];
-  const p1B = buf[1];
-  const p1C = buf[2];
-  const p1D = buf[3];
-  const p2A = buf[4];
-  const p2B = buf[5];
-  const p3A = buf[6];
-  const p3B = buf[7];
-  const p4 = buf.subarray(8, 10);
-  const p5 = buf.subarray(10, 16);
-
-  const ord = new Uint8Array(16);
-  ord[0] = p1D; ord[1] = p1C; ord[2] = p1B; ord[3] = p1A; // swap32 BE -> LE
-  ord[4] = p2B; ord[5] = p2A;                             // swap16 BE -> LE
-  ord[6] = p3B; ord[7] = p3A;                             // swap16 BE -> LE
-  ord.set(p4,  8);
-  ord.set(p5, 10);
-
-  return bytesToHex(ord);
-}
-
-/**
  * Check if an ArrayBuffer is equal to the bytes given.
  * @param {ArrayBuffer} buffer
  * @param {Uint8Array} bytes
@@ -370,15 +234,10 @@ function isABEqualBytes(buffer : ArrayBuffer, bytes : Uint8Array) : boolean {
 }
 
 export {
-  strToBytes, strToUTF16Array,
-  bytesToStr, bytesToUTF16Str,
-  hexToBytes,
-  bytesToHex,
   concat,
   be2toi, be3toi, be4toi, be8toi,
   le2toi, le4toi, le8toi,
   itobe2, itobe4, itobe8,
   itole2, itole4,
-  guidToUuid,
   isABEqualBytes,
 };

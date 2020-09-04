@@ -21,10 +21,10 @@ import {
   be4toi,
   be8toi,
   concat,
-  hexToBytes,
   itobe4,
   itobe8,
 } from "../../../utils/byte_parsing";
+import { hexToBytes } from "../../../utils/string_parsing";
 import { MAX_32_BIT_INT } from "./constants";
 import { createBox } from "./create_box";
 import { getPlayReadyKIDFromPrivateData } from "./drm";

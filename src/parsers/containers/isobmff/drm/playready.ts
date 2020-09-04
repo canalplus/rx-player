@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import { le2toi } from "../../../../utils/byte_parsing";
 import {
-    bytesToUTF16Str,
     guidToUuid,
-    le2toi,
-} from "../../../../utils/byte_parsing";
+    leUtf16ToStr,
+} from "../../../../utils/string_parsing";
 
 /**
  * Parse PlayReady privateData to get its Hexa-coded KeyID.
@@ -29,7 +29,7 @@ export function getPlayReadyKIDFromPrivateData(
   data: Uint8Array
 ) : string {
   const xmlLength = le2toi(data, 8);
-  const xml = bytesToUTF16Str(data.subarray(10, xmlLength + 10));
+  const xml = leUtf16ToStr(data.subarray(10, xmlLength + 10));
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   const kidElement = doc.querySelector("KID");
   if (kidElement === null) {
