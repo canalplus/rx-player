@@ -409,21 +409,21 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    *     is inferior to the timescale)
    *   - The next range starts after the end of the current range.
    *
-   * @param {Number} _time
+   * @param {Number} timeSec
    * @returns {Number} - If a discontinuity is present, this is the Starting
    * time for the next (discontinuited) range. If not this is equal to -1.
    */
-  checkDiscontinuity(_time : number) : number {
+  checkDiscontinuity(timeSec : number) : number {
     this._refreshTimeline();
     const index = this._index;
     const { timeline, timescale = 1 } = index;
-    const time = _time * timescale;
+    const timeTScaled = timeSec * timescale;
 
-    if (time <= 0) {
+    if (timeTScaled <= 0) {
       return -1;
     }
 
-    const segmentIndex = getSegmentIndex(index, time);
+    const segmentIndex = getSegmentIndex(index, timeTScaled);
     if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
       return -1;
     }
@@ -439,10 +439,9 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
 
     // when we are actually inside the found range and this range has
     // an explicit discontinuity with the next one
-    if (rangeTo !== nextRange.start &&
-        time >= rangeUp &&
-        time <= rangeTo &&
-        (rangeTo - time) < timescale) {
+    if (rangeTo < nextRange.start &&
+        timeTScaled >= rangeUp &&
+        (rangeTo - timeTScaled) < timescale) {
       return nextRange.start / timescale;
     }
 
