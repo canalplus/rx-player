@@ -56,8 +56,8 @@ import { ICustomMediaKeySession } from "./custom_media_keys";
  */
 export function patchInitData(initData : Uint8Array) : Uint8Array {
   log.info("Compat: Trying to move CENC PSSH from init data at the end of it.");
-  let encounteredCencs : Array<{ version : number;
-                                 pssh : Uint8Array; }> = [];
+  let foundCencV1 = false;
+  let concatenatedCencs = new Uint8Array();
   let resInitData = new Uint8Array();
 
   let offset = 0;
@@ -100,28 +100,17 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
       log.info("Compat: CENC PSSH found with version", version);
       if (version === undefined) {
         log.warn("Compat: could not read version of CENC PSSH");
+      } else if (foundCencV1 === (version === 1)) {
+        // Either `concatenatedCencs` only contains v1 or does not contain any
+        concatenatedCencs = concat(concatenatedCencs, currentPSSH);
+      } else if (version === 1) {
+        log.warn("Compat: cenc version 1 encountered, " +
+                 "removing every other cenc pssh box.");
+        concatenatedCencs = currentPSSH;
+        foundCencV1 = true;
       } else {
-        if (encounteredCencs.length === 0) {
-          encounteredCencs.push({ version, pssh: currentPSSH });
-        } else {
-          const hasV1 = encounteredCencs.some(cenc => cenc.version === 1);
-          if (version === 1) {
-            if (hasV1) {
-              encounteredCencs.push({ version, pssh: currentPSSH });
-            } else {
-              log.warn("Compat: cenc version 1 encountered, " +
-                       "removing every other cenc pssh box.");
-              encounteredCencs = [{ version, pssh: currentPSSH }];
-            }
-          } else {
-            if (hasV1) {
-              log.warn("Compat: filtering out cenc pssh box with wrong version",
-                       version);
-            } else {
-              encounteredCencs.push({ version, pssh: currentPSSH });
-            }
-          }
-        }
+        log.warn("Compat: filtering out cenc pssh box with wrong version",
+                 version);
       }
     } else {
       resInitData = concat(resInitData, currentPSSH);
@@ -133,9 +122,7 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
     log.warn("Compat: unrecognized initialization data. Cannot patch it.");
     throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
   }
-
-  const cencs = concat(...encounteredCencs.map(cenc => cenc.pssh));
-  return concat(resInitData, cencs);
+  return concat(resInitData, concatenatedCencs);
 }
 
 /**
