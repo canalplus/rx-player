@@ -22,7 +22,9 @@ import {
 import {
   mapTo,
   mergeMap,
+  mergeMapTo,
   startWith,
+  take,
 } from "rxjs/operators";
 import { setMediaKeys } from "../../compat";
 import attachMediaKeys from "./attach_media_keys";
@@ -51,17 +53,13 @@ export default function initMediaKeys(
         disableOldMediaKeys$ = setMediaKeys(mediaElement, null);
       }
 
-      const attachMediaKeys$ = new ReplaySubject<void>(1);
+      const attachMediaKeys$ = (new ReplaySubject<void>(1));
       return disableOldMediaKeys$.pipe(
-        mergeMap(() => {
-          return attachMediaKeys$.pipe(
-            mergeMap(() => {
-              return attachMediaKeys(mediaKeysInfos, mediaElement)
-                .pipe(mapTo({ type: "attached-media-keys" as const,
-                              value: mediaKeysInfos, }));
-            })
-          );
-        }),
+        mergeMapTo(attachMediaKeys$),
+        mergeMap(() => attachMediaKeys(mediaKeysInfos, mediaElement)),
+        take(1),
+        mapTo({ type: "attached-media-keys" as const,
+                 value: mediaKeysInfos, }),
         startWith({ type: "created-media-keys" as const,
                     value: { mediaKeysInfos,
                              attachMediaKeys$ } })

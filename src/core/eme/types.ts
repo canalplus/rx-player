@@ -69,6 +69,8 @@ export interface ICreatedMediaKeysEvent {
 // media segments are to be pushed to avoid issues.
 // Because this event is sent after a MediaKeys is created, you will always have
 // a "created-media-keys" event before an "attached-media-keys" event.
+// The "created-media-keys" sends a subject (attachMediaKeys$) that will be used by
+// the init to ask the EME to attach the mediakeys.
 export interface IAttachedMediaKeysEvent { type: "attached-media-keys";
                                            value: IMediaKeysInfos; }
 

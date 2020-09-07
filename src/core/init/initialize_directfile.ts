@@ -52,7 +52,6 @@ import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
 import getStalledEvents from "./get_stalled_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import isEMEReadyEvent from "./is_eme_ready";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IInitClockTick,
@@ -184,7 +183,13 @@ export default function initializeDirectfileContent({
 
   // Manage "loaded" event and warn if autoplay is blocked on the current browser
   const loadedEvent$ = emeManager$.pipe(
-    filter(isEMEReadyEvent),
+    filter(function isEMEReady(evt) {
+      return evt.type === "eme-disabled" ||
+             evt.type === "attached-media-keys" ||
+             (evt.type === "created-media-keys" &&
+              evt.value.mediaKeysInfos.keySystemOptions
+                .disableMediaKeysAttachmentLock === true);
+    }),
     take(1),
     mergeMapTo(load$),
     mergeMap((evt) => {
