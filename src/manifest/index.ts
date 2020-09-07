@@ -26,9 +26,10 @@ import Manifest, {
 } from "./manifest";
 import Period from "./period";
 import Representation from "./representation";
-import IRepresentationIndex, {
+import {
   IBaseContentInfos,
   IMetaPlaylistPrivateInfos,
+  IRepresentationIndex,
   ISegment,
   StaticRepresentationIndex,
 } from "./representation_index";

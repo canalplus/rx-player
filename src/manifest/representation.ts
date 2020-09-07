@@ -22,7 +22,7 @@ import {
 } from "../parsers/manifest";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import { concat } from "../utils/byte_parsing";
-import IRepresentationIndex from "./representation_index";
+import { IRepresentationIndex } from "./representation_index";
 import { IAdaptationType } from "./types";
 
 export interface IContentProtectionsInitDataObject {

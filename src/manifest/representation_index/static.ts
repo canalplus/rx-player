@@ -15,7 +15,8 @@
  */
 
 import log from "../../log";
-import IRepresentationIndex, {
+import {
+  IRepresentationIndex,
   ISegment,
 } from "./types";
 

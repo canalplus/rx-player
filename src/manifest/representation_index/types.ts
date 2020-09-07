@@ -132,7 +132,7 @@ export interface ISegment {
 }
 
 /** Interface that should be implemented by any Representation's `index` value. */
-export default interface IRepresentationIndex {
+export interface IRepresentationIndex {
   /**
    * Returns Segment object for the initialization segment, allowing to do the
    * Init Segment request.

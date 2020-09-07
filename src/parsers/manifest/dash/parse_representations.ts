@@ -17,9 +17,9 @@
 import log from "../../../log";
 import {
   Adaptation,
+  IRepresentationIndex,
   Representation,
 } from "../../../manifest";
-import IRepresentationIndex from "../../../manifest/representation_index";
 import {
   IContentProtections,
   IParsedRepresentation,
