@@ -25,33 +25,33 @@ import {
 import log from "../../../log";
 import { Period } from "../../../manifest";
 import { IBufferType } from "../../source_buffers";
-import { IBufferStateFull } from "../types";
+import { IStreamStateFull } from "../types";
 
 /**
- * Create empty AdaptationBuffer Observable, linked to a Period.
+ * Create empty AdaptationStream Observable, linked to a Period.
  *
  * This observable will never download any segment and just emit a "full"
  * event when reaching the end.
- * @param {Observable} bufferClock$
+ * @param {Observable} streamClock$
  * @param {Observable} wantedBufferAhead$
  * @param {string} bufferType
  * @param {Object} content
  * @returns {Observable}
  */
-export default function creatEmptyAdaptationBuffer(
-  bufferClock$ : Observable<{ currentTime : number }>,
+export default function creatEmptyAdaptationStream(
+  streamClock$ : Observable<{ currentTime : number }>,
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,
   content : { period : Period }
-) : Observable<IBufferStateFull> {
+) : Observable<IStreamStateFull> {
   const { period } = content;
-  return observableCombineLatest([bufferClock$, wantedBufferAhead$]).pipe(
+  return observableCombineLatest([streamClock$, wantedBufferAhead$]).pipe(
     filter(([clockTick, wantedBufferAhead]) =>
       period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
     ),
     map(() => {
-      log.debug("Buffer: full \"empty\" AdaptationBuffer", bufferType);
-      return { type: "full-buffer" as "full-buffer",
+      log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
+      return { type: "full-stream" as "full-stream",
                value: { bufferType } };
     })
   );

@@ -170,9 +170,9 @@ export interface IRepresentationIndex {
    * Returns `true` if, from the given situation, the manifest has to be
    * refreshed.
    * @param {number} up - Beginning time in seconds of the range that is
-   * currently wanted by the buffer.
+   * currently wanted.
    * @param {number} to - Ending time in seconds of the range that is
-   * currently wanted by the buffer.
+   * currently wanted.
    * @returns {Boolean}
    */
   shouldRefresh(up : number, to : number) : boolean;

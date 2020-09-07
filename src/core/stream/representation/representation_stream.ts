@@ -15,9 +15,9 @@
  */
 
 /**
- * This file allows to create RepresentationBuffers.
+ * This file allows to create RepresentationStreams.
  *
- * A RepresentationBuffer downloads and push segment for a single
+ * A RepresentationStream downloads and push segment for a single
  * Representation (e.g. a single video stream of a given quality).
  * It chooses which segments should be downloaded according to the current
  * position and what is currently buffered.
@@ -71,14 +71,14 @@ import {
 import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import {
-  IBufferEventAddedSegment,
-  IBufferManifestMightBeOutOfSync,
-  IBufferNeedsDiscontinuitySeek,
-  IBufferNeedsManifestRefresh,
-  IBufferStateActive,
-  IBufferStateFull,
   IProtectedSegmentEvent,
-  IRepresentationBufferEvent,
+  IRepresentationStreamEvent,
+  IStreamEventAddedSegment,
+  IStreamManifestMightBeOutOfSync,
+  IStreamNeedsDiscontinuitySeek,
+  IStreamNeedsManifestRefresh,
+  IStreamStateActive,
+  IStreamStateFull,
 } from "../types";
 import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority, {
@@ -88,8 +88,8 @@ import getWantedRange from "./get_wanted_range";
 import pushInitSegment from "./push_init_segment";
 import pushMediaSegment from "./push_media_segment";
 
-/** Object emitted by the Buffer's clock$ at each tick. */
-export interface IRepresentationBufferClockTick {
+/** Object emitted by the Stream's clock$ at each tick. */
+export interface IRepresentationStreamClockTick {
   /** The current position, in seconds the media element is in, in seconds. */
   currentTime : number;
  /**
@@ -109,10 +109,10 @@ export interface IRepresentationBufferClockTick {
   wantedTimeOffset : number;
 }
 
-/** Item emitted by the `terminate$` Observable given to a RepresentationBuffer. */
+/** Item emitted by the `terminate$` Observable given to a RepresentationStream. */
 export interface ITerminationOrder {
   /*
-   * If `true`, the RepresentationBuffer should interrupt immediately every long
+   * If `true`, the RepresentationStream should interrupt immediately every long
    * pending operations such as segment downloads.
    * If it is set to `false`, it can continue until those operations are
    * finished.
@@ -120,10 +120,10 @@ export interface ITerminationOrder {
   urgent : boolean;
 }
 
-/** Arguments to give to the RepresentationBuffer. */
-export interface IRepresentationBufferArguments<T> {
+/** Arguments to give to the RepresentationStream. */
+export interface IRepresentationStreamArguments<T> {
   /** Periodically emits the current playback conditions. */
-  clock$ : Observable<IRepresentationBufferClockTick>;
+  clock$ : Observable<IRepresentationStreamClockTick>;
   /** The context of the Representation you want to load. */
   content: { adaptation : Adaptation;
              manifest : Manifest;
@@ -134,13 +134,13 @@ export interface IRepresentationBufferArguments<T> {
   /** Interface used to load new segments. */
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   /**
-   * Observable emitting when the RepresentationBuffer should "terminate".
+   * Observable emitting when the RepresentationStream should "terminate".
    *
-   * When this Observable emits, the RepresentationBuffer will begin a
+   * When this Observable emits, the RepresentationStream will begin a
    * "termination process": it will, depending on the type of termination
    * wanted, either stop immediately pending segment requests or wait until they
    * are finished before fully terminating (completing the
-   * `RepresentationBuffer` Observable).
+   * `RepresentationStream` Observable).
    */
   terminate$ : Observable<ITerminationOrder>;
   /**
@@ -208,13 +208,13 @@ interface ISegmentRequestObject<T> {
  * Download and push segments linked to the given Representation according
  * to what is already in the SourceBuffer and where the playback currently is.
  *
- * Multiple RepresentationBuffer observables can run on the same SourceBuffer.
+ * Multiple RepresentationStream observables can run on the same SourceBuffer.
  * This allows for example smooth transitions between multiple periods.
  *
  * @param {Object} args
  * @returns {Observable}
  */
-export default function RepresentationBuffer<T>({
+export default function RepresentationStream<T>({
   bufferGoal$,
   clock$,
   content,
@@ -222,7 +222,7 @@ export default function RepresentationBuffer<T>({
   queuedSourceBuffer,
   segmentFetcher,
   terminate$,
-} : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
+} : IRepresentationStreamArguments<T>) : Observable<IRepresentationStreamEvent<T>> {
   const { manifest, period, adaptation, representation } = content;
   const bufferType = adaptation.type;
   const initSegment = representation.index.getInitSegment();
@@ -237,18 +237,18 @@ export default function RepresentationBuffer<T>({
                             initTimescale: undefined } :
                           null;
 
-  /** Segments queued for download in this RepresentationBuffer. */
+  /** Segments queued for download in this RepresentationStream. */
   let downloadQueue : IQueuedSegment[] = [];
 
   /** Emit to start/restart a downloading Queue. */
   const startDownloadingQueue$ = new ReplaySubject<void>(1);
 
-  /** Emit when the RepresentationBuffer asks to re-check which segments are needed. */
+  /** Emit when the RepresentationStream asks to re-check which segments are needed. */
   const reCheckNeededSegments$ = new Subject<void>();
 
   /**
    * Keep track of the information about the pending segment request.
-   * `null` if no segment request is pending in that RepresentationBuffer.
+   * `null` if no segment request is pending in that RepresentationStream.
    */
   let currentSegmentRequest : ISegmentRequestObject<T>|null = null;
 
@@ -284,9 +284,9 @@ export default function RepresentationBuffer<T>({
 
       if (!representation.index.isInitialized()) {
         if (initSegment === null) {
-          log.warn("Buffer: Uninitialized index without an initialization segment");
+          log.warn("Stream: Uninitialized index without an initialization segment");
         } else if (initSegmentObject !== null) {
-          log.warn("Buffer: Uninitialized index with an already loaded " +
+          log.warn("Stream: Uninitialized index with an already loaded " +
                    "initialization segment");
         } else {
           neededSegments.push({ segment: initSegment,
@@ -313,7 +313,7 @@ export default function RepresentationBuffer<T>({
       }
 
       /**
-       * `true` if the current buffer has loaded all the needed segments for
+       * `true` if the current Stream has loaded all the needed segments for
        * this Representation until the end of the Period.
        */
       let isFull : boolean;
@@ -353,10 +353,10 @@ export default function RepresentationBuffer<T>({
                shouldRefreshManifest };
     }),
 
-    mergeMap(function handleStatus(status) : Observable<IBufferNeedsManifestRefresh |
-                                                        IBufferNeedsDiscontinuitySeek |
-                                                        IBufferStateFull |
-                                                        IBufferStateActive |
+    mergeMap(function handleStatus(status) : Observable<IStreamNeedsManifestRefresh |
+                                                        IStreamNeedsDiscontinuitySeek |
+                                                        IStreamStateFull |
+                                                        IStreamStateActive |
                                                         { type : "terminated" }
     > {
       const neededSegments = status.neededSegments;
@@ -365,18 +365,18 @@ export default function RepresentationBuffer<T>({
       if (status.terminate !== null) {
         downloadQueue = [];
         if (status.terminate.urgent) {
-          log.debug("Buffer: urgent termination request, terminate.", bufferType);
+          log.debug("Stream: urgent termination request, terminate.", bufferType);
           startDownloadingQueue$.complete(); // complete the downloading queue
           return observableOf({ type: "terminated" as "terminated" });
         } else if (currentSegmentRequest === null) {
-          log.debug("Buffer: no request, terminate.", bufferType);
+          log.debug("Stream: no request, terminate.", bufferType);
           startDownloadingQueue$.complete(); // complete the downloading queue
           return observableOf({ type: "terminated" as "terminated" });
         } else if (
           mostNeededSegment == null ||
           currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
         ) {
-          log.debug("Buffer: cancel request and terminate.", bufferType);
+          log.debug("Stream: cancel request and terminate.", bufferType);
           startDownloadingQueue$.next(); // interrupt the current request
           startDownloadingQueue$.complete(); // complete the downloading queue
           return observableOf({ type: "terminated" as "terminated" });
@@ -385,12 +385,12 @@ export default function RepresentationBuffer<T>({
           segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
           currentSegmentRequest.priority = mostNeededSegment.priority;
         }
-        log.debug("Buffer: terminate after request.", bufferType);
+        log.debug("Stream: terminate after request.", bufferType);
         return EMPTY;
       }
 
-      const neededActions : Array<IBufferNeedsManifestRefresh |
-                                  IBufferNeedsDiscontinuitySeek> = [];
+      const neededActions : Array<IStreamNeedsManifestRefresh |
+                                  IStreamNeedsDiscontinuitySeek> = [];
       if (status.discontinuity > 1) {
         const nextTime = status.discontinuity + 1;
         const gap: [number, number] = [status.discontinuity, nextTime];
@@ -403,33 +403,33 @@ export default function RepresentationBuffer<T>({
 
       if (mostNeededSegment == null) {
         if (currentSegmentRequest !== null) {
-          log.debug("Buffer: interrupt segment request.", bufferType);
+          log.debug("Stream: interrupt segment request.", bufferType);
         }
         downloadQueue = [];
         startDownloadingQueue$.next(); // (re-)start with an empty queue
 
         return observableConcat(
           observableOf(...neededActions),
-          status.isFull ? observableOf(EVENTS.fullBuffer(bufferType)) :
+          status.isFull ? observableOf(EVENTS.fullStream(bufferType)) :
                           EMPTY
         );
       }
 
       if (currentSegmentRequest === null) {
-        log.debug("Buffer: start downloading queue.", bufferType);
+        log.debug("Stream: start downloading queue.", bufferType);
         downloadQueue = neededSegments;
         startDownloadingQueue$.next(); // restart the queue
       } else if (currentSegmentRequest.segment.id !== mostNeededSegment.segment.id) {
-        log.debug("Buffer: restart download queue.", bufferType);
+        log.debug("Stream: restart download queue.", bufferType);
         downloadQueue = neededSegments;
         startDownloadingQueue$.next(); // restart the queue
       } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
-        log.debug("Buffer: update request priority.", bufferType);
+        log.debug("Stream: update request priority.", bufferType);
         const { request$ } = currentSegmentRequest;
         segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
         currentSegmentRequest.priority = mostNeededSegment.priority;
       } else {
-        log.debug("Buffer: update downloading queue", bufferType);
+        log.debug("Stream: update downloading queue", bufferType);
 
         // Update the previous queue to be all needed segments but the first one,
         // for which a request is already pending
@@ -437,15 +437,15 @@ export default function RepresentationBuffer<T>({
       }
 
       return observableConcat(observableOf(...neededActions),
-                              observableOf(EVENTS.activeBuffer(bufferType)));
+                              observableOf(EVENTS.activeStream(bufferType)));
     }),
-    takeWhile((e) : e is IBufferNeedsManifestRefresh |
-                         IBufferNeedsDiscontinuitySeek |
-                         IBufferStateFull |
-                         IBufferStateActive => e.type !== "terminated"));
+    takeWhile((e) : e is IStreamNeedsManifestRefresh |
+                         IStreamNeedsDiscontinuitySeek |
+                         IStreamStateFull |
+                         IStreamStateActive => e.type !== "terminated"));
 
   /**
-   * Buffer Queue:
+   * Stream Queue:
    *   - download every segments queued sequentially
    *   - when a segment is loaded, append it to the SourceBuffer
    */
@@ -495,7 +495,7 @@ export default function RepresentationBuffer<T>({
                                       value: { segment } });
 
               case "interrupted":
-                log.info("Buffer: segment request interrupted temporarly.", segment);
+                log.info("Stream: segment request interrupted temporarly.", segment);
                 return EMPTY;
 
               case "chunk":
@@ -524,10 +524,10 @@ export default function RepresentationBuffer<T>({
    */
   function onLoaderEvent(
     evt : ISegmentLoadingEvent<T>
-  ) : Observable<IBufferEventAddedSegment<T> |
+  ) : Observable<IStreamEventAddedSegment<T> |
                  ISegmentFetcherWarning |
                  IProtectedSegmentEvent |
-                 IBufferManifestMightBeOutOfSync>
+                 IStreamManifestMightBeOutOfSync>
   {
     switch (evt.type) {
       case "retry":

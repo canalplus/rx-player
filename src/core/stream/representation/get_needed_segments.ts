@@ -15,9 +15,9 @@
  */
 
 /**
- * This file allows to create RepresentationBuffers.
+ * This file allows to create RepresentationStreams.
  *
- * A RepresentationBuffer downloads and push segment for a single
+ * A RepresentationStream downloads and push segment for a single
  * Representation (e.g. a single video stream of a given quality).
  * It chooses which segments should be downloaded according to the current
  * position and what is currently buffered.
@@ -262,7 +262,7 @@ function isStartGarbageCollected(
   maximumStartTime : number
 ) {
   if (currentSeg.bufferedStart === undefined)  {
-    log.warn("Buffer: Start of a segment unknown. " +
+    log.warn("Stream: Start of a segment unknown. " +
              "Assuming it is garbage collected by default.",
              currentSeg);
     return true;
@@ -278,7 +278,7 @@ function isStartGarbageCollected(
       currentSeg.bufferedStart - currentSeg.start >
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
   {
-    log.info("Buffer: The start of the wanted segment has been garbage collected",
+    log.info("Stream: The start of the wanted segment has been garbage collected",
               currentSeg);
     return true;
   }
@@ -304,7 +304,7 @@ function isEndGarbageCollected(
   minimumEndTime : number
 ) {
   if (currentSeg.bufferedEnd === undefined)  {
-    log.warn("Buffer: End of a segment unknown. " +
+    log.warn("Stream: End of a segment unknown. " +
              "Assuming it is garbage collected by default.",
              currentSeg);
     return true;
@@ -319,7 +319,7 @@ function isEndGarbageCollected(
   if (minimumEndTime > currentSeg.bufferedEnd &&
       currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
   {
-    log.info("Buffer: The end of the wanted segment has been garbage collected",
+    log.info("Stream: The end of the wanted segment has been garbage collected",
               currentSeg);
     return true;
   }

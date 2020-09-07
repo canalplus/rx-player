@@ -809,13 +809,13 @@ export default class TrackChoiceManager {
 
     const recursiveUpdateAudioTrack = (index : number) : void => {
       if (index >= this._periods.length()) {
-        // we did all audio Buffers, exit
+        // we did all audio Periods, exit
         return;
       }
 
       const periodItem = this._periods.get(index);
       if (periodItem.audio == null) {
-        // No audio Buffer for this period, check next one
+        // No audio choice for this period, check next one
         recursiveUpdateAudioTrack(index + 1);
         return;
       }
@@ -831,7 +831,7 @@ export default class TrackChoiceManager {
             arrayIncludes(audioAdaptations, chosenAudioAdaptation)
           )
       ) {
-        // Already best audio for this Buffer, check next one
+        // Already best audio for this Period, check next one
         recursiveUpdateAudioTrack(index + 1);
         return;
       }
@@ -863,13 +863,13 @@ export default class TrackChoiceManager {
 
     const recursiveUpdateTextTrack = (index : number) : void => {
       if (index >= this._periods.length()) {
-        // we did all text Buffers, exit
+        // we did all text Periods, exit
         return;
       }
 
       const periodItem = this._periods.get(index);
       if (periodItem.text == null) {
-        // No text Buffer for this period, check next one
+        // No text choice for this period, check next one
         recursiveUpdateTextTrack(index + 1);
         return;
       }
@@ -885,7 +885,7 @@ export default class TrackChoiceManager {
             arrayIncludes(textAdaptations, chosenTextAdaptation)
           )
       ) {
-        // Already best text for this Buffer, check next one
+        // Already best text for this Period, check next one
         recursiveUpdateTextTrack(index + 1);
         return;
       }
@@ -915,13 +915,13 @@ export default class TrackChoiceManager {
     const preferredVideoTracks = this._preferredVideoTracks;
     const recursiveUpdateVideoTrack = (index : number) : void => {
       if (index >= this._periods.length()) {
-        // we did all video Buffers, exit
+        // we did all video Periods, exit
         return;
       }
 
       const periodItem = this._periods.get(index);
       if (periodItem.video == null) {
-        // No video Buffer for this period, check next one
+        // No video choice for this period, check next one
         recursiveUpdateVideoTrack(index + 1);
         return;
       }
@@ -936,7 +936,7 @@ export default class TrackChoiceManager {
             arrayIncludes(videoAdaptations, chosenVideoAdaptation)
           )
       ) {
-        // Already best video for this Buffer, check next one
+        // Already best video for this Period, check next one
         recursiveUpdateVideoTrack(index + 1);
         return;
       }

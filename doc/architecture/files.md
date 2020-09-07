@@ -25,7 +25,7 @@ a single directory or subdirectory, in alphabetical order.
 - [src/core/: The core directory](#core)
   - [src/core/abr/: The adaptive bitrate code](#core-abr)
   - [src/core/api/: The API definition](#core-api)
-  - [src/core/buffers/: The Buffer management](#core-buffers)
+  - [src/core/stream/: Load the right segments](#core-stream)
   - [src/core/eme/: Encryption management](#core-eme)
   - [src/core/fetchers/: The fetchers](#core-fetchers)
   - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
@@ -121,9 +121,8 @@ the streaming technology used.
 
 That's where:
   - the api is defined
-  - the buffer is managed
   - the MSE and EME APIs are called and managed
-  - the segments are downloaded
+  - the segments are downloaded and pushed to then be decoded by the browser
   - adaptive bitrate strategies are set
 
 This directory contains other subdirectories which are listed in the next
@@ -254,8 +253,8 @@ Defines the rx-player API. This is the part the library user will directly
 interact with.
 
 
-<a name="core-buffers"></a>
-### src/core/buffers/: The Buffer management ###################################
+<a name="core-stream"></a>
+### src/core/stream/: Load the right segments ##################################
 
 The code there calculate which segments should be downloaded, ask for their
 download and push the segments into the SourceBuffers.
@@ -293,7 +292,9 @@ defined in `src/custom_source_buffers`.
 ### src/core/init/: Content initialization #####################################
 
 This is the central part which download manifests, initialize MSE and EME APIs,
-instanciate the Buffer and link together many subparts of the player.
+instanciate the central `StreamOrchestrator` (which will allow to download and
+push segments so the content can play) and link together many subparts of the
+player.
 
 
 <a name="src-tests"></a>

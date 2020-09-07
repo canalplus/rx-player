@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * This file helps to keep track of the currently active Periods.
- * That is, Periods for which at least a single Buffer is currently active.
- *
- * It also keep track of the currently active period:
- * The first chronological period for which all types of buffers are active.
- */
-
 import {
   merge as observableMerge,
   Observable
@@ -34,7 +26,7 @@ import {
 } from "rxjs/operators";
 import { Period } from "../../../manifest";
 import { IBufferType } from "../../source_buffers";
-import { IMultiplePeriodBuffersEvent } from "../types";
+import { IMultiplePeriodStreamsEvent } from "../types";
 
 interface IPeriodObject { period : Period;
                           buffers: Set<IBufferType>; }
@@ -45,7 +37,7 @@ type IPeriodsList = Partial<Record<string, IPeriodObject>>;
  * Emit the active Period each times it changes.
  *
  * The active Period is the first Period (in chronological order) which has
- * a RepresentationBuffer associated for every defined BUFFER_TYPES.
+ * a RepresentationStream associated for every defined BUFFER_TYPES.
  *
  * Emit null if no Period can be considered active currently.
  *
@@ -61,36 +53,36 @@ type IPeriodsList = Partial<Record<string, IPeriodObject>>;
  *                     +-------------+
  *
  * The active Period here is Period 2 as Period 1 has no video
- * RepresentationBuffer.
+ * RepresentationStream.
  *
- * If we are missing a or multiple PeriodBuffers in the first chronological
+ * If we are missing a or multiple PeriodStreams in the first chronological
  * Period, like that is the case here, it generally means that we are
  * currently switching between Periods.
  *
  * For here we are surely switching from Period 1 to Period 2 beginning by the
- * video PeriodBuffer. As every PeriodBuffer is ready for Period 2, we can
+ * video PeriodStream. As every PeriodStream is ready for Period 2, we can
  * already inform that it is the current Period.
  * ```
  *
  * @param {Array.<string>} bufferTypes - Every buffer types in the content.
- * @param {Observable} addPeriodBuffer$ - Emit PeriodBuffer information when
+ * @param {Observable} addPeriodStream$ - Emit PeriodStream information when
  * one is added.
- * @param {Observable} removePeriodBuffer$ - Emit PeriodBuffer information when
+ * @param {Observable} removePeriodStream$ - Emit PeriodStream information when
  * one is removed.
  * @returns {Observable}
  */
 export default function ActivePeriodEmitter(
-  buffers$: Array<Observable<IMultiplePeriodBuffersEvent>>
+  buffers$: Array<Observable<IMultiplePeriodStreamsEvent>>
 ) : Observable<Period|null> {
-  const numberOfBuffers = buffers$.length;
+  const numberOfStreams = buffers$.length;
   return observableMerge(...buffers$).pipe(
     // not needed to filter, this is an optim
-    filter(({ type }) => type === "periodBufferCleared" ||
+    filter(({ type }) => type === "periodStreamCleared" ||
                          type === "adaptationChange" ||
                          type === "representationChange"),
-    scan<IMultiplePeriodBuffersEvent, IPeriodsList>((acc, evt) => {
+    scan<IMultiplePeriodStreamsEvent, IPeriodsList>((acc, evt) => {
       switch (evt.type) {
-        case "periodBufferCleared": {
+        case "periodStreamCleared": {
           const { period, type } = evt.value;
           const currentInfos = acc[period.id];
           if (currentInfos != null && currentInfos.buffers.has(type)) {
@@ -131,7 +123,7 @@ export default function ActivePeriodEmitter(
       const completePeriods : Period[] = [];
       for (let i = 0; i < activePeriodIDs.length; i++) {
         const periodInfos = list[activePeriodIDs[i]];
-        if (periodInfos != null && periodInfos.buffers.size === numberOfBuffers) {
+        if (periodInfos != null && periodInfos.buffers.size === numberOfStreams) {
           completePeriods.push(periodInfos.period);
         }
       }

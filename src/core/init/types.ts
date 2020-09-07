@@ -21,8 +21,8 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import { IStalledStatus } from "../api";
-import { IRepresentationChangeEvent } from "../buffers";
 import SourceBuffersStore from "../source_buffers";
+import { IRepresentationChangeEvent } from "../stream";
 import { IStallingItem } from "./get_stalled_events";
 
 // Object emitted when the clock ticks

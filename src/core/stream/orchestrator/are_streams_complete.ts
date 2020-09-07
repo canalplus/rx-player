@@ -24,42 +24,42 @@ import {
   map,
   startWith,
 } from "rxjs/operators";
-import { IMultiplePeriodBuffersEvent } from "../types";
+import { IMultiplePeriodStreamsEvent } from "../types";
 
 /**
- * Returns an Observable which emits ``true`` when all PeriodBuffers given are
+ * Returns an Observable which emits ``true`` when all PeriodStreams given are
  * _complete_.
  * Returns false otherwise.
  *
- * A PeriodBuffer for a given type is considered _complete_ when both of these
+ * A PeriodStream for a given type is considered _complete_ when both of these
  * conditions are true:
- *   - it is the last PeriodBuffer in the content for the given type
+ *   - it is the last PeriodStream in the content for the given type
  *   - it has finished downloading segments (it is _full_)
  *
- * Simply put a _complete_ PeriodBuffer for a given type means that every
- * segments needed for this Buffer have been downloaded.
+ * Simply put a _complete_ PeriodStream for a given type means that every
+ * segments needed for this Stream have been downloaded.
  *
- * When the Observable returned here emits, every Buffer are finished.
- * @param {...Observable} buffers
+ * When the Observable returned here emits, every Stream are finished.
+ * @param {...Observable} streams
  * @returns {Observable}
  */
-export default function areBuffersComplete(
-  ...buffers : Array<Observable<IMultiplePeriodBuffersEvent>>
+export default function areStreamsComplete(
+  ...streams : Array<Observable<IMultiplePeriodStreamsEvent>>
 ) : Observable<boolean> {
   /**
-   * Array of Observables linked to the Array of Buffers which emit:
-   *   - true when the corresponding buffer is considered _complete_.
-   *   - false when the corresponding buffer is considered _active_.
+   * Array of Observables linked to the Array of Streams which emit:
+   *   - true when the corresponding Stream is considered _complete_.
+   *   - false when the corresponding Stream is considered _active_.
    * @type {Array.<Observable>}
    */
-  const isCompleteArray : Array<Observable<boolean>> = buffers
-    .map((buffer) => {
-      return buffer.pipe(
+  const isCompleteArray : Array<Observable<boolean>> = streams
+    .map((stream) => {
+      return stream.pipe(
         filter((evt) => {
-          return evt.type === "complete-buffer" ||
-                 evt.type === "active-buffer";
+          return evt.type === "complete-stream" ||
+                 evt.type === "active-stream";
         }),
-        map((evt) => evt.type === "complete-buffer"),
+        map((evt) => evt.type === "complete-stream"),
         startWith(false),
         distinctUntilChanged()
       );

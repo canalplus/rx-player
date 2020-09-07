@@ -66,7 +66,7 @@ export default function BufferGarbageCollector({
  * maxBufferAhead / maxBufferBehind settings.
  *
  * Normally, the browser garbage-collect automatically old-added chunks of
- * buffer date when memory is scarce. However, you might want to control
+ * buffer data when memory is scarce. However, you might want to control
  * the size of memory allocated. This function takes the current position
  * and a "depth" behind and ahead wanted for the buffer, in seconds.
  *

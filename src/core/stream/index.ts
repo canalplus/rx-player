@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import BufferOrchestrator, {
-  IBufferOrchestratorClockTick,
-} from "./buffer_orchestrator";
+import StreamOrchestrator, {
+  IStreamOrchestratorClockTick,
+} from "./orchestrator";
+export * from "./types";
 
-export default BufferOrchestrator;
-export { IBufferOrchestratorClockTick };
+export default StreamOrchestrator;
+export { IStreamOrchestratorClockTick };

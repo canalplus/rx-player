@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import AdaptationBuffer, {
-  IAdaptationBufferClockTick,
-} from "./adaptation_buffer";
+import AdaptationStream, {
+  IAdaptationStreamClockTick,
+} from "./adaptation_stream";
 
-export default AdaptationBuffer;
-export { IAdaptationBufferClockTick };
+export default AdaptationStream;
+export { IAdaptationStreamClockTick };

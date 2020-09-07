@@ -50,17 +50,17 @@ import SourceBuffersStore, {
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../../source_buffers";
-import AdaptationBuffer from "../adaptation";
+import AdaptationStream from "../adaptation";
 import EVENTS from "../events_generators";
 import {
-  IAdaptationBufferEvent,
-  IBufferWarningEvent,
-  IPeriodBufferEvent,
+  IAdaptationStreamEvent,
+  IPeriodStreamEvent,
+  IStreamWarningEvent,
 } from "../types";
-import createEmptyBuffer from "./create_empty_adaptation_buffer";
+import createEmptyStream from "./create_empty_adaptation_stream";
 import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
-export interface IPeriodBufferClockTick {
+export interface IPeriodStreamClockTick {
   currentTime : number; // the current position we are in the video in s
   duration : number; // duration of the HTMLMediaElement
   isPaused: boolean; // If true, the player is on pause
@@ -73,10 +73,10 @@ export interface IPeriodBufferClockTick {
                              // position we actually want to download from
 }
 
-export interface IPeriodBufferArguments {
+export interface IPeriodStreamArguments {
   abrManager : ABRManager;
   bufferType : IBufferType;
-  clock$ : Observable<IPeriodBufferClockTick>;
+  clock$ : Observable<IPeriodStreamClockTick>;
   content : { manifest : Manifest;
               period : Period; };
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
@@ -88,16 +88,16 @@ export interface IPeriodBufferArguments {
 }
 
 /**
- * Create single PeriodBuffer Observable:
+ * Create single PeriodStream Observable:
  *   - Lazily create (or reuse) a SourceBuffer for the given type.
- *   - Create a Buffer linked to an Adaptation each time it changes, to
+ *   - Create a Stream linked to an Adaptation each time it changes, to
  *     download and append the corresponding Segments in the SourceBuffer.
- *   - Announce when the Buffer is full or is awaiting new Segments through
+ *   - Announce when the Stream is full or is awaiting new Segments through
  *     events
  * @param {Object} args
  * @returns {Observable}
  */
-export default function PeriodBuffer({
+export default function PeriodStream({
   abrManager,
   bufferType,
   clock$,
@@ -107,7 +107,7 @@ export default function PeriodBuffer({
   sourceBuffersStore,
   options,
   wantedBufferAhead$,
-} : IPeriodBufferArguments) : Observable<IPeriodBufferEvent> {
+} : IPeriodStreamArguments) : Observable<IPeriodStreamEvent> {
   const { period } = content;
 
   // Emits the chosen Adaptation for the current type.
@@ -116,12 +116,12 @@ export default function PeriodBuffer({
   return adaptation$.pipe(
     switchMap((adaptation) => {
       if (adaptation === null) {
-        log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
+        log.info(`Stream: Set no ${bufferType} Adaptation`, period);
         const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
         if (sourceBufferStatus.type === "initialized") {
-          log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
+          log.info(`Stream: Clearing previous ${bufferType} SourceBuffer`);
           if (SourceBuffersStore.isNative(bufferType)) {
             return clock$.pipe(map((tick) => {
               return EVENTS.needsMediaSourceReload(period, tick);
@@ -138,9 +138,9 @@ export default function PeriodBuffer({
           cleanBuffer$ = observableOf(null);
         }
 
-        return observableConcat<IPeriodBufferEvent>(
+        return observableConcat<IPeriodStreamEvent>(
           cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
-          createEmptyBuffer(clock$, wantedBufferAhead$, bufferType, { period })
+          createEmptyStream(clock$, wantedBufferAhead$, bufferType, { period })
         );
       }
 
@@ -152,9 +152,9 @@ export default function PeriodBuffer({
         }));
       }
 
-      log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation, period);
+      log.info(`Stream: Updating ${bufferType} adaptation`, adaptation, period);
 
-      const newBuffer$ = clock$.pipe(
+      const newStream$ = clock$.pipe(
         take(1),
         mergeMap((tick) => {
           const qSourceBuffer = createOrReuseQueuedSourceBuffer(sourceBuffersStore,
@@ -176,21 +176,21 @@ export default function PeriodBuffer({
             EMPTY;
 
           const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
-          const adaptationBuffer$ = createAdaptationBuffer(adaptation, qSourceBuffer);
+          const adaptationStream$ = createAdaptationStream(adaptation, qSourceBuffer);
 
           return sourceBuffersStore.waitForUsableSourceBuffers().pipe(mergeMap(() => {
             return observableConcat(cleanBuffer$,
-                                    observableMerge(adaptationBuffer$,
+                                    observableMerge(adaptationStream$,
                                                     bufferGarbageCollector$));
           }));
         }));
 
-      return observableConcat<IPeriodBufferEvent>(
+      return observableConcat<IPeriodStreamEvent>(
         observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
-        newBuffer$
+        newStream$
       );
     }),
-    startWith(EVENTS.periodBufferReady(bufferType, period, adaptation$))
+    startWith(EVENTS.periodStreamReady(bufferType, period, adaptation$))
   );
 
   /**
@@ -198,43 +198,43 @@ export default function PeriodBuffer({
    * @param {Object} qSourceBuffer
    * @returns {Observable}
    */
-  function createAdaptationBuffer<T>(
+  function createAdaptationStream<T>(
     adaptation : Adaptation,
     qSourceBuffer : QueuedSourceBuffer<T>
-  ) : Observable<IAdaptationBufferEvent<T>|IBufferWarningEvent> {
+  ) : Observable<IAdaptationStreamEvent<T>|IStreamWarningEvent> {
     const { manifest } = content;
-    const adaptationBufferClock$ = clock$.pipe(map(tick => {
+    const adaptationStreamClock$ = clock$.pipe(map(tick => {
       const buffered = qSourceBuffer.getBufferedRanges();
       return objectAssign({},
                           tick,
                           { bufferGap: getLeftSizeOfRange(buffered,
                                                           tick.currentTime) });
     }));
-    return AdaptationBuffer({ abrManager,
-                              clock$: adaptationBufferClock$,
+    return AdaptationStream({ abrManager,
+                              clock$: adaptationStreamClock$,
                               content: { manifest, period, adaptation },
                               options,
                               queuedSourceBuffer: qSourceBuffer,
                               segmentFetcherCreator,
                               wantedBufferAhead$ })
     .pipe(catchError((error : unknown) => {
-      // non native buffer should not impact the stability of the
-      // player. ie: if a text buffer sends an error, we want to
-      // continue playing without any subtitles
+      // Stream linked to a non-native SourceBuffer should not impact the
+      // stability of the player. ie: if a text buffer sends an error, we want
+      // to continue playing without any subtitles
       if (!SourceBuffersStore.isNative(bufferType)) {
-        log.error(`Buffer: Custom ${bufferType} buffer crashed. Aborting it.`, error);
+        log.error(`Stream: ${bufferType} Stream crashed. Aborting it.`, error);
         sourceBuffersStore.disposeSourceBuffer(bufferType);
 
         const formattedError = formatError(error, {
           defaultCode: "NONE",
-          defaultReason: "Unknown `AdaptationBuffer` error",
+          defaultReason: "Unknown `AdaptationStream` error",
         });
-        return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
+        return observableConcat<IAdaptationStreamEvent<T>|IStreamWarningEvent>(
           observableOf(EVENTS.warning(formattedError)),
-          createEmptyBuffer(clock$, wantedBufferAhead$, bufferType, { period })
+          createEmptyStream(clock$, wantedBufferAhead$, bufferType, { period })
         );
       }
-      log.error(`Buffer: Native ${bufferType} buffer crashed. Stopping playback.`, error);
+      log.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`, error);
       throw error;
     }));
   }
@@ -253,7 +253,7 @@ function createOrReuseQueuedSourceBuffer<T>(
 ) : QueuedSourceBuffer<T> {
   const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
   if (sourceBufferStatus.type === "initialized") {
-    log.info("Buffer: Reusing a previous SourceBuffer for the type", bufferType);
+    log.info("Stream: Reusing a previous SourceBuffer for the type", bufferType);
     return sourceBufferStatus.value;
   }
   const codec = getFirstDeclaredMimeType(adaptation);

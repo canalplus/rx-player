@@ -55,25 +55,25 @@ import SourceBuffersStore, {
   QueuedSourceBuffer,
 } from "../../source_buffers";
 import EVENTS from "../events_generators";
-import PeriodBuffer, {
-  IPeriodBufferClockTick,
+import PeriodStream, {
+  IPeriodStreamClockTick,
 } from "../period";
 import {
-  IBufferOrchestratorEvent,
-  IMultiplePeriodBuffersEvent,
-  IPeriodBufferEvent,
+  IMultiplePeriodStreamsEvent,
+  IPeriodStreamEvent,
+  IStreamOrchestratorEvent,
 } from "../types";
 import ActivePeriodEmitter from "./active_period_emitter";
-import areBuffersComplete from "./are_buffers_complete";
+import areStreamsComplete from "./are_streams_complete";
 import getBlacklistedRanges from "./get_blacklisted_ranges";
 
-export type IBufferOrchestratorClockTick = IPeriodBufferClockTick;
+export type IStreamOrchestratorClockTick = IPeriodStreamClockTick;
 
 const { MAXIMUM_MAX_BUFFER_AHEAD,
         MAXIMUM_MAX_BUFFER_BEHIND } = config;
 
 /**
- * Create and manage the various Buffer Observables needed for the content to
+ * Create and manage the various Stream Observables needed for the content to
  * play:
  *
  *   - Create or dispose SourceBuffers depending on the chosen Adaptations.
@@ -82,14 +82,14 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  *     preferences, the current position, the bandwidth, the decryption
  *     conditions...
  *
- *   - Concatenate Buffers for adaptation from separate Periods at the right
+ *   - Concatenate Streams for adaptation from separate Periods at the right
  *     time, to allow smooth transitions between periods.
  *
  *   - Emit various events to notify of its health and issues
  *
- * Here multiple buffers can be created at the same time to allow smooth
+ * Here multiple Streams can be created at the same time to allow smooth
  * transitions between periods.
- * To do this, we dynamically create or destroy buffers as they are needed.
+ * To do this, we dynamically create or destroy Streams as they are needed.
  * @param {Object} content
  * @param {Observable} clock$ - Emit position information
  * @param {Object} abrManager - Emit bitrate estimates and best Representation
@@ -100,10 +100,10 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  * @param {Object} options
  * @returns {Observable}
  */
-export default function BufferOrchestrator(
+export default function StreamOrchestrator(
   content : { manifest : Manifest;
               initialPeriod : Period; },
-  clock$ : Observable<IBufferOrchestratorClockTick>,
+  clock$ : Observable<IStreamOrchestratorClockTick>,
   abrManager : ABRManager,
   sourceBuffersStore : SourceBuffersStore,
   segmentFetcherCreator : SegmentFetcherCreator<any>,
@@ -112,7 +112,7 @@ export default function BufferOrchestrator(
              maxBufferBehind$ : Observable<number>;
              textTrackOptions? : ITextTrackSourceBufferOptions;
              manualBitrateSwitchingMode : "seamless" | "direct"; }
-) : Observable<IBufferOrchestratorEvent> {
+) : Observable<IStreamOrchestratorEvent> {
   const { manifest, initialPeriod } = content;
   const { maxBufferAhead$, maxBufferBehind$, wantedBufferAhead$ } = options;
 
@@ -158,67 +158,67 @@ export default function BufferOrchestrator(
 
   const bufferTypes = sourceBuffersStore.getBufferTypes();
 
-  // Every PeriodBuffers for every possible types
-  const buffersArray = bufferTypes.map((bufferType) => {
-    return manageEveryBuffers(bufferType, initialPeriod)
+  // Every PeriodStreams for every possible types
+  const streamsArray = bufferTypes.map((bufferType) => {
+    return manageEveryStreams(bufferType, initialPeriod)
       .pipe(deferSubscriptions(), share());
   });
 
   // Emits the activePeriodChanged events every time the active Period changes.
-  const activePeriodChanged$ = ActivePeriodEmitter(buffersArray).pipe(
+  const activePeriodChanged$ = ActivePeriodEmitter(streamsArray).pipe(
     filter((period) : period is Period => period != null),
     map(period => {
-      log.info("Buffer: New active period", period);
+      log.info("Stream: New active period", period);
       return EVENTS.activePeriodChanged(period);
     }));
 
-  // Emits an "end-of-stream" event once every PeriodBuffer are complete.
+  // Emits an "end-of-stream" event once every PeriodStream are complete.
   // Emits a 'resume-stream" when it's not
-  const endOfStream$ = areBuffersComplete(...buffersArray)
+  const endOfStream$ = areStreamsComplete(...streamsArray)
     .pipe(map((areComplete) =>
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  return observableMerge(...buffersArray,
+  return observableMerge(...streamsArray,
                          activePeriodChanged$,
                          endOfStream$,
                          outOfManifest$);
 
   /**
-   * Manage creation and removal of Buffers for every Periods for a given type.
+   * Manage creation and removal of Streams for every Periods for a given type.
    *
-   * Works by creating consecutive buffers through the
-   * `manageConsecutivePeriodBuffers` function, and restarting it when the clock
-   * goes out of the bounds of these buffers.
+   * Works by creating consecutive Streams through the
+   * `manageConsecutivePeriodStreams` function, and restarting it when the clock
+   * goes out of the bounds of these Streams.
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
    * @returns {Observable}
    */
-  function manageEveryBuffers(
+  function manageEveryStreams(
     bufferType : IBufferType,
     basePeriod : Period
-  ) : Observable<IMultiplePeriodBuffersEvent> {
-    // Each Period for which there is currently a Buffer, chronologically
+  ) : Observable<IMultiplePeriodStreamsEvent> {
+    // Each Period for which there is currently a Stream, chronologically
     const periodList = new SortedList<Period>((a, b) => a.start - b.start);
-    const destroyBuffers$ = new Subject<void>();
+    const destroyStreams$ = new Subject<void>();
 
-    // When set to `true`, all the currently active PeriodBuffer will be destroyed
+    // When set to `true`, all the currently active PeriodStream will be destroyed
     // and re-created from the new current position if we detect it to be out of
     // their bounds.
     // This is set to false when we're in the process of creating the first
-    // PeriodBuffer, to avoid interferences while no PeriodBuffer is available.
+    // PeriodStream, to avoid interferences while no PeriodStream is available.
     let enableOutOfBoundsCheck = false;
 
     /**
      * @param {Object} period
      * @returns {Observable}
      */
-    function launchConsecutiveBuffersForPeriod(
+    function launchConsecutiveStreamsForPeriod(
       period : Period
-    ) : Observable<IMultiplePeriodBuffersEvent> {
-      return manageConsecutivePeriodBuffers(bufferType, period, destroyBuffers$).pipe(
-        filterMap<IMultiplePeriodBuffersEvent,
-                  IMultiplePeriodBuffersEvent,
+    ) : Observable<IMultiplePeriodStreamsEvent> {
+      return manageConsecutivePeriodStreams(bufferType, period, destroyStreams$).pipe(
+        filterMap<IMultiplePeriodStreamsEvent,
+                  IMultiplePeriodStreamsEvent,
                   null>((message) => {
           switch (message.type) {
             case "needs-media-source-reload":
@@ -231,11 +231,11 @@ export default function BufferOrchestrator(
                 return null;
               }
               break;
-            case "periodBufferReady":
+            case "periodStreamReady":
               enableOutOfBoundsCheck = true;
               periodList.add(message.value.period);
               break;
-            case "periodBufferCleared":
+            case "periodStreamCleared":
               periodList.removeElement(message.value.period);
               break;
           }
@@ -263,9 +263,9 @@ export default function BufferOrchestrator(
                                 last.end) < time;
     }
 
-    // Restart the current buffer when the wanted time is in another period
+    // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
-    const restartBuffersWhenOutOfBounds$ = clock$.pipe(
+    const restartStreamsWhenOutOfBounds$ = clock$.pipe(
       filter(({ currentTime, wantedTimeOffset }) => {
         return enableOutOfBoundsCheck &&
                manifest.getPeriodForTime(wantedTimeOffset +
@@ -273,12 +273,12 @@ export default function BufferOrchestrator(
                isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
       tap(({ currentTime, wantedTimeOffset }) => {
-        log.info("BO: Current position out of the bounds of the active periods," +
-                 "re-creating buffers.",
+        log.info("SO: Current position out of the bounds of the active periods," +
+                 "re-creating Streams.",
                  bufferType,
                  currentTime + wantedTimeOffset);
         enableOutOfBoundsCheck = false;
-        destroyBuffers$.next();
+        destroyStreams$.next();
       }),
       mergeMap(({ currentTime, wantedTimeOffset }) => {
         const newInitialPeriod = manifest
@@ -287,7 +287,7 @@ export default function BufferOrchestrator(
           throw new MediaError("MEDIA_TIME_NOT_FOUND",
                                "The wanted position is not found in the Manifest.");
         }
-        return launchConsecutiveBuffersForPeriod(newInitialPeriod);
+        return launchConsecutiveStreamsForPeriod(newInitialPeriod);
       })
     );
 
@@ -296,12 +296,12 @@ export default function BufferOrchestrator(
         const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
         const hasType = updates.some(update => update.adaptation.type === bufferType);
         if (!hasType || sourceBufferStatus.type !== "initialized") {
-          return EMPTY; // no need to stop the current buffers
+          return EMPTY; // no need to stop the current Streams.
         }
         const queuedSourceBuffer = sourceBufferStatus.value;
         const rangesToClean = getBlacklistedRanges(queuedSourceBuffer, updates);
         enableOutOfBoundsCheck = false;
-        destroyBuffers$.next();
+        destroyStreams$.next();
         return observableConcat(
           ...rangesToClean.map(({ start, end }) =>
             queuedSourceBuffer.removeBuffer(start, end).pipe(ignoreElements())),
@@ -315,90 +315,90 @@ export default function BufferOrchestrator(
                   throw new MediaError("MEDIA_TIME_NOT_FOUND",
                     "The wanted position is not found in the Manifest.");
                 }
-                return launchConsecutiveBuffersForPeriod(newInitialPeriod);
+                return launchConsecutiveStreamsForPeriod(newInitialPeriod);
               }));
           })));
       }));
 
-    return observableMerge(restartBuffersWhenOutOfBounds$,
+    return observableMerge(restartStreamsWhenOutOfBounds$,
                            handleDecipherabilityUpdate$,
-                           launchConsecutiveBuffersForPeriod(basePeriod));
+                           launchConsecutiveStreamsForPeriod(basePeriod));
   }
 
   /**
-   * Create lazily consecutive PeriodBuffers:
+   * Create lazily consecutive PeriodStreams:
    *
-   * It first creates the PeriodBuffer for `basePeriod` and - once it becomes
+   * It first creates the PeriodStream for `basePeriod` and - once it becomes
    * full - automatically creates the next chronological one.
-   * This process repeats until the PeriodBuffer linked to the last Period is
+   * This process repeats until the PeriodStream linked to the last Period is
    * full.
    *
-   * If an "old" PeriodBuffer becomes active again, it destroys all PeriodBuffer
+   * If an "old" PeriodStream becomes active again, it destroys all PeriodStream
    * coming after it (from the last chronological one to the first).
    *
-   * To clean-up PeriodBuffers, each one of them are also automatically
+   * To clean-up PeriodStreams, each one of them are also automatically
    * destroyed once the clock anounce a time superior or equal to the end of
    * the concerned Period.
    *
-   * A "periodBufferReady" event is sent each times a new PeriodBuffer is
+   * A "periodStreamReady" event is sent each times a new PeriodStream is
    * created. The first one (for `basePeriod`) should be sent synchronously on
    * subscription.
    *
-   * A "periodBufferCleared" event is sent each times a PeriodBuffer is
+   * A "periodStreamCleared" event is sent each times a PeriodStream is
    * destroyed.
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
-   * @param {Observable} destroy$ - Emit when/if all created Buffers from this
+   * @param {Observable} destroy$ - Emit when/if all created Streams from this
    * point should be destroyed.
    * @returns {Observable}
    */
-  function manageConsecutivePeriodBuffers(
+  function manageConsecutivePeriodStreams(
     bufferType : IBufferType,
     basePeriod : Period,
     destroy$ : Observable<void>
-  ) : Observable<IMultiplePeriodBuffersEvent> {
-    log.info("BO: Creating new Buffer for", bufferType, basePeriod);
+  ) : Observable<IMultiplePeriodStreamsEvent> {
+    log.info("SO: Creating new Stream for", bufferType, basePeriod);
 
-    // Emits the Period of the next Period Buffer when it can be created.
-    const createNextPeriodBuffer$ = new Subject<Period>();
+    // Emits the Period of the next Period Stream when it can be created.
+    const createNextPeriodStream$ = new Subject<Period>();
 
-    // Emits when the Buffers for the next Periods should be destroyed, if
+    // Emits when the Streams for the next Periods should be destroyed, if
     // created.
-    const destroyNextBuffers$ = new Subject<void>();
+    const destroyNextStreams$ = new Subject<void>();
 
-    // Emits when the current position goes over the end of the current buffer.
-    const endOfCurrentBuffer$ = clock$
+    // Emits when the current position goes over the end of the current Stream.
+    const endOfCurrentStream$ = clock$
       .pipe(filter(({ currentTime, wantedTimeOffset }) =>
                      basePeriod.end != null &&
                     (currentTime + wantedTimeOffset) >= basePeriod.end));
 
-    // Create Period Buffer for the next Period.
-    const nextPeriodBuffer$ = createNextPeriodBuffer$
+    // Create Period Stream for the next Period.
+    const nextPeriodStream$ = createNextPeriodStream$
       .pipe(exhaustMap((nextPeriod) =>
-        manageConsecutivePeriodBuffers(bufferType, nextPeriod, destroyNextBuffers$)
+        manageConsecutivePeriodStreams(bufferType, nextPeriod, destroyNextStreams$)
       ));
 
-    // Allows to destroy each created Buffer, from the newest to the oldest,
+    // Allows to destroy each created Stream, from the newest to the oldest,
     // once destroy$ emits.
     const destroyAll$ = destroy$.pipe(
       take(1),
       tap(() => {
-        // first complete createNextBuffer$ to allow completion of the
-        // nextPeriodBuffer$ observable once every further Buffers have been
+        // first complete createNextStream$ to allow completion of the
+        // nextPeriodStream$ observable once every further Streams have been
         // cleared.
-        createNextPeriodBuffer$.complete();
+        createNextPeriodStream$.complete();
 
-        // emit destruction signal to the next Buffer first
-        destroyNextBuffers$.next();
-        destroyNextBuffers$.complete(); // we do not need it anymore
+        // emit destruction signal to the next Stream first
+        destroyNextStreams$.next();
+        destroyNextStreams$.complete(); // we do not need it anymore
       }),
       share() // share side-effects
     );
 
-    // Will emit when the current buffer should be destroyed.
-    const killCurrentBuffer$ = observableMerge(endOfCurrentBuffer$, destroyAll$);
+    // Will emit when the current Stream should be destroyed.
+    const killCurrentStream$ = observableMerge(endOfCurrentStream$, destroyAll$);
 
-    const periodBuffer$ = PeriodBuffer({ abrManager,
+    const periodStream$ = PeriodStream({ abrManager,
                                          bufferType,
                                          clock$,
                                          content: { manifest, period: basePeriod },
@@ -408,37 +408,37 @@ export default function BufferOrchestrator(
                                          options,
                                          wantedBufferAhead$, }
     ).pipe(
-      mergeMap((evt : IPeriodBufferEvent) : Observable<IMultiplePeriodBuffersEvent> => {
+      mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
         const { type } = evt;
-        if (type === "full-buffer") {
+        if (type === "full-stream") {
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
           if (nextPeriod == null) {
-            return observableOf(EVENTS.bufferComplete(bufferType));
+            return observableOf(EVENTS.streamComplete(bufferType));
           } else {
-            // current buffer is full, create the next one if not
-            createNextPeriodBuffer$.next(nextPeriod);
+            // current Stream is full, create the next one if not
+            createNextPeriodStream$.next(nextPeriod);
           }
-        } else if (type === "active-buffer") {
-          // current buffer is active, destroy next buffer if created
-          destroyNextBuffers$.next();
+        } else if (type === "active-stream") {
+          // current Stream is active, destroy next Stream if created
+          destroyNextStreams$.next();
         }
         return observableOf(evt);
       }),
       share()
     );
 
-    // Buffer for the current Period.
-    const currentBuffer$ : Observable<IMultiplePeriodBuffersEvent> =
+    // Stream for the current Period.
+    const currentStream$ : Observable<IMultiplePeriodStreamsEvent> =
       observableConcat(
-        periodBuffer$.pipe(takeUntil(killCurrentBuffer$)),
-        observableOf(EVENTS.periodBufferCleared(bufferType, basePeriod))
+        periodStream$.pipe(takeUntil(killCurrentStream$)),
+        observableOf(EVENTS.periodStreamCleared(bufferType, basePeriod))
           .pipe(tap(() => {
-            log.info("BO: Destroying buffer for", bufferType, basePeriod);
+            log.info("SO: Destroying Stream for", bufferType, basePeriod);
           }))
         );
 
-    return observableMerge(currentBuffer$,
-                           nextPeriodBuffer$,
+    return observableMerge(currentStream$,
+                           nextPeriodStream$,
                            destroyAll$.pipe(ignoreElements()));
   }
 }
