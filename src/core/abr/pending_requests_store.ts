@@ -111,6 +111,6 @@ export default class PendingRequestsStore {
   public getRequests() : IRequestInfo[] {
     return objectValues(this._currentRequests)
       .filter((x) : x is IRequestInfo => x != null)
-      .sort();
+      .sort((reqA, reqB) => reqA.time - reqB.time);
   }
 }
