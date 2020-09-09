@@ -302,6 +302,23 @@ export default class ObservablePrioritizer<T> {
       if (this._isHighPriority(waitingQueueElt)) {
         // This task has high priority.
         // We should cancel every "cancellable" pending task
+        //
+        // Note: We start the task before interrupting cancellable tasks on
+        // purpose.
+        // Because both `_startTask` and `_interruptCancellableTasks` can emit
+        // events and thus call external code, we could retrieve ourselves in a
+        // very weird state at this point (for example, the different Observable
+        // priorities could all be shuffled up, new Observables could have been
+        // started in the meantime, etc.).
+        //
+        // By starting the task first, we ensure that this is manageable:
+        // `_minPendingPriority` has already been updated to the right value at
+        // the time we reached external code, the priority of the current
+        // Observable has just been re-checked by `_isHighPriority`, and
+        // `_interruptCancellableTasks` will ensure that we're basing ourselves
+        // on the last `priority` value each time.
+        // Doing it in the reverse order is an order of magnitude more difficult
+        // to write and to reason about.
         this._interruptCancellableTasks();
       }
       return;
