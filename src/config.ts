@@ -63,6 +63,20 @@ export default {
                                                        "direct",
 
   /**
+   * Default behavior for the `enableFastSwitching` loadVideo options.
+   *
+   * Fast-switching allows to provide quicker transitions from lower quality
+   * segments to higher quality segments but might be badly supported on some
+   * devices.
+   * When enabled, the RxPlayer might replace segments of a lower-quality
+   * (with a lower bitrate) with segments of a higher quality (with a higher
+   * bitrate). This allows to have a fast transition when network conditions
+   * improve.
+   * When disabled, segments of a lower-quality will not be replaced.
+   */
+  DEFAULT_ENABLE_FAST_SWITCHING: true,
+
+  /**
    * If set to true, video through loadVideo will auto play by default
    * @type {Boolean}
    */
