@@ -418,6 +418,7 @@ describe("API - parseLoadVideoOptions", () => {
     autoPlay: false,
     defaultAudioTrack: undefined,
     defaultTextTrack: undefined,
+    enableFastSwitching: true,
     hideNativeSubtitle: false,
     keySystems: [],
     lowLatencyMode: false,
@@ -764,6 +765,30 @@ describe("API - parseLoadVideoOptions", () => {
       url: "foo",
       transport: "bar",
       manualBitrateSwitchingMode: "seamless",
+    });
+  });
+
+  it("should authorize setting a valid enableFastSwitching option", () => {
+    expect(parseLoadVideoOptions({
+      enableFastSwitching: false,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      enableFastSwitching: false,
+    });
+
+    expect(parseLoadVideoOptions({
+      enableFastSwitching: true,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      enableFastSwitching: true,
     });
   });
 
