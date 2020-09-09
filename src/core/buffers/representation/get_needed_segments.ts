@@ -209,47 +209,101 @@ function filterGarbageCollectedSegments(
 ) : IBufferedChunk[] {
   const completeSegments : IBufferedChunk[] = [];
   for (let i = 0; i < consideredSegments.length; i++) {
-    let segmentStartIsComplete = true;
-    let segmentEndIsComplete = true;
-
     const currentSeg = consideredSegments[i];
     const prevSeg = i === 0 ? null :
                               consideredSegments[i - 1];
     const nextSeg = i >= consideredSegments.length - 1 ? null :
                                                          consideredSegments[i + 1];
-    if (currentSeg.bufferedStart === undefined) {
-      segmentStartIsComplete = false;
-    } else if ((prevSeg === null ||
-                prevSeg.bufferedEnd === undefined ||
-                prevSeg.bufferedEnd !== currentSeg.bufferedStart) &&
-               neededRange.start < currentSeg.bufferedStart &&
-               currentSeg.bufferedStart - currentSeg.start >
-                 MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
+    if (!isStartGarbageCollected(currentSeg, prevSeg, neededRange.start) &&
+        !isEndGarbageCollected(currentSeg, nextSeg, neededRange.end))
     {
-      log.info("Buffer: The start of the wanted segment has been garbage collected",
-               currentSeg);
-      segmentStartIsComplete = false;
-    }
-
-    if (currentSeg.bufferedEnd === undefined) {
-      segmentEndIsComplete = false;
-    } else if ((nextSeg === null ||
-                nextSeg.bufferedEnd === undefined ||
-                nextSeg.bufferedEnd !== currentSeg.bufferedStart) &&
-               neededRange.end > currentSeg.bufferedEnd &&
-               currentSeg.end - currentSeg.bufferedEnd >
-                 MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
-    {
-      log.info("Buffer: The end of the wanted segment has been garbage collected",
-                currentSeg);
-      segmentEndIsComplete = false;
-    }
-
-    if (segmentStartIsComplete && segmentEndIsComplete) {
       completeSegments.push(currentSeg);
     }
   }
   return completeSegments;
+}
+
+/**
+ * From buffered segment information, return `true` if the given `currentSeg`
+ * might have been garbage collected at the start.
+ * Return `false` if the segment is complete at least from `maximumStartTime`.
+ * @param {Object} currentSeg - The segment information for the segment in
+ * question.
+ * @param {Object|null} prevSeg - The segment information for the previous
+ * buffered segment, if one (`null` if none).
+ * @param {number} maximumStartTime - Only consider the data after that time.
+ * If `currentSeg` has only been garbage collected for some data which is before
+ * that time, we will return `false`.
+ */
+function isStartGarbageCollected(
+  currentSeg : IBufferedChunk,
+  prevSeg : IBufferedChunk | null,
+  maximumStartTime : number
+) {
+  if (currentSeg.bufferedStart === undefined)  {
+    log.warn("Buffer: Start of a segment unknown. " +
+             "Assuming it is garbage collected by default.",
+             currentSeg);
+    return true;
+  }
+
+  if (prevSeg !== null && prevSeg.bufferedEnd !== undefined &&
+      (currentSeg.bufferedStart - prevSeg.bufferedEnd < 0.1))
+  {
+    return false;
+  }
+
+  if (maximumStartTime < currentSeg.bufferedStart &&
+      currentSeg.bufferedStart - currentSeg.start >
+        MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
+  {
+    log.info("Buffer: The start of the wanted segment has been garbage collected",
+              currentSeg);
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * From buffered segment information, return `true` if the given `currentSeg`
+ * might have been garbage collected at the end.
+ * Return `false` if the segment is complete at least until `minimumEndTime`.
+ * @param {Object} currentSeg - The segment information for the segment in
+ * question.
+ * @param {Object|null} nextSeg - The segment information for the next buffered
+ * segment, if one (`null` if none).
+ * @param {number} minimumEndTime - Only consider the data before that time.
+ * If `currentSeg` has only been garbage collected for some data which is after
+ * that time, we will return `false`.
+ */
+function isEndGarbageCollected(
+  currentSeg : IBufferedChunk,
+  nextSeg : IBufferedChunk | null,
+  minimumEndTime : number
+) {
+  if (currentSeg.bufferedEnd === undefined)  {
+    log.warn("Buffer: End of a segment unknown. " +
+             "Assuming it is garbage collected by default.",
+             currentSeg);
+    return true;
+  }
+
+  if (nextSeg !== null && nextSeg.bufferedStart !== undefined &&
+      (nextSeg.bufferedStart - currentSeg.bufferedEnd < 0.1))
+  {
+    return false;
+  }
+
+  if (minimumEndTime > currentSeg.bufferedEnd &&
+      currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
+  {
+    log.info("Buffer: The end of the wanted segment has been garbage collected",
+              currentSeg);
+    return true;
+  }
+
+  return false;
 }
 
 /**
