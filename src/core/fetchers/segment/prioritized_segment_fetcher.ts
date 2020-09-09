@@ -70,7 +70,7 @@ export default function applyPrioritizerToSegmentFetcher<T>(
   fetcher : ISegmentFetcher<T>
 ) : IPrioritizedSegmentFetcher<T> {
   /**
-   * The observables returned by `createRequest` are not exactly the same than
+   * The Observables returned by `createRequest` are not exactly the same than
    * the one created by the `ObservablePrioritizer`. Because we still have to
    * keep a handle on that value.
    */
@@ -103,7 +103,7 @@ export default function applyPrioritizerToSegmentFetcher<T>(
     /**
      * Update the priority of a pending request, created through
      * `createRequest`.
-     * @param {Observable} observable - The observables returned by `createRequest`.
+     * @param {Observable} observable - The Observable returned by `createRequest`.
      * @param {Number} priority - The new priority value.
      */
     updatePriority(
