@@ -50,7 +50,9 @@ import SourceBuffersStore, {
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../../source_buffers";
-import AdaptationStream from "../adaptation";
+import AdaptationStream, {
+  IAdaptationStreamOptions,
+} from "../adaptation";
 import EVENTS from "../events_generators";
 import {
   IAdaptationStreamEvent,
@@ -82,10 +84,13 @@ export interface IPeriodStreamArguments {
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
   segmentFetcherCreator : SegmentFetcherCreator<any>;
   sourceBuffersStore : SourceBuffersStore;
-  options: { manualBitrateSwitchingMode : "seamless" | "direct";
-             textTrackOptions? : ITextTrackSourceBufferOptions; };
+  options: IPeriodStreamOptions;
   wantedBufferAhead$ : BehaviorSubject<number>;
 }
+
+/** Options tweaking the behavior of the PeriodStream. */
+export type IPeriodStreamOptions = IAdaptationStreamOptions &
+                                   { textTrackOptions? : ITextTrackSourceBufferOptions };
 
 /**
  * Create single PeriodStream Observable:
