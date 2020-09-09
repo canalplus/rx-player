@@ -357,7 +357,12 @@ function createClock(
       .pipe(
         map((state : IMediaInfosState) => {
           lastTimings = getCurrentClockTick(state);
-          log.debug("API: new clock tick", lastTimings);
+          if (log.getLevel() === "DEBUG") {
+            log.debug("API: current playback timeline:\n" +
+                      prettyPrintBuffered(lastTimings.buffered,
+                                          lastTimings.currentTime),
+                      `\n${state}`);
+          }
           return lastTimings;
         }),
 
@@ -366,6 +371,69 @@ function createClock(
     multicast(() => new ReplaySubject<IClockTick>(1)), // Always emit the last
     refCount()
   );
+}
+
+/**
+ * Pretty print a TimeRanges Object, to see the current content of it in a
+ * one-liner string.
+ *
+ * @example
+ * This function is called by giving it directly the TimeRanges, such as:
+ * ```js
+ * prettyPrintBuffered(document.getElementsByTagName("video")[0].buffered);
+ * ```
+ *
+ * Let's consider this possible return:
+ *
+ * ```
+ * 0.00|==29.95==|29.95 ~30.05~ 60.00|==29.86==|89.86
+ *          ^14
+ * ```
+ * This means that our video element has 29.95 seconds of buffer between 0 and
+ * 29.95 seconds.
+ * Then 30.05 seconds where no buffer is found.
+ * Then 29.86 seconds of buffer between 60.00 and 89.86 seconds.
+ *
+ * A caret on the second line indicates the current time we're at.
+ * The number coming after it is the current time.
+ * @param {TimeRanges} buffered
+ * @param {number} currentTime
+ * @returns {string}
+ */
+function prettyPrintBuffered(
+  buffered : TimeRanges,
+  currentTime : number
+) : string {
+  let str = "";
+  let currentTimeStr = "";
+
+  for (let i = 0; i < buffered.length; i++) {
+    const start = buffered.start(i);
+    const end = buffered.end(i);
+    const fixedStart = start.toFixed(2);
+    const fixedEnd = end.toFixed(2);
+    const fixedDuration = (end - start).toFixed(2);
+    const newIntervalStr = `${fixedStart}|==${fixedDuration}==|${fixedEnd}`;
+    str += newIntervalStr;
+    if (currentTimeStr.length === 0 && end > currentTime) {
+      const padBefore = str.length - Math.floor(newIntervalStr.length / 2);
+      currentTimeStr = " ".repeat(padBefore) + `^${currentTime}`;
+    }
+    if (i < buffered.length - 1) {
+      const nextStart = buffered.start(i + 1);
+      const fixedDiff = (nextStart - end).toFixed(2);
+      const holeStr = ` ~${fixedDiff}~ `;
+      str += holeStr;
+      if (currentTimeStr.length === 0 && currentTime < nextStart) {
+        const padBefore = str.length - Math.floor(holeStr.length / 2);
+        currentTimeStr = " ".repeat(padBefore) + `^${currentTime}`;
+      }
+    }
+  }
+  if (currentTimeStr.length === 0) {
+    currentTimeStr = " ".repeat(str.length) + `^${currentTime}`;
+  }
+  return str + "\n" + currentTimeStr;
 }
 
 export default createClock;
