@@ -15,8 +15,14 @@
  */
 
 import AdaptationStream, {
+  IAdaptationStreamArguments,
   IAdaptationStreamClockTick,
+  IAdaptationStreamOptions,
 } from "./adaptation_stream";
 
 export default AdaptationStream;
-export { IAdaptationStreamClockTick };
+export {
+  IAdaptationStreamArguments,
+  IAdaptationStreamClockTick,
+  IAdaptationStreamOptions,
+};
