@@ -51,12 +51,12 @@ import { SegmentFetcherCreator } from "../../fetchers";
 import SourceBuffersStore, {
   BufferGarbageCollector,
   IBufferType,
-  ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import PeriodStream, {
   IPeriodStreamClockTick,
+  IPeriodStreamOptions,
 } from "../period";
 import {
   IMultiplePeriodStreamsEvent,
@@ -71,6 +71,13 @@ export type IStreamOrchestratorClockTick = IPeriodStreamClockTick;
 
 const { MAXIMUM_MAX_BUFFER_AHEAD,
         MAXIMUM_MAX_BUFFER_BEHIND } = config;
+
+/** Options tweaking the behavior of the StreamOrchestrator. */
+export type IStreamOrchestratorOptions =
+  IPeriodStreamOptions &
+  { wantedBufferAhead$ : BehaviorSubject<number>;
+    maxBufferAhead$ : Observable<number>;
+    maxBufferBehind$ : Observable<number>; };
 
 /**
  * Create and manage the various Stream Observables needed for the content to
@@ -107,11 +114,7 @@ export default function StreamOrchestrator(
   abrManager : ABRManager,
   sourceBuffersStore : SourceBuffersStore,
   segmentFetcherCreator : SegmentFetcherCreator<any>,
-  options: { wantedBufferAhead$ : BehaviorSubject<number>;
-             maxBufferAhead$ : Observable<number>;
-             maxBufferBehind$ : Observable<number>;
-             textTrackOptions? : ITextTrackSourceBufferOptions;
-             manualBitrateSwitchingMode : "seamless" | "direct"; }
+  options: IStreamOrchestratorOptions
 ) : Observable<IStreamOrchestratorEvent> {
   const { manifest, initialPeriod } = content;
   const { maxBufferAhead$, maxBufferBehind$, wantedBufferAhead$ } = options;
