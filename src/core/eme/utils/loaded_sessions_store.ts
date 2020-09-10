@@ -27,10 +27,10 @@ import {
   ignoreElements,
 } from "rxjs/operators";
 import {
+  closeSession,
   ICustomMediaKeys,
   ICustomMediaKeySession,
 } from "../../../compat";
-import closeSession$ from "../../../compat/eme/close_session";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
@@ -242,7 +242,7 @@ function safelyCloseMediaKeySession(
   mediaKeySession : MediaKeySession | ICustomMediaKeySession
 ) : Observable<unknown> {
   log.debug("EME-LSS: Close MediaKeySession", mediaKeySession);
-  return closeSession$(mediaKeySession)
+  return closeSession(mediaKeySession)
     .pipe(catchError((err : unknown) => {
       log.error("EME-LSS: Could not close MediaKeySession: " +
                 (err instanceof Error ? err.toString() :

@@ -30,6 +30,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/core/fetchers/: The fetchers](#core-fetchers)
   - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
   - [src/core/init/: Media streaming logic](#core-init)
+- [src/**/__tests__: the unit tests directories](#src-tests)
 - [tests/: Test strategies, integration and memory tests](#tests)
 
 
@@ -293,6 +294,29 @@ defined in `src/custom_source_buffers`.
 
 This is the central part which download manifests, initialize MSE and EME APIs,
 instanciate the Buffer and link together many subparts of the player.
+
+
+<a name="src-tests"></a>
+## src/**/__tests__: the unit tests directories ################################
+
+You will find multiple directories named `__tests__` in the RxPlayer.
+Those contain unit tests and are put in the same directory than the code it
+tests.
+
+Most unit tests files contain only tests for a single source file. Those will
+be put directly at the root of `__tests__` under the name
+`<ORIGINAL_SRC_FILE>.test.ts` (where `<ORIGINAL_SRC_FILE>` is the filename of
+the tested file).
+
+`__tests__` directories can also contain files defining tests for multiple files
+contained in the tested directory.
+Those can be quicker to write and easier to maintain at the expense of being
+less thorough.
+
+Those type of "global" unit tests are put in a special `__global__` directory,
+itself directly at the root of the corresponding `__tests__` directory.
+Their filename don't follow the same convention than single-source unit tests
+but should still be suffixed by `.test.ts`.
 
 
 <a name="tests"></a>

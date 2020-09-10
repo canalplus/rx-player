@@ -18,8 +18,12 @@ import {
   defer as observableDefer,
   Observable,
   of as observableOf,
-  Subscription,
+  throwError as observableThrow,
 } from "rxjs";
+import {
+  catchError,
+  map,
+} from "rxjs/operators";
 import {
   ICustomMediaKeySystemAccess,
   requestMediaKeySystemAccess,
@@ -301,27 +305,34 @@ export default function getMediaKeySystemAccess(
       }
       , []);
 
-    return new Observable((obs) => {
-      let disposed = false;
-      let sub: Subscription|null;
+    return recursivelyTestKeySystems(0);
 
-      /**
-       * Test the key system as defined in keySystemsType[index].
-       * @param {Number} index
-       */
-      function testKeySystem(index: number) : void {
-        // completely quit the loop if unsubscribed
-        if (disposed) {
-          return;
-        }
-
+    /**
+     * Test all key system configuration stored in `keySystemsType` one by one
+     * recursively.
+     * Returns an Observable which emit the MediaKeySystemAccess if one was
+     * found compatible with one of the configurations or just throws if none
+     * were found to be compatible.
+     * @param {Number} index - The index in `keySystemsType` to start from.
+     * Should be set to `0` when calling directly.
+     * @returns {Observable}
+     */
+    function recursivelyTestKeySystems(
+      index : number
+    ) : Observable<IFoundMediaKeySystemAccessEvent> {
         // if we iterated over the whole keySystemsType Array, quit on error
         if (index >= keySystemsType.length) {
-          obs.error(new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS",
-                                            "No key system compatible with your " +
-                                            "wanted configuration has been found " +
-                                            "in the current browser."));
-          return;
+          const error = new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS",
+                                                "No key system compatible with your " +
+                                                "wanted configuration has been found " +
+                                                "in the current browser.");
+          return observableThrow(error);
+        }
+
+        if (requestMediaKeySystemAccess == null) {
+          const error = Error("requestMediaKeySystemAccess is not " +
+                              "implemented in your browser.");
+          return observableThrow(error);
         }
 
         const { keyName, keyType, keySystemOptions } = keySystemsType[index];
@@ -333,37 +344,19 @@ export default function getMediaKeySystemAccess(
                   `${index + 1} of ${keySystemsType.length}`,
                   keySystemConfigurations);
 
-        if (requestMediaKeySystemAccess == null) {
-          throw new Error("requestMediaKeySystemAccess is not " +
-                          "implemented in your browser.");
-        }
-
-        sub = requestMediaKeySystemAccess(keyType, keySystemConfigurations)
-          .subscribe((keySystemAccess) => {
+        return requestMediaKeySystemAccess(keyType, keySystemConfigurations).pipe(
+          map((keySystemAccess) => {
             log.info("EME: Found compatible keysystem", keyType, keySystemConfigurations);
-            obs.next({ type: "create-media-key-system-access",
-                       value: { options: keySystemOptions,
-                                mediaKeySystemAccess: keySystemAccess },
-                      });
-            obs.complete();
-          },
-          () => {
+            return { type: "create-media-key-system-access" as const,
+                     value: { options: keySystemOptions,
+                              mediaKeySystemAccess: keySystemAccess } };
+          }),
+          catchError(() => {
             log.debug("EME: Rejected access to keysystem",
                       keyType,
                       keySystemConfigurations);
-            sub = null;
-            testKeySystem(index + 1);
-          });
-      }
-
-      testKeySystem(0);
-
-      return () => {
-        disposed = true;
-        if (sub != null) {
-          sub.unsubscribe();
-        }
-      };
-    });
+            return recursivelyTestKeySystems(index + 1);
+          }));
+    }
   });
 }

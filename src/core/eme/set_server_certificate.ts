@@ -25,15 +25,11 @@ import {
   ignoreElements,
 } from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat";
-import {
-  EncryptedMediaError,
-} from "../../errors";
+import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
-import {
-  IEMEWarningEvent,
-  TypedArray,
-} from "./types";
+import tryCatch from "../../utils/rx-try_catch";
+import { IEMEWarningEvent } from "./types";
 
 /**
  * Call the setServerCertificate API with the given certificate.
@@ -51,12 +47,14 @@ import {
  */
 function setServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
-  serverCertificate : ArrayBuffer|TypedArray
-) : Observable<unknown> {
+  serverCertificate : BufferSource
+) : Observable<boolean> {
   return observableDefer(() => {
-    return castToObservable(
-      (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
-    ).pipe(catchError((error: unknown) => {
+    return tryCatch<void, boolean>(() =>
+      castToObservable(
+        (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
+      )
+    , undefined).pipe(catchError((error: unknown) => {
       log.warn("EME: mediaKeys.setServerCertificate returned an error", error);
       const reason = error instanceof Error ? error.toString() :
                                               "`setServerCertificate` error";
@@ -74,7 +72,7 @@ function setServerCertificate(
  */
 export default function trySettingServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
-  serverCertificate : ArrayBuffer|TypedArray
+  serverCertificate : BufferSource
 ) : Observable<IEMEWarningEvent> {
   return observableDefer(() => {
     if (typeof mediaKeys.setServerCertificate !== "function") {

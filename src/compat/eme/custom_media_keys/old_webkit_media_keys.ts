@@ -19,7 +19,6 @@ import {
   Subject,
 } from "rxjs";
 import { takeUntil } from "rxjs/operators";
-import { TypedArray } from "../../../core/eme";
 import {
   bytesToStr,
   strToBytes,
@@ -38,8 +37,8 @@ export interface IOldWebkitHTMLMediaElement extends HTMLVideoElement {
   webkitGenerateKeyRequest : (keyType: string, initData : ArrayBuffer) => void;
   webkitAddKey : (
     keyType: string,
-    key : ArrayBuffer|TypedArray|DataView,
-    kid : ArrayBuffer|TypedArray|DataView|null,
+    key : BufferSource,
+    kid : BufferSource|null,
     sessionId : string
   ) => void;
 }

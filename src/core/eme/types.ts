@@ -142,7 +142,7 @@ export type IEMEManagerEvent = IEMEWarningEvent | // minor error
                                IBlacklistKeysEvent | // keyIDs undecipherable
                                IBlacklistProtectionDataEvent; // initData undecipherable
 
-export type ILicense = TypedArray |
+export type ILicense = BufferSource |
                        ArrayBuffer;
 
 // Segment protection manually sent to the EMEManager
@@ -278,29 +278,16 @@ export interface IPersistentSessionInfoV0 {
 export interface IPersistentSessionStorage { load() : IPersistentSessionInfo[];
                                              save(x : IPersistentSessionInfo[]) : void; }
 
-export type TypedArray = Int8Array |
-                         Int16Array |
-                         Int32Array |
-                         Uint8Array |
-                         Uint16Array |
-                         Uint32Array |
-                         Uint8ClampedArray |
-                         Float32Array |
-                         Float64Array;
-
 // Options given by the caller
 export interface IKeySystemOption {
   type : string;
   getLicense : (message : Uint8Array, messageType : string)
-                 => Promise<TypedArray |
-                            ArrayBuffer |
-                            null> |
-                    TypedArray |
-                    ArrayBuffer |
+                 => Promise<BufferSource | null> |
+                    BufferSource |
                     null;
   getLicenseConfig? : { retry? : number;
                         timeout? : number; };
-  serverCertificate? : ArrayBuffer | TypedArray;
+  serverCertificate? : BufferSource;
   persistentLicense? : boolean;
   licenseStorage? : IPersistentSessionStorage;
   persistentStateRequired? : boolean;
@@ -308,11 +295,8 @@ export interface IKeySystemOption {
   closeSessionsOnStop? : boolean;
   onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
                                                  ICustomMediaKeySession)
-                           => Promise<TypedArray |
-                                      ArrayBuffer |
-                                      null> |
-                              TypedArray |
-                              ArrayBuffer |
+                           => Promise<BufferSource | null> |
+                              BufferSource |
                               null;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
