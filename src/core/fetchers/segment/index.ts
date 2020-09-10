@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
+import {
+  IPrioritizedSegmentFetcher,
+  IPrioritizedSegmentFetcherEvent,
+} from "./prioritized_segment_fetcher";
 import {
   ISegmentFetcherChunkCompleteEvent,
   ISegmentFetcherChunkEvent,
@@ -28,6 +31,7 @@ import SegmentFetcherCreator, {
 export default SegmentFetcherCreator;
 export {
   IPrioritizedSegmentFetcher,
+  IPrioritizedSegmentFetcherEvent,
   ISegmentFetcherChunkCompleteEvent,
   ISegmentFetcherChunkEvent,
   ISegmentFetcherEvent,

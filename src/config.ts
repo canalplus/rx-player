@@ -688,6 +688,11 @@ export default {
    * Distances which will be used as limit points, from which a new step is
    * reached (see example).
    *
+   * In the RxPlayer's code, each step is then translated in to a priority
+   * number.
+   * The lower is that number, the lower is the step and the lower is the step,
+   * the higher is the priority.
+   *
    * Note: You can set an empty array to deactivate the steps feature (every
    * Segments have the same priority).
    *
@@ -696,24 +701,57 @@ export default {
    * let's imagine the following SEGMENT_PRIORITIES_STEPS array:
    * [5, 11, 17, 25]
    *
-   * To link each Segments to a corresponding priority (and thus to a specific
-   * step), we have to consider the distance d between the current position and
-   * the start time of the Segment.
+   * To link each Segments to a corresponding priority number (and thus to a
+   * specific step), we have to consider the distance between the current
+   * position and the start time of the Segment.
    *
    * We have in our example 5 groups, which correspond to the following possible
-   * d values:
-   *   1. inferior to 5
-   *   2. between 5 and 11
-   *   3. between 11 and 17
-   *   4. between 17 and 25
-   *   5. superior to 25
+   * distances:
+   *   1. inferior to 5 => first step (priority number = 0)
+   *   2. between 5 and 11 => second step (priority number = 1)
+   *   3. between 11 and 17 => third step (priority number = 2)
+   *   4. between 17 and 25 => fourth step (priority number = 3)
+   *   5. superior to 25 => fifth step (priority number = 4)
    *
    * Segments corresponding to a lower-step will need to all be downloaded
    * before Segments of a newer step begin.
    *
    * @type {Array.<Number>}
    */
-  SEGMENT_PRIORITIES_STEPS : [6, 14],
+   SEGMENT_PRIORITIES_STEPS : [ 2,  // 1st Step (priority number = 0):  < 2
+                               4,   // 2nd Step (priority number = 1):  2-4
+                               8,   // 3rd Step (priority number = 2):  4-8
+                               12,  // 4th Step (priority number = 3):  8-12
+                               18,  // 5th Step (priority number = 4):  12-18
+                               25], // 6th Step (priority number = 5):  18-25
+                                    // 7th Step (priority number = 6):  >= 25
+
+  /**
+   * Some segment requests are said to be "high priority".
+   *
+   * Requests in that category once done will cancel any segment request that
+   * has a low priority number (see `SEGMENT_PRIORITIES_STEPS`) - meaning a
+   * priority number equal to `MIN_CANCELABLE_PRIORITY` or more.
+   *
+   * Enter here the last priority number that is considered high priority
+   * (beginning by the first step, which has the priority number `0`).
+   * @type {number}
+   */
+  MAX_HIGH_PRIORITY_LEVEL: 1, // priority number 1 and lower is high priority
+
+  /**
+   * Enter here the first priority step (see `SEGMENT_PRIORITIES_STEPS`) that
+   * will be considered as low priority.
+   *
+   * Segment requests with a low priority will be cancelled if a high priority
+   * segment request (see MAX_HIGH_PRIORITY_LEVEL) is scheduled while they are
+   * pending.
+   *
+   * This number should be strictly superior to the value indicated in
+   * `MAX_HIGH_PRIORITY_LEVEL`.
+   * @type {number}
+   */
+  MIN_CANCELABLE_PRIORITY: 3, // priority number 3 onward can be cancelled
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the

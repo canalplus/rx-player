@@ -54,15 +54,29 @@ import createSegmentLoader, {
   ISegmentLoaderWarning,
 } from "./create_segment_loader";
 
+/**
+ * Event sent when the segment request needs to be renewed (e.g. due to an HTTP
+ * error).
+ */
 export type ISegmentFetcherWarning = ISegmentLoaderWarning;
 
+/**
+ * Event sent when a new "chunk" of the segment is available.
+ * A segment can contain n chunk(s) for n >= 0.
+ */
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
+  /** Parse the downloaded chunk. */
   parse : (initTimescale? : number) => Observable<ISegmentParserResponse<T>>;
 }
 
+/**
+ * Event sent when all "chunk" of the segments have been communicated through
+ * `ISegmentFetcherChunkEvent` events.
+ */
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
 
+/** Event sent by the SegmentFetcher when fetching a segment. */
 export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
                                       ISegmentFetcherChunkEvent<T> |
                                       ISegmentFetcherWarning;

@@ -15,21 +15,43 @@
  */
 
 import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
+import log from "../../../log";
 import { ISegmentLoaderContent } from "./create_segment_loader";
-import ObservablePrioritizer from "./prioritizer";
+import ObservablePrioritizer, { ITaskEvent } from "./prioritizer";
 import {
   ISegmentFetcher,
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
+/**
+ * Event sent when a segment request has been temporarly interrupted due to
+ * another request with a high priority.
+ * The request for that segment will restart (from scratch) when requests with
+ * more priority are finished.
+ */
+export interface ISegmentFetcherInterruptedEvent { type : "interrupted"; }
+
+/**
+ * Event sent when a segment request just ended.
+ * You can use this event to schedule another task you wanted to perform at best
+ * immediately after that one (its priority will be checked).
+ */
+export interface IEndedTaskEvent { type : "ended"; }
+
+/** Event sent by a `IPrioritizedSegmentFetcher`. */
+export type IPrioritizedSegmentFetcherEvent<T> = ISegmentFetcherEvent<T> |
+                                                 ISegmentFetcherInterruptedEvent |
+                                                 IEndedTaskEvent;
+
 /** Oject returned by `applyPrioritizerToSegmentFetcher`. */
 export interface IPrioritizedSegmentFetcher<T> {
   /** Create a new request for a segment with a given priority. */
   createRequest : (content : ISegmentLoaderContent,
-                   priority? : number) => Observable<ISegmentFetcherEvent<T>>;
+                   priority? : number) => Observable<IPrioritizedSegmentFetcherEvent<T>>;
 
   /** Update priority of a request created through `createRequest`. */
-  updatePriority : (observable : Observable<ISegmentFetcherEvent<T>>,
+  updatePriority : (observable : Observable<IPrioritizedSegmentFetcherEvent<T>>,
                     priority : number) => void;
 }
 
@@ -44,36 +66,56 @@ export interface IPrioritizedSegmentFetcher<T> {
  * @returns {Object}
  */
 export default function applyPrioritizerToSegmentFetcher<T>(
-  prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<T>>,
+  prioritizer : ObservablePrioritizer<IPrioritizedSegmentFetcherEvent<T>>,
   fetcher : ISegmentFetcher<T>
 ) : IPrioritizedSegmentFetcher<T> {
+  /**
+   * The Observables returned by `createRequest` are not exactly the same than
+   * the one created by the `ObservablePrioritizer`. Because we still have to
+   * keep a handle on that value.
+   */
+  const taskHandlers =
+    new WeakMap<Observable<IPrioritizedSegmentFetcherEvent<T>>,
+                           Observable<ITaskEvent<IPrioritizedSegmentFetcherEvent<T>>>>();
   return {
     /**
      * Create a Segment request with a given priority.
      * @param {Object} content - content to request
-     * @param {Number} priority - priority at which the content should be
-     * requested.
+     * @param {Number} priority - priority at which the content should be requested.
+     * Lower number == higher priority.
      * @returns {Observable}
      */
     createRequest(
       content : ISegmentLoaderContent,
       priority : number = 0
-    ) : Observable<ISegmentFetcherEvent<T>> {
-      return prioritizer.create(fetcher(content), priority);
+    ) : Observable<IPrioritizedSegmentFetcherEvent<T>> {
+      const task = prioritizer.create(fetcher(content), priority);
+      const flattenTask = task.pipe(
+        map((evt) => {
+          return evt.type === "data" ? evt.value :
+                                       evt;
+        })
+      );
+      taskHandlers.set(flattenTask, task);
+      return flattenTask;
     },
 
     /**
      * Update the priority of a pending request, created through
      * `createRequest`.
-     * @param {Observable} observable - the corresponding request
-     * @param {Number} priority
+     * @param {Observable} observable - The Observable returned by `createRequest`.
+     * @param {Number} priority - The new priority value.
      */
     updatePriority(
-      observable : Observable<ISegmentFetcherEvent<T>>,
+      observable : Observable<IPrioritizedSegmentFetcherEvent<T>>,
       priority : number
     ) : void {
-      prioritizer.updatePriority(observable, priority);
+      const correspondingTask = taskHandlers.get(observable);
+      if (correspondingTask === undefined) {
+        log.warn("Fetchers: Cannot update the priority of a request: task not found.");
+        return;
+      }
+      prioritizer.updatePriority(correspondingTask, priority);
     },
-
   };
 }
