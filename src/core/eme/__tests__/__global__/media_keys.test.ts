@@ -44,7 +44,7 @@ describe("core - eme - global tests - media key system access", () => {
   beforeEach(() => {
     jest.resetModules();
     jest.restoreAllMocks();
-    jest.mock("../../set_server_certificate", () => ({ __esModule: true,
+    jest.mock("../../set_server_certificate", () => ({ __esModule: true as const,
                                                        default: neverCalledFn }));
   });
 
