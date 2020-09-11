@@ -333,13 +333,13 @@ function createPssh({ systemId, privateData } : IISOBMFFPSSHInfo) : Uint8Array {
 
 /**
  * Update ISOBMFF given to add a "pssh" box in the "moov" box for every content
- * protection in the pssList array given.
+ * protection in the psshList array given.
  * @param {Uint8Array} buf - the ISOBMFF file
- * @param {Array.<Object>} pssList
+ * @param {Array.<Object>} psshList
  * @returns {Uint8Array} - The new ISOBMFF generated.
  */
-function patchPssh(buf : Uint8Array, pssList : IISOBMFFPSSHInfo[]) : Uint8Array {
-  if (pssList == null || pssList.length === 0) {
+function patchPssh(buf : Uint8Array, psshList : IISOBMFFPSSHInfo[]) : Uint8Array {
+  if (psshList == null || psshList.length === 0) {
     return buf;
   }
 
@@ -350,8 +350,8 @@ function patchPssh(buf : Uint8Array, pssList : IISOBMFFPSSHInfo[]) : Uint8Array 
 
   const moov = buf.subarray(moovOffsets[0], moovOffsets[2]);
   const moovArr = [moov];
-  for (let i = 0; i < pssList.length; i++) {
-    moovArr.push(createPssh(pssList[i]));
+  for (let i = 0; i < psshList.length; i++) {
+    moovArr.push(createPssh(psshList[i]));
   }
   const newmoov = updateBoxLength(concat(...moovArr));
 

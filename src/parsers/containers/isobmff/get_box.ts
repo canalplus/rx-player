@@ -139,7 +139,7 @@ function getUuidContent(
     boxSize = be4toi(buf, currentOffset);
     currentOffset += 4;
 
-    const boxName =  be4toi(buf, currentOffset);
+    const boxName = be4toi(buf, currentOffset);
     currentOffset += 4;
 
     if (boxSize === 0) {
