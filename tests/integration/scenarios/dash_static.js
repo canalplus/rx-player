@@ -26,7 +26,7 @@ describe("DASH non-linear content not starting at 0 (SegmentTimeline)", function
   launchTestsForContent(notStartingAt0ManifestInfos);
 });
 
-describe.only("DASH content CENC wrong version in MPD", function () {
+describe("DASH content CENC wrong version in MPD", function () {
   /**
    * Translate groups of 4 big-endian bytes to Integer.
    * @param {Uint8Array} bytes
