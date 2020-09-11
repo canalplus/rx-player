@@ -544,18 +544,22 @@ function parseLoadVideoOptions(
     options.transportOptions :
     {};
 
-  const transportOptions : IParsedTransportOptions = {
-    aggressiveMode: transportOptsArg.aggressiveMode,
-    checkMediaSegmentIntegrity: transportOptsArg.checkMediaSegmentIntegrity,
+  const manifestUpdateUrl = options.transportOptions?.manifestUpdateUrl;
+  const minimumManifestUpdateInterval =
+    options.transportOptions?.minimumManifestUpdateInterval ?? 0;
+
+  const transportOptions = objectAssign({}, transportOptsArg, {
+    /* tslint:disable deprecation */
+    supplementaryImageTracks: [] as ISupplementaryImageTrackOption[],
+    supplementaryTextTracks: [] as ISupplementaryTextTrackOption[],
+    /* tslint:enable deprecation */
     lowLatencyMode,
-    manifestLoader: transportOptsArg.manifestLoader,
-    referenceDateTime: transportOptsArg.referenceDateTime,
-    representationFilter: transportOptsArg.representationFilter,
-    segmentLoader: transportOptsArg.segmentLoader,
-    serverSyncInfos: transportOptsArg.serverSyncInfos,
-    supplementaryImageTracks: [],
-    supplementaryTextTracks: [],
-  };
+  });
+
+  // remove already parsed data to simplify the `transportOptions` object
+  delete transportOptions.manifestUpdateUrl;
+  delete transportOptions.minimumManifestUpdateInterval;
+
   if (options.supplementaryTextTracks !== undefined) {
     warnOnce("The `supplementaryTextTracks` loadVideo option is deprecated.\n" +
              "Please use the `TextTrackRenderer` tool instead.");
@@ -652,10 +656,6 @@ function parseLoadVideoOptions(
       startAt = options.startAt as IParsedStartAtOption;
     }
   }
-
-  const manifestUpdateUrl = options.transportOptions?.manifestUpdateUrl;
-  const minimumManifestUpdateInterval =
-    options.transportOptions?.minimumManifestUpdateInterval ?? 0;
 
   const networkConfig = options.networkConfig == null ?
     {} :

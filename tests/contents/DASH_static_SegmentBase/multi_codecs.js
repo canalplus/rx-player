@@ -3,12 +3,12 @@ const BASE_URL = "http://" +
                __TEST_CONTENT_SERVER__.URL + ":" +
                __TEST_CONTENT_SERVER__.PORT +
                /* eslint-enable no-undef */
-               "/DASH_static_SegmentBase_multi_codecs/media/";
+               "/DASH_static_SegmentBase/media/";
 
 // Provide infos on this content under JSON.
 // Useful for integration tests on DASH parsers.
 export default {
-  url: BASE_URL + "dash.mpd",
+  url: BASE_URL + "multi_codecs.mpd",
   transport: "dash",
   isDynamic: false,
   isLive: false,

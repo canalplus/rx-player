@@ -1211,5 +1211,24 @@ describe("API - parseLoadVideoOptions", () => {
     expect(logWarnMock).toHaveBeenCalledWith("API: You have set a textTrackElement " +
       "without being in an \"html\" textTrackMode. It will be ignored.");
   });
+
+  /* tslint:disable max-line-length */
+  it("should set non-documented variables in `transportOptions`", () => {
+  /* tslint:enable max-line-length */
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      transportOptions: { __priv_toto: 4 } as any,
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      transportOptions: { lowLatencyMode: false,
+                          __priv_toto: 4,
+                          supplementaryImageTracks: [],
+                          supplementaryTextTracks: [] },
+    });
+  });
+
 });
 /* tslint:enable no-unsafe-any */

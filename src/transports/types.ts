@@ -562,6 +562,8 @@ export interface ITransportOptions {
   supplementaryImageTracks? : ISupplementaryImageTrack[];
   supplementaryTextTracks? : ISupplementaryTextTrack[];
   /* tslint:enable deprecation */
+
+  __priv_patchLastSegmentInSidx? : boolean;
 }
 
 export type ITransportFunction = (options : ITransportOptions) =>
