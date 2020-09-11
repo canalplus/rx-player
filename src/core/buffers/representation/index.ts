@@ -17,10 +17,12 @@
 import RepresentationBuffer, {
   IRepresentationBufferArguments,
   IRepresentationBufferClockTick,
+  ITerminationOrder,
 } from "./representation_buffer";
 
 export default RepresentationBuffer;
 export {
   IRepresentationBufferArguments,
   IRepresentationBufferClockTick,
+  ITerminationOrder,
 };

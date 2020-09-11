@@ -44,7 +44,6 @@ import {
   multicast,
   share,
   startWith,
-  takeUntil,
   tap,
 } from "rxjs/operators";
 import {
@@ -71,6 +70,7 @@ import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import RepresentationBuffer, {
   IRepresentationBufferClockTick,
+  ITerminationOrder,
 } from "../representation";
 import {
   IAdaptationBufferEvent,
@@ -171,14 +171,8 @@ export default function AdaptationBuffer<T>({
    */
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
-  /** Emit when the current RepresentationBuffer should be stopped right now. */
-  const killCurrentBuffer$ = new Subject<void>();
-
-  /**
-   * Emit when the current RepresentationBuffer should stop making new
-   * downloads, and terminate itself when done.
-   */
-  const terminateCurrentBuffer$ = new Subject<void>();
+  /** Emit when the current RepresentationBuffer should terminate itself. */
+  const terminateCurrentBuffer$ = new Subject<ITerminationOrder>();
 
   // use ABRManager for choosing the Representation
   const bufferEvents$ = new Subject<IBufferEventAddedSegment<T> |
@@ -246,10 +240,9 @@ export default function AdaptationBuffer<T>({
           observableOf(EVENTS.representationChange(adaptation.type,
                                                    period,
                                                    representation));
-        const representationBuffer$ = createRepresentationBuffer(representation)
-          .pipe(takeUntil(killCurrentBuffer$));
 
-        return observableConcat(representationChange$, representationBuffer$)
+        return observableConcat(representationChange$,
+                                createRepresentationBuffer(representation))
           .pipe(tap((evt) : void => {
             if (evt.type === "representationChange" ||
                 evt.type === "added-segment")
@@ -267,15 +260,10 @@ export default function AdaptationBuffer<T>({
       }
       if (estimate.urgent) {
         log.info("Buffer: urgent Representation switch", adaptation.type);
-
-        // Kill current Buffer immediately. The one just chosen take its place.
-        killCurrentBuffer$.next();
+        terminateCurrentBuffer$.next({ urgent: true });
       } else {
         log.info("Buffer: slow Representation switch", adaptation.type);
-
-        // terminate current Buffer. The last chosen Representation at the time
-        // it will be finished will take its place.
-        terminateCurrentBuffer$.next();
+        terminateCurrentBuffer$.next({ urgent: false });
       }
     }), ignoreElements())
   );
