@@ -87,7 +87,7 @@ function strToUtf8(str : string) : Uint8Array {
 
   // As "unescape" is a deprecated function we want to declare a fallback in the
   // case a browser decide to not implement it.
-  if (typeof window.unescape === "function") {
+  if (typeof unescape === "function") {
     utf8Str = unescape(pcStr);
   } else {
     // Let's implement a simple unescape function (got to admit it was for the challenge)
@@ -193,7 +193,7 @@ function utf8ToStr(data : Uint8Array) : string {
   const utf8Str = stringFromCharCodes(uint8);
 
   let escaped : string;
-  if (typeof window.escape === "function") {
+  if (typeof escape === "function") {
     // Transform UTF-8 escape sequence into percent-encoded escape sequences.
     escaped = escape(utf8Str);
   } else {
