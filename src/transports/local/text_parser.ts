@@ -54,8 +54,7 @@ function parseISOBMFFEmbeddedTextTrack(
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: null,
-                                   initTimescale: mdhdTimescale > 0 ? mdhdTimescale :
-                                                                      undefined,
+                                   initTimescale: mdhdTimescale,
                                    segmentProtections: [] } });
   }
   const chunkInfos = getISOBMFFTimingInfos(chunkBytes,

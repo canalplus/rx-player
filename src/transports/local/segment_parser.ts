@@ -20,6 +20,7 @@ import {
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
   IAudioVideoParserObservable,
@@ -72,9 +73,9 @@ export default function segmentParser({
     const segmentProtections = representation.getProtectionsInitializationData();
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: chunkData,
-                                   initTimescale: timescale !== null && timescale > 0 ?
-                                     timescale :
-                                     undefined,
+                                   initTimescale: isNullOrUndefined(timescale) ?
+                                     undefined :
+                                     timescale,
                                    segmentProtections } });
   }
 

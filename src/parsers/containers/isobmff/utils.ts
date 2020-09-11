@@ -159,37 +159,38 @@ function getSegmentsFromSidx(
  * segment (in the media timescale).
  *
  * Stops at the first tfdt encountered from the beginning of the file.
- * Returns this time. -1 if not found.
+ * Returns this time.
+ * `undefined` if not found.
  * @param {Uint8Array} buffer
- * @returns {Number}
+ * @returns {Number | undefined}
  */
-function getTrackFragmentDecodeTime(buffer : Uint8Array) : number {
+function getTrackFragmentDecodeTime(buffer : Uint8Array) : number | undefined {
   const traf = getTRAF(buffer);
   if (traf === null) {
-    return -1;
+    return undefined;
   }
   const tfdt = getBoxContent(traf, 0x74666474 /* tfdt */);
   if (tfdt === null) {
-    return -1;
+    return undefined;
   }
   const version = tfdt[0];
   return version === 1 ? be8toi(tfdt, 4) :
          version === 0 ? be4toi(tfdt, 4) :
-                         -1;
+                         undefined;
 }
 
 /**
  * Returns the "default sample duration" which is the default value for duration
  * of samples found in a "traf" ISOBMFF box.
  *
- * Returns `-1` if no "default sample duration" has been found.
+ * Returns `undefined` if no "default sample duration" has been found.
  * @param {Uint8Array} traf
- * @returns {number}
+ * @returns {number|undefined}
  */
-function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number {
+function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number | undefined {
   const tfhd = getBoxContent(traf, 0x74666864 /* tfhd */);
   if (tfhd === null) {
-    return -1;
+    return undefined;
   }
 
   let cursor = /* version */ 1;
@@ -200,7 +201,7 @@ function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number {
   const hasDefaultSampleDuration = (flags & 0x000008) > 0;
 
   if (!hasDefaultSampleDuration) {
-    return -1;
+    return undefined;
   }
   cursor += 4;
 
@@ -220,34 +221,34 @@ function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number {
  * Calculate segment duration approximation by additioning the duration from
  * every samples in a trun ISOBMFF box.
  *
- * Returns `-1` if we could not parse the duration.
+ * Returns `undefined` if we could not parse the duration.
  * @param {Uint8Array} buffer
- * @returns {number}
+ * @returns {number | undefined}
  */
-function getDurationFromTrun(buffer : Uint8Array) : number {
+function getDurationFromTrun(buffer : Uint8Array) : number | undefined {
   const traf = getTRAF(buffer);
   if (traf === null) {
-    return -1;
+    return undefined;
   }
 
   const trun = getBoxContent(traf, 0x7472756E /* trun */);
   if (trun === null) {
-    return -1;
+    return undefined;
   }
   let cursor = 0;
   const version = trun[cursor]; cursor += 1;
   if (version > 1) {
-    return -1;
+    return undefined;
   }
 
   const flags = be3toi(trun, cursor); cursor += 3;
   const hasSampleDuration = (flags & 0x000100) > 0;
 
-  let defaultDuration = 0;
+  let defaultDuration : number | undefined = 0;
   if (!hasSampleDuration) {
     defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
-    if (defaultDuration < 0) {
-      return -1;
+    if (defaultDuration === undefined) {
+      return undefined;
     }
   }
 
@@ -291,34 +292,28 @@ function getDurationFromTrun(buffer : Uint8Array) : number {
 
 /**
  * Get timescale information from a movie header box. Found in init segments.
- * `-1` if not found or not parsed.
+ * `undefined` if not found or not parsed.
  *
  * This timescale is the default timescale used for segments.
  * @param {Uint8Array} buffer
- * @returns {Number}
+ * @returns {Number | undefined}
  */
-function getMDHDTimescale(buffer : Uint8Array) : number {
+function getMDHDTimescale(buffer : Uint8Array) : number | undefined {
   const mdia = getMDIA(buffer);
   if (mdia === null) {
-    return -1;
+    return undefined;
   }
 
   const mdhd = getBoxContent(mdia, 0x6D646864  /* "mdhd" */);
   if (mdhd === null) {
-    return -1;
+    return undefined;
   }
 
   let cursor = 0;
   const version = mdhd[cursor]; cursor += 4;
-  if (version === 1) {
-    cursor += 16;
-    return be4toi(mdhd, cursor);
-  } else if (version === 0) {
-    cursor += 8;
-    return be4toi(mdhd, cursor);
-  } else {
-    return -1;
-  }
+  return version === 1 ? be4toi(mdhd, cursor + 16) :
+         version === 0 ? be4toi(mdhd, cursor + 8) :
+                         undefined;
 }
 
 /**
