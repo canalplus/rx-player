@@ -394,7 +394,7 @@ export default {
    */
   ABR_STARVATION_FACTOR: {
     DEFAULT: 0.72,
-    LOW_LATENCY: 0.64,
+    LOW_LATENCY: 0.72,
   },
 
   /**
@@ -403,8 +403,8 @@ export default {
    * @type {Object}
    */
   ABR_REGULAR_FACTOR: {
-    DEFAULT: 0.9,
-    LOW_LATENCY: 0.9,
+    DEFAULT: 0.8,
+    LOW_LATENCY: 0.8,
   },
 
   /**

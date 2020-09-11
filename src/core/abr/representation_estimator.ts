@@ -51,11 +51,10 @@ import RepresentationScoreCalculator from "./representation_score_calculator";
  * Adaptive BitRate estimate object.
  *
  * The `RepresentationEstimator` helps the player to choose a Representation
- * (i.e. a quality) by frequently mesuring the current network and playback
+ * (i.e. a quality) by frequently measuring the current network and playback
  * conditions.
  *
- * At regular intervals, it will send an estimate of what the player should
- * play through those `IABREstimate` objects.
+ * At regular intervals, an `IABREstimate` will be sent to that end.
  */
 export interface IABREstimate {
   /**
@@ -67,9 +66,8 @@ export interface IABREstimate {
    */
   bitrate: undefined | number;
   /**
-   * If `true`, the Representation chosen in the current estimate object is
-   * linked to a choice performed manually by the user, such as a bitrate
-   * choice.
+   * If `true`, the `representation` chosen in the current estimate object is
+   * linked to a choice chosen manually by the user.
    *
    * If `false`, this estimate is just due to the adaptative logic.
    */
@@ -78,7 +76,7 @@ export interface IABREstimate {
    * The Representation considered as the most adapted to the current network
    * and playback conditions.
    */
-  representation: Representation; // The chosen representation
+  representation: Representation;
   /**
    * If `true`, the current `representation` suggested should be switched to as
    * soon as possible. For example, you might want to interrupt all pending
@@ -114,16 +112,19 @@ export interface IABREstimate {
   knownStableBitrate?: number;
 }
 
-/** Properties the `RepresentationEstimator` will need at each clock tick. */
+/** Properties the `RepresentationEstimator` will need at each "clock tick". */
 export interface IRepresentationEstimatorClockTick {
   /**
    * For the concerned SourceBuffer, difference in seconds between the next
    * position where no segment data is available and the current position.
    */
   bufferGap : number;
-  /** Current playback position in the video, in seconds. */
+  /** Current playback position on the concerned media element, in seconds. */
   currentTime : number;
-  /** Last "playback rate" asked by the user. */
+  /**
+   * Last "playback rate" set by the user. This is the ideal "playback rate" at
+   * which the media should play.
+   */
   speed : number;
   /** `duration` property of the HTMLMediaElement on which the content plays. */
   duration : number;
