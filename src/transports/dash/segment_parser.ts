@@ -25,6 +25,7 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
   IAudioVideoParserObservable,
@@ -119,8 +120,8 @@ export default function generateAudioVideoSegmentParser(
 
     const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
                                getMDHDTimescale(chunkData);
-    const parsedTimescale = timescale !== null && timescale > 0 ? timescale :
-                                                                  undefined;
+    const parsedTimescale = isNullOrUndefined(timescale) ? undefined :
+                                                           timescale;
     if (!isWEBM) { // TODO extract webm protection information
       const psshInfo = takePSSHOut(chunkData);
       for (let i = 0; i < psshInfo.length; i++) {

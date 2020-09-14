@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
 import assert from "../../../utils/assert";
 import {
   be2toi,
@@ -24,108 +23,86 @@ import {
   concat,
   hexToBytes,
   itobe4,
+  itobe8,
 } from "../../../utils/byte_parsing";
+import { MAX_32_BIT_INT } from "./constants";
 import { createBox } from "./create_box";
 import { getPlayReadyKIDFromPrivateData } from "./drm";
+import {
+  getBoxContent,
+  getBoxOffsets,
+} from "./get_box";
 import {
   getMDIA,
   getTRAF,
 } from "./read";
 
-interface IISOBMFFKeySystem {
+/** Information related to a PSSH box. */
+export interface IISOBMFFPSSHInfo {
+  /** Corresponding DRM's system ID, as an hexadecimal string. */
   systemId : string;
+  /** Additional data contained in the PSSH Box. */
   privateData : Uint8Array;
 }
 
-/**
- * Find the offset for the first declaration of the given box in an isobmff.
- * Returns -1 if not found.
- *
- * This function calls log.error in case of partial segments.
- * @param {Uint8Array} buf - the isobmff
- * @param {Number} wantedName
- * @returns {Number} - Offset where the box begins. -1 if not found.
- */
-function findBox(buf : Uint8Array, wantedName : number) : number {
-  const len = buf.length;
-  let i = 0;
-  while (i + 8 < len) {
-    const size = be4toi(buf, i);
-    if (size <= 0) {
-      log.error("ISOBMFF: size out of range");
-      return -1;
-    }
-
-    const name = be4toi(buf, i + 4);
-    if (name === wantedName) {
-      if (i + size <= len) {
-        return i;
-      }
-      log.error("ISOBMFF: box out of range");
-      return -1;
-    }
-
-    i += size;
-  }
-  return -1;
-}
-
-// Segment information returned from a parsed sidx
+/** Segment information from a parsed sidx. */
 export interface ISidxSegment {
+  /** This segment start time, timescaled. */
   time : number;
+  /** This segment difference between its end and start time, timescaled. */
   duration : number;
+  /**
+   * Amount of time this segment repeats, always , always 0.
+   * TODO Remove.
+   */
   count : 0;
+  /** Dividing `time` or `duration` with this value allows to obtain seconds. */
   timescale : number;
+  /**
+   * Start and ending bytes (included) for the segment in the whole ISOBMFF
+   * buffer.
+   */
   range : [number, number];
 }
 
 /**
- * Parse the sidx part (segment index) of the isobmff.
- * Returns null if not found.
+ * Parse the sidx part (segment index) of an ISOBMFF buffer and construct a
+ * corresponding Array of available segments.
  *
+ * Returns `null` if not found.
  * @param {Uint8Array} buf
- * @param {Number} initialOffset
+ * @param {Number} sidxOffsetInWholeSegment
  * @returns {Object|null} {Array.<Object>} - Information about each subsegment.
- * Contains those keys:
- *   - time {Number}: starting _presentation time_ for the subsegment,
- *     timescaled
- *   - duration {Number}: duration of the subsegment, timescaled
- *   - timescale {Number}: the timescale in which the time and duration are set
- *   - count {Number}: always at 0
- *   - range {Array.<Number>}: first and last bytes in the media file
- *     from the anchor point (first byte after the sidx box) for the
- *     concerned subsegment.
  */
 function getSegmentsFromSidx(
   buf : Uint8Array,
-  initialOffset : number
+  sidxOffsetInWholeSegment : number
 ) : ISidxSegment[]|null {
-  const index = findBox(buf, 0x73696478 /* "sidx" */);
-  if (index === -1) {
+  const sidxOffsets = getBoxOffsets(buf, 0x73696478 /* "sidx" */);
+  if (sidxOffsets === null) {
     return null;
   }
-  let offset = initialOffset;
-
-  const size = be4toi(buf, index);
-  let pos = index + /* size */4 + /* name */4;
+  let offset = sidxOffsetInWholeSegment;
+  const boxSize = sidxOffsets[2] - sidxOffsets[0];
+  let cursor = sidxOffsets[1];
 
   /* version(8) */
   /* flags(24) */
   /* reference_ID(32); */
   /* timescale(32); */
-  const version = buf[pos]; pos += 4 + 4;
-  const timescale = be4toi(buf, pos); pos += 4;
+  const version = buf[cursor]; cursor += 4 + 4;
+  const timescale = be4toi(buf, cursor); cursor += 4;
 
   /* earliest_presentation_time(32 / 64) */
   /* first_offset(32 / 64) */
   let time;
   if (version === 0) {
-    time    = be4toi(buf, pos);        pos += 4;
-    offset += be4toi(buf, pos) + size; pos += 4;
+    time    = be4toi(buf, cursor);           cursor += 4;
+    offset += be4toi(buf, cursor) + boxSize; cursor += 4;
   }
   else if (version === 1) {
-    time    = be8toi(buf, pos);        pos += 8;
-    offset += be8toi(buf, pos) + size; pos += 8;
+    time    = be8toi(buf, cursor);           cursor += 8;
+    offset += be8toi(buf, cursor) + boxSize; cursor += 8;
   }
   else {
     return null;
@@ -135,16 +112,16 @@ function getSegmentsFromSidx(
 
   /* reserved(16) */
   /* reference_count(16) */
-  pos += 2;
-  let count = be2toi(buf, pos);
-  pos += 2;
+  cursor += 2;
+  let count = be2toi(buf, cursor);
+  cursor += 2;
   while (--count >= 0) {
     /* reference_type(1) */
     /* reference_size(31) */
     /* segment_duration(32) */
     /* sap..(32) */
-    const refChunk = be4toi(buf, pos);
-    pos += 4;
+    const refChunk = be4toi(buf, cursor);
+    cursor += 4;
     const refType = (refChunk & 0x80000000) >>> 31;
     const refSize = (refChunk & 0x7FFFFFFF);
 
@@ -153,11 +130,11 @@ function getSegmentsFromSidx(
       throw new Error("sidx with reference_type `1` not yet implemented");
     }
 
-    const duration = be4toi(buf, pos);
-    pos += 4;
+    const duration = be4toi(buf, cursor);
+    cursor += 4;
 
-    // let sapChunk = be4toi(buf, pos + 8);
-    pos += 4;
+    // let sapChunk = be4toi(buf, cursor + 8);
+    cursor += 4;
 
     // TODO(pierre): handle sap
     // let startsWithSap = (sapChunk & 0x80000000) >>> 31;
@@ -180,133 +157,133 @@ function getSegmentsFromSidx(
 /**
  * Parse track Fragment Decode Time to get a precize initial time for this
  * segment (in the media timescale).
+ *
  * Stops at the first tfdt encountered from the beginning of the file.
- * Returns this time. -1 if not found.
+ * Returns this time.
+ * `undefined` if not found.
  * @param {Uint8Array} buffer
- * @returns {Number}
+ * @returns {Number | undefined}
  */
-function getTrackFragmentDecodeTime(buffer : Uint8Array) : number {
+function getTrackFragmentDecodeTime(buffer : Uint8Array) : number | undefined {
   const traf = getTRAF(buffer);
   if (traf === null) {
-    return -1;
+    return undefined;
   }
-
-  const index = findBox(traf, 0x74666474 /* tfdt */);
-  if (index === -1) {
-    return -1;
+  const tfdt = getBoxContent(traf, 0x74666474 /* tfdt */);
+  if (tfdt === null) {
+    return undefined;
   }
-
-  let pos = index + /* size */4 + /* name */4;
-  const version = traf[pos]; pos += 4;
-  if (version > 1) {
-    return -1;
-  }
-
-  return version !== 0 ? be8toi(traf, pos) :
-                         be4toi(traf, pos);
+  const version = tfdt[0];
+  return version === 1 ? be8toi(tfdt, 4) :
+         version === 0 ? be4toi(tfdt, 4) :
+                         undefined;
 }
 
 /**
+ * Returns the "default sample duration" which is the default value for duration
+ * of samples found in a "traf" ISOBMFF box.
+ *
+ * Returns `undefined` if no "default sample duration" has been found.
  * @param {Uint8Array} traf
- * @returns {number}
+ * @returns {number|undefined}
  */
-function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number {
-  const index = findBox(traf, 0x74666864 /* tfhd */);
-  if (index === -1) {
-    return -1;
+function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number | undefined {
+  const tfhd = getBoxContent(traf, 0x74666864 /* tfhd */);
+  if (tfhd === null) {
+    return undefined;
   }
 
-  let pos = index + /* size */4 + /* name */4 + /* version */ 1;
+  let cursor = /* version */ 1;
 
-  const flags = be3toi(traf, pos); pos += 3;
+  const flags = be3toi(tfhd, cursor); cursor += 3;
+  const hasBaseDataOffset = (flags & 0x000001) > 0;
+  const hasSampleDescriptionIndex = (flags & 0x000002) > 0;
+  const hasDefaultSampleDuration = (flags & 0x000008) > 0;
 
-  const hasBaseDataOffset = flags & 0x000001;
-  const hasSampleDescriptionIndex = flags & 0x000002;
-  const hasDefaultSampleDuration = flags & 0x000008;
+  if (!hasDefaultSampleDuration) {
+    return undefined;
+  }
+  cursor += 4;
 
-  if (hasDefaultSampleDuration === 0) {
-    return -1;
+  if (hasBaseDataOffset) {
+    cursor += 8;
   }
 
-  pos += 4;
-
-  if (hasBaseDataOffset !== 0) {
-    pos += 8;
+  if (hasSampleDescriptionIndex) {
+    cursor += 4;
   }
 
-  if (hasSampleDescriptionIndex !== 0) {
-    pos += 4;
-  }
-
-  const defaultDuration = be4toi(traf, pos);
-
+  const defaultDuration = be4toi(tfhd, cursor);
   return defaultDuration;
 }
 
 /**
+ * Calculate segment duration approximation by additioning the duration from
+ * every samples in a trun ISOBMFF box.
+ *
+ * Returns `undefined` if we could not parse the duration.
  * @param {Uint8Array} buffer
- * @returns {number}
+ * @returns {number | undefined}
  */
-function getDurationFromTrun(buffer : Uint8Array) : number {
+function getDurationFromTrun(buffer : Uint8Array) : number | undefined {
   const traf = getTRAF(buffer);
   if (traf === null) {
-    return -1;
+    return undefined;
   }
 
-  const index = findBox(traf, 0x7472756E /* trun */);
-  if (index === -1) {
-    return -1;
+  const trun = getBoxContent(traf, 0x7472756E /* trun */);
+  if (trun === null) {
+    return undefined;
   }
-
-  let pos = index + /* size */4 + /* name */4;
-  const version = traf[pos]; pos += 1;
+  let cursor = 0;
+  const version = trun[cursor]; cursor += 1;
   if (version > 1) {
-    return -1;
+    return undefined;
   }
-  const flags = be3toi(traf, pos); pos += 3;
-  const hasSampleDuration = flags & 0x000100;
 
-  let defaultDuration = 0;
-  if (hasSampleDuration === 0) {
+  const flags = be3toi(trun, cursor); cursor += 3;
+  const hasSampleDuration = (flags & 0x000100) > 0;
+
+  let defaultDuration : number | undefined = 0;
+  if (!hasSampleDuration) {
     defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
-    if (defaultDuration < 0) {
-      return -1;
+    if (defaultDuration === undefined) {
+      return undefined;
     }
   }
 
-  const hasDataOffset = flags & 0x000001;
-  const hasFirstSampleFlags = flags & 0x000004;
-  const hasSampleSize = flags & 0x000200;
-  const hasSampleFlags = flags & 0x000400;
-  const hasSampleCompositionOffset = flags & 0x000800;
+  const hasDataOffset = (flags & 0x000001) > 0;
+  const hasFirstSampleFlags = (flags & 0x000004) > 0;
+  const hasSampleSize = (flags & 0x000200) > 0;
+  const hasSampleFlags = (flags & 0x000400) > 0;
+  const hasSampleCompositionOffset = (flags & 0x000800) > 0;
 
-  const sampleCounts = be4toi(traf, pos); pos += 4;
+  const sampleCounts = be4toi(trun, cursor); cursor += 4;
 
-  if (hasDataOffset !== 0) {
-    pos += 4;
+  if (hasDataOffset) {
+    cursor += 4;
   }
-
-  if (hasFirstSampleFlags !== 0) {
-    pos += 4;
+  if (hasFirstSampleFlags) {
+    cursor += 4;
   }
 
   let i = sampleCounts;
   let duration = 0;
   while (i-- > 0) {
-    if (hasSampleDuration !== 0) {
-      duration += be4toi(traf, pos);
-      pos += 4;
+    if (hasSampleDuration) {
+      duration += be4toi(trun, cursor);
+      cursor += 4;
     } else {
       duration += defaultDuration;
     }
-    if (hasSampleSize !== 0) {
-      pos += 4;
+    if (hasSampleSize) {
+      cursor += 4;
     }
-    if (hasSampleFlags !== 0) {
-      pos += 4;
+    if (hasSampleFlags) {
+      cursor += 4;
     }
-    if (hasSampleCompositionOffset !== 0) {
-      pos += 4;
+    if (hasSampleCompositionOffset) {
+      cursor += 4;
     }
   }
 
@@ -314,96 +291,122 @@ function getDurationFromTrun(buffer : Uint8Array) : number {
 }
 
 /**
- * Get various information from a movie header box. Found in init segments.
- * null if not found or not parsed.
+ * Get timescale information from a movie header box. Found in init segments.
+ * `undefined` if not found or not parsed.
  *
  * This timescale is the default timescale used for segments.
  * @param {Uint8Array} buffer
- * @returns {Number}
+ * @returns {Number | undefined}
  */
-function getMDHDTimescale(buffer : Uint8Array) : number {
+function getMDHDTimescale(buffer : Uint8Array) : number | undefined {
   const mdia = getMDIA(buffer);
   if (mdia === null) {
-    return -1;
+    return undefined;
   }
 
-  const index = findBox(mdia, 0x6D646864  /* "mdhd" */);
-  if (index === -1) {
-    return -1;
+  const mdhd = getBoxContent(mdia, 0x6D646864  /* "mdhd" */);
+  if (mdhd === null) {
+    return undefined;
   }
 
-  let pos = index + /* size */4 + /* name */4;
-
-  const version = mdia[pos]; pos += 4;
-  if (version === 1) {
-    pos += 16;
-    return be4toi(mdia, pos);
-  } else if (version === 0) {
-    pos += 8;
-    return be4toi(mdia, pos);
-  } else {
-    return -1;
-  }
+  let cursor = 0;
+  const version = mdhd[cursor]; cursor += 4;
+  return version === 1 ? be4toi(mdhd, cursor + 16) :
+         version === 0 ? be4toi(mdhd, cursor + 8) :
+                         undefined;
 }
 
 /**
- * Returns a PSSH box from a systemId and private data.
- * @param {Array.<Object>} pssList - The content protections under the form of
- * object containing two properties:
- *   - systemId {string}: The uuid code. Should only contain 32 hexadecimal
- *     numbers and hyphens
- *   - privateData {Uint8Array} private data associated.
+ * Creates a PSSH box with the given systemId and data.
+ * @param {Array.<Object>} psshInfo
  * @returns {Uint8Array}
  */
-function createPssh({ systemId, privateData } : IISOBMFFKeySystem) : Uint8Array {
+function createPssh({ systemId, privateData } : IISOBMFFPSSHInfo) : Uint8Array {
   const _systemId = systemId.replace(/-/g, "");
 
   assert(_systemId.length === 32);
-  return createBox("pssh", concat(
-    4, // 4 initial zeroed bytes
-    hexToBytes(_systemId),
-    itobe4(privateData.length),
-    privateData
-  ));
+  return createBox("pssh", concat(4, // 4 initial zeroed bytes
+                                  hexToBytes(_systemId),
+                                  itobe4(privateData.length),
+                                  privateData));
 }
 
 /**
  * Update ISOBMFF given to add a "pssh" box in the "moov" box for every content
- * protection in the pssList array given.
+ * protection in the psshList array given.
  * @param {Uint8Array} buf - the ISOBMFF file
- * @param {Array.<Object>} pssList - The content protections under the form of
- * objects containing two properties:
- *   - systemId {string}: The uuid code. Should only contain 32 hexadecimal
- *     numbers and hyphens
- *   - privateData {Uint8Array} private data associated.
+ * @param {Array.<Object>} psshList
  * @returns {Uint8Array} - The new ISOBMFF generated.
  */
-function patchPssh(buf : Uint8Array, pssList : IISOBMFFKeySystem[]) : Uint8Array {
-  if (pssList == null || pssList.length === 0) {
+function patchPssh(buf : Uint8Array, psshList : IISOBMFFPSSHInfo[]) : Uint8Array {
+  if (psshList == null || psshList.length === 0) {
     return buf;
   }
 
-  const pos = findBox(buf, 0x6D6F6F76 /* = "moov" */);
-  if (pos === -1) {
+  const moovOffsets = getBoxOffsets(buf, 0x6D6F6F76 /* = "moov" */);
+  if (moovOffsets === null) {
     return buf;
   }
 
-  const size = be4toi(buf, pos); // size of the "moov" box
-  const moov = buf.subarray(pos, pos + size);
-
+  const moov = buf.subarray(moovOffsets[0], moovOffsets[2]);
   const moovArr = [moov];
-  for (let i = 0; i < pssList.length; i++) {
-    moovArr.push(createPssh(pssList[i]));
+  for (let i = 0; i < psshList.length; i++) {
+    moovArr.push(createPssh(psshList[i]));
   }
+  const newmoov = updateBoxLength(concat(...moovArr));
 
-  const newmoov = concat(...moovArr);
-  newmoov.set(itobe4(newmoov.length), 0); // overwrite "moov" length
+  return concat(buf.subarray(0, moovOffsets[0]),
+                newmoov,
+                buf.subarray(moovOffsets[2]));
+}
 
-  return concat(
-    buf.subarray(0, pos),
-    newmoov,
-    buf.subarray(pos + size)
-  );
+/**
+ * Returns a new version of the given box with the size updated
+ * so it reflects its actual size.
+ *
+ * You can use this function after modifying a ISOBMFF box so its size is
+ * updated.
+ *
+ * /!\ Please consider that this function might mutate the given Uint8Array
+ * in place or might create a new one, depending on the current conditions.
+ * @param {Uint8Array} buf - The ISOBMFF box
+ * @returns {Uint8Array}
+ */
+function updateBoxLength(buf : Uint8Array) : Uint8Array {
+  const newLen = buf.length;
+  if (newLen < 4) {
+    throw new Error("Cannot update box length: box too short");
+  }
+  const oldSize = be4toi(buf, 0);
+  if (oldSize === 0) {
+    if (newLen > MAX_32_BIT_INT) {
+      const newBox = new Uint8Array(newLen + 8);
+      newBox.set(itobe4(1), 0);
+      newBox.set(buf.subarray(4, 8), 4);
+      newBox.set(itobe8(newLen + 8), 8);
+      newBox.set(buf.subarray(8, newLen), 16);
+      return newBox;
+    } else {
+      buf.set(itobe4(newLen), 0);
+      return buf;
+    }
+  } else if (oldSize === 1) {
+    if (newLen < 16) {
+      throw new Error("Cannot update box length: box too short");
+    }
+    buf.set(itobe8(newLen), 8);
+    return buf;
+  } else if (newLen <= MAX_32_BIT_INT) {
+    buf.set(itobe4(newLen), 0);
+    return buf;
+  } else {
+    const newBox = new Uint8Array(newLen + 8);
+    newBox.set(itobe4(1), 0);
+    newBox.set(buf.subarray(4, 8), 4);
+    newBox.set(itobe8(newLen + 8), 8);
+    newBox.set(buf.subarray(8, newLen), 16);
+    return newBox;
+  }
 }
 
 export {
@@ -413,4 +416,5 @@ export {
   getDurationFromTrun,
   getSegmentsFromSidx,
   patchPssh,
+  updateBoxLength,
 };

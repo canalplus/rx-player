@@ -52,12 +52,11 @@ export default function getISOBMFFTimingInfos(
     if (initTimescale === undefined) {
       return null;
     }
-    if (baseDecodeTime < 0) {
+    if (baseDecodeTime === undefined) {
       return null;
     }
     return { time: baseDecodeTime,
-             duration: trunDuration >= 0 ? trunDuration :
-                                           undefined,
+             duration: trunDuration,
              timescale: initTimescale };
   }
 
@@ -87,7 +86,7 @@ export default function getISOBMFFTimingInfos(
                         undefined;
   }
 
-  if (baseDecodeTime >= 0) {
+  if (baseDecodeTime !== undefined) {
     startTime = segment.timestampOffset !== undefined ?
                   baseDecodeTime + (segment.timestampOffset * timescale) :
                   baseDecodeTime;
@@ -95,7 +94,7 @@ export default function getISOBMFFTimingInfos(
     return null;
   }
 
-  if (trunDuration >= 0 &&
+  if (trunDuration !== undefined &&
       (
         segmentDuration === undefined ||
         Math.abs(trunDuration - segmentDuration) <= maxDecodeTimeDelta

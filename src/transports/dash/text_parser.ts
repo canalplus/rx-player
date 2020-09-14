@@ -85,8 +85,7 @@ function parseISOBMFFEmbeddedTextTrack(
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: null,
                                    segmentProtections: [],
-                                   initTimescale: mdhdTimescale > 0 ? mdhdTimescale :
-                                                                       undefined } });
+                                   initTimescale: mdhdTimescale } });
   }
   const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
                                            isChunked,

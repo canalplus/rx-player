@@ -21,8 +21,13 @@ import {
   getBoxOffsets,
 } from "./get_box";
 
-export interface IPSSHInfo { systemID : string;
-                             data : Uint8Array; }
+/** Information related to a PSSH box. */
+export interface IISOBMFFPSSHInfo {
+  /** Corresponding DRM's system ID, as an hexadecimal string. */
+  systemID : string;
+  /** Additional data contained in the PSSH Box. */
+  data : Uint8Array;
+}
 
 /**
  * Replace every PSSH box from an ISOBMFF segment by FREE boxes and returns the
@@ -33,30 +38,29 @@ export interface IPSSHInfo { systemID : string;
  * @returns {Array.<Uint8Array>} - The extracted PSSH boxes. In the order they
  * are encountered.
  */
-export default function takePSSHOut(data : Uint8Array) : IPSSHInfo[] {
+export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
   let i = 0;
   const moov = getBoxContent(data, 0x6D6F6F76 /* moov */);
   if (moov === null) {
     return [];
   }
 
-  const psshBoxes : IPSSHInfo[] = [];
+  const psshBoxes : IISOBMFFPSSHInfo[] = [];
   while (i < moov.length) {
-    let psshOffsets : [number, number]|null;
+    let psshOffsets;
     try {
       psshOffsets = getBoxOffsets(moov, 0x70737368 /* pssh */);
     } catch (e) {
-      log.warn(e);
+      log.warn("ISOBMFF:", e);
       return psshBoxes;
     }
     if (psshOffsets == null) {
       return psshBoxes;
     }
-    const pssh = moov.slice(psshOffsets[0], psshOffsets[1]);
-    const systemID = getSystemID(pssh);
+    const pssh = moov.slice(psshOffsets[0], psshOffsets[2]);
+    const systemID = getSystemID(pssh, psshOffsets[1] - psshOffsets[0]);
     if (systemID !== null) {
-      psshBoxes.push({ systemID,
-                       data: pssh });
+      psshBoxes.push({ systemID, data: pssh });
     }
 
     // replace by `free` box.
@@ -64,23 +68,27 @@ export default function takePSSHOut(data : Uint8Array) : IPSSHInfo[] {
     moov[psshOffsets[0] + 5] = 0x72;
     moov[psshOffsets[0] + 6] = 0x65;
     moov[psshOffsets[0] + 7] = 0x65;
-    i = psshOffsets[1];
+    i = psshOffsets[2];
   }
   return psshBoxes;
 }
 
 /**
- * @param {Uint8Array} buff
- * @param {number} psshOffset
+ * Parse systemID from a "pssh" box into an hexadecimal string.
+ * @param {Uint8Array} buff - The pssh box
+ * @param {number} initialDataOffset - offset of the first byte after the size
+ * and name in this pssh box.
  * @returns {string|null}
  */
-function getSystemID(buff : Uint8Array) : string|null {
-  if (buff[9] > 1) {
+function getSystemID(
+  buff : Uint8Array,
+  initialDataOffset : number
+) : string|null {
+  if (buff[initialDataOffset] > 1) {
     log.warn("ISOBMFF: un-handled PSSH version");
     return null;
   }
-  const offset = 4 + /* length */
-                 4 + /* box name */
+  const offset = initialDataOffset +
                  4; /* version + flags */
   if (offset + 16 > buff.length) {
     return null;

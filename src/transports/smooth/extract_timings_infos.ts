@@ -111,7 +111,7 @@ export default function extractTimingsInfos(
                                       segment.duration / 4);
 
   const trunDuration = getDurationFromTrun(data);
-  if (trunDuration >= 0 && (isNullOrUndefined(segment.duration) ||
+  if (trunDuration !== undefined && (isNullOrUndefined(segment.duration) ||
       Math.abs(trunDuration - segment.duration) <= maxDecodeTimeDelta)
   ) {
     chunkInfos = { time: segment.time,
