@@ -26,16 +26,6 @@ import QueuedSourceBuffer, {
   IBufferType,
 } from "./queued_source_buffer";
 
-type TypedArray = Int8Array |
-                  Int16Array |
-                  Int32Array |
-                  Uint8Array |
-                  Uint16Array |
-                  Uint32Array |
-                  Uint8ClampedArray |
-                  Float32Array |
-                  Float64Array;
-
 const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
                                                 "video",
                                                 "text",
@@ -107,17 +97,9 @@ export default class SourceBuffersStore {
    * won't be needed when playing the current content.
    */
   private _initializedSourceBuffers : {
-    audio? : QueuedSourceBuffer<ArrayBuffer |
-                                ArrayBufferView |
-                                TypedArray |
-                                DataView |
-                                null> |
+    audio? : QueuedSourceBuffer<BufferSource | null> |
              null;
-    video? : QueuedSourceBuffer<ArrayBuffer |
-                                ArrayBufferView |
-                                TypedArray |
-                                DataView |
-                                null> |
+    video? : QueuedSourceBuffer<BufferSource | null> |
               null;
     text? : QueuedSourceBuffer<unknown> |
             null;
@@ -410,7 +392,7 @@ function createNativeQueuedSourceBuffer(
   bufferType : IBufferType,
   mediaSource : MediaSource,
   codec : string
-) : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null> {
+) : QueuedSourceBuffer<BufferSource | null> {
   const sourceBuffer = mediaSource.addSourceBuffer(codec);
   return new QueuedSourceBuffer(bufferType, codec, sourceBuffer);
 }

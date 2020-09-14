@@ -18,8 +18,8 @@ import {
   concat,
   itobe4,
   itobe8,
-  strToBytes,
 } from "../../../utils/byte_parsing";
+import { strToUtf8 } from "../../../utils/string_parsing";
 import { MAX_32_BIT_INT } from "./constants";
 
 /**
@@ -45,7 +45,7 @@ function boxName(str : string) : Uint8Array {
     return boxNamesMem[str];
   }
 
-  const nameInBytes = strToBytes(str);
+  const nameInBytes = strToUtf8(str);
   boxNamesMem[str] = nameInBytes;
   return nameInBytes;
 }

@@ -25,13 +25,13 @@ import {
   base64ToBytes,
   bytesToBase64,
 } from "../../../../utils/base64";
-import {
-  bytesToStr,
-  strToBytes,
-} from "../../../../utils/byte_parsing";
 import castToObservable from "../../../../utils/cast_to_observable";
 import EventEmitter, { fromEvent } from "../../../../utils/event_emitter";
 import flatMap from "../../../../utils/flat_map";
+import {
+  strToUtf8,
+  utf8ToStr,
+} from "../../../../utils/string_parsing";
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
 export const defaultKSConfig = [{
@@ -395,7 +395,7 @@ export function expectEncryptedEventReceived(
 export function extrackInfoFromFakeChallenge(
   challenge : Uint8Array
 ) : { initData : Uint8Array; initDataType : string } {
-  const licenseData = JSON.stringify(bytesToStr(challenge));
+  const licenseData = JSON.stringify(utf8ToStr(challenge));
   const initData = base64ToBytes(licenseData[1]);
   return { initData, initDataType: licenseData[0] };
 }
@@ -412,5 +412,5 @@ export function formatFakeChallengeFromInitData(
   const initDataAB = initData instanceof ArrayBuffer ? initData :
                                                        initData.buffer;
   const objChallenge = [initDataType, bytesToBase64(new Uint8Array(initDataAB))];
-  return strToBytes(JSON.stringify(objChallenge));
+  return strToUtf8(JSON.stringify(objChallenge));
 }

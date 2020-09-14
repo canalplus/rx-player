@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import { concat } from "../../../utils/byte_parsing";
 import {
-  concat,
   hexToBytes,
-  strToBytes,
-} from "../../../utils/byte_parsing";
+  strToUtf8,
+} from "../../../utils/string_parsing";
 import { getPlayReadyKIDFromPrivateData } from "../../containers/isobmff";
 
 export interface IKeySystem { systemId : string;
@@ -51,8 +51,9 @@ export default function parseProtectionNode(
     throw new Error("Protection should have ProtectionHeader child");
   }
   const header = protectionNode.firstElementChild;
-  const privateData = strToBytes(atob(header.textContent === null ? "" :
-                                                                    header.textContent));
+  const privateData = strToUtf8(
+    atob(header.textContent === null ? "" :
+                                       header.textContent));
   const keyIdHex = getPlayReadyKIDFromPrivateData(privateData);
   const keyIdBytes = hexToBytes(keyIdHex);
 

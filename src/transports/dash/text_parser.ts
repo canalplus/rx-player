@@ -20,9 +20,9 @@ import {
   getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
 import {
-  bytesToStr,
-  strToBytes,
-} from "../../utils/byte_parsing";
+  strToUtf8,
+  utf8ToStr,
+} from "../../utils/string_parsing";
 import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserArguments,
@@ -53,7 +53,7 @@ function parseISOBMFFEmbeddedTextTrack(
   const { isInit, indexRange } = segment;
   const { data, isChunked } = response;
 
-  const chunkBytes = typeof data === "string" ? strToBytes(data) :
+  const chunkBytes = typeof data === "string"   ? strToUtf8(data) :
                      data instanceof Uint8Array ? data :
                                                   new Uint8Array(data);
   if (isInit) {
@@ -128,7 +128,7 @@ function parsePlainTextTrack(
   if (typeof data !== "string") {
     const bytesData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
-    textTrackData = bytesToStr(bytesData);
+    textTrackData = utf8ToStr(bytesData);
   } else {
     textTrackData = data;
   }

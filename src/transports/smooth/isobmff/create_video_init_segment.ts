@@ -15,7 +15,7 @@
  */
 
 import { createBoxWithChildren } from "../../../parsers/containers/isobmff";
-import { hexToBytes } from "../../../utils/byte_parsing";
+import { hexToBytes } from "../../../utils/string_parsing";
 import {
   createAVC1Box,
   createAVCCBox,

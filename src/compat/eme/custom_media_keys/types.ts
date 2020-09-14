@@ -49,31 +49,11 @@ export interface ICustomMediaKeyStatusMap {
   readonly size: number;
   forEach(callback: (status : MediaKeyStatus) => void, thisArg?: any): void;
   get(
-    keyId: Int8Array |
-           Int16Array |
-           Int32Array |
-           Uint8Array |
-           Uint16Array |
-           Uint32Array |
-           Uint8ClampedArray |
-           Float32Array |
-           Float64Array |
-           DataView |
-           ArrayBuffer |
+    keyId: BufferSource |
            null
   ) : MediaKeyStatus|undefined;
   has(
-    keyId: Int8Array |
-           Int16Array |
-           Int32Array |
-           Uint8Array |
-           Uint16Array |
-           Uint32Array |
-           Uint8ClampedArray |
-           Float32Array |
-           Float64Array |
-           DataView |
-           ArrayBuffer |
+    keyId: BufferSource |
            null
     ) : boolean;
 }

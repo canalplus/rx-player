@@ -15,7 +15,7 @@
  */
 
 import log from "../../../../log";
-import { hexToBytes } from "../../../../utils/byte_parsing";
+import { hexToBytes } from "../../../../utils/string_parsing";
 import { parseBase64 } from "./utils";
 
 export interface IParsedContentProtection {

@@ -21,7 +21,7 @@ import {
   Representation,
 } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
-import stringFromUTF8 from "../../utils/string_from_utf8";
+import { utf8ToStr } from "../../utils/string_parsing";
 import {
   IChunkTimeInfo,
   ITextTrackSegmentData,
@@ -33,7 +33,9 @@ import {
  * @returns {string}
  */
 export function extractTextTrackFromISOBMFF(chunkBytes : Uint8Array) : string {
-  return stringFromUTF8(getMDAT(chunkBytes));
+  const mdat = getMDAT(chunkBytes);
+  return mdat === null ? "" :
+                         utf8ToStr(mdat);
 }
 
 /**

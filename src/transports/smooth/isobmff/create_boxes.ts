@@ -19,12 +19,14 @@ import {
   be2toi,
   be4toi,
   concat,
-  hexToBytes,
   itobe2,
   itobe4,
   itobe8,
-  strToBytes,
 } from "../../../utils/byte_parsing";
+import {
+  hexToBytes,
+  strToUtf8,
+} from "../../../utils/string_parsing";
 
 /**
  * @param {Number} width
@@ -46,18 +48,18 @@ function createAVC1Box(
   avcc : Uint8Array
 ) : Uint8Array {
   return createBox("avc1", concat(
-    6,                      // 6 bytes reserved
-    itobe2(1), 16,          // drefIdx + QuickTime reserved, zeroes
-    itobe2(width),          // size 2 w
-    itobe2(height),         // size 2 h
-    itobe2(hRes), 2,        // reso 4 h
-    itobe2(vRes), 2 + 4,    // reso 4 v + QuickTime reserved, zeroes
-    [0, 1, encName.length], // frame count (default 1)
-    strToBytes(encName),    // 1byte len + encoder name str
-    (31 - encName.length),  // + padding
-    itobe2(colorDepth),     // color depth
-    [0xFF, 0xFF],           // reserved ones
-    avcc                    // avcc atom,
+    6,                       // 6 bytes reserved
+    itobe2(1), 16,           // drefIdx + QuickTime reserved, zeroes
+    itobe2(width),           // size 2 w
+    itobe2(height),          // size 2 h
+    itobe2(hRes), 2,         // reso 4 h
+    itobe2(vRes), 2 + 4,     // reso 4 v + QuickTime reserved, zeroes
+    [0, 1, encName.length],  // frame count (default 1)
+    strToUtf8(encName),      // 1byte len + encoder name str
+    (31 - encName.length),   // + padding
+    itobe2(colorDepth),      // color depth
+    [0xFF, 0xFF],            // reserved ones
+    avcc                     // avcc atom,
   ));
 }
 
@@ -83,18 +85,18 @@ function createENCVBox(
   sinf : Uint8Array
 ) : Uint8Array {
   return createBox("encv", concat(
-    6,                      // 6 bytes reserved
-    itobe2(1), 16,          // drefIdx + QuickTime reserved, zeroes
-    itobe2(width),          // size 2 w
-    itobe2(height),         // size 2 h
-    itobe2(hRes), 2,        // reso 4 h
-    itobe2(vRes), 2 + 4,    // reso 4 v + QuickTime reserved, zeroes
-    [0, 1, encName.length], // frame count (default 1)
-    strToBytes(encName),    // 1byte len + encoder name str
-    (31 - encName.length),  // + padding
-    itobe2(colorDepth),     // color depth
-    [0xFF, 0xFF],           // reserved ones
-    avcc,                   // avcc atom,
+    6,                       // 6 bytes reserved
+    itobe2(1), 16,           // drefIdx + QuickTime reserved, zeroes
+    itobe2(width),           // size 2 w
+    itobe2(height),          // size 2 h
+    itobe2(hRes), 2,         // reso 4 h
+    itobe2(vRes), 2 + 4,     // reso 4 v + QuickTime reserved, zeroes
+    [0, 1, encName.length],  // frame count (default 1)
+    strToUtf8(encName),      // 1byte len + encoder name str
+    (31 - encName.length),   // + padding
+    itobe2(colorDepth),      // color depth
+    [0xFF, 0xFF],            // reserved ones
+    avcc,                    // avcc atom,
     sinf
   ));
 }
@@ -177,9 +179,9 @@ function createDREFBox(url : Uint8Array) : Uint8Array {
  */
 function createFTYPBox(majorBrand : string, brands : string[]) : Uint8Array {
   return createBox("ftyp", concat.apply(null, [
-    strToBytes(majorBrand),
+    strToUtf8(majorBrand),
     [0, 0, 0, 1],
-  ].concat(brands.map(strToBytes))));
+  ].concat(brands.map(strToUtf8))));
 }
 
 /**
@@ -188,7 +190,7 @@ function createFTYPBox(majorBrand : string, brands : string[]) : Uint8Array {
  * @returns {Uint8Array}
  */
 function createSCHMBox(schemeType : string, schemeVersion : number) : Uint8Array {
-  return createBox("schm", concat(4, strToBytes(schemeType), itobe4(schemeVersion)));
+  return createBox("schm", concat(4, strToUtf8(schemeType), itobe4(schemeVersion)));
 }
 
 /**
@@ -248,7 +250,7 @@ function createESDSBox(stream : number, codecPrivateData : string) : Uint8Array 
  * @returns {Uint8Array}
  */
 function createFRMABox(dataFormat : string) : Uint8Array {
-  return createBox("frma", strToBytes(dataFormat));
+  return createBox("frma", strToUtf8(dataFormat));
 }
 
 /**
@@ -312,8 +314,8 @@ function createHDLRBox(type : "audio"|"video"|"hint") : Uint8Array {
 
   return createBox("hdlr", concat(
     8,
-    strToBytes(name), 12,
-    strToBytes(handlerName),
+    strToUtf8(name), 12,
+    strToUtf8(handlerName),
     1 // handler name is C-style string (0 terminated)
   ));
 }

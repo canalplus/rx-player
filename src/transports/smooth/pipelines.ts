@@ -33,13 +33,12 @@ import {
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
-import {
-  bytesToStr,
-  strToBytes,
-} from "../../utils/byte_parsing";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import request from "../../utils/request";
-import stringFromUTF8 from "../../utils/string_from_utf8";
+import {
+  strToUtf8,
+  utf8ToStr,
+} from "../../utils/string_parsing";
 import warnOnce from "../../utils/warn_once";
 import {
   IAudioVideoParserObservable,
@@ -292,7 +291,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       if (isMP4) {
         let chunkBytes : Uint8Array;
         if (typeof data === "string") {
-          chunkBytes = strToBytes(data);
+          chunkBytes = strToUtf8(data);
         } else {
           chunkBytes = data instanceof Uint8Array ? data :
             new Uint8Array(data);
@@ -333,13 +332,14 @@ export default function(options : ITransportOptions) : ITransportPipelines {
             `could not find a text-track parser for the type ${mimeType}`);
         }
         const mdat = getMDAT(chunkBytes);
-        _sdData = stringFromUTF8(mdat);
+        _sdData = mdat === null ? "" :
+                                  utf8ToStr(mdat);
       } else {
         let chunkString : string;
         if (typeof data !== "string") {
           const bytesData = data instanceof Uint8Array ? data :
                                                          new Uint8Array(data);
-          chunkString = bytesToStr(bytesData);
+          chunkString = utf8ToStr(bytesData);
         } else {
           chunkString = data;
         }

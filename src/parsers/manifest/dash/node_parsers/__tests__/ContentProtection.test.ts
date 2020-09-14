@@ -67,7 +67,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
     const hexToBytesSpy = jest.fn().mockImplementation(() => {
       return keyId;
     });
-    jest.mock("../../../../../utils/byte_parsing", () => ({
+    jest.mock("../../../../../utils/string_parsing", () => ({
       hexToBytes: hexToBytesSpy,
     }));
     const parseContentProtection = require("../ContentProtection").default;
@@ -100,7 +100,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
     const hexToBytesSpy = jest.fn().mockImplementation(() => {
       return keyId;
     });
-    jest.mock("../../../../../utils/byte_parsing", () => ({
+    jest.mock("../../../../../utils/string_parsing", () => ({
       hexToBytes: hexToBytesSpy,
     }));
     const parseContentProtection = require("../ContentProtection").default;
@@ -159,7 +159,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
     const hexToBytesSpy = jest.fn().mockImplementation(() => {
       return keyId;
     });
-    jest.mock("../../../../../utils/byte_parsing", () => ({
+    jest.mock("../../../../../utils/string_parsing", () => ({
       hexToBytes: hexToBytesSpy,
     }));
     const parseContentProtection = require("../ContentProtection").default;

@@ -20,10 +20,10 @@
  */
 
 import {
-  bytesToStr,
   le2toi,
   le4toi,
 } from "../../utils/byte_parsing";
+import { utf8ToStr } from "../../utils/string_parsing";
 
 export interface IBifThumbnail { index : number;
                                  duration : number;
@@ -50,8 +50,9 @@ function parseBif(buf : Uint8Array) : IBifObject {
   let pos = 0;
 
   const length = buf.length;
-  const fileFormat = bytesToStr(buf.subarray(pos, pos + 8));   pos += 8;
-  if (fileFormat !== "\u0089BIF\r\n\u001a\n") {
+
+  const fileFormat = utf8ToStr(buf.subarray(pos + 1, pos + 8)); pos += 8;
+  if (buf[0] !== 0x89 || fileFormat !== "BIF\r\n\u001a\n") {
     throw new Error("Invalid BIF file");
   }
 
@@ -69,7 +70,7 @@ function parseBif(buf : Uint8Array) : IBifObject {
   const imageCount = le4toi(buf, pos); pos += 4;
   const framewiseSeparation = le4toi(buf, pos); pos += 4;
 
-  const format = bytesToStr(buf.subarray(pos, pos + 4)); pos += 4;
+  const format = utf8ToStr(buf.subarray(pos, pos + 4)); pos += 4;
 
   const width = le2toi(buf, pos); pos += 2;
   const height = le2toi(buf, pos); pos += 2;

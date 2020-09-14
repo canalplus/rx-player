@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import { bytesToHex } from "../../../utils/byte_parsing";
+import { bytesToHex } from "../../../utils/string_parsing";
 import {
   getBoxContent,
   getBoxOffsets,
