@@ -98,7 +98,7 @@ export default class SegmentFetcherCreator<T> {
 
   /**
    * Create a segment fetcher, allowing to easily perform segment requests.
-   * @param {string} bufferType - The type of buffer wanted (e.g. "audio",
+   * @param {string} bufferType - The type of buffer concerned (e.g. "audio",
    * "video", etc.)
    * @param {Subject} requests$ - Subject through which request-related events
    * (such as those needed by the ABRManager) will be sent.

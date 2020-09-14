@@ -32,7 +32,7 @@ import {
   QueuedSourceBuffer,
 } from "../../source_buffers";
 import EVENTS from "../events_generators";
-import { IBufferEventAddedSegment } from "../types";
+import { IStreamEventAddedSegment } from "../types";
 import appendSegmentToSourceBuffer from "./append_segment_to_source_buffer";
 
 /**
@@ -56,7 +56,7 @@ export default function pushInitSegment<T>(
                              segmentData : T | null;
                              segment : ISegment;
                              queuedSourceBuffer : QueuedSourceBuffer<T>; }
-) : Observable< IBufferEventAddedSegment<T> > {
+) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (segmentData === null) {
       return EMPTY;

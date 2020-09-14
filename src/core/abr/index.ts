@@ -20,7 +20,7 @@ import ABRManager, {
 } from "./abr_manager";
 export {
   IABRAddedSegmentEvent,
-  IABRBufferEvents,
+  IABRStreamEvents,
   IABREstimate,
   IABRMetricsEvent,
   IABRRepresentationChangeEvent,

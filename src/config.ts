@@ -340,7 +340,7 @@ export default {
    * directfile API.
    *
    * Those events are the base of various important mechanisms in the player:
-   *   - set the clock for the buffer.
+   *   - set the clock used to regularly check which segments should be loaded
    *   - set the clock for the ABR strategy.
    *   - used to trigger positionUpdate events.
    *

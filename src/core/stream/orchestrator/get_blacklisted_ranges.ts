@@ -50,7 +50,7 @@ export default function getBlacklistedRanges(
     if (hasContent) {
       const { bufferedStart, bufferedEnd } = chunk;
       if (bufferedStart === undefined || bufferedEnd === undefined) {
-        log.warn("BO: No buffered start or end found from a segment.");
+        log.warn("SO: No buffered start or end found from a segment.");
         const buffered = queuedSourceBuffer.getBufferedRanges();
         const len = buffered.length;
         if (len === 0) {

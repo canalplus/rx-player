@@ -15,12 +15,12 @@
  */
 
 /**
- * This file allows to create `AdaptationBuffer`s.
+ * This file allows to create `AdaptationStream`s.
  *
- * An `AdaptationBuffer` downloads and push segment for a single Adaptation
+ * An `AdaptationStream` downloads and push segment for a single Adaptation
  * (e.g.  a single audio, video or text track).
  * It chooses which Representation to download mainly thanks to the
- * ABRManager, and orchestrates a RepresentationBuffer, which will download and
+ * ABRManager, and orchestrates a RepresentationStream, which will download and
  * push segments corresponding to a chosen Representation.
  */
 
@@ -68,23 +68,23 @@ import ABRManager, {
 import { SegmentFetcherCreator } from "../../fetchers";
 import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
-import RepresentationBuffer, {
-  IRepresentationBufferClockTick,
+import RepresentationStream, {
+  IRepresentationStreamClockTick,
   ITerminationOrder,
 } from "../representation";
 import {
-  IAdaptationBufferEvent,
-  IBufferEventAddedSegment,
-  IBufferNeedsDiscontinuitySeek,
-  IBufferNeedsManifestRefresh,
-  IBufferStateActive,
-  IBufferStateFull,
-  IRepresentationBufferEvent,
+  IAdaptationStreamEvent,
   IRepresentationChangeEvent,
+  IRepresentationStreamEvent,
+  IStreamEventAddedSegment,
+  IStreamNeedsDiscontinuitySeek,
+  IStreamNeedsManifestRefresh,
+  IStreamStateActive,
+  IStreamStateFull,
 } from "../types";
 
-/** `Clock tick` information needed by the AdaptationBuffer. */
-export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTick {
+/** `Clock tick` information needed by the AdaptationStream. */
+export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTick {
   /**
    * For the current SourceBuffer, difference in seconds between the next position
    * where no segment data is available and the current position.
@@ -98,8 +98,8 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
   speed : number;
 }
 
-/** Arguments given when creating a new `AdaptationBuffer`. */
-export interface IAdaptationBufferArguments<T> {
+/** Arguments given when creating a new `AdaptationStream`. */
+export interface IAdaptationStreamArguments<T> {
   /**
    * Module allowing to find the best Representation depending on the current
    * conditions like the current network bandwidth.
@@ -107,10 +107,10 @@ export interface IAdaptationBufferArguments<T> {
   abrManager : ABRManager;
   /**
    * Regularly emit playback conditions.
-   * The main AdaptationBuffer logic will be triggered on each `tick`.
+   * The main AdaptationStream logic will be triggered on each `tick`.
    */
-  clock$ : Observable<IAdaptationBufferClockTick>;
-  /** Content you want to create this buffer for. */
+  clock$ : Observable<IAdaptationStreamClockTick>;
+  /** Content you want to create this Stream for. */
   content : { manifest : Manifest;
               period : Period;
               adaptation : Adaptation; };
@@ -130,13 +130,13 @@ export interface IAdaptationBufferArguments<T> {
   /**
    * "Buffer goal" wanted, or the ideal amount of time ahead of the current
    * position in the current SourceBuffer. When this amount has been reached
-   * this AdaptationBuffer won't try to download new segments.
+   * this AdaptationStream won't try to download new segments.
    */
   wantedBufferAhead$ : BehaviorSubject<number>;
 }
 
 /**
- * Create new AdaptationBuffer Observable, which task will be to download the
+ * Create new AdaptationStream Observable, which task will be to download the
  * media data for a given Adaptation (i.e. "track").
  *
  * It will rely on the ABRManager to choose at any time the best Representation
@@ -149,7 +149,7 @@ export interface IAdaptationBufferArguments<T> {
  * @param {Object} args
  * @returns {Observable}
  */
-export default function AdaptationBuffer<T>({
+export default function AdaptationStream<T>({
   abrManager,
   clock$,
   content,
@@ -157,7 +157,7 @@ export default function AdaptationBuffer<T>({
   queuedSourceBuffer,
   segmentFetcherCreator,
   wantedBufferAhead$,
-} : IAdaptationBufferArguments<T>) : Observable<IAdaptationBufferEvent<T>> {
+} : IAdaptationStreamArguments<T>) : Observable<IAdaptationStreamEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
 
@@ -171,17 +171,17 @@ export default function AdaptationBuffer<T>({
    */
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
-  /** Emit when the current RepresentationBuffer should terminate itself. */
-  const terminateCurrentBuffer$ = new Subject<ITerminationOrder>();
+  /** Emit when the current RepresentationStream should terminate itself. */
+  const terminateCurrentStream$ = new Subject<ITerminationOrder>();
 
   // use ABRManager for choosing the Representation
-  const bufferEvents$ = new Subject<IBufferEventAddedSegment<T> |
+  const streamEvents$ = new Subject<IStreamEventAddedSegment<T> |
                                     IRepresentationChangeEvent>();
   const requestsEvents$ = new Subject<IABRMetricsEvent |
                                       IABRRequestBeginEvent |
                                       IABRRequestProgressEvent |
                                       IABRRequestEndEvent>();
-  const abrEvents$ = observableMerge(bufferEvents$, requestsEvents$);
+  const abrEvents$ = observableMerge(streamEvents$, requestsEvents$);
 
   const playableRepresentations = adaptation.getPlayableRepresentations();
 
@@ -216,7 +216,7 @@ export default function AdaptationBuffer<T>({
     filter(({ bitrate }) => bitrate != null),
     distinctUntilChanged((old, current) => old.bitrate === current.bitrate),
     map(({ bitrate }) => {
-      log.debug(`Buffer: new ${adaptation.type} bitrate estimate`, bitrate);
+      log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
       return EVENTS.bitrateEstimationChange(adaptation.type, bitrate);
     })
   );
@@ -225,9 +225,9 @@ export default function AdaptationBuffer<T>({
     .pipe(distinctUntilChanged((a, b) => a.manual === b.manual &&
                                          a.representation.id === b.representation.id));
 
-  const adaptationBuffer$ = observableMerge(
+  const adaptationStream$ = observableMerge(
     newRepresentation$
-      .pipe(concatMapLatest((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
+      .pipe(concatMapLatest((estimate, i) : Observable<IAdaptationStreamEvent<T>> => {
         const { representation } = estimate;
 
         // A manual bitrate switch might need an immediate feedback.
@@ -242,12 +242,12 @@ export default function AdaptationBuffer<T>({
                                                    representation));
 
         return observableConcat(representationChange$,
-                                createRepresentationBuffer(representation))
+                                createRepresentationStream(representation))
           .pipe(tap((evt) : void => {
             if (evt.type === "representationChange" ||
                 evt.type === "added-segment")
             {
-              return bufferEvents$.next(evt);
+              return streamEvents$.next(evt);
             }
           }));
       })),
@@ -255,30 +255,30 @@ export default function AdaptationBuffer<T>({
     // NOTE: This operator was put in a merge on purpose. It's a "clever"
     // hack to allow it to be called just *AFTER* the concatMapLatest one.
     newRepresentation$.pipe(map((estimate, i) => {
-      if (i === 0) { // Initial run == no Buffer pending. We have nothing to do:
+      if (i === 0) { // Initial run == no Stream pending. We have nothing to do:
         return;      // The one just created will be launched right away.
       }
       if (estimate.urgent) {
-        log.info("Buffer: urgent Representation switch", adaptation.type);
-        terminateCurrentBuffer$.next({ urgent: true });
+        log.info("Stream: urgent Representation switch", adaptation.type);
+        terminateCurrentStream$.next({ urgent: true });
       } else {
-        log.info("Buffer: slow Representation switch", adaptation.type);
-        terminateCurrentBuffer$.next({ urgent: false });
+        log.info("Stream: slow Representation switch", adaptation.type);
+        terminateCurrentStream$.next({ urgent: false });
       }
     }), ignoreElements())
   );
 
-  return observableMerge(adaptationBuffer$, bitrateEstimates$);
+  return observableMerge(adaptationStream$, bitrateEstimates$);
 
   /**
-   * Create and returns a new RepresentationBuffer Observable, linked to the
+   * Create and returns a new RepresentationStream Observable, linked to the
    * given Representation.
    * @param {Representation} representation
    * @returns {Observable}
    */
-  function createRepresentationBuffer(
+  function createRepresentationStream(
     representation : Representation
-  ) : Observable<IRepresentationBufferEvent<T>> {
+  ) : Observable<IRepresentationStreamEvent<T>> {
     return observableDefer(() => {
       const oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
       const bufferGoalRatio = oldBufferGoalRatio != null ? oldBufferGoalRatio :
@@ -289,21 +289,21 @@ export default function AdaptationBuffer<T>({
         map((wba) => wba * bufferGoalRatio)
       );
 
-      log.info("Buffer: changing representation", adaptation.type, representation);
-      return RepresentationBuffer({ clock$,
+      log.info("Stream: changing representation", adaptation.type, representation);
+      return RepresentationStream({ clock$,
                                     content: { representation,
                                                adaptation,
                                                period,
                                                manifest },
                                     queuedSourceBuffer,
                                     segmentFetcher,
-                                    terminate$: terminateCurrentBuffer$,
+                                    terminate$: terminateCurrentStream$,
                                     bufferGoal$,
                                     knownStableBitrate$ })
         .pipe(catchError((err : unknown) => {
           const formattedError = formatError(err, {
             defaultCode: "NONE",
-            defaultReason: "Unknown `RepresentationBuffer` error",
+            defaultReason: "Unknown `RepresentationStream` error",
           });
           if (formattedError.code === "BUFFER_FULL_ERROR") {
             const wantedBufferAhead = wantedBufferAhead$.getValue();
@@ -314,7 +314,7 @@ export default function AdaptationBuffer<T>({
               throw formattedError;
             }
             bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
-            return createRepresentationBuffer(representation);
+            return createRepresentationStream(representation);
           }
           throw formattedError;
         }));
@@ -322,11 +322,11 @@ export default function AdaptationBuffer<T>({
   }
 }
 
-// Re-export RepresentationBuffer events used by the AdaptationBuffer
+// Re-export RepresentationStream events used by the AdaptationStream
 export {
-  IBufferEventAddedSegment,
-  IBufferNeedsDiscontinuitySeek,
-  IBufferNeedsManifestRefresh,
-  IBufferStateActive,
-  IBufferStateFull,
+  IStreamEventAddedSegment,
+  IStreamNeedsDiscontinuitySeek,
+  IStreamNeedsManifestRefresh,
+  IStreamStateActive,
+  IStreamStateFull,
 };

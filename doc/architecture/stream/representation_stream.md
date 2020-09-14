@@ -1,16 +1,16 @@
-# RepresentationBuffer #########################################################
+# RepresentationStream #########################################################
 
 
 ## Overview ####################################################################
 
-The RepresentationBuffer download and push segments linked to a given
+The RepresentationStream download and push segments linked to a given
 Representation.
 
 It constructs a list of segments to download, which depend on the current timing
 values and parameters.
 It then download and push them to a linked SourceBuffer.
 
-Multiple RepresentationBuffer observables can be ran on the same
+Multiple RepresentationStream observables can be ran on the same
 SourceBuffer without problems. This allows for example smooth transitions
 between multiple periods.
 
@@ -18,18 +18,18 @@ between multiple periods.
 
 ## Return value ################################################################
 
-The RepresentationBuffer returns an Observable which emits multiple
+The RepresentationStream returns an Observable which emits multiple
 notifications depending on what is happening at its core.
 
 Such events tells us when:
 
   - Segments are being scheduled for download
 
-  - The RepresentationBuffer has no segment left for download
+  - The RepresentationStream has no segment left for download
 
-  - The RepresentationBuffer appended a new Segment to the SourceBuffer
+  - The RepresentationStream appended a new Segment to the SourceBuffer
 
-  - The Manifest should be refreshed to allow the RepresentationBuffer to
+  - The Manifest should be refreshed to allow the RepresentationStream to
     download future-needed segments.
 
   - A discontinuity is currently encountered
@@ -38,7 +38,7 @@ Such events tells us when:
 
 ## Queue Algorithm #############################################################
 
-The RepresentationBuffer depends on a central algorithm to make sure that the
+The RepresentationStream depends on a central algorithm to make sure that the
 right segments are scheduled for download at any time.
 
 This algorithm constructs a queue of segments to download at any time, and

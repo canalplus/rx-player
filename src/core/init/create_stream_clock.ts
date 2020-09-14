@@ -25,10 +25,10 @@ import {
   tap,
 } from "rxjs/operators";
 import Manifest from "../../manifest";
-import { IBufferOrchestratorClockTick } from "../buffers";
+import { IStreamOrchestratorClockTick } from "../stream";
 import { IInitClockTick } from "./types";
 
-export interface IBufferClockArguments {
+export interface IStreamClockArguments {
   autoPlay : boolean; // If true, the player will auto-play when initialPlay$ emits
   initialPlay$ : Observable<unknown>; // The initial play has been done
   initialSeek$ : Observable<unknown>; // The initial seek has been done
@@ -38,20 +38,20 @@ export interface IBufferClockArguments {
 }
 
 /**
- * Create clock Observable for the Buffers part of the code.
+ * Create clock Observable for the `Stream` part of the code.
  * @param {Observable} initClock$
- * @param {Object} bufferClockArgument
+ * @param {Object} streamClockArgument
  * @returns {Observable}
  */
-export default function createBufferClock(
+export default function createStreamClock(
   initClock$ : Observable<IInitClockTick>,
   { autoPlay,
     initialPlay$,
     initialSeek$,
     manifest,
     speed$,
-    startTime } : IBufferClockArguments
-) : Observable<IBufferOrchestratorClockTick> {
+    startTime } : IStreamClockArguments
+) : Observable<IStreamOrchestratorClockTick> {
   let initialPlayPerformed = false;
   let initialSeekPerformed = false;
 
@@ -63,7 +63,7 @@ export default function createBufferClock(
     tap(() => { initialSeekPerformed = true; }),
     ignoreElements());
 
-  const clock$ : Observable<IBufferOrchestratorClockTick> =
+  const clock$ : Observable<IStreamOrchestratorClockTick> =
     observableCombineLatest([initClock$, speed$])
       .pipe(map(([tick, speed]) => {
         const { isLive } = manifest;

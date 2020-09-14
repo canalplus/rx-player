@@ -1,4 +1,4 @@
-# BufferOchestrator ############################################################
+# StreamOchestrator ############################################################
 
 
 ## Overview ####################################################################
@@ -6,10 +6,10 @@
 To be able to play a content, the player has to be able to download chunks of
 media data - called segments - and has to push them to SourceBuffers.
 
-In the RxPlayer, the _BufferOrchestrator_ is the entry point for performing all
+In the RxPlayer, the _StreamOrchestrator_ is the entry point for performing all
 those tasks.
 
-Basically, the _BufferOrchestrator_:
+Basically, the _StreamOrchestrator_:
 
   - dynamically creates various SourceBuffers depending on the needs of the
     given content
@@ -30,25 +30,26 @@ regular browser-defined _MSE_ SourceBuffers.
 For any other types, such as "text" and "image", we defined custom SourceBuffers
 implementation adapted to these type of contents.
 
-We then create a different Buffer for each type. Each will progressively
+We then create a different Stream for each type. Each will progressively
 download and push content of their respective type to their respective
 SourceBuffer:
 
 ```
-- AUDIO BUFFER _
+- AUDIO STREAM -
 |======================    |
 
-- VIDEO BUFFER _
+- VIDEO STREAM -
 |==================        |
 
-- TEXT BUFFER _
+- TEXT STREAM -
 |========================  |
 
-- IMAGE BUFFER _
+- IMAGE STREAM -
 |====================      |
 ```
-_(the ``|`` sign delimits the temporal start and end of a given buffer, the
-``=`` sign represent a pushed segment in the corresponding SourceBuffer)_
+_(the ``|`` sign delimits the temporal start and end of the buffer linked to a
+given Stream, the ``=`` sign represent a pushed segment in the corresponding
+SourceBuffer)_
 
 
 
@@ -101,7 +102,7 @@ permissive way than custom ones:
 
 
 
-## PeriodBuffers ###############################################################
+## PeriodStreams ###############################################################
 
 The _DASH_ streaming technology has a concept called _Period_. Simply put, it
 allows to set various types of content successively in the same manifest.
@@ -135,17 +136,16 @@ As such, they have to be considered separately - in a different Period:
         TV Show               Italian Film            American film
 ```
 
-In the RxPlayer, we create one _buffer_ per Period **and** per type.
-Those are called _PeriodBuffers_.
+In the RxPlayer, we create one _PeriodStream_ per Period **and** per type.
 
-_PeriodBuffers_ are automatically created/destroyed during playback. The job of
-a single _PeriodBuffer_ is to process and download optimally the content linked
+_PeriodStreams_ are automatically created/destroyed during playback. The job of
+a single _PeriodStream_ is to process and download optimally the content linked
 to a single _Period_ and to a single type:
 
 ```
 - VIDEO BUFFER -
 
-     PERIOD BUFFER
+     PERIOD STREAM
 08h05              09h00
   |=========         |
         TV Show
@@ -153,7 +153,7 @@ to a single _Period_ and to a single type:
 
 - AUDIO BUFFER -
 
-     PERIOD BUFFER
+     PERIOD STREAM
 08h05              09h00
   |=============     |
         TV Show
@@ -161,7 +161,7 @@ to a single _Period_ and to a single type:
 
 - TEXT BUFFER -
 
-     PERIOD BUFFER
+     PERIOD STREAM
 08h05              09h00
   |======            |
         TV Show
@@ -171,12 +171,12 @@ to a single _Period_ and to a single type:
 To allow smooth transitions between them, we also might want to preload content
 defined by a subsequent _Period_ once we lean towards the end of the content
 described by the previous one.
-Thus, multiple _PeriodBuffers_ might be active at the same time:
+Thus, multiple _PeriodStreams_ might be active at the same time:
 
 ```
 +----------------------------   AUDIO   ----------------------------------+
 |                                                                         |
-|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     |
+|      PERIOD STREAM 1        PERIOD STREAM 2         PERIOD STREAM 3     |
 | 08h05              09h00                       10h30                now |
 |   |=============     |=================          |================   |  |
 |         TV Show               Italian Film            American film     |
@@ -184,7 +184,7 @@ Thus, multiple _PeriodBuffers_ might be active at the same time:
 
 +------------------------------   VIDEO   --------------------------------+
 |                                                                         |
-|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     |
+|      PERIOD STREAM 1        PERIOD STREAM 2         PERIOD STREAM 3     |
 | 08h05              09h00                       10h30                now |
 |   |=====             |===                        |===                |  |
 |         TV Show               Italian Film            American film     |
@@ -192,7 +192,7 @@ Thus, multiple _PeriodBuffers_ might be active at the same time:
 
 +------------------------------   TEXT   ---------------------------------+
 |                                                                         |
-|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     |
+|      PERIOD STREAM 1        PERIOD STREAM 2         PERIOD STREAM 3     |
 | 08h05              09h00                       10h30                now |
 |     (NO SUBTITLES)   |=========================  |=================  |  |
 |         TV Show               Italian Film            American film     |
@@ -202,7 +202,7 @@ Thus, multiple _PeriodBuffers_ might be active at the same time:
 
 ### Multi-Period management ####################################################
 
-The creation/destruction of _PeriodBuffers_ is actually done in a very precize
+The creation/destruction of _PeriodStreams_ is actually done in a very precize
 and optimal way, which gives a higher priority to immediate content.
 
 To better grasp how it works, let's imagine a regular use-case, with two periods
@@ -210,7 +210,7 @@ for a single type of buffer:
 
 --------------------------------------------------------------------------------
 
-Let's say that the _PeriodBuffer_ for the first _Period_ (named P1) is currently
+Let's say that the _PeriodStream_ for the first _Period_ (named P1) is currently
 actively downloading segments (the "^" sign is the current position):
 
 ```
@@ -227,7 +227,7 @@ Once P1 is full (it has no segment left to download):
    ^
 ```
 
-We will be able to create a new _PeriodBuffer_, P2, for the second _Period_:
+We will be able to create a new _PeriodStream_, P2, for the second _Period_:
 
 ```
    P1     P2
@@ -273,7 +273,7 @@ Once P1, goes full again, we re-create P2:
 _Note that we still have the segment pushed to P2 available in the corresponding
 SourceBuffer_
 
-When the current position go ahead of a _PeriodBuffer_ (here ahead of P1):
+When the current position go ahead of a _PeriodStream_ (here ahead of P1):
 
 ```
    P1     P2
@@ -281,7 +281,7 @@ When the current position go ahead of a _PeriodBuffer_ (here ahead of P1):
         ^
 ```
 
-This _PeriodBuffer_ is destroyed to free up ressources:
+This _PeriodStream_ is destroyed to free up ressources:
 
 ```
           P2
@@ -291,7 +291,7 @@ This _PeriodBuffer_ is destroyed to free up ressources:
 
 ----
 
-When the current position goes behind the first currently defined _PeriodBuffer_:
+When the current position goes behind the first currently defined _PeriodStream_:
 
 ```
           P2
@@ -299,7 +299,7 @@ When the current position goes behind the first currently defined _PeriodBuffer_
     ^
 ```
 
-Then we destroy all previous _PeriodBuffers_ and [re-]create the one needed:
+Then we destroy all previous _PeriodStreams_ and [re-]create the one needed:
 
 ```
    P1
@@ -319,7 +319,7 @@ can re-create P2, which will also keep its already-pushed segments:
 --------------------------------------------------------------------------------
 
 For multiple types of buffers (example: _audio_ and _video_) the same logic is
-repeated (and separated) as many times. An _audio_ _PeriodBuffer_ will not
+repeated (and separated) as many times. An _audio_ _PeriodStream_ will not
 influence a _video_ one:
 
 ```
@@ -339,17 +339,17 @@ influence a _video_ one:
      ^
 ```
 
-At the end, we should only have _PeriodBuffer[s]_ for consecutive Period[s]:
+At the end, we should only have _PeriodStream[s]_ for consecutive Period[s]:
   - The first chronological one is the one currently seen by the user.
   - The last chronological one is the only one downloading content.
-  - In between, we only have full consecutive _PeriodBuffers_.
+  - In between, we only have full consecutive _PeriodStreams_.
 
 
 ### Communication with the API #################################################
 
-The Buffer communicates to the API about creations and destructions of
-_PeriodBuffers_ respectively through ``"periodBufferReady"`` and
-``"periodBufferCleared"`` events.
+Any "Stream" communicates to the API about creations and destructions of
+_PeriodStreams_ respectively through ``"periodStreamReady"`` and
+``"periodStreamCleared"`` events.
 
 When the currently seen Period changes, an ``activePeriodChanged`` event is
 sent.

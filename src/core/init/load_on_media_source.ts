@@ -35,15 +35,15 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 import Manifest from "../../manifest";
 import ABRManager from "../abr";
-import BufferOrchestrator, {
-  IBufferOrchestratorEvent,
-} from "../buffers";
 import { SegmentFetcherCreator } from "../fetchers";
 import SourceBuffersStore, {
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
-import createBufferClock from "./create_buffer_clock";
+import StreamOrchestrator, {
+  IStreamOrchestratorEvent,
+} from "../stream";
 import { setDurationToMediaSource } from "./create_media_source";
+import createStreamClock from "./create_stream_clock";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import getDiscontinuities from "./get_discontinuities";
@@ -89,7 +89,7 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
                                       ISpeedChangedEvent |
                                       ILoadedEvent |
                                       IWarningEvent |
-                                      IBufferOrchestratorEvent |
+                                      IStreamOrchestratorEvent |
                                       IStreamEvent;
 
 /**
@@ -149,7 +149,7 @@ export default function createMediaSourceLoader({
       mergeMap(() => streamEventsEmitter(manifest, mediaElement, clock$))
     );
 
-    const bufferClock$ = createBufferClock(clock$, { autoPlay,
+    const streamClock$ = createStreamClock(clock$, { autoPlay,
                                                      initialPlay$,
                                                      initialSeek$: seek$,
                                                      manifest,
@@ -159,13 +159,13 @@ export default function createMediaSourceLoader({
     // Will be used to cancel any endOfStream tries when the contents resume
     const cancelEndOfStream$ = new Subject<null>();
 
-    // Creates Observable which will manage every Buffer for the given Content.
-    const buffers$ = BufferOrchestrator({ manifest, initialPeriod },
-                                        bufferClock$,
-                                        abrManager,
-                                        sourceBuffersStore,
-                                        segmentFetcherCreator,
-                                        bufferOptions
+    // Creates Observable which will manage every Stream for the given Content.
+    const streams$ = StreamOrchestrator({ manifest, initialPeriod },
+                                          streamClock$,
+                                          abrManager,
+                                          sourceBuffersStore,
+                                          segmentFetcherCreator,
+                                          bufferOptions
     ).pipe(
       mergeMap((evt) : Observable<IMediaSourceLoaderEvent> => {
         switch (evt.type) {
@@ -231,7 +231,7 @@ export default function createMediaSourceLoader({
                            loadedEvent$,
                            playbackRate$,
                            stalled$,
-                           buffers$,
+                           streams$,
                            streamEvents$
     ).pipe(finalize(() => {
         // clean-up every created SourceBuffers

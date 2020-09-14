@@ -30,7 +30,7 @@ import { ISegmentParserParsedSegment } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
 import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
-import { IBufferEventAddedSegment } from "../types";
+import { IStreamEventAddedSegment } from "../types";
 import appendSegmentToSourceBuffer from "./append_segment_to_source_buffer";
 
 /**
@@ -56,7 +56,7 @@ export default function pushMediaSegment<T>(
                              parsedSegment : ISegmentParserParsedSegment<T>;
                              segment : ISegment;
                              queuedSourceBuffer : QueuedSourceBuffer<T>; }
-) : Observable< IBufferEventAddedSegment<T> > {
+) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (parsedSegment.chunkData === null) {
       return EMPTY;

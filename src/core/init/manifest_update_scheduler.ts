@@ -171,7 +171,7 @@ export default function manifestUpdateScheduler({
               mapTo({ completeRefresh: true, unsafeMode: unsafeModeEnabled }));
 
     // Emit when the manifest should be refreshed. Either when:
-    //   - A buffer asks for it to be refreshed
+    //   - A Stream asks for it to be refreshed
     //   - its lifetime expired.
     return observableMerge(autoRefresh$, internalRefresh$, expired$).pipe(
       take(1),

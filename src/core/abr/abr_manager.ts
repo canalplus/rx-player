@@ -25,8 +25,8 @@ import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import createFilters from "./create_filters";
 import RepresentationEstimator, {
-  IABRBufferEvents,
   IABREstimate,
+  IABRStreamEvents,
   IRepresentationEstimatorClockTick,
 } from "./representation_estimator";
 
@@ -91,14 +91,14 @@ export default class ABRManager {
    * @param {string} type
    * @param {Array.<Representation>|undefined} representations
    * @param {Observable<Object>} clock$
-   * @param {Observable<Object>} bufferEvents$
+   * @param {Observable<Object>} streamEvents$
    * @returns {Observable}
    */
   public get$(
     type : IBufferType,
     representations : Representation[] = [],
     clock$ : Observable<IABRManagerClockTick>,
-    bufferEvents$ : Observable<IABRBufferEvents>
+    streamEvents$ : Observable<IABRStreamEvents>
   ) : Observable<IABREstimate> {
     const bandwidthEstimator = this._getBandwidthEstimator(type);
     const manualBitrate$ =
@@ -111,7 +111,7 @@ export default class ABRManager {
                                    this._throttlers.throttleBitrate[type],
                                    this._throttlers.throttle[type]);
     return RepresentationEstimator({ bandwidthEstimator,
-                                     bufferEvents$,
+                                     streamEvents$,
                                      clock$,
                                      filters$,
                                      initialBitrate,

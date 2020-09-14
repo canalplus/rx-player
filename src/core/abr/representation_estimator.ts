@@ -284,7 +284,7 @@ export interface IABRAddedSegmentEvent {
  * playback and network conditions for the current type (e.g.  "audio", "video"
  * etc.) and Period.
  */
-export type IABRBufferEvents = IABRAddedSegmentEvent |
+export type IABRStreamEvents = IABRAddedSegmentEvent |
                                IABRMetricsEvent |
                                IABRRepresentationChangeEvent |
                                IABRRequestBeginEvent |
@@ -296,7 +296,7 @@ export interface IRepresentationEstimatorArguments {
   /** Class allowing to estimate the current network bandwidth. */
   bandwidthEstimator : BandwidthEstimator;
   /** Events indicating current playback and network conditions. */
-  bufferEvents$ : Observable<IABRBufferEvents>;
+  streamEvents$ : Observable<IABRStreamEvents>;
   /** Observable emitting regularly the current playback situation. */
   clock$ : Observable<IRepresentationEstimatorClockTick>;
   /** Observable allows to filter out Representation in our estimations. */
@@ -385,7 +385,6 @@ function getFilteredRepresentations(
  */
 export default function RepresentationEstimator({
   bandwidthEstimator,
-  bufferEvents$,
   clock$,
   filters$,
   initialBitrate,
@@ -393,6 +392,7 @@ export default function RepresentationEstimator({
   manualBitrate$,
   maxAutoBitrate$,
   representations,
+  streamEvents$,
 } : IRepresentationEstimatorArguments) : Observable<IABREstimate> {
   const scoreCalculator = new RepresentationScoreCalculator();
   const networkAnalyzer = new NetworkAnalyzer(initialBitrate == null ? 0 :
@@ -429,12 +429,12 @@ export default function RepresentationEstimator({
     scoreCalculator.addSample(representation, requestDuration, segmentDuration);
   }
 
-  const metrics$ = bufferEvents$.pipe(
+  const metrics$ = streamEvents$.pipe(
     filter((e) : e is IABRMetricsEvent => e.type === "metrics"),
     tap(({ value }) => onMetric(value)),
     ignoreElements());
 
-  const requests$ = bufferEvents$.pipe(
+  const requests$ = streamEvents$.pipe(
     tap((evt) => {
       switch (evt.type) {
         case "requestBegin":
@@ -450,7 +450,7 @@ export default function RepresentationEstimator({
     }),
     ignoreElements());
 
-  const currentRepresentation$ = bufferEvents$.pipe(
+  const currentRepresentation$ = streamEvents$.pipe(
     filter((e) : e is IABRRepresentationChangeEvent => e.type === "representationChange"),
     map((e) => e.value.representation),
     startWith(null));
@@ -494,7 +494,7 @@ export default function RepresentationEstimator({
 
       // Emit each time a buffer-based estimation should be actualized (each
       // time a segment is added).
-      const bufferBasedClock$ = bufferEvents$.pipe(
+      const bufferBasedClock$ = streamEvents$.pipe(
         filter((e) : e is IABRAddedSegmentEvent => e.type === "added-segment"),
         withLatestFrom(clock$),
         map(([{ value: evtValue }, { speed, currentTime } ]) => {

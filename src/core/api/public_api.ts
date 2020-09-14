@@ -2043,11 +2043,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "activePeriodChanged":
         this._priv_onActivePeriodChanged(event.value);
         break;
-      case "periodBufferReady":
-        this._priv_onPeriodBufferReady(event.value);
+      case "periodStreamReady":
+        this._priv_onPeriodStreamReady(event.value);
         break;
-      case "periodBufferCleared":
-        this._priv_onPeriodBufferCleared(event.value);
+      case "periodStreamCleared":
+        this._priv_onPeriodStreamCleared(event.value);
         break;
       case "reloading-media-source":
         this._priv_onReloadingMediaSource();
@@ -2241,11 +2241,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each times a new "PeriodBuffer" is ready.
+   * Triggered each times a new "PeriodStream" is ready.
    * Choose the right Adaptation for the Period and emit it.
    * @param {Object} value
    */
-  private _priv_onPeriodBufferReady(value : {
+  private _priv_onPeriodStreamReady(value : {
     type : IBufferType;
     period : Period;
     adaptation$ : Subject<Adaptation|null>;
@@ -2296,10 +2296,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each times we "remove" a PeriodBuffer.
+   * Triggered each times we "remove" a PeriodStream.
    * @param {Object} value
    */
-  private _priv_onPeriodBufferCleared(value : {
+  private _priv_onPeriodStreamCleared(value : {
     type : IBufferType;
     period : Period;
   }) : void {

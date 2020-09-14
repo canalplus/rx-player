@@ -55,7 +55,7 @@ Such number will indicate which segment is needed more immediately than other
 
 This is for example used to indicate that a very close video segment has a
 higher priority than some distant audio segment (both might be scheduled at the
-same time depending on the Buffer's logic).
+same time depending on the situation).
 
 If the request has no priorization number, the lowest priorization number
 (the highest priority) will be set on it: ``0``

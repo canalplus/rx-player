@@ -27,27 +27,27 @@ import {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,
   IBitrateEstimationChangeEvent,
-  IBufferEventAddedSegment,
-  IBufferManifestMightBeOutOfSync,
-  IBufferNeedsDiscontinuitySeek,
-  IBufferNeedsManifestRefresh,
-  IBufferStateActive,
-  IBufferStateFull,
-  IBufferWarningEvent,
-  ICompletedBufferEvent,
+  ICompletedStreamEvent,
   IEndOfStreamEvent,
   INeedsDecipherabilityFlush,
   INeedsMediaSourceReload,
-  IPeriodBufferClearedEvent,
-  IPeriodBufferReadyEvent,
+  IPeriodStreamClearedEvent,
+  IPeriodStreamReadyEvent,
   IProtectedSegmentEvent,
   IRepresentationChangeEvent,
   IResumeStreamEvent,
+  IStreamEventAddedSegment,
+  IStreamManifestMightBeOutOfSync,
+  IStreamNeedsDiscontinuitySeek,
+  IStreamNeedsManifestRefresh,
+  IStreamStateActive,
+  IStreamStateFull,
+  IStreamWarningEvent,
 } from "./types";
 
 const EVENTS = {
-  activeBuffer(bufferType: IBufferType) : IBufferStateActive {
-    return { type: "active-buffer",
+  activeStream(bufferType: IBufferType) : IStreamStateActive {
+    return { type: "active-stream",
              value: { bufferType } };
   },
 
@@ -74,7 +74,7 @@ const EVENTS = {
     segment : ISegment,
     buffered : TimeRanges,
     segmentData : T
-  ) : IBufferEventAddedSegment<T> {
+  ) : IStreamEventAddedSegment<T> {
     return { type : "added-segment",
              value : { content,
                        segment,
@@ -90,15 +90,15 @@ const EVENTS = {
              value: { type, bitrate } };
   },
 
-  bufferComplete(bufferType: IBufferType) : ICompletedBufferEvent {
-    return { type: "complete-buffer",
+  streamComplete(bufferType: IBufferType) : ICompletedStreamEvent {
+    return { type: "complete-stream",
              value: { type: bufferType } };
   },
 
   discontinuityEncountered(
     gap : [number, number],
     bufferType : IBufferType
-  ) : IBufferNeedsDiscontinuitySeek {
+  ) : IStreamNeedsDiscontinuitySeek {
     return { type : "discontinuity-encountered",
              value : { bufferType, gap } };
   },
@@ -108,17 +108,17 @@ const EVENTS = {
              value: undefined };
   },
 
-  fullBuffer(bufferType : IBufferType) : IBufferStateFull {
-    return { type: "full-buffer",
+  fullStream(bufferType : IBufferType) : IStreamStateFull {
+    return { type: "full-stream",
              value: { bufferType } };
   },
 
-  needsManifestRefresh() : IBufferNeedsManifestRefresh {
+  needsManifestRefresh() : IStreamNeedsManifestRefresh {
     return { type : "needs-manifest-refresh",
              value :  undefined };
   },
 
-  manifestMightBeOufOfSync() : IBufferManifestMightBeOutOfSync {
+  manifestMightBeOufOfSync() : IStreamManifestMightBeOutOfSync {
     return { type : "manifest-might-be-out-of-sync",
              value : undefined };
   },
@@ -144,20 +144,20 @@ const EVENTS = {
              value: { currentTime, isPaused, duration } };
   },
 
-  periodBufferReady(
+  periodStreamReady(
     type : IBufferType,
     period : Period,
     adaptation$ : Subject<Adaptation|null>
-  ) : IPeriodBufferReadyEvent {
-    return { type: "periodBufferReady",
+  ) : IPeriodStreamReadyEvent {
+    return { type: "periodStreamReady",
              value: { type, period, adaptation$ } };
   },
 
-  periodBufferCleared(
+  periodStreamCleared(
     type : IBufferType,
     period : Period
-  ) : IPeriodBufferClearedEvent {
-    return { type: "periodBufferCleared",
+  ) : IPeriodStreamClearedEvent {
+    return { type: "periodStreamCleared",
              value: { type, period } };
   },
 
@@ -182,7 +182,7 @@ const EVENTS = {
              value: undefined };
   },
 
-  warning(value : ICustomError) : IBufferWarningEvent {
+  warning(value : ICustomError) : IStreamWarningEvent {
     return { type: "warning", value };
   },
 };

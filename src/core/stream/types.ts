@@ -25,14 +25,14 @@ import {
 import { IBufferType } from "../source_buffers";
 
 /** Event sent when a minor error happened, which doesn't stop playback. */
-export interface IBufferWarningEvent {
+export interface IStreamWarningEvent {
   type : "warning";
   /** The error corresponding to the warning given. */
   value : ICustomError;
 }
 
 /** Emitted after a new segment has been succesfully added to the SourceBuffer */
-export interface IBufferEventAddedSegment<T> {
+export interface IStreamEventAddedSegment<T> {
   type : "added-segment";
   value : {
     /** Context about the content that has been added. */
@@ -50,26 +50,26 @@ export interface IBufferEventAddedSegment<T> {
 
 /**
  * The Manifest needs to be refreshed.
- * Note that the buffer might still be active even after sending this event:
+ * Note that the Stream might still be active even after sending this event:
  * It might download and push segments, send any other event etc.
  */
-export interface IBufferNeedsManifestRefresh {
+export interface IStreamNeedsManifestRefresh {
   type : "needs-manifest-refresh";
   value : undefined;
 }
 
 /**
  * The Manifest is possibly out-of-sync and needs to be refreshed completely.
- * The buffer made that guess because a segment that should have been available
+ * The Stream made that guess because a segment that should have been available
  * is not and because it suspects this is due to a synchronization problem.
  */
-export interface IBufferManifestMightBeOutOfSync {
+export interface IStreamManifestMightBeOutOfSync {
   type : "manifest-might-be-out-of-sync";
   value : undefined;
 }
 
 /** Emit when a discontinuity is encountered and the user is "stuck" on it. */
-export interface IBufferNeedsDiscontinuitySeek {
+export interface IStreamNeedsDiscontinuitySeek {
   type : "discontinuity-encountered";
   value : {
     /** The type of the Representation concerned by the discontinuity. */
@@ -79,18 +79,18 @@ export interface IBufferNeedsDiscontinuitySeek {
   };
 }
 
-/** Event emitted when a buffer is scheduling new segments to be loaded. */
-export interface IBufferStateActive {
-  type : "active-buffer";
+/** Event emitted when a Stream is scheduling new segments to be loaded. */
+export interface IStreamStateActive {
+  type : "active-stream";
   value : {
     /** The type of the Representation concerned. */
     bufferType : IBufferType;
   };
 }
 
-/** Event emitted when the buffer has loaded segments to the end of its SourceBuffer. */
-export interface IBufferStateFull {
-  type : "full-buffer";
+/** Event emitted when the Stream has loaded segments to the end of its SourceBuffer. */
+export interface IStreamStateFull {
+  type : "full-stream";
   value : {
    /** The type of the Representation concerned. */
     bufferType : IBufferType;
@@ -114,15 +114,15 @@ export interface IProtectedSegmentEvent {
   value : ISegmentProtection;
 }
 
-/** Event sent by a `RepresentationBuffer`. */
-export type IRepresentationBufferEvent<T> = IBufferEventAddedSegment<T> |
+/** Event sent by a `RepresentationStream`. */
+export type IRepresentationStreamEvent<T> = IStreamEventAddedSegment<T> |
                                             IProtectedSegmentEvent |
-                                            IBufferStateFull |
-                                            IBufferStateActive |
-                                            IBufferManifestMightBeOutOfSync |
-                                            IBufferNeedsDiscontinuitySeek |
-                                            IBufferNeedsManifestRefresh |
-                                            IBufferWarningEvent;
+                                            IStreamStateFull |
+                                            IStreamStateActive |
+                                            IStreamManifestMightBeOutOfSync |
+                                            IStreamNeedsDiscontinuitySeek |
+                                            IStreamNeedsManifestRefresh |
+                                            IStreamWarningEvent;
 
 /** Emitted as new bitrate estimates are done. */
 export interface IBitrateEstimationChangeEvent {
@@ -139,33 +139,33 @@ export interface IBitrateEstimationChangeEvent {
 }
 
 /**
- * Emitted when a new `RepresentationBuffer` is created for a given
+ * Emitted when a new `RepresentationStream` is created for a given
  * `Representation`.
  */
 export interface IRepresentationChangeEvent {
   type : "representationChange";
   value : {
-    /** The type of buffer linked to that `RepresentationBuffer`. */
+    /** The type of buffer linked to that `RepresentationStream`. */
     type : IBufferType;
-    /** The `Period` linked to the `RepresentationBuffer` we're creating. */
+    /** The `Period` linked to the `RepresentationStream` we're creating. */
     period : Period;
     /**
-     * The `Representation` linked to the `RepresentationBuffer` we're creating.
+     * The `Representation` linked to the `RepresentationStream` we're creating.
      * `null` when we're choosing no Representation at all.
      */
     representation : Representation |
                      null; };
 }
 
-/** Event sent by an `AdaptationBuffer`. */
-export type IAdaptationBufferEvent<T> = IRepresentationBufferEvent<T> |
+/** Event sent by an `AdaptationStream`. */
+export type IAdaptationStreamEvent<T> = IRepresentationStreamEvent<T> |
                                         IBitrateEstimationChangeEvent |
                                         INeedsMediaSourceReload |
                                         INeedsDecipherabilityFlush |
                                         IRepresentationChangeEvent;
 
 /**
- * Emitted when a new `AdaptationBuffer` is created for a given
+ * Emitted when a new `AdaptationStream` is created for a given
  * `Representation`.
  */
 export interface IAdaptationChangeEvent {
@@ -173,10 +173,10 @@ export interface IAdaptationChangeEvent {
   value : {
     /** The type of buffer for which the Representation is changing. */
     type : IBufferType;
-    /** The `Period` linked to the `RepresentationBuffer` we're creating. */
+    /** The `Period` linked to the `RepresentationStream` we're creating. */
     period : Period;
     /**
-     * The `Adaptation` linked to the `AdaptationBuffer` we're creating.
+     * The `Adaptation` linked to the `AdaptationStream` we're creating.
      * `null` when we're choosing no Adaptation at all.
      */
     adaptation : Adaptation |
@@ -194,23 +194,23 @@ export interface IActivePeriodChangedEvent {
 }
 
 /**
- * A new `PeriodBuffer` is ready to start but needs an Adaptation (i.e. track)
+ * A new `PeriodStream` is ready to start but needs an Adaptation (i.e. track)
  * to be chosen first.
  */
-export interface IPeriodBufferReadyEvent {
-  type : "periodBufferReady";
+export interface IPeriodStreamReadyEvent {
+  type : "periodStreamReady";
   value : {
-    /** The type of buffer linked to the `PeriodBuffer` we want to create. */
+    /** The type of buffer linked to the `PeriodStream` we want to create. */
     type : IBufferType;
-    /** The `Period` linked to the `PeriodBuffer` we have created. */
+    /** The `Period` linked to the `PeriodStream` we have created. */
     period : Period;
     /**
      * The subject through which any Adaptation (i.e. track) choice should be
-     * emitted for that `PeriodBuffer`.
+     * emitted for that `PeriodStream`.
      *
-     * The `PeriodBuffer` will not do anything until this subject has emitted
+     * The `PeriodStream` will not do anything until this subject has emitted
      * at least one to give its initial choice.
-     * You can send `null` through it to tell this `PeriodBuffer` that you don't
+     * You can send `null` through it to tell this `PeriodStream` that you don't
      * want any `Adaptation`.
      */
     adaptation$ : Subject<Adaptation|null>;
@@ -218,33 +218,33 @@ export interface IPeriodBufferReadyEvent {
 }
 
 /**
- * A `PeriodBuffer` has been removed.
+ * A `PeriodStream` has been removed.
  * This event can be used for clean-up purposes. For example, you are free to
  * remove from scope the subject that you used to choose a track for that
- * `PeriodBuffer`.
+ * `PeriodStream`.
  */
-export interface IPeriodBufferClearedEvent {
-  type : "periodBufferCleared";
+export interface IPeriodStreamClearedEvent {
+  type : "periodStreamCleared";
   value : {
     /**
-     * The type of buffer linked to the `PeriodBuffer` we just removed.
+     * The type of buffer linked to the `PeriodStream` we just removed.
      *
      * The combination of this and `Period` should give you enough information
-     * about which `PeriodBuffer` has been removed.
+     * about which `PeriodStream` has been removed.
      */
     type : IBufferType;
     /**
-     * The `Period` linked to the `PeriodBuffer` we just removed.
+     * The `Period` linked to the `PeriodStream` we just removed.
      *
      * The combination of this and `Period` should give you enough information
-     * about which `PeriodBuffer` has been removed.
+     * about which `PeriodStream` has been removed.
      */
     period : Period;
   };
 }
 
 /**
- * The last (chronologically) PeriodBuffers from every type of buffers are full.
+ * The last (chronologically) PeriodStreams from every type of buffers are full.
  * This means usually that segments for the whole content have been pushed to
  * the end.
  */
@@ -252,7 +252,7 @@ export interface IEndOfStreamEvent { type: "end-of-stream";
                                      value: undefined; }
 
 /**
- * At least a single PeriodBuffer is now pushing segments.
+ * At least a single PeriodStream is now pushing segments.
  * This event is sent to cancel a previous `IEndOfStreamEvent`.
  *
  * Note that it also can be send if no `IEndOfStreamEvent` has been sent before.
@@ -261,16 +261,16 @@ export interface IResumeStreamEvent { type: "resume-stream";
                                       value: undefined; }
 
 /**
- * The last (chronologically) `PeriodBuffer` for a given type has pushed all
+ * The last (chronologically) `PeriodStream` for a given type has pushed all
  * the segments it needs until the end.
  */
-export interface ICompletedBufferEvent { type: "complete-buffer";
+export interface ICompletedStreamEvent { type: "complete-stream";
                                          value : { type: IBufferType }; }
 
 /**
  * A situation needs the MediaSource to be reloaded.
  *
- * Once the MediaSource is reloaded, the buffer needs to be restarted from
+ * Once the MediaSource is reloaded, the Streams need to be restarted from
  * scratch.
  */
 export interface INeedsMediaSourceReload {
@@ -296,17 +296,17 @@ export interface INeedsMediaSourceReload {
     isPaused : boolean;
 
     /**
-     * A `INeedsMediaSourceReload` is an event sent by a buffer (e.g. a
-     * `PeriodBuffer`, `AdaptationBuffer` or `RepresentationBuffer`) which is
+     * A `INeedsMediaSourceReload` is an event sent by a Stream (e.g. a
+     * `PeriodStream`, `AdaptationStream` or `RepresentationStream`) which is
      * linked to a given `Period` in the `Manifest`.
      *
      * This property indicates the linked Period in question.
      *
-     * This property is used internally by the Buffer to filter out
+     * This property is used internally by the Stream to filter out
      * `INeedsMediaSourceReload` until the corresponding Period is the active
      * one. Without it, we might reload the MediaSource too soon.
      *
-     * Outside of the Buffer's code, you probably don't need this information.
+     * Outside of the Stream's code, you probably don't need this information.
      */
     period : Period;
   };
@@ -345,19 +345,19 @@ export interface INeedsDecipherabilityFlush {
   };
 }
 
-/** Event sent by a `PeriodBuffer`. */
-export type IPeriodBufferEvent = IPeriodBufferReadyEvent |
-                                 IAdaptationBufferEvent<unknown> |
+/** Event sent by a `PeriodStream`. */
+export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
+                                 IAdaptationStreamEvent<unknown> |
                                  INeedsMediaSourceReload |
                                  IAdaptationChangeEvent;
 
-/** Event coming from function(s) managing multiple PeriodBuffers. */
-export type IMultiplePeriodBuffersEvent = IPeriodBufferEvent |
-                                          IPeriodBufferClearedEvent |
-                                          ICompletedBufferEvent;
+/** Event coming from function(s) managing multiple PeriodStreams. */
+export type IMultiplePeriodStreamsEvent = IPeriodStreamEvent |
+                                          IPeriodStreamClearedEvent |
+                                          ICompletedStreamEvent;
 
-/** Every event sent by the `BufferOrchestrator`. */
-export type IBufferOrchestratorEvent = IActivePeriodChangedEvent |
-                                       IMultiplePeriodBuffersEvent |
+/** Every event sent by the `StreamOrchestrator`. */
+export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
+                                       IMultiplePeriodStreamsEvent |
                                        IEndOfStreamEvent |
                                        IResumeStreamEvent;

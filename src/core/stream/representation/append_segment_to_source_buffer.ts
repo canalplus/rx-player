@@ -15,7 +15,7 @@
  */
 
 /**
- * This file allows any Buffer to push data to a QueuedSourceBuffer.
+ * This file allows any Stream to push data to a QueuedSourceBuffer.
  */
 
 import {

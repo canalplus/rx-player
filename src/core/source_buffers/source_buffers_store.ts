@@ -58,11 +58,11 @@ type INativeSourceBufferType = "audio" | "video";
  *
  * Only one SourceBuffer per type is allowed at the same time:
  *
- *   - source buffers for native types (which are "audio" and "video" and which
+ *   - SourceBuffers for native types (which are "audio" and "video" and which
  *     depend on the native SourceBuffer implementation) are reused if one is
  *     re-created.
  *
- *   - source buffers for custom types are aborted each time a new one of the
+ *   - SourceBuffers for custom types are aborted each time a new one of the
  *     same type is created.
  *
  * The returned SourceBuffer is actually a QueuedSourceBuffer instance which
@@ -173,14 +173,15 @@ export default class SourceBuffersStore {
   }
 
   /**
-   * Returns the current "status" of the buffer in the SourceBuffer.
+   * Returns the current "status" of the SourceBuffer linked to the buffer type
+   * given.
    *
    * This function will return  an object containing a key named `type` which
    * can be equal to either one of those three value:
    *
-   *   - "initialized": A SourceBuffer has been created. You will in this case
-   *     also have a second key, `value`, which will contain the related
-   *     QueuedSourceBuffer instance.
+   *   - "initialized": A SourceBuffer has been created for that type.
+   *     You will in this case also have a second key, `value`, which will
+   *     contain the related QueuedSourceBuffer instance.
    *     Please note that you will need to wait until
    *     `this.waitForUsableSourceBuffers()` has emitted before pushing segment
    *     data to a native QueuedSourceBuffer.
@@ -210,7 +211,7 @@ export default class SourceBuffersStore {
    * content need to all be created before any one can be used.
    *
    * This function will return an Observable emitting when any and all native
-   * Source Buffers through this store can be used.
+   * SourceBuffers through this store can be used.
    *
    * From https://w3c.github.io/media-source/#methods
    *   For example, a user agent may throw a QuotaExceededError

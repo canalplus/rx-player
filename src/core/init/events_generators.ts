@@ -20,10 +20,10 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { IRepresentationChangeEvent } from "../buffers";
 import SourceBuffersStore, {
   IBufferType,
 } from "../source_buffers";
+import { IRepresentationChangeEvent } from "../stream";
 import { IStallingItem } from "./get_stalled_events";
 import {
   IDecipherabilityUpdateEvent,

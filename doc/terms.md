@@ -87,17 +87,11 @@ needing to pause due to poor network conditions.
 <a name="buffer"></a>
 ### Buffer ######################################################################
 
-When we talk about the "buffer" in the RxPlayer, it most likely mean one of two
-things, depending on the context:
+When we talk about the "buffer" in the RxPlayer, we most likely refer to the
+structures in the browser holding media data, waiting to be decoded.
 
-  - The media data currently loaded by the browser, ready to be decoded.
-
-    In the API, that's what we mean when we talk about the buffer.
-
-  - modules in the RxPlayer downloading [media segments](#segment) and doing
-    what is needed to play them.
-
-    Here you will mostly encounter that term in the architecture documentation.
+Several layers of buffers can be defined in the browser-side to allow to have a
+smooth playback, fast seeking etc.
 
 
 <a name="type"></a>
@@ -109,9 +103,6 @@ Example of such types are:
   - "video": which represents only the video content
   - "audio": the audio content without the video
   - "text": the subtitles, for example
-
-Those are called buffer types here (or simply "types") as each type will have
-its own [Buffer](#buffer) (in both sense of the term) in the RxPlayer.
 
 
 <a name="chunk"></a>

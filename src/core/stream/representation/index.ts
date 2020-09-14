@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-import PeriodBuffer, {
-  IPeriodBufferArguments,
-  IPeriodBufferClockTick,
-} from "./period_buffer";
+import RepresentationStream, {
+  IRepresentationStreamArguments,
+  IRepresentationStreamClockTick,
+  ITerminationOrder,
+} from "./representation_stream";
 
-export default PeriodBuffer;
-
+export default RepresentationStream;
 export {
-  IPeriodBufferArguments,
-  IPeriodBufferClockTick,
+  IRepresentationStreamArguments,
+  IRepresentationStreamClockTick,
+  ITerminationOrder,
 };
