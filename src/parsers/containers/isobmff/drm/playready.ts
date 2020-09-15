@@ -16,8 +16,10 @@
 
 import { le2toi } from "../../../../utils/byte_parsing";
 import {
-    guidToUuid,
-    leUtf16ToStr,
+  bytesToHex,
+  guidToUuid,
+  leUtf16ToStr,
+  strToUtf8,
 } from "../../../../utils/string_parsing";
 
 /**
@@ -35,7 +37,9 @@ export function getPlayReadyKIDFromPrivateData(
   if (kidElement === null) {
     throw new Error("Cannot parse PlayReady private data: invalid XML");
   }
-  const kid = kidElement.textContent === null ? "" :
-                                                kidElement.textContent;
-  return guidToUuid(atob(kid)).toLowerCase();
+  const b64guidKid = kidElement.textContent === null ? "" :
+                                                       kidElement.textContent;
+
+  const uuidKid = guidToUuid(strToUtf8(atob(b64guidKid)));
+  return bytesToHex(uuidKid).toLowerCase();
 }

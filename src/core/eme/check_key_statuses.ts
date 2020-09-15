@@ -15,6 +15,7 @@
  */
 
 import { ICustomMediaKeySession } from "../../compat";
+import getUUIDKidFromKeyStatusKID from "../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../errors";
 import {
   IEMEWarningEvent,
@@ -32,35 +33,39 @@ const KEY_STATUSES = { EXPIRED: "expired",
  * Throws if one of the keyID is on an error.
  * @param {MediaKeySession} session - The MediaKeySession from which the keys
  * will be checked.
- * @param {Object} keySystem - Configuration. Used to known on which situations
+ * @param {Object} keySystemOptions - Options. Used to known on which situations
  * we can fallback.
+ * @param {String} keySystem - The configuration keySystem used for deciphering
  * @returns {Array} - Warnings to send and blacklisted key ids.
  */
 export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
-  keySystem: IKeySystemOption
+  keySystemOptions: IKeySystemOption,
+  keySystem: string
 ) : [IEMEWarningEvent[], ArrayBuffer[]] {
   const warnings : IEMEWarningEvent[] = [];
   const blacklistedKeyIDs : ArrayBuffer[] = [];
-  const { fallbackOn = {} } = keySystem;
+  const { fallbackOn = {}, throwOnLicenseExpiration } = keySystemOptions;
 
   /* tslint:disable no-unsafe-any */
   (session.keyStatuses as any).forEach((_arg1 : unknown, _arg2 : unknown) => {
     /* tslint:enable no-unsafe-any */
     // Hack present because the order of the arguments has changed in spec
     // and is not the same between some versions of Edge and Chrome.
-    const [keyStatus, keyId] = (() => {
+    const [keyStatus, keyStatusKeyId] = (() => {
       return (typeof _arg1  === "string" ? [_arg1, _arg2] :
                                            [_arg2, _arg1]
              ) as [MediaKeyStatus, ArrayBuffer];
     })();
 
+    const keyId = getUUIDKidFromKeyStatusKID(keySystem,
+                                             new Uint8Array(keyStatusKeyId));
     switch (keyStatus) {
       case KEY_STATUSES.EXPIRED: {
         const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
                                               "A decryption key expired");
 
-        if (keySystem.throwOnLicenseExpiration !== false) {
+        if (throwOnLicenseExpiration !== false) {
           throw error;
         }
         warnings.push({ type: "warning", value: error });

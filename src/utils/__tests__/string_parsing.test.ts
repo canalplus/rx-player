@@ -149,21 +149,25 @@ describe("utils - string parsing", () => {
 
   describe("guidToUuid", () => {
     it("should throw if the length is different than 16 bytes", () => {
-      expect(() => strUtils.guidToUuid("")).toThrow();
-      expect(() => strUtils.guidToUuid("abca")).toThrow();
-      expect(() => strUtils.guidToUuid("a;rokgr;oeo;reugporugpuwrhpwjtw")).toThrow();
+      expect(() => strUtils.guidToUuid(new Uint8Array(0))).toThrow();
+      expect(() => strUtils.guidToUuid(new Uint8Array(4))).toThrow();
+      expect(() => strUtils.guidToUuid(new Uint8Array(20))).toThrow();
     });
     it("should translate PlayReady GUID to universal UUID", () => {
-      const uuid1 = String.fromCharCode(
-        ...[15, 27, 175, 76, 7, 184, 156, 73, 181, 133, 213, 230, 192, 48, 134, 31]
-      );
-      const uuid2 = String.fromCharCode(
-        ...[212, 72, 21, 77, 26, 220, 79, 95, 101, 86, 92, 99, 110, 189, 1, 111]
-      );
+      const uuid1 = new Uint8Array(
+        [15, 27, 175, 76, 7, 184, 156, 73, 181, 133, 213, 230, 192, 48, 134, 31]);
+      const uuid2 = new Uint8Array(
+        [212, 72, 21, 77, 26, 220, 79, 95, 101, 86, 92, 99, 110, 189, 1, 111]);
       expect(strUtils.guidToUuid(uuid1))
-        .toBe("afc21b0f074cb8c2c29c49c2b5c285c3");
+        .toEqual(
+          new Uint8Array(
+            [76, 175, 27, 15, 184, 7, 73, 156, 181, 133, 213, 230, 192, 48, 134, 31])
+        );
       expect(strUtils.guidToUuid(uuid2))
-      .toBe("154894c31a4d9cc34f5f65565c636ec2");
+        .toEqual(
+          new Uint8Array(
+            [77, 21, 72, 212, 220, 26, 95, 79, 101, 86, 92, 99, 110, 189, 1, 111])
+        );
     });
   });
 
