@@ -97,7 +97,7 @@ export interface IListIndexIndexArgument {
    * timescale (see timescale)
    */
   presentationTimeOffset? : number;
-  timescale : number;
+  timescale? : number;
 }
 
 /** Aditional context needed by a SegmentList RepresentationIndex. */
@@ -132,7 +132,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     const presentationTimeOffset =
       index.presentationTimeOffset != null ? index.presentationTimeOffset :
                                              0;
-    const indexTimeOffset = presentationTimeOffset - periodStart * index.timescale;
+    const timescale = index.timescale ?? 1;
+    const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
     const list = index.list.map((lItem) => ({
       mediaURLs: createIndexURLs(representationBaseURLs,
@@ -141,7 +142,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
                                  representationBitrate),
       mediaRange: lItem.mediaRange }));
     this._index = { list,
-                    timescale: index.timescale,
+                    timescale,
                     duration: index.duration,
                     indexTimeOffset,
                     indexRange: index.indexRange,

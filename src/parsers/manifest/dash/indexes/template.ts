@@ -97,15 +97,14 @@ export interface ITemplateIndex {
  * Most of the properties here are already defined in ITemplateIndex.
  */
 export interface ITemplateIndexIndexArgument {
-  duration : number;
-  timescale : number;
-
+  duration? : number;
   indexRange?: [number, number];
   initialization?: { media? : string;
                      range? : [number, number]; };
   media? : string;
   presentationTimeOffset? : number;
   startNumber? : number;
+  timescale? : number;
 }
 
 /** Aditional context needed by a SegmentTemplate RepresentationIndex. */
@@ -161,7 +160,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     index : ITemplateIndexIndexArgument,
     context : ITemplateIndexContextArgument
   ) {
-    const { timescale } = index;
     const { aggressiveMode,
             availabilityTimeOffset,
             manifestBoundsCalculator,
@@ -171,6 +169,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             representationBaseURLs,
             representationId,
             representationBitrate } = context;
+    const timescale = index.timescale ?? 1;
 
     this._availabilityTimeOffset = availabilityTimeOffset;
 
@@ -182,6 +181,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
     const scaledStart = periodStart * timescale;
     const indexTimeOffset = presentationTimeOffset - scaledStart;
+
+    if (index.duration === undefined) {
+      throw new Error("Invalid SegmentTemplate: no duration");
+    }
 
     this._index = { duration: index.duration,
                     timescale,

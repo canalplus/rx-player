@@ -35,7 +35,6 @@ import parseSegmentList, {
 } from "./SegmentList";
 import parseSegmentTemplate, {
   IParsedSegmentTemplate,
-  IParsedSegmentTimeline,
 } from "./SegmentTemplate";
 import {
   IScheme,
@@ -68,7 +67,7 @@ export interface IAdaptationSetChildren {
 
   segmentBase? : IParsedSegmentBase;
   segmentList? : IParsedSegmentList;
-  segmentTemplate? : IParsedSegmentTemplate|IParsedSegmentTimeline;
+  segmentTemplate? : IParsedSegmentTemplate;
 }
 
 export interface IAdaptationSetAttributes {
