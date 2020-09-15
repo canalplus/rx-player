@@ -15,18 +15,16 @@
  */
 
 import {
+  defer as observableDefer,
   Observable,
-  of as observableOf,
   ReplaySubject,
 } from "rxjs";
 import {
   mapTo,
   mergeMap,
-  mergeMapTo,
   startWith,
   take,
 } from "rxjs/operators";
-import { setMediaKeys } from "../../compat";
 import attachMediaKeys from "./attach_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
 import {
@@ -47,22 +45,16 @@ export default function initMediaKeys(
 ): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
-      let disableOldMediaKeys$: Observable<unknown> = observableOf(null);
-      if (mediaElement.mediaKeys !== null &&
-          mediaKeysInfos.mediaKeys !== mediaElement.mediaKeys) {
-        disableOldMediaKeys$ = setMediaKeys(mediaElement, null);
-      }
-
       const attachMediaKeys$ = (new ReplaySubject<void>(1));
-      return disableOldMediaKeys$.pipe(
-        mergeMapTo(attachMediaKeys$),
-        mergeMap(() => attachMediaKeys(mediaKeysInfos, mediaElement)),
+      return observableDefer(() => attachMediaKeys$.pipe(
+        mergeMap(() => attachMediaKeys(mediaKeysInfos,
+                                       mediaElement)),
         take(1),
         mapTo({ type: "attached-media-keys" as const,
                  value: mediaKeysInfos, }),
         startWith({ type: "created-media-keys" as const,
                     value: { mediaKeysInfos,
                              attachMediaKeys$ } })
-      );
+      ));
     }));
 }
