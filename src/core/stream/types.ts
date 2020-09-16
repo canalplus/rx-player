@@ -114,6 +114,24 @@ export interface IProtectedSegmentEvent {
   value : ISegmentProtection;
 }
 
+/**
+ * Event sent when a `RepresentationStream` is terminating:
+ *
+ *   - it has finished all its segment requests and won't do new ones.
+ *
+ *   - it has stopped regularly checking for its current status.
+ *
+ *   - it only waits until all the segments it has loaded have been pushed to the
+ *     SourceBuffer before actually completing.
+ *
+ * You can use this event as a hint that a new `RepresentationStream` can be
+ * created.
+ */
+export interface IStreamTerminatingEvent {
+  type : "stream-terminating";
+  value : undefined;
+}
+
 /** Event sent by a `RepresentationStream`. */
 export type IRepresentationStreamEvent<T> = IStreamEventAddedSegment<T> |
                                             IProtectedSegmentEvent |
@@ -122,6 +140,7 @@ export type IRepresentationStreamEvent<T> = IStreamEventAddedSegment<T> |
                                             IStreamManifestMightBeOutOfSync |
                                             IStreamNeedsDiscontinuitySeek |
                                             IStreamNeedsManifestRefresh |
+                                            IStreamTerminatingEvent |
                                             IStreamWarningEvent;
 
 /** Emitted as new bitrate estimates are done. */

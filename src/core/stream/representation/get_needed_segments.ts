@@ -59,6 +59,12 @@ export interface ISegmentFilterArgument {
 }
 
 /**
+ * Epsilon compensating for rounding errors when comparing the start and end
+ * time of multiple segments.
+ */
+const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
+
+/**
  * @param {Object} segmentFilterArgument
  * @returns {Array.<Object>}
  */
@@ -99,12 +105,11 @@ export default function getNeededSegments({
   bufferedSegments = filterGarbageCollectedSegments(bufferedSegments, neededRange);
 
   // 4 - now filter the list of segments we can download
-  const roundingError = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   return segmentsForRange.filter(segment => {
+    const contentObject = objectAssign({ segment }, content);
 
     // First, check that the segment is not already being pushed
     if (segmentsBeingPushed.length > 0) {
-      const contentObject = objectAssign({ segment }, content);
       const isAlreadyBeingPushed = segmentsBeingPushed
         .some((pendingSegment) => areSameContent(contentObject, pendingSegment));
       if (isAlreadyBeingPushed) {
@@ -125,6 +130,35 @@ export default function getNeededSegments({
     const scaledDuration = duration / timescale;
     const scaledEnd = scaledTime + scaledDuration;
 
+    // Check if the same segment from another Representation is not already
+    // being pushed.
+    if (segmentsBeingPushed.length > 0) {
+      const waitForPushedSegment = segmentsBeingPushed.some((pendingSegment) => {
+        if (pendingSegment.period.id !== content.period.id ||
+            pendingSegment.adaptation.id !== content.adaptation.id)
+        {
+          return false;
+        }
+        const { segment: oldSegment } = pendingSegment;
+        const oldSegmentStart = oldSegment.time / oldSegment.timescale;
+        if ((oldSegmentStart - ROUNDING_ERROR) > scaledTime) {
+          return false;
+        }
+        const oldSegmentEnd = oldSegmentStart +
+          (oldSegment.duration / oldSegment.timescale);
+        if ((oldSegmentEnd + ROUNDING_ERROR) < scaledEnd) {
+          return false;
+        }
+        return !shouldContentBeReplaced(pendingSegment,
+                                        contentObject,
+                                        currentPlaybackTime,
+                                        knownStableBitrate);
+      });
+      if (waitForPushedSegment) {
+        return false;
+      }
+    }
+
     // check if the segment is already downloaded
     for (let i = 0; i < bufferedSegments.length; i++) {
       const completeSeg = bufferedSegments[i];
@@ -139,8 +173,8 @@ export default function getNeededSegments({
         const segTimeScale = completeSeg.infos.segment.timescale;
         const scaledSegTime = segTime / segTimeScale;
         const scaledSegEnd = scaledSegTime + segDuration / segTimeScale;
-        if (scaledTime - scaledSegTime > -roundingError &&
-            scaledSegEnd - scaledEnd > -roundingError)
+        if (scaledTime - scaledSegTime > -ROUNDING_ERROR &&
+            scaledSegEnd - scaledEnd > -ROUNDING_ERROR)
         {
           return false; // already downloaded
         }
@@ -151,21 +185,21 @@ export default function getNeededSegments({
     for (let i = 0; i < bufferedSegments.length; i++) {
       const completeSeg = bufferedSegments[i];
       if (completeSeg.end > scaledTime) {
-        if (completeSeg.start > scaledTime + roundingError) {
+        if (completeSeg.start > scaledTime + ROUNDING_ERROR) {
           return true;
         }
         let j = i + 1;
 
         // go through all contiguous segments and take the last one
         while (j < bufferedSegments.length - 1 &&
-               (bufferedSegments[j - 1].end + roundingError) >
+               (bufferedSegments[j - 1].end + ROUNDING_ERROR) >
                 bufferedSegments[j].start)
         {
           j++;
         }
         j--; // index of last contiguous segment
 
-        return bufferedSegments[j].end < scaledEnd + roundingError;
+        return bufferedSegments[j].end < scaledEnd + ROUNDING_ERROR;
       }
     }
     return true;
@@ -207,14 +241,34 @@ function shouldContentBeReplaced(
     return true; // replace segments from another Adaptation
   }
 
-  const oldContentBitrate = oldContent.representation.bitrate;
+  return canFastSwitch(oldContent.representation,
+                       currentContent.representation,
+                       knownStableBitrate);
+}
+
+/**
+ * Returns `true` if segments from the new Representation can replace
+ * previously-loaded segments from the old Representation given.
+ *
+ * This behavior is called "fast-switching".
+ * @param {Object} oldSegmentRepresentation
+ * @param {Object} newSegmentRepresentation
+ * @param {number|undefined} knownStableBitrate
+ * @returns {boolean}
+ */
+function canFastSwitch(
+  oldSegmentRepresentation : Representation,
+  newSegmentRepresentation : Representation,
+  knownStableBitrate : number | undefined
+) : boolean {
+  const oldContentBitrate = oldSegmentRepresentation.bitrate;
   if (knownStableBitrate === undefined) {
     // only re-load comparatively-poor bitrates for the same Adaptation.
     const bitrateCeil = oldContentBitrate * BITRATE_REBUFFERING_RATIO;
-    return currentContent.representation.bitrate > bitrateCeil;
+    return newSegmentRepresentation.bitrate > bitrateCeil;
   }
   return oldContentBitrate < knownStableBitrate &&
-         currentContent.representation.bitrate > oldContentBitrate;
+         newSegmentRepresentation.bitrate > oldContentBitrate;
 }
 
 /**

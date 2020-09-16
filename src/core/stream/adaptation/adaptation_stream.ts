@@ -28,42 +28,32 @@ import {
   BehaviorSubject,
   concat as observableConcat,
   defer as observableDefer,
+  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
-  ReplaySubject,
-  Subject,
-  throwError,
 } from "rxjs";
 import {
   catchError,
   distinctUntilChanged,
+  exhaustMap,
   filter,
-  ignoreElements,
   map,
-  multicast,
+  mergeMap,
   share,
-  startWith,
+  take,
   tap,
 } from "rxjs/operators";
-import {
-  formatError,
-  MediaError,
-} from "../../../errors";
+import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
 } from "../../../manifest";
-import concatMapLatest from "../../../utils/concat_map_latest";
 import deferSubscriptions from "../../../utils/defer_subscriptions";
 import ABRManager, {
   IABREstimate,
-  IABRMetricsEvent,
-  IABRRequestBeginEvent,
-  IABRRequestEndEvent,
-  IABRRequestProgressEvent,
 } from "../../abr";
 import { SegmentFetcherCreator } from "../../fetchers";
 import { QueuedSourceBuffer } from "../../source_buffers";
@@ -74,7 +64,6 @@ import RepresentationStream, {
 } from "../representation";
 import {
   IAdaptationStreamEvent,
-  IRepresentationChangeEvent,
   IRepresentationStreamEvent,
   IStreamEventAddedSegment,
   IStreamNeedsDiscontinuitySeek,
@@ -82,6 +71,7 @@ import {
   IStreamStateActive,
   IStreamStateFull,
 } from "../types";
+import createRepresentationEstimator from "./create_representation_estimator";
 
 /** `Clock tick` information needed by the AdaptationStream. */
 export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTick {
@@ -171,48 +161,29 @@ export default function AdaptationStream<T>({
    */
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
-  /** Emit when the current RepresentationStream should terminate itself. */
-  const terminateCurrentStream$ = new Subject<ITerminationOrder>();
+  const { estimator$, requestFeedback$, streamFeedback$ } =
+    createRepresentationEstimator(adaptation, abrManager, clock$);
 
-  // use ABRManager for choosing the Representation
-  const streamEvents$ = new Subject<IStreamEventAddedSegment<T> |
-                                    IRepresentationChangeEvent>();
-  const requestsEvents$ = new Subject<IABRMetricsEvent |
-                                      IABRRequestBeginEvent |
-                                      IABRRequestProgressEvent |
-                                      IABRRequestEndEvent>();
-  const abrEvents$ = observableMerge(streamEvents$, requestsEvents$);
-
-  const playableRepresentations = adaptation.getPlayableRepresentations();
-
-  if (playableRepresentations.length <= 0) {
-    const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
-                                    "No Representation in the chosen " +
-                                    "Adaptation can be played");
-    return throwError(noRepErr);
-  }
-
-  const abr$ : Observable<IABREstimate> = abrManager.get$(adaptation.type,
-                                                          playableRepresentations,
-                                                          clock$,
-                                                          abrEvents$)
-      .pipe(deferSubscriptions(), share());
-
+  /** Allows the `RepresentationStream` to easily fetch media segments. */
   const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type,
-                                                                    requestsEvents$);
+                                                                    requestFeedback$);
 
-  // Bitrate higher or equal to this value should not be replaced by segments of
-  // better quality.
-  // undefined means everything can potentially be replaced
-  const knownStableBitrate$ = abr$.pipe(
-    map(({ knownStableBitrate }) => knownStableBitrate),
-    // always emit the last on subscribe
-    multicast(() => new ReplaySubject< number | undefined >(1)),
-    startWith(undefined),
-    distinctUntilChanged());
+  /**
+   * Emits each time an estimate is made through the `abrEstimate$` Observable,
+   * starting with the last one.
+   * This allows to easily rely on that value in inner Observables which might also
+   * need the last already-considered value.
+   */
+  const lastEstimate$ = new BehaviorSubject<IABREstimate | null>(null);
 
-  // Emit at each bitrate estimate done by the ABRManager
-  const bitrateEstimates$ = abr$.pipe(
+  /** Emits abr estimates on Subscription. */
+  const abrEstimate$ = estimator$.pipe(
+    tap((estimate) => { lastEstimate$.next(estimate); }),
+    deferSubscriptions(),
+    share());
+
+  /** Emit at each bitrate estimate done by the ABRManager. */
+  const bitrateEstimate$ = abrEstimate$.pipe(
     filter(({ bitrate }) => bitrate != null),
     distinctUntilChanged((old, current) => old.bitrate === current.bitrate),
     map(({ bitrate }) => {
@@ -221,54 +192,102 @@ export default function AdaptationStream<T>({
     })
   );
 
-  const newRepresentation$ = abr$
-    .pipe(distinctUntilChanged((a, b) => a.manual === b.manual &&
-                                         a.representation.id === b.representation.id));
+  /** Recursively create `RepresentationStream`s according to the last estimate. */
+  const representationStreams$ = abrEstimate$
+      .pipe(exhaustMap((estimate, i) : Observable<IAdaptationStreamEvent<T>> => {
+        return recursivelyCreateRepresentationStreams(estimate, i === 0);
+      }));
 
-  const adaptationStream$ = observableMerge(
-    newRepresentation$
-      .pipe(concatMapLatest((estimate, i) : Observable<IAdaptationStreamEvent<T>> => {
-        const { representation } = estimate;
+  return observableMerge(representationStreams$, bitrateEstimate$);
 
-        // A manual bitrate switch might need an immediate feedback.
-        // To do that properly, we need to reload the MediaSource
-        if (directManualBitrateSwitching && estimate.manual && i !== 0) {
-          return clock$.pipe(map(t => EVENTS.needsMediaSourceReload(period, t)));
+  /**
+   * Create `RepresentationStream`s starting with the Representation indicated in
+   * `fromEstimate` argument.
+   * Each time a new estimate is made, this function will create a new
+   * `RepresentationStream` corresponding to that new estimate.
+   * @param {Object} fromEstimate - The first estimate we should start with
+   * @param {boolean} isFirstEstimate - Whether this is the first time we're
+   * creating a RepresentationStream in the corresponding `AdaptationStream`.
+   * This is important because manual quality switches might need a full reload
+   * of the MediaSource _except_ if we are talking about the first quality chosen.
+   * @returns {Observable}
+   */
+  function recursivelyCreateRepresentationStreams(
+    fromEstimate : IABREstimate,
+    isFirstEstimate : boolean
+  ) : Observable<IAdaptationStreamEvent<T>> {
+    const { representation } = fromEstimate;
+
+    // A manual bitrate switch might need an immediate feedback.
+    // To do that properly, we need to reload the MediaSource
+    if (directManualBitrateSwitching &&
+        fromEstimate.manual &&
+        !isFirstEstimate)
+    {
+      return clock$.pipe(map(t => EVENTS.needsMediaSourceReload(period, t)));
+    }
+
+    /**
+     * Emit when the current RepresentationStream should be terminated to make
+     * place for a new one (e.g. when switching quality).
+     */
+    const terminateCurrentStream$ = lastEstimate$.pipe(
+      filter((newEstimate) => newEstimate === null ||
+                              newEstimate.representation.id !== representation.id ||
+                              (newEstimate.manual && !fromEstimate.manual)),
+      take(1),
+      map((newEstimate) => {
+        if (newEstimate === null) {
+          log.info("Stream: urgent Representation termination", adaptation.type);
+          return ({ urgent: true });
         }
+        if (newEstimate.urgent) {
+          log.info("Stream: urgent Representation switch", adaptation.type);
+          return ({ urgent: true });
+        } else {
+          log.info("Stream: slow Representation switch", adaptation.type);
+          return ({ urgent: false });
+        }
+      }));
 
-        const representationChange$ =
-          observableOf(EVENTS.representationChange(adaptation.type,
-                                                   period,
-                                                   representation));
+    /**
+     * Bitrate higher or equal to this value should not be replaced by segments of
+     * better quality.
+     * undefined means everything can potentially be replaced
+     */
+    const knownStableBitrate$ = lastEstimate$.pipe(
+      map((estimate) => estimate === null ? undefined :
+                                            estimate.knownStableBitrate),
+      distinctUntilChanged());
 
-        return observableConcat(representationChange$,
-                                createRepresentationStream(representation))
-          .pipe(tap((evt) : void => {
-            if (evt.type === "representationChange" ||
-                evt.type === "added-segment")
-            {
-              return streamEvents$.next(evt);
-            }
-          }));
-      })),
+    const representationChange$ =
+      observableOf(EVENTS.representationChange(adaptation.type,
+                                               period,
+                                               representation));
 
-    // NOTE: This operator was put in a merge on purpose. It's a "clever"
-    // hack to allow it to be called just *AFTER* the concatMapLatest one.
-    newRepresentation$.pipe(map((estimate, i) => {
-      if (i === 0) { // Initial run == no Stream pending. We have nothing to do:
-        return;      // The one just created will be launched right away.
-      }
-      if (estimate.urgent) {
-        log.info("Stream: urgent Representation switch", adaptation.type);
-        terminateCurrentStream$.next({ urgent: true });
-      } else {
-        log.info("Stream: slow Representation switch", adaptation.type);
-        terminateCurrentStream$.next({ urgent: false });
-      }
-    }), ignoreElements())
-  );
-
-  return observableMerge(adaptationStream$, bitrateEstimates$);
+    return observableConcat(representationChange$,
+                            createRepresentationStream(representation,
+                                                       terminateCurrentStream$,
+                                                       knownStableBitrate$))
+    .pipe(
+      tap((evt) : void => {
+        if (evt.type === "representationChange" ||
+            evt.type === "added-segment")
+        {
+          return streamFeedback$.next(evt);
+        }
+      }),
+      mergeMap((evt) => {
+        if (evt.type === "stream-terminating") {
+          const lastEstimate = lastEstimate$.getValue();
+          if (lastEstimate === null) {
+            return EMPTY;
+          }
+          return recursivelyCreateRepresentationStreams(lastEstimate, false);
+        }
+        return observableOf(evt);
+      }));
+  }
 
   /**
    * Create and returns a new RepresentationStream Observable, linked to the
@@ -277,7 +296,9 @@ export default function AdaptationStream<T>({
    * @returns {Observable}
    */
   function createRepresentationStream(
-    representation : Representation
+    representation : Representation,
+    terminateCurrentStream$ : Observable<ITerminationOrder>,
+    knownStableBitrate$ : Observable<number | undefined>
   ) : Observable<IRepresentationStreamEvent<T>> {
     return observableDefer(() => {
       const oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
@@ -314,7 +335,9 @@ export default function AdaptationStream<T>({
               throw formattedError;
             }
             bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
-            return createRepresentationStream(representation);
+            return createRepresentationStream(representation,
+                                              terminateCurrentStream$,
+                                              knownStableBitrate$);
           }
           throw formattedError;
         }));
