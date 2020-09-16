@@ -618,22 +618,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       this.minimumTime = newManifest.minimumTime;
       this.uris = newManifest.uris;
-    }
-
-    if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       replacePeriods(this.periods, newManifest.periods);
     } else {
       updatePeriods(this.periods, newManifest.periods);
-    }
 
-    // Re-set this.adaptations for retro-compatibility in v3.x.x
-    /* tslint:disable:deprecation */
-    this.adaptations = this.periods[0] === undefined ?
-                         {} :
-                         this.periods[0].adaptations;
-    /* tslint:enable:deprecation */
-
-    if (updateType === MANIFEST_UPDATE_TYPE.Partial) {
       // Partial updates do not remove old Periods.
       // This can become a memory problem when playing a content long enough.
       // Let's clean manually Periods behind the minimum possible position.
@@ -643,9 +631,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
         if (period.end === undefined || period.end > min) {
           break;
         }
-        this.periods.splice(0);
+        this.periods.shift();
       }
     }
+
+    // Re-set this.adaptations for retro-compatibility in v3.x.x
+    /* tslint:disable:deprecation */
+    this.adaptations = this.periods[0] === undefined ?
+                         {} :
+                         this.periods[0].adaptations;
+    /* tslint:enable:deprecation */
 
     // Let's trigger events at the end, as those can trigger side-effects.
     // We do not want the current Manifest object to be incomplete when those
