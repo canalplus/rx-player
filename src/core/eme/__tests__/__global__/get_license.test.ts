@@ -346,6 +346,9 @@ function checkGetLicense(
   EMEManager(videoElt, ksConfig, initDataSubject)
     .pipe(takeUntil(kill$))
     .subscribe((evt : any) => {
+      if (evt.type === "created-media-keys") {
+        evt.value.attachMediaKeys$.next();
+      }
       eventsReceived++;
       // Those first three have been tested enough
       if (eventsReceived <= 3) {

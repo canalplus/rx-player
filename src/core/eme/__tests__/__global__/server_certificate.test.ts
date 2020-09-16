@@ -80,6 +80,7 @@ describe("core - eme - global tests - server certificate", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -141,6 +142,7 @@ describe("core - eme - global tests - server certificate", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -208,6 +210,7 @@ describe("core - eme - global tests - server certificate", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -285,6 +288,7 @@ describe("core - eme - global tests - server certificate", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");

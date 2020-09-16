@@ -52,7 +52,9 @@ export default function attachMediaKeys(
                                 observableOf(null);
 
     const shouldDisableOldMediaKeys = mediaElement.mediaKeys !== null &&
+                                      mediaElement.mediaKeys !== undefined &&
                                       mediaKeysInfos.mediaKeys !== mediaElement.mediaKeys;
+
     const disableOldMediaKeys$ = shouldDisableOldMediaKeys ?
       observableDefer(() => {
         MediaKeysInfosStore.setState(mediaElement, null);
