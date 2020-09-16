@@ -34,6 +34,7 @@ import {
 import {
   distinctUntilChanged,
   filter,
+  ignoreElements,
   map,
   mapTo,
   mergeMapTo,
@@ -72,6 +73,7 @@ import Manifest, {
 } from "../../manifest";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import assertUnreachable from "../../utils/assert_unreachable";
 import EventEmitter, {
   fromEvent,
 } from "../../utils/event_emitter";
@@ -622,11 +624,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Load a new video.
    * @param {Object} opts
    */
-  loadVideo(opts : ILoadVideoOptions) : void {
+  loadVideo(opts : ILoadVideoOptions) : Promise<void> {
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options);
     this._priv_lastContentPlaybackInfos = { options };
-    this._priv_initializeContentPlayback(options);
+    return this._priv_initializeContentPlayback(options);
   }
 
   /**
@@ -634,7 +636,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * the manifest.
    * @param {Object} reloadOpts
    */
-  reload(reloadOpts?: { reloadAt?: { position?: number; relative?: number } }): void {
+  reload(
+    reloadOpts?: { reloadAt?: { position?: number; relative?: number } }
+  ): Promise<void> {
     const { options,
             manifest,
             lastPlaybackPosition } = this._priv_lastContentPlaybackInfos;
@@ -670,14 +674,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const newOptions = { ...options,
                          initialManifest: manifest };
     newOptions.startAt = { position: startAtPositon };
-    this._priv_initializeContentPlayback(newOptions);
+    return this._priv_initializeContentPlayback(newOptions);
   }
 
   /**
    * From given options, initialize content playback.
    * @param {Object} options
    */
-  private _priv_initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
+  private _priv_initializeContentPlayback(
+    options : IParsedLoadVideoOptions
+  ) : Promise<void> {
     const { autoPlay,
             audioTrackSwitchingMode,
             defaultAudioTrack,
@@ -1007,6 +1013,25 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       () => this._priv_onPlaybackFinished()
     );
 
+    const returnedPromise = new PPromise<void>((res, rej) => {
+      observableMerge(
+        loaded$.pipe(mapTo({ type: "loaded" as const })),
+        playback$.pipe(ignoreElements()), // we only care about errors here
+        this._priv_stopCurrentContent$.pipe(mapTo({ type: "aborted" as const }))
+      ).pipe(take(1)).subscribe(evt => {
+        switch (evt.type) {
+          case "loaded":
+            res();
+            break;
+          case "aborted":
+            rej({ reason: "aborted", error: null });
+            break;
+          default:
+            assertUnreachable(evt);
+        }
+      }, err => { rej({ reason: "error", error: err }); });
+    });
+
     // initialize the content only when the lock is inactive
     this._priv_contentLock$
       .pipe(
@@ -1018,6 +1043,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         // start playback!
         playbackSubscription = playback$.connect();
       });
+
+    // This is an ugly hack to hide Unhandled Promise rejections warnings.
+    // We want to mute such warnings because there are other channels through
+    // which a user can be notified on an error (i.e. an `"error"` event or the
+    // `getError` API.
+    returnedPromise.catch(noop);
+    return returnedPromise;
   }
 
   /**
