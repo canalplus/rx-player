@@ -175,7 +175,7 @@ export default function tryURLsWithBackoff<T>(
           }
 
           // else, remove that element from the array and go the next URL
-          urlsToTry.splice(index);
+          urlsToTry.splice(index, 1);
           const newIndex = index >= urlsToTry.length - 1 ? 0 :
                                                            index;
           return tryURLsRecursively(urlsToTry[newIndex], newIndex)
