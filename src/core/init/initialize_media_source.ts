@@ -287,26 +287,25 @@ export default function InitializeOnMediaSource(
    */
   const prepareMediaSource$ = emeManager$.pipe(
     mergeMap((evt) => {
-      if (evt.type === "eme-disabled") {
-        return observableOf(undefined);
-      }
-      if (evt.type === "attached-media-keys") {
-        return observableOf(undefined);
-      }
-      if (evt.type === "created-media-keys") {
-        return openMediaSource$.pipe(mergeMap(() => {
-          evt.value.attachMediaKeys$.next();
+      switch (evt.type) {
+        case "eme-disabled":
+        case "attached-media-keys":
+          return observableOf(undefined);
+        case "created-media-keys":
+          return openMediaSource$.pipe(mergeMap(() => {
+            evt.value.attachMediaKeys$.next();
 
-          if (evt.value.mediaKeysInfos.keySystemOptions
-                .disableMediaKeysAttachmentLock === true)
-          {
-            return observableOf(undefined);
-          }
-          // wait for "attached-media-keys"
+            if (evt.value.mediaKeysInfos.keySystemOptions
+                  .disableMediaKeysAttachmentLock === true)
+            {
+              return observableOf(undefined);
+            }
+            // wait for "attached-media-keys"
+            return EMPTY;
+          }));
+        default:
           return EMPTY;
-        }));
       }
-      return EMPTY;
     }),
     take(1),
     exhaustMap(() => openMediaSource$)
@@ -340,12 +339,11 @@ export default function InitializeOnMediaSource(
       // Emit when we want to manually update the manifest.
       const scheduleRefresh$ = new Subject<IManifestRefreshSchedulerEvent>();
 
-      const manifestUpdate$ =
-        manifestUpdateScheduler({ fetchManifest,
-                                  initialManifest: parsedManifest,
-                                  manifestUpdateUrl,
-                                  minimumManifestUpdateInterval,
-                                  scheduleRefresh$ });
+      const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
+                                                        initialManifest: parsedManifest,
+                                                        manifestUpdateUrl,
+                                                        minimumManifestUpdateInterval,
+                                                        scheduleRefresh$ });
 
       const manifestEvents$ = observableMerge(
         fromEvent(manifest, "manifestUpdate")
@@ -358,8 +356,7 @@ export default function InitializeOnMediaSource(
           log.info("Init: blacklisting Representations based on keyIDs");
           manifest.addUndecipherableKIDs(evt.value);
         } else if (evt.type === "blacklist-protection-data") {
-          log.info("Init: blacklisting Representations based on " +
-                   "protection data.");
+          log.info("Init: blacklisting Representations based on protection data.");
           manifest.addUndecipherableProtectionData(evt.value.type,
                                                    evt.value.data);
         }
@@ -389,48 +386,47 @@ export default function InitializeOnMediaSource(
       ) : Observable<IInitEvent> {
         const reloadMediaSource$ = new Subject<{ currentTime : number;
                                                  isPaused : boolean; }>();
-        const mediaSourceLoader$ =
-          mediaSourceLoader(mediaSource, position, shouldPlay)
+        const mediaSourceLoader$ = mediaSourceLoader(mediaSource, position, shouldPlay)
           .pipe(tap(evt => {
-                    switch (evt.type) {
-                      case "needs-manifest-refresh":
-                        scheduleRefresh$.next({ completeRefresh: false,
-                                                canUseUnsafeMode: true });
-                        break;
-                      case "manifest-might-be-out-of-sync":
-                        scheduleRefresh$.next({
-                          completeRefresh: true,
-                          canUseUnsafeMode: false,
-                          delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
-                        });
-                        break;
-                      case "needs-media-source-reload":
-                        reloadMediaSource$.next(evt.value);
-                        break;
-                      case "needs-decipherability-flush":
-                        const keySystem = getCurrentKeySystem(mediaElement);
-                        if (shouldReloadMediaSourceOnDecipherabilityUpdate(
-                              keySystem
-                            )
-                        ) {
-                          reloadMediaSource$.next(evt.value);
-                          return;
-                        }
+            switch (evt.type) {
+              case "needs-manifest-refresh":
+                scheduleRefresh$.next({ completeRefresh: false,
+                                        canUseUnsafeMode: true });
+                break;
+              case "manifest-might-be-out-of-sync":
+                scheduleRefresh$.next({
+                  completeRefresh: true,
+                  canUseUnsafeMode: false,
+                  delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
+                });
+                break;
+              case "needs-media-source-reload":
+                reloadMediaSource$.next(evt.value);
+                break;
+              case "needs-decipherability-flush":
+                const keySystem = getCurrentKeySystem(mediaElement);
+                if (shouldReloadMediaSourceOnDecipherabilityUpdate(
+                      keySystem
+                    )
+                ) {
+                  reloadMediaSource$.next(evt.value);
+                  return;
+                }
 
-                        // simple seek close to the current position
-                        // to flush the buffers
-                        const { currentTime } = evt.value;
-                        if (currentTime + 0.001 < evt.value.duration) {
-                          mediaElement.currentTime += 0.001;
-                        } else {
-                          mediaElement.currentTime = currentTime;
-                        }
-                        break;
-                      case "protected-segment":
-                        protectedSegments$.next(evt.value);
-                        break;
-                    }
-                  }));
+                // simple seek close to the current position
+                // to flush the buffers
+                const { currentTime } = evt.value;
+                if (currentTime + 0.001 < evt.value.duration) {
+                  mediaElement.currentTime += 0.001;
+                } else {
+                  mediaElement.currentTime = currentTime;
+                }
+                break;
+              case "protected-segment":
+                protectedSegments$.next(evt.value);
+                break;
+            }
+          }));
 
         const currentLoad$ =
           mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
