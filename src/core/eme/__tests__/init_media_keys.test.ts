@@ -39,13 +39,13 @@ describe("core - eme - initMediaKeys", () => {
     const spyAttachMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
-    const spyCleanMediaKeys = jest.fn(() => {
+    const spyDisableOldMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
-      cleanMediaKeys: spyCleanMediaKeys,
+      disableOldMediaKeys: spyDisableOldMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 
@@ -80,13 +80,13 @@ describe("core - eme - initMediaKeys", () => {
     const spyAttachMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
-    const spyCleanMediaKeys = jest.fn(() => {
+    const spyDisableOldMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
-      cleanMediaKeys: spyCleanMediaKeys,
+      disableOldMediaKeys: spyDisableOldMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 
@@ -129,13 +129,13 @@ describe("core - eme - initMediaKeys", () => {
     const spyAttachMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
-    const spyCleanMediaKeys = jest.fn(() => {
+    const spyDisableOldMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
-      cleanMediaKeys: spyCleanMediaKeys,
+      disableOldMediaKeys: spyDisableOldMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 
@@ -165,13 +165,13 @@ describe("core - eme - initMediaKeys", () => {
     }));
     const err = new Error("a");
     const spyAttachMediaKeys = jest.fn(() => throwError(err));
-    const spyCleanMediaKeys = jest.fn(() => {
+    const spyDisableOldMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
-      cleanMediaKeys: spyCleanMediaKeys,
+      disableOldMediaKeys: spyDisableOldMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 

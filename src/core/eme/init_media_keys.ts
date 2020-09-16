@@ -25,7 +25,7 @@ import {
   take,
 } from "rxjs/operators";
 import attachMediaKeys, {
-  cleanMediaKeys
+  disableOldMediaKeys
 } from "./attach_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
 import {
@@ -47,7 +47,7 @@ export default function initMediaKeys(
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
       const attachMediaKeys$ = (new ReplaySubject<void>(1));
-      return cleanMediaKeys(mediaKeysInfos, mediaElement).pipe(
+      return disableOldMediaKeys(mediaKeysInfos, mediaElement).pipe(
         mergeMap(() => {
           return attachMediaKeys$.pipe(
             mergeMap(() => attachMediaKeys(mediaKeysInfos, mediaElement)),
