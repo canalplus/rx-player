@@ -15,7 +15,6 @@
  */
 
 import {
-  defer as observableDefer,
   Observable,
   ReplaySubject,
 } from "rxjs";
@@ -25,7 +24,9 @@ import {
   startWith,
   take,
 } from "rxjs/operators";
-import attachMediaKeys from "./attach_media_keys";
+import attachMediaKeys, {
+  cleanMediaKeys
+} from "./attach_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
 import {
   IAttachedMediaKeysEvent,
@@ -46,15 +47,18 @@ export default function initMediaKeys(
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
       const attachMediaKeys$ = (new ReplaySubject<void>(1));
-      return observableDefer(() => attachMediaKeys$.pipe(
-        mergeMap(() => attachMediaKeys(mediaKeysInfos,
-                                       mediaElement)),
-        take(1),
-        mapTo({ type: "attached-media-keys" as const,
-                 value: mediaKeysInfos, }),
-        startWith({ type: "created-media-keys" as const,
-                    value: { mediaKeysInfos,
-                             attachMediaKeys$ } })
-      ));
+      return cleanMediaKeys(mediaKeysInfos, mediaElement).pipe(
+        mergeMap(() => {
+          return attachMediaKeys$.pipe(
+            mergeMap(() => attachMediaKeys(mediaKeysInfos, mediaElement)),
+            take(1),
+            mapTo({ type: "attached-media-keys" as const,
+                     value: mediaKeysInfos, }),
+            startWith({ type: "created-media-keys" as const,
+                        value: { mediaKeysInfos,
+                                 attachMediaKeys$ } })
+          );
+        })
+      );
     }));
 }

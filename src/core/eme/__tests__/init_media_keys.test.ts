@@ -39,9 +39,13 @@ describe("core - eme - initMediaKeys", () => {
     const spyAttachMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
+    const spyCleanMediaKeys = jest.fn(() => {
+      return observableOf(undefined);
+    });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
+      cleanMediaKeys: spyCleanMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 
@@ -76,9 +80,13 @@ describe("core - eme - initMediaKeys", () => {
     const spyAttachMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
+    const spyCleanMediaKeys = jest.fn(() => {
+      return observableOf(undefined);
+    });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
+      cleanMediaKeys: spyCleanMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 
@@ -121,9 +129,13 @@ describe("core - eme - initMediaKeys", () => {
     const spyAttachMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
+    const spyCleanMediaKeys = jest.fn(() => {
+      return observableOf(undefined);
+    });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
+      cleanMediaKeys: spyCleanMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 
@@ -153,12 +165,14 @@ describe("core - eme - initMediaKeys", () => {
     }));
     const err = new Error("a");
     const spyAttachMediaKeys = jest.fn(() => throwError(err));
-    jest.mock("../attach_media_keys", () => {
-      return {
-        __esModule: true as const,
-        default: spyAttachMediaKeys,
-      };
+    const spyCleanMediaKeys = jest.fn(() => {
+      return observableOf(undefined);
     });
+    jest.mock("../attach_media_keys", () => ({
+      __esModule: true as const,
+      default: spyAttachMediaKeys,
+      cleanMediaKeys: spyCleanMediaKeys,
+    }));
     const initMediaKeys = require("../init_media_keys").default;
 
     const mediaElement = document.createElement("video");
