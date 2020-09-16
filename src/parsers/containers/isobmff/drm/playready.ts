@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import { base64ToBytes } from "../../../../utils/base64";
 import { le2toi } from "../../../../utils/byte_parsing";
 import {
   bytesToHex,
   guidToUuid,
   leUtf16ToStr,
-  strToUtf8,
 } from "../../../../utils/string_parsing";
 
 /**
@@ -40,6 +40,6 @@ export function getPlayReadyKIDFromPrivateData(
   const b64guidKid = kidElement.textContent === null ? "" :
                                                        kidElement.textContent;
 
-  const uuidKid = guidToUuid(strToUtf8(atob(b64guidKid)));
+  const uuidKid = guidToUuid(base64ToBytes(b64guidKid));
   return bytesToHex(uuidKid).toLowerCase();
 }
