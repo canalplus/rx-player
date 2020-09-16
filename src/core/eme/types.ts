@@ -57,6 +57,8 @@ export interface IEncryptedEvent { type: "encrypted-event-received";
  * current content.
  * This is necessary before creating a MediaKeySession which will allow
  * encryption keys to be communicated.
+ * It sends a subject (attachMediaKeys$) that will be used by the init to
+ * ask the EME to attach the mediakeys.
  */
 export interface ICreatedMediaKeysEvent {
   type: "created-media-keys";
@@ -69,8 +71,6 @@ export interface ICreatedMediaKeysEvent {
 // media segments are to be pushed to avoid issues.
 // Because this event is sent after a MediaKeys is created, you will always have
 // a "created-media-keys" event before an "attached-media-keys" event.
-// The "created-media-keys" sends a subject (attachMediaKeys$) that will be used by
-// the init to ask the EME to attach the mediakeys.
 export interface IAttachedMediaKeysEvent { type: "attached-media-keys";
                                            value: IMediaKeysInfos; }
 
