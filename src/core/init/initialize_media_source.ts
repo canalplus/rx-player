@@ -238,19 +238,8 @@ export default function InitializeOnMediaSource(
    * The MediaSource will be closed on unsubscription.
    */
   const openMediaSource$ = openMediaSource(mediaElement).pipe(
-    // Because multiple Observables here depend on this Observable as a source,
-    // we prefer deferring Subscription until those Observables are themselves
-    // all subscribed to.
-    // This is needed because `openMediaSource$` might send events synchronously
-    // on subscription. In that case, it might communicate those events directly
-    // after the first Subscription is done, making the next subscription miss
-    // out on those events, even if that second subscription is done
-    // synchronously after the first one.
-    // By calling `deferSubscriptions`, we ensure that subscription to
-    // `openMediaSource$` effectively starts after a very short delay, thus
-    // ensuring that no such race condition can occur.
-    deferSubscriptions(),
-    shareReplay({ refCount: true }));
+    shareReplay({ refCount: true })
+  );
 
   /** Send content protection data to the `EMEManager`. */
   const protectedSegments$ = new Subject<IContentProtection>();
@@ -259,8 +248,19 @@ export default function InitializeOnMediaSource(
   const emeManager$ = createEMEManager(mediaElement,
                                        keySystems,
                                        protectedSegments$).pipe(
+    // Because multiple Observables here depend on this Observable as a source,
+    // we prefer deferring Subscription until those Observables are themselves
+    // all subscribed to.
+    // This is needed because `emeManager$` might send events synchronously
+    // on subscription. In that case, it might communicate those events directly
+    // after the first Subscription is done, making the next subscription miss
+    // out on those events, even if that second subscription is done
+    // synchronously after the first one.
+    // By calling `deferSubscriptions`, we ensure that subscription to
+    // `emeManager$` effectively starts after a very short delay, thus
+    // ensuring that no such race condition can occur.
     deferSubscriptions(),
-    shareReplay()
+    share()
   );
 
   /**
