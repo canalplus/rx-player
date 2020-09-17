@@ -17,18 +17,21 @@
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
+  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
   Subject,
 } from "rxjs";
 import {
+  exhaustMap,
   filter,
   finalize,
   map,
   mapTo,
   mergeMap,
   share,
+  shareReplay,
   startWith,
   switchMap,
   take,
@@ -67,7 +70,6 @@ import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import isEMEReadyEvent from "./is_eme_ready";
 import createMediaSourceLoader, {
   IMediaSourceLoaderEvent,
 } from "./load_on_media_source";
@@ -236,42 +238,36 @@ export default function InitializeOnMediaSource(
    * The MediaSource will be closed on unsubscription.
    */
   const openMediaSource$ = openMediaSource(mediaElement).pipe(
-    // Because multiple Observables here depend on this Observable as a source,
-    // we prefer deferring Subscription until those Observables are themselves
-    // all subscribed to.
-    // This is needed because `openMediaSource$` might send events synchronously
-    // on subscription. In that case, it might communicate those events directly
-    // after the first Subscription is done, making the next subscription miss
-    // out on those events, even if that second subscription is done
-    // synchronously after the first one.
-    // By calling `deferSubscriptions`, we ensure that subscription to
-    // `openMediaSource$` effectively starts after a very short delay, thus
-    // ensuring that no such race condition can occur.
-    deferSubscriptions(),
-    share()); // Do not re-start the Observable on further parallel subscriptions
+    shareReplay({ refCount: true })
+  );
 
   /** Send content protection data to the `EMEManager`. */
   const protectedSegments$ = new Subject<IContentProtection>();
 
   /** Create `EMEManager`, an observable which will handle content DRM. */
-  const emeManager$ = openMediaSource$.pipe(
-    mergeMap(() => createEMEManager(mediaElement, keySystems, protectedSegments$)),
-    // Defer subscription and share for the same reasons than `openMediaSource$`
+  const emeManager$ = createEMEManager(mediaElement,
+                                       keySystems,
+                                       protectedSegments$).pipe(
+    // Because multiple Observables here depend on this Observable as a source,
+    // we prefer deferring Subscription until those Observables are themselves
+    // all subscribed to.
+    // This is needed because `emeManager$` might send events synchronously
+    // on subscription. In that case, it might communicate those events directly
+    // after the first Subscription is done, making the next subscription miss
+    // out on those events, even if that second subscription is done
+    // synchronously after the first one.
+    // By calling `deferSubscriptions`, we ensure that subscription to
+    // `emeManager$` effectively starts after a very short delay, thus
+    // ensuring that no such race condition can occur.
     deferSubscriptions(),
-    share());
+    share()
+  );
 
   /**
    * Translate errors coming from the media element into RxPlayer errors
    * through a throwing Observable.
    */
   const mediaError$ = throwOnMediaError(mediaElement);
-
-  /**
-   * Emit when EME negociations that should happen before pushing any content
-   * have finished.
-   */
-  const waitForEMEReady$ = emeManager$.pipe(filter(isEMEReadyEvent),
-                                            take(1));
 
   /** Do the first Manifest request. */
   const initialManifestRequest$ = fetchManifest(url, { previousManifest: null,
@@ -285,10 +281,39 @@ export default function InitializeOnMediaSource(
   const initialManifest$ = initialManifestRequest$
     .pipe(filter((evt) : evt is IManifestFetcherParsedResult => evt.type === "parsed"));
 
+  /**
+   * Wait for the MediaKeys to have been created before
+   * opening MediaSource, and ask EME to attach MediaKeys.
+   */
+  const prepareMediaSource$ = emeManager$.pipe(
+    mergeMap((evt) => {
+      switch (evt.type) {
+        case "eme-disabled":
+        case "attached-media-keys":
+          return observableOf(undefined);
+        case "created-media-keys":
+          return openMediaSource$.pipe(mergeMap(() => {
+            evt.value.attachMediaKeys$.next();
+
+            if (evt.value.mediaKeysInfos.keySystemOptions
+                  .disableMediaKeysAttachmentLock === true)
+            {
+              return observableOf(undefined);
+            }
+            // wait for "attached-media-keys"
+            return EMPTY;
+          }));
+        default:
+          return EMPTY;
+      }
+    }),
+    take(1),
+    exhaustMap(() => openMediaSource$)
+  );
+
   /** Load and play the content asked. */
   const loadContent$ = observableCombineLatest([initialManifest$,
-                                                openMediaSource$,
-                                                waitForEMEReady$]).pipe(
+                                                prepareMediaSource$]).pipe(
     mergeMap(([parsedManifest, initialMediaSource]) => {
       const manifest = parsedManifest.manifest;
 
@@ -332,7 +357,8 @@ export default function InitializeOnMediaSource(
           manifest.addUndecipherableKIDs(evt.value);
         } else if (evt.type === "blacklist-protection-data") {
           log.info("Init: blacklisting Representations based on protection data.");
-          manifest.addUndecipherableProtectionData(evt.value.type, evt.value.data);
+          manifest.addUndecipherableProtectionData(evt.value.type,
+                                                   evt.value.data);
         }
       }));
 
@@ -362,43 +388,48 @@ export default function InitializeOnMediaSource(
                                                  isPaused : boolean; }>();
         const mediaSourceLoader$ = mediaSourceLoader(mediaSource, position, shouldPlay)
           .pipe(tap(evt => {
-                  switch (evt.type) {
-                    case "needs-manifest-refresh":
-                      scheduleRefresh$.next({ completeRefresh: false,
-                                              canUseUnsafeMode: true });
-                      break;
-                    case "manifest-might-be-out-of-sync":
-                      scheduleRefresh$.next({
-                        completeRefresh: true,
-                        canUseUnsafeMode: false,
-                        delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
-                      });
-                      break;
-                    case "needs-media-source-reload":
-                      reloadMediaSource$.next(evt.value);
-                      break;
-                    case "needs-decipherability-flush":
-                      const keySystem = getCurrentKeySystem(mediaElement);
-                      if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem)) {
-                        reloadMediaSource$.next(evt.value);
-                        return;
-                      }
+            switch (evt.type) {
+              case "needs-manifest-refresh":
+                scheduleRefresh$.next({ completeRefresh: false,
+                                        canUseUnsafeMode: true });
+                break;
+              case "manifest-might-be-out-of-sync":
+                scheduleRefresh$.next({
+                  completeRefresh: true,
+                  canUseUnsafeMode: false,
+                  delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
+                });
+                break;
+              case "needs-media-source-reload":
+                reloadMediaSource$.next(evt.value);
+                break;
+              case "needs-decipherability-flush":
+                const keySystem = getCurrentKeySystem(mediaElement);
+                if (shouldReloadMediaSourceOnDecipherabilityUpdate(
+                      keySystem
+                    )
+                ) {
+                  reloadMediaSource$.next(evt.value);
+                  return;
+                }
 
-                      // simple seek close to the current position to flush the buffers
-                      const { currentTime } = evt.value;
-                      if (currentTime + 0.001 < evt.value.duration) {
-                        mediaElement.currentTime += 0.001;
-                      } else {
-                        mediaElement.currentTime = currentTime;
-                      }
-                      break;
-                    case "protected-segment":
-                      protectedSegments$.next(evt.value);
-                      break;
-                  }
-                }));
+                // simple seek close to the current position
+                // to flush the buffers
+                const { currentTime } = evt.value;
+                if (currentTime + 0.001 < evt.value.duration) {
+                  mediaElement.currentTime += 0.001;
+                } else {
+                  mediaElement.currentTime = currentTime;
+                }
+                break;
+              case "protected-segment":
+                protectedSegments$.next(evt.value);
+                break;
+            }
+          }));
 
-        const currentLoad$ = mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
+        const currentLoad$ =
+          mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
 
         const handleReloads$ = reloadMediaSource$.pipe(
           switchMap(({ currentTime, isPaused }) => {
@@ -412,7 +443,8 @@ export default function InitializeOnMediaSource(
 
         return observableMerge(handleReloads$, currentLoad$);
       }
-    }));
+    })
+  );
 
   return observableMerge(initialManifestRequestWarnings$,
                          loadContent$,

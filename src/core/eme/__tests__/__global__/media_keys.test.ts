@@ -22,7 +22,10 @@ import {
   Subject,
   // throwError as observableThrow,
 } from "rxjs";
-import { takeUntil } from "rxjs/operators";
+import {
+  take,
+  takeUntil,
+} from "rxjs/operators";
 import {
   MediaKeysImpl,
   MediaKeySystemAccessImpl,
@@ -127,10 +130,11 @@ describe("core - eme - global tests - media key system access", () => {
     const kill$ = new Subject();
     const EMEManager = require("../../eme_manager").default;
     EMEManager(videoElt, ksConfig, EMPTY)
-      .pipe(takeUntil(kill$))
+      .pipe(takeUntil(kill$), take(1))
       .subscribe((evt : any) => {
         eventsReceived++;
         expect(evt.type).toEqual("created-media-keys");
+        evt.value.attachMediaKeys$.next();
         setTimeout(() => {
           expect(eventsReceived).toEqual(1);
           expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
@@ -159,6 +163,7 @@ describe("core - eme - global tests - media key system access", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -192,6 +197,7 @@ describe("core - eme - global tests - media key system access", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -236,6 +242,7 @@ describe("core - eme - global tests - media key system access", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");

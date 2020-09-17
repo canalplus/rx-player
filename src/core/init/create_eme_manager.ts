@@ -81,7 +81,9 @@ export default function createEMEManager(
   }
 
   log.debug("Init: Creating EMEManager");
-  return features.emeManager(mediaElement, keySystems, contentProtections$);
+  return features.emeManager(mediaElement,
+                             keySystems,
+                             contentProtections$);
 }
 
 export { IEMEManagerEvent };

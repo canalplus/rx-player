@@ -15,10 +15,11 @@
  */
 
 import {
+  isObservable,
   of as observableOf,
   throwError,
 } from "rxjs";
-import { skip, take } from "rxjs/operators";
+import { skip, take, tap } from "rxjs/operators";
 
 /* tslint:disable no-unsafe-any */
 describe("core - eme - initMediaKeys", () => {
@@ -38,9 +39,13 @@ describe("core - eme - initMediaKeys", () => {
     const spyAttachMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
+    const spyDisableOldMediaKeys = jest.fn(() => {
+      return observableOf(undefined);
+    });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
+      disableOldMediaKeys: spyDisableOldMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 
@@ -48,19 +53,17 @@ describe("core - eme - initMediaKeys", () => {
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
     initMediaKeys(mediaElement, keySystemsConfigs)
       .pipe(take(1))
-      .subscribe((result : unknown) => {
-        expect(result).toEqual({
-          type: "created-media-keys",
-          value: falseMediaKeys,
-        });
+      .subscribe((result : any) => {
+        expect(result.type).toEqual("created-media-keys");
+        expect(result.value.mediaKeysInfos).toEqual(falseMediaKeys);
+        expect(isObservable(result.value.attachMediaKeys$) &&
+               typeof result.value.attachMediaKeys$.next === "function").toBeTruthy();
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
           .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
 
-        expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
-        expect(spyAttachMediaKeys)
-          .toHaveBeenCalledWith(falseMediaKeys, mediaElement);
+        expect(spyAttachMediaKeys).toHaveBeenCalledTimes(0);
         done();
       });
   });
@@ -77,16 +80,27 @@ describe("core - eme - initMediaKeys", () => {
     const spyAttachMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
+    const spyDisableOldMediaKeys = jest.fn(() => {
+      return observableOf(undefined);
+    });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
+      disableOldMediaKeys: spyDisableOldMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
     initMediaKeys(mediaElement, keySystemsConfigs)
-      .pipe(skip(1))
+      .pipe(
+        tap((evt: any) => {
+          if (evt.type === "created-media-keys") {
+            evt.value.attachMediaKeys$.next();
+          }
+        }),
+        skip(1)
+      )
       .subscribe((result : unknown) => {
         expect(result).toEqual({
           type: "attached-media-keys",
@@ -115,9 +129,13 @@ describe("core - eme - initMediaKeys", () => {
     const spyAttachMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });
+    const spyDisableOldMediaKeys = jest.fn(() => {
+      return observableOf(undefined);
+    });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
       default: spyAttachMediaKeys,
+      disableOldMediaKeys: spyDisableOldMediaKeys,
     }));
     const initMediaKeys = require("../init_media_keys").default;
 
@@ -147,12 +165,14 @@ describe("core - eme - initMediaKeys", () => {
     }));
     const err = new Error("a");
     const spyAttachMediaKeys = jest.fn(() => throwError(err));
-    jest.mock("../attach_media_keys", () => {
-      return {
-        __esModule: true as const,
-        default: spyAttachMediaKeys,
-      };
+    const spyDisableOldMediaKeys = jest.fn(() => {
+      return observableOf(undefined);
     });
+    jest.mock("../attach_media_keys", () => ({
+      __esModule: true as const,
+      default: spyAttachMediaKeys,
+      disableOldMediaKeys: spyDisableOldMediaKeys,
+    }));
     const initMediaKeys = require("../init_media_keys").default;
 
     const mediaElement = document.createElement("video");
@@ -160,11 +180,12 @@ describe("core - eme - initMediaKeys", () => {
 
     let eventReceived = false;
     initMediaKeys(mediaElement, keySystemsConfigs)
-      .subscribe((evt : unknown) => {
-        expect(evt).toEqual({
-          type: "created-media-keys",
-          value: falseMediaKeys,
-        });
+      .subscribe((evt : any) => {
+        expect(evt.type).toEqual("created-media-keys");
+        expect(evt.value.mediaKeysInfos).toEqual(falseMediaKeys);
+        expect(isObservable(evt.value.attachMediaKeys$) &&
+               typeof evt.value.attachMediaKeys$.next === "function").toBeTruthy();
+        evt.value.attachMediaKeys$.next();
         eventReceived = true;
       }, (e : Error) => {
         expect(eventReceived).toEqual(true);

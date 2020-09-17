@@ -15,15 +15,19 @@
  */
 
 import {
-  concat as observableConcat,
   Observable,
   of as observableOf,
+  ReplaySubject,
 } from "rxjs";
 import {
   mapTo,
   mergeMap,
+  startWith,
+  take,
 } from "rxjs/operators";
-import attachMediaKeys from "./attach_media_keys";
+import attachMediaKeys, {
+  disableMediaKeys
+} from "./attach_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
 import {
   IAttachedMediaKeysEvent,
@@ -43,12 +47,28 @@ export default function initMediaKeys(
 ): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
-      return observableConcat(
-        observableOf({ type: "created-media-keys" as const,
-                       value: mediaKeysInfos }),
-        attachMediaKeys(mediaKeysInfos, mediaElement)
-          .pipe(mapTo({ type: "attached-media-keys" as const,
-                        value: mediaKeysInfos, }))
+      const attachMediaKeys$ = (new ReplaySubject<void>(1));
+      const shouldDisableOldMediaKeys =
+        mediaElement.mediaKeys !== null &&
+        mediaElement.mediaKeys !== undefined &&
+        mediaKeysInfos.mediaKeys !== mediaElement.mediaKeys;
+
+      const disableOldMediaKeys$ = shouldDisableOldMediaKeys ?
+        disableMediaKeys(mediaElement) :
+        observableOf(null);
+
+      return disableOldMediaKeys$.pipe(
+        mergeMap(() => {
+          return attachMediaKeys$.pipe(
+            mergeMap(() => attachMediaKeys(mediaKeysInfos, mediaElement)),
+            take(1),
+            mapTo({ type: "attached-media-keys" as const,
+                     value: mediaKeysInfos, }),
+            startWith({ type: "created-media-keys" as const,
+                        value: { mediaKeysInfos,
+                                 attachMediaKeys$ } })
+          );
+        })
       );
     }));
 }

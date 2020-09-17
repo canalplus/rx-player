@@ -95,6 +95,7 @@ describe("core - eme - global tests - init data", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -142,6 +143,7 @@ describe("core - eme - global tests - init data", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -205,6 +207,7 @@ describe("core - eme - global tests - init data", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -278,6 +281,7 @@ describe("core - eme - global tests - init data", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -352,6 +356,7 @@ describe("core - eme - global tests - init data", () => {
             break;
           case 2:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 3:
             expect(evt.type).toEqual("attached-media-keys");
@@ -408,6 +413,7 @@ describe("core - eme - global tests - init data", () => {
             break;
           case 5:
             expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
             break;
           case 6:
             expect(evt.type).toEqual("attached-media-keys");
@@ -492,7 +498,9 @@ describe("core - eme - global tests - init data", () => {
           case 3: checkEncryptedEventReceived(evt, initDataEvent2, initData2, 3); break;
           case 4: checkEncryptedEventReceived(evt, initDataEvent1, initData1, 4); break;
           case 5: checkEncryptedEventReceived(evt, initDataEvent2, initData2, 5); break;
-          case 6: expect(evt.type).toEqual("created-media-keys"); break;
+          case 6: expect(evt.type).toEqual("created-media-keys");
+                  evt.value.attachMediaKeys$.next();
+                  break;
           case 7: expect(evt.type).toEqual("attached-media-keys"); break;
           case 8: expectLicenseRequestMessage(evt, initData1, "cenc"); break;
           case 9: expectInitDataIgnored(evt, initData1, "cenc"); break;
@@ -575,7 +583,9 @@ describe("core - eme - global tests - init data", () => {
           case 2: checkEncryptedEventReceived(evt, initDataEvent2, initData1, 2); break;
           case 3: checkEncryptedEventReceived(evt, initDataEvent3, initData2, 3); break;
           case 4: checkEncryptedEventReceived(evt, initDataEvent4, initData2, 4); break;
-          case 5: expect(evt.type).toEqual("created-media-keys"); break;
+          case 5: expect(evt.type).toEqual("created-media-keys");
+                  evt.value.attachMediaKeys$.next();
+                  break;
           case 6: expect(evt.type).toEqual("attached-media-keys"); break;
           case 7: expectLicenseRequestMessage(evt, initData1, "cenc"); break;
           case 8: expectLicenseRequestMessage(evt, initData1, "cenc2"); break;
@@ -657,7 +667,9 @@ describe("core - eme - global tests - init data", () => {
       .subscribe((evt : any) => {
         switch (++eventsReceived) {
           case 1: checkEncryptedEventReceived(evt, initDataEvent1, initData1, 1); break;
-          case 2: expect(evt.type).toEqual("created-media-keys"); break;
+          case 2: expect(evt.type).toEqual("created-media-keys");
+                  evt.value.attachMediaKeys$.next();
+                  break;
           case 3:
             expect(evt.type).toEqual("attached-media-keys");
             expect(createSessionSpy).toHaveBeenCalledTimes(0);
