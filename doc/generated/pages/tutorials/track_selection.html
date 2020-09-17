@@ -183,17 +183,17 @@ an empty array (as it should). This has to be considered.</p>
 <span class="hljs-keyword">let</span> currentVideoTracks = [];
 <span class="hljs-keyword">let</span> currentTextTracks = [];
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;availableAudioTracksChange&quot;</span>, audioTracks =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;availableAudioTracksChange&quot;</span>, <span class="hljs-function"><span class="hljs-params">audioTracks</span> =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;New audio tracks:&quot;</span>, audioTracks);
   currentAudioTracks = audioTracks;
 })
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;availableVideoTracksChange&quot;</span>, videoTracks =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;availableVideoTracksChange&quot;</span>, <span class="hljs-function"><span class="hljs-params">videoTracks</span> =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;New video tracks:&quot;</span>, videoTracks);
   currentVideoTracks = videoTracks;
 })
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;availableTextTracksChange&quot;</span>, textTracks =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;availableTextTracksChange&quot;</span>, <span class="hljs-function"><span class="hljs-params">textTracks</span> =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;New text tracks:&quot;</span>, textTracks);
   currentTextTracks = textTracks;
 })
@@ -296,7 +296,7 @@ Calling the <code>get...Track</code> method in those cases will return <code>und
 should. This has to be considered.</p>
 <h4>Example</h4>
 <p>Like for any events, you will have to register an event listener:</p>
-<pre><code class="language-js">rxPlayer.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</span>, track =&gt; {
+<pre><code class="language-js">rxPlayer.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</span>, <span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> {
   <span class="hljs-keyword">if</span> (track === <span class="hljs-literal">null</span>) {
     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;No text track is active&quot;</span>);
   } <span class="hljs-keyword">else</span> {
@@ -320,7 +320,7 @@ wants no text tracks at all).</p>
 
 <span class="hljs-comment">// get the active audio track through `availableAudioTracksChange`</span>
 <span class="hljs-keyword">let</span> activeAudioTrack2;
-rxPlayer.addEventListener(<span class="hljs-string">&quot;availableAudioTracksChange&quot;</span>, (tracks) =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;availableAudioTracksChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">tracks</span>) =&gt;</span> {
   activeAudioTrack2 = tracks.find(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.active);
 });
 </code></pre>

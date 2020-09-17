@@ -44,11 +44,11 @@ implementing it.</p>
 current network, user settings and viewing conditions.</p>
 </li>
 <li>
-<p><strong>the <a href="buffers/index.html">Buffers</a></strong></p>
+<p><strong>the <a href="stream/index.html">Stream</a></strong></p>
 <p>Choose which media segments to download and push them to SourceBuffers to
 then be able to decode them.</p>
-<p>Various files documenting the Buffers architecture should be available in
-the <code>doc/architecture/buffer</code> directory.</p>
+<p>Various files documenting the Stream architecture should be available in
+the <code>doc/architecture/stream</code> directory.</p>
 </li>
 <li>
 <p><strong>the <a href="source-buffers/index.html">SourceBuffers</a></strong></p>
@@ -112,11 +112,11 @@ which are used by these different modules.</p>
                                  | ~  playback and                                    | ~
                                  | ~  create/connect                                  | ~
                                  | ~  modules                                         | ~
-Buffers                          | ~                                                  | ~
+Stream                           | ~                                                  | ~
 +--------------------------------|-~-----------------------------+                    | ~
 |                                V ~                             |                    | ~
 |  Create the right         +-------------------------------+    |                    | ~
-|  PeriodBuffers depending  |       BufferOrchestrator      |    |                    | ~
+|  PeriodStreams depending  |       StreamOrchestrator      |    |                    | ~
 |  on the current position, +-------------------------------+    |                    | ~
 |  and settings              | ^          | ^            | ^     |                    | ~
 |                            | ~          | ~            | ~     |                    | ~
@@ -124,9 +124,9 @@ Buffers                          | ~                                            
 |                            | ~          | ~            | ~     |                    | ~
 |                  (audio)   v ~  (video) V ~     (text) v ~     |                    | ~
 | Create the right +----------+   +----------+    +----------+   |  +--------------+  | ~
-| AdaptationBuffer |          |   |          |    |          |----&gt; | SourceBuffer |  | ~
+| AdaptationStream |          |   |          |    |          |----&gt; | SourceBuffer |  | ~
 | depending on the |  Period  |-+ |  Period  |-+  |  Period  |-+ |  |   Store (1)  |  | ~
-| wanted track     |  Buffer  | | |  Buffer  | |  |  Buffer  | | |  +--------------+  | ~
+| wanted track     |  Stream  | | |  Stream  | |  |  Stream  | | |  +--------------+  | ~
 | (One per Period  |          | | |          | |  |          | | |  Create one        | ~
 | and one per type +----------+ | +----------+ |  +----------+ | |  SourceBuffer per  | ~
 | of media)         |           |  |           |   |           | |  type of media     | ~
@@ -139,7 +139,7 @@ Buffers                          | ~                                            
 |                  +----------+   +----------+    +----------+ ---&gt; +--------------+  | ~
 | Create the right |          |   |          |    |          | &lt;~~~ |ABRManager (1)|  | ~
 | Representation-  |Adaptation|-+ |Adaptation|-+  |Adaptation|-+ |  +--------------+  | ~
-| Buffer depending |  Buffer  | | |  Buffer  | |  |  Buffer  | | |  Find the best     | ~
+| Stream depending |  Stream  | | |  Stream  | |  |  Stream  | | |  Find the best     | ~
 | on the current   |          | | |          | |  |          | | |  bitrate           | ~
 | network,         +----------+ | +----------+ |  +----------+ | |                    | ~
 | settings...       |           |  |           |   |           | |                    | ~
@@ -151,8 +151,8 @@ Buffers                          | ~                                            
 |                  (audio) v ~    (video) V ~     (text) v ~     |                    | ~
 |                  +----------+   +----------+    +----------+ ----&gt; +------------+   | ~
 | (Representation- |          |   |          |    |          | &lt;~~~~ |  Segment   | --+ ~
-| Buffer).         |Represe...|-+ |Represe...|-+  |Represe...|-+ |   | fetcher (1)| &lt;~~~+
-| Download and push|  Buffer  | | |  Buffer  | |  |  Buffer  | | |   +------------+
+| Stream).         |Represe...|-+ |Represe...|-+  |Represe...|-+ |   | fetcher (1)| &lt;~~~+
+| Download and push|  Stream  | | |  Stream  | |  |  Stream  | | |   +------------+
 | segments based on|          | | |          | |  |          | | |   Download media
 | the current      +----------+ | +----------+ |  +----------+ | |   segments
 | position and      |           |  |           |   |           | |
@@ -161,6 +161,6 @@ Buffers                          | ~                                            
 +----------------------------------------------------------------+
 
 (1) The SourceBuffer Store, Segment fetcher and ABRManager are actually created by the
-Init and then used by the Buffers.
+Init and then used by the Stream.
 </code></pre>
 </body></html></div></div></div></body>

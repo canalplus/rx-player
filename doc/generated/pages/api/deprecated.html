@@ -259,7 +259,7 @@ fullscreen mode, with agg boolean as a payload:</p>
 </ul>
 <p>This behavior can easily be recreated through the following code:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> mediaElement = player.getVideoElement();
-mediaElement.addEventListener(<span class="hljs-string">&quot;fullscreenChange&quot;</span>, () =&gt; {
+mediaElement.addEventListener(<span class="hljs-string">&quot;fullscreenChange&quot;</span>, <span class="hljs-function">() =&gt;</span> {
   <span class="hljs-keyword">if</span> (isFullscreen()) { <span class="hljs-comment">// see isFullscreen implementation above</span>
     <span class="hljs-comment">// do things</span>
   } <span class="hljs-keyword">else</span> {

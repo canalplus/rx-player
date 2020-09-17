@@ -383,13 +383,13 @@ its own chapter.</p>
 <h4>Replacement examples</h4>
 <p>If you want to know when the player is on error, you will have to listen to the
 <code>error</code> events:</p>
-<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;error&quot;</span>, (error) =&gt; {
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">error</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;content on error&quot;</span>);
 });
 </code></pre>
 <p>If you want to know when the content is loaded, you will have to listen to when
 the <code>playerStateChange</code> events:</p>
-<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, (state) =&gt; {
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
   <span class="hljs-keyword">switch</span> (state) {
     <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;LOADING&quot;</span>:
       <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is loading&quot;</span>);
@@ -883,7 +883,7 @@ player.getImageTrack().subscribe(<span class="hljs-function"><span class="hljs-p
 });
 
 <span class="hljs-comment">// becomes</span>
-player.addEventListener(<span class="hljs-string">&quot;imageTrackUpdate&quot;</span>, ({ data }) =&gt; {
+player.addEventListener(<span class="hljs-string">&quot;imageTrackUpdate&quot;</span>, <span class="hljs-function">(<span class="hljs-params">{ data }</span>) =&gt;</span> {
   displaySomeImages(data);
 });
 </code></pre>
@@ -1173,12 +1173,12 @@ much of our internal logic.</p>
 audio description.</p>
 <h4>Replacement example</h4>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
-player.addEventListener(<span class="hljs-string">&quot;languageChange&quot;</span>, (lang) =&gt; {
+player.addEventListener(<span class="hljs-string">&quot;languageChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">lang</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;language changed to&quot;</span>, lang);
 });
 
 <span class="hljs-comment">// becomes</span>
-player.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;</span>, (track) =&gt; {
+player.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
   <span class="hljs-keyword">const</span> { language, id, audioDescription } = track;
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;language changed to&quot;</span>, language);
 });
@@ -1191,12 +1191,12 @@ player.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;</
 closed caption.</p>
 <h4>Replacement example</h4>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
-player.addEventListener(<span class="hljs-string">&quot;subtitleChange&quot;</span>, (lang) =&gt; {
+player.addEventListener(<span class="hljs-string">&quot;subtitleChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">lang</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;subtitle changed to&quot;</span>, lang);
 });
 
 <span class="hljs-comment">// becomes</span>
-player.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</span>, (track) =&gt; {
+player.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
   <span class="hljs-keyword">const</span> { language, id, closedCaption } = track;
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;language changed to&quot;</span>, language);
 });
@@ -1228,12 +1228,12 @@ information. Also, this allows to signal when a <code>TextTrack</code> has been 
 from the DOM to help you free up ressources on your side.</p>
 <h4>Replacement example</h4>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
-player.addEventListener(<span class="hljs-string">&quot;nativeTextTrackChange&quot;</span>, (track) =&gt; {
+player.addEventListener(<span class="hljs-string">&quot;nativeTextTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the track changed:&quot;</span>, track);
 });
 
 <span class="hljs-comment">// becomes</span>
-player.addEventListener(<span class="hljs-string">&quot;nativeTextTracksChange&quot;</span>, (tracks) =&gt; {
+player.addEventListener(<span class="hljs-string">&quot;nativeTextTracksChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">tracks</span>) =&gt;</span> {
   <span class="hljs-keyword">if</span> (tracks.length === <span class="hljs-number">0</span>) {
     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no active track!&quot;</span>);
   } <span class="hljs-keyword">else</span> {

@@ -23,13 +23,14 @@
 <ul>
 <li><a href="#subchapter-src/core/abr/:%20The%20adaptive%20bitrate%20code">src/core/abr/: The adaptive bitrate code</a></li>
 <li><a href="#subchapter-src/core/api/:%20The%20API%20definition">src/core/api/: The API definition</a></li>
-<li><a href="#subchapter-src/core/buffers/:%20The%20Buffer%20management">src/core/buffers/: The Buffer management</a></li>
+<li><a href="#subchapter-src/core/stream/:%20Load%20the%20right%20segments">src/core/stream/: Load the right segments</a></li>
 <li><a href="#subchapter-src/core/eme/:%20Encryption%20management">src/core/eme/: Encryption management</a></li>
 <li><a href="#subchapter-src/core/fetchers/:%20The%20fetchers">src/core/fetchers/: The fetchers</a></li>
 <li><a href="#subchapter-src/core/source_buffers/:%20SourceBuffers%20definitions">src/core/source_buffers/: SourceBuffers definitions</a></li>
 <li><a href="#subchapter-src/core/init/:%20Content%20initialization">src/core/init/: Content initialization</a></li>
 </ul>
 </li>
+<li><a href="#chapter-src/**/__tests__:%20the%20unit%20tests%20directories">src/**/<strong>tests</strong>: the unit tests directories</a></li>
 <li><a href="#chapter-The%20tests/%20directory:%20Test%20strategies,%20integration%20and%20memory%20tests">The tests/ directory: Test strategies, integration and memory tests</a></li>
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-File%20architecture"></a></p>
@@ -115,9 +116,8 @@ the streaming technology used.</p>
 <p>That&#x2019;s where:</p>
 <ul>
 <li>the api is defined</li>
-<li>the buffer is managed</li>
 <li>the MSE and EME APIs are called and managed</li>
-<li>the segments are downloaded</li>
+<li>the segments are downloaded and pushed to then be decoded by the browser</li>
 <li>adaptive bitrate strategies are set</li>
 </ul>
 <p>This directory contains other subdirectories which are listed in the next
@@ -218,9 +218,9 @@ improvements.</p>
 <h3>src/core/api/: The API definition</h3>
 <p>Defines the rx-player API. This is the part the library user will directly
 interact with.</p>
-<p><a name="core-buffers"></a>
-<a name="subchapter-src/core/buffers/:%20The%20Buffer%20management"></a></p>
-<h3>src/core/buffers/: The Buffer management</h3>
+<p><a name="core-stream"></a>
+<a name="subchapter-src/core/stream/:%20Load%20the%20right%20segments"></a></p>
+<h3>src/core/stream/: Load the right segments</h3>
 <p>The code there calculate which segments should be downloaded, ask for their
 download and push the segments into the SourceBuffers.</p>
 <p><a name="core-eme"></a>
@@ -247,7 +247,27 @@ defined in <code>src/custom_source_buffers</code>.</p>
 <a name="subchapter-src/core/init/:%20Content%20initialization"></a></p>
 <h3>src/core/init/: Content initialization</h3>
 <p>This is the central part which download manifests, initialize MSE and EME APIs,
-instanciate the Buffer and link together many subparts of the player.</p>
+instanciate the central <code>StreamOrchestrator</code> (which will allow to download and
+push segments so the content can play) and link together many subparts of the
+player.</p>
+<p><a name="src-tests"></a>
+<a name="chapter-src/**/__tests__:%20the%20unit%20tests%20directories"></a></p>
+<h2>src/**/<strong>tests</strong>: the unit tests directories</h2>
+<p>You will find multiple directories named <code>__tests__</code> in the RxPlayer.
+Those contain unit tests and are put in the same directory than the code it
+tests.</p>
+<p>Most unit tests files contain only tests for a single source file. Those will
+be put directly at the root of <code>__tests__</code> under the name
+<code>&lt;ORIGINAL_SRC_FILE&gt;.test.ts</code> (where <code>&lt;ORIGINAL_SRC_FILE&gt;</code> is the filename of
+the tested file).</p>
+<p><code>__tests__</code> directories can also contain files defining tests for multiple files
+contained in the tested directory.
+Those can be quicker to write and easier to maintain at the expense of being
+less thorough.</p>
+<p>Those type of &#x201C;global&#x201D; unit tests are put in a special <code>__global__</code> directory,
+itself directly at the root of the corresponding <code>__tests__</code> directory.
+Their filename don&#x2019;t follow the same convention than single-source unit tests
+but should still be suffixed by <code>.test.ts</code>.</p>
 <p><a name="tests"></a>
 <a name="chapter-The%20tests/%20directory:%20Test%20strategies,%20integration%20and%20memory%20tests"></a></p>
 <h2>The tests/ directory: Test strategies, integration and memory tests</h2>
@@ -258,6 +278,6 @@ the player).</p>
 subdirectory.</p>
 <p>Memory tests are entirely written in the <code>tests/memory</code> subdirectory.</p>
 <p>As for unit tests, they are written alongside the code, in <code>__tests__</code>
-directories, the <code>tests/unit</code> directory only contains the configuration files
-to launch them.</p>
+directories. All its configuration can be found at the root of the project,
+in <code>jest.config.js</code> (we use the jest library for unit tests).</p>
 </body></html></div></div></div></body>

@@ -13,18 +13,99 @@
 <p>The <code>core/source-buffer</code> directory contains the part of the code directly
 related to the insertion and removal of media segments.</p>
 <p>This is done through <code>SourceBuffers</code>, which are JavaScript objects.</p>
-<p>Some <code>SourceBuffers</code> are directly defined by the browser like the audio and
-video ones. Others, like for subtitles for example, are defined by the RxPlayer.
-Those custom <code>SourceBuffers</code> definitions are written in the
+<p>The name is taken from the MSE SourceBuffer[1] JavaScript object, which are the
+native browser interface through which media segments are pushed.</p>
+<p>In the RxPlayer, those SourceBuffer objects are only used for audio and video
+decoding. For the other types of media (e.g. text - for subtitles - and
+image - for thumbnails), custom SourceBuffer implementation have been written
+entirely in JavaScript instead, to allow more advanced treatment of those.</p>
+<p>Those custom SourceBuffer implementation are defined in the
 <code>src/custom_source_buffers</code> directory.</p>
+<p>[1] <a href="https://www.w3.org/TR/media-source/#sourcebuffer">MSE SourceBuffer</a></p>
+<p>Here&#x2019;s a vulgarized architecture schema of the code in that directory:</p>
+<pre><code>   +--------------------------------------------------------------------------+
+   |                        Rest of the RxPlayer&apos;s code                       |
+   +--------------------------------------------------------------------------+
+                                |       ^
+  Ask to get / create / remove  |       | Returns created QueuedSourceBuffer or
+  SourceBuffer for a given type |       | wanted information
+  or get information about the  |       |
+  available types               |       |
+                                |       |
+                                V       |
+   +--------------------------------------------------------------------------+
+   |                             SourceBuffersStore                           |
+   +--------------------------------------------------------------------------+
+          |                  |                  |                 |
+          | creates          | creates          | creates         | creates
+          | (if needed)      | (if needed)      | (if needed)     | (if needed)
+          |                  |                  |                 |
+          V                  V                  V                 V
+   +------------+     +------------+     +------------+     +------------+
+   |   Queued   |     |   Queued   |     |   Queued   |     |   Queued   |
+   |SourceBuffer|     |SourceBuffer|     |SourceBuffer|     |SourceBuffer|
+   |  (video)   |     |  (audio)   |     |   (text)   |     |  (image)   |
+   +------------+     +------------+     +------------+     +------------+
+   Creates   |        Creates   |        Creates   |        Creates   |
+      |      |           |      |           |      |           |      |
+      |      |           |      |           |      |           |      |
+      V      V           V      V           V      V           V      V
+  +-----+ +------+   +-----+ +------+   +-----+ +------+   +-----+ +------+
+  | SI* | | NSB* |   | SI* | | NSB* |   | SI* | | TSB* |   | SI* | | ISB* |
+  +-----+ +------+   +-----+ +------+   +-----+ +------+   +-----+ +------+
+
+  SI*: SegmentInventory. Store the information on every segments currently
+       available in the associated SourceBuffer.
+
+  NSB*: Native [browser implementation of a] SourceBuffer.
+
+  TSB*: Text SourceBuffer (either HTMLTextSourceBuffer or
+        NativeTextSourceBuffer depending on the current textrack mode chosen.).
+        Custom SourceBuffer implementation for subtitles which handle the logic
+        of storing subtitles and displaying them at the right time and with the
+        right style (color, position etc.).
+
+  ISB*: ImageSourceBuffer. Custom SourceBuffer implementation for image
+        thumbnails which will just store them.
+</code></pre>
 <p><a name="chapter-SourceBuffersStore"></a></p>
 <h2>SourceBuffersStore</h2>
 <p>The <code>SourceBuffersStore</code> is the main export from there. It facilitates the
-creation and destruction of SourceBuffers.
-More specifically, it keeps track of every <code>SourceBuffer</code> created for a given
-content.</p>
-<p>As a rule, only ONE <code>SourceBuffer</code> is allowed by type of buffer (e.g.
-<code>audio</code>, <code>video</code>, <code>text</code> (subtitles), <code>images</code> (thumbnails)).</p>
+creation and destruction of SourceBuffers.</p>
+<p>Its roles are to:</p>
+<ul>
+<li>
+<p>announce which types of SourceBuffer can be currently created on the
+HTMLMediaElement (example of a type of buffer would be &#x201C;audio&#x201D;, &#x201C;video&#x201D; or
+&#x201C;text&#x201D;).</p>
+<p>For example, no &#x201C;video&#x201D; SourceBuffer should be created on an <code>&lt;audio&gt;</code>
+element (though it wouldn&#x2019;t cause any problem, it would be useless
+as video cannot be rendered here). To give another example, you should not
+create a &#x201C;text&#x201D; SourceBuffer if no text track parser has been added to the
+RxPlayer.</p>
+</li>
+<li>
+<p>Create only one <code>QueuedSourceBuffer</code> instance per type of buffer.</p>
+<p>Multiple <code>QueuedSourceBuffer</code> for a single type could lead to browser issues
+and to conflicts in the RxPlayer code.</p>
+</li>
+<li>
+<p>Provide a synchronization mechanism to announce when all &#x201C;native&#x201D;
+SourceBuffers are ready to receive segments. I&#x2019;ll explain:</p>
+<p>&#x201C;Native&#x201D; SourceBuffers are SourceBuffers directly implemented by the
+browser. They typically are the &#x201C;video&#x201D; and &#x201C;audio&#x201D; SourceBuffers.</p>
+<p>Among several other constraints, all native SourceBuffers needed to play a
+given content should be created before we can start pushing segments to any
+of them. This is a browser limitation.</p>
+<p>This is where this synchronization mechanism can become useful. The
+SourceBuffersStore will signal when all of the native SourceBuffers needed
+for the given contents are created, so that the rest of the RxPlayer knows
+when it can begin to push segments to those.</p>
+<p>Note that this means that un-needed SourceBuffers have to be explicitely
+&#x201C;disabled&#x201D; here, as the SourceBuffersStore cannot know whether it should
+wait until those SourceBuffers are created of if you just don&#x2019;t need it.</p>
+</li>
+</ul>
 <p><a name="chapter-QueuedSourceBuffer"></a></p>
 <h2>QueuedSourceBuffer</h2>
 <p>A <code>QueuedSourceBuffer</code> is a wrapper on top of a <code>SourceBuffer</code> (a native one
@@ -61,6 +142,9 @@ position</p>
 <p>Basically, each times the given clock ticks, the BufferGarbageCollector will
 ensure that the volume of data before and ahead of the current position does not
 grow into a larger value than what is configured.</p>
+<p>For now, its code is completely decoupled for the rest of the code in that
+directory. This is why it is not included in the schema included on the top of
+this page.</p>
 <p><a name="chapter-The%20SegmentInventory"></a></p>
 <h2>The SegmentInventory</h2>
 <p>The <code>SegmentInventory</code> keeps track of which segments are currently bufferized

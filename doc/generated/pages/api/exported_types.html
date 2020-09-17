@@ -200,7 +200,7 @@ method and emitted as the payload of the <code>audioTrackChange</code> event.</p
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
 <span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;</span>, (track : IAudioTrack) =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track : IAudioTrack</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;current track:&quot;</span>, track);
 });
 
@@ -222,7 +222,7 @@ method and emitted as the payload of the <code>textTrackChange</code> event.</p>
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
 <span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</span>, (track : ITextTrack) =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track : ITextTrack</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;current track:&quot;</span>, track);
 });
 
@@ -244,7 +244,7 @@ method and emitted as the payload of the <code>videoTrackChange</code> event.</p
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
 <span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;videoTrackChange&quot;</span>, (track : IVideoTrack) =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;videoTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track : IVideoTrack</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;current track:&quot;</span>, track);
 });
 
