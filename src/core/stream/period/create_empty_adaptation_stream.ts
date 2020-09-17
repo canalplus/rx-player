@@ -38,7 +38,7 @@ import { IStreamStateFull } from "../types";
  * @param {Object} content
  * @returns {Observable}
  */
-export default function creatEmptyAdaptationStream(
+export default function createEmptyAdaptationStream(
   streamClock$ : Observable<{ currentTime : number }>,
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,

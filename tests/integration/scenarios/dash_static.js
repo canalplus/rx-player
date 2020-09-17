@@ -64,7 +64,7 @@ describe("DASH content CENC wrong version in MPD", function () {
       xhrMock.restore();
       xhrMock = undefined;
     }
-    stubs.forEach(stub => stub.restore());
+    stubs.forEach(declaredStub => declaredStub.restore());
     stubs = [];
   });
   it("should filter out CENC pssh with a wrong version", async function() {

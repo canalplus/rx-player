@@ -192,7 +192,8 @@ export default class Adaptation {
         }
       }
     }
-    this.representations = representations.sort((a, b) => a.bitrate - b.bitrate);
+    representations.sort((a, b) => a.bitrate - b.bitrate);
+    this.representations = representations;
 
     this.decipherable = decipherable;
     this.isSupported = isSupported;

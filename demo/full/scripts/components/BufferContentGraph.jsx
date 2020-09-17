@@ -213,27 +213,27 @@ export default function BufferContentGraph({
         setTipVisible(true);
         setTipPosition(event.clientX);
 
-        let tipText = "";
+        let newTipText = "";
         switch (adaptation.type) {
           case "video":
-            tipText += `width: ${representation.width}` + "\n" +
-                       `height: ${representation.height}` + "\n" +
-                       `codec: ${representation.codec}` + "\n" +
-                       `bitrate: ${representation.bitrate}` + "\n";
+            newTipText += `width: ${representation.width}` + "\n" +
+                          `height: ${representation.height}` + "\n" +
+                          `codec: ${representation.codec}` + "\n" +
+                          `bitrate: ${representation.bitrate}` + "\n";
             break;
           case "audio":
-            tipText += `language: ${adaptation.language}` + "\n" +
-                       `audioDescription: ${!!adaptation.isAudioDescription}` + "\n" +
-                       `codec: ${representation.codec}` + "\n" +
-                       `bitrate: ${representation.bitrate}` + "\n";
+            newTipText += `language: ${adaptation.language}` + "\n" +
+                          `audioDescription: ${!!adaptation.isAudioDescription}` + "\n" +
+                          `codec: ${representation.codec}` + "\n" +
+                          `bitrate: ${representation.bitrate}` + "\n";
             break;
           case "text":
-            tipText += `language: ${adaptation.language}` + "\n" +
-                       `closedCaption: ${!!adaptation.isClosedCaption}` + "\n";
+            newTipText += `language: ${adaptation.language}` + "\n" +
+                          `closedCaption: ${!!adaptation.isClosedCaption}` + "\n";
             break;
         }
-        tipText += `segment: [${start.toFixed(1)}, ${end.toFixed(1)}]`;
-        setTipText(tipText);
+        newTipText += `segment: [${start.toFixed(1)}, ${end.toFixed(1)}]`;
+        setTipText(newTipText);
         return;
       }
     }

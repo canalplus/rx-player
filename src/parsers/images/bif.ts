@@ -77,7 +77,7 @@ function parseBif(buf : Uint8Array) : IBifObject {
 
   const aspectRatio = [buf[pos], buf[pos + 1]].join(":"); pos += 2;
 
-  const isVod = buf[pos] === 1; pos += 1;
+  const isVod = buf[pos] === 1;
 
   // bytes 0x1F to 0x40 is unused data for now
   pos = 0x40;

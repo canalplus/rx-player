@@ -15,22 +15,30 @@
  */
 
 import {
+  createDashUrlDetokenizer,
   replaceRepresentationDASHTokens,
-  replaceSegmentDASHTokens,
 } from "../tokens";
 
 describe("dash parser tokens helpers", function() {
-  describe("replaceSegmentDASHTokens", () => {
+  describe("createDashUrlDetokenizer", () => {
     it("should correctly parse time token", function() {
-      expect(replaceSegmentDASHTokens("Example_Token_$Time$", 1000))
+      expect(createDashUrlDetokenizer(1000, undefined)("Example_Token_$Time$"))
         .toBe("Example_Token_1000");
     });
     it("should correctly parse number token", function() {
-      expect(replaceSegmentDASHTokens("Example_Token_$Number$", 1000, 3))
+      expect(createDashUrlDetokenizer(1000, 3)("Example_Token_$Number$"))
         .toBe("Example_Token_3");
     });
+    it("should correctly parse both time and number token", function() {
+      expect(createDashUrlDetokenizer(1000, 3)("Example_Token_$Number$_$Time$"))
+        .toBe("Example_Token_3_1000");
+    });
+    it("should not replace undefined tokens", function() {
+      expect(createDashUrlDetokenizer(1000, 3)("Example_Token_$Nmber$_$ime$"))
+        .toBe("Example_Token_$Nmber$_$ime$");
+    });
     it("should return segment name if no token", function() {
-      expect(replaceSegmentDASHTokens("Example_Token"))
+      expect(createDashUrlDetokenizer(undefined, undefined)("Example_Token"))
         .toBe("Example_Token");
     });
   });

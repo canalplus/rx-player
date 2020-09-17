@@ -23,8 +23,8 @@ import {
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import {
+  createDashUrlDetokenizer,
   createIndexURLs,
-  replaceSegmentDASHTokens,
 } from "./tokens";
 
 const { MINIMUM_SEGMENT_SIZE } = config;
@@ -273,9 +273,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       const realTime = timeFromPeriodStart + scaledStart;
       const manifestTime = timeFromPeriodStart + this._index.presentationTimeOffset;
 
-      const detokenizedURLs = mediaURLs?.map(url => {
-        return replaceSegmentDASHTokens(url, manifestTime, realNumber);
-      }) ?? null;
+      const detokenizedURLs = mediaURLs === null ?
+        null :
+        mediaURLs.map(createDashUrlDetokenizer(manifestTime, realNumber));
+
       const args = { id: String(realNumber),
                      number: realNumber,
                      time: realTime,
