@@ -1,5 +1,34 @@
 # Changelog
 
+## v3.21.1 (2020/09/21)
+
+### Bug fixes
+
+  - compatibility/drm: make switching the current `MediaKeys` work on most platforms by re-ordering browser API calls [#766, #744]
+  - compatibility/drm: in Edge and IE11, fix behavior which could lead to not fallbacking from a non-decryptable quality due to a badly parsed key ID [#790]
+  - dash: when a Representation depends on multiple SegmentTemplate at the same time, merge all corresponding information instead of just relying on the last one [#767, #768]
+  - smooth: skip discontinuity when seeking in the middle of one when playing a smooth content [#792]
+  - api: fix `getUrl` and the minimum position calculation after playing for some time a live content with a set `manifestUpdateUrl` [#775, #776]
+  - drm/subtitles: better handle UTF-8 and UTF-16 characters in an encrypted initialization data or in subtitles [#791]
+  - requests: still retry all the other segment's URLs when a non-retryable error happen on the request for one of them [#798]
+  - dash: fix infinite rebuffering when playing multi-Period DASH contents for some time with a `manifestUpdateUrl` set [#797]
+
+### Other improvements
+
+  - improve seek latency in some rare cases where we could profit from cancelling a request for a needed segment [#752, #769]
+  - requests: only download an initialization segment when media segments for that Representation are needed [#773]
+  - requests: avoid unnecessary segment requests when segments loaded don't exactly align with what is expected if contiguous segments exist [#772, #771]
+  - better time quality switches to avoid having to re-download segments in the new quality [#781, #782, #783]
+  - adaptive: limit bandwidth oscillations when the buffer level is low by choosing a lower bitrate by default and limiting fall in bandwidth when in "starvation mode" [#796]
+  - compatibility/drm: filter out badly-formed CENC PSSH when found, if some well-formed exist [#788]
+  - isobmff: support rare but possible occurence where an ISOBMFF box size is stored on 8 bytes [#784]
+  - logs: when logs are set to `"DEBUG"`, now regularly print visual representations of which segments live currently in the buffer(s) [#795]
+  - demo: change separator in the demo's generated links from "\" to "!" to not change its form when percent-encoded [#758, #759]
+  - project: better document changes in changelog and release notes, mostly by linking to related issues and PRs
+  - code: rename "Buffer" module to "Stream" in the code, documentation and logs to better reflect what that code does [#793]
+  - tests: add "global" unit tests for a more a module-oriented testing strategy (when compared to our existing function-oriented unit tests) to our EME (DRM) related code [#753]
+
+
 ## v3.21.0 (2020/06/17)
 
 ### Features
