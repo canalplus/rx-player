@@ -19,12 +19,10 @@ import {
   Subject,
 } from "rxjs";
 import { takeUntil } from "rxjs/operators";
+import { base64ToBytes } from "../../../utils/base64";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
-import {
-  strToUtf8,
-  utf8ToStr,
-} from "../../../utils/string_parsing";
+import { utf8ToStr } from "../../../utils/string_parsing";
 import * as events from "../../event_listeners";
 import {
   ICustomMediaKeys,
@@ -98,8 +96,8 @@ class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
                                                license;
             /* tslint:disable no-unsafe-any */
             const json = JSON.parse(utf8ToStr(licenseTypedArray));
-            const key = strToUtf8(atob(json.keys[0].k));
-            const kid = strToUtf8(atob(json.keys[0].kid));
+            const key = base64ToBytes(json.keys[0].k);
+            const kid = base64ToBytes(json.keys[0].kid);
             /* tslint:enable no-unsafe-any */
             resolve(this._vid.webkitAddKey(this._key, key, kid, /* sessionId */ ""));
           } else {
