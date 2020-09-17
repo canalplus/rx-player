@@ -26,28 +26,16 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
 import { IMediaKeysInfos } from "./types";
 
 /**
- * Dispose the old media keys if different than new one.
- * @param {Object} mediaKeysInfos
+ * Dispose the media keys on media element.
  * @param {Object} mediaElement
  * @returns {Observable}
  */
-export function disableOldMediaKeys(
-  mediaKeysInfos: IMediaKeysInfos,
+export function disableMediaKeys(
   mediaElement : HTMLMediaElement
 ): Observable<unknown> {
   return observableDefer(() => {
-    const shouldDisableOldMediaKeys = mediaElement.mediaKeys !== null &&
-                                      mediaElement.mediaKeys !== undefined &&
-                                      mediaKeysInfos.mediaKeys !== mediaElement.mediaKeys;
-
-    const disableOldMediaKeys$ = shouldDisableOldMediaKeys ?
-      observableDefer(() => {
-        MediaKeysInfosStore.setState(mediaElement, null);
-        return setMediaKeys(mediaElement, null);
-      }) :
-      observableOf(null);
-
-    return disableOldMediaKeys$;
+    MediaKeysInfosStore.setState(mediaElement, null);
+    return setMediaKeys(mediaElement, null);
   });
 }
 
@@ -79,10 +67,10 @@ export default function attachMediaKeys(
     return closeAllSessions$.pipe(
       mergeMap(() => {
         MediaKeysInfosStore.setState(mediaElement,
-          { keySystemOptions,
-            mediaKeySystemAccess,
-            mediaKeys,
-            loadedSessionsStore });
+                                    { keySystemOptions,
+                                      mediaKeySystemAccess,
+                                      mediaKeys,
+                                      loadedSessionsStore });
         if (mediaElement.mediaKeys === mediaKeys) {
           return observableOf(null);
         }

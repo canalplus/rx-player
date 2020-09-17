@@ -16,6 +16,7 @@
 
 import {
   Observable,
+  of as observableOf,
   ReplaySubject,
 } from "rxjs";
 import {
@@ -25,7 +26,7 @@ import {
   take,
 } from "rxjs/operators";
 import attachMediaKeys, {
-  disableOldMediaKeys
+  disableMediaKeys
 } from "./attach_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
 import {
@@ -47,7 +48,16 @@ export default function initMediaKeys(
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
       const attachMediaKeys$ = (new ReplaySubject<void>(1));
-      return disableOldMediaKeys(mediaKeysInfos, mediaElement).pipe(
+      const shouldDisableOldMediaKeys =
+        mediaElement.mediaKeys !== null &&
+        mediaElement.mediaKeys !== undefined &&
+        mediaKeysInfos.mediaKeys !== mediaElement.mediaKeys;
+
+      const disableOldMediaKeys$ = shouldDisableOldMediaKeys ?
+        disableMediaKeys(mediaElement) :
+        observableOf(null);
+
+      return disableOldMediaKeys$.pipe(
         mergeMap(() => {
           return attachMediaKeys$.pipe(
             mergeMap(() => attachMediaKeys(mediaKeysInfos, mediaElement)),
