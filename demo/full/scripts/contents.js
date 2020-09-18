@@ -3,7 +3,7 @@ import MetaPlaylistDASHSmoothURL from "./metaplaylist_url";
 export default [
   {
     "name": "DASH-IF - SegmentTimeline live stream",
-    "url": "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
+    "url": "https://livesim.dashif.org/livesim/start_1800/testpic_2s/Manifest.mpd",
     "transport": "dash",
     "live": true,
   },
