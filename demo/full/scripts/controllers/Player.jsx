@@ -30,34 +30,34 @@ function Player() {
   const playerWrapperElement = useRef(null);
 
   useEffect(() => {
-    const player = createModule(PlayerModule, {
+    const playerMod = createModule(PlayerModule, {
       videoElement: videoElement.current,
       textTrackElement: textTrackElement.current,
     });
 
     const $destroySubject = new Subject();
-    $destroySubject.subscribe(() => player.destroy());
+    $destroySubject.subscribe(() => playerMod.destroy());
 
     let displaySpinnerTimeout = 0;
 
     // update isStopped and displaySpinner
-    player.$get("autoPlayBlocked" ,
-                "isSeeking",
-                "isBuffering",
-                "isLoading",
-                "isReloading",
-                "isStopped")
+    playerMod.$get("autoPlayBlocked" ,
+                   "isSeeking",
+                   "isBuffering",
+                   "isLoading",
+                   "isReloading",
+                   "isStopped")
       .pipe(takeUntil($destroySubject))
       .subscribe(([
-        autoPlayBlocked,
+        newAutoPlayBlocked,
         isSeeking,
         isBuffering,
         isLoading,
         isReloading,
-        isStopped,
+        newIsStopped,
       ]) => {
-        setAutoPlayBlocked(autoPlayBlocked);
-        setIsStopped(isStopped);
+        setAutoPlayBlocked(newAutoPlayBlocked);
+        setIsStopped(newIsStopped);
         if (isLoading || isReloading) {
           setDisplaySpinner(true);
         } else if (isSeeking || isBuffering) {
@@ -76,10 +76,7 @@ function Player() {
         }
       });
 
-    setPlayer(player);
-
-    // for DEV mode
-    window.playerModule = player;
+    setPlayer(playerMod);
 
     return () => {
       if ($destroySubject) {

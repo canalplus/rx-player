@@ -137,7 +137,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
 
   // update bufferedData
   fromPlayerEvent(player, "playerStateChange").pipe(
-    map((state) => state === "STOPPED"),
+    map((playerState) => playerState === "STOPPED"),
     distinctUntilChanged(),
     takeUntil($destroy),
     switchMap((isStopped) => {

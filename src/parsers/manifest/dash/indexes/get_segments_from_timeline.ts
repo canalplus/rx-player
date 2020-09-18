@@ -20,7 +20,7 @@ import {
   IIndexSegment,
   toIndexTime,
 } from "../../utils/index_helpers";
-import { replaceSegmentDASHTokens } from "./tokens";
+import { createDashUrlDetokenizer } from "./tokens";
 
 /**
  * For the given start time and duration of a timeline element, calculate how
@@ -88,9 +88,10 @@ export default function getSegmentsFromTimeline(
       const segmentNumber = currentNumber != null ?
         currentNumber + segmentNumberInCurrentRange : undefined;
 
-      const detokenizedURLs = mediaURLs?.map(url => {
-        return replaceSegmentDASHTokens(url, segmentTime, segmentNumber);
-      }) ?? null;
+      const detokenizedURLs = mediaURLs === null ?
+        null :
+        mediaURLs.map(createDashUrlDetokenizer(segmentTime, segmentNumber));
+
       const segment = { id: String(segmentTime),
                         time: segmentTime - index.indexTimeOffset,
                         isInit: false,

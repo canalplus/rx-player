@@ -46,9 +46,14 @@ export type ITextTrackPreference = null |
 
 /** Single preference for a video track Adaptation. */
 export type IVideoTrackPreference = null |
-                                    { codec? : { all: boolean;
-                                                 test: RegExp; };
-                                      signInterpreted? : boolean; };
+                                    IVideoTrackPreferenceObject;
+
+/** Preference for a video track Adaptation for when it is not set to `null`. */
+interface IVideoTrackPreferenceObject {
+  codec? : { all: boolean;
+             test: RegExp; };
+  signInterpreted? : boolean;
+}
 
 /**
  * Definition of a single audio Representation as represented by the
@@ -120,15 +125,25 @@ interface ITMPeriodInfos { period : Period;
 
 /** Audio track preference once normalized by the TrackChoiceManager. */
 type INormalizedPreferredAudioTrack = null |
-                                      { normalized? : string;
-                                        audioDescription? : boolean;
-                                        codec? : { all: boolean;
-                                                   test: RegExp; }; };
+                                      INormalizedPreferredAudioTrackObject;
+
+/** Audio track preference when it is not set to `null`. */
+interface INormalizedPreferredAudioTrackObject {
+  normalized? : string;
+  audioDescription? : boolean;
+  codec? : { all: boolean;
+             test: RegExp; };
+}
 
 /** Text track preference once normalized by the TrackChoiceManager. */
 type INormalizedPreferredTextTrack = null |
-                                     { normalized : string;
-                                       closedCaption : boolean; };
+                                     INormalizedPreferredTextTrackObject;
+
+/** Text track preference when it is not set to `null`. */
+interface INormalizedPreferredTextTrackObject {
+  normalized : string;
+  closedCaption : boolean;
+}
 
 /**
  * Transform an array of IAudioTrackPreference into an array of
@@ -956,6 +971,57 @@ export default class TrackChoiceManager {
 }
 
 /**
+ * Create a function allowing to compare audio Adaptations with a given
+ * `preferredAudioTrack` preference to see if they match.
+ *
+ * This function is curried to be easily and optimally used in a loop context.
+ *
+ * @param {Object} preferredAudioTrack - The audio track preference you want to
+ * compare audio Adaptations to.
+ * @returns {Function} - Function taking in argument an audio Adaptation and
+ * returning `true` if it matches the `preferredAudioTrack` preference (and
+ * `false` otherwise.
+ */
+function createAudioPreferenceMatcher(
+  preferredAudioTrack : INormalizedPreferredAudioTrackObject
+) : (audioAdaptation : Adaptation) => boolean {
+  /**
+   * Compares an audio Adaptation to the given `preferredAudioTrack` preference.
+   * Returns `true` if it matches, false otherwise.
+   * @param {Object} audioAdaptation
+   * @returns {boolean}
+   */
+  return function matchAudioPreference(audioAdaptation : Adaptation) : boolean {
+    if (preferredAudioTrack.normalized !== undefined) {
+      const language = audioAdaptation.normalizedLanguage ?? "";
+      if (language !== preferredAudioTrack.normalized) {
+        return false;
+      }
+    }
+    if (preferredAudioTrack.audioDescription !== undefined) {
+      if (preferredAudioTrack.audioDescription) {
+        if (audioAdaptation.isAudioDescription !== true) {
+          return false;
+        }
+      } else if (audioAdaptation.isAudioDescription === true) {
+        return false;
+      }
+    }
+    if (preferredAudioTrack.codec === undefined) {
+      return true;
+    }
+    const regxp = preferredAudioTrack.codec.test;
+    const codecTestingFn = (rep : Representation) =>
+      rep.codec !== undefined && regxp.test(rep.codec);
+
+    if (preferredAudioTrack.codec.all) {
+      return audioAdaptation.representations.every(codecTestingFn);
+    }
+    return audioAdaptation.representations.some(codecTestingFn);
+  };
+}
+
+/**
  * Find an optimal audio adaptation given their list and the array of preferred
  * audio tracks sorted from the most preferred to the least preferred.
  *
@@ -979,43 +1045,45 @@ function findFirstOptimalAudioAdaptation(
       return null;
     }
 
-    const foundAdaptation = arrayFind(audioAdaptations, (audioAdaptation) => {
-      if (preferredAudioTrack.normalized !== undefined) {
-        const language = audioAdaptation.normalizedLanguage ?? "";
-        if (language !== preferredAudioTrack.normalized) {
-          return false;
-        }
-      }
-      if (preferredAudioTrack.audioDescription !== undefined) {
-        if (preferredAudioTrack.audioDescription) {
-          if (audioAdaptation.isAudioDescription !== true) {
-            return false;
-          }
-        } else if (audioAdaptation.isAudioDescription === true) {
-          return false;
-        }
-      }
-      if (preferredAudioTrack.codec === undefined) {
-        return true;
-      }
-      const regxp = preferredAudioTrack.codec.test;
-      const codecTestingFn = (rep : Representation) =>
-        rep.codec !== undefined && regxp.test(rep.codec);
-
-      if (preferredAudioTrack.codec.all) {
-        return audioAdaptation.representations.every(codecTestingFn);
-      }
-      return audioAdaptation.representations.some(codecTestingFn);
-    });
+    const matchPreferredAudio = createAudioPreferenceMatcher(preferredAudioTrack);
+    const foundAdaptation = arrayFind(audioAdaptations, matchPreferredAudio);
 
     if (foundAdaptation !== undefined) {
       return foundAdaptation;
     }
-
   }
 
   // no optimal adaptation, just return the first one
   return audioAdaptations[0];
+}
+
+/**
+ * Create a function allowing to compare text Adaptations with a given
+ * `preferredTextTrack` preference to see if they match.
+ *
+ * This function is curried to be easily and optimally used in a loop context.
+ *
+ * @param {Object} preferredTextTrack - The text track preference you want to
+ * compare text Adaptations to.
+ * @returns {Function} - Function taking in argument a text Adaptation and
+ * returning `true` if it matches the `preferredTextTrack` preference (and
+ * `false` otherwise.
+ */
+function createTextPreferenceMatcher(
+  preferredTextTrack : INormalizedPreferredTextTrackObject
+) : (textAdaptation : Adaptation) => boolean {
+  /**
+   * Compares a text Adaptation to the given `preferredTextTrack` preference.
+   * Returns `true` if it matches, false otherwise.
+   * @param {Object} textAdaptation
+   * @returns {boolean}
+   */
+  return function matchTextPreference(textAdaptation : Adaptation) : boolean {
+    return takeFirstSet<string>(textAdaptation.normalizedLanguage,
+                                "") === preferredTextTrack.normalized &&
+    (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true :
+                                        textAdaptation.isClosedCaption !== true);
+  };
 }
 
 /**
@@ -1042,21 +1110,57 @@ function findFirstOptimalTextAdaptation(
       return null;
     }
 
-    const foundAdaptation = arrayFind(textAdaptations, (textAdaptation) =>
-      takeFirstSet<string>(textAdaptation.normalizedLanguage,
-                           "") === preferredTextTrack.normalized &&
-      (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true :
-                                          textAdaptation.isClosedCaption !== true)
-    );
+    const matchPreferredText = createTextPreferenceMatcher(preferredTextTrack);
+    const foundAdaptation = arrayFind(textAdaptations, matchPreferredText);
 
     if (foundAdaptation !== undefined) {
       return foundAdaptation;
     }
-
   }
 
   // no optimal adaptation
   return null;
+}
+
+/**
+ * Create a function allowing to compare video Adaptations with a given
+ * `preferredVideoTrack` preference to see if they match.
+ *
+ * This function is curried to be easily and optimally used in a loop context.
+ *
+ * @param {Object} preferredVideoTrack - The video track preference you want to
+ * compare video Adaptations to.
+ * @returns {Function} - Function taking in argument a video Adaptation and
+ * returning `true` if it matches the `preferredVideoTrack` preference (and
+ * `false` otherwise.
+ */
+function createVideoPreferenceMatcher(
+  preferredVideoTrack : IVideoTrackPreferenceObject
+) : (videoAdaptation : Adaptation) => boolean {
+  /**
+   * Compares a video Adaptation to the given `preferredVideoTrack` preference.
+   * Returns `true` if it matches, false otherwise.
+   * @param {Object} videoAdaptation
+   * @returns {boolean}
+   */
+  return function matchVideoPreference(videoAdaptation : Adaptation) : boolean {
+    if (preferredVideoTrack.signInterpreted !== undefined &&
+        preferredVideoTrack.signInterpreted !== videoAdaptation.isSignInterpreted)
+    {
+      return false;
+    }
+    if (preferredVideoTrack.codec === undefined) {
+      return true;
+    }
+    const regxp = preferredVideoTrack.codec.test;
+    const codecTestingFn = (rep : Representation) =>
+      rep.codec !== undefined && regxp.test(rep.codec);
+
+    if (preferredVideoTrack.codec.all) {
+      return videoAdaptation.representations.every(codecTestingFn);
+    }
+    return videoAdaptation.representations.some(codecTestingFn);
+  };
 }
 
 /**
@@ -1083,29 +1187,12 @@ function findFirstOptimalVideoAdaptation(
       return null;
     }
 
-    const foundAdaptation = arrayFind(videoAdaptations, (videoAdaptation) => {
-      if (preferredVideoTrack.signInterpreted !== undefined &&
-          preferredVideoTrack.signInterpreted !== videoAdaptation.isSignInterpreted)
-      {
-        return false;
-      }
-      if (preferredVideoTrack.codec === undefined) {
-        return true;
-      }
-      const regxp = preferredVideoTrack.codec.test;
-      const codecTestingFn = (rep : Representation) =>
-        rep.codec !== undefined && regxp.test(rep.codec);
-
-      if (preferredVideoTrack.codec.all) {
-        return videoAdaptation.representations.every(codecTestingFn);
-      }
-      return videoAdaptation.representations.some(codecTestingFn);
-    });
+    const matchPreferredVideo = createVideoPreferenceMatcher(preferredVideoTrack);
+    const foundAdaptation = arrayFind(videoAdaptations, matchPreferredVideo);
 
     if (foundAdaptation !== undefined) {
       return foundAdaptation;
     }
-
   }
 
   // no optimal adaptation, just return the first one

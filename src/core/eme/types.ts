@@ -100,14 +100,14 @@ export interface IInitDataIgnoredEvent { type: "init-data-ignored";
 export interface ISessionMessageEvent { type: "session-message";
                                         value : { messageType : string;
                                                   initData : Uint8Array;
-                                                  initDataType? : string; }; }
+                                                  initDataType : string | undefined; }; }
 
 // Emitted when a `getLicense` call resolves with null.
 // In that case, we do not call `MediaKeySession.prototype.update` and no
 // `session-updated` event will be sent.
 export interface INoUpdateEvent { type : "no-update";
                                   value : { initData : Uint8Array;
-                                            initDataType? : string; }; }
+                                            initDataType : string | undefined; }; }
 
 // Emitted after the `MediaKeySession.prototype.update` function resolves.
 // This function is called when the `getLicense` callback resolves with a data
@@ -117,7 +117,7 @@ export interface ISessionUpdatedEvent { type: "session-updated";
                                                           ICustomMediaKeySession;
                                                  license: ILicense|null;
                                                  initData : Uint8Array;
-                                                 initDataType? : string; }; }
+                                                 initDataType : string | undefined; }; }
 
 // Emitted when individual keys are considered undecipherable and are thus
 // blacklisted.
