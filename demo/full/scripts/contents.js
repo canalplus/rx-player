@@ -2,12 +2,6 @@ import MetaPlaylistDASHSmoothURL from "./metaplaylist_url";
 
 export default [
   {
-    "name": "DASH-IF - SegmentTimeline live stream",
-    "url": "https://livesim.dashif.org/livesim/start_1800/testpic_2s/Manifest.mpd",
-    "transport": "dash",
-    "live": true,
-  },
-  {
     "name": "Tears of Steel (clear)",
     "url": "https://www.bok.net/dash/tears_of_steel/cleartext/stream.mpd",
     "transport": "dash",
