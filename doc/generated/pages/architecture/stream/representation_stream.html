@@ -1,24 +1,24 @@
-<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>RepresentationBuffer - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-RepresentationBuffer">RepresentationBuffer</a></p>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>RepresentationStream - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-RepresentationStream">RepresentationStream</a></p>
 <ul>
 <li><a href="#chapter-Overview">Overview</a></li>
 <li><a href="#chapter-Return%20value">Return value</a></li>
 <li><a href="#chapter-Queue%20Algorithm">Queue Algorithm</a></li>
 </ul>
-</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-RepresentationBuffer"></a></p>
-<h1>RepresentationBuffer</h1>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-RepresentationStream"></a></p>
+<h1>RepresentationStream</h1>
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
-<p>The RepresentationBuffer download and push segments linked to a given
+<p>The RepresentationStream download and push segments linked to a given
 Representation.</p>
 <p>It constructs a list of segments to download, which depend on the current timing
 values and parameters.
 It then download and push them to a linked SourceBuffer.</p>
-<p>Multiple RepresentationBuffer observables can be ran on the same
+<p>Multiple RepresentationStream observables can be ran on the same
 SourceBuffer without problems. This allows for example smooth transitions
 between multiple periods.</p>
 <p><a name="chapter-Return%20value"></a></p>
 <h2>Return value</h2>
-<p>The RepresentationBuffer returns an Observable which emits multiple
+<p>The RepresentationStream returns an Observable which emits multiple
 notifications depending on what is happening at its core.</p>
 <p>Such events tells us when:</p>
 <ul>
@@ -26,13 +26,13 @@ notifications depending on what is happening at its core.</p>
 <p>Segments are being scheduled for download</p>
 </li>
 <li>
-<p>The RepresentationBuffer has no segment left for download</p>
+<p>The RepresentationStream has no segment left for download</p>
 </li>
 <li>
-<p>The RepresentationBuffer appended a new Segment to the SourceBuffer</p>
+<p>The RepresentationStream appended a new Segment to the SourceBuffer</p>
 </li>
 <li>
-<p>The Manifest should be refreshed to allow the RepresentationBuffer to
+<p>The Manifest should be refreshed to allow the RepresentationStream to
 download future-needed segments.</p>
 </li>
 <li>
@@ -41,7 +41,7 @@ download future-needed segments.</p>
 </ul>
 <p><a name="chapter-Queue%20Algorithm"></a></p>
 <h2>Queue Algorithm</h2>
-<p>The RepresentationBuffer depends on a central algorithm to make sure that the
+<p>The RepresentationStream depends on a central algorithm to make sure that the
 right segments are scheduled for download at any time.</p>
 <p>This algorithm constructs a queue of segments to download at any time, and
 regularly checks that the segment currently downloaded still corresponds to the

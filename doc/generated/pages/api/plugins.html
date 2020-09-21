@@ -119,7 +119,7 @@ no use, as our implementation does the same thing and more):</p>
 
   xhr.send();
 
-  <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  <span class="hljs-keyword">return</span> <span class="hljs-function">() =&gt;</span> {
     xhr.abort();
   };
 };
@@ -207,7 +207,7 @@ implementation does the same thing and more):</p>
     }
   };
 
-  xhr.onerror = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  xhr.onerror = <span class="hljs-function">() =&gt;</span> {
     <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;didn&apos;t work&quot;</span>);
     err.xhr = xhr;
     callbacks.reject(err);
@@ -218,7 +218,7 @@ implementation does the same thing and more):</p>
 
   xhr.send();
 
-  <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  <span class="hljs-keyword">return</span> <span class="hljs-function">() =&gt;</span> {
     xhr.abort();
   };
 };

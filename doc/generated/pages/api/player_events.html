@@ -55,7 +55,7 @@
 bitrate) the player use the event listener pattern.</p>
 <p>As <a href="index.html#meth-addEventListener">documented in the API</a>, you can call
 <code>addEventListener</code> to register a callback for a particular event, like:</p>
-<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;videoBitrateChange&quot;</span>, (newVideoBitrate) =&gt; {
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;videoBitrateChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">newVideoBitrate</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the video bitrate changed to:&quot;</span>, newVideoBitrate)
 });
 </code></pre>

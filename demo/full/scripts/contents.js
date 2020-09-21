@@ -2,12 +2,6 @@ import MetaPlaylistDASHSmoothURL from "./metaplaylist_url";
 
 export default [
   {
-    "name": "DASH-IF - SegmentTimeline live stream",
-    "url": "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
-    "transport": "dash",
-    "live": true,
-  },
-  {
     "name": "Tears of Steel (clear)",
     "url": "https://www.bok.net/dash/tears_of_steel/cleartext/stream.mpd",
     "transport": "dash",
@@ -34,12 +28,6 @@ export default [
     }],
   },
   {
-    "name": "DASH-IF - SegmentTemplate live stream",
-    "url": "https://vm2.dashif.org/livesim-dev/periods_1/testpic_2s/Manifest.mpd",
-    "transport": "dash",
-    "live": true,
-  },
-  {
     "name": "BBC - presentationTimeOffset on audio and video",
     "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-pto_both-events.mpd",
     "transport": "dash",
@@ -47,7 +35,7 @@ export default [
   },
   {
     "name": "DASH-IF - Multi-Subtitles",
-    "url": "https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
     "transport": "dash",
     "live": false,
   },
@@ -59,9 +47,9 @@ export default [
   },
   {
     "name": "DASH-IF - Audio-only",
-    "url": "https://vm2.dashif.org/livesim/testpic_2s/audio.mpd",
+    "url": "https://dash.akamaized.net/dash264/TestCases/3a/fraunhofer/aac-lc_stereo_without_video/Sintel/sintel_audio_only_aaclc_stereo_sidx.mpd",
     "transport": "dash",
-    "live": true,
+    "live": false,
   },
   {
     "name": "Wowza - Big Buck Bunny",

@@ -336,7 +336,7 @@ Explorer 11), a JavaScript implementation is provided instead. This
 implementation has the exact same implementation than <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">ES2015
 Promises</a>.</p>
 <h4>Example</h4>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> resumeContent = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+<pre><code class="language-js"><span class="hljs-keyword">const</span> resumeContent = <span class="hljs-function">() =&gt;</span> {
   player.play();
 };
 </code></pre>
@@ -347,7 +347,7 @@ Promises</a>.</p>
 <p>Note that a content can be paused even if its current state is <code>BUFFERING</code> or
 <code>SEEKING</code>.</p>
 <h4>Example</h4>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> pauseContent = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+<pre><code class="language-js"><span class="hljs-keyword">const</span> pauseContent = <span class="hljs-function">() =&gt;</span> {
   player.pause();
 };
 </code></pre>
@@ -358,7 +358,7 @@ Promises</a>.</p>
 <p>This will totaly un-load the current content. To re-start playing the same
 content, you will need to call <code>loadVideo</code> again.</p>
 <h4>Example</h4>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> stopVideo = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+<pre><code class="language-js"><span class="hljs-keyword">const</span> stopVideo = <span class="hljs-function">() =&gt;</span> {
   player.stop();
 };
 </code></pre>

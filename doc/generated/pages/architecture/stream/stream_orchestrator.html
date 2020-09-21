@@ -1,24 +1,24 @@
-<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>BufferOchestrator - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-BufferOchestrator">BufferOchestrator</a></p>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>StreamOchestrator - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-StreamOchestrator">StreamOchestrator</a></p>
 <ul>
 <li><a href="#chapter-Overview">Overview</a></li>
 <li><a href="#chapter-Multiple%20types%20handling">Multiple types handling</a></li>
 <li><a href="#chapter-Native%20SourceBuffers">Native SourceBuffers</a></li>
-<li><a href="#chapter-PeriodBuffers">PeriodBuffers</a>
+<li><a href="#chapter-PeriodStreams">PeriodStreams</a>
 <ul>
 <li><a href="#subchapter-Multi-Period%20management">Multi-Period management</a></li>
 <li><a href="#subchapter-Communication%20with%20the%20API">Communication with the API</a></li>
 </ul>
 </li>
 </ul>
-</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-BufferOchestrator"></a></p>
-<h1>BufferOchestrator</h1>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-StreamOchestrator"></a></p>
+<h1>StreamOchestrator</h1>
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
 <p>To be able to play a content, the player has to be able to download chunks of
 media data - called segments - and has to push them to SourceBuffers.</p>
-<p>In the RxPlayer, the <em>BufferOrchestrator</em> is the entry point for performing all
+<p>In the RxPlayer, the <em>StreamOrchestrator</em> is the entry point for performing all
 those tasks.</p>
-<p>Basically, the <em>BufferOrchestrator</em>:</p>
+<p>Basically, the <em>StreamOrchestrator</em>:</p>
 <ul>
 <li>
 <p>dynamically creates various SourceBuffers depending on the needs of the
@@ -38,23 +38,24 @@ Manifest and as such, have to be downloaded and decoded separately.</p>
 regular browser-defined <em>MSE</em> SourceBuffers.
 For any other types, such as &#x201C;text&#x201D; and &#x201C;image&#x201D;, we defined custom SourceBuffers
 implementation adapted to these type of contents.</p>
-<p>We then create a different Buffer for each type. Each will progressively
+<p>We then create a different Stream for each type. Each will progressively
 download and push content of their respective type to their respective
 SourceBuffer:</p>
-<pre><code>- AUDIO BUFFER _
+<pre><code>- AUDIO STREAM -
 |======================    |
 
-- VIDEO BUFFER _
+- VIDEO STREAM -
 |==================        |
 
-- TEXT BUFFER _
+- TEXT STREAM -
 |========================  |
 
-- IMAGE BUFFER _
+- IMAGE STREAM -
 |====================      |
 </code></pre>
-<p><em>(the <code>|</code> sign delimits the temporal start and end of a given buffer, the
-<code>=</code> sign represent a pushed segment in the corresponding SourceBuffer)</em></p>
+<p><em>(the <code>|</code> sign delimits the temporal start and end of the buffer linked to a
+given Stream, the <code>=</code> sign represent a pushed segment in the corresponding
+SourceBuffer)</em></p>
 <p><a name="chapter-Native%20SourceBuffers"></a></p>
 <h2>Native SourceBuffers</h2>
 <p>SourceBuffers created for the audio and/or video types are called <em>native
@@ -114,8 +115,8 @@ permissive way than custom ones:</p>
 on a fatal error</p>
 </li>
 </ul>
-<p><a name="chapter-PeriodBuffers"></a></p>
-<h2>PeriodBuffers</h2>
+<p><a name="chapter-PeriodStreams"></a></p>
+<h2>PeriodStreams</h2>
 <p>The <em>DASH</em> streaming technology has a concept called <em>Period</em>. Simply put, it
 allows to set various types of content successively in the same manifest.</p>
 <p>For example, let&#x2019;s take a manifest describing a live content with
@@ -140,14 +141,13 @@ film is finished, to report about it immediately in a graphical interface.</p>
   |==================|===========================|===================|
         TV Show               Italian Film            American film
 </code></pre>
-<p>In the RxPlayer, we create one <em>buffer</em> per Period <strong>and</strong> per type.
-Those are called <em>PeriodBuffers</em>.</p>
-<p><em>PeriodBuffers</em> are automatically created/destroyed during playback. The job of
-a single <em>PeriodBuffer</em> is to process and download optimally the content linked
+<p>In the RxPlayer, we create one <em>PeriodStream</em> per Period <strong>and</strong> per type.</p>
+<p><em>PeriodStreams</em> are automatically created/destroyed during playback. The job of
+a single <em>PeriodStream</em> is to process and download optimally the content linked
 to a single <em>Period</em> and to a single type:</p>
 <pre><code>- VIDEO BUFFER -
 
-     PERIOD BUFFER
+     PERIOD STREAM
 08h05              09h00
   |=========         |
         TV Show
@@ -155,7 +155,7 @@ to a single <em>Period</em> and to a single type:</p>
 
 - AUDIO BUFFER -
 
-     PERIOD BUFFER
+     PERIOD STREAM
 08h05              09h00
   |=============     |
         TV Show
@@ -163,7 +163,7 @@ to a single <em>Period</em> and to a single type:</p>
 
 - TEXT BUFFER -
 
-     PERIOD BUFFER
+     PERIOD STREAM
 08h05              09h00
   |======            |
         TV Show
@@ -171,10 +171,10 @@ to a single <em>Period</em> and to a single type:</p>
 <p>To allow smooth transitions between them, we also might want to preload content
 defined by a subsequent <em>Period</em> once we lean towards the end of the content
 described by the previous one.
-Thus, multiple <em>PeriodBuffers</em> might be active at the same time:</p>
+Thus, multiple <em>PeriodStreams</em> might be active at the same time:</p>
 <pre><code>+----------------------------   AUDIO   ----------------------------------+
 |                                                                         |
-|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     |
+|      PERIOD STREAM 1        PERIOD STREAM 2         PERIOD STREAM 3     |
 | 08h05              09h00                       10h30                now |
 |   |=============     |=================          |================   |  |
 |         TV Show               Italian Film            American film     |
@@ -182,7 +182,7 @@ Thus, multiple <em>PeriodBuffers</em> might be active at the same time:</p>
 
 +------------------------------   VIDEO   --------------------------------+
 |                                                                         |
-|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     |
+|      PERIOD STREAM 1        PERIOD STREAM 2         PERIOD STREAM 3     |
 | 08h05              09h00                       10h30                now |
 |   |=====             |===                        |===                |  |
 |         TV Show               Italian Film            American film     |
@@ -190,7 +190,7 @@ Thus, multiple <em>PeriodBuffers</em> might be active at the same time:</p>
 
 +------------------------------   TEXT   ---------------------------------+
 |                                                                         |
-|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     |
+|      PERIOD STREAM 1        PERIOD STREAM 2         PERIOD STREAM 3     |
 | 08h05              09h00                       10h30                now |
 |     (NO SUBTITLES)   |=========================  |=================  |  |
 |         TV Show               Italian Film            American film     |
@@ -198,12 +198,12 @@ Thus, multiple <em>PeriodBuffers</em> might be active at the same time:</p>
 </code></pre>
 <p><a name="subchapter-Multi-Period%20management"></a></p>
 <h3>Multi-Period management</h3>
-<p>The creation/destruction of <em>PeriodBuffers</em> is actually done in a very precize
+<p>The creation/destruction of <em>PeriodStreams</em> is actually done in a very precize
 and optimal way, which gives a higher priority to immediate content.</p>
 <p>To better grasp how it works, let&#x2019;s imagine a regular use-case, with two periods
 for a single type of buffer:</p>
 <hr>
-<p>Let&#x2019;s say that the <em>PeriodBuffer</em> for the first <em>Period</em> (named P1) is currently
+<p>Let&#x2019;s say that the <em>PeriodStream</em> for the first <em>Period</em> (named P1) is currently
 actively downloading segments (the &#x201C;^&#x201D; sign is the current position):</p>
 <pre><code>   P1
 |====  |
@@ -214,7 +214,7 @@ actively downloading segments (the &#x201C;^&#x201D; sign is the current positio
 |======|
    ^
 </code></pre>
-<p>We will be able to create a new <em>PeriodBuffer</em>, P2, for the second <em>Period</em>:</p>
+<p>We will be able to create a new <em>PeriodStream</em>, P2, for the second <em>Period</em>:</p>
 <pre><code>   P1     P2
 |======|      |
    ^
@@ -243,23 +243,23 @@ changed):</p>
 </code></pre>
 <p><em>Note that we still have the segment pushed to P2 available in the corresponding
 SourceBuffer</em></p>
-<p>When the current position go ahead of a <em>PeriodBuffer</em> (here ahead of P1):</p>
+<p>When the current position go ahead of a <em>PeriodStream</em> (here ahead of P1):</p>
 <pre><code>   P1     P2
 |======|===   |
         ^
 </code></pre>
-<p>This <em>PeriodBuffer</em> is destroyed to free up ressources:</p>
+<p>This <em>PeriodStream</em> is destroyed to free up ressources:</p>
 <pre><code>          P2
        |===   |
         ^
 </code></pre>
 <hr>
-<p>When the current position goes behind the first currently defined <em>PeriodBuffer</em>:</p>
+<p>When the current position goes behind the first currently defined <em>PeriodStream</em>:</p>
 <pre><code>          P2
        |===   |
     ^
 </code></pre>
-<p>Then we destroy all previous <em>PeriodBuffers</em> and [re-]create the one needed:</p>
+<p>Then we destroy all previous <em>PeriodStreams</em> and [re-]create the one needed:</p>
 <pre><code>   P1
 |======|
     ^
@@ -272,7 +272,7 @@ can re-create P2, which will also keep its already-pushed segments:</p>
 </code></pre>
 <hr>
 <p>For multiple types of buffers (example: <em>audio</em> and <em>video</em>) the same logic is
-repeated (and separated) as many times. An <em>audio</em> <em>PeriodBuffer</em> will not
+repeated (and separated) as many times. An <em>audio</em> <em>PeriodStream</em> will not
 influence a <em>video</em> one:</p>
 <pre><code>---------------------------   AUDIO   --------------------------------
      Period 1         Period 2
@@ -289,17 +289,17 @@ influence a <em>video</em> one:</p>
 |================| (NO SUBTITLES) |================   |
      ^
 </code></pre>
-<p>At the end, we should only have <em>PeriodBuffer[s]</em> for consecutive Period[s]:</p>
+<p>At the end, we should only have <em>PeriodStream[s]</em> for consecutive Period[s]:</p>
 <ul>
 <li>The first chronological one is the one currently seen by the user.</li>
 <li>The last chronological one is the only one downloading content.</li>
-<li>In between, we only have full consecutive <em>PeriodBuffers</em>.</li>
+<li>In between, we only have full consecutive <em>PeriodStreams</em>.</li>
 </ul>
 <p><a name="subchapter-Communication%20with%20the%20API"></a></p>
 <h3>Communication with the API</h3>
-<p>The Buffer communicates to the API about creations and destructions of
-<em>PeriodBuffers</em> respectively through <code>&quot;periodBufferReady&quot;</code> and
-<code>&quot;periodBufferCleared&quot;</code> events.</p>
+<p>Any &#x201C;Stream&#x201D; communicates to the API about creations and destructions of
+<em>PeriodStreams</em> respectively through <code>&quot;periodStreamReady&quot;</code> and
+<code>&quot;periodStreamCleared&quot;</code> events.</p>
 <p>When the currently seen Period changes, an <code>activePeriodChanged</code> event is
 sent.</p>
 </body></html></div></div></div></body>

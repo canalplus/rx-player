@@ -84,12 +84,12 @@ that a player seek operation resulted in the corresponds event being
 <p>In any case, the corresponding event will be attached as a payload.</p>
 <p>Example:</p>
 <pre><code class="language-js"><span class="hljs-comment">// listen to &quot;streamEvent&quot; events</span>
-rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEvent&quot;</span>, (evt) =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEvent&quot;</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;An event has been reached:&quot;</span>, evt);
 });
 
 <span class="hljs-comment">// listen to &quot;streamEventSkip&quot; events</span>
-rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEventSkip&quot;</span>, (evt) =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEventSkip&quot;</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;We just &apos;skipped&apos; an event:&quot;</span>, evt);
 });
 </code></pre>
@@ -241,10 +241,10 @@ event that the RxPlayer reached is now ended.</p>
 <p>Any event with a set <code>end</code> can be added an <code>onExit</code> callback. This callback will
 be called once the event has ended.</p>
 <p>So for example you can write:</p>
-<pre><code class="language-js">rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEvent&quot;</span>, (evt) =&gt; {
+<pre><code class="language-js">rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEvent&quot;</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;An event has been reached:&quot;</span>, evt);
   <span class="hljs-keyword">if</span> (evt.end !== <span class="hljs-literal">undefined</span>) {
-    evt.onExit = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+    evt.onExit = <span class="hljs-function">() =&gt;</span> {
       <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;An event has been exited:&quot;</span>, evt);
     }  ;
   }
@@ -261,7 +261,7 @@ the MPD once it has been refreshed.</p>
 <p><a name="chapter-Example"></a></p>
 <h2>Example</h2>
 <p>To end this tutorial, lets define a complete example:</p>
-<pre><code class="language-js">rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEvent&quot;</span>, (evt) =&gt; {
+<pre><code class="language-js">rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEvent&quot;</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;An event has been reached:&quot;</span>, evt);
 
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;This is an event of type:&quot;</span>, evt.data.type)
@@ -273,13 +273,13 @@ the MPD once it has been refreshed.</p>
   }
 
   <span class="hljs-keyword">if</span> (evt.end !== <span class="hljs-literal">undefined</span>) {
-    evt.onExit = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+    evt.onExit = <span class="hljs-function">() =&gt;</span> {
       <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;An event has been exited:&quot;</span>, evt);
     };
   }
 });
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEventSkip&quot;</span>, (evt) =&gt; {
+rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEventSkip&quot;</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;We just &apos;skipped&apos; an event:&quot;</span>, evt);
 
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;This was an event of type:&quot;</span>, evt.data.type)
