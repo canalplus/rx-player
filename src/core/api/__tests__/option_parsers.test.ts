@@ -420,6 +420,7 @@ describe("API - parseLoadVideoOptions", () => {
     defaultTextTrack: undefined,
     enableFastSwitching: true,
     hideNativeSubtitle: false,
+    initialManifest: undefined,
     keySystems: [],
     lowLatencyMode: false,
     manualBitrateSwitchingMode: "seamless",
@@ -433,6 +434,7 @@ describe("API - parseLoadVideoOptions", () => {
       supplementaryTextTracks: [],
       supplementaryImageTracks: [],
     },
+    url: undefined,
   };
 
   it("should throw if no option is given", () => {
@@ -511,6 +513,42 @@ describe("API - parseLoadVideoOptions", () => {
                           manifestLoader,
                           supplementaryImageTracks: [],
                           supplementaryTextTracks: [] },
+    });
+  });
+
+  /* tslint:disable max-line-length */
+  it("should set a default object if both an initialManifest and transport is given", () => {
+  /* tslint:enable max-line-length */
+    expect(parseLoadVideoOptions({
+      transport: "bar",
+      transportOptions: { initialManifest: "test" },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      transport: "bar",
+      initialManifest: "test",
+    });
+  });
+
+  it("should authorize setting an initialManifest option", () => {
+    expect(parseLoadVideoOptions({
+      transportOptions: { initialManifest: "baz" },
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      initialManifest: "baz",
+    });
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      transportOptions: { initialManifest: "" },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      initialManifest: "",
     });
   });
 

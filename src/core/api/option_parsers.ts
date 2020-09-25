@@ -25,6 +25,7 @@ import { IRepresentationFilter } from "../../manifest";
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
+  ILoadedManifest,
   ITransportOptions as IParsedTransportOptions,
 } from "../../transports";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -78,6 +79,8 @@ export interface ITransportOptions {
    * request if that's the case.
    */
   checkMediaSegmentIntegrity? : boolean;
+  /** Manifest object that will be used initially. */
+  initialManifest? : ILoadedManifest;
   /** Custom implementation for performing Manifest requests. */
   manifestLoader? : CustomManifestLoader;
   /** Possible custom URL pointing to a shorter form of the Manifest. */
@@ -256,9 +259,10 @@ export interface ILoadVideoOptions {
  * `loadVideo` method exend.
  */
 interface IParsedLoadVideoOptionsBase {
-  url? : string;
+  url : string | undefined;
   transport : string;
   autoPlay : boolean;
+  initialManifest : ILoadedManifest | undefined;
   keySystems : IKeySystemOption[];
   lowLatencyMode : boolean;
   manifestUpdateUrl : string | undefined;
@@ -511,7 +515,10 @@ function parseLoadVideoOptions(
 
   if (!isNullOrUndefined(options.url)) {
     url = String(options.url);
-  } else if (isNullOrUndefined(options.transportOptions?.manifestLoader)) {
+  } else if (
+    isNullOrUndefined(options.transportOptions?.initialManifest) &&
+    isNullOrUndefined(options.transportOptions?.manifestLoader)
+  ) {
     throw new Error("No url set on loadVideo");
   }
 
@@ -547,6 +554,7 @@ function parseLoadVideoOptions(
     options.transportOptions :
     {};
 
+  const initialManifest = options.transportOptions?.initialManifest;
   const manifestUpdateUrl = options.transportOptions?.manifestUpdateUrl;
   const minimumManifestUpdateInterval =
     options.transportOptions?.minimumManifestUpdateInterval ?? 0;
@@ -560,6 +568,7 @@ function parseLoadVideoOptions(
   });
 
   // remove already parsed data to simplify the `transportOptions` object
+  delete transportOptions.initialManifest;
   delete transportOptions.manifestUpdateUrl;
   delete transportOptions.minimumManifestUpdateInterval;
 
@@ -677,6 +686,7 @@ function parseLoadVideoOptions(
            enableFastSwitching,
            hideNativeSubtitle,
            keySystems,
+           initialManifest,
            lowLatencyMode,
            manualBitrateSwitchingMode,
            manifestUpdateUrl,
