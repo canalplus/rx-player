@@ -27,6 +27,7 @@ import {
   CustomSegmentLoader,
   ITransportOptions as IParsedTransportOptions,
 } from "../../transports";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
   normalizeAudioTrack,
   normalizeTextTrack,
@@ -323,7 +324,7 @@ function parseConstructorOptions(
   let maxVideoBitrate : number;
   let stopAtEnd : boolean;
 
-  if (options.maxBufferAhead == null) {
+  if (isNullOrUndefined(options.maxBufferAhead)) {
     maxBufferAhead = DEFAULT_MAX_BUFFER_AHEAD;
   } else {
     maxBufferAhead = Number(options.maxBufferAhead);
@@ -332,7 +333,7 @@ function parseConstructorOptions(
     }
   }
 
-  if (options.maxBufferBehind == null) {
+  if (isNullOrUndefined(options.maxBufferBehind)) {
     maxBufferBehind = DEFAULT_MAX_BUFFER_BEHIND;
   } else {
     maxBufferBehind = Number(options.maxBufferBehind);
@@ -341,7 +342,7 @@ function parseConstructorOptions(
     }
   }
 
-  if (options.wantedBufferAhead == null) {
+  if (isNullOrUndefined(options.wantedBufferAhead)) {
     wantedBufferAhead = DEFAULT_WANTED_BUFFER_AHEAD;
   } else {
     wantedBufferAhead = Number(options.wantedBufferAhead);
@@ -352,10 +353,11 @@ function parseConstructorOptions(
     }
   }
 
-  limitVideoWidth = options.limitVideoWidth == null ? DEFAULT_LIMIT_VIDEO_WIDTH :
-                                                      !!options.limitVideoWidth;
+  limitVideoWidth = isNullOrUndefined(options.limitVideoWidth) ?
+    DEFAULT_LIMIT_VIDEO_WIDTH :
+    !!options.limitVideoWidth;
 
-  if (options.throttleWhenHidden != null) {
+  if (!isNullOrUndefined(options.throttleWhenHidden)) {
     warnOnce("`throttleWhenHidden` API is deprecated. Consider using " +
              "`throttleVideoBitrateWhenHidden` instead.");
 
@@ -369,9 +371,10 @@ function parseConstructorOptions(
   if (throttleWhenHidden) {
     throttleVideoBitrateWhenHidden = false;
   } else {
-    throttleVideoBitrateWhenHidden = options.throttleVideoBitrateWhenHidden == null ?
-      DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
-      !!options.throttleVideoBitrateWhenHidden;
+    throttleVideoBitrateWhenHidden =
+      isNullOrUndefined(options.throttleVideoBitrateWhenHidden) ?
+        DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
+        !!options.throttleVideoBitrateWhenHidden;
   }
 
   if (options.preferredTextTracks !== undefined) {
@@ -407,7 +410,7 @@ function parseConstructorOptions(
     preferredVideoTracks = [];
   }
 
-  if (options.videoElement == null) {
+  if (isNullOrUndefined(options.videoElement)) {
     videoElement = document.createElement("video");
   } else if (options.videoElement instanceof HTMLMediaElement) {
     videoElement = options.videoElement;
@@ -417,7 +420,7 @@ function parseConstructorOptions(
     /* tslint:enable:max-line-length */
   }
 
-  if (options.initialVideoBitrate == null) {
+  if (isNullOrUndefined(options.initialVideoBitrate)) {
     initialVideoBitrate = DEFAULT_INITIAL_BITRATES.video;
   } else {
     initialVideoBitrate = Number(options.initialVideoBitrate);
@@ -428,7 +431,7 @@ function parseConstructorOptions(
     }
   }
 
-  if (options.initialAudioBitrate == null) {
+  if (isNullOrUndefined(options.initialAudioBitrate)) {
     initialAudioBitrate = DEFAULT_INITIAL_BITRATES.audio;
   } else {
     initialAudioBitrate = Number(options.initialAudioBitrate);
@@ -439,7 +442,7 @@ function parseConstructorOptions(
     }
   }
 
-  if (options.maxVideoBitrate == null) {
+  if (isNullOrUndefined(options.maxVideoBitrate)) {
     maxVideoBitrate = DEFAULT_MAX_BITRATES.video;
   } else {
     maxVideoBitrate = Number(options.maxVideoBitrate);
@@ -448,7 +451,7 @@ function parseConstructorOptions(
     }
   }
 
-  if (options.maxAudioBitrate == null) {
+  if (isNullOrUndefined(options.maxAudioBitrate)) {
     maxAudioBitrate = DEFAULT_MAX_BITRATES.audio;
   } else {
     maxAudioBitrate = Number(options.maxAudioBitrate);
@@ -457,8 +460,8 @@ function parseConstructorOptions(
     }
   }
 
-  stopAtEnd = options.stopAtEnd == null ? DEFAULT_STOP_AT_END :
-                                          !!options.stopAtEnd;
+  stopAtEnd = isNullOrUndefined(options.stopAtEnd) ? DEFAULT_STOP_AT_END :
+                                                     !!options.stopAtEnd;
 
   return { maxBufferAhead,
            maxBufferBehind,
@@ -499,29 +502,25 @@ function parseLoadVideoOptions(
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
 
-  if (options == null) {
+  if (isNullOrUndefined(options)) {
     throw new Error("No option set on loadVideo");
   }
 
-  if (options.url != null) {
-    url = String(options.url);
-  } else if (
-    options.transportOptions == null ||
-    options.transportOptions.manifestLoader == null
-  ) {
+  if (!isNullOrUndefined(options.url)) { url = String(options.url);
+  } else if (isNullOrUndefined(options.transportOptions?.manifestLoader)) {
     throw new Error("No url set on loadVideo");
   }
 
-  if (options.transport == null) {
+  if (isNullOrUndefined(options.transport)) {
     throw new Error("No transport set on loadVideo");
   } else {
     transport = String(options.transport);
   }
 
-  const autoPlay = options.autoPlay == null ? DEFAULT_AUTO_PLAY :
-                                              !!options.autoPlay;
+  const autoPlay = isNullOrUndefined(options.autoPlay) ? DEFAULT_AUTO_PLAY :
+                                                         !!options.autoPlay;
 
-  if (options.keySystems == null) {
+  if (isNullOrUndefined(options.keySystems)) {
     keySystems = [];
   } else {
     keySystems = Array.isArray(options.keySystems) ? options.keySystems :
@@ -595,7 +594,7 @@ function parseLoadVideoOptions(
     transportOptions.supplementaryImageTracks = supplementaryImageTracks;
   }
 
-  if (options.textTrackMode == null) {
+  if (isNullOrUndefined(options.textTrackMode)) {
     textTrackMode = DEFAULT_TEXT_TRACK_MODE;
   } else {
     if (options.textTrackMode !== "native" && options.textTrackMode !== "html") {
@@ -604,14 +603,14 @@ function parseLoadVideoOptions(
     textTrackMode = options.textTrackMode;
   }
 
-  if (options.defaultAudioTrack != null) {
+  if (!isNullOrUndefined(options.defaultAudioTrack)) {
     warnOnce("The `defaultAudioTrack` loadVideo option is deprecated.\n" +
              "Please use the `preferredAudioTracks` constructor option or the" +
              "`setPreferredAudioTracks` method instead");
   }
   const defaultAudioTrack = normalizeAudioTrack(options.defaultAudioTrack);
 
-  if (options.defaultTextTrack != null) {
+  if (!isNullOrUndefined(options.defaultTextTrack)) {
     warnOnce("The `defaultTextTrack` loadVideo option is deprecated.\n" +
              "Please use the `preferredTextTracks` constructor option or the" +
              "`setPreferredTextTracks` method instead");
@@ -619,17 +618,16 @@ function parseLoadVideoOptions(
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
 
   let hideNativeSubtitle = !DEFAULT_SHOW_NATIVE_SUBTITLE;
-  if (options.hideNativeSubtitle != null) {
+  if (!isNullOrUndefined(options.hideNativeSubtitle)) {
     warnOnce("The `hideNativeSubtitle` loadVideo option is deprecated");
     hideNativeSubtitle = !!options.hideNativeSubtitle;
   }
-  const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode == null ?
-      DEFAULT_MANUAL_BITRATE_SWITCHING_MODE :
-      options.manualBitrateSwitchingMode;
+  const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
+                                     DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
-    if (options.textTrackElement == null) {
+    if (isNullOrUndefined(options.textTrackElement)) {
       throw new Error("You have to provide a textTrackElement " +
                       "in \"html\" textTrackMode.");
     } else if (!(options.textTrackElement instanceof HTMLElement)) {
@@ -637,12 +635,12 @@ function parseLoadVideoOptions(
     } else {
       textTrackElement = options.textTrackElement;
     }
-  } else if (options.textTrackElement != null) {
+  } else if (!isNullOrUndefined(options.textTrackElement)) {
     log.warn("API: You have set a textTrackElement without being in " +
              "an \"html\" textTrackMode. It will be ignored.");
   }
 
-  if (options.startAt != null) {
+  if (!isNullOrUndefined(options.startAt)) {
     // TODO Better way to express that in TypeScript?
     if ((options.startAt as { wallClockTime? : Date|number }).wallClockTime
            instanceof Date
@@ -657,7 +655,7 @@ function parseLoadVideoOptions(
     }
   }
 
-  const networkConfig = options.networkConfig == null ?
+  const networkConfig = isNullOrUndefined(options.networkConfig) ?
     {} :
     { manifestRetry: options.networkConfig.manifestRetry,
       offlineRetry: options.networkConfig.offlineRetry,
