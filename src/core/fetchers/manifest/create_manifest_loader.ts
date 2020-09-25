@@ -53,32 +53,6 @@ export interface IManifestLoaderWarning {
 export type IManifestLoaderEvent = IManifestLoaderDataLoadedEvent |
                                    IManifestLoaderWarning;
 
-/** Options you can use when calling `createManifestLoader`. */
-export interface IManifestLoaderOptions {
-  /**
-   * Maximum number of time a given request on error will be retried when the
-   * error is not due to the user being offline.
-   */
-  maxRetry : number;
-  /**
-   * Maximum number of time a given request on error will be retried when the
-   * error is due to the user being offline.
-   */
-  maxRetryOffline : number;
-  /**
-   * Initial delay when retrying a request.
-   * Further delay will grow, usually through powers of 2 relative to the
-   * previous one.
-   */
-  baseDelay : number;
-  /**
-   * Maximum delay that can be reached before a request should be retried.
-   * When the calculated delay goes further than that delay, `maxDelay` will be
-   * used instead before the request will be retried.
-   */
-  maxDelay : number;
-}
-
 /**
  * Returns function allowing to download the Manifest through a
  * `resolver -> loader` transport pipeline.
