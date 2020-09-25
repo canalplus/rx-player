@@ -506,7 +506,8 @@ function parseLoadVideoOptions(
     throw new Error("No option set on loadVideo");
   }
 
-  if (!isNullOrUndefined(options.url)) { url = String(options.url);
+  if (!isNullOrUndefined(options.url)) {
+    url = String(options.url);
   } else if (isNullOrUndefined(options.transportOptions?.manifestLoader)) {
     throw new Error("No url set on loadVideo");
   }
