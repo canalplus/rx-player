@@ -15,9 +15,9 @@
     - [textTrackElement](#prop-textTrackElement)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
     - [lowLatencyMode](#prop-lowLatencyMode)
-    - [supplementaryImageTracks](#prop-supplementaryImageTracks)
-    - [hideNativeSubtitle](#prop-hideNativeSubtitle)
     - [networkConfig](#prop-networkConfig)
+    - [hideNativeSubtitle (deprecated)](#prop-hideNativeSubtitle)
+    - [supplementaryImageTracks (deprecated)](#prop-supplementaryImageTracks)
     - [supplementaryTextTracks (deprecated)](#prop-supplementaryTextTracks)
     - [defaultAudioTrack (deprecated)](#prop-defaultAudioTrack)
     - [defaultTextTrack (deprecated)](#prop-defaultTextTrack)
@@ -912,81 +912,6 @@ More information on playing low-latency DASH contents can be found in the
 [corresponding documentation page](./low_latency.md).
 
 
-<a name="prop-supplementaryImageTracks"></a>
-### supplementaryImageTracks ###################################################
-
-_type_: ``Array.<Object>|Object|undefined``
-_defaults_: ``[]``
-
----
-
-:warning: This option is not available in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-This option allows to specify information about supplementary image tracks you
-might want to add to those already declared in the
-[Manifest](../terms.md#manifest).
-
-This only work under the following conditions:
-
-  - the image track is not fragmented
-
-  - the image track can be retrieved by fetching a single URL
-
-  - the image track is in an understood format and enough information has been
-    given to infer it.
-
-
-Each of those can have the following properties:
-```js
-const supplementaryImageTracks = [{
-  url: ImageTrackURL, // {string} The url on which the complete image track can
-                      // be obtained
-
-  mimeType: "application/bif", // {string} A mimeType used to describe
-                               // the image format.
-}];
-```
-
-
-<a name="prop-hideNativeSubtitle"></a>
-### hideNativeSubtitle #########################################################
-
----
-
-:warning: This option is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_type_: ``Boolean``
-
-_defaults_: ``false``
-
----
-
-:warning: This option is not available in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-If set to ``true``, the eventual <track> element will be put on mode ``hidden``
-when added to the video element, so it won't actually display the subtitles the
-rx-player add to it.
-
-This has an effect only if:
-
-  - the current ``textTrackMode`` is equal to ``"native"`` (see [textTrackMode
-    option](#prop-textTrackMode))
-
-  - a text track is currently active
-
-  - the text track format is understood by the rx-player
-
-
-
 <a name="prop-networkConfig"></a>
 ### networkConfig ##############################################################
 
@@ -1043,6 +968,92 @@ This object can take the following properties (all are optional):
   - the request failed because of an unknown XHR error (might be a
     parsing/interface error)
 
+
+
+<a name="prop-hideNativeSubtitle"></a>
+### hideNativeSubtitle #########################################################
+
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_type_: ``Boolean``
+
+_defaults_: ``false``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+If set to ``true``, the eventual <track> element will be put on mode ``hidden``
+when added to the video element, so it won't actually display the subtitles the
+rx-player add to it.
+
+This has an effect only if:
+
+  - the current ``textTrackMode`` is equal to ``"native"`` (see [textTrackMode
+    option](#prop-textTrackMode))
+
+  - a text track is currently active
+
+  - the text track format is understood by the rx-player
+
+
+
+<a name="prop-supplementaryImageTracks"></a>
+### supplementaryImageTracks ###################################################
+
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+If you want to parse and display a BIF image track, you can use the
+[`parseBifThumbnails`](./parseBifThumbnails.md) tool, which will also work for
+Directfile contents.
+
+---
+
+_type_: ``Array.<Object>|Object|undefined``
+_defaults_: ``[]``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+This option allows to specify information about supplementary image tracks you
+might want to add to those already declared in the
+[Manifest](../terms.md#manifest).
+
+This only work under the following conditions:
+
+  - the image track is not fragmented
+
+  - the image track can be retrieved by fetching a single URL
+
+  - the image track is in an understood format and enough information has been
+    given to infer it.
+
+
+Each of those can have the following properties:
+```js
+const supplementaryImageTracks = [{
+  url: ImageTrackURL, // {string} The url on which the complete image track can
+                      // be obtained
+
+  mimeType: "application/bif", // {string} A mimeType used to describe
+                               // the image format.
+}];
+```
 
 
 <a name="prop-supplementaryTextTracks"></a>
