@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import createManifestFetcher, {
+import ManifestFetcher, {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
   IManifestFetcherWarningEvent,
@@ -30,7 +30,7 @@ import SegmentFetcherCreator, {
 } from "./segment";
 
 export {
-  createManifestFetcher,
+  ManifestFetcher,
   SegmentFetcherCreator,
 
   IManifestFetcherParserOptions,

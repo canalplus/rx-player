@@ -97,9 +97,18 @@ For Smooth, DASH or MetaPlaylist contents, the URL to the
 For _DirectFile_ mode contents, the URL of the content (the supported contents
 depends on the current browser).
 
-This property is mandatory unless a `manifestLoader` is defined in the
-[transportOptions](#prop-transportOptions), in which case that callback will be
-called instead any time we want to load the Manifest.
+This property is mandatory unless either:
+
+  - a `manifestLoader` is defined in the
+    [transportOptions](#prop-transportOptions), in which case that callback will
+    be called instead any time we want to load the Manifest.
+
+  - an `initialManifest` is defined in the
+    [transportOptions](#prop-transportOptions), in which case this will be used
+    as the first version of the Manifest.
+    Note however that if the Manifest needs to be refreshed and no `url` nor
+    `manifestLoader` has been set, the RxPlayer will most likely fail and stop
+    playback.
 
 Example:
 ```js
@@ -576,6 +585,41 @@ considered stable:
       }
     });
     ```
+
+  - __initialManifest__ (`string|Document|Object`):
+
+    Manifest that will be initially used (before any potential Manifest
+    refresh).
+
+    Some applications pre-load the Manifest to parse some information from it
+    before calling `loadVideo`.
+    As in that case the Manifest has already been loaded, an application can
+    optimize content loading time by giving to the RxPlayer that already-loaded
+    Manifest so the latter can avoid doing another request for it.
+
+    The format accepted for that option depends on the current chosen
+    [`transport`](#prop-transport):
+
+      - for `"dash"` and `"smooth"` contents either a `string` (of the whole
+        Manifest's xml data) or a corresponding `Document` format is accepted.
+
+      - for `"metaplaylist"`, either a `string` (for the whole JSON) or the
+        corresponding JS Object is accepted.
+
+      - for `"local"`, only the corresponding local Manifest as a JS object is
+        accepted.
+
+    Note that using this option could have implications for live contents.
+    Depending on the content, the initial playing position and maximum position
+    could be calculated based on that option's value.
+
+    In a case where the corresponding Manifest request was performed long before
+    the `loadVideo` call, the RxPlayer could be for example initially playing
+    far from the real live edge.
+    Because of that, it is recommended to only set that options for live/dynamic
+    contents if its request was done immediately before the `loadVideo`
+    call.
+
 
   - __manifestUpdateUrl__ (`string|undefined`):
 
