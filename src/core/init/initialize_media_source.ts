@@ -25,7 +25,6 @@ import {
 } from "rxjs";
 import {
   exhaustMap,
-  filter,
   finalize,
   map,
   mapTo,
@@ -41,7 +40,10 @@ import {
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
 import log from "../../log";
-import { ITransportPipelines } from "../../transports";
+import {
+  ILoadedManifest,
+  ITransportPipelines,
+} from "../../transports";
 import deferSubscriptions from "../../utils/defer_subscriptions";
 import { fromEvent } from "../../utils/event_emitter";
 import objectAssign from "../../utils/object_assign";
@@ -56,9 +58,9 @@ import {
   IKeySystemOption,
 } from "../eme";
 import {
-  createManifestFetcher,
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
+  ManifestFetcher,
   SegmentFetcherCreator,
 } from "../fetchers";
 import { ITextTrackSourceBufferOptions } from "../source_buffers";
@@ -115,12 +117,19 @@ export interface IInitializeArguments {
   };
   /** Regularly emit current playback conditions. */
   clock$ : Observable<IInitClockTick>;
+  /** Information on the content we want to play */
+  content : {
+    /** Initial value of the Manifest, if already parsed. */
+    initialManifest? : ILoadedManifest;
+    /** Optional shorter version of the Manifest used for updates only. */
+    manifestUpdateUrl? : string;
+    /** URL of the Manifest. */
+    url? : string;
+  };
   /** Every encryption configuration set. */
   keySystems : IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
   lowLatencyMode : boolean;
-  /** Optional shorter version of the Manifest used for updates only. */
-  manifestUpdateUrl? : string;
   /** The HTMLMediaElement on which we will play. */
   mediaElement : HTMLMediaElement;
   /** Limit the frequency of Manifest updates. */
@@ -145,8 +154,6 @@ export interface IInitializeArguments {
    * (e.g. DASH, Smooth...)
    */
   transportPipelines : ITransportPipelines;
-  /** URL of the Manifest. */
-  url? : string;
 }
 
 /** Every events emitted by `InitializeOnMediaSource`. */
@@ -196,24 +203,25 @@ export default function InitializeOnMediaSource(
     autoPlay,
     bufferOptions,
     clock$,
+    content,
     keySystems,
     lowLatencyMode,
-    manifestUpdateUrl,
     mediaElement,
     minimumManifestUpdateInterval,
     networkConfig,
     speed$,
     startAt,
     textTrackOptions,
-    transportPipelines,
-    url } : IInitializeArguments
+    transportPipelines } : IInitializeArguments
 ) : Observable<IInitEvent> {
+  const { url, initialManifest, manifestUpdateUrl } = content;
   const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
 
-  const manifestFetcher = createManifestFetcher(transportPipelines,
-                                                { lowLatencyMode,
-                                                  maxRetryRegular: manifestRetry,
-                                                  maxRetryOffline: offlineRetry });
+  const manifestFetcher = new ManifestFetcher(url,
+                                              transportPipelines,
+                                              { lowLatencyMode,
+                                                maxRetryRegular: manifestRetry,
+                                                maxRetryOffline: offlineRetry });
 
   /**
    * Fetch and parse the manifest from the URL given.
@@ -240,7 +248,9 @@ export default function InitializeOnMediaSource(
   /**
    * Create and open a new MediaSource object on the given media element on
    * subscription.
-   * The MediaSource will be closed on unsubscription.
+   * Multiple concurrent subscriptions on this Observable will obtain the same
+   * created MediaSource.
+   * The MediaSource will be closed when subscriptions are down to 0.
    */
   const openMediaSource$ = openMediaSource(mediaElement).pipe(
     shareReplay({ refCount: true })
@@ -274,17 +284,11 @@ export default function InitializeOnMediaSource(
    */
   const mediaError$ = throwOnMediaError(mediaElement);
 
-  /** Do the first Manifest request. */
-  const initialManifestRequest$ = fetchManifest(url, { previousManifest: null,
-                                                       unsafeMode: false }).pipe(
-    // Defer subscription and share for the same reasons than `openMediaSource$`
-    deferSubscriptions(),
-    share());
-
-  const initialManifestRequestWarnings$ = initialManifestRequest$
-    .pipe(filter((evt) : evt is IWarningEvent => evt.type === "warning"));
-  const initialManifest$ = initialManifestRequest$
-    .pipe(filter((evt) : evt is IManifestFetcherParsedResult => evt.type === "parsed"));
+  const initialManifestRequest$ = (initialManifest === undefined ?
+    fetchManifest(url, { previousManifest: null, unsafeMode: false }) :
+    manifestFetcher.parse(initialManifest, { previousManifest: null,
+                                             unsafeMode: false })
+  );
 
   /**
    * Wait for the MediaKeys to have been created before
@@ -317,10 +321,14 @@ export default function InitializeOnMediaSource(
   );
 
   /** Load and play the content asked. */
-  const loadContent$ = observableCombineLatest([initialManifest$,
+  const loadContent$ = observableCombineLatest([initialManifestRequest$,
                                                 prepareMediaSource$]).pipe(
-    mergeMap(([parsedManifest, initialMediaSource]) => {
-      const manifest = parsedManifest.manifest;
+    mergeMap(([manifestEvt, initialMediaSource]) => {
+      if (manifestEvt.type === "warning") {
+        return observableOf(manifestEvt);
+      }
+
+      const { manifest } = manifestEvt;
 
       log.debug("Init: Calculating initial time");
       const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
@@ -345,7 +353,7 @@ export default function InitializeOnMediaSource(
       const scheduleRefresh$ = new Subject<IManifestRefreshSchedulerEvent>();
 
       const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
-                                                        initialManifest: parsedManifest,
+                                                        initialManifest: manifestEvt,
                                                         manifestUpdateUrl,
                                                         minimumManifestUpdateInterval,
                                                         scheduleRefresh$ });
@@ -451,8 +459,5 @@ export default function InitializeOnMediaSource(
     })
   );
 
-  return observableMerge(initialManifestRequestWarnings$,
-                         loadContent$,
-                         mediaError$,
-                         emeManager$);
+  return observableMerge(loadContent$, mediaError$, emeManager$);
 }
