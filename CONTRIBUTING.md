@@ -242,9 +242,6 @@ Every commits in a PR should pass our quick checks (linter, typescript check
 and unit tests). To check if that's the case, you can run locally the `check`
 script by calling `npm run check`.
 
-In any case, the type checking and linting of the `src` directory is
-automatically done before each commit thanks to a git hook.
-
 Those checks give us some guarantees that every merged commit in the `master`
 branch is stable enough.
 
