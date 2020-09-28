@@ -4,8 +4,6 @@
 
 - [Issues and new features](#issues)
 - [Reading the current code](#reading)
-- [Creating a branch](#branch)
-  - [Naming convention](#branch-name)
 - [Code style](#code)
     - [Linting](#code-lint)
     - [Types](#code-types)
@@ -15,7 +13,7 @@
   - [Using HTTPS](#demo-https)
 - [Creating a commit](#commit)
   - [Checks](#commit-checks)
-  - [Naming convention](#commit-name)
+  - [Convention](#commit-name)
 - [The test suite](#testing)
   - [Unit tests](#testing-unit)
   - [Integration tests](#testing-integration)
@@ -58,49 +56,6 @@ A good place to start would be the [file organization of the project
 The code of the RxPlayer being heavily modularized, you should not need to read
 the whole documentation to be ready, only the parts you want to update
 (hopefully!).
-
-
-
-<a name="branch"></a>
-## Creating a branch ###########################################################
-
-<a name="branch-name"></a>
-### Naming convention ##########################################################
-
-We follow a strict convention for branch names. They are usually under this
-form: `type/alias_for_the_fix`.
-
-This strictness mostly helps us to quickly rememorate what each PR or merged
-branch is/was about.
-
----
-
-The type should be one of the following:
-  - `fix`: For bug fixes
-  - `feat`: For new features to the RxPlayer
-  - `doc`: For documentation updates
-  - `demo`: For demo improvements/fixes
-  - `tests`: For tests improvements/fixes
-  - `code`: For refactoring code which brings no fix or no new feature
-  - `tools`: For improvements related to the RxPlayer's tools
-  - `misc`: For unclassifiable other improvements
-
----
-
-The `alias` should be descriptive enough to understand roughly what is the
-impacted code.
-
----
-
-Examples:
-  - `fix/dash-minimum_position`
-  - `fix/webm-duration_calculation`
-  - `fix/ttml-background_color`
-  - `feat/dash-utc_timing`
-  - `code/manifest_as_event_emitter`
-  - `tests/eme-attach_media_keys`
-  - `tools/webpack-4`
-  - `doc/public_api_typos`
 
 
 
@@ -250,19 +205,26 @@ debugging if we detect a regression by the usage of tools such as git-bisect.
 
 
 <a name="commit-name"></a>
-### Naming convention ##########################################################
+### Convention #################################################################
 
-We have a naming convention for commits, roughly under the form:
-`namespace: what the commit does`.
+When creating a new commit it is advised (though not enforced) to add a message
+containing multiple paragraphs.
 
-Adding a paragraph (by setting multiple `-m` options to git-commit for
-example) to explain why you did those modifications is preferred. The goal here
-is to help understand your changes at a later time, in case things go wrong in
-the future.
+The first paragraph should be a short summary of what the commit does, short
+enough so it can usually be displayed on one line - probably like the usual
+commit messages you are used to.
+The following paragraphs can be as long as you want (note that relying on a
+[maximum column width of around 72 is a sensible
+default](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)
+even if we do not enforce that either).
 
-The `namespace` here should describe the area of the code the commit modifies,
-so we can tell quickly the impact of one when glancing through git logs. In
-doubt, you can set it to the name of the most updated directory.
+The goal here is to help understand your changes at a later time, in case things
+go wrong in the future.
+
+_You can create a commit with multiple paragraphs either through the command
+line either by setting multiple `-m` options to git-commit, or just by calling
+`git commit` with no `-m` option and editing the message manually in the opened
+editor._
 
 
 
