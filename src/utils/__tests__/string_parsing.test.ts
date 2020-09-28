@@ -49,14 +49,14 @@ describe("utils - string parsing", () => {
     });
   });
 
-  describe("strToLeUtf16", () => {
+  describe("strToUtf16LE", () => {
     it("should return an empty Uint8Array for an empty string", () => {
-      expect(strUtils.strToLeUtf16("")).toEqual(new Uint8Array([]));
+      expect(strUtils.strToUtf16LE("")).toEqual(new Uint8Array([]));
     });
 
     it("should convert a string to little-endian UTF-16 code unit", () => {
       const someLetters = "A❁ლewat";
-      expect(strUtils.strToLeUtf16(someLetters))
+      expect(strUtils.strToUtf16LE(someLetters))
         .toEqual(new Uint8Array([65,
                                  0, // 0x0041 (A)
 
@@ -80,9 +80,40 @@ describe("utils - string parsing", () => {
     });
   });
 
-  describe("leUtf16ToStr", () => {
+  describe("strToBeUtf16", () => {
+    it("should return an empty Uint8Array for an empty string", () => {
+      expect(strUtils.strToBeUtf16("")).toEqual(new Uint8Array([]));
+    });
+
+    it("should convert a string to little-endian UTF-16 code unit", () => {
+      const someLetters = "A❁ლewat";
+      expect(strUtils.strToBeUtf16(someLetters))
+        .toEqual(new Uint8Array([0,
+                                 65, // 0x0041 (A)
+
+                                 39,
+                                 65, // 0x2741 (❁)
+
+                                 16,
+                                 218, // 0x10DA (ლ)
+
+                                 0,
+                                 101,  // 0x065 (e)
+
+                                 0,
+                                 119, // etc.
+
+                                 0,
+                                 97,
+
+                                 0,
+                                 116 ]));
+    });
+  });
+
+  describe("utf16LEToStr", () => {
     it("should return an empty string for an empty Uint8Array", () => {
-      expect(strUtils.leUtf16ToStr(new Uint8Array([]))).toBe("");
+      expect(strUtils.utf16LEToStr(new Uint8Array([]))).toBe("");
     });
 
     it("should convert little-endian UTF-16 to its original string", () => {
@@ -106,7 +137,37 @@ describe("utils - string parsing", () => {
 
                                    116,
                                    0 ]);
-      expect(strUtils.leUtf16ToStr(utf16)).toEqual("A❁ლewat");
+      expect(strUtils.utf16LEToStr(utf16)).toEqual("A❁ლewat");
+    });
+  });
+
+  describe("beUtf16ToStr", () => {
+    it("should return an empty string for an empty Uint8Array", () => {
+      expect(strUtils.beUtf16ToStr(new Uint8Array([]))).toBe("");
+    });
+
+    it("should convert little-endian UTF-16 to its original string", () => {
+     const utf16 = new Uint8Array([0,
+                                   65, // 0x0041 (A)
+
+                                   39,
+                                   65, // 0x2741 (❁)
+
+                                   16,
+                                   218, // 0x10DA (ლ)
+
+                                   0,
+                                   101,  // 0x065 (e)
+
+                                   0,
+                                   119, // etc.
+
+                                   0,
+                                   97,
+
+                                   0,
+                                   116 ]);
+      expect(strUtils.beUtf16ToStr(utf16)).toEqual("A❁ლewat");
     });
   });
 
