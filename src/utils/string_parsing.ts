@@ -22,7 +22,7 @@ import assert from "./assert";
  * @param {string} str
  * @returns {Uint8Array}
  */
-function strToLeUtf16(str: string): Uint8Array {
+function strToUtf16LE(str: string): Uint8Array {
   const buffer = new ArrayBuffer(str.length * 2);
   const res = new Uint8Array(buffer);
   for (let i = 0; i < res.length; i += 2) {
@@ -34,14 +34,44 @@ function strToLeUtf16(str: string): Uint8Array {
 }
 
 /**
+ * Convert a string to an Uint8Array containing the corresponding UTF-16 code
+ * units in little-endian.
+ * @param {string} str
+ * @returns {Uint8Array}
+ */
+function strToBeUtf16(str: string): Uint8Array {
+  const buffer = new ArrayBuffer(str.length * 2);
+  const res = new Uint8Array(buffer);
+  for (let i = 0; i < res.length; i += 2) {
+    const value = str.charCodeAt(i / 2);
+    res[i + 1] = value & 0xFF;
+    res[i] = value >> 8 & 0xFF;
+  }
+  return res;
+}
+
+/**
  * Construct string from the little-endian UTF-16 code units given.
  * @param {Uint8Array} bytes
  * @returns {string}
  */
-function leUtf16ToStr(bytes : Uint8Array) : string {
+function utf16LEToStr(bytes : Uint8Array) : string {
   let str = "";
   for (let i = 0; i < bytes.length; i += 2) {
     str += String.fromCharCode((bytes[i + 1] << 8) + bytes[i]);
+  }
+  return str;
+}
+
+/**
+ * Construct string from the little-endian UTF-16 code units given.
+ * @param {Uint8Array} bytes
+ * @returns {string}
+ */
+function beUtf16ToStr(bytes : Uint8Array) : string {
+  let str = "";
+  for (let i = 0; i < bytes.length; i += 2) {
+    str += String.fromCharCode((bytes[i] << 8) + bytes[i + 1]);
   }
   return str;
 }
@@ -293,8 +323,11 @@ export {
   strToUtf8,
   utf8ToStr,
 
-  strToLeUtf16,
-  leUtf16ToStr,
+  strToUtf16LE,
+  utf16LEToStr,
+
+  strToBeUtf16,
+  beUtf16ToStr,
 
   guidToUuid,
 };
