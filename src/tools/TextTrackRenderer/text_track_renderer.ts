@@ -14,20 +14,29 @@
  * limitations under the License.
  */
 
-import HTMLTextSourceBuffer from "../../../custom_source_buffers/text/html";
+import HTMLTextSourceBuffer from "../../custom_source_buffers/text/html";
 import {
   addFeatures,
   IFeatureFunction,
-} from "../../../features";
+} from "../../features";
 
-// Argument for the `setTextTrack` method
+/** Arguments for the `setTextTrack` method. */
 export interface ISetTextTrackArguments {
-  data : string; // All the text tracks to display
-  type : string; // The text track format (e.g. "ttml", "srt", "vtt" or "sami")
-  timeOffset? : number; // Offset, in seconds, that will be added to each
-                        // subtitle's start and end time.
-  language? : string; // Define the language of the subtitles.
-                      // Only needed by some formats, such as SAMI.
+  /** The text track data. */
+  data : string;
+  /** The format of the text track data in `data` (e.g. "ttml", "srt", "vtt" or "sami") */
+  type : string;
+  /**
+   * Offset, in seconds, that will be added to each subtitle's start and end time.
+   * If not set or if set to `0`, no offset will be added.
+   */
+  timeOffset? : number;
+  /**
+   * Define the language of the subtitles.
+   * Only required by some formats, such as SAMI.
+   * Can be unset for most other cases.
+   */
+  language? : string;
 }
 
 /**

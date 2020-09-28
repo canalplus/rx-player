@@ -17,11 +17,9 @@
 import createMetaplaylist from "./createMetaplaylist";
 import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
 import parseBifThumbnails from "./parseBIFThumbnails";
-import TextTrackRenderer from "./TextTrackRenderer";
 
 export {
   createMetaplaylist,
   mediaCapabilitiesProber,
   parseBifThumbnails,
-  TextTrackRenderer,
 };

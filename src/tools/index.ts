@@ -15,3 +15,6 @@
  */
 
 export * as StringUtils from "./string_utils";
+import TextTrackRenderer from "./TextTrackRenderer";
+
+export { TextTrackRenderer };
