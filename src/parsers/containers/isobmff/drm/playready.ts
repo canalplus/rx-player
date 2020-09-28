@@ -19,7 +19,7 @@ import { le2toi } from "../../../../utils/byte_parsing";
 import {
   bytesToHex,
   guidToUuid,
-  leUtf16ToStr,
+  utf16LEToStr,
 } from "../../../../utils/string_parsing";
 
 /**
@@ -31,7 +31,7 @@ export function getPlayReadyKIDFromPrivateData(
   data: Uint8Array
 ) : string {
   const xmlLength = le2toi(data, 8);
-  const xml = leUtf16ToStr(data.subarray(10, xmlLength + 10));
+  const xml = utf16LEToStr(data.subarray(10, xmlLength + 10));
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   const kidElement = doc.querySelector("KID");
   if (kidElement === null) {
