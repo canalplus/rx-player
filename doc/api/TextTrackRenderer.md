@@ -29,7 +29,7 @@ import TextTrackRenderer, {
   VTT_PARSER,
   SRT_PARSER,
   SAMI_PARSER,
-} from "rx-player/experimental/tools/TextTrackRenderer";
+} from "rx-player/tools/TextTrackRenderer";
 
 // Add the needed parsers to the TextTrackRenderer
 TextTrackRenderer.addParsers([ TTML_PARSER, VTT_PARSER, SRT_PARSER, SAMI_PARSER ]);
@@ -77,13 +77,9 @@ try {
 
 ## How to import it ############################################################
 
-The TextTrackRenderer is still considered an "experimental" tool. This means
-that its API could change at any new version of the RxPlayer (don't worry, we
-would still document all changes made to it in the corresponding release note).
-
-As an experimental tool, the TextTrackRenderer is imported as such:
+The TextTrackRenderer alone can be imported as such:
 ```ts
-import TextTrackRenderer from "rx-player/experimental/tools/TextTrackRenderer";
+import TextTrackRenderer from "rx-player/tools/TextTrackRenderer";
 ```
 
 But just importing the TextTrackRenderer alone is pointless, you also have to
@@ -98,7 +94,7 @@ of:
 import TextTrackRenderer, {
   TTML_PARSER,
   SRT_PARSER,
-} from "rx-player/experimental/tools/TextTrackRenderer";
+} from "rx-player/tools/TextTrackRenderer";
 TextTrackRenderer.addParsers([ TTML_PARSER, SRT_PARSER ]);
 ```
 
