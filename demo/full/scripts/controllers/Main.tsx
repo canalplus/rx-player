@@ -1,15 +1,18 @@
+import * as React from "react";
 import RxPlayer from "rx-player";
-import React from "react";
 import Player from "./Player.jsx";
 
-function MainComponent() {
+function MainComponent() : JSX.Element {
   return (
     <div>
-      <div class="nav-header">
+      <div className="nav-header">
         <section className="title-wrapper">
           <h1 className="title">
             <a href="https://github.com/canalplus/rx-player">
-              <img className="rxplayer-logo" alt="RxPlayer" src="./assets/logo_white.png"/>
+              <img
+                className="rxplayer-logo"
+                alt="RxPlayer"
+                src="./assets/logo_white.png"/>
             </a>
             <a href="https://github.com/canalplus/rx-player/releases">
               <span className="version">{" v" + RxPlayer.version}</span>

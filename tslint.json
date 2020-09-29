@@ -37,7 +37,6 @@
     "deprecation": true,
     "encoding": true,
     "eofline": true,
-    "file-header": [true, "Copyright \\d{4}"],
     "forin": { "severity": "warning" },
     "import-spacing": true,
     "indent": [true, "spaces", 2],

@@ -12,16 +12,18 @@ if (["development", "production"].indexOf(RXP_ENV) < 0) {
 
 const isDevMode = RXP_ENV === "development";
 
+const PATH_ALIASES = {
+  ["rx-player$"]: path.resolve(__dirname, "src/index.ts"),
+  ["rx-player/tools$"]: path.resolve(__dirname, "src/tools/index.ts"),
+  ["rx-player/experimental/tools$"]: path.resolve(__dirname, "src/experimental/tools/index.ts"),
+};
+
 module.exports = {
   mode: isDevMode ? "development" : "production",
-  entry: path.join(__dirname, "./demo/full/scripts/index.jsx"),
+  entry: path.join(__dirname, "./demo/full/scripts/index.tsx"),
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
-    alias: {
-      ["rx-player$"]: path.resolve(__dirname, "src/index.ts"),
-      ["rx-player/tools$"]: path.resolve(__dirname, "src/tools/index.ts"),
-      ["rx-player/experimental/tools$"]: path.resolve(__dirname, "src/experimental/tools/index.ts"),
-    },
+    alias: PATH_ALIASES,
   },
   output: {
     path: path.join(__dirname, "./demo/full"),
@@ -40,16 +42,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
-        use: [{
-          loader: "ts-loader",
-          options: {
-            compilerOptions: { sourceMap: true },
-          },
-        }],
-      },
-      {
-        test: /\.jsx?$/,
+        test: /\.[jt]sx?$/,
         use: {
           loader: "babel-loader",
           options: {
@@ -60,6 +53,25 @@ module.exports = {
             ],
           },
         },
+      },
+      {
+        test: /\.tsx?$/,
+        use: [
+          {
+            loader: "ts-loader",
+            options: {
+              compilerOptions: {
+                baseUrl: "./",
+                paths: Object.keys(PATH_ALIASES).reduce((acc, key) => {
+                  acc[key] = [PATH_ALIASES[key]];
+                  return acc;
+                }, {}),
+                jsx: "preserve",
+                sourceMap: true,
+              },
+            },
+          },
+        ],
       },
       {
         test: /\.css$/,

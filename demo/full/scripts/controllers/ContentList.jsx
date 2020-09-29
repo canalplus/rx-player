@@ -14,7 +14,7 @@ import Button from "../components/Button.jsx";
 import FocusedTextInput from "../components/FocusedInput.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
-import contentsDatabase from "../contents.js";
+import contentsDatabase from "../contents";
 import GeneratedLinkURL from "../components/GenerateLinkURL.jsx";
 import GenerateLinkButton from "../components/GenerateLinkButton.jsx";
 
