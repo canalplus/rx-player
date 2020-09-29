@@ -19,8 +19,8 @@ import {
   le4toi,
 } from "../../utils/byte_parsing";
 import {
-  leUtf16ToStr,
-  strToLeUtf16,
+  strToUtf16LE,
+  utf16LEToStr,
 } from "../../utils/string_parsing";
 
 /**
@@ -45,12 +45,12 @@ export default function getWebKitFairPlayInitData(
   if (length + 4 !== initData.length) {
     throw new Error("Unsupported WebKit initData.");
   }
-  const initDataUri = leUtf16ToStr(initData);
+  const initDataUri = utf16LEToStr(initData);
   const skdIndexInInitData = initDataUri.indexOf("skd://");
   const contentIdStr = skdIndexInInitData > -1 ?
     initDataUri.substring(skdIndexInInitData + 6) :
     initDataUri;
-  const id = strToLeUtf16(contentIdStr);
+  const id = strToUtf16LE(contentIdStr);
 
   let offset = 0;
   const res =
