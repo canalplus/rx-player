@@ -1,3 +1,4 @@
+import RxPlayer from "rx-player";
 import React from "react";
 import Player from "./Player.jsx";
 
@@ -11,7 +12,7 @@ function MainComponent() {
               <img className="rxplayer-logo" alt="RxPlayer" src="./assets/logo_white.png"/>
             </a>
             <a href="https://github.com/canalplus/rx-player/releases">
-              <span className="version">{" v" + window.RxPlayer.version}</span>
+              <span className="version">{" v" + RxPlayer.version}</span>
             </a>
           </h1>
         </section>
