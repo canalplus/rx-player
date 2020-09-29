@@ -93,8 +93,8 @@
     - [LogLevel](#static-LogLevel)
 - [Tools](#tools)
     - [StringUtils](#tools-string-parsing)
+    - [TextTrackRenderer](#tools-textTrackRenderer)
     - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
-    - [Experimental - TextTrackRenderer](#tools-textTrackRenderer)
     - [Experimental - parseBifThumbnails](#tools-parseBifThumbnails)
     - [Experimental - createMetaplaylist](#tools-createMetaplaylist)
 
@@ -2645,6 +2645,18 @@ console.log(strToUtf8("hello😀"));
     ```
 
 
+<a name="tools-textTrackRenderer"></a>
+### TextTrackRenderer ##########################################################
+
+The TextTrackRenderer allows to easily render subtitles synchronized to a video
+element.
+
+It allows easily to dynamically add subtitles (as long as it is in one of the
+following format: srt, ttml, webVTT or SAMI) to a played video.
+
+This tool is documented [here](./TextTrackRenderer.md).
+
+
 <a name="tools-mediaCapabilitiesProber"></a>
 ### MediaCapabilitiesProber ####################################################
 
@@ -2664,26 +2676,6 @@ An experimental tool to probe browser media capabilities:
   - Display capabilities
 
 You can find its documentation [here](./mediaCapabilitiesProber.md).
-
-
-<a name="tools-textTrackRenderer"></a>
-### TextTrackRenderer ##########################################################
-
---
-
-:warning: This tool is experimental. This only means that its API can change at
-any new RxPlayer version (with all the details in the corresponding release
-note).
-
---
-
-The TextTrackRenderer allows to easily render subtitles synchronized to a video
-element.
-
-It allows easily to dynamically add subtitles (as long as it is in one of the
-following format: srt, ttml, webVTT or SAMI) to a played video.
-
-This tool is documented [here](./TextTrackRenderer.md).
 
 
 <a name="tools-parseBifThumbnails"></a>
