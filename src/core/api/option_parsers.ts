@@ -519,7 +519,11 @@ function parseLoadVideoOptions(
     isNullOrUndefined(options.transportOptions?.initialManifest) &&
     isNullOrUndefined(options.transportOptions?.manifestLoader)
   ) {
-    throw new Error("No url set on loadVideo");
+    throw new Error("Unable to load a content: no url set on loadVideo.\n" +
+                    "Please provide at least either an `url` argument, a " +
+                    "`transportOptions.initialManifest` option or a " +
+                    "`transportOptions.manifestLoader` option so the RxPlayer " +
+                    "can load the content.");
   }
 
   if (isNullOrUndefined(options.transport)) {
