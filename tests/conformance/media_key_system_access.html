@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!--
+
+This file allows to quickly test which MediaKeySystemAccess is supported on the
+current device.
+
+To do that:
+
+  1. update the `configs` property in the script part of the document.
+
+  2. Run this page from the environment (device and/or browser) you want to test
+
+  3. Check the logs, that's it!
+
+-->
+<html lang="en">
+  <head>
+    <head>
+      <meta charset="UTF-8">
+      <title>RxPlayer Conformance Test - MediaKeySystemAccess support</title>
+    </head>
+    <body>
+      <script charset="utf-8">
+/* eslint-disable no-console */
+
+/* Edit this variable to test available MediaKeySystemAccess configurations. */
+const configs = [
+  {
+    keySystem: "com.widevine.alpha",
+    configuration: [{
+      initDataTypes: ["cenc"],
+      audioCapabilities:[{
+        robustness: "",
+        contentType: "audio/mp4; codecs=\"mp4a.40.2\"",
+      }],
+      videoCapabilities:[{
+        robustness: "",
+        contentType: "video/mp4;codecs=\"avc1.640028\"",
+      }],
+      sessionTypes: ["temporary"],
+    }],
+  },
+  {
+    keySystem: "com.microsoft.playready",
+    configuration: [{
+      initDataTypes: ["cenc"],
+      audioCapabilities:[{
+        robustness: "",
+        contentType: "audio/mp4; codecs=\"mp4a.40.2\"",
+      }],
+      videoCapabilities:[{
+        robustness: "",
+        contentType: "video/mp4;codecs=\"avc1.640028\"",
+      }],
+      sessionTypes: ["temporary"],
+    }],
+  },
+];
+
+start();
+
+function start() {
+  recursivelyTestConfig(0);
+}
+
+/**
+ * Recursively tests all MediaKeySystemConfiguration configured in the `configs`
+ * object from the given `idx` index.
+ * @param {number} idx
+ */
+function recursivelyTestConfig(idx) {
+  if (idx >= configs.length) {
+    console.log("Done!");
+    return;
+  }
+
+  const videoElement = createVideoElement();
+  const { keySystem, configuration } = configs[idx];
+  console.log("Testing new config:", keySystem, configuration);
+  createMediaKeySystemAccess(keySystem, configuration)
+    .then((mediaKeySystemAccess) => {
+      return createMediaKeys(mediaKeySystemAccess);
+    })
+    .then((mediaKeys) => {
+      return attachMediaKeysToVideoElement(mediaKeys, videoElement);
+    }).then(() => {
+      console.log(`Configuration ${idx} succeeded!`,
+                  keySystem,
+                  configuration);
+    }).finally(() => {
+      removeElement(videoElement);
+      recursivelyTestConfig(idx + 1);
+    });
+}
+
+/**
+ * @returns {HTMLVideoElement}
+ */
+function createVideoElement() {
+  console.log("Creating video element...");
+  const elt = document.createElement("video");
+  document.body.appendChild(elt);
+  console.log("Video element created.");
+  return elt;
+}
+
+/**
+ * @param {HTMLMediaElement} element
+ */
+function removeElement(element) {
+  element.parentElement.removeChild(element);
+}
+
+/**
+ * @param {string} keySystem
+ * @param {MediaKeySystemConfiguration} mediaKeySystemAccessConfig
+ * @returns {Promise.<MediaKeySystemAccess>}
+ */
+function createMediaKeySystemAccess(keySystem, mediaKeySystemAccessConfig) {
+  console.log("Creating MediaKeySystemAccess");
+  return navigator.requestMediaKeySystemAccess(
+    keySystem,
+    mediaKeySystemAccessConfig,
+  ).then(
+    (mediaKeySystemAccess) => {
+      console.log("MediaKeySystemAccess created.",
+                  mediaKeySystemAccess.getConfiguration());
+      return mediaKeySystemAccess;
+    },
+    (err) => {
+      console.error("Failed to create MediaKeySystemAccess",
+                    keySystem,
+                    mediaKeySystemAccessConfig,
+                    err);
+      throw err;
+    },
+  );
+}
+
+/**
+ * Create A MediaKeys from the given MediaKeySystemAccess.
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess
+ * @returns {Promise}
+ */
+function createMediaKeys(mediaKeySystemAccess) {
+  console.log("Creating MediaKeys.");
+  return mediaKeySystemAccess.createMediaKeys().then(
+    (mediaKeys) => {
+      console.log("MediaKeys created.");
+      return mediaKeys;
+    },
+    (err) => {
+      console.error("Failed to create MediaKeys", err);
+      throw err;
+    },
+  );
+}
+
+/**
+ * Attach the given MediaKeys instance to the given HTMLVideoElement.
+ * @param {MediaKeys} mediaKeys
+ * @param {HTMLVideoElement} videoElement
+ * @returns {Promise}
+ */
+function attachMediaKeysToVideoElement(mediaKeys, videoElement) {
+  console.log("Attaching MediaKeys...");
+  return videoElement.setMediaKeys(mediaKeys).then(
+    () => {
+      console.log("MediaKeys attached.");
+    },
+    (err) => {
+      console.error("Failed to create MediaKeys", err);
+      throw err;
+    },
+  );
+}
+      </script>
+    </body>
+</html>

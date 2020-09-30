@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--
+
+This file allows to quickly test if:
+  - the `getStatusForPolicy` API is defined.
+  - if it is, which HDCP levels are deemed as "usable".
+
+To do that:
+
+  1. update the `keySystem`, `configuration` and `hdcpLevels` properties in the
+     script part of the document.
+
+  2. Run this page from the environment (device and/or browser) you want to test
+
+  3. Check the logs, that's it!
+
+-->
+<html lang="en">
+  <head>
+    <head>
+      <meta charset="UTF-8">
+      <title>RxPlayer Conformance Test - MediaKeySystemAccess support</title>
+    </head>
+    <body>
+      <script charset="utf-8">
+/* eslint-disable no-console */
+/*
+ * Edit those variables to test on a specific MediaKeySystemAccess
+ * configuration.
+ */
+const keySystem = "com.widevine.alpha";
+const configuration = [{
+  initDataTypes: ["cenc"],
+  audioCapabilities:[{
+    robustness: "",
+    contentType: "audio/mp4; codecs=\"mp4a.40.2\"",
+  }],
+  videoCapabilities:[{
+    robustness: "",
+    contentType: "video/mp4;codecs=\"avc1.640028\"",
+  }],
+  sessionTypes: ["temporary"],
+}];
+
+const hdcpLevels = [
+  "1.0", "1.1", "1.2", "1.3", "1.4",
+  "2.0", "2.1", "2.2", "2.3",
+];
+
+console.log("Calling requestMediaKeySystemAccess...");
+navigator.requestMediaKeySystemAccess(keySystem, configuration)
+  .then(mediaKeySystemAccess => {
+    console.log("MediaKeySystemAccess created!",
+                mediaKeySystemAccess.getConfiguration());
+    console.log("Creating MediaKeys...");
+    return mediaKeySystemAccess.createMediaKeys();
+  })
+  .then(mediaKeys => {
+    console.log("MediaKeys created!");
+    console.log("Getting HDCP status...");
+    if (!("getStatusForPolicy" in mediaKeys)) {
+      console.error("getStatusForPolicy API not available.");
+      return ;
+    }
+    recursivelyTestMinHDCPVersion(mediaKeys, 0);
+  });
+
+/**
+ * Test all "minHdcpVersion" in `hdcpLevels`, starting from the index `idx`.
+ * @param {MediaKeys} mediaKeys
+ * @param {number} idx
+ */
+function recursivelyTestMinHDCPVersion(mediaKeys, idx) {
+  if (idx >= hdcpLevels.length) {
+    console.log("Done!");
+    return;
+  }
+  const minHdcpVersion = hdcpLevels[idx];
+  mediaKeys.getStatusForPolicy({ minHdcpVersion })
+    .then(status => {
+      if (status !== "usable") {
+        console.error(`HDCP level ${minHdcpVersion} not usable.`);
+        return;
+      }
+      console.log(`HDCP level ${minHdcpVersion} usable!`);
+    }).catch((err) => {
+      console.error("`getStatusForPolicy` API failed", err);
+    }).finally(() => {
+      recursivelyTestMinHDCPVersion(mediaKeys, idx + 1);
+    });
+}
+      </script>
+    </body>
+</html>
