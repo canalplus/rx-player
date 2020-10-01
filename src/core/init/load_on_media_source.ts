@@ -37,7 +37,6 @@ import ABRManager from "../abr";
 import { SegmentFetcherCreator } from "../fetchers";
 import SegmentBuffersStore from "../segment_buffers";
 import StreamOrchestrator, {
-  IStreamOrchestratorEvent,
   IStreamOrchestratorOptions,
 } from "../stream";
 import { setDurationToMediaSource } from "./create_media_source";
@@ -48,45 +47,39 @@ import getDiscontinuities from "./get_discontinuities";
 import getStalledEvents from "./get_stalled_events";
 import handleDiscontinuity from "./handle_discontinuity";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import streamEventsEmitter, {
-  IStreamEvent
-} from "./stream_events_emitter";
+import streamEventsEmitter from "./stream_events_emitter";
 import {
   IInitClockTick,
-  ILoadedEvent,
-  ISpeedChangedEvent,
-  IStalledEvent,
-  IWarningEvent,
+  IMediaSourceLoaderEvent,
 } from "./types";
 import updatePlaybackRate from "./update_playback_rate";
 
-// Arguments needed by `createMediaSourceLoader`
+/** Arguments needed by `createMediaSourceLoader`. */
 export interface IMediaSourceLoaderArguments {
-  abrManager : ABRManager; // Helps to choose the right Representation
+  /** Module helping to choose the right Representation. */
+  abrManager : ABRManager;
+  /** Various stream-related options. */
   bufferOptions : IStreamOrchestratorOptions;
-  clock$ : Observable<IInitClockTick>; // Emit position information
-  manifest : Manifest; // Manifest of the content we want to play
-  mediaElement : HTMLMediaElement; // Media Element on which the content will be
-                                   // played
-  segmentFetcherCreator : SegmentFetcherCreator<any>; // Interface to download
-                                                        // segments
-  speed$ : Observable<number>; // Emit the speed.
-                               // /!\ Should replay the last value on subscription.
+  /** Observable emitting playback conditions regularly. */
+  clock$ : Observable<IInitClockTick>;
+  /* Manifest of the content we want to play. */
+  manifest : Manifest;
+  /** Media Element on which the content will be played. */
+  mediaElement : HTMLMediaElement;
+  /** Module to facilitate segment fetching. */
+  segmentFetcherCreator : SegmentFetcherCreator<any>;
+  /**
+   * Observable emitting the wanted playback rate as it changes.
+   * Replay the last value on subscription.
+   */
+  speed$ : Observable<number>;
 }
-
-// Events emitted when loading content in the MediaSource
-export type IMediaSourceLoaderEvent = IStalledEvent |
-                                      ISpeedChangedEvent |
-                                      ILoadedEvent |
-                                      IWarningEvent |
-                                      IStreamOrchestratorEvent |
-                                      IStreamEvent;
 
 /**
  * Returns a function allowing to load or reload the content in arguments into
  * a single or multiple MediaSources.
  * @param {Object} args
- * @returns {Observable}
+ * @returns {Function}
  */
 export default function createMediaSourceLoader({
   mediaElement,
@@ -183,7 +176,7 @@ export default function createMediaSourceLoader({
     // little longer while the buffer is empty.
     const playbackRate$ =
       updatePlaybackRate(mediaElement, speed$, clock$, { pauseWhenStalled: true })
-        .pipe(map(EVENTS.speedChanged));
+        .pipe(ignoreElements());
 
     // Create Stalling Manager, an observable which will try to get out of
     // various infinite stalling issues

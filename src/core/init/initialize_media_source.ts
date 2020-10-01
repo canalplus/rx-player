@@ -44,6 +44,7 @@ import log from "../../log";
 import { ITransportPipelines } from "../../transports";
 import deferSubscriptions from "../../utils/defer_subscriptions";
 import { fromEvent } from "../../utils/event_emitter";
+import filterMap from "../../utils/filter_map";
 import objectAssign from "../../utils/object_assign";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
@@ -52,7 +53,6 @@ import ABRManager, {
 import {
   getCurrentKeySystem,
   IContentProtection,
-  IEMEManagerEvent,
   IKeySystemOption,
 } from "../eme";
 import {
@@ -62,30 +62,21 @@ import {
   SegmentFetcherCreator,
 } from "../fetchers";
 import { ITextTrackSegmentBufferOptions } from "../segment_buffers";
-import createEMEManager, {
-  IEMEDisabledEvent,
-} from "./create_eme_manager";
+import createEMEManager from "./create_eme_manager";
 import openMediaSource from "./create_media_source";
 import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import createMediaSourceLoader, {
-  IMediaSourceLoaderEvent,
-} from "./load_on_media_source";
+import createMediaSourceLoader from "./load_on_media_source";
 import manifestUpdateScheduler, {
   IManifestRefreshSchedulerEvent,
 } from "./manifest_update_scheduler";
-import {
-  IStreamEvent
-} from "./stream_events_emitter";
 import throwOnMediaError from "./throw_on_media_error";
 import {
-  IDecipherabilityUpdateEvent,
   IInitClockTick,
-  IManifestReadyEvent,
-  IManifestUpdateEvent,
-  IReloadingMediaSourceEvent,
+  IInitEvent,
+  IMediaSourceLoaderEvent,
   IWarningEvent,
 } from "./types";
 
@@ -148,17 +139,6 @@ export interface IInitializeArguments {
   /** URL of the Manifest. */
   url? : string;
 }
-
-/** Every events emitted by `InitializeOnMediaSource`. */
-export type IInitEvent = IManifestReadyEvent |
-                         IManifestUpdateEvent |
-                         IMediaSourceLoaderEvent |
-                         IEMEManagerEvent |
-                         IEMEDisabledEvent |
-                         IReloadingMediaSourceEvent |
-                         IDecipherabilityUpdateEvent |
-                         IWarningEvent |
-                         IStreamEvent;
 
 /**
  * Begin content playback.
@@ -392,22 +372,22 @@ export default function InitializeOnMediaSource(
         const reloadMediaSource$ = new Subject<{ currentTime : number;
                                                  isPaused : boolean; }>();
         const mediaSourceLoader$ = mediaSourceLoader(mediaSource, position, shouldPlay)
-          .pipe(tap(evt => {
+          .pipe(filterMap<IMediaSourceLoaderEvent, IInitEvent, null>((evt) => {
             switch (evt.type) {
               case "needs-manifest-refresh":
                 scheduleRefresh$.next({ completeRefresh: false,
                                         canUseUnsafeMode: true });
-                break;
+                return null;
               case "manifest-might-be-out-of-sync":
                 scheduleRefresh$.next({
                   completeRefresh: true,
                   canUseUnsafeMode: false,
                   delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
                 });
-                break;
+                return null;
               case "needs-media-source-reload":
                 reloadMediaSource$.next(evt.value);
-                break;
+                return null;
               case "needs-decipherability-flush":
                 const keySystem = getCurrentKeySystem(mediaElement);
                 if (shouldReloadMediaSourceOnDecipherabilityUpdate(
@@ -415,7 +395,7 @@ export default function InitializeOnMediaSource(
                     )
                 ) {
                   reloadMediaSource$.next(evt.value);
-                  return;
+                  return null;
                 }
 
                 // simple seek close to the current position
@@ -426,12 +406,13 @@ export default function InitializeOnMediaSource(
                 } else {
                   mediaElement.currentTime = currentTime;
                 }
-                break;
+                return null;
               case "protected-segment":
                 protectedSegments$.next(evt.value);
-                break;
+                return null;
             }
-          }));
+            return evt;
+          }, null));
 
         const currentLoad$ =
           mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
