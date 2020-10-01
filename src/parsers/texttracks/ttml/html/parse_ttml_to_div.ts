@@ -35,33 +35,87 @@ import parseCue, {
   ITTMLHTMLCue,
 } from "./parse_cue";
 
- const STYLE_ATTRIBUTES = [ "backgroundColor",
-                            "color",
-                            "direction",
-                            "display",
-                            "displayAlign",
-                            "extent",
-                            "fontFamily",
-                            "fontSize",
-                            "fontStyle",
-                            "fontWeight",
-                            "lineHeight",
-                            "opacity",
-                            "origin",
-                            "overflow",
-                            "padding",
-                            "textAlign",
-                            "textDecoration",
-                            "textOutline",
-                            "unicodeBidi",
-                            "visibility",
-                            "wrapOption",
-                            "writingMode",
+const STYLE_ATTRIBUTES = [ "backgroundColor",
+                           "color",
+                           "direction",
+                           "display",
+                           "displayAlign",
+                           "extent",
+                           "fontFamily",
+                           "fontSize",
+                           "fontStyle",
+                           "fontWeight",
+                           "lineHeight",
+                           "opacity",
+                           "origin",
+                           "overflow",
+                           "padding",
+                           "textAlign",
+                           "textDecoration",
+                           "textOutline",
+                           "unicodeBidi",
+                           "visibility",
+                           "wrapOption",
+                           "writingMode",
 
-                            // Not managed anywhere for now
-                            // "showBackground",
-                            // "zIndex",
-                            ];
+                           // Not managed anywhere for now
+                           // "showBackground",
+                           // "zIndex",
+                           ];
+
+/**
+ * Apply a default style to TTML cue if no conflict is detected
+ * with current cue style.
+ *
+ * No position, orientation and dimension style should have been
+ * set to avoid any conflict.
+ *
+ * The default style propose to set the cue at the bottom, centered
+ * and lightly spaced apart from the edges :
+ *
+ *        -----------------------------------------------
+ *        |                                             |
+ *        |                                             |
+ *        |                                             |
+ *        |                                             |
+ *        |                                             |
+ *        |                                             |
+ *        |            subtitle is displayed            |
+ *        |                    here                     |
+ *        -----------------------------------------------
+ *
+ * @param {Object} cue
+ */
+function applyDefaultTTMLCSSStyle(cue: ITTMLHTMLCue): void {
+  const { element } = cue;
+  const { style: cueStyle } = element;
+  const { childNodes: paragraphNodes } = element;
+  const mainParagraphNode = paragraphNodes[0] as HTMLElement;
+  if (// cue region dimensions
+      cueStyle.width === "" &&
+      cueStyle.height === "" &&
+      // cue region position
+      cueStyle.position === "" &&
+      cueStyle.left === "" &&
+      cueStyle.top === "" &&
+      // cue text position
+      cueStyle.display === "" &&
+      cueStyle.flexDirection === "" &&
+      cueStyle.justifyContent === "" &&
+      // cue text centering
+      mainParagraphNode !== undefined &&
+      mainParagraphNode.style.textAlign === "") {
+    cueStyle.width = "70%";
+    cueStyle.height = "20%";
+    cueStyle.position = "relative";
+    cueStyle.left = "15%";
+    cueStyle.top = "80%";
+    cueStyle.display = "flex";
+    cueStyle.flexDirection = "column";
+    cueStyle.justifyContent = "flex-start";
+    mainParagraphNode.style.textAlign = "center";
+  }
+}
 
 /**
  * Create array of objects which should represent the given TTML text track.
@@ -186,7 +240,9 @@ export default function parseTTMLStringToDIV(
                              paragraphStyle,
                              ttParams,
                              shouldTrimWhiteSpaceOnParagraph);
+
         if (cue !== null) {
+          applyDefaultTTMLCSSStyle(cue);
           ret.push(cue);
         }
       }
