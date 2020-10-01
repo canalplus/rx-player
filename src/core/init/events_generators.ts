@@ -31,7 +31,6 @@ import {
   IManifestReadyEvent,
   IManifestUpdateEvent,
   IReloadingMediaSourceEvent,
-  ISpeedChangedEvent,
   IStalledEvent,
   IWarningEvent,
 } from "./types";
@@ -87,15 +86,6 @@ function manifestUpdate() : IManifestUpdateEvent {
 }
 
 /**
- * Construct a "speedChanged" event.
- * @param {Number} speed
- * @returns {Object}
- */
-function speedChanged(speed : number) : ISpeedChangedEvent {
-  return { type: "speedChanged", value: speed };
-}
-
-/**
  * Construct a "representationChange" event.
  * @param {string} type
  * @param {Object} period
@@ -134,7 +124,6 @@ const INIT_EVENTS = { loaded,
                       manifestUpdate,
                       nullRepresentation,
                       reloadingMediaSource,
-                      speedChanged,
                       stalled,
                       warning };
 
