@@ -64,8 +64,8 @@ const STYLE_ATTRIBUTES = [ "backgroundColor",
                            ];
 
 /**
- * Apply a default style to TTML cue if no conflict is detected
- * with current cue style.
+ * Apply a default style to TTML cue if no style has been already
+ * declared and no conflict is detected with current cue style.
  *
  * No position, orientation and dimension style should have been
  * set to avoid any conflict.
