@@ -60,18 +60,15 @@ export default function parseLocalManifest(
   };
   const maximumPosition = getMaximumPosition(manifest);
   if (maximumPosition !== undefined) {
-    manifest.maximumTime = {
-        isContinuous : false,
-        value : maximumPosition,
-        time : performance.now(),
-    };
+    manifest.maximumTime = { isContinuous: false,
+                             value : maximumPosition,
+                             time : performance.now() };
   }
   const minimumPosition = getMinimumPosition(manifest);
-  manifest.minimumTime = {
-    isContinuous : false,
-    value : minimumPosition !== undefined ? minimumPosition : 0,
-    time : performance.now(),
-  };
+  manifest.minimumTime = { isContinuous : false,
+                           value : minimumPosition !== undefined ? minimumPosition :
+                                                                   0,
+                           time : performance.now() };
   return manifest;
 }
 
