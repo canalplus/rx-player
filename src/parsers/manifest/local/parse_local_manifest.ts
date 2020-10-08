@@ -15,8 +15,6 @@
  */
 
 import idGenerator from "../../../utils/id_generator";
-import getMaximumPosition from "../utils/get_maximum_position";
-import getMinimumPosition from "../utils/get_minimum_position";
 
 import {
   IParsedAdaptation,
@@ -42,12 +40,15 @@ export default function parseLocalManifest(
   if (localManifest.type !== "local") {
     throw new Error("Invalid local manifest given. It misses the `type` property.");
   }
-  if (localManifest.version !== "0.1") {
+  if (localManifest.version !== "0.2") {
     throw new Error(`The current Local Manifest version (${localManifest.version})` +
                     " is not compatible with the current version of the RxPlayer");
   }
   const periodIdGenerator = idGenerator();
-  const { isFinished } = localManifest;
+
+  const { minimumPosition,
+          maximumPosition,
+          isFinished } = localManifest;
   const manifest: IParsedManifest = {
     availabilityStartTime: 0,
     expired: localManifest.expired,
@@ -56,37 +57,41 @@ export default function parseLocalManifest(
     isLive: false,
     uris: [],
     periods: localManifest.periods
-      .map(period => parsePeriod(period, periodIdGenerator, isFinished)),
+      .map(period => parsePeriod(period, { periodIdGenerator,
+                                           isFinished })),
+    minimumTime: { isContinuous : false,
+                   value : minimumPosition !== undefined ? minimumPosition :
+                                                           0,
+                   time : performance.now() },
   };
-  const maximumPosition = getMaximumPosition(manifest);
   if (maximumPosition !== undefined) {
     manifest.maximumTime = { isContinuous: false,
                              value : maximumPosition,
                              time : performance.now() };
   }
-  const minimumPosition = getMinimumPosition(manifest);
-  manifest.minimumTime = { isContinuous : false,
-                           value : minimumPosition !== undefined ? minimumPosition :
-                                                                   0,
-                           time : performance.now() };
   return manifest;
 }
 
 /**
  * @param {Object} period
+ * @param {Object} ctxt
  * @returns {Object}
  */
 function parsePeriod(
   period : ILocalPeriod,
-  periodIdGenerator : () => string,
-  isFinished : boolean
+  ctxt : { /** Generate next Period's id */
+           periodIdGenerator : () => string;
+           /** If true, the local Manifest has been fully downloaded. */
+           isFinished : boolean; }
 ) : IParsedPeriod {
+  const { isFinished } = ctxt;
   const adaptationIdGenerator = idGenerator();
   return {
-    id: "period-" + periodIdGenerator(),
+    id: "period-" + ctxt.periodIdGenerator(),
+
     start: period.start,
-    end: period.duration - period.start,
-    duration: period.duration,
+    end: period.end,
+    duration: period.end - period.start,
     adaptations: period.adaptations
       .reduce<Partial<Record<string, IParsedAdaptation[]>>>((acc, ada) => {
         const type = ada.type;
@@ -95,7 +100,8 @@ function parsePeriod(
           adaps = [];
           acc[type] = adaps;
         }
-        adaps.push(parseAdaptation(ada, adaptationIdGenerator, isFinished));
+        adaps.push(parseAdaptation(ada, { adaptationIdGenerator,
+                                          isFinished }));
         return acc;
       }, {}),
   };
@@ -103,22 +109,27 @@ function parsePeriod(
 
 /**
  * @param {Object} adaptation
+ * @param {Object} ctxt
  * @returns {Object}
  */
 function parseAdaptation(
   adaptation : ILocalAdaptation,
-  adaptationIdGenerator : () => string,
-  isFinished : boolean
+  ctxt : { /** Generate next Adaptation's id */
+           adaptationIdGenerator : () => string;
+           /** If true, the local Manifest has been fully downloaded. */
+           isFinished : boolean; }
 ) : IParsedAdaptation {
+  const { isFinished } = ctxt;
   const representationIdGenerator = idGenerator();
   return {
-    id: "adaptation-" + adaptationIdGenerator(),
+    id: "adaptation-" + ctxt.adaptationIdGenerator(),
     type: adaptation.type,
     audioDescription: adaptation.audioDescription,
     closedCaption: adaptation.closedCaption,
     language: adaptation.language,
     representations: adaptation.representations.map((representation) =>
-        parseRepresentation(representation, representationIdGenerator, isFinished)),
+      parseRepresentation(representation, { representationIdGenerator,
+                                            isFinished })),
   };
 }
 
@@ -128,10 +139,13 @@ function parseAdaptation(
  */
 function parseRepresentation(
   representation : ILocalRepresentation,
-  representationIdGenerator : () => string,
-  isFinished : boolean
+  ctxt : { /** Generate next Adaptation's id */
+           representationIdGenerator : () => string;
+           /** If true, the local Manifest has been fully downloaded. */
+           isFinished : boolean; }
 ) : IParsedRepresentation {
-  const id = "representation-" + representationIdGenerator();
+  const { isFinished } = ctxt;
+  const id = "representation-" + ctxt.representationIdGenerator();
   return { id,
            bitrate: representation.bitrate,
            height: representation.height,

@@ -1,4 +1,13 @@
-# Local contents (offline playback) ############################################
+# Local Manifest format version 0.1  ###########################################
+
+---
+
+:warning: The `0.1` version of the local Manifest format is an old version which
+is not properly understood by the RxPlayer anymore.
+
+The last version of this specification can be found [here](./local_manifest.md).
+
+---
 
 ## Preamble ####################################################################
 
@@ -138,11 +147,8 @@ First, let's go into an example, before describing what each property is for:
 ```js
 {
   type: "local", // always set to "local"
-  version: "0.2", // version number, in a MAJOR.MINOR form
-  minimumPosition: 0, // Minimum possible reachable position in the content,
-                      // in seconds
-  maximumPosition: 120, // Maximum possible reachable position in the content,
-                        // in seconds
+  version: "0.1", // version number, in a MAJOR.MINOR form
+  duration: 60000, // duration of the whole content, in ms
   isFinished: true, // if `false`, the content is still downloading
   periods: [ // different "periods" in the content - see below
     // ...
@@ -163,7 +169,7 @@ object:
     RxPlayer that the current content is a local manifest.
 
   - version (`string`): Version number, in a MAJOR.MINOR form.
-    The present documentation is for the `"0.2"` version.
+    The present documentation is for the `"0.1"` version.
 
     A parser for a version with the a given MAJOR version should be able to
     parse and play contents for any of the corresponding MINOR versions.
@@ -172,14 +178,9 @@ object:
     A parser for a version with that major (let's say `0.1`) might be unable to
     parse local Manifests of another version (e.g. `0.2`).
 
-  - minimumPosition (`number|undefined`): Optional minimum position reachable in
-    this content once it has been fully loaded, in seconds.
-
-    If not set or set to `undefined`, the RxPlayer will assume that the content
-    starts at a `0` position.
-
-  - maximumPosition (`number|undefined`): Maximum position reachable in this
-    content once it has been fully loaded, in seconds.
+  - duration (`number`): duration of the whole content, in milliseconds. This
+    means the difference between the absolute maximum position and the absolute
+    minimum position.
 
   - isFinished (`boolean`): `true` indicates that the content has been
     completely downloaded and can now be played as a whole. `false` indicates
@@ -219,8 +220,8 @@ for your local manifest.
 Here's an example of a period object:
 ```js
 {
-  start: 10, // starting position in the whole content, in seconds
-  end: 20, // ending position, in seconds
+  start: 10000, // starting position in the whole content, in ms
+  end: 20000, // ending position, in ms
   adaptations: [ // available tracks for this period
     // ***
   ]
@@ -232,24 +233,23 @@ look like:
 ```js
 {
   type: "local",
-  version: "0.2",
-  minimumPosition: 0,
-  maximumPosition: 60,
+  version: "0.1",
+  duration: 60000,
   isFinished: true,
   periods: [ // Here we have 3 consecutive periods:
     {
       start: 0,
-      end: 10,
+      end: 10000,
       adaptations: [ /* ... */ ]
     },
     {
-      start: 10,
-      end: 30,
+      start: 10000,
+      end: 30000,
       adaptations: [ /* ... */ ]
     },
     {
-      start: 30,
-      end: 60,
+      start: 30000,
+      end: 60000,
       adaptations: [ /* ... */ ]
     },
   ],
@@ -261,9 +261,9 @@ look like:
 
 The following properties are found in a period object:
 
-  - start (`number`): The position in seconds at which the period starts.
+  - start (`number`): The position in milliseconds at which the period starts.
 
-  - end (`number`): The position in seconds at which the period ends.
+  - end (`number`): The position in milliseconds at which the period ends.
 
   - adaptations (`Array.<Object>`): The different tracks available. See below
     for more information.
@@ -317,7 +317,7 @@ Here how it looks when adaptations are integrated in a given period:
 ```js
 {
   start: 0,
-  end: 10,
+  end: 10000,
   adaptations: [
     {
       type: "video",
@@ -500,11 +500,11 @@ it contains itself three properties:
 Let's start by the first one, `segments`. `segments` is an array of objects,
 each object describing a single segment of media data. Each object has the
 following properties:
-  - time (`number`): starting position of the segment, in seconds
-  - duration (`number`): duration of the segment, in seconds
+  - time (`number`): starting position of the segment, in milliseconds
+  - duration (`number`): duration of the segment, in milliseconds
   - timestampOffset (`number|undefined`): optional time offset to add to the
-    segment's internal time in seconds to convert its media time to its
-    presentation time, in seconds.
+    segment's internal time to convert its media time to its presentation time,
+    in milliseconds.
     If you don't know what it is, you will most likely not need it.
 
 Let's see a simple example with four segments of 2 seconds:
@@ -512,19 +512,19 @@ Let's see a simple example with four segments of 2 seconds:
 [
   {
     time: 0,
-    duration: 2
+    duration: 2000
   },
   {
-    time: 2,
-    duration: 2
+    time: 2000,
+    duration: 2000
   },
   {
-    time: 4,
-    duration: 2
+    time: 4000,
+    duration: 2000
   },
   {
-    time: 6,
-    duration: 2
+    time: 6000,
+    duration: 2000
   }
 ]
 ```
@@ -630,35 +630,3 @@ ISOBMFF containers).
 
 We also look into adding supplementary encryption information into the local
 manifest format, but this is not available for now.
-
-
-## Difference with the `0.1` format ############################################
-
-The previous `0.1` version of the local Manifest is now obsolete and is not
-compatible with the new versions of the RxPlayer.
-Its documentation can be found [here](./local_manifest_v0.1.md).
-
-If you were relying on this version before and would like to switch the the
-`0.2` version, to be able to play it on newer versions of the RxPlayer, here
-is the exhaustive list of what changed:
-
-  - a `minimumPosition` has been added to the "period object"
-
-  - a `maximumPosition` has been added to the "period object"
-
-  - the `duration` property of the "period object" has been removed
-
-  - the `start` property from a "period object" is now expressed in seconds
-    instead of in milliseconds.
-
-  - the `end` property from a "period object" is now expressed in seconds
-    instead of in milliseconds.
-
-  - the `time` property from a segment in the "segments array" is now expressed
-    in seconds instead of in milliseconds.
-
-  - the `duration` property from a segment in the "segments array" is now
-    expressed in seconds instead of in milliseconds.
-
-  - the `timestampOffset` property from a segment in the "segments array" is now
-    expressed in seconds. In the `0.1` version the unit of time was unclear.

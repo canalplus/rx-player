@@ -43,7 +43,7 @@ export interface IContentProtections {
 
 /** Representation of a "quality" available in an Adaptation. */
 export interface IParsedRepresentation {
-  /** Average bitrate the Representation is available in, in bits per seconds. */
+  /** Maximum bitrate the Representation is available in, in bits per seconds. */
   bitrate : number;
   /**
    * Interface to get information about segments associated with this

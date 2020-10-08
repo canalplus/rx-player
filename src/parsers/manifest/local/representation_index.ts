@@ -61,11 +61,11 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     const wantedSegments : ILocalIndexSegment[] = [];
     for (let i = 0; i < this._index.segments.length; i++) {
       const segment = this._index.segments[i];
-      const segmentStart = segment.time / 1000;
+      const segmentStart = segment.time;
       if (endTime <= segmentStart) {
         break;
       }
-      const segmentEnd = (segment.time + segment.duration) / 1000;
+      const segmentEnd = segment.time + segment.duration;
       if (segmentEnd > startTime) {
         wantedSegments.push(segment);
       }
@@ -78,7 +78,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
           isInit: false,
           time: wantedSegment.time,
           duration: wantedSegment.duration,
-          timescale: 1000,
+          timescale: 1,
           timestampOffset: wantedSegment.timestampOffset,
           mediaURLs: null,
           privateInfos: {
@@ -97,7 +97,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       return undefined;
     }
     const firstSegment = this._index.segments[0];
-    return firstSegment.time / 1000;
+    return firstSegment.time;
   }
 
   /**
@@ -108,7 +108,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       return undefined;
     }
     const lastSegment = this._index.segments[this._index.segments.length - 1];
-    return lastSegment.time / 1000;
+    return lastSegment.time;
   }
 
   /**
