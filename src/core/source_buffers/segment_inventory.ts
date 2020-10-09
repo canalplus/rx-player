@@ -29,68 +29,135 @@ const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
         MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
         MINIMUM_SEGMENT_SIZE } = config;
 
-interface IBufferedChunkInfos { adaptation : Adaptation;
-                                period : Period;
-                                representation : Representation;
-                                segment : ISegment; }
+/** Content information for a single buffered chunk */
+interface IBufferedChunkInfos {
+  /** Adaptation this chunk is related to. */
+  adaptation : Adaptation;
+  /** Period this chunk is related to. */
+  period : Period;
+  /** Representation this chunk is related to. */
+  representation : Representation;
+  /** Segment this chunk is related to. */
+  segment : ISegment;
+}
 
-// Stored information for each chunk
+/** Information stored on a single chunk by the SegmentInventory. */
 export interface IBufferedChunk {
-  bufferedEnd : number|undefined; // Last inferred end in the SourceBuffer this
-                                  // chunk ends at, in seconds
-  bufferedStart : number|undefined; // Last inferred start in the SourceBuffer
-                                    // this chunk starts at, in seconds
-  end : number; // Supposed end, in seconds, the chunk is expected to reach
-  precizeEnd : boolean; // if `true` the `end` property is an estimate we have
-                        // enough confidence in (and thus `bufferedEnd` should
-                        // be very close to that value when that chunk has been
-                        // pushed).
-                        // if `false`, it is just a guess based on segment
-                        // information. in that case, we might update that
-                        // value the next time we check the state of the
-                        // buffered segments.
-  precizeStart : boolean; // if `true` the `start` is an estimate we have enough
-                          // confidence in (and thus `bufferedStart` should
-                          // be very close to that value when that chunk has
-                          // been pushed).
-                          // if `false`, it is just a guess based on segment
-                          // information. in that case, we might update that
-                          // value the next time we check the state of the
-                          // buffered segments.
-  infos : IBufferedChunkInfos; // Information on what this segment is in terms
-                               // of content.
-  partiallyPushed : boolean; // If `false`, the whole segment has been
-                             // completely pushed. If false, it is just a
-                             // chunk of the whole segment which has yet to be
-                             // finished to be pushed
+  /**
+   * Last inferred end in the SourceBuffer this chunk ends at, in seconds.
+   *
+   * Depending on if contiguous chunks were around it during the first
+   * synchronization for that chunk this value could be more or less precize.
+   */
+  bufferedEnd : number|undefined;
+  /**
+   * Last inferred start in the SourceBuffer this chunk starts at, in seconds.
+   *
+   * Depending on if contiguous chunks were around it during the first
+   * synchronization for that chunk this value could be more or less precize.
+   */
+  bufferedStart : number|undefined;
+  /**
+   * Supposed end, in seconds, the chunk is expected to end at.
+   *
+   * It can correspond either to the end of the chunk or to the end of the whole
+   * segment the chunk is linked to. This should not matter as chunks linked to
+   * the same segment will all be merged once all chunks have been pushed and
+   * the `completeSegment` API call is done. Until then, this property should
+   * not be relied on.
+   *
+   * You can know whether the `completeSegment` API has been called by checking
+   * the `partiallyPushed` property.
+   */
+  end : number;
+  /**
+   * If `true` the `end` property is an estimate the `SegmentInventory` has
+   * a high confidence in.
+   * In that situation, `bufferedEnd` can easily be compared to it to check if
+   * that segment has been partially, or fully, garbage collected.
+   *
+   * If `false`, it is just a guess based on segment information.
+   */
+  precizeEnd : boolean;
+  /**
+   * If `true` the `start` property is an estimate the `SegmentInventory` has
+   * a high confidence in.
+   * In that situation, `bufferedStart` can easily be compared to it to check if
+   * that segment has been partially, or fully, garbage collected.
+   *
+   * If `false`, it is just a guess based on segment information.
+   */
+  precizeStart : boolean;
+  /** Information on what that chunk actually contains. */
+  infos : IBufferedChunkInfos;
+  /**
+   * If `true`, this chunk is only a partial chunk of a whole segment.
+   * In this condition, `start` and `end` may be ignored, as they may either
+   * refer to the chunk or to the whole segment.
+   *
+   * Inversely, if `false`, this chunk is a whole segment whose inner chunks
+   * have all been fully pushed.
+   * In that condition, the `start` and `end` properties refer to that fully
+   * pushed segment.
+   */
+  partiallyPushed : boolean;
+  /**
+   * Supposed start, in seconds, the chunk is expected to start at.
+   *
+   * It can correspond either to the start of the chunk or to the start of the
+   * whole segment the chunk is linked to. This should not matter as chunks
+   * linked to the same segment will all be merged once all chunks have been
+   * pushed and the `completeSegment` API call is done. Until then, this
+   * property should not be relied on.
+   *
+   * You can know whether the `completeSegment` API has been called by checking
+   * the `partiallyPushed` property.
+   */
   start : number; // Supposed start the segment should start from, in seconds
 }
 
-// information to provide when inserting a new chunk
+/** information to provide when "inserting" a new chunk into the SegmentInventory. */
 export interface IInsertedChunkInfos {
+  /** The Adaptation that chunk is linked to */
   adaptation : Adaptation;
+  /** The Period that chunk is linked to */
   period : Period;
+  /** The Representation that chunk is linked to. */
   representation : Representation;
+  /** The Segment that chunk is linked to. */
   segment : ISegment;
-  start : number; // Start time the segment should most probably begin from when
-                  // pushed, in seconds
-  end : number; // End time at which the segment should most probably end when
-                // pushed, in seconds
+  /**
+   * Start time, in seconds, this chunk most probably begins from after being
+   * pushed.
+   * In doubt, you can set it at the start of the whole segment (after
+   * considering the possible offsets and append windows).
+   */
+  start : number;
+  /**
+   * End time, in seconds, this chunk most probably ends at after being
+   * pushed.
+   *
+   * In doubt, you can set it at the end of the whole segment (after
+   * considering the possible offsets and append windows).
+   */
+  end : number;
 }
 
 /**
  * Keep track of every chunk downloaded and currently in the browser's memory.
  *
- * The main point of this class is to know which CDN chunks are already
- * pushed to the SourceBuffer, at which bitrate, and which have been
- * garbage-collected since by the browser (and thus should be re-downloaded).
+ * The main point of this class is to know which chunks are already pushed to
+ * the SourceBuffer, at which bitrate, and which have been garbage-collected
+ * since by the browser (and thus may need to be re-loaded).
  * @class SegmentInventory
  */
 export default class SegmentInventory {
-  // The inventory keeps track of all the segments which should be currently in
-  // the browser's memory.
-  // This array contains objects, each being related to a single downloaded
-  // segment which is at least partially added in a SourceBuffer.
+  /**
+   * Keeps track of all the segments which should be currently in the browser's
+   * memory.
+   * This array contains objects, each being related to a single downloaded
+   * chunk or segment which is at least partially added in a SourceBuffer.
+   */
   private inventory : IBufferedChunk[];
 
   constructor() {
@@ -106,7 +173,14 @@ export default class SegmentInventory {
 
   /**
    * Infer each segment's bufferedStart and bufferedEnd from the TimeRanges
-   * given (coming from the SourceBuffer).
+   * given.
+   *
+   * The TimeRanges object given should come from the SourceBuffer linked to
+   * that SegmentInventory.
+   *
+   * /!\ A SegmentInventory should not be associated to multiple SourceBuffers
+   * at a time, so each `synchronizeBuffered` call should be given a TimeRanges
+   * coming from the same SourceBuffer instance.
    * @param {TimeRanges}
    */
   public synchronizeBuffered(buffered : TimeRanges) : void {
@@ -241,11 +315,10 @@ export default class SegmentInventory {
   }
 
   /**
-   * Add a new segment in the inventory.
+   * Add a new chunk in the inventory.
    *
-   * Note: As new segments can "replace" partially or completely old ones, we
-   * have to perform a complex logic and might update previously added segments.
-   *
+   * Chunks are decodable sub-parts of a whole segment. Once all chunks in a
+   * segment have been inserted, you should call the `completeSegment` method.
    * @param {Object} chunkInformation
    */
   public insertChunk(
@@ -642,6 +715,10 @@ export default class SegmentInventory {
   }
 
   /**
+   * Returns the whole inventory.
+   *
+   * To get a list synchronized with what a SourceBuffer actually has buffered
+   * you might want to call `synchronizeBuffered` before calling this method.
    * @returns {Array.<Object>}
    */
   public getInventory() : IBufferedChunk[] {
