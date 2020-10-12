@@ -44,8 +44,7 @@ import SegmentInventory, {
   IInsertedChunkInfos,
 } from "./segment_inventory";
 
-const { APPEND_WINDOW_SECURITIES,
-        SOURCE_BUFFER_FLUSHING_INTERVAL, } = config;
+const { SOURCE_BUFFER_FLUSHING_INTERVAL, } = config;
 
 /** Every QueuedSourceBuffer types. */
 export type IBufferType = "audio" |
@@ -114,39 +113,11 @@ export interface IPushedChunkData<T> {
 }
 
 /**
- * Content of the `inventoryInfos` property when pushing a new chunk
- * This data will only be needed for inventory purposes in the QueuedSourceBuffer.
- */
-export interface IPushedChunkInventoryInfos {
-  /** Adaptation object linked to the chunk. */
-  adaptation : Adaptation;
-  /** Period object linked to the chunk. */
-  period : Period;
-  /** Representation object linked to the chunk. */
-  representation : Representation;
-  /** The segment object linked to the pushed chunk. */
-  segment : ISegment;
-  /**
-   * Estimated precize start time, in seconds, the chunk starts at when decoded
-   * (this should include any possible `timestampOffset` value but should not
-   * take into account the append windows). TODO simplify those rules?
-   */
-  estimatedStart? : number;
-  /**
-   * Estimated precize difference, in seconds, between the last decodable
-   * and the first decodable position in the chunk.
-   * (this should include any possible `timestampOffset` value but should not
-   * take into account the append windows). TODO simplify those rules?
-   */
-  estimatedDuration? : number; // Estimated end time, in s, of the chunk
-}
-
-/**
  * Information to give when pushing a new chunk via the `pushChunk` method.
  * Type parameter `T` is the format of the chunk's data.
  */
 export interface IPushChunkInfos<T> { data : IPushedChunkData<T>;
-                                      inventoryInfos : IPushedChunkInventoryInfos; }
+                                      inventoryInfos : IInsertedChunkInfos; }
 
 /**
  * Information to give when indicating a whole segment has been pushed via the
@@ -234,10 +205,7 @@ type IPushTask<T> = IPushOperation<T> & {
    * the last pushed initialization segment).
    */
   steps : Array<IPushData<T>>;
-  /**
-   * Processed `inventoryInfos` given through a `pushChunk` method call which
-   * will actually be sent to the SegmentInventory.
-   */
+  /** The data that will be inserted to the inventory after that chunk is pushed. */
   inventoryData : IInsertedChunkInfos;
   /** Subject used to emit an event to the caller when the operation is finished. */
   subject : Subject<void>;
@@ -739,58 +707,26 @@ function convertQueueItemToTask<T>(
       const steps = [];
       const itemValue = item.value;
       const { data, inventoryInfos } = itemValue;
-      const { estimatedDuration, estimatedStart, segment } = inventoryInfos;
-
-      // Cutting exactly at the start or end of the appendWindow can lead to
-      // cases of infinite rebuffering due to how browser handle such windows.
-      // To work-around that, we add a small offset before and after those.
-      const safeAppendWindow : [ number | undefined, number | undefined ] = [
-        data.appendWindow[0] !== undefined ?
-          Math.max(0, data.appendWindow[0] - APPEND_WINDOW_SECURITIES.START) :
-          undefined,
-        data.appendWindow[1] !== undefined ?
-          data.appendWindow[1] + APPEND_WINDOW_SECURITIES.END :
-          undefined,
-      ];
 
       if (data.initSegment !== null) {
         steps.push({ isInit: true,
                      segmentData: data.initSegment,
                      codec: data.codec,
                      timestampOffset: data.timestampOffset,
-                     appendWindow: safeAppendWindow });
+                     appendWindow: data.appendWindow });
       }
       if (data.chunk !== null) {
         steps.push({ isInit: false,
                      segmentData: data.chunk,
                      codec: data.codec,
                      timestampOffset: data.timestampOffset,
-                     appendWindow: safeAppendWindow });
+                     appendWindow: data.appendWindow });
       }
       if (steps.length === 0) {
         return null;
       }
 
-      let start = estimatedStart === undefined ? segment.time / segment.timescale :
-                                                 estimatedStart;
-      const duration = estimatedDuration === undefined ?
-        segment.duration / segment.timescale :
-        estimatedDuration;
-      let end = start + duration;
-
-      if (safeAppendWindow[0] !== undefined) {
-        start = Math.max(start, safeAppendWindow[0]);
-      }
-      if (safeAppendWindow[1] !== undefined) {
-        end = Math.min(end, safeAppendWindow[1]);
-      }
-
-      const inventoryData = { period: inventoryInfos.period,
-                              adaptation: inventoryInfos.adaptation,
-                              representation: inventoryInfos.representation,
-                              segment: inventoryInfos.segment,
-                              start,
-                              end };
+      const inventoryData = inventoryInfos;
       return objectAssign({ steps, inventoryData }, item);
 
     case SourceBufferOperation.Remove:

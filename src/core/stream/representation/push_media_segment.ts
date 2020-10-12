@@ -20,6 +20,7 @@ import {
   Observable,
 } from "rxjs";
 import { map } from "rxjs/operators";
+import config from "../../../config";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -32,6 +33,8 @@ import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
 import appendSegmentToSourceBuffer from "./append_segment_to_source_buffer";
+
+const { APPEND_WINDOW_SECURITIES } = config;
 
 /**
  * Push a given media segment (non-init segment) to a QueuedSourceBuffer.
@@ -66,24 +69,50 @@ export default function pushMediaSegment<T>(
             chunkOffset,
             appendWindow } = parsedSegment;
     const codec = content.representation.getMimeTypeString();
+
+    // Cutting exactly at the start or end of the appendWindow can lead to
+    // cases of infinite rebuffering due to how browser handle such windows.
+    // To work-around that, we add a small offset before and after those.
+    const safeAppendWindow : [ number | undefined, number | undefined ] = [
+      appendWindow[0] !== undefined ?
+        Math.max(0, appendWindow[0] - APPEND_WINDOW_SECURITIES.START) :
+        undefined,
+      appendWindow[1] !== undefined ?
+        appendWindow[1] + APPEND_WINDOW_SECURITIES.END :
+        undefined,
+    ];
+
     const data = { initSegment: initSegmentData,
                    chunk: chunkData,
                    timestampOffset: chunkOffset,
-                   appendWindow,
+                   appendWindow: safeAppendWindow,
                    codec };
 
-    let estimatedStart : number|undefined;
-    let estimatedDuration : number|undefined;
+    let estimatedStart : number;
+    let estimatedDuration : number;
     if (chunkInfos !== null) {
       estimatedStart = chunkInfos.time / chunkInfos.timescale;
       estimatedDuration = chunkInfos.duration !== undefined ?
         chunkInfos.duration / chunkInfos.timescale :
-        undefined;
+        segment.duration / segment.timescale;
+    } else {
+      estimatedStart = segment.time / segment.timescale;
+      estimatedDuration = segment.duration / segment.timescale;
     }
+
+    let estimatedEnd = estimatedStart + estimatedDuration;
+    if (safeAppendWindow[0] !== undefined) {
+      estimatedStart = Math.max(estimatedStart, safeAppendWindow[0]);
+    }
+    if (safeAppendWindow[1] !== undefined) {
+      estimatedEnd = Math.min(estimatedEnd, safeAppendWindow[1]);
+    }
+
     const inventoryInfos = objectAssign({ segment,
-                                          estimatedStart,
-                                          estimatedDuration },
+                                          start: estimatedStart,
+                                          end: estimatedEnd },
                                         content);
+
     return appendSegmentToSourceBuffer(clock$,
                                        queuedSourceBuffer,
                                        { data, inventoryInfos })
