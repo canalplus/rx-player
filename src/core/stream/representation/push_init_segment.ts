@@ -67,7 +67,7 @@ export default function pushInitSegment<T>(
                                          timestampOffset: 0,
                                          appendWindow: [ undefined, undefined ],
                                          codec };
-    const inventoryInfos = objectAssign({ segment }, content);
+    const inventoryInfos = objectAssign({ segment, start: 0, end: 0 }, content);
     return appendSegmentToSourceBuffer(clock$,
                                        queuedSourceBuffer,
                                        { data, inventoryInfos })
