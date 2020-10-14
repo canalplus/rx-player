@@ -15,7 +15,6 @@
  */
 
 import { Observable } from "rxjs";
-import { ICustomSourceBuffer } from "../compat";
 import MediaElementTrackChoiceManager from "../core/api/media_element_track_choice_manager";
 import {
   IEMEManagerEvent,
@@ -25,6 +24,7 @@ import {
   IDirectfileEvent,
   IDirectFileOptions,
 } from "../core/init/initialize_directfile";
+import { ISegmentBuffer } from "../core/segment_buffers";
 import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
@@ -42,13 +42,13 @@ export type IEMEManager = (mediaElement : HTMLMediaElement,
                            contentProtections$ : Observable<IContentProtection>) =>
                              Observable<IEMEManagerEvent>;
 
-export type INativeTextTracksBuffer =
-  new(mediaElement : HTMLMediaElement,
-      hideNativeSubtitle: boolean) => ICustomSourceBuffer<unknown>;
-
 export type IHTMLTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
-      textTrackElement: HTMLElement) => ICustomSourceBuffer<unknown>;
+      textTrackElement : HTMLElement) => ISegmentBuffer<unknown>;
+
+export type INativeTextTracksBuffer =
+  new(mediaElement : HTMLMediaElement,
+      hideNativeSubtitle : boolean) => ISegmentBuffer<unknown>;
 
 export type IMediaElementTrackChoiceManager = typeof MediaElementTrackChoiceManager;
 
@@ -76,7 +76,8 @@ interface IBifObject { fileFormat : string;
                        isVod : boolean;
                        thumbs : IBifThumbnail[]; }
 
-export type IImageBuffer = new() => ICustomSourceBuffer<IImageTrackSegmentData>;
+export type IImageBuffer =
+  new() => ISegmentBuffer<IImageTrackSegmentData>;
 
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);

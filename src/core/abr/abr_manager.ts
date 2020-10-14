@@ -21,7 +21,7 @@ import {
 import log from "../../log";
 import { Representation } from "../../manifest";
 import takeFirstSet from "../../utils/take_first_set";
-import { IBufferType } from "../source_buffers";
+import { IBufferType } from "../segment_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import createFilters from "./create_filters";
 import RepresentationEstimator, {

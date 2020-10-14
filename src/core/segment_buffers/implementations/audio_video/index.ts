@@ -14,14 +14,5 @@
  * limitations under the License.
  */
 
-/**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
- */
-
-import ImageSourceBuffer, {
-  IImageTrackSegmentData,
-} from "./image_source_buffer";
-
-export default ImageSourceBuffer;
-export { IImageTrackSegmentData };
+import AudioVideoSegmentBuffer from "./audio_video_segment_buffer";
+export default AudioVideoSegmentBuffer;

@@ -15,7 +15,7 @@
  */
 
 /**
- * This file allows any Stream to push data to a QueuedSourceBuffer.
+ * This file allows any Stream to push data to a ISegmentBuffer.
  */
 
 import {
@@ -29,26 +29,26 @@ import {
 import { MediaError } from "../../../errors";
 import {
   IPushChunkInfos,
-  QueuedSourceBuffer,
-} from "../../source_buffers";
+  ISegmentBuffer,
+} from "../../segment_buffers";
 import forceGarbageCollection from "./force_garbage_collection";
 
 /**
- * Append buffer to the queuedSourceBuffer.
+ * Append buffer to the given segmentBuffer.
  * If it leads to a QuotaExceededError, try to run our custom range
  * _garbage collector_.
  *
  * @param {Observable} clock$
- * @param {Object} queuedSourceBuffer
+ * @param {Object} segmentBuffer
  * @param {Object} dataInfos
  * @returns {Observable}
  */
-export default function appendSegmentToSourceBuffer<T>(
+export default function appendSegmentToBuffer<T>(
   clock$ : Observable<{ position : number }>,
-  queuedSourceBuffer : QueuedSourceBuffer<T>,
+  segmentBuffer : ISegmentBuffer<T>,
   dataInfos : IPushChunkInfos<T>
 ) : Observable<unknown> {
-  const append$ = queuedSourceBuffer.pushChunk(dataInfos);
+  const append$ = segmentBuffer.pushChunk(dataInfos);
 
   return append$.pipe(
     catchError((appendError : unknown) => {
@@ -60,7 +60,7 @@ export default function appendSegmentToSourceBuffer<T>(
       }
 
       return observableConcat(
-        forceGarbageCollection(clock$, queuedSourceBuffer).pipe(ignoreElements()),
+        forceGarbageCollection(clock$, segmentBuffer).pipe(ignoreElements()),
         append$
       ).pipe(
         catchError((forcedGCError : unknown) => {

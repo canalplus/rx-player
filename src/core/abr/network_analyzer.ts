@@ -35,7 +35,7 @@ const { ABR_REGULAR_FACTOR,
 /** Object describing the current playback conditions. */
 interface IPlaybackConditionsInfo {
   /**
-   * For the concerned SourceBuffer, difference in seconds between the next
+   * For the concerned media buffer, difference in seconds between the next
    * position where no segment data is available and the current position.
    */
   bufferGap : number;

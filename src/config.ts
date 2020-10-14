@@ -422,7 +422,7 @@ export default {
   },
 
   /**
-   * If a SourceBuffer has less than ABR_STARVATION_GAP in seconds ahead of the
+   * If a media buffer has less than ABR_STARVATION_GAP in seconds ahead of the
    * current position in its buffer, the ABR manager will go into starvation
    * mode.
    *
@@ -525,7 +525,7 @@ export default {
 
   /**
    * Maximum authorized difference between what we calculated to be the
-   * beginning or end of the segment in the SourceBuffer and what we
+   * beginning or end of the segment in a media buffer and what we
    * actually are noticing now.
    *
    * If the segment seems to have removed more than this size in seconds, we
@@ -540,11 +540,11 @@ export default {
    * time of a given chunk and what the segment information of the Manifest
    * tells us.
    *
-   * Setting a value too high can lead to parts of the SourceBuffer being
+   * Setting a value too high can lead to parts of the media buffer being
    * linked to the wrong segments and to segments wrongly believed to be still
    * complete (instead of garbage collected).
    *
-   * Setting a value too low can lead to parts of the SourceBuffer not being
+   * Setting a value too low can lead to parts of the media buffer not being
    * linked to the concerned segment and to segments wrongly believed to be
    * partly garbage collected (instead of complete segments).
    * @type {Number}
@@ -554,13 +554,13 @@ export default {
   /**
    * The maximum authorized difference, in seconds, between the duration a
    * segment should have according to the Manifest and the actual duration it
-   * seems to have once pushed to the SourceBuffer.
+   * seems to have once pushed to the media buffer.
    *
-   * Setting a value too high can lead to parts of the SourceBuffer being
+   * Setting a value too high can lead to parts of the media buffer being
    * linked to the wrong segments and to segments wrongly believed to be still
    * complete (instead of garbage collected).
    *
-   * Setting a value too low can lead to parts of the SourceBuffer not being
+   * Setting a value too low can lead to parts of the media buffer not being
    * linked to the concerned segment and to segments wrongly believed to be
    * partly garbage collected (instead of complete segments). This last point
    * could lead to unnecessary segment re-downloading.
@@ -592,7 +592,7 @@ export default {
    * Append windows allow to filter media data from segments if they are outside
    * a given limit.
    * Coded frames with presentation timestamp within this range are allowed to
-   * be appended to the SourceBuffer while coded frames outside this range are
+   * be appended to the media buffer while coded frames outside this range are
    * filtered out.
    *
    * Those are often set to be the start and end of the "Period" the segment is

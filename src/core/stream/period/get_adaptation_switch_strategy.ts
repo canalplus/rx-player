@@ -27,7 +27,10 @@ import {
   isTimeInRanges,
   keepRangeIntersection,
 } from "../../../utils/ranges";
-import { IBufferedChunk, QueuedSourceBuffer } from "../../source_buffers";
+import {
+  IBufferedChunk,
+  ISegmentBuffer,
+} from "../../segment_buffers";
 
 const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 
@@ -39,19 +42,19 @@ export type IAdaptationSwitchStrategy =
 /**
  * Find out what to do when switching Adaptation, based on the current
  * situation.
- * @param {Object} queuedSourceBuffer
+ * @param {Object} segmentBuffer
  * @param {Object} period
  * @param {Object} adaptation
  * @param {Object} playbackInfo
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
-  queuedSourceBuffer : QueuedSourceBuffer<unknown>,
+  segmentBuffer : ISegmentBuffer<unknown>,
   period : Period,
   adaptation : Adaptation,
   playbackInfo : { currentTime : number; readyState : number }
 ) : IAdaptationSwitchStrategy {
-  const buffered = queuedSourceBuffer.getBufferedRanges();
+  const buffered = segmentBuffer.getBufferedRanges();
   if (buffered.length === 0) {
     return { type: "continue", value: undefined };
   }
@@ -64,8 +67,8 @@ export default function getAdaptationSwitchStrategy(
     return { type: "continue", value: undefined };
   }
 
-  queuedSourceBuffer.synchronizeInventory();
-  const inventory = queuedSourceBuffer.getInventory();
+  segmentBuffer.synchronizeInventory();
+  const inventory = segmentBuffer.getInventory();
 
   // Continue if we have no other Adaptation buffered in the current Period
   if (!inventory.some(buf => buf.infos.period.id === period.id &&
@@ -157,8 +160,8 @@ export default function getAdaptationSwitchStrategy(
 
 /**
  * Returns buffered ranges of what we know correspond to the given `adaptation`
- * in the SourceBuffer.
- * @param {Object} queuedSourceBuffer
+ * in the SegmentBuffer.
+ * @param {Object} segmentBuffer
  * @param {Object} period
  * @param {Object} adaptation
  * @returns {Array.<Object>}

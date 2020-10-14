@@ -8,10 +8,11 @@ Representation.
 
 It constructs a list of segments to download, which depend on the current timing
 values and parameters.
-It then download and push them to a linked SourceBuffer.
+It then download and push them to a linked `SegmentBuffer` (the media buffer
+containing the segments for later decoding).
 
 Multiple RepresentationStream observables can be ran on the same
-SourceBuffer without problems. This allows for example smooth transitions
+`SegmentBuffer` without problems. This allows for example smooth transitions
 between multiple periods.
 
 
@@ -27,7 +28,7 @@ Such events tells us when:
 
   - The RepresentationStream has no segment left for download
 
-  - The RepresentationStream appended a new Segment to the SourceBuffer
+  - The RepresentationStream appended a new Segment to the `SegmentBuffer`
 
   - The Manifest should be refreshed to allow the RepresentationStream to
     download future-needed segments.
@@ -49,7 +50,7 @@ This list of segments is based on a simple calculation between the current
 position and the buffer size we want to achieve.
 This list goes then through multiple filters to ensure we're not queueing them
 unnecessarly. Such cases would be, for example, if the segment is already
-present in the SourceBuffer at a better quality.
+present in the `SegmentBuffer` at a better quality.
 
 For a clock based on various video events, the strategy is the following:
 
@@ -93,6 +94,6 @@ For a clock based on various video events, the strategy is the following:
 
   9. Once the request is finished, run those tasks in parallel:
 
-     9-1. Append the segment to the corresponding SourceBuffer
+     9-1. Append the segment to the corresponding `SegmentBuffer`
 
      9-1. go back to step _4_.

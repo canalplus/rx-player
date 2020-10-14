@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-/**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
- */
+import NativeTextSegmentBuffer, {
+  INativeTextTrackData,
+} from "./native_text_segment_buffer";
 
-import HTMLTextSourceBuffer, {
-  IHTMLTextTrackData,
-} from "./html_text_source_buffer";
-
-export default HTMLTextSourceBuffer;
-export { IHTMLTextTrackData };
+export default NativeTextSegmentBuffer;
+export { INativeTextTrackData };

@@ -29,15 +29,15 @@ import Manifest, {
 } from "../../../manifest";
 import { ISegmentParserParsedSegment } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
-import { QueuedSourceBuffer } from "../../source_buffers";
+import { ISegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
-import appendSegmentToSourceBuffer from "./append_segment_to_source_buffer";
+import appendSegmentToBuffer from "./append_segment_to_buffer";
 
 const { APPEND_WINDOW_SECURITIES } = config;
 
 /**
- * Push a given media segment (non-init segment) to a QueuedSourceBuffer.
+ * Push a given media segment (non-init segment) to a ISegmentBuffer.
  * The Observable returned:
  *   - emit an event once the segment has been pushed.
  *   - throws on Error.
@@ -50,15 +50,15 @@ export default function pushMediaSegment<T>(
     initSegmentData,
     parsedSegment,
     segment,
-    queuedSourceBuffer } : { clock$ : Observable<{ position : number }>;
-                             content: { adaptation : Adaptation;
-                                        manifest : Manifest;
-                                        period : Period;
-                                        representation : Representation; };
-                             initSegmentData : T | null;
-                             parsedSegment : ISegmentParserParsedSegment<T>;
-                             segment : ISegment;
-                             queuedSourceBuffer : QueuedSourceBuffer<T>; }
+    segmentBuffer } : { clock$ : Observable<{ position : number }>;
+                        content: { adaptation : Adaptation;
+                                   manifest : Manifest;
+                                   period : Period;
+                                   representation : Representation; };
+                        initSegmentData : T | null;
+                        parsedSegment : ISegmentParserParsedSegment<T>;
+                        segment : ISegment;
+                        segmentBuffer : ISegmentBuffer<T>; }
 ) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (parsedSegment.chunkData === null) {
@@ -113,11 +113,9 @@ export default function pushMediaSegment<T>(
                                           end: estimatedEnd },
                                         content);
 
-    return appendSegmentToSourceBuffer(clock$,
-                                       queuedSourceBuffer,
-                                       { data, inventoryInfos })
+    return appendSegmentToBuffer(clock$, segmentBuffer, { data, inventoryInfos })
       .pipe(map(() => {
-        const buffered = queuedSourceBuffer.getBufferedRanges();
+        const buffered = segmentBuffer.getBufferedRanges();
         return EVENTS.addedSegment(content, segment, buffered, chunkData);
       }));
   });

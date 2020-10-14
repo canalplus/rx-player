@@ -69,7 +69,7 @@ export function imageParser(
 
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
 
-  // TODO image Parsing should be more on the sourceBuffer side, no?
+  // TODO image Parsing should be more on the buffer side, no?
   if (data === null || features.imageParser === null) {
     return observableOf({ type: "parsed-segment",
                           value: { chunkData: null,

@@ -37,9 +37,9 @@ import objectAssign from "../../../utils/object_assign";
 import {
   IBufferedChunk,
   IEndOfSegmentOperation,
-  QueuedSourceBuffer,
-  SourceBufferOperation,
-} from "../../source_buffers";
+  ISegmentBuffer,
+  SegmentBufferOperation,
+} from "../../segment_buffers";
 
 const { CONTENT_REPLACEMENT_PADDING,
         BITRATE_REBUFFERING_RATIO,
@@ -55,7 +55,7 @@ export interface ISegmentFilterArgument {
   fastSwitchThreshold : number | undefined;
   neededRange : { start: number;
                   end: number; };
-  queuedSourceBuffer : QueuedSourceBuffer<unknown>;
+  segmentBuffer : ISegmentBuffer<unknown>;
 }
 
 /**
@@ -73,16 +73,16 @@ export default function getNeededSegments({
   currentPlaybackTime,
   fastSwitchThreshold,
   neededRange,
-  queuedSourceBuffer,
+  segmentBuffer,
 } : ISegmentFilterArgument) : ISegment[] {
-  const segmentInventory = queuedSourceBuffer.getInventory();
+  const segmentInventory = segmentBuffer.getInventory();
   /**
    * Every segment awaiting an "EndOfSegment" operation, which indicates that a
-   * completely-loaded segment is still being pushed to the QueuedSourceBuffer.
+   * completely-loaded segment is still being pushed to the ISegmentBuffer.
    */
-  const segmentsBeingPushed = queuedSourceBuffer.getPendingOperations()
+  const segmentsBeingPushed = segmentBuffer.getPendingOperations()
     .filter((operation) : operation is IEndOfSegmentOperation =>
-      operation.type === SourceBufferOperation.EndOfSegment
+      operation.type === SegmentBufferOperation.EndOfSegment
     ).map(operation => operation.value);
 
   // 1 - construct lists of segments possible and actually pushed

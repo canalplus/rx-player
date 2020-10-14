@@ -24,7 +24,7 @@ import {
 } from "./browser_compatibility_types";
 import canPatchISOBMFFSegment from "./can_patch_isobmff";
 import tryToChangeSourceBufferType, {
-  ICustomSourceBuffer,
+  ICompatSourceBuffer,
 } from "./change_source_buffer_type";
 import clearElementSrc from "./clear_element_src";
 import {
@@ -84,7 +84,7 @@ export {
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
   ICustomMediaKeys,
-  ICustomSourceBuffer,
+  ICompatSourceBuffer,
   isCodecSupported,
   isFullscreen,
   isOffline,
