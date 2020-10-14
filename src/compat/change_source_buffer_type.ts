@@ -22,6 +22,11 @@ interface ICompatSourceBufferEvents { updatestart : Event|undefined;
                                       updateend : Event|undefined;
                                       error : Event; }
 
+/**
+ * Definition of a SourceBuffer Object.
+ * Adds some non-standard APIs to the regular one like `changeType`, which exist
+ * on some browsers.
+ */
 export interface ICompatSourceBuffer
   extends IEventEmitter<ICompatSourceBufferEvents> {
     buffered : TimeRanges;

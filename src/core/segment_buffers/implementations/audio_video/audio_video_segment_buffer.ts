@@ -35,7 +35,6 @@ import assertUnreachable from "../../../../utils/assert_unreachable";
 import objectAssign from "../../../../utils/object_assign";
 import { IInsertedChunkInfos } from "../../segment_inventory";
 import {
-  IBufferType,
   IEndOfSegmentInfos,
   IEndOfSegmentOperation,
   IPushChunkInfos,
@@ -49,18 +48,25 @@ import {
 const { SOURCE_BUFFER_FLUSHING_INTERVAL, } = config;
 
 /**
- * Enumeration of every item that can be added to the AudioVideoSegmentBuffer's
- * queue before being processed into a task (see IAVSBPendingTask).
+ * Item added to the AudioVideoSegmentBuffer's queue before being processed into
+ * a task (see `IAVSBPendingTask`).
  *
- * Here we add the `subject` Subject which will allows the
- * AudioVideoSegmentBuffer to emit an item when the corresponding queued
+ * Here we add the `subject` property which will allow the
+ * AudioVideoSegmentBuffer to emit an event when the corresponding queued
  * operation is completely processed.
- *
- * Type parameter `T` is the format of the chunk's data.
  */
 type IAVSBQueueItem = ISBOperation<BufferSource> & { subject: Subject<void> };
 
-/** Type of task currently processed by the AudioVideoSegmentBuffer. */
+/**
+ * Task currently processed by the AudioVideoSegmentBuffer.
+ *
+ * A task is first pushed to the AudioVideoSegmentBuffer's queue as a
+ * `IAVSBQueueItem` object before being transformed into a `IAVSBPendingTask`
+ * when it is started.
+ * This new object only make changes for the `IPushOperation`, as it can be
+ * split up into multiple tasks depending on the need to push an initialization
+ * segment before the wanted media segment.
+ */
 type IAVSBPendingTask = IPushTask |
                         IRemoveOperation & { subject: Subject<void> } |
                         IEndOfSegmentOperation & { subject: Subject<void> };
@@ -74,7 +80,10 @@ type IPushTask = IPushOperation<BufferSource> & {
    * the last pushed initialization segment).
    */
   steps : IPushData[];
-  /** The data that will be inserted to the inventory after that chunk is pushed. */
+  /**
+   * The data that will be inserted to the inventory after that chunk is pushed.
+   * If `null`, no data will be pushed.
+   */
   inventoryData : IInsertedChunkInfos |
                   null;
   /** Subject used to emit an event to the caller when the operation is finished. */
@@ -114,8 +123,8 @@ interface IPushData {
  */
 export default class AudioVideoSegmentBuffer
                  extends SegmentBuffer<BufferSource> {
-  /** "Type" of the buffer (e.g. "audio", "video", "text", "image"). */
-  public readonly bufferType : IBufferType;
+  /** "Type" of the buffer concerned. */
+  public readonly bufferType : "audio" | "video";
 
   /** SourceBuffer implementation. */
   private readonly _sourceBuffer : ICompatSourceBuffer;
@@ -170,7 +179,7 @@ export default class AudioVideoSegmentBuffer
    * @param {SourceBuffer} sourceBuffer
    */
   constructor(
-    bufferType : IBufferType,
+    bufferType : "audio" | "video",
     codec : string,
     mediaSource : MediaSource
   ) {
