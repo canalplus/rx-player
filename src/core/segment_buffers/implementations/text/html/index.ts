@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-import imageBuffer from "../../../core/segment_buffers/implementations/image";
-import addImageBufferFeature from "../image_buffer";
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
 
-/* tslint:disable no-unsafe-any */
-describe("Features list - HTML Text Buffer", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
+import HTMLTextSegmentBuffer, {
+  IHTMLTextTrackData,
+} from "./html_text_segment_buffer";
 
-  it("should add an Image Buffer in the current features", () => {
-    const featureObject : any = {};
-    addImageBufferFeature(featureObject);
-    expect(featureObject).toEqual({ imageBuffer });
-    expect(featureObject.imageBuffer).toBe(imageBuffer);
-  });
-});
-/* tslint:enable no-unsafe-any */
+export default HTMLTextSegmentBuffer;
+export { IHTMLTextTrackData };

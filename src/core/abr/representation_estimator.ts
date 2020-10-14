@@ -115,7 +115,7 @@ export interface IABREstimate {
 /** Properties the `RepresentationEstimator` will need at each "clock tick". */
 export interface IRepresentationEstimatorClockTick {
   /**
-   * For the concerned SourceBuffer, difference in seconds between the next
+   * For the concerned media buffer, difference in seconds between the next
    * position where no segment data is available and the current position.
    */
   bufferGap : number;
@@ -265,14 +265,14 @@ export interface IABRFiltersObject {
 /**
  * "added-segment" event emitted to indicate to the `RepresentationEstimator`
  * that a new segment for the given type (e.g. "audio", "video" etc.) and
- * Period has been correctly added to the SourceBuffer.
+ * Period has been correctly added to the underlying media buffer.
  */
 export interface IABRAddedSegmentEvent {
   type : "added-segment";
   value : {
     /**
-     * The corresponding SourceBuffer's `buffered` property after that segment
-     * has been pushed.
+     * The buffered ranges of the related media buffer after that segment has
+     * been pushed.
      */
     buffered : TimeRanges;
     /** The context for the segment that has been pushed. */

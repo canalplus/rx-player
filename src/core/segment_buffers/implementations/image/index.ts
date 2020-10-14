@@ -14,14 +14,5 @@
  * limitations under the License.
  */
 
-/**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
- */
-
-import NativeTextSourceBuffer, {
-  INativeTextTrackData,
-} from "./native_text_source_buffer";
-
-export default NativeTextSourceBuffer;
-export { INativeTextTrackData };
+import ImageSegmentBuffer from "./image_segment_buffer";
+export default ImageSegmentBuffer;

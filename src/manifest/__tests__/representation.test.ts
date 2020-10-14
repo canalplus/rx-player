@@ -270,7 +270,7 @@ describe("Manifest - Representation", () => {
     expect(notSupportedSpy).toHaveBeenCalledWith("audio/mp4;codecs=\"mp4a.40.2\"");
   });
 
-  it("should not check support for a custom SourceBuffer", () => {
+  it("should not check support for a custom media buffer", () => {
     const notSupportedSpy = jest.fn(() => false);
     jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: notSupportedSpy }));

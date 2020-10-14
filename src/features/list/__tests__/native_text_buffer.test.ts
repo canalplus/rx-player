@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import nativeTextTracksBuffer from "../../../custom_source_buffers/text/native";
+import nativeTextTracksBuffer from "../../../core/segment_buffers/implementations/text/native";
 import addNativeTextBuffer from "../native_text_buffer";
 
 /* tslint:disable no-unsafe-any */
-jest.mock("../../../custom_source_buffers/text/native", () => ({
+jest.mock("../../../core/segment_buffers/implementations/text/native", () => ({
   __esModule: true as const,
   default: jest.fn(),
 }));

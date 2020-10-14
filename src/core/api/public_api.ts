@@ -97,10 +97,10 @@ import initializeMediaSourcePlayback, {
   IStalledEvent,
 } from "../init";
 import { IStreamEventData } from "../init/stream_events_emitter";
-import SourceBuffersStore, {
+import SegmentBuffersStore, {
   IBufferedChunk,
   IBufferType,
-} from "../source_buffers";
+} from "../segment_buffers";
 import createClock, {
   IClockTick
 } from "./clock";
@@ -355,8 +355,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /** Store starting text track if one. */
     initialTextTrack : undefined|ITextTrackPreference;
 
-    /** Keep information on the active SourceBuffers. */
-    sourceBuffersStore : SourceBuffersStore | null;
+    /** Keep information on the active SegmentBuffers. */
+    segmentBuffersStore : SegmentBuffersStore | null;
   };
 
   /** List of favorite audio tracks, in preference order.  */
@@ -639,7 +639,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_currentError = null;
     this._priv_contentInfos = { url,
                                 isDirectFile,
-                                sourceBuffersStore: null,
+                                segmentBuffersStore: null,
                                 thumbnails: null,
                                 manifest: null,
                                 currentPeriod: null,
@@ -707,7 +707,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         },
       };
 
-      /** Options used by the TextTrack SourceBuffer. */
+      /** Options used by the TextTrack SegmentBuffer. */
       const textTrackOptions = options.textTrackMode === "native" ?
         { textTrackMode: "native" as const,
           hideNativeSubtitle: options.hideNativeSubtitle } :
@@ -1969,20 +1969,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * /!\ For demo use only! Do not touch!
    *
    * Returns every chunk buffered for a given buffer type.
-   * Returns `null` if no SourceBuffer was created for this type of buffer.
+   * Returns `null` if no SegmentBuffer was created for this type of buffer.
    * @param {string} bufferType
    * @returns {Array.<Object>|null}
    */
-  __priv_getSourceBufferContent(bufferType : IBufferType) : IBufferedChunk[] | null {
+  __priv_getSegmentBufferContent(bufferType : IBufferType) : IBufferedChunk[] | null {
     if (this._priv_contentInfos === null ||
-        this._priv_contentInfos.sourceBuffersStore === null)
+        this._priv_contentInfos.segmentBuffersStore === null)
     {
       return null;
     }
-    const sourceBufferStatus = this._priv_contentInfos
-                                 .sourceBuffersStore.getStatus(bufferType);
-    return sourceBufferStatus.type === "initialized" ?
-      sourceBufferStatus.value.getInventory() :
+    const segmentBufferStatus = this._priv_contentInfos
+                                 .segmentBuffersStore.getStatus(bufferType);
+    return segmentBufferStatus.type === "initialized" ?
+      segmentBufferStatus.value.getInventory() :
       null;
   }
 
@@ -2074,7 +2074,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           log.error("API: Loaded event while no content is loaded");
           return;
         }
-        this._priv_contentInfos.sourceBuffersStore = event.value.sourceBuffersStore;
+        this._priv_contentInfos.segmentBuffersStore = event.value.segmentBuffersStore;
         break;
       case "decipherabilityUpdate":
         this.trigger("decipherabilityUpdate", event.value);
@@ -2349,7 +2349,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onReloadingMediaSource() {
     if (this._priv_contentInfos !== null) {
-      this._priv_contentInfos.sourceBuffersStore = null;
+      this._priv_contentInfos.segmentBuffersStore = null;
     }
     if (this._priv_trackChoiceManager !== null) {
       this._priv_trackChoiceManager.resetPeriods();

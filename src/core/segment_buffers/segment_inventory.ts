@@ -44,14 +44,14 @@ interface IBufferedChunkInfos {
 /** Information stored on a single chunk by the SegmentInventory. */
 export interface IBufferedChunk {
   /**
-   * Last inferred end in the SourceBuffer this chunk ends at, in seconds.
+   * Last inferred end in the media buffer this chunk ends at, in seconds.
    *
    * Depending on if contiguous chunks were around it during the first
    * synchronization for that chunk this value could be more or less precize.
    */
   bufferedEnd : number|undefined;
   /**
-   * Last inferred start in the SourceBuffer this chunk starts at, in seconds.
+   * Last inferred start in the media buffer this chunk starts at, in seconds.
    *
    * Depending on if contiguous chunks were around it during the first
    * synchronization for that chunk this value could be more or less precize.
@@ -144,10 +144,11 @@ export interface IInsertedChunkInfos {
 }
 
 /**
- * Keep track of every chunk downloaded and currently in the browser's memory.
+ * Keep track of every chunk downloaded and currently in the linked media
+ * buffer.
  *
  * The main point of this class is to know which chunks are already pushed to
- * the SourceBuffer, at which bitrate, and which have been garbage-collected
+ * the corresponding media buffer, at which bitrate, and which have been garbage-collected
  * since by the browser (and thus may need to be re-loaded).
  * @class SegmentInventory
  */
@@ -156,7 +157,7 @@ export default class SegmentInventory {
    * Keeps track of all the segments which should be currently in the browser's
    * memory.
    * This array contains objects, each being related to a single downloaded
-   * chunk or segment which is at least partially added in a SourceBuffer.
+   * chunk or segment which is at least partially added in the media buffer.
    */
   private inventory : IBufferedChunk[];
 
@@ -175,12 +176,12 @@ export default class SegmentInventory {
    * Infer each segment's bufferedStart and bufferedEnd from the TimeRanges
    * given.
    *
-   * The TimeRanges object given should come from the SourceBuffer linked to
+   * The TimeRanges object given should come from the media buffer linked to
    * that SegmentInventory.
    *
-   * /!\ A SegmentInventory should not be associated to multiple SourceBuffers
+   * /!\ A SegmentInventory should not be associated to multiple media buffers
    * at a time, so each `synchronizeBuffered` call should be given a TimeRanges
-   * coming from the same SourceBuffer instance.
+   * coming from the same buffer.
    * @param {TimeRanges}
    */
   public synchronizeBuffered(buffered : TimeRanges) : void {
@@ -717,7 +718,7 @@ export default class SegmentInventory {
   /**
    * Returns the whole inventory.
    *
-   * To get a list synchronized with what a SourceBuffer actually has buffered
+   * To get a list synchronized with what a media buffer actually has buffered
    * you might want to call `synchronizeBuffered` before calling this method.
    * @returns {Array.<Object>}
    */

@@ -56,7 +56,7 @@ import ABRManager, {
   IABREstimate,
 } from "../../abr";
 import { SegmentFetcherCreator } from "../../fetchers";
-import { QueuedSourceBuffer } from "../../source_buffers";
+import { ISegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import RepresentationStream, {
   IRepresentationStreamClockTick,
@@ -76,7 +76,7 @@ import createRepresentationEstimator from "./create_representation_estimator";
 /** `Clock tick` information needed by the AdaptationStream. */
 export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTick {
   /**
-   * For the current SourceBuffer, difference in seconds between the next position
+   * For the current SegmentBuffer, difference in seconds between the next position
    * where no segment data is available and the current position.
    */
   bufferGap : number;
@@ -114,12 +114,12 @@ export interface IAdaptationStreamArguments<T> {
    */
   options: IAdaptationStreamOptions;
   /** SourceBuffer wrapper - needed to push media segments. */
-  queuedSourceBuffer : QueuedSourceBuffer<T>;
+  segmentBuffer : ISegmentBuffer<T>;
   /** Module used to fetch the wanted media segments. */
   segmentFetcherCreator : SegmentFetcherCreator<any>;
   /**
    * "Buffer goal" wanted, or the ideal amount of time ahead of the current
-   * position in the current SourceBuffer. When this amount has been reached
+   * position in the current SegmentBuffer. When this amount has been reached
    * this AdaptationStream won't try to download new segments.
    */
   wantedBufferAhead$ : BehaviorSubject<number>;
@@ -161,7 +161,7 @@ export interface IAdaptationStreamOptions {
  *
  * It will rely on the ABRManager to choose at any time the best Representation
  * for this Adaptation and then run the logic to download and push the
- * corresponding segments in the SourceBuffer.
+ * corresponding segments in the SegmentBuffer.
  *
  * After being subscribed to, it will start running and will emit various events
  * to report its current status.
@@ -174,7 +174,7 @@ export default function AdaptationStream<T>({
   clock$,
   content,
   options,
-  queuedSourceBuffer,
+  segmentBuffer,
   segmentFetcherCreator,
   wantedBufferAhead$,
 } : IAdaptationStreamArguments<T>) : Observable<IAdaptationStreamEvent<T>> {
@@ -354,7 +354,7 @@ export default function AdaptationStream<T>({
                                                adaptation,
                                                period,
                                                manifest },
-                                    queuedSourceBuffer,
+                                    segmentBuffer,
                                     segmentFetcher,
                                     terminate$: terminateCurrentStream$,
                                     bufferGoal$,

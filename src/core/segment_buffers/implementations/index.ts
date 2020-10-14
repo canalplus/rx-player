@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-import ManualTimeRanges from "./time_ranges";
-export { ManualTimeRanges };
+import AudioVideoSegmentBuffer from "./audio_video";
+export * from "./types";
+
+export { AudioVideoSegmentBuffer };

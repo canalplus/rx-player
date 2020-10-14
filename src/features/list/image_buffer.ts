@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import imageBuffer from "../../custom_source_buffers/image";
+import imageBuffer from "../../core/segment_buffers/implementations/image";
 import { IFeaturesObject } from "../types";
 
 /**
