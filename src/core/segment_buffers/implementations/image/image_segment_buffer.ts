@@ -21,13 +21,10 @@ import {
 } from "rxjs";
 import log from "../../../../log";
 import { IBifThumbnail } from "../../../../parsers/images/bif";
-import SegmentInventory, {
-  IBufferedChunk,
-} from "../../segment_inventory";
 import {
   IEndOfSegmentInfos,
   IPushChunkInfos,
-  ISegmentBuffer,
+  SegmentBuffer,
 } from "../types";
 import ManualTimeRanges from "../utils/manual_time_ranges";
 
@@ -50,17 +47,15 @@ export interface IImageTrackSegmentData {
  * @class ImageSegmentBuffer
  */
 export default class ImageSegmentBuffer
-                 implements ISegmentBuffer<IImageTrackSegmentData> {
+                 extends SegmentBuffer<IImageTrackSegmentData> {
   public readonly bufferType : "image";
-
   private _buffered : ManualTimeRanges;
-  private _segmentInventory : SegmentInventory;
 
   constructor() {
     log.debug("ISB: Creating ImageSegmentBuffer");
+    super();
     this.bufferType = "image";
     this._buffered = new ManualTimeRanges();
-    this._segmentInventory = new SegmentInventory();
   }
 
   /**
@@ -136,34 +131,6 @@ export default class ImageSegmentBuffer
    */
   public getBufferedRanges() : ManualTimeRanges {
     return this._buffered;
-  }
-
-  /**
-   * Manually trigger an inventory synchronization.
-   */
-  public synchronizeInventory() : void {
-    this._segmentInventory.synchronizeBuffered(this._buffered);
-  }
-
-  /**
-   * Returns the currently buffered data for which the content is known with
-   * the corresponding content information.
-   * @returns {Array.<Object>}
-   */
-  public getInventory() : IBufferedChunk[] {
-    return this._segmentInventory.getInventory();
-  }
-
-  /**
-   * Returns the list of every operations that the `ImageSegmentBuffer` is
-   * still processing.
-   *
-   * As every `ImageSegmentBuffer` operations are synchronous, this method
-   * always return an empty array.
-   * @returns {Array.<Object>}
-   */
-  public getPendingOperations() : [] {
-    return [];
   }
 
   public dispose() : void {

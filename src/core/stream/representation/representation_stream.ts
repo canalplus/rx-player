@@ -68,7 +68,7 @@ import {
   IPrioritizedSegmentFetcherEvent,
   ISegmentFetcherWarning,
 } from "../../fetchers";
-import { ISegmentBuffer } from "../../segment_buffers";
+import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import {
   IProtectedSegmentEvent,
@@ -130,8 +130,8 @@ export interface IRepresentationStreamArguments<T> {
              manifest : Manifest;
              period : Period;
              representation : Representation; };
-  /** The `ISegmentBuffer` on which segments will be pushed. */
-  segmentBuffer : ISegmentBuffer<T>;
+  /** The `SegmentBuffer` on which segments will be pushed. */
+  segmentBuffer : SegmentBuffer<T>;
   /** Interface used to load new segments. */
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   /**

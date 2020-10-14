@@ -26,7 +26,7 @@ import {
 import config from "../../../config";
 import log from "../../../log";
 import { getInnerAndOuterTimeRanges } from "../../../utils/ranges";
-import { ISegmentBuffer } from "../../segment_buffers";
+import { SegmentBuffer } from "../../segment_buffers";
 
 const GC_GAP_CALM = config.BUFFER_GC_GAPS.CALM;
 const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
@@ -43,7 +43,7 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
  */
 export default function forceGarbageCollection(
   timings$ : Observable<{ position : number }>,
-  bufferingQueue : ISegmentBuffer<unknown>
+  bufferingQueue : SegmentBuffer<unknown>
 ) : Observable<unknown> {
   // wait for next timing event
   return timings$.pipe(

@@ -28,14 +28,14 @@ import Manifest, {
 } from "../../../manifest";
 import {
   IPushedChunkData,
-  ISegmentBuffer,
+  SegmentBuffer,
 } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
 import appendSegmentToBuffer from "./append_segment_to_buffer";
 
 /**
- * Push the initialization segment to the ISegmentBuffer.
+ * Push the initialization segment to the SegmentBuffer.
  * The Observable returned:
  *   - emit an event once the segment has been pushed.
  *   - throws on Error.
@@ -54,7 +54,7 @@ export default function pushInitSegment<T>(
                                    representation : Representation; };
                         segmentData : T | null;
                         segment : ISegment;
-                        segmentBuffer : ISegmentBuffer<T>; }
+                        segmentBuffer : SegmentBuffer<T>; }
 ) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (segmentData === null) {

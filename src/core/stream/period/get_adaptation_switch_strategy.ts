@@ -29,7 +29,7 @@ import {
 } from "../../../utils/ranges";
 import {
   IBufferedChunk,
-  ISegmentBuffer,
+  SegmentBuffer,
 } from "../../segment_buffers";
 
 const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
@@ -49,7 +49,7 @@ export type IAdaptationSwitchStrategy =
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
-  segmentBuffer : ISegmentBuffer<unknown>,
+  segmentBuffer : SegmentBuffer<unknown>,
   period : Period,
   adaptation : Adaptation,
   playbackInfo : { currentTime : number; readyState : number }

@@ -24,7 +24,7 @@ import log from "../../log";
 import {
   AudioVideoSegmentBuffer,
   IBufferType,
-  ISegmentBuffer,
+  SegmentBuffer,
 } from "./implementations";
 
 const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
@@ -92,13 +92,13 @@ export default class SegmentBuffersStore {
    * won't be needed when playing the current content.
    */
   private _initializedSegmentBuffers : {
-    audio? : ISegmentBuffer<BufferSource | null> |
+    audio? : SegmentBuffer<BufferSource | null> |
              null;
-    video? : ISegmentBuffer<BufferSource | null> |
+    video? : SegmentBuffer<BufferSource | null> |
               null;
-    text? : ISegmentBuffer<unknown> |
+    text? : SegmentBuffer<unknown> |
             null;
-    image? : ISegmentBuffer<unknown> |
+    image? : SegmentBuffer<unknown> |
              null;
   };
 
@@ -172,7 +172,7 @@ export default class SegmentBuffersStore {
    * @returns {Object|null}
    */
   public getStatus(bufferType : IBufferType) : { type : "initialized";
-                                                 value : ISegmentBuffer<any>; } |
+                                                 value : SegmentBuffer<any>; } |
                                                { type : "uninitialized" } |
                                                { type : "disabled" }
   {
@@ -251,7 +251,7 @@ export default class SegmentBuffersStore {
     bufferType : IBufferType,
     codec : string,
     options : ISegmentBufferOptions = {}
-  ) : ISegmentBuffer<any> {
+  ) : SegmentBuffer<any> {
     const memorizedSegmentBuffer = this._initializedSegmentBuffers[bufferType];
     if (shouldHaveNativeBuffer(bufferType)) {
       if (memorizedSegmentBuffer != null) {
@@ -279,7 +279,7 @@ export default class SegmentBuffersStore {
       return memorizedSegmentBuffer;
     }
 
-    let segmentBuffer : ISegmentBuffer<unknown>;
+    let segmentBuffer : SegmentBuffer<unknown>;
     if (bufferType === "text") {
       log.info("SB: Creating a new text SegmentBuffer");
 
@@ -332,7 +332,7 @@ export default class SegmentBuffersStore {
   }
 
   /**
-   * Dispose of all ISegmentBuffer created on this SegmentBuffersStore.
+   * Dispose of all SegmentBuffer created on this SegmentBuffersStore.
    */
   public disposeAll() {
     POSSIBLE_BUFFER_TYPES.forEach((bufferType : IBufferType) => {

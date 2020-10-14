@@ -36,14 +36,11 @@ import {
 } from "../../../../../compat";
 import config from "../../../../../config";
 import log from "../../../../../log";
-import SegmentInventory, {
-  IBufferedChunk,
-} from "../../../segment_inventory";
 import {
   IEndOfSegmentInfos,
   IPushChunkInfos,
   IPushedChunkData,
-  ISegmentBuffer,
+  SegmentBuffer,
 } from "../../types";
 import ManualTimeRanges from "../../utils/manual_time_ranges";
 import parseTextTrackToElements from "./parsers";
@@ -135,7 +132,7 @@ function getElementResolution(
  * @class HTMLTextSegmentBuffer
  */
 export default class HTMLTextSegmentBuffer
-               implements ISegmentBuffer<IHTMLTextTrackData>
+                 extends SegmentBuffer<IHTMLTextTrackData>
 {
   readonly bufferType : "text";
 
@@ -179,7 +176,6 @@ export default class HTMLTextSegmentBuffer
   }>;
 
   private _buffered : ManualTimeRanges;
-  private _segmentInventory : SegmentInventory;
 
   /**
    * @param {HTMLMediaElement} videoElement
@@ -190,10 +186,10 @@ export default class HTMLTextSegmentBuffer
     textTrackElement : HTMLElement
   ) {
     log.debug("HTSB: Creating HTMLTextSegmentBuffer");
+    super();
     this.bufferType = "text";
 
     this._buffered = new ManualTimeRanges();
-    this._segmentInventory = new SegmentInventory();
 
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
@@ -278,34 +274,6 @@ export default class HTMLTextSegmentBuffer
    */
   public getBufferedRanges() : ManualTimeRanges {
     return this._buffered;
-  }
-
-  /**
-   * Manually trigger an inventory synchronization.
-   */
-  public synchronizeInventory() : void {
-    this._segmentInventory.synchronizeBuffered(this._buffered);
-  }
-
-  /**
-   * Returns the currently buffered data for which the content is known with
-   * the corresponding content information.
-   * @returns {Array.<Object>}
-   */
-  public getInventory() : IBufferedChunk[] {
-    return this._segmentInventory.getInventory();
-  }
-
-  /**
-   * Returns the list of every operations that the `NativeTextSegmentBuffer` is
-   * still processing.
-   *
-   * As every `NativeTextSegmentBuffer` operations are synchronous, this method
-   * always return an empty array.
-   * @returns {Array.<Object>}
-   */
-  public getPendingOperations() : [] {
-    return [];
   }
 
   public dispose() : void {

@@ -24,7 +24,7 @@ import {
   IPushOperation,
   IRemoveOperation,
   ISBOperation,
-  ISegmentBuffer,
+  SegmentBuffer,
   SegmentBufferOperation,
 } from "./implementations";
 import SegmentBuffersStore, {
@@ -40,7 +40,7 @@ export {
   ISegmentBufferOptions,
   ITextTrackSegmentBufferOptions,
 
-  ISegmentBuffer,
+  SegmentBuffer,
 
   IBufferType,
   IBufferedChunk,

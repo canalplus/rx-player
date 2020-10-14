@@ -15,7 +15,7 @@
  */
 
 /**
- * This file allows any Stream to push data to a ISegmentBuffer.
+ * This file allows any Stream to push data to a SegmentBuffer.
  */
 
 import {
@@ -29,7 +29,7 @@ import {
 import { MediaError } from "../../../errors";
 import {
   IPushChunkInfos,
-  ISegmentBuffer,
+  SegmentBuffer,
 } from "../../segment_buffers";
 import forceGarbageCollection from "./force_garbage_collection";
 
@@ -45,7 +45,7 @@ import forceGarbageCollection from "./force_garbage_collection";
  */
 export default function appendSegmentToBuffer<T>(
   clock$ : Observable<{ position : number }>,
-  segmentBuffer : ISegmentBuffer<T>,
+  segmentBuffer : SegmentBuffer<T>,
   dataInfos : IPushChunkInfos<T>
 ) : Observable<unknown> {
   const append$ = segmentBuffer.pushChunk(dataInfos);
