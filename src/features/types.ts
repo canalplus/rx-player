@@ -24,7 +24,7 @@ import {
   IDirectfileEvent,
   IDirectFileOptions,
 } from "../core/init/initialize_directfile";
-import { ISegmentBuffer } from "../core/segment_buffers";
+import { SegmentBuffer } from "../core/segment_buffers";
 import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
@@ -44,11 +44,11 @@ export type IEMEManager = (mediaElement : HTMLMediaElement,
 
 export type IHTMLTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
-      textTrackElement : HTMLElement) => ISegmentBuffer<unknown>;
+      textTrackElement : HTMLElement) => SegmentBuffer<unknown>;
 
 export type INativeTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
-      hideNativeSubtitle : boolean) => ISegmentBuffer<unknown>;
+      hideNativeSubtitle : boolean) => SegmentBuffer<unknown>;
 
 export type IMediaElementTrackChoiceManager = typeof MediaElementTrackChoiceManager;
 
@@ -77,7 +77,7 @@ interface IBifObject { fileFormat : string;
                        thumbs : IBifThumbnail[]; }
 
 export type IImageBuffer =
-  new() => ISegmentBuffer<IImageTrackSegmentData>;
+  new() => SegmentBuffer<IImageTrackSegmentData>;
 
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);

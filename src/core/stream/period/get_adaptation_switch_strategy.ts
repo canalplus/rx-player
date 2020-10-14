@@ -27,7 +27,7 @@ import {
   isTimeInRanges,
   keepRangeIntersection,
 } from "../../../utils/ranges";
-import { ISegmentBuffer } from "../../segment_buffers";
+import { SegmentBuffer } from "../../segment_buffers";
 
 const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 
@@ -46,7 +46,7 @@ export type IAdaptationSwitchStrategy =
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
-  segmentBuffer : ISegmentBuffer<unknown>,
+  segmentBuffer : SegmentBuffer<unknown>,
   period : Period,
   adaptation : Adaptation,
   clockTick : { currentTime : number; readyState : number }
@@ -106,7 +106,7 @@ export default function getAdaptationSwitchStrategy(
  * @returns {Array.<Object>}
  */
 function getBufferedRangesFromAdaptation(
-  segmentBuffer : ISegmentBuffer<unknown>,
+  segmentBuffer : SegmentBuffer<unknown>,
   period : Period,
   adaptation : Adaptation
 ) : IRange[] {

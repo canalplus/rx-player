@@ -25,13 +25,10 @@ import {
 } from "../../../../../compat";
 import removeCue from "../../../../../compat/remove_cue";
 import log from "../../../../../log";
-import SegmentInventory, {
-  IBufferedChunk,
-} from "../../../segment_inventory";
 import {
   IEndOfSegmentInfos,
   IPushChunkInfos,
-  ISegmentBuffer,
+  SegmentBuffer,
 } from "../../types";
 import parseTextTrackToCues from "./parsers";
 
@@ -57,13 +54,13 @@ export interface INativeTextTrackData {
 }
 
 /**
- * Implementation of an ISegmentBuffer for "native" text tracks.
+ * Implementation of an SegmentBuffer for "native" text tracks.
  * "Native" text tracks rely on a `<track>` HTMLElement and its associated
  * expected behavior to display subtitles synchronized to the video.
  * @class NativeTextSegmentBuffer
  */
 export default class NativeTextSegmentBuffer
-                 implements ISegmentBuffer<INativeTextTrackData> {
+                 extends SegmentBuffer<INativeTextTrackData> {
   public readonly bufferType : "text";
 
   private readonly _videoElement : HTMLMediaElement;
@@ -71,7 +68,6 @@ export default class NativeTextSegmentBuffer
   private readonly _trackElement? : HTMLTrackElement;
 
   private _buffered : ManualTimeRanges;
-  private _segmentInventory : SegmentInventory;
 
   /**
    * @param {HTMLMediaElement} videoElement
@@ -82,13 +78,13 @@ export default class NativeTextSegmentBuffer
     hideNativeSubtitle : boolean
   ) {
     log.debug("NTSB: Creating NativeTextSegmentBuffer");
+    super();
     const { track,
             trackElement } = addTextTrack(videoElement, hideNativeSubtitle);
 
     this.bufferType = "text";
 
     this._buffered = new ManualTimeRanges();
-    this._segmentInventory = new SegmentInventory();
 
     this._videoElement = videoElement;
     this._track = track;
@@ -246,34 +242,6 @@ export default class NativeTextSegmentBuffer
    */
   public getBufferedRanges() : ManualTimeRanges {
     return this._buffered;
-  }
-
-  /**
-   * Manually trigger an inventory synchronization.
-   */
-  public synchronizeInventory() : void {
-    this._segmentInventory.synchronizeBuffered(this._buffered);
-  }
-
-  /**
-   * Returns the currently buffered data for which the content is known with
-   * the corresponding content information.
-   * @returns {Array.<Object>}
-   */
-  public getInventory() : IBufferedChunk[] {
-    return this._segmentInventory.getInventory();
-  }
-
-  /**
-   * Returns the list of every operations that the `NativeTextSegmentBuffer` is
-   * still processing.
-   *
-   * As every `NativeTextSegmentBuffer` operations are synchronous, this method
-   * always return an empty array.
-   * @returns {Array.<Object>}
-   */
-  public getPendingOperations() : [] {
-    return [];
   }
 
   public dispose() : void {

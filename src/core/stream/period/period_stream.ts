@@ -47,8 +47,8 @@ import { IStalledStatus } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
   IBufferType,
-  ISegmentBuffer,
   ITextTrackSegmentBufferOptions,
+  SegmentBuffer,
 } from "../../segment_buffers";
 import AdaptationStream, {
   IAdaptationStreamOptions,
@@ -81,7 +81,7 @@ export interface IPeriodStreamArguments {
   clock$ : Observable<IPeriodStreamClockTick>;
   content : { manifest : Manifest;
               period : Period; };
-  garbageCollectors : WeakMapMemory<ISegmentBuffer<unknown>, Observable<never>>;
+  garbageCollectors : WeakMapMemory<SegmentBuffer<unknown>, Observable<never>>;
   segmentFetcherCreator : SegmentFetcherCreator<any>;
   segmentBuffersStore : SegmentBuffersStore;
   options: IPeriodStreamOptions;
@@ -205,7 +205,7 @@ export default function PeriodStream({
    */
   function createAdaptationStream<T>(
     adaptation : Adaptation,
-    segmentBuffer : ISegmentBuffer<T>
+    segmentBuffer : SegmentBuffer<T>
   ) : Observable<IAdaptationStreamEvent<T>|IStreamWarningEvent> {
     const { manifest } = content;
     const adaptationStreamClock$ = clock$.pipe(map(tick => {
@@ -255,7 +255,7 @@ function createOrReuseSegmentBuffer<T>(
   bufferType : IBufferType,
   adaptation : Adaptation,
   options: { textTrackOptions? : ITextTrackSegmentBufferOptions }
-) : ISegmentBuffer<T> {
+) : SegmentBuffer<T> {
   const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
   if (segmentBufferStatus.type === "initialized") {
     log.info("Stream: Reusing a previous SegmentBuffer for the type", bufferType);

@@ -51,7 +51,7 @@ import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
   BufferGarbageCollector,
   IBufferType,
-  ISegmentBuffer,
+  SegmentBuffer,
 } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import PeriodStream, {
@@ -120,9 +120,9 @@ export default function StreamOrchestrator(
   const { maxBufferAhead$, maxBufferBehind$, wantedBufferAhead$ } = options;
 
   // Keep track of a unique BufferGarbageCollector created per
-  // ISegmentBuffer.
+  // SegmentBuffer.
   const garbageCollectors =
-    new WeakMapMemory((segmentBuffer : ISegmentBuffer<unknown>) => {
+    new WeakMapMemory((segmentBuffer : SegmentBuffer<unknown>) => {
       const { bufferType } = segmentBuffer;
       const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ?
                                  MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number :

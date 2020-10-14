@@ -27,11 +27,11 @@ import {
 } from "rxjs/operators";
 import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
-import { ISegmentBuffer } from "./implementations";
+import { SegmentBuffer } from "./implementations";
 
 export interface IGarbageCollectorArgument {
   /** SegmentBuffer implementation */
-  segmentBuffer : ISegmentBuffer<unknown>;
+  segmentBuffer : SegmentBuffer<unknown>;
   /** Emit current position in seconds regularly */
   clock$ : Observable<number>;
   /** Maximum time to keep behind current time position, in seconds */
@@ -73,14 +73,14 @@ export default function BufferGarbageCollector({
  * and a "depth" behind and ahead wanted for the buffer, in seconds.
  *
  * Anything older than the depth will be removed from the buffer.
- * @param {ISegmentBuffer} segmentBuffer
+ * @param {Object} segmentBuffer
  * @param {Number} position - The current position
  * @param {Number} maxBufferBehind
  * @param {Number} maxBufferAhead
  * @returns {Observable}
  */
 function clearBuffer(
-  segmentBuffer : ISegmentBuffer<unknown>,
+  segmentBuffer : SegmentBuffer<unknown>,
   position : number,
   maxBufferBehind : number,
   maxBufferAhead : number

@@ -37,7 +37,7 @@ import objectAssign from "../../../utils/object_assign";
 import {
   IBufferedChunk,
   IEndOfSegmentOperation,
-  ISegmentBuffer,
+  SegmentBuffer,
   SegmentBufferOperation,
 } from "../../segment_buffers";
 
@@ -55,7 +55,7 @@ export interface ISegmentFilterArgument {
   fastSwitchThreshold : number | undefined;
   neededRange : { start: number;
                   end: number; };
-  segmentBuffer : ISegmentBuffer<unknown>;
+  segmentBuffer : SegmentBuffer<unknown>;
 }
 
 /**
@@ -78,7 +78,7 @@ export default function getNeededSegments({
   const segmentInventory = segmentBuffer.getInventory();
   /**
    * Every segment awaiting an "EndOfSegment" operation, which indicates that a
-   * completely-loaded segment is still being pushed to the ISegmentBuffer.
+   * completely-loaded segment is still being pushed to the SegmentBuffer.
    */
   const segmentsBeingPushed = segmentBuffer.getPendingOperations()
     .filter((operation) : operation is IEndOfSegmentOperation =>

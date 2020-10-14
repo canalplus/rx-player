@@ -56,7 +56,7 @@ import ABRManager, {
   IABREstimate,
 } from "../../abr";
 import { SegmentFetcherCreator } from "../../fetchers";
-import { ISegmentBuffer } from "../../segment_buffers";
+import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import RepresentationStream, {
   IRepresentationStreamClockTick,
@@ -114,7 +114,7 @@ export interface IAdaptationStreamArguments<T> {
    */
   options: IAdaptationStreamOptions;
   /** SourceBuffer wrapper - needed to push media segments. */
-  segmentBuffer : ISegmentBuffer<T>;
+  segmentBuffer : SegmentBuffer<T>;
   /** Module used to fetch the wanted media segments. */
   segmentFetcherCreator : SegmentFetcherCreator<any>;
   /**

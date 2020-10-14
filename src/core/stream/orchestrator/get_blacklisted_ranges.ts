@@ -21,7 +21,7 @@ import {
   Representation,
 } from "../../../manifest";
 import { IRange } from "../../../utils/ranges";
-import { ISegmentBuffer } from "../../segment_buffers";
+import { SegmentBuffer } from "../../segment_buffers";
 
 /**
  * Returns the buffered ranges which hold the given content.
@@ -31,7 +31,7 @@ import { ISegmentBuffer } from "../../segment_buffers";
  * @returns {Array.<Object>}
  */
 export default function getBlacklistedRanges(
-  segmentBuffer : ISegmentBuffer<unknown>,
+  segmentBuffer : SegmentBuffer<unknown>,
   contents : Array<{ adaptation : Adaptation;
                      period : Period;
                      representation : Representation; }>

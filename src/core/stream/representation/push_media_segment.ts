@@ -29,7 +29,7 @@ import Manifest, {
 } from "../../../manifest";
 import { ISegmentParserParsedSegment } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
-import { ISegmentBuffer } from "../../segment_buffers";
+import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
 import appendSegmentToBuffer from "./append_segment_to_buffer";
@@ -37,7 +37,7 @@ import appendSegmentToBuffer from "./append_segment_to_buffer";
 const { APPEND_WINDOW_SECURITIES } = config;
 
 /**
- * Push a given media segment (non-init segment) to a ISegmentBuffer.
+ * Push a given media segment (non-init segment) to a SegmentBuffer.
  * The Observable returned:
  *   - emit an event once the segment has been pushed.
  *   - throws on Error.
@@ -58,7 +58,7 @@ export default function pushMediaSegment<T>(
                         initSegmentData : T | null;
                         parsedSegment : ISegmentParserParsedSegment<T>;
                         segment : ISegment;
-                        segmentBuffer : ISegmentBuffer<T>; }
+                        segmentBuffer : SegmentBuffer<T>; }
 ) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (parsedSegment.chunkData === null) {
