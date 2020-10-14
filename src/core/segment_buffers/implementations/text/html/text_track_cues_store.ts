@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import assert from "../../../utils/assert";
+import assert from "../../../../../utils/assert";
 import {
   ICuesGroup,
   IHTMLCue,
@@ -27,7 +27,7 @@ import {
 } from "./utils";
 
 /**
- * Manage the buffer of the HTML text Sourcebuffer.
+ * Manage the buffer of the HTMLTextSegmentBuffer.
  * Allows to add, remove and recuperate cues at given times.
  * @class TextTrackCuesStore
  */

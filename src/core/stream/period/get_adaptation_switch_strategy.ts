@@ -27,7 +27,7 @@ import {
   isTimeInRanges,
   keepRangeIntersection,
 } from "../../../utils/ranges";
-import { QueuedSourceBuffer } from "../../source_buffers";
+import { ISegmentBuffer } from "../../segment_buffers";
 
 const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 
@@ -39,19 +39,19 @@ export type IAdaptationSwitchStrategy =
 /**
  * Find out what to do when switching adaptation, based on the current
  * situation.
- * @param {Object} queuedSourceBuffer
+ * @param {Object} segmentBuffer
  * @param {Object} period
  * @param {Object} adaptation
  * @param {Object} clockTick
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
-  queuedSourceBuffer : QueuedSourceBuffer<unknown>,
+  segmentBuffer : ISegmentBuffer<unknown>,
   period : Period,
   adaptation : Adaptation,
   clockTick : { currentTime : number; readyState : number }
 ) : IAdaptationSwitchStrategy {
-  const buffered = queuedSourceBuffer.getBufferedRanges();
+  const buffered = segmentBuffer.getBufferedRanges();
   if (buffered.length === 0) {
     return { type: "continue", value: undefined };
   }
@@ -65,7 +65,7 @@ export default function getAdaptationSwitchStrategy(
   }
 
   // remove from that intersection what we know to be the right Adaptation
-  const adaptationInBuffer = getBufferedRangesFromAdaptation(queuedSourceBuffer,
+  const adaptationInBuffer = getBufferedRangesFromAdaptation(segmentBuffer,
                                                              period,
                                                              adaptation);
   const { currentTime } = clockTick;
@@ -99,19 +99,19 @@ export default function getAdaptationSwitchStrategy(
 
 /**
  * Returns buffered ranges of what we know correspond to the given `adaptation`
- * in the SourceBuffer.
- * @param {Object} queuedSourceBuffer
+ * in the SegmentBuffer.
+ * @param {Object} segmentBuffer
  * @param {Object} period
  * @param {Object} adaptation
  * @returns {Array.<Object>}
  */
 function getBufferedRangesFromAdaptation(
-  queuedSourceBuffer : QueuedSourceBuffer<unknown>,
+  segmentBuffer : ISegmentBuffer<unknown>,
   period : Period,
   adaptation : Adaptation
 ) : IRange[] {
-  queuedSourceBuffer.synchronizeInventory();
-  return queuedSourceBuffer.getInventory()
+  segmentBuffer.synchronizeInventory();
+  return segmentBuffer.getInventory()
     .reduce<IRange[]>((acc : IRange[], chunk) : IRange[] => {
       if (chunk.infos.period.id !== period.id ||
           chunk.infos.adaptation.id !== adaptation.id)

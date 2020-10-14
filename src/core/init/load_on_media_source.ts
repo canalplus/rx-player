@@ -35,7 +35,7 @@ import log from "../../log";
 import Manifest from "../../manifest";
 import ABRManager from "../abr";
 import { SegmentFetcherCreator } from "../fetchers";
-import SourceBuffersStore from "../source_buffers";
+import SegmentBuffersStore from "../segment_buffers";
 import StreamOrchestrator, {
   IStreamOrchestratorEvent,
   IStreamOrchestratorOptions,
@@ -123,9 +123,8 @@ export default function createMediaSourceLoader({
                            "Wanted starting time not found in the Manifest.");
     }
 
-    // Creates SourceBuffersStore allowing to create and keep track of a
-    // single SourceBuffer per type.
-    const sourceBuffersStore = new SourceBuffersStore(mediaElement, mediaSource);
+    /** Interface to create media buffers for loaded segments. */
+    const segmentBuffersStore = new SegmentBuffersStore(mediaElement, mediaSource);
 
     const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
                                                         mediaElement,
@@ -153,7 +152,7 @@ export default function createMediaSourceLoader({
     const streams$ = StreamOrchestrator({ manifest, initialPeriod },
                                           streamClock$,
                                           abrManager,
-                                          sourceBuffersStore,
+                                          segmentBuffersStore,
                                           segmentFetcherCreator,
                                           bufferOptions
     ).pipe(
@@ -170,7 +169,7 @@ export default function createMediaSourceLoader({
             return EMPTY;
           case "discontinuity-encountered":
             const { bufferType, gap } = evt.value;
-            if (SourceBuffersStore.isNative(bufferType)) {
+            if (SegmentBuffersStore.isNative(bufferType)) {
               handleDiscontinuity(gap[1], mediaElement);
             }
             return EMPTY;
@@ -206,7 +205,7 @@ export default function createMediaSourceLoader({
                                        "Cannot trigger auto-play automatically: " +
                                        "your browser does not allow it.");
           return observableOf(EVENTS.warning(error),
-                              EVENTS.loaded(sourceBuffersStore));
+                              EVENTS.loaded(segmentBuffersStore));
         } else if (evt === "not-loaded-metadata") {
           const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
                                        "Cannot load automatically: your browser " +
@@ -214,7 +213,7 @@ export default function createMediaSourceLoader({
           return observableOf(EVENTS.warning(error));
         }
         log.debug("Init: The current content is loaded.");
-        return observableOf(EVENTS.loaded(sourceBuffersStore));
+        return observableOf(EVENTS.loaded(segmentBuffersStore));
       }));
 
     return observableMerge(handledDiscontinuities$,
@@ -224,8 +223,8 @@ export default function createMediaSourceLoader({
                            streams$,
                            streamEvents$
     ).pipe(finalize(() => {
-        // clean-up every created SourceBuffers
-        sourceBuffersStore.disposeAll();
+        // clean-up every created SegmentBuffers
+        segmentBuffersStore.disposeAll();
       }));
   };
 }

@@ -22,7 +22,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
-import { IBufferType } from "../source_buffers";
+import { IBufferType } from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,

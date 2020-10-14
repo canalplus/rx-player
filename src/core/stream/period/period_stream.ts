@@ -45,11 +45,11 @@ import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
 import { IStalledStatus } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
-import SourceBuffersStore, {
+import SegmentBuffersStore, {
   IBufferType,
-  ITextTrackSourceBufferOptions,
-  QueuedSourceBuffer,
-} from "../../source_buffers";
+  ISegmentBuffer,
+  ITextTrackSegmentBufferOptions,
+} from "../../segment_buffers";
 import AdaptationStream, {
   IAdaptationStreamOptions,
 } from "../adaptation";
@@ -81,22 +81,22 @@ export interface IPeriodStreamArguments {
   clock$ : Observable<IPeriodStreamClockTick>;
   content : { manifest : Manifest;
               period : Period; };
-  garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
+  garbageCollectors : WeakMapMemory<ISegmentBuffer<unknown>, Observable<never>>;
   segmentFetcherCreator : SegmentFetcherCreator<any>;
-  sourceBuffersStore : SourceBuffersStore;
+  segmentBuffersStore : SegmentBuffersStore;
   options: IPeriodStreamOptions;
   wantedBufferAhead$ : BehaviorSubject<number>;
 }
 
 /** Options tweaking the behavior of the PeriodStream. */
 export type IPeriodStreamOptions = IAdaptationStreamOptions &
-                                   { textTrackOptions? : ITextTrackSourceBufferOptions };
+                                   { textTrackOptions? : ITextTrackSegmentBufferOptions };
 
 /**
  * Create single PeriodStream Observable:
- *   - Lazily create (or reuse) a SourceBuffer for the given type.
+ *   - Lazily create (or reuse) a SegmentBuffer for the given type.
  *   - Create a Stream linked to an Adaptation each time it changes, to
- *     download and append the corresponding Segments in the SourceBuffer.
+ *     download and append the corresponding segments to the SegmentBuffer.
  *   - Announce when the Stream is full or is awaiting new Segments through
  *     events
  * @param {Object} args
@@ -109,7 +109,7 @@ export default function PeriodStream({
   content,
   garbageCollectors,
   segmentFetcherCreator,
-  sourceBuffersStore,
+  segmentBuffersStore,
   options,
   wantedBufferAhead$,
 } : IPeriodStreamArguments) : Observable<IPeriodStreamEvent> {
@@ -122,23 +122,23 @@ export default function PeriodStream({
     switchMap((adaptation) => {
       if (adaptation === null) {
         log.info(`Stream: Set no ${bufferType} Adaptation`, period);
-        const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
+        const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
-        if (sourceBufferStatus.type === "initialized") {
-          log.info(`Stream: Clearing previous ${bufferType} SourceBuffer`);
-          if (SourceBuffersStore.isNative(bufferType)) {
+        if (segmentBufferStatus.type === "initialized") {
+          log.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
+          if (SegmentBuffersStore.isNative(bufferType)) {
             return clock$.pipe(map((tick) => {
               return EVENTS.needsMediaSourceReload(period, tick);
             }));
           }
-          cleanBuffer$ = sourceBufferStatus.value
+          cleanBuffer$ = segmentBufferStatus.value
             .removeBuffer(period.start,
                           period.end == null ? Infinity :
                                                period.end);
         } else {
-          if (sourceBufferStatus.type === "uninitialized") {
-            sourceBuffersStore.disableSourceBuffer(bufferType);
+          if (segmentBufferStatus.type === "uninitialized") {
+            segmentBuffersStore.disableSegmentBuffer(bufferType);
           }
           cleanBuffer$ = observableOf(null);
         }
@@ -149,8 +149,8 @@ export default function PeriodStream({
         );
       }
 
-      if (SourceBuffersStore.isNative(bufferType) &&
-          sourceBuffersStore.getStatus(bufferType).type === "disabled")
+      if (SegmentBuffersStore.isNative(bufferType) &&
+          segmentBuffersStore.getStatus(bufferType).type === "disabled")
       {
         return clock$.pipe(map((tick) => {
           return EVENTS.needsMediaSourceReload(period, tick);
@@ -162,11 +162,11 @@ export default function PeriodStream({
       const newStream$ = clock$.pipe(
         take(1),
         mergeMap((tick) => {
-          const qSourceBuffer = createOrReuseQueuedSourceBuffer(sourceBuffersStore,
-                                                                bufferType,
-                                                                adaptation,
-                                                                options);
-          const strategy = getAdaptationSwitchStrategy(qSourceBuffer,
+          const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
+                                                           bufferType,
+                                                           adaptation,
+                                                           options);
+          const strategy = getAdaptationSwitchStrategy(segmentBuffer,
                                                        period,
                                                        adaptation,
                                                        tick);
@@ -176,14 +176,14 @@ export default function PeriodStream({
 
           const cleanBuffer$ = strategy.type === "clean-buffer" ?
             observableConcat(...strategy.value.map(({ start, end }) =>
-                               qSourceBuffer.removeBuffer(start, end))
+                               segmentBuffer.removeBuffer(start, end))
                             ).pipe(ignoreElements()) :
             EMPTY;
 
-          const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
-          const adaptationStream$ = createAdaptationStream(adaptation, qSourceBuffer);
+          const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
+          const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
 
-          return sourceBuffersStore.waitForUsableSourceBuffers().pipe(mergeMap(() => {
+          return segmentBuffersStore.waitForUsableBuffers().pipe(mergeMap(() => {
             return observableConcat(cleanBuffer$,
                                     observableMerge(adaptationStream$,
                                                     bufferGarbageCollector$));
@@ -200,16 +200,16 @@ export default function PeriodStream({
 
   /**
    * @param {Object} adaptation
-   * @param {Object} qSourceBuffer
+   * @param {Object} segmentBuffer
    * @returns {Observable}
    */
   function createAdaptationStream<T>(
     adaptation : Adaptation,
-    qSourceBuffer : QueuedSourceBuffer<T>
+    segmentBuffer : ISegmentBuffer<T>
   ) : Observable<IAdaptationStreamEvent<T>|IStreamWarningEvent> {
     const { manifest } = content;
     const adaptationStreamClock$ = clock$.pipe(map(tick => {
-      const buffered = qSourceBuffer.getBufferedRanges();
+      const buffered = segmentBuffer.getBufferedRanges();
       return objectAssign({},
                           tick,
                           { bufferGap: getLeftSizeOfRange(buffered,
@@ -219,16 +219,16 @@ export default function PeriodStream({
                               clock$: adaptationStreamClock$,
                               content: { manifest, period, adaptation },
                               options,
-                              queuedSourceBuffer: qSourceBuffer,
+                              segmentBuffer,
                               segmentFetcherCreator,
                               wantedBufferAhead$ })
     .pipe(catchError((error : unknown) => {
-      // Stream linked to a non-native SourceBuffer should not impact the
+      // Stream linked to a non-native media buffer should not impact the
       // stability of the player. ie: if a text buffer sends an error, we want
       // to continue playing without any subtitles
-      if (!SourceBuffersStore.isNative(bufferType)) {
+      if (!SegmentBuffersStore.isNative(bufferType)) {
         log.error(`Stream: ${bufferType} Stream crashed. Aborting it.`, error);
-        sourceBuffersStore.disposeSourceBuffer(bufferType);
+        segmentBuffersStore.disposeSegmentBuffer(bufferType);
 
         const formattedError = formatError(error, {
           defaultCode: "NONE",
@@ -250,20 +250,20 @@ export default function PeriodStream({
  * @param {Object} adaptation
  * @returns {Object}
  */
-function createOrReuseQueuedSourceBuffer<T>(
-  sourceBuffersStore : SourceBuffersStore,
+function createOrReuseSegmentBuffer<T>(
+  segmentBuffersStore : SegmentBuffersStore,
   bufferType : IBufferType,
   adaptation : Adaptation,
-  options: { textTrackOptions? : ITextTrackSourceBufferOptions }
-) : QueuedSourceBuffer<T> {
-  const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
-  if (sourceBufferStatus.type === "initialized") {
-    log.info("Stream: Reusing a previous SourceBuffer for the type", bufferType);
-    return sourceBufferStatus.value;
+  options: { textTrackOptions? : ITextTrackSegmentBufferOptions }
+) : ISegmentBuffer<T> {
+  const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
+  if (segmentBufferStatus.type === "initialized") {
+    log.info("Stream: Reusing a previous SegmentBuffer for the type", bufferType);
+    return segmentBufferStatus.value;
   }
   const codec = getFirstDeclaredMimeType(adaptation);
   const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
-  return sourceBuffersStore.createSourceBuffer(bufferType, codec, sbOptions);
+  return segmentBuffersStore.createSegmentBuffer(bufferType, codec, sbOptions);
 }
 
 /**

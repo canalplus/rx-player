@@ -61,7 +61,7 @@ import {
   IManifestFetcherParserOptions,
   SegmentFetcherCreator,
 } from "../fetchers";
-import { ITextTrackSourceBufferOptions } from "../source_buffers";
+import { ITextTrackSegmentBufferOptions } from "../segment_buffers";
 import createEMEManager, {
   IEMEDisabledEvent,
 } from "./create_eme_manager";
@@ -139,7 +139,7 @@ export interface IInitializeArguments {
   /** The configured starting position. */
   startAt? : IInitialTimeOptions;
   /** Configuration specific to the text track. */
-  textTrackOptions : ITextTrackSourceBufferOptions;
+  textTrackOptions : ITextTrackSegmentBufferOptions;
   /**
    * "Transport pipelines": logic specific to the current transport
    * (e.g. DASH, Smooth...)

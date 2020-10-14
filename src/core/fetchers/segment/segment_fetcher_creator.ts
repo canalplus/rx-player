@@ -23,7 +23,7 @@ import {
   IABRRequestEndEvent,
   IABRRequestProgressEvent,
 } from "../../abr";
-import { IBufferType } from "../../source_buffers";
+import { IBufferType } from "../../segment_buffers";
 import getSegmentBackoffOptions from "./get_segment_backoff_options";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,

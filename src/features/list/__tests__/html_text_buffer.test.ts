@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-import htmlTextTracksBuffer from "../../../custom_source_buffers/text/html";
+/* tslint:disable max-line-length */
+import htmlTextTracksBuffer from "../../../core/segment_buffers/implementations/text/html";
+/* tslint:enable max-line-length */
 import addHTMLTextBuffer from "../html_text_buffer";
 
 /* tslint:disable no-unsafe-any */
-jest.mock("../../../custom_source_buffers/text/html", () => ({
+jest.mock("../../../core/segment_buffers/implementations/text/html", () => ({
   __esModule: true as const,
   default: jest.fn(),
 }));

@@ -21,7 +21,7 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import { IStalledStatus } from "../api";
-import SourceBuffersStore from "../source_buffers";
+import SegmentBuffersStore from "../segment_buffers";
 import { IRepresentationChangeEvent } from "../stream";
 import { IStallingItem } from "./get_stalled_events";
 
@@ -81,7 +81,7 @@ export interface IStalledEvent { type : "stalled";
 // The content loaded and can now be played
 export interface ILoadedEvent { type : "loaded";
                                 value : {
-                                  sourceBuffersStore: SourceBuffersStore | null;
+                                  segmentBuffersStore: SegmentBuffersStore | null;
                                 }; }
 
 export { IRepresentationChangeEvent };

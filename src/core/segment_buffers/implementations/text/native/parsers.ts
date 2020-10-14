@@ -14,36 +14,34 @@
  * limitations under the License.
  */
 
-import features from "../../../features";
-import log from "../../../log";
-
-export interface IHTMLCue { start : number;
-                            end: number;
-                            element : HTMLElement; }
+import { ICompatVTTCue } from "../../../../../compat";
+import features from "../../../../../features";
+import log from "../../../../../log";
 
 /**
- * Convert text track data into timed HTML Cues.
+ * Convert text track data into timed VTT Cues.
  * @param {string} type - Text track format wanted
  * @param {string} data - Text track data
  * @param {Number} timestampOffset - offset to apply to every timed text
  * @param {string} [language] - language of the text tracks
- * @returns {Array.<Object>}
+ * @returns {Array.<VTTCue>}
  * @throws Error - Throw if no parser is found for the given type
  */
-export default function parseTextTrackToElements(
+export default function parseTextTrackToCues(
   type : string,
   data : string,
   timestampOffset : number,
   language? : string
-) : IHTMLCue[] {
-  log.debug("HTSB: Finding parser for html text tracks:", type);
-  const parser = features.htmlTextTracksParsers[type];
+) : Array<ICompatVTTCue|TextTrackCue> {
+  log.debug("NTSB: Finding parser for native text tracks:", type);
+  const parser = features.nativeTextTracksParsers[type];
 
   if (typeof parser !== "function") {
     throw new Error("no parser found for the given text track");
   }
-  log.debug("HTSB: Parser found, parsing...");
+
+  log.debug("NTSB: Parser found, parsing...");
   const parsed = parser(data, timestampOffset, language);
-  log.debug("HTTB: Parsed successfully!", parsed);
+  log.debug("NTSB: Parsed successfully!", parsed);
   return parsed;
 }
