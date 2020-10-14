@@ -33,10 +33,7 @@ import config from "../../../../config";
 import log from "../../../../log";
 import assertUnreachable from "../../../../utils/assert_unreachable";
 import objectAssign from "../../../../utils/object_assign";
-import SegmentInventory, {
-  IBufferedChunk,
-  IInsertedChunkInfos,
-} from "../../segment_inventory";
+import { IInsertedChunkInfos } from "../../segment_inventory";
 import {
   IBufferType,
   IEndOfSegmentInfos,
@@ -45,7 +42,7 @@ import {
   IPushOperation,
   IRemoveOperation,
   ISBOperation,
-  ISegmentBuffer,
+  SegmentBuffer,
   SegmentBufferOperation,
 } from "../types";
 
@@ -116,15 +113,12 @@ interface IPushData {
  * @class AudioVideoSegmentBuffer
  */
 export default class AudioVideoSegmentBuffer
-                 implements ISegmentBuffer<BufferSource> {
+                 extends SegmentBuffer<BufferSource> {
   /** "Type" of the buffer (e.g. "audio", "video", "text", "image"). */
   public readonly bufferType : IBufferType;
 
   /** SourceBuffer implementation. */
   private readonly _sourceBuffer : ICompatSourceBuffer;
-
-  /** Inventory of buffered segments. */
-  private readonly _segmentInventory : SegmentInventory;
 
   /**
    * Subject triggered when this AudioVideoSegmentBuffer is disposed.
@@ -180,6 +174,7 @@ export default class AudioVideoSegmentBuffer
     codec : string,
     mediaSource : MediaSource
   ) {
+    super();
     const sourceBuffer = mediaSource.addSourceBuffer(codec);
 
     this._destroy$ = new Subject<void>();
@@ -190,7 +185,6 @@ export default class AudioVideoSegmentBuffer
     this._pendingTask = null;
     this._lastInitSegment = null;
     this._currentCodec = codec;
-    this._segmentInventory = new SegmentInventory();
 
     // Some browsers (happened with firefox 66) sometimes "forget" to send us
     // `update` or `updateend` events.
@@ -281,35 +275,11 @@ export default class AudioVideoSegmentBuffer
   }
 
   /**
-   * The maintained inventory can fall out of sync from garbage collection or
-   * other events.
-   *
-   * This methods allow to manually trigger a synchronization. It should be
-   * called before retrieving Segment information from it (e.g. with
-   * `getInventory`).
-   */
-  public synchronizeInventory() : void {
-    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges());
-  }
-
-  /**
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
    */
   public getBufferedRanges() : TimeRanges {
     return this._sourceBuffer.buffered;
-  }
-
-  /**
-   * Returns the currently buffered data for which the content is known with
-   * the corresponding content information.
-   * /!\ This data can fall out of sync with the real buffered ranges. Please
-   * call `synchronizeInventory` before to make sure it is correctly
-   * synchronized.
-   * @returns {Array.<Object>}
-   */
-  public getInventory() : IBufferedChunk[] {
-    return this._segmentInventory.getInventory();
   }
 
   /**
@@ -367,18 +337,6 @@ export default class AudioVideoSegmentBuffer
         log.warn(`AVSB: Failed to abort a ${this.bufferType} SourceBuffer:`, e);
       }
     }
-  }
-
-  /**
-   * Abort the linked SourceBuffer.
-   * You should call this only if the linked MediaSource is still "open".
-   *
-   * /!\ You won't be able to use the AudioVideoSegmentBuffer after calling this
-   * function.
-   * @private
-   */
-  public abort() {
-    this._sourceBuffer.abort();
   }
 
   /**
@@ -628,5 +586,3 @@ function convertQueueItemToTask(
       assertUnreachable(item);
   }
 }
-
-export { IBufferedChunk };

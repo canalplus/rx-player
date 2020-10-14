@@ -21,20 +21,20 @@ import {
   Period,
   Representation,
 } from "../../../manifest";
-import {
+import SegmentInventory, {
   IBufferedChunk,
   IInsertedChunkInfos,
 } from "../segment_inventory";
 
 /**
- * Interface allowing to push segments and remove data to a buffer to be able
+ * Class allowing to push segments and remove data to a buffer to be able
  * to decode them in the future as well as retrieving information about which
  * segments have already been pushed.
  *
- * An `ISegmentBuffer` can rely on a browser's SourceBuffer as well as being
+ * A `SegmentBuffer` can rely on a browser's SourceBuffer as well as being
  * entirely defined in the code.
  *
- * An ISegmentBuffer is associated to a given "bufferType" (e.g. "audio",
+ * A SegmentBuffer is associated to a given "bufferType" (e.g. "audio",
  * "video", "text") and allows to push segments as well as removing part of
  * already-pushed segments for that type.
  *
@@ -48,14 +48,14 @@ import {
  * implementation.
  * TODO reflect that in the API?
  *
- * An ISegmentBuffer also maintains an "inventory", which is the current
+ * A SegmentBuffer also maintains an "inventory", which is the current
  * list of segments contained in the underlying buffer.
  * This inventory has to be manually "synchronized" (through the
  * `synchronizeInventory` method) before being retrieved (through the
  * `getInventory` method).
  *
  * Also depending on the underlying implementation, the various operations
- * performed on an `ISegmentBuffer` (push/remove/endOfSegment) can happen
+ * performed on a `SegmentBuffer` (push/remove/endOfSegment) can happen
  * synchronously or asynchronously.
  * In the latter case, such operations are put in a FIFO Queue.
  * You can retrieve the current queue of operations by calling the
@@ -63,9 +63,18 @@ import {
  * If operations happens synchronously, this method will just return an empty
  * array.
  */
-export interface ISegmentBuffer<T> {
+export abstract class SegmentBuffer<T> {
   /** "Type" of the buffer (e.g. "audio", "video", "text", "image"). */
-  readonly bufferType : IBufferType;
+  public readonly abstract bufferType : IBufferType;
+
+  /** Default implementation of an inventory of segment metadata. */
+  protected _segmentInventory : SegmentInventory;
+
+  constructor() {
+    // Use SegmentInventory by default for inventory purposes
+    this._segmentInventory = new SegmentInventory();
+  }
+
   /**
    * Push a chunk of the media segment given to the attached buffer, in a
    * FIFO queue.
@@ -93,14 +102,16 @@ export interface ISegmentBuffer<T> {
    * @param {Object} infos
    * @returns {Observable}
    */
-  pushChunk(infos : IPushChunkInfos<T>) : Observable<void>;
+  public abstract pushChunk(infos : IPushChunkInfos<T>) : Observable<void>;
+
   /**
    * Remove buffered data (added to the same FIFO queue than `pushChunk`).
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
    * @returns {Observable}
    */
-  removeBuffer(start : number, end : number) : Observable<void>;
+  public abstract removeBuffer(start : number, end : number) : Observable<void>;
+
   /**
    * Indicate that every chunks from a Segment has been given to pushChunk so
    * far.
@@ -110,12 +121,14 @@ export interface ISegmentBuffer<T> {
    * @param {Object} infos
    * @returns {Observable}
    */
-  endOfSegment(infos : IEndOfSegmentInfos) : Observable<void>;
+  public abstract endOfSegment(infos : IEndOfSegmentInfos) : Observable<void>;
+
   /**
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
    */
-  getBufferedRanges() : TimeRanges;
+  public abstract getBufferedRanges() : TimeRanges;
+
   /**
    * The maintained inventory can fall out of sync from garbage collection or
    * other events.
@@ -124,7 +137,11 @@ export interface ISegmentBuffer<T> {
    * called before retrieving Segment information from it (e.g. with
    * `getInventory`).
    */
-  synchronizeInventory() : void;
+  public synchronizeInventory() : void {
+    // The default implementation just use the SegmentInventory
+    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges());
+  }
+
   /**
    * Returns the currently buffered data for which the content is known with
    * the corresponding content information.
@@ -133,23 +150,31 @@ export interface ISegmentBuffer<T> {
    * synchronized.
    * @returns {Array.<Object>}
    */
-  getInventory() : IBufferedChunk[];
+  public getInventory() : IBufferedChunk[] {
+    // The default implementation just use the SegmentInventory
+    return this._segmentInventory.getInventory();
+  }
+
   /**
-   * Returns the list of every operations that the `ISegmentBuffer` is still
+   * Returns the list of every operations that the `SegmentBuffer` is still
    * processing. From the one with the highest priority (like the one being
    * processed)
    * @returns {Array.<Object>}
    */
-  getPendingOperations() : Array<ISBOperation<T>>;
+  public getPendingOperations() : Array<ISBOperation<T>> {
+    // Return no pending operation by default (for synchronous SegmentBuffers)
+    return [];
+  }
+
   /**
    * Dispose of the resources used by this AudioVideoSegmentBuffer.
-   * /!\ You won't be able to use the ISegmentBuffer after calling this
+   * /!\ You won't be able to use the SegmentBuffer after calling this
    * function.
    */
-  dispose() : void;
+  public abstract dispose() : void;
 }
 
-/** Every ISegmentBuffer types. */
+/** Every SegmentBuffer types. */
 export type IBufferType = "audio" |
                           "video" |
                           "text" |
@@ -243,13 +268,13 @@ export interface IPushChunkInfos<T> {
                     null;
 }
 
-/** "Operations" scheduled by a ISegmentBuffer. */
+/** "Operations" scheduled by a SegmentBuffer. */
 export type ISBOperation<T> = IPushOperation<T> |
                               IRemoveOperation |
                               IEndOfSegmentOperation;
 
 /**
- * Enum used by a ISegmentBuffer as a discriminant in its queue of
+ * Enum used by a SegmentBuffer as a discriminant in its queue of
  * "operations".
  */
 export enum SegmentBufferOperation { Push,
@@ -257,7 +282,7 @@ export enum SegmentBufferOperation { Push,
                                      EndOfSegment }
 
 /**
- * "Operation" created by a `ISegmentBuffer` when asked to push a chunk.
+ * "Operation" created by a `SegmentBuffer` when asked to push a chunk.
  *
  * It represents a queued "Push" operation (created due to a `pushChunk` method
  * call) that is not yet fully processed by a `SegmentBuffer`.
@@ -270,10 +295,10 @@ export interface IPushOperation<T> {
 }
 
 /**
- * "Operation" created by a ISegmentBuffer when asked to remove buffer.
+ * "Operation" created by a SegmentBuffer when asked to remove buffer.
  *
  * It represents a queued "Remove" operation (created due to a `removeBuffer`
- * method call) that is not yet fully processed by a ISegmentBuffer.
+ * method call) that is not yet fully processed by a SegmentBuffer.
  */
 export interface IRemoveOperation {
   /** Discriminant (allows to tell its a "Remove operation"). */
@@ -283,12 +308,12 @@ export interface IRemoveOperation {
             end : number; }; }
 
 /**
- * "Operation" created by a `ISegmentBuffer` when asked to validate that a full
+ * "Operation" created by a `SegmentBuffer` when asked to validate that a full
  * segment has been pushed through earlier `Push` operations.
  *
  * It represents a queued "EndOfSegment" operation (created due to a
  * `endOfSegment` method call) that is not yet fully processed by a
- * `ISegmentBuffer.`
+ * `SegmentBuffer.`
  */
 export interface IEndOfSegmentOperation {
   /** Discriminant (allows to tell its an "EndOfSegment operation"). */
