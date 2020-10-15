@@ -257,6 +257,7 @@ export default function getMediaKeySystemAccess(
   keySystemsConfigs: IKeySystemOption[]
 ) : Observable<IFoundMediaKeySystemAccessEvent> {
   return observableDefer<Observable<IFoundMediaKeySystemAccessEvent>>(() => {
+    log.info("EME: Searching for compatible MediaKeySystemAccess");
     const currentState = MediaKeysInfosStore.getState(mediaElement);
     if (currentState != null) {
       // Fast way to find a compatible keySystem if the currently loaded
@@ -266,7 +267,7 @@ export default function getMediaKeySystemAccess(
                                         currentState.mediaKeySystemAccess,
                                         currentState.keySystemOptions);
       if (cachedKeySystemAccess !== null) {
-        log.debug("EME: Found cached compatible keySystem", cachedKeySystemAccess);
+        log.info("EME: Found cached compatible keySystem", cachedKeySystemAccess);
         return observableOf({
           type: "reuse-media-key-system-access" as "reuse-media-key-system-access",
           value: { mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,

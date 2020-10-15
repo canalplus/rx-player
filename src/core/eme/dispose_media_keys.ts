@@ -37,7 +37,7 @@ export default function disposeMediaKeys(
       return observableOf(null);
     }
 
-    log.debug("EME: Disposing of the current MediaKeys");
+    log.info("EME: Disposing of the current MediaKeys");
     const { loadedSessionsStore } = currentState;
     MediaKeysInfosStore.clearState(mediaElement);
     return loadedSessionsStore.closeAllSessions()

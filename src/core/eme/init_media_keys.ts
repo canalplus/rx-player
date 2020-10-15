@@ -25,6 +25,7 @@ import {
   startWith,
   take,
 } from "rxjs/operators";
+import log from "../../log";
 import attachMediaKeys, {
   disableMediaKeys
 } from "./attach_media_keys";
@@ -57,8 +58,10 @@ export default function initMediaKeys(
         disableMediaKeys(mediaElement) :
         observableOf(null);
 
+      log.debug("EME: Disabling old MediaKeys");
       return disableOldMediaKeys$.pipe(
         mergeMap(() => {
+          log.debug("EME: Disabled old MediaKeys. Waiting to attach new MediaKeys");
           return attachMediaKeys$.pipe(
             mergeMap(() => attachMediaKeys(mediaKeysInfos, mediaElement)),
             take(1),

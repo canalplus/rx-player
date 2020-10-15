@@ -81,7 +81,7 @@ export default function trySettingServerCertificate(
       return EMPTY;
     }
 
-    log.debug("EME: Setting server certificate on the MediaKeys");
+    log.info("EME: Setting server certificate on the MediaKeys");
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
       ignoreElements(),
       catchError(error => observableOf({ type: "warning" as const, value: error })));

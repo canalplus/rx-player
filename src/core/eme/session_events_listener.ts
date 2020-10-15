@@ -33,6 +33,7 @@ import {
   mergeMap,
   startWith,
   takeUntil,
+  tap,
   timeout,
 } from "rxjs/operators";
 import {
@@ -104,7 +105,7 @@ export default function SessionEventsListener(
                ISessionUpdatedEvent |
                IBlacklistKeysEvent>
 {
-  log.debug("EME: Binding session events", session);
+  log.info("EME: Binding session events", session);
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
   const { getLicenseConfig = {} } = keySystemOptions;
 
@@ -127,8 +128,7 @@ export default function SessionEventsListener(
         messageEvent.messageType :
         "license-request";
 
-      log.debug(`EME: Event message type ${messageType}`, session, messageEvent);
-
+      log.info(`EME: Received message event, type ${messageType}`, session, messageEvent);
       const getLicense$ = observableDefer(() => {
         const getLicense = keySystemOptions.getLicense(message, messageType);
         const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
@@ -275,13 +275,14 @@ function updateSessionWithMessage(
                           value: { initData, initDataType }});
   }
 
-  log.debug("EME: Updating session");
+  log.info("EME: Updating MediaKeySession with message");
   return castToObservable(session.update(message)).pipe(
     catchError((error: unknown) => {
       const reason = error instanceof Error ? error.toString() :
                                               "`session.update` failed";
       throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
     }),
+    tap(() => { log.info("EME: MediaKeySession update succeeded."); }),
     mapTo({ type: "session-updated" as const,
             value: { session, license: message, initData, initDataType } })
   );
@@ -299,7 +300,7 @@ function handleKeyStatusesChangeEvent(
   keySystem : string,
   keyStatusesEvent : Event
 ) : Observable<IKeyStatusChangeHandledEvent | IBlacklistKeysEvent | IEMEWarningEvent> {
-  log.debug("EME: handling keystatuseschange event", session, keyStatusesEvent);
+  log.info("EME: keystatuseschange event received", session, keyStatusesEvent);
   const callback$ = observableDefer(() => {
     if (typeof keySystemOptions.onKeyStatusesChange !== "function") {
       return EMPTY;
