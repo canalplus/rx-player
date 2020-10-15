@@ -166,24 +166,24 @@ echo "creating tools build..."
 rm -rf tools
 mkdir tools
 echo "${copyright_text}
-export * from \"../../dist/_esm5.processed/tools/index.js\";" > tools/index.js
+export * from \"../dist/_esm5.processed/tools/index.js\";" > tools/index.js
 echo "${copyright_text}
-export * from \"../../dist/_esm5.processed/tools/index\";" > tools/index.d.ts
+export * from \"../dist/_esm5.processed/tools/index\";" > tools/index.d.ts
 echo "${copyright_text}
-import StringUtils from \"../../dist/_esm5.processed/tools/string_utils.js\";
-export * from \"../../dist/_esm5.processed/tools/string_utils.js\";
+import StringUtils from \"../dist/_esm5.processed/tools/string_utils.js\";
+export * from \"../dist/_esm5.processed/tools/string_utils.js\";
 export default StringUtils;" > tools/string-utils.js
 echo "${copyright_text}
-import StringUtils from \"../../dist/_esm5.processed/tools/string_utils\";
-export * from \"../../dist/_esm5.processed/tools/string_utils\";
+import StringUtils from \"../dist/_esm5.processed/tools/string_utils\";
+export * from \"../dist/_esm5.processed/tools/string_utils\";
 export default StringUtils;" > tools/string-utils.d.ts
 echo "${copyright_text}
-import TextTrackRenderer from \"../../dist/_esm5.processed/tools/TextTrackRenderer/index.js\";
-export * from \"../../dist/_esm5.processed/tools/TextTrackRenderer/index.js\";
+import TextTrackRenderer from \"../dist/_esm5.processed/tools/TextTrackRenderer/index.js\";
+export * from \"../dist/_esm5.processed/tools/TextTrackRenderer/index.js\";
 export default TextTrackRenderer;" > tools/TextTrackRenderer.js
 echo "${copyright_text}
-import TextTrackRenderer from \"../../dist/_esm5.processed/tools/TextTrackRenderer/index\";
-export * from \"../../dist/_esm5.processed/tools/TextTrackRenderer/index\";
+import TextTrackRenderer from \"../dist/_esm5.processed/tools/TextTrackRenderer/index\";
+export * from \"../dist/_esm5.processed/tools/TextTrackRenderer/index\";
 export default TextTrackRenderer;" > tools/TextTrackRenderer.d.ts
 
 echo "creating experimental build..."
