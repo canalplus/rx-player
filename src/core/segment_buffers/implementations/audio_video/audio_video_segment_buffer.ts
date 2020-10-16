@@ -31,7 +31,10 @@ import {
 } from "../../../../compat";
 import config from "../../../../config";
 import log from "../../../../log";
+import areArraysOfNumbersEqual from "../../../../utils/are_arrays_of_numbers_equal";
 import assertUnreachable from "../../../../utils/assert_unreachable";
+import { toUint8Array } from "../../../../utils/byte_parsing";
+import hashBuffer from "../../../../utils/hash_buffer";
 import objectAssign from "../../../../utils/object_assign";
 import { IInsertedChunkInfos } from "../../segment_inventory";
 import {
@@ -112,7 +115,7 @@ interface IPushData {
 }
 
 /**
- * Allows to push and remove new Segments to a SourceBuffer in a FIFO queue (not
+ * Allows to push and remove new segments to a SourceBuffer in a FIFO queue (not
  * doing so can lead to browser Errors) while keeping an inventory of what has
  * been pushed and what is being pushed.
  *
@@ -153,10 +156,20 @@ export default class AudioVideoSegmentBuffer
   private _pendingTask : IAVSBPendingTask | null;
 
   /**
-   * Keep track of the reference of the latest init segment pushed in the
-   * linked SourceBuffer.
+   * Keep track of the of the latest init segment pushed in the linked
+   * SourceBuffer.
+   *
+   * This allows to be sure the right initialization segment is pushed before
+   * any chunk is.
+   *
+   * `null` if no initialization segment have been pushed to the
+   * `AudioVideoSegmentBuffer` yet.
    */
-  private _lastInitSegment : BufferSource | null;
+  private _lastInitSegment : { /** The initSegment itself. */
+                               data : Uint8Array;
+                               /** Hash of the initSegment for fast comparison */
+                               hash : number; } |
+                             null;
 
   /**
    * Current `type` of the underlying SourceBuffer.
@@ -229,10 +242,9 @@ export default class AudioVideoSegmentBuffer
    *
    * Such initialization segment will be first pushed to the SourceBuffer if the
    * last pushed segment was associated to another initialization segment.
-   * This detection is entirely reference-based so make sure that the same
-   * `data.initSegment` argument given share the same reference (in the opposite
-   * case, we would just unnecessarily push again the same initialization
-   * segment).
+   * This detection rely on the initialization segment's reference so you need
+   * to avoid mutating in-place a initialization segment given to that function
+   * (to avoid having two different values which have the same reference).
    *
    * If you don't need any initialization segment to push the wanted chunk, you
    * can just set `data.initSegment` to `null`.
@@ -469,7 +481,7 @@ export default class AudioVideoSegmentBuffer
         case SegmentBufferOperation.Push:
           const nextStep = task.steps.shift();
           if (nextStep === undefined ||
-              (nextStep.isInit && this._lastInitSegment === nextStep.segmentData))
+              (nextStep.isInit && this._isLastInitSegment(nextStep.segmentData)))
           {
             this._flush();
             return;
@@ -546,9 +558,36 @@ export default class AudioVideoSegmentBuffer
 
     log.debug("AVSB: pushing new data to SourceBuffer", this.bufferType);
     if (isInit) {
-      this._lastInitSegment = segmentData;
+      const initU8 = toUint8Array(segmentData);
+      this._lastInitSegment = { data: initU8,
+                                hash: hashBuffer(initU8) };
     }
     this._sourceBuffer.appendBuffer(segmentData);
+  }
+
+ /**
+  * Return `true` if the given `segmentData` is the same segment than the last
+  * initialization segment pushed to the `AudioVideoSegmentBuffer`.
+  * @param {BufferSource} segmentData
+  * @returns {boolean}
+  */
+  private _isLastInitSegment(segmentData : BufferSource) : boolean {
+    if (this._lastInitSegment === null) {
+      return false;
+    }
+    if (this._lastInitSegment.data === segmentData) {
+      return true;
+    }
+    const oldInit = this._lastInitSegment.data;
+    if (oldInit.byteLength === segmentData.byteLength) {
+      const newInitU8 = toUint8Array(segmentData);
+      if (hashBuffer(newInitU8) === this._lastInitSegment.hash &&
+          areArraysOfNumbersEqual(oldInit, newInitU8))
+      {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

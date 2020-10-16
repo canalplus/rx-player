@@ -88,10 +88,10 @@ export abstract class SegmentBuffer<T> {
    *
    * Such initialization segment will be first pushed to the buffer if the
    * last pushed segment was associated to another initialization segment.
-   * This detection is entirely reference-based so make sure that the same
-   * `data.initSegment` argument given share the same reference (in the opposite
-   * case, we would just unnecessarily push again the same initialization
-   * segment).
+   * This detection might rely on the initialization segment's reference so you
+   * might want to avoid mutating in-place a initialization segment given to
+   * that function (to avoid having two different values which have the same
+   * reference).
    *
    * If you don't need any initialization segment to push the wanted chunk, you
    * can just set `data.initSegment` to `null`.

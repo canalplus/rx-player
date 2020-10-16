@@ -233,6 +233,19 @@ function isABEqualBytes(buffer : ArrayBuffer, bytes : Uint8Array) : boolean {
   return true;
 }
 
+/**
+ * Convert any BufferSource-typed structure into the corresponding Uint8Array.
+ * @param {BufferSource} input
+ * @returns {Uint8Array}
+ */
+function toUint8Array(
+  input : BufferSource
+) : Uint8Array {
+  return input instanceof Uint8Array ? input :
+         input instanceof ArrayBuffer ? new Uint8Array(input) :
+                                        new Uint8Array(input.buffer);
+}
+
 export {
   concat,
   be2toi, be3toi, be4toi, be8toi,
@@ -240,4 +253,5 @@ export {
   itobe2, itobe4, itobe8,
   itole2, itole4,
   isABEqualBytes,
+  toUint8Array,
 };
