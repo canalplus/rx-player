@@ -36,12 +36,14 @@ import {
   events,
   generateKeyRequest,
   getInitData,
+  ICustomMediaKeys,
 } from "../../compat/";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import assertUnreachable from "../../utils/assert_unreachable";
 import filterMap from "../../utils/filter_map";
+import hashBuffer from "../../utils/hash_buffer";
 import objectAssign from "../../utils/object_assign";
 import cleanOldStoredPersistentInfo from "./clean_old_stored_persistent_info";
 import getSession, {
@@ -97,6 +99,12 @@ export default function EMEManager(
    * the same `BlacklistedSessionError`.
    */
   const blacklistedInitData = new InitDataStore<BlacklistedSessionError>();
+
+  /**
+   * Keep track of server certificate which have been set for a MediaKeys.
+   */
+  const serverCertificateForMediaKeys =
+    new WeakMap<MediaKeys | ICustomMediaKeys, number>();
 
   /** Emit the MediaKeys instance and its related information when ready. */
   const mediaKeysInfos$ = initMediaKeys(mediaElement, keySystemsConfigs)
@@ -183,13 +191,27 @@ export default function EMEManager(
           };
         }));
 
-      if (i === 0) { // first encrypted event for the current content
-        return observableMerge(
-          serverCertificate != null ?
-            observableConcat(setServerCertificate(mediaKeys, serverCertificate),
-                             session$) :
-            session$
-        );
+      // first encrypted event for the current content
+      if (i === 0 && serverCertificate !== undefined) {
+        const formattedServerCertificate: Uint8Array =
+          serverCertificate instanceof Uint8Array ?
+            serverCertificate :
+            new Uint8Array(
+              serverCertificate instanceof ArrayBuffer ? serverCertificate :
+                                                         serverCertificate.buffer);
+        const currentServerCertificateHash = hashBuffer(formattedServerCertificate);
+        const oldServerCertificateHash = serverCertificateForMediaKeys.get(mediaKeys);
+        if (oldServerCertificateHash !== currentServerCertificateHash) {
+          return observableConcat(
+            setServerCertificate(mediaKeys, serverCertificate).pipe(
+              tap(() => {
+                serverCertificateForMediaKeys.set(mediaKeys,
+                                                  currentServerCertificateHash);
+              })
+            ),
+            session$);
+        }
+        return session$;
       }
 
       return session$;
