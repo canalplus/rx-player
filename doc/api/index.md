@@ -1224,7 +1224,7 @@ Change the current video track.
 
 The argument to this method is the wanted track's `id` property. This `id` can
 for example be obtained on the corresponding track object returned by the
-``getAvailableAudioTracks`` method.
+``getAvailableVideoTracks`` method.
 
 Setting a new video track when a previous one was already playing can lead the
 rx-player to "reload" this content.
