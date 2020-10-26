@@ -16,10 +16,12 @@
 
 import noop from "../../utils/noop";
 import disposeMediaKeys from "./dispose_media_keys";
+import ServerCertificateHashStore from "./server_certificate_hash_store";
 
 /**
  * Free up all ressources taken by the EME management.
  */
 export default function disposeEME(mediaElement : HTMLMediaElement) : void {
+  ServerCertificateHashStore.clear();
   disposeMediaKeys(mediaElement).subscribe(noop);
 }
