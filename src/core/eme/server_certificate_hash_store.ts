@@ -18,18 +18,37 @@ import { ICustomMediaKeys } from "../../compat";
 
 /**
  * Keep track of server certificate which have been set for a MediaKeys.
+ * As it is impossible for a MediaKeys to have his server certificate set
+ * to a nullish value, we consider that once it has been set, it will remain
+ * set until the MediaKeys instance is killed.
+ *
+ * So, a WeakMap helps keeping a trace of which server certificate (identified
+ * with a unique hash) is set on a MediaKeys.
  */
-let serverCertificateForMediaKeys: WeakMap<MediaKeys | ICustomMediaKeys, number> =
+let serverCertificateHashesMap: WeakMap<MediaKeys | ICustomMediaKeys, number> =
     new WeakMap<MediaKeys | ICustomMediaKeys, number>();
 
+/** ServerCertificateHashStore */
 export default {
+  /**
+   * @param {MediaKeys | Object} mediaKeys
+   * @param {number} hash
+   */
   add(mediaKeys: MediaKeys | ICustomMediaKeys, hash: number): void {
-    serverCertificateForMediaKeys.set(mediaKeys, hash);
+    serverCertificateHashesMap.set(mediaKeys, hash);
   },
-  get(mediaKeys: MediaKeys | ICustomMediaKeys): number | undefined {
-    return serverCertificateForMediaKeys.get(mediaKeys);
+  /**
+   * @param {MediaKeys | Object} mediaKeys
+   * @returns {number | null}
+   */
+  get(mediaKeys: MediaKeys | ICustomMediaKeys): number | null {
+    const serverCertificateHash = serverCertificateHashesMap.get(mediaKeys);
+    if (serverCertificateHash === undefined) {
+      return null;
+    }
+    return serverCertificateHash;
   },
   clear() {
-    serverCertificateForMediaKeys = new WeakMap<MediaKeys | ICustomMediaKeys, number>();
+    serverCertificateHashesMap = new WeakMap<MediaKeys | ICustomMediaKeys, number>();
   },
 };
