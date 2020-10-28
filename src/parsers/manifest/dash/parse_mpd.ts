@@ -15,6 +15,7 @@
  */
 
 import config from "../../../config";
+import log from "../../../log";
 import Manifest from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import { normalizeBaseURL } from "../../../utils/resolve_url";
@@ -251,6 +252,73 @@ function parseCompleteIntermediateRepresentation(
                           xlinkInfos };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
   const mediaPresentationDuration = rootAttributes.duration;
+
+  let lifetime : number | undefined;
+  let minimumTime : number | undefined;
+  let timeshiftDepth : number | null = null;
+  let maximumTimeData : { isLinear : boolean; value : number; time : number };
+
+  if (rootAttributes.minimumUpdatePeriod !== undefined &&
+      rootAttributes.minimumUpdatePeriod >= 0)
+  {
+    lifetime = rootAttributes.minimumUpdatePeriod === 0 ?
+      DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 :
+      rootAttributes.minimumUpdatePeriod;
+  }
+
+  const [contentStart, contentEnd] = getMinimumAndMaximumPosition(parsedPeriods);
+  const now = performance.now();
+
+  if (!isDynamic) {
+    minimumTime = contentStart !== undefined            ? contentStart :
+                  parsedPeriods[0]?.start !== undefined ? parsedPeriods[0].start :
+                                                          0;
+    let maximumTime : number | undefined;
+    if (contentEnd !== undefined) {
+      maximumTime = contentEnd;
+    } else if (mediaPresentationDuration !== undefined) {
+      maximumTime = mediaPresentationDuration;
+    } else if (parsedPeriods[parsedPeriods.length - 1] !== undefined) {
+      const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
+      maximumTime = lastPeriod.end ??
+                    (lastPeriod.duration !== undefined ?
+                      lastPeriod.start + lastPeriod.duration :
+                      undefined);
+    }
+
+    maximumTimeData = { isLinear: false,
+                        value: maximumTime ?? Infinity,
+                        time: now };
+  } else {
+    minimumTime = contentStart;
+    timeshiftDepth = timeShiftBufferDepth ?? null;
+    let maximumTime : number;
+    if (contentEnd !== undefined) {
+      maximumTime = contentEnd;
+    } else {
+      const ast = availabilityStartTime ?? 0;
+      const { externalClockOffset } = args;
+      if (externalClockOffset === undefined) {
+        log.warn("DASH Parser: use system clock to define maximum position");
+        maximumTime = (Date.now() / 1000) - ast;
+      } else {
+        const serverTime = performance.now() + externalClockOffset;
+        maximumTime = (serverTime / 1000) - ast;
+      }
+    }
+    maximumTimeData = { isLinear: true,
+                        value: maximumTime,
+                        time: now };
+
+    // if the minimum calculated time is even below the buffer depth, perhaps we
+    // can go even lower in terms of depth
+    if (timeshiftDepth !== null && minimumTime !== undefined &&
+        maximumTime - minimumTime > timeshiftDepth)
+    {
+      timeshiftDepth = maximumTime - minimumTime;
+    }
+  }
+
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
@@ -259,68 +327,13 @@ function parseCompleteIntermediateRepresentation(
     periods: parsedPeriods,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,
     transportType: "dash",
+    timeBounds: { absoluteMinimum: minimumTime,
+                  timeshiftDepth,
+                  maximumTimeData },
+    lifetime,
     uris: args.url == null ?
       rootChildren.locations : [args.url, ...rootChildren.locations],
   };
-
-  // -- add optional fields --
-  if (rootAttributes.minimumUpdatePeriod !== undefined &&
-      rootAttributes.minimumUpdatePeriod >= 0)
-  {
-    parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod === 0 ?
-      DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 :
-      rootAttributes.minimumUpdatePeriod;
-  }
-
-  const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
-  const now = performance.now();
-  if (!isDynamic) {
-    if (minTime !== undefined) {
-      parsedMPD.minimumTime = { isContinuous: false,
-                                value: minTime,
-                                time: now };
-    } else if (parsedPeriods[0]?.start !== undefined) {
-      parsedMPD.minimumTime = { isContinuous: false,
-                                value: parsedPeriods[0].start,
-                                time: now };
-    }
-    if (maxTime !== undefined) {
-      parsedMPD.maximumTime = { isContinuous: false,
-                                value: maxTime,
-                                time: now };
-    } else if (mediaPresentationDuration !== undefined) {
-      parsedMPD.maximumTime = { isContinuous: false,
-                                value: mediaPresentationDuration,
-                                time: now };
-    } else if (parsedPeriods[parsedPeriods.length - 1] !== undefined) {
-      const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
-      const end = lastPeriod.end ??
-                  (lastPeriod.duration !== undefined ?
-                    lastPeriod.start + lastPeriod.duration :
-                    undefined);
-      if (end !== undefined) {
-        parsedMPD.maximumTime = { isContinuous: false,
-                                  value: end,
-                                  time: now };
-      }
-    }
-  } else {
-    if (minTime != null) {
-      parsedMPD.minimumTime = { isContinuous: timeShiftBufferDepth != null,
-                                value: minTime,
-                                time: now };
-    }
-    if (maxTime != null) {
-      parsedMPD.maximumTime = { isContinuous: true,
-                                value: maxTime,
-                                time: now };
-      if (minTime == null) {
-        parsedMPD.minimumTime = { isContinuous: true,
-                                  value: maxTime,
-                                  time: now };
-      }
-    }
-  }
 
   return { type: "done", value: { parsed: parsedMPD, warnings } };
 }

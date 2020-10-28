@@ -203,56 +203,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public availabilityStartTime? : number;
 
-  /** Information allowing to calculate the first seekable position at any time. */
-  public minimumTime? : {
-    /**
-     * Whether `value` continuously and linearly evolves over time.
-     *
-     * If set to `true`, we will consider that the minimum time continuously
-     * increase at the same rate than the time. 1000 milliseconds
-     * For example, a `value` of 10000 (10 seconds) will indicate a minimum time
-     * of 11 seconds after 1 second has passed, of 16 seconds after 6 seconds
-     * has passed etc. (we know how many seconds have passed since the initial
-     * calculation of value by checking the `time` property).
-     *
-     * If set to `false`, `value` won't change over time.
-     */
-    isContinuous : boolean;
-    /** Minimum seekable time in milliseconds calculated at `time`. */
-    value : number;
-    /**
-     * `Performance.now()` output at the time `value` was calculated.
-     * This can be used to retrieve the minimum position from `value` when it
-     * continuously evolves over time (see `isContinuous` property).
-     */
-    time : number;
-  };
-
-  /** Information allowing to calculate the last seekable position at any time. */
-  public maximumTime? : {
-    /**
-     * Whether `value` continuously and linearly evolves over time.
-     *
-     * If set to `true`, we will consider that the maximum time continuously
-     * increase at the same rate than the time. 1000 milliseconds
-     * For example, a `value` of 60000 (60 seconds) will indicate a maximum time
-     * of 61 seconds after 1 second has passed, of 66 seconds after 6 seconds
-     * has passed etc. (we know how many seconds have passed since the initial
-     * calculation of value by checking the `time` property).
-     *
-     * If set to `false`, `value` won't change over time.
-     */
-    isContinuous : boolean;
-    /** Maximum seekable time in milliseconds calculated at `time`. */
-    value : number;
-    /**
-     * `Performance.now()` output at the time `value` was calculated.
-     * This can be used to retrieve the minimum position from `value` when it
-     * continuously evolves over time (see `isContinuous` property).
-     */
-    time : number;
-  };
-
   /**
    * Array containing every minor errors that happened when the Manifest has
    * been created, in the order they have happened.
@@ -266,6 +216,77 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * `undefined` if we did not obtain the server's time
    */
   public clockOffset : number | undefined;
+
+  /**
+   * Data allowing to calculate the minimum and maximum seekable positions at
+   * any given time.
+   */
+  private _timeBounds : {
+    /**
+     * The minimum time, in seconds, that was available the last time the
+     * Manifest was fetched.
+     *
+     * `undefined` if that value is unknown.
+     *
+     * Together with `timeshiftDepth` and the `maximumTimeData` object, this
+     * value allows to compute at any time the minimum seekable time:
+     *
+     *   - if `timeshiftDepth` is not set, the minimum seekable time is a
+     *     constant that corresponds to this value.
+     *
+     *    - if `timeshiftDepth` is set, `absoluteMinimum` will act as the
+     *      absolute minimum seekable time we can never seek below, even when
+     *      `timeshiftDepth` indicates a possible lower position.
+     *      This becomes useful for example when playing live contents which -
+     *      despite having a large window depth - just begun and as such only
+     *      have a few segment available for now.
+     *      Here, `absoluteMinimum` would be the start time of the initial
+     *      segment, and `timeshiftDepth` would be the whole depth that will
+     *      become available once enough segments have been generated.
+     */
+    absoluteMinimum? : number;
+    /**
+     * Some dynamic contents have the concept of a "window depth" (or "buffer
+     * depth") which allows to set a minimum position for all reachable
+     * segments, in function of the maximum reachable position.
+     *
+     * This is justified by the fact that a server might want to remove older
+     * segments when new ones become available, to free storage size.
+     *
+     * If this value is set to a number, it is the amount of time in seconds
+     * that needs to be substracted from the current maximum seekable position,
+     * to obtain the minimum seekable position.
+     * As such, this value evolves at the same rate than the maximum position
+     * does (if it does at all).
+     *
+     * If set to `null`, this content has no concept of a "window depth".
+     */
+    timeshiftDepth : number | null;
+    /** Data allowing to calculate the maximum position at any given time. */
+    maximumTimeData : {
+      /** Maximum seekable time in milliseconds calculated at `time`. */
+      value : number;
+      /**
+       * `Performance.now()` output at the time `value` was calculated.
+       * This can be used to retrieve the maximum position from `value` when it
+       * linearly evolves over time (see `isLinear` property).
+       */
+      time : number;
+      /**
+       * Whether the maximum seekable position evolves linearly over time.
+       *
+       * If set to `false`, `value` indicates the constant maximum position.
+       *
+       * If set to `true`, the maximum seekable time continuously increase at
+       * the same rate than the time since `time` does.
+       * For example, a `value` of 50000 (50 seconds) will indicate a maximum time
+       * of 51 seconds after 1 second have passed, of 56 seconds after 6 seconds
+       * have passed (we know how many seconds have passed since the initial
+       * calculation of value by checking the `time` property) etc.
+       */
+      isLinear: boolean;
+    };
+  };
 
   /**
    * Construct a Manifest instance from a parsed Manifest object (as returned by
@@ -302,7 +323,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                        this.periods[0].adaptations;
     /* tslint:enable:deprecation */
 
-    this.minimumTime = parsedManifest.minimumTime;
+    this._timeBounds = parsedManifest.timeBounds;
     this.isDynamic = parsedManifest.isDynamic;
     this.isLive = parsedManifest.isLive;
     this.uris = parsedManifest.uris === undefined ? [] :
@@ -311,7 +332,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.lifetime = parsedManifest.lifetime;
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
-    this.maximumTime = parsedManifest.maximumTime;
 
     if (supplementaryImageTracks.length > 0) {
       this.addSupplementaryImageAdaptations(supplementaryImageTracks);
@@ -403,15 +423,21 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMinimumPosition() : number {
-    const { minimumTime } = this;
-    if (minimumTime === undefined) {
-      return 0;
+    const windowData = this._timeBounds;
+    if (windowData.timeshiftDepth === null) {
+      return windowData.absoluteMinimum ?? 0;
     }
-    if (!minimumTime.isContinuous) {
-      return minimumTime.value;
+
+    const { maximumTimeData } = windowData;
+    let maximumTime : number;
+    if (!windowData.maximumTimeData.isLinear) {
+      maximumTime = maximumTimeData.value;
+    } else {
+      const timeDiff = performance.now() - maximumTimeData.time;
+      maximumTime = maximumTimeData.value + timeDiff / 1000;
     }
-    const timeDiff = performance.now() - minimumTime.time;
-    return minimumTime.value + timeDiff / 1000;
+    const theoricalMinimum = maximumTime - windowData.timeshiftDepth;
+    return Math.max(windowData.absoluteMinimum ?? 0, theoricalMinimum);
   }
 
   /**
@@ -419,26 +445,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMaximumPosition() : number {
-    const { maximumTime } = this;
-    if (maximumTime === undefined) {
-      if (this.isLive) {
-        const ast = this.availabilityStartTime !== undefined ?
-          this.availabilityStartTime :
-          0;
-        if (this.clockOffset === undefined) {
-          // server's time not known, rely on user's clock
-          return (Date.now() / 1000) - ast;
-       }
-        const serverTime = performance.now() + this.clockOffset;
-        return (serverTime / 1000) - ast;
-      }
-      return Infinity;
+    const { maximumTimeData } = this._timeBounds;
+    if (!maximumTimeData.isLinear) {
+      return maximumTimeData.value;
     }
-    if (!maximumTime.isContinuous) {
-      return maximumTime.value;
-    }
-    const timeDiff = performance.now() - maximumTime.time;
-    return maximumTime.value + timeDiff / 1000;
+    const timeDiff = performance.now() - maximumTimeData.time;
+    return maximumTimeData.value + timeDiff / 1000;
   }
 
   /**
@@ -660,16 +672,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.isDynamic = newManifest.isDynamic;
     this.isLive = newManifest.isLive;
     this.lifetime = newManifest.lifetime;
-    this.maximumTime = newManifest.maximumTime;
     this.parsingErrors = newManifest.parsingErrors;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
 
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
-      this.minimumTime = newManifest.minimumTime;
+      this._timeBounds = newManifest._timeBounds;
       this.uris = newManifest.uris;
       replacePeriods(this.periods, newManifest.periods);
     } else {
+      this._timeBounds.maximumTimeData = newManifest._timeBounds.maximumTimeData;
       updatePeriods(this.periods, newManifest.periods);
 
       // Partial updates do not remove old Periods.

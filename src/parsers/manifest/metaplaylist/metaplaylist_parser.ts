@@ -301,12 +301,11 @@ function createManifest(
                      isDynamic,
                      uris: url == null ? [] :
                                          [url],
-                     maximumTime: { isContinuous: false,
-                                    value: maximumTime,
-                                    time },
-                     minimumTime: { isContinuous: false,
-                                    value: minimumTime,
-                                    time },
+                     timeBounds: { minimumTime,
+                                   timeshiftDepth: null,
+                                   maximumTimeData: { isLinear: false,
+                                                      value: maximumTime,
+                                                      time } },
                      lifetime: mplData.pollInterval };
 
   return manifest;

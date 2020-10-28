@@ -48,28 +48,20 @@ export default function parseLocalManifest(
   }
   const periodIdGenerator = idGenerator();
   const { isFinished } = localManifest;
-  const manifest: IParsedManifest = {
-    availabilityStartTime: 0,
-    expired: localManifest.expired,
-    transportType: "local",
-    isDynamic: !localManifest.isFinished,
-    isLive: false,
-    uris: [],
-    periods: localManifest.periods
-      .map(period => parsePeriod(period, periodIdGenerator, isFinished)),
-  };
-  const maximumPosition = getMaximumPosition(manifest);
-  if (maximumPosition !== undefined) {
-    manifest.maximumTime = { isContinuous: false,
-                             value : maximumPosition,
-                             time : performance.now() };
-  }
-  const minimumPosition = getMinimumPosition(manifest);
-  manifest.minimumTime = { isContinuous : false,
-                           value : minimumPosition !== undefined ? minimumPosition :
-                                                                   0,
-                           time : performance.now() };
-  return manifest;
+  const parsedPeriods = localManifest.periods
+    .map(period => parsePeriod(period, periodIdGenerator, isFinished));
+  return { availabilityStartTime: 0,
+           expired: localManifest.expired,
+           transportType: "local",
+           isDynamic: !localManifest.isFinished,
+           isLive: false,
+           uris: [],
+           timeBounds: { absoluteMinimum: getMinimumPosition(parsedPeriods) ?? 0,
+                         timeshiftDepth: null,
+                         maximumTimeData: { isLinear: false,
+                                            value: getMaximumPosition(parsedPeriods) ?? 0,
+                                            time: performance.now() }, },
+           periods: parsedPeriods };
 }
 
 /**

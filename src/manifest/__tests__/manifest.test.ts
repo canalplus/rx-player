@@ -39,6 +39,11 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
+                                 timeBounds: { absoluteMinimum: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
                                  periods: [] };
 
     const Manifest = require("../manifest").default;
@@ -50,8 +55,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(undefined);
-    expect(manifest.maximumTime).toEqual(undefined);
-    expect(manifest.minimumTime).toEqual(undefined);
+    expect(manifest.getMaximumPosition()).toEqual(10);
+    expect(manifest.getMinimumPosition()).toEqual(0);
     expect(manifest.parsingErrors).toEqual([]);
     expect(manifest.periods).toEqual([]);
     expect(manifest.suggestedPresentationDelay).toEqual(undefined);
@@ -70,6 +75,11 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
+                                 timeBounds: { absoluteMinimum: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
                                  periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
@@ -105,6 +115,11 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
+                                 timeBounds: { absoluteMinimum: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
                                  periods: [period1, period2] };
 
     const representationFilter = function() { return false; };
@@ -138,6 +153,11 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
+                                 timeBounds: { absoluteMinimum: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
                                  periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
@@ -171,6 +191,11 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
+                                 timeBounds: { absoluteMinimum: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
                                  periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
@@ -209,8 +234,11 @@ describe("Manifest - Manifest", () => {
                               lifetime: 13,
                               parsingErrors: [new Error("a"), new Error("b")],
                               periods: [oldPeriod1, oldPeriod2],
-                              maximumTime: { isContinuous: false, value: 10, time },
-                              minimumTime: { isContinuous: true, value: 5, time },
+                              timeBounds: { absoluteMinimum: 5,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time } },
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
@@ -231,8 +259,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(13);
     expect(manifest.parsingErrors).toEqual([new Error("0"), new Error("1")]);
-    expect(manifest.maximumTime).toEqual({ isContinuous: false, value: 10, time });
-    expect(manifest.minimumTime).toEqual({ isContinuous: true, value: 5, time });
+    expect(manifest.getMaximumPosition()).toEqual(10);
+    expect(manifest.getMinimumPosition()).toEqual(5);
     expect(manifest.periods).toEqual([
       { id: "foo0", parsingErrors: [new Error("0")], adaptations: {}, start: 4 },
       { id: "foo1", parsingErrors: [new Error("1")], adaptations: {}, start: 12 },
@@ -265,14 +293,19 @@ describe("Manifest - Manifest", () => {
                                isDynamic: false,
                                isLive: false,
                                lifetime: 13,
-      parsingErrors: [new Error("a"), new Error("b")],
-      periods: [
-        { id: "0", start: 4, adaptations: {} },
-        { id: "1", start: 12, adaptations: {} },
-      ],
-      suggestedPresentationDelay: 99,
-      uris: ["url1", "url2"],
-    };
+                               timeBounds: { absoluteMinimum: 0,
+                                             timeshiftDepth: null,
+                                             maximumTimeData: { isLinear: false,
+                                                                value: 10,
+                                                                time: 10 } },
+                              parsingErrors: [new Error("a"), new Error("b")],
+                               periods: [
+                                 { id: "0", start: 4, adaptations: {} },
+                                 { id: "1", start: 12, adaptations: {} },
+                               ],
+                               suggestedPresentationDelay: 99,
+                               uris: ["url1", "url2"],
+                             };
 
     const manifest1 = new Manifest(oldManifestArgs1, {});
     expect(manifest1.getUrl()).toEqual("url1");
@@ -283,26 +316,26 @@ describe("Manifest - Manifest", () => {
                                isDynamic: false,
                                isLive: false,
                                lifetime: 13,
-                               minimumTime: 4,
                                parsingErrors: [new Error("a"), new Error("b")],
                                periods: [
                                  { id: "0", start: 4, adaptations: {} },
                                  { id: "1", start: 12, adaptations: {} },
                                ],
                                suggestedPresentationDelay: 99,
+                               timeBounds: { absoluteMinimum: 0,
+                                             timeshiftDepth: null,
+                                             maximumTimeData: { isLinear: false,
+                                                                value: 10,
+                                                                time: 10 } },
                                uris: [] };
     const manifest2 = new Manifest(oldManifestArgs2, {});
     expect(manifest2.getUrl()).toEqual(undefined);
   });
 
-  it("should update with a new Manifest when calling `update`", () => {
-    const fakePeriod = jest.fn((period) => {
-      return {
-        ...period,
-        id: `foo${period.id}`,
-        parsingErrors: [new Error(period.id)],
-      };
-    });
+  it("should replace with a new Manifest when calling `replace`", () => {
+    const fakePeriod = jest.fn((period) => ({ ...period,
+                                              id: `foo${period.id}`,
+                                              parsingErrors: [new Error(period.id)] }));
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
@@ -311,14 +344,10 @@ describe("Manifest - Manifest", () => {
       oldPeriod.start = newPeriod.start;
       oldPeriod.adaptations = newPeriod.adaptations;
     });
-    jest.mock("../period", () =>  ({
-      __esModule: true as const,
-      default: fakePeriod,
-    }));
-    jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true as const,
-      default: fakeUpdatePeriodInPlace,
-    }));
+    jest.mock("../period", () => ({ __esModule: true as const,
+                                    default: fakePeriod }));
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
+                                                    default: fakeUpdatePeriodInPlace }));
 
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
@@ -330,12 +359,11 @@ describe("Manifest - Manifest", () => {
                                                new Error("b") ],
                               periods: [ { id: "0", start: 4, adaptations: {} },
                                          { id: "1", start: 12, adaptations: {} } ],
-                              maximumTime: { isContinuous: false,
-                                             value: 10,
-                                             time: 30000 },
-                              minimumTime: { isContinuous: true,
-                                             value: 7,
-                                             time: 10000 },
+                              timeBounds: { absoluteMinimum: 7,
+                                            timeshiftDepth: 10,
+                                            maximumTimeData: { isLinear: true,
+                                                               value: 30,
+                                                               time: 30000 } },
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
@@ -346,8 +374,6 @@ describe("Manifest - Manifest", () => {
 
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
-    const newMinimumTime = { isContinuous: false, value: 1, time: 5000000 };
-    const newMaximumTime = { isContinuous: true, value: 3, time: 4000000 };
     const newAdaptations = {};
     const newPeriod1 = { id: "foo0", start: 4, adaptations: {} };
     const newPeriod2 = { id: "foo1", start: 12, adaptations: {} };
@@ -360,8 +386,11 @@ describe("Manifest - Manifest", () => {
                                 parsingErrors: [new Error("c"), new Error("d")],
                                 suggestedPresentationDelay: 100,
                                 timeShiftBufferDepth: 3,
-                                maximumTime: newMaximumTime,
-                                minimumTime: newMinimumTime,
+                                _timeBounds: { absoluteMinimum: 7,
+                                               timeshiftDepth: 5,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 40,
+                                                                  time: 30000 } },
                                 periods: [newPeriod1, newPeriod2],
                                 uris: ["url3", "url4"] };
 
@@ -373,8 +402,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isLive).toEqual(true);
     expect(manifest.lifetime).toEqual(14);
     expect(manifest.parsingErrors).toEqual([new Error("c"), new Error("d")]);
-    expect(manifest.maximumTime).toEqual(newMaximumTime);
-    expect(manifest.minimumTime).toEqual(newMinimumTime);
+    expect(manifest.getMinimumPosition()).toEqual(40 - 5);
+    expect(manifest.getMaximumPosition()).toEqual(40);
     expect(manifest.suggestedPresentationDelay).toEqual(100);
     expect(manifest.uris).toEqual(["url3", "url4"]);
 
@@ -392,14 +421,18 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 
-  it("should prepend older Periods when calling `update`", () => {
+  it("should prepend older Periods when calling `replace`", () => {
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              minimumTime: 4,
+                              timeBounds: { absoluteMinimum: 0,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time: 10 } },
                               parsingErrors: [new Error("a"), new Error("b")],
                               periods: [{ id: "1", start: 4, adaptations: {} }],
                               suggestedPresentationDelay: 99,
@@ -451,13 +484,17 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          minimumTime: 5,
                           parsingErrors: [ new Error("c"),
                                            new Error("d") ],
                           suggestedPresentationDelay: 100,
                           periods: [ newPeriod1,
                                      newPeriod2,
                                      newPeriod3 ],
+                          timeBounds: { absoluteMinimum: 0,
+                                        timeshiftDepth: null,
+                                        maximumTimeData: { isLinear: false,
+                                                           value: 10,
+                                                           time: 10 } },
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest as any);
@@ -478,17 +515,21 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 
-  it("should append newer Periods when calling `update`", () => {
+  it("should append newer Periods when calling `replace`", () => {
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              minimumTime: 4,
                               parsingErrors: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
+                              timeBounds: { absoluteMinimum: 0,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time: 10 } },
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
@@ -523,10 +564,14 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          minimumTime: 5,
                           parsingErrors: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
+                          timeBounds: { absoluteMinimum: 0,
+                                        timeshiftDepth: null,
+                                        maximumTimeData: { isLinear: false,
+                                                           value: 10,
+                                                           time: 10 } },
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest as any);
@@ -545,17 +590,21 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 
-  it("should replace different Periods when calling `update`", () => {
+  it("should replace different Periods when calling `replace`", () => {
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              minimumTime: 4,
                               parsingErrors: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
+                              timeBounds: { absoluteMinimum: 0,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time: 10 } },
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
@@ -589,10 +638,14 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          minimumTime: 5,
                           parsingErrors: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
+                          timeBounds: { absoluteMinimum: 0,
+                                        timeshiftDepth: null,
+                                        maximumTimeData: { isLinear: false,
+                                                           value: 10,
+                                                           time: 10 } },
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest as any);
@@ -608,18 +661,22 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 
-  it("should merge overlapping Periods when calling `update`", () => {
+  it("should merge overlapping Periods when calling `replace`", () => {
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              minimumTime: 4,
                               parsingErrors: [new Error("a"), new Error("b")],
                               periods: [{ id: "1", start: 2 },
                                         { id: "2", start: 4 },
                                         { id: "3", start: 6 }],
+                              timeBounds: { absoluteMinimum: 0,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time: 10 } },
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
@@ -658,7 +715,6 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          minimumTime: 5,
                           parsingErrors: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [ newPeriod1,
@@ -666,6 +722,11 @@ describe("Manifest - Manifest", () => {
                                      newPeriod3,
                                      newPeriod4,
                                      newPeriod5 ],
+                          timeBounds: { absoluteMinimum: 0,
+                                        timeshiftDepth: null,
+                                        maximumTimeData: { isLinear: false,
+                                                           value: 10,
+                                                           time: 10 } },
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest as any);
