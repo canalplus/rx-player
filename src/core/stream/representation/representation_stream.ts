@@ -384,8 +384,8 @@ export default function RepresentationStream<T>({
           return observableOf(EVENTS.streamTerminating());
         } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
           const { request$ } = currentSegmentRequest;
-          segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
           currentSegmentRequest.priority = mostNeededSegment.priority;
+          segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
         }
         log.debug("Stream: terminate after request.", bufferType);
         return EMPTY;
@@ -428,8 +428,8 @@ export default function RepresentationStream<T>({
       } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
         log.debug("Stream: update request priority.", bufferType);
         const { request$ } = currentSegmentRequest;
-        segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
         currentSegmentRequest.priority = mostNeededSegment.priority;
+        segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
       } else {
         log.debug("Stream: update downloading queue", bufferType);
 
