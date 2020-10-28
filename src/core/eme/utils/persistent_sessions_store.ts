@@ -220,7 +220,7 @@ export default class PersistentSessionsStore {
   }
 
   deleteOldSessions(sessionsToDelete : number) : void {
-    log.debug(`EME-PSS: Deleting last ${sessionsToDelete} sessions.`);
+    log.info(`EME-PSS: Deleting last ${sessionsToDelete} sessions.`);
     if (sessionsToDelete <= 0) {
       return;
     }

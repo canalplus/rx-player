@@ -35,9 +35,9 @@ export default function clearEMESession(
   mediaElement : HTMLMediaElement
 ) : Observable<never> {
   return observableDefer(() => {
-    log.debug("EME: Clearing-up EME session.");
+    log.info("EME: Clearing-up EME session.");
     if (shouldUnsetMediaKeys()) {
-      log.debug("EME: disposing current MediaKeys.");
+      log.info("EME: disposing current MediaKeys.");
       return disposeMediaKeys(mediaElement)
         .pipe(ignoreElements());
     }
@@ -46,11 +46,11 @@ export default function clearEMESession(
     if (currentState !== null &&
         currentState.keySystemOptions.closeSessionsOnStop === true)
     {
-      log.debug("EME: closing all current sessions.");
+      log.info("EME: closing all current sessions.");
       return currentState.loadedSessionsStore.closeAllSessions()
         .pipe(ignoreElements());
     }
-    log.debug("EME: Nothing to clear. Returning right away. No state =",
+    log.info("EME: Nothing to clear. Returning right away. No state =",
               currentState === null);
     return EMPTY;
   });

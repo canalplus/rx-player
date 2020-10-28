@@ -54,7 +54,7 @@ function createPersistentSessionsStorage(
                                   "No license storage found for persistent license.");
   }
 
-  log.info("EME: Set the given license storage");
+  log.debug("EME: Set the given license storage");
   return new PersistentSessionsStore(licenseStorage);
 }
 
@@ -83,7 +83,7 @@ export default function getMediaKeysInfos(
                               persistentSessionsStore });
       }
 
-      log.debug("EME: Calling createMediaKeys on the MediaKeySystemAccess");
+      log.info("EME: Calling createMediaKeys on the MediaKeySystemAccess");
       return tryCatch(() => castToObservable(mediaKeySystemAccess.createMediaKeys()),
                       undefined).pipe(
         catchError((error : unknown) : never => {
@@ -92,10 +92,13 @@ export default function getMediaKeysInfos(
             "Unknown error when creating MediaKeys.";
           throw new EncryptedMediaError("CREATE_MEDIA_KEYS_ERROR", message);
         }),
-        map((mediaKeys) => ({ mediaKeys,
-                              loadedSessionsStore: new LoadedSessionsStore(mediaKeys),
-                              mediaKeySystemAccess,
-                              keySystemOptions: options,
-                              persistentSessionsStore })));
+        map((mediaKeys) => {
+          log.info("EME: MediaKeys created with success", mediaKeys);
+          return { mediaKeys,
+                   loadedSessionsStore: new LoadedSessionsStore(mediaKeys),
+                   mediaKeySystemAccess,
+                   keySystemOptions: options,
+                   persistentSessionsStore };
+        }));
     }));
 }
