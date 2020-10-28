@@ -96,7 +96,8 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     if (this._index.segments.length === 0) {
       return undefined;
     }
-    return this._index.segments[0].time;
+    const firstSegment = this._index.segments[0];
+    return firstSegment.time / 1000;
   }
 
   /**
@@ -106,7 +107,8 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     if (this._index.segments.length === 0) {
       return undefined;
     }
-    return this._index.segments[this._index.segments.length - 1].time;
+    const lastSegment = this._index.segments[this._index.segments.length - 1];
+    return lastSegment.time / 1000;
   }
 
   /**
@@ -149,12 +151,14 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   }
 
   _replace(newIndex : LocalRepresentationIndex) : void {
+    this._isFinished = newIndex._isFinished;
     this._index.segments = newIndex._index.segments;
     this._index.loadSegment = newIndex._index.loadSegment;
     this._index.loadInitSegment = newIndex._index.loadInitSegment;
   }
 
   _update(newIndex : LocalRepresentationIndex) : void {
+    this._isFinished = newIndex._isFinished;
     const newSegments = newIndex._index.segments;
     if (newSegments.length <= 0) {
       return;
