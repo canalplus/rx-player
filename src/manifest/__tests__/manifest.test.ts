@@ -39,8 +39,7 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [],
-                                 transportType: "foobar" };
+                                 periods: [] };
 
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
@@ -56,7 +55,6 @@ describe("Manifest - Manifest", () => {
     expect(manifest.parsingErrors).toEqual([]);
     expect(manifest.periods).toEqual([]);
     expect(manifest.suggestedPresentationDelay).toEqual(undefined);
-    expect(manifest.transport).toEqual("foobar");
     expect(manifest.uris).toEqual([]);
 
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
@@ -72,8 +70,7 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [period1, period2],
-                                 transportType: "foobar" };
+                                 periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
       return { id: `foo${period.id}`, adaptations: {}, parsingErrors: [] };
@@ -108,8 +105,7 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [period1, period2],
-                                 transportType: "foobar" };
+                                 periods: [period1, period2] };
 
     const representationFilter = function() { return false; };
 
@@ -142,8 +138,7 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [period1, period2],
-                                 transportType: "foobar" };
+                                 periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
       return { ...period, id: `foo${period.id}`, parsingErrors: [] };
@@ -176,8 +171,7 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [period1, period2],
-                                 transportType: "foobar" };
+                                 periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
       return { id: `foo${period.id}`,
@@ -218,7 +212,6 @@ describe("Manifest - Manifest", () => {
                               maximumTime: { isContinuous: false, value: 10, time },
                               minimumTime: { isContinuous: true, value: 5, time },
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
@@ -245,7 +238,6 @@ describe("Manifest - Manifest", () => {
       { id: "foo1", parsingErrors: [new Error("1")], adaptations: {}, start: 12 },
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
-    expect(manifest.transport).toEqual("foobar");
     expect(manifest.uris).toEqual(["url1", "url2"]);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
@@ -279,7 +271,6 @@ describe("Manifest - Manifest", () => {
         { id: "1", start: 12, adaptations: {} },
       ],
       suggestedPresentationDelay: 99,
-      transportType: "foobar",
       uris: ["url1", "url2"],
     };
 
@@ -299,7 +290,6 @@ describe("Manifest - Manifest", () => {
                                  { id: "1", start: 12, adaptations: {} },
                                ],
                                suggestedPresentationDelay: 99,
-                               transportType: "foobar",
                                uris: [] };
     const manifest2 = new Manifest(oldManifestArgs2, {});
     expect(manifest2.getUrl()).toEqual(undefined);
@@ -347,7 +337,6 @@ describe("Manifest - Manifest", () => {
                                              value: 7,
                                              time: 10000 },
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const Manifest = require("../manifest").default;
@@ -374,7 +363,6 @@ describe("Manifest - Manifest", () => {
                                 maximumTime: newMaximumTime,
                                 minimumTime: newMinimumTime,
                                 periods: [newPeriod1, newPeriod2],
-                                transport: "foob",
                                 uris: ["url3", "url4"] };
 
     manifest.replace(newManifest);
@@ -388,7 +376,6 @@ describe("Manifest - Manifest", () => {
     expect(manifest.maximumTime).toEqual(newMaximumTime);
     expect(manifest.minimumTime).toEqual(newMinimumTime);
     expect(manifest.suggestedPresentationDelay).toEqual(100);
-    expect(manifest.transport).toEqual("foob");
     expect(manifest.uris).toEqual(["url3", "url4"]);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2]);
@@ -416,7 +403,6 @@ describe("Manifest - Manifest", () => {
                               parsingErrors: [new Error("a"), new Error("b")],
                               periods: [{ id: "1", start: 4, adaptations: {} }],
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
@@ -472,7 +458,6 @@ describe("Manifest - Manifest", () => {
                           periods: [ newPeriod1,
                                      newPeriod2,
                                      newPeriod3 ],
-                          transport: "foob",
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest as any);
@@ -504,7 +489,6 @@ describe("Manifest - Manifest", () => {
                               parsingErrors: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
@@ -543,7 +527,6 @@ describe("Manifest - Manifest", () => {
                           parsingErrors: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
-                          transport: "foob",
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest as any);
@@ -573,7 +556,6 @@ describe("Manifest - Manifest", () => {
                               parsingErrors: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
@@ -611,7 +593,6 @@ describe("Manifest - Manifest", () => {
                           parsingErrors: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
-                          transport: "foob",
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest as any);
@@ -640,7 +621,6 @@ describe("Manifest - Manifest", () => {
                                         { id: "2", start: 4 },
                                         { id: "3", start: 6 }],
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
@@ -686,7 +666,6 @@ describe("Manifest - Manifest", () => {
                                      newPeriod3,
                                      newPeriod4,
                                      newPeriod5 ],
-                          transport: "foob",
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest as any);

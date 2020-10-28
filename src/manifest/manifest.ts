@@ -122,11 +122,13 @@ export interface IManifestEvents {
  * @class Manifest
  */
 export default class Manifest extends EventEmitter<IManifestEvents> {
-  /** ID uniquely identifying this Manifest. */
+  /**
+   * ID uniquely identifying this Manifest.
+   * No two Manifests should have this ID.
+   * This ID is automatically calculated each time a `Manifest` instance is
+   * created.
+   */
   public readonly id : string;
-
-  /** Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`). */
-  public transport : string;
 
   /**
    * List every Period in that Manifest chronologically (from start to end).
@@ -135,25 +137,29 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public readonly periods : Period[];
 
-  /** When that promise resolves, the whole Manifest needs to be updated */
+  /**
+   * When that promise resolves, the whole Manifest needs to be requested again
+   * so it can be refreshed.
+   */
   public expired : Promise<void> | null;
 
   /**
-   * Deprecated. Equivalent to manifest.periods[0].adaptations.
+   * Deprecated. Equivalent to `manifest.periods[0].adaptations`.
    * @deprecated
    */
   public adaptations : IManifestAdaptations;
 
   /**
-   * If true, the Manifest can evolve over time. New content can be downloaded,
-   * properties of the manifest can be changed.
+   * If true, the Manifest can evolve over time:
+   * New segments can become available in the future, properties of the manifest
+   * can change...
    */
   public isDynamic : boolean;
 
   /**
    * If true, this Manifest describes a live content.
-   * A live content is a specific kind of dynamic content where you want to play
-   * as close as possible to the maximum position.
+   * A live content is a specific kind of content where you want to play very
+   * close to the maximum position (here called the "live edge").
    * E.g., a TV channel is a live content.
    */
   public isLive : boolean;
@@ -166,16 +172,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public uris : string[];
 
   /**
-   * Suggested delay from the "live edge" the content is suggested to start
+   * Suggested delay from the "live edge" (i.e. the position corresponding to
+   * the current broadcast for a live content) the content is suggested to start
    * from.
    * This only applies to live contents.
    */
   public suggestedPresentationDelay? : number;
 
   /**
-   * Amount of time, in seconds, this Manifest is valid from its fetching time.
-   * If not valid, you will need to refresh and update this Manifest (the latter
-   * can be done through the `update` method).
+   * Amount of time, in seconds, this Manifest is valid from the time when it
+   * has been fetched.
    * If no lifetime is set, this Manifest does not become invalid after an
    * amount of time.
    */
@@ -189,18 +195,54 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public availabilityStartTime? : number;
 
-  /** Information about the first seekable position. */
+  /** Information allowing to calculate the first seekable position at any time. */
   public minimumTime? : {
-    isContinuous : boolean; // Whether this value continuously evolve over time
-    value : number; // Minimum seekable time in milliseconds calculated at `time`.
-    time : number; // `Performance.now()` output at the time `value` was calculated
+    /**
+     * Whether `value` continuously and linearly evolves over time.
+     *
+     * If set to `true`, we will consider that the minimum time continuously
+     * increase at the same rate than the time. 1000 milliseconds
+     * For example, a `value` of 10000 (10 seconds) will indicate a minimum time
+     * of 11 seconds after 1 second has passed, of 16 seconds after 6 seconds
+     * has passed etc. (we know how many seconds have passed since the initial
+     * calculation of value by checking the `time` property).
+     *
+     * If set to `false`, `value` won't change over time.
+     */
+    isContinuous : boolean;
+    /** Minimum seekable time in milliseconds calculated at `time`. */
+    value : number;
+    /**
+     * `Performance.now()` output at the time `value` was calculated.
+     * This can be used to retrieve the minimum position from `value` when it
+     * continuously evolves over time (see `isContinuous` property).
+     */
+    time : number;
   };
 
-  /** Information about the last seekable position. */
+  /** Information allowing to calculate the last seekable position at any time. */
   public maximumTime? : {
-    isContinuous : boolean; // Whether this value continuously evolve over time
-    value : number; // Maximum seekable time in milliseconds calculated at `time`.
-    time : number; // `Performance.now()` output at the time `value` was calculated
+    /**
+     * Whether `value` continuously and linearly evolves over time.
+     *
+     * If set to `true`, we will consider that the maximum time continuously
+     * increase at the same rate than the time. 1000 milliseconds
+     * For example, a `value` of 60000 (60 seconds) will indicate a maximum time
+     * of 61 seconds after 1 second has passed, of 66 seconds after 6 seconds
+     * has passed etc. (we know how many seconds have passed since the initial
+     * calculation of value by checking the `time` property).
+     *
+     * If set to `false`, `value` won't change over time.
+     */
+    isContinuous : boolean;
+    /** Maximum seekable time in milliseconds calculated at `time`. */
+    value : number;
+    /**
+     * `Performance.now()` output at the time `value` was calculated.
+     * This can be used to retrieve the minimum position from `value` when it
+     * continuously evolves over time (see `isContinuous` property).
+     */
+    time : number;
   };
 
   /**
@@ -234,7 +276,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.parsingErrors = [];
     this.id = generateNewManifestId();
     this.expired = parsedManifest.expired ?? null;
-    this.transport = parsedManifest.transportType;
     this.clockOffset = parsedManifest.clockOffset;
 
     this.periods = parsedManifest.periods.map((parsedPeriod) => {
@@ -613,7 +654,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.maximumTime = newManifest.maximumTime;
     this.parsingErrors = newManifest.parsingErrors;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
-    this.transport = newManifest.transport;
 
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       this.minimumTime = newManifest.minimumTime;
