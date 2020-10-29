@@ -38,7 +38,6 @@ import log from "../../../../../log";
 import {
   IEndOfSegmentInfos,
   IPushChunkInfos,
-  IPushedChunkData,
   SegmentBuffer,
 } from "../../types";
 import ManualTimeRanges from "../../utils/manual_time_ranges";
@@ -226,14 +225,7 @@ export default class HTMLTextSegmentBuffer
    */
   public pushChunk(infos : IPushChunkInfos<IHTMLTextTrackData>) : Observable<void> {
     return observableDefer(() => {
-      const hasPushedData = this.pushDataSync(infos.data);
-      if (!hasPushedData) {
-        return observableOf(undefined);
-      }
-
-      if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos);
-      }
+      this.pushChunkSync(infos);
       return observableOf(undefined);
     });
   }
@@ -299,13 +291,13 @@ export default class HTMLTextSegmentBuffer
    * @param {Object} data
    * @returns {boolean}
    */
-  public pushDataSync(data : IPushedChunkData<IHTMLTextTrackData>) : boolean {
+  public pushChunkSync(infos : IPushChunkInfos<IHTMLTextTrackData>) : void {
     log.debug("HTSB: Appending new html text tracks");
     const { timestampOffset,
             appendWindow,
-            chunk } = data;
+            chunk } = infos.data;
     if (chunk === null) {
-      return false;
+      return;
     }
 
     const { timescale,
@@ -363,7 +355,7 @@ export default class HTMLTextSegmentBuffer
     } else {
       if (cues.length <= 0) {
         log.warn("HTSB: Current text tracks have no cues nor start time. Aborting");
-        return false;
+        return ;
       }
       log.warn("HTSB: No start time given. Guessing from cues.");
       start = cues[0].start;
@@ -375,7 +367,7 @@ export default class HTMLTextSegmentBuffer
     } else {
       if (cues.length <= 0) {
         log.warn("HTSB: Current text tracks have no cues nor end time. Aborting");
-        return false;
+        return ;
       }
       log.warn("HTSB: No end time given. Guessing from cues.");
       end = cues[cues.length - 1].end;
@@ -384,12 +376,14 @@ export default class HTMLTextSegmentBuffer
     if (end <= start) {
       log.warn("HTSB: Invalid text track appended: ",
                "the start time is inferior or equal to the end time.");
-      return false;
+      return ;
     }
 
+    if (infos.inventoryInfos !== null) {
+      this._segmentInventory.insertChunk(infos.inventoryInfos);
+    }
     this._buffer.insert(cues, start, end);
     this._buffered.insert(start, end);
-    return true;
   }
 
   /**
