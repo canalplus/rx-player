@@ -48,7 +48,7 @@ import {
   SegmentBufferOperation,
 } from "../types";
 
-const { SOURCE_BUFFER_FLUSHING_INTERVAL, } = config;
+const { SOURCE_BUFFER_FLUSHING_INTERVAL } = config;
 
 /**
  * Item added to the AudioVideoSegmentBuffer's queue before being processed into
