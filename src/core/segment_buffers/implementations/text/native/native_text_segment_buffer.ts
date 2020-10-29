@@ -113,10 +113,10 @@ export default class NativeTextSegmentBuffer
       const appendWindowStart = appendWindow[0] ?? 0;
       const appendWindowEnd = appendWindow[1] ?? Infinity;
 
-      const startTime = timescaledStart != null ? timescaledStart / timescale :
-                                                  undefined;
-      const endTime = timescaledEnd != null ? timescaledEnd / timescale :
-                                              undefined;
+      const startTime = timescaledStart !== undefined ? timescaledStart / timescale :
+                                                        undefined;
+      const endTime = timescaledEnd !== undefined ? timescaledEnd / timescale :
+                                                    undefined;
 
       const cues = parseTextTrackToCues(type, dataString, timestampOffset, language);
 
@@ -150,7 +150,7 @@ export default class NativeTextSegmentBuffer
       }
 
       let start : number;
-      if (startTime != null) {
+      if (startTime !== undefined) {
         start = Math.max(appendWindowStart, startTime);
       } else {
         if (cues.length <= 0) {
@@ -162,7 +162,7 @@ export default class NativeTextSegmentBuffer
       }
 
       let end : number;
-      if (endTime != null) {
+      if (endTime !== undefined) {
         end = Math.min(appendWindowEnd, endTime);
       } else {
         if (cues.length <= 0) {
@@ -250,9 +250,7 @@ export default class NativeTextSegmentBuffer
     const { _trackElement,
             _videoElement } = this;
 
-    if (_trackElement !== undefined && _videoElement != null &&
-        _videoElement.hasChildNodes()
-    ) {
+    if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
       try {
         _videoElement.removeChild(_trackElement);
       } catch (e) {
@@ -260,11 +258,9 @@ export default class NativeTextSegmentBuffer
       }
     }
 
-    if (this._track != null) {
-      this._track.mode = "disabled";
-    }
+    this._track.mode = "disabled";
 
-    if (this._trackElement != null) {
+    if (this._trackElement !== undefined) {
       this._trackElement.innerHTML = "";
     }
   }
@@ -273,7 +269,7 @@ export default class NativeTextSegmentBuffer
     log.debug("NTSB: Removing native text track data", start, end);
     const track = this._track;
     const cues = track.cues;
-    if (cues != null) {
+    if (cues !== null) {
       for (let i = cues.length - 1; i >= 0; i--) {
         const cue = cues[i];
         const { startTime, endTime } = cue;

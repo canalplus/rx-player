@@ -34,7 +34,7 @@ export interface IImageTrackSegmentData {
   data : IBifThumbnail[];
   /** The type of the data (example: "bif") */
   type : string;
-  /** End time time until which the segment apply */
+  /** End time until which the segment apply */
   end : number;
   /** Start time from which the segment apply */
   start : number;
@@ -76,8 +76,7 @@ export default class ImageSegmentBuffer
       const appendWindowEnd = appendWindow[1] ?? Infinity;
 
       const timescaledStart = start / timescale;
-      const timescaledEnd = end == null ? Number.MAX_VALUE :
-                                          end / timescale;
+      const timescaledEnd = end / timescale;
 
       const startTime = Math.max(appendWindowStart, timescaledStart);
       const endTime = Math.min(appendWindowEnd, timescaledEnd);
