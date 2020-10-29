@@ -77,16 +77,17 @@ export default class TextTrackRenderer {
     const timestampOffset = typeof args.timeOffset === "number" ?
       args.timeOffset :
       0;
-    this._segmentBuffer.pushDataSync({ initSegment: null,
-                                       codec: args.type,
-                                       timestampOffset,
-                                       appendWindow: [0, Infinity],
-                                       chunk : { timescale: 1,
-                                                 start: 0,
-                                                 end: Number.MAX_VALUE,
-                                                 data: args.data,
-                                                 language: args.language,
-                                                 type: args.type } });
+    this._segmentBuffer.pushChunkSync({ inventoryInfos: null,
+                                       data: { initSegment: null,
+                                               codec: args.type,
+                                               timestampOffset,
+                                               appendWindow: [0, Infinity],
+                                               chunk : { timescale: 1,
+                                                         start: 0,
+                                                         end: Number.MAX_VALUE,
+                                                         data: args.data,
+                                                         language: args.language,
+                                                         type: args.type } } });
   }
 
   /**
