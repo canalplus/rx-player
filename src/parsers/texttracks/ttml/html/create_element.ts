@@ -225,6 +225,8 @@ function applyGeneralStyle(
   // Set default text color. It can be overrided by text element color.
   element.style.color = "white";
 
+  element.style.position = "absolute";
+
   // applies to tt, region
   const extent = style.extent;
   if (isNonEmptyString(extent)) {
