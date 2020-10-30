@@ -77,7 +77,6 @@
       selectionPriority="100"
       startWithSAP="1">
       <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
-      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
       <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
         <SegmentTimeline>
           <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
@@ -162,7 +161,6 @@
       startWithSAP="1">
       <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
       <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
-      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
       <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
         <SegmentTimeline>
           <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
@@ -192,7 +190,6 @@
       lang="de"
       selectionPriority="20"
       subsegmentAlignment="true">
-      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
       <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
         <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
       </SegmentTemplate>
@@ -223,7 +220,6 @@
       selectionPriority="50"
       subsegmentAlignment="true">
       <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "2" />
-      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
       <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
         <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
       </SegmentTemplate>
@@ -396,7 +392,6 @@
       selectionPriority="100"
       startWithSAP="1">
       <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
-      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
       <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
         <SegmentTimeline>
           <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
@@ -481,7 +476,28 @@
       startWithSAP="1">
       <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "1" />
       <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+      <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000"></Representation>
+    </AdaptationSet>
+
+
+    <!-- audio sw mp4a.40.2 main priority 100 -->
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      lang="sw"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      selectionPriority="100"
+      startWithSAP="1">
       <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
       <SegmentTemplate timescale="44100" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
         <SegmentTimeline>
           <S t="0" d="177341" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" /><S d="177152" /><S d="176128" r="1" /><S d="177152" /><S d="176128" /><S d="64512" />
@@ -511,7 +527,6 @@
       lang="de"
       selectionPriority="20"
       subsegmentAlignment="true">
-      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
       <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
         <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
       </SegmentTemplate>
@@ -542,7 +557,23 @@
       selectionPriority="50"
       subsegmentAlignment="true">
       <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "2" />
+      <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="text" bandwidth="256" mimeType="text/vtt">
+      </Representation>
+    </AdaptationSet>
+
+
+    <!-- text sw main hard-of-hearing priority 50 -->
+    <AdaptationSet
+      id="0"
+      contentType="text"
+      lang="sw"
+      selectionPriority="50"
+      subsegmentAlignment="true">
       <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value= "2" />
       <SegmentTemplate timescale="1" media="ateam-$RepresentationID$-$Time$.dash">
         <SegmentTimeline><S t="0" d="10" r="9"/></SegmentTimeline>
       </SegmentTemplate>
