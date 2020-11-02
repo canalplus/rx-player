@@ -100,7 +100,7 @@ To understand this equation, we will need to define some variables:
 |----------|------------|
 | PTO | The "presentationTimeOffset" attribute of the MPD |
 | mediaTime | The start time anounced in the segment |
-| TS | Timescale used by PTO and sementTime, to transform them into seconds |
+| TS | Timescale used by PTO and segmentTime, to transform them into seconds |
 | periodStart | Start time of the given period, in seconds |
 | presentationTime | The time at which the segment will be shown, in seconds |
 
