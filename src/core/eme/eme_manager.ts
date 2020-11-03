@@ -183,7 +183,8 @@ export default function EMEManager(
           };
         }));
 
-      // first encrypted event for the current content
+      // set server certificate when it is defined, at first received encrypted
+      // event
       if (i === 0 && serverCertificate !== undefined) {
           return observableConcat(
             setServerCertificate(mediaKeys, serverCertificate),
