@@ -15,6 +15,7 @@
  */
 
 import { ICustomMediaKeys } from "../../compat";
+import hashBuffer from "../../utils/hash_buffer";
 
 /**
  * Keep track of server certificate which have been set for a MediaKeys.
@@ -25,17 +26,27 @@ import { ICustomMediaKeys } from "../../compat";
  * So, a WeakMap helps keeping a trace of which server certificate (identified
  * with a unique hash) is set on a MediaKeys.
  */
-let serverCertificateHashesMap: WeakMap<MediaKeys | ICustomMediaKeys, number> =
-    new WeakMap<MediaKeys | ICustomMediaKeys, number>();
+let serverCertificateHashesMap: WeakMap<MediaKeys | ICustomMediaKeys,
+                                        { hash: number; serverCertificate: Uint8Array }> =
+  new WeakMap<MediaKeys | ICustomMediaKeys,
+              { hash: number; serverCertificate: Uint8Array }>();
 
 /** ServerCertificateHashStore */
 export default {
   /**
    * @param {MediaKeys | Object} mediaKeys
-   * @param {number} hash
+   * @param {BufferSource} serverCertificate
    */
-  add(mediaKeys: MediaKeys | ICustomMediaKeys, hash: number): void {
-    serverCertificateHashesMap.set(mediaKeys, hash);
+  add(mediaKeys: MediaKeys | ICustomMediaKeys, serverCertificate: BufferSource): void {
+    const formattedServerCertificate: Uint8Array =
+    serverCertificate instanceof Uint8Array ?
+      serverCertificate :
+      new Uint8Array(
+        serverCertificate instanceof ArrayBuffer ? serverCertificate :
+                                                   serverCertificate.buffer);
+    const hash = hashBuffer(formattedServerCertificate);
+    serverCertificateHashesMap.set(
+      mediaKeys, { hash, serverCertificate: formattedServerCertificate });
   },
   /**
    * @param {MediaKeys | Object} mediaKeys
@@ -45,16 +56,37 @@ export default {
   },
   /**
    * @param {MediaKeys | Object} mediaKeys
-   * @returns {number | null}
+   * @param {BufferSource} serverCertificate
+   * @returns {boolean}
    */
-  get(mediaKeys: MediaKeys | ICustomMediaKeys): number | null {
+  has(mediaKeys: MediaKeys | ICustomMediaKeys, serverCertificate: BufferSource): boolean {
     const serverCertificateHash = serverCertificateHashesMap.get(mediaKeys);
     if (serverCertificateHash === undefined) {
-      return null;
+      return false;
     }
-    return serverCertificateHash;
+    const { hash: oldHash, serverCertificate: oldServerCertificate } =
+      serverCertificateHash;
+    const newServerCertificate: Uint8Array =
+      serverCertificate instanceof Uint8Array ?
+        serverCertificate :
+        new Uint8Array(
+          serverCertificate instanceof ArrayBuffer ? serverCertificate :
+                                                     serverCertificate.buffer);
+    const newHash = hashBuffer(newServerCertificate);
+    if (newHash !== oldHash ||
+        oldServerCertificate.length !== newServerCertificate.length) {
+      return false;
+    }
+    for (let i = 0; i < oldServerCertificate.length; i++) {
+      if (oldServerCertificate[i] !== newServerCertificate[i]) {
+        return false;
+      }
+    }
+    return true;
   },
   clear() {
-    serverCertificateHashesMap = new WeakMap<MediaKeys | ICustomMediaKeys, number>();
+    serverCertificateHashesMap =
+      new WeakMap<MediaKeys | ICustomMediaKeys,
+                  { hash: number; serverCertificate: Uint8Array }>();
   },
 };
