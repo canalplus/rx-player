@@ -30,7 +30,7 @@ import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
 import tryCatch from "../../utils/rx-try_catch";
-import ServerCertificateHashStore from "./server_certificate_hash_store";
+import ServerCertificateStore from "./server_certificate_store";
 import { IEMEWarningEvent } from "./types";
 
 /**
@@ -83,7 +83,7 @@ export default function trySettingServerCertificate(
       return EMPTY;
     }
 
-    if (ServerCertificateHashStore.has(mediaKeys, serverCertificate)) {
+    if (ServerCertificateStore.has(mediaKeys, serverCertificate)) {
       log.debug("EME: Server certificate already set on the MediaKeys");
       return EMPTY;
     }
@@ -93,10 +93,9 @@ export default function trySettingServerCertificate(
     // server certificate setting, we might delete the mediaKeys entrance in the
     // server certificate store. Next time we'll try to set server certificate,
     // in case of doubt, we will consider the certificate not to be set on mediaKeys.
-    ServerCertificateHashStore.delete(mediaKeys);
+    ServerCertificateStore.delete(mediaKeys);
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
-      tap(() => { ServerCertificateHashStore.add(mediaKeys,
-                                                 serverCertificate); }),
+      tap(() => { ServerCertificateStore.add(mediaKeys, serverCertificate); }),
       ignoreElements(),
       catchError(error => observableOf({ type: "warning" as const, value: error })));
   });

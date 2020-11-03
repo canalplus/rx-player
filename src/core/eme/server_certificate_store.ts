@@ -31,7 +31,7 @@ let serverCertificateHashesMap: WeakMap<MediaKeys | ICustomMediaKeys,
   new WeakMap<MediaKeys | ICustomMediaKeys,
               { hash: number; serverCertificate: Uint8Array }>();
 
-/** ServerCertificateHashStore */
+/** ServerCertificateStore */
 export default {
   /**
    * @param {MediaKeys | Object} mediaKeys
