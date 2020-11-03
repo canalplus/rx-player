@@ -222,6 +222,9 @@ function applyGeneralStyle(
   element : HTMLElement,
   style : Partial<Record<string, string>>
 ) {
+  // Set default text color. It can be overrided by text element color.
+  element.style.color = "white";
+
   // applies to tt, region
   const extent = style.extent;
   if (isNonEmptyString(extent)) {
