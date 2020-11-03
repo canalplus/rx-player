@@ -99,6 +99,11 @@ export default function trySettingServerCertificate(
     }
 
     log.debug("EME: Setting server certificate on the MediaKeys");
+    // Because of browser errors, or a user action that can lead to interrupting
+    // server certificate setting, we might delete the mediaKeys entrance in the
+    // server certificate store. Next time we'll try to set server certificate,
+    // in case of doubt, we will consider the certificate not to be set on mediaKeys.
+    ServerCertificateHashStore.delete(mediaKeys);
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
       tap(() => { ServerCertificateHashStore.add(mediaKeys,
                                                  currentServerCertificateHash); }),

@@ -39,6 +39,12 @@ export default {
   },
   /**
    * @param {MediaKeys | Object} mediaKeys
+   */
+  delete(mediaKeys: MediaKeys | ICustomMediaKeys): void {
+    serverCertificateHashesMap.delete(mediaKeys);
+  },
+  /**
+   * @param {MediaKeys | Object} mediaKeys
    * @returns {number | null}
    */
   get(mediaKeys: MediaKeys | ICustomMediaKeys): number | null {
