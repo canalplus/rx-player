@@ -68,7 +68,7 @@ import {
   IPrioritizedSegmentFetcherEvent,
   ISegmentFetcherWarning,
 } from "../../fetchers";
-import { QueuedSourceBuffer } from "../../source_buffers";
+import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import {
   IProtectedSegmentEvent,
@@ -130,8 +130,8 @@ export interface IRepresentationStreamArguments<T> {
              manifest : Manifest;
              period : Period;
              representation : Representation; };
-  /** The `QueuedSourceBuffer` on which segments will be pushed. */
-  queuedSourceBuffer : QueuedSourceBuffer<T>;
+  /** The `SegmentBuffer` on which segments will be pushed. */
+  segmentBuffer : SegmentBuffer<T>;
   /** Interface used to load new segments. */
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   /**
@@ -217,9 +217,9 @@ interface ISegmentRequestObject<T> {
  * Build up buffer for a single Representation.
  *
  * Download and push segments linked to the given Representation according
- * to what is already in the SourceBuffer and where the playback currently is.
+ * to what is already in the SegmentBuffer and where the playback currently is.
  *
- * Multiple RepresentationStream observables can run on the same SourceBuffer.
+ * Multiple RepresentationStream observables can run on the same SegmentBuffer.
  * This allows for example smooth transitions between multiple periods.
  *
  * @param {Object} args
@@ -230,7 +230,7 @@ export default function RepresentationStream<T>({
   clock$,
   content,
   fastSwitchThreshold$,
-  queuedSourceBuffer,
+  segmentBuffer,
   segmentFetcher,
   terminate$,
 } : IRepresentationStreamArguments<T>) : Observable<IRepresentationStreamEvent<T>> {
@@ -280,7 +280,7 @@ export default function RepresentationStream<T>({
           neededSegments : IQueuedSegment[];
           shouldRefreshManifest : boolean; }
     {
-      queuedSourceBuffer.synchronizeInventory();
+      segmentBuffer.synchronizeInventory();
       const neededRange = getWantedRange(period, timing, bufferGoal);
 
       const discontinuity = timing.stalled != null ?
@@ -308,7 +308,7 @@ export default function RepresentationStream<T>({
                                              currentPlaybackTime: timing.position,
                                              fastSwitchThreshold,
                                              neededRange,
-                                             queuedSourceBuffer })
+                                             segmentBuffer })
           .map((segment) => ({ priority: getSegmentPriority(segment, timing),
                                segment }));
 
@@ -456,7 +456,7 @@ export default function RepresentationStream<T>({
   /**
    * Stream Queue:
    *   - download every segments queued sequentially
-   *   - when a segment is loaded, append it to the SourceBuffer
+   *   - when a segment is loaded, append it to the SegmentBuffer
    */
   const streamQueue$ = startDownloadingQueue$.pipe(
     switchMap(() => downloadQueue.length > 0 ? loadSegmentsFromQueue() : EMPTY),
@@ -563,7 +563,7 @@ export default function RepresentationStream<T>({
                                              content,
                                              segment: evt.segment,
                                              segmentData: evt.value.initializationData,
-                                             queuedSourceBuffer });
+                                             segmentBuffer });
         return observableMerge(protectedEvents$, pushEvent$);
 
       case "parsed-segment":
@@ -573,11 +573,11 @@ export default function RepresentationStream<T>({
                                   initSegmentData,
                                   parsedSegment: evt.value,
                                   segment: evt.segment,
-                                  queuedSourceBuffer });
+                                  segmentBuffer });
 
       case "end-of-segment": {
         const { segment } = evt.value;
-        return queuedSourceBuffer.endOfSegment(objectAssign({ segment }, content))
+        return segmentBuffer.endOfSegment(objectAssign({ segment }, content))
           .pipe(ignoreElements());
       }
 

@@ -27,15 +27,17 @@ import {
 } from "rxjs/operators";
 import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
-import QueuedSourceBuffer from "./queued_source_buffer";
+import { SegmentBuffer } from "./implementations";
 
 export interface IGarbageCollectorArgument {
-  queuedSourceBuffer : QueuedSourceBuffer<unknown>; // interact with the SourceBuffer
-  clock$ : Observable<number>; // Emit current position in seconds regularly
-  maxBufferBehind$ : Observable<number>; // Maximum time to keep behind current
-                                         // time position, in seconds
-  maxBufferAhead$ : Observable<number>; // Minimum time to keep behind current
-                                        // time position, in seconds
+  /** SegmentBuffer implementation */
+  segmentBuffer : SegmentBuffer<unknown>;
+  /** Emit current position in seconds regularly */
+  clock$ : Observable<number>;
+  /** Maximum time to keep behind current time position, in seconds */
+  maxBufferBehind$ : Observable<number>;
+  /** Minimum time to keep behind current time position, in seconds */
+  maxBufferAhead$ : Observable<number>;
 }
 
 /**
@@ -47,14 +49,14 @@ export interface IGarbageCollectorArgument {
  * @returns {Observable}
  */
 export default function BufferGarbageCollector({
-  queuedSourceBuffer,
+  segmentBuffer,
   clock$,
   maxBufferBehind$,
   maxBufferAhead$,
 } : IGarbageCollectorArgument) : Observable<never> {
   return observableCombineLatest([clock$, maxBufferBehind$, maxBufferAhead$]).pipe(
     mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
-      return clearBuffer(queuedSourceBuffer,
+      return clearBuffer(segmentBuffer,
                          currentTime,
                          maxBufferBehind,
                          maxBufferAhead);
@@ -71,14 +73,14 @@ export default function BufferGarbageCollector({
  * and a "depth" behind and ahead wanted for the buffer, in seconds.
  *
  * Anything older than the depth will be removed from the buffer.
- * @param {QueuedSourceBuffer} qSourceBuffer
+ * @param {Object} segmentBuffer
  * @param {Number} position - The current position
  * @param {Number} maxBufferBehind
  * @param {Number} maxBufferAhead
  * @returns {Observable}
  */
 function clearBuffer(
-  qSourceBuffer : QueuedSourceBuffer<unknown>,
+  segmentBuffer : SegmentBuffer<unknown>,
   position : number,
   maxBufferBehind : number,
   maxBufferAhead : number
@@ -90,7 +92,7 @@ function clearBuffer(
   const cleanedupRanges : Array<{ start : number;
                                   end: number; }> = [];
   const { innerRange, outerRanges } =
-    getInnerAndOuterTimeRanges(qSourceBuffer.getBufferedRanges(),
+    getInnerAndOuterTimeRanges(segmentBuffer.getBufferedRanges(),
                                position);
 
   const collectBufferBehind = () => {
@@ -151,8 +153,8 @@ function clearBuffer(
   collectBufferAhead();
   const clean$ = observableFrom(
     cleanedupRanges.map((range) => {
-      log.debug("GC: cleaning range from SourceBuffer", range);
-      return qSourceBuffer.removeBuffer(range.start, range.end);
+      log.debug("GC: cleaning range from SegmentBuffer", range);
+      return segmentBuffer.removeBuffer(range.start, range.end);
     })
   ).pipe(concatAll(), ignoreElements());
 

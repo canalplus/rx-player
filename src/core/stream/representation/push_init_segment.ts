@@ -26,17 +26,16 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
-import objectAssign from "../../../utils/object_assign";
 import {
   IPushedChunkData,
-  QueuedSourceBuffer,
-} from "../../source_buffers";
+  SegmentBuffer,
+} from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
-import appendSegmentToSourceBuffer from "./append_segment_to_source_buffer";
+import appendSegmentToBuffer from "./append_segment_to_buffer";
 
 /**
- * Push the initialization segment to the QueuedSourceBuffer.
+ * Push the initialization segment to the SegmentBuffer.
  * The Observable returned:
  *   - emit an event once the segment has been pushed.
  *   - throws on Error.
@@ -48,14 +47,14 @@ export default function pushInitSegment<T>(
     content,
     segment,
     segmentData,
-    queuedSourceBuffer } : { clock$ : Observable<{ position : number }>;
-                             content: { adaptation : Adaptation;
-                                        manifest : Manifest;
-                                        period : Period;
-                                        representation : Representation; };
-                             segmentData : T | null;
-                             segment : ISegment;
-                             queuedSourceBuffer : QueuedSourceBuffer<T>; }
+    segmentBuffer } : { clock$ : Observable<{ position : number }>;
+                        content: { adaptation : Adaptation;
+                                   manifest : Manifest;
+                                   period : Period;
+                                   representation : Representation; };
+                        segmentData : T | null;
+                        segment : ISegment;
+                        segmentBuffer : SegmentBuffer<T>; }
 ) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (segmentData === null) {
@@ -67,12 +66,10 @@ export default function pushInitSegment<T>(
                                          timestampOffset: 0,
                                          appendWindow: [ undefined, undefined ],
                                          codec };
-    const inventoryInfos = objectAssign({ segment }, content);
-    return appendSegmentToSourceBuffer(clock$,
-                                       queuedSourceBuffer,
-                                       { data, inventoryInfos })
+    return appendSegmentToBuffer(clock$, segmentBuffer, { data,
+                                                          inventoryInfos: null })
       .pipe(map(() => {
-        const buffered = queuedSourceBuffer.getBufferedRanges();
+        const buffered = segmentBuffer.getBufferedRanges();
         return EVENTS.addedSegment(content, segment, buffered, segmentData);
       }));
   });

@@ -22,7 +22,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
-import { IBufferType } from "../source_buffers";
+import { IBufferType } from "../segment_buffers";
 
 /** Event sent when a minor error happened, which doesn't stop playback. */
 export interface IStreamWarningEvent {
@@ -31,7 +31,7 @@ export interface IStreamWarningEvent {
   value : ICustomError;
 }
 
-/** Emitted after a new segment has been succesfully added to the SourceBuffer */
+/** Emitted after a new segment has been succesfully added to the SegmentBuffer */
 export interface IStreamEventAddedSegment<T> {
   type : "added-segment";
   value : {
@@ -41,7 +41,7 @@ export interface IStreamEventAddedSegment<T> {
                representation : Representation; };
     /** The concerned Segment. */
     segment : ISegment;
-    /** TimeRanges of the concerned SourceBuffer after the segment was pushed. */
+    /** TimeRanges of the concerned SegmentBuffer after the segment was pushed. */
     buffered : TimeRanges;
     /* The data pushed */
     segmentData : T;
@@ -88,7 +88,7 @@ export interface IStreamStateActive {
   };
 }
 
-/** Event emitted when the Stream has loaded segments to the end of its SourceBuffer. */
+/** Event emitted when the Stream has loaded segments to the end of its SegmentBuffer. */
 export interface IStreamStateFull {
   type : "full-stream";
   value : {
@@ -122,7 +122,7 @@ export interface IProtectedSegmentEvent {
  *   - it has stopped regularly checking for its current status.
  *
  *   - it only waits until all the segments it has loaded have been pushed to the
- *     SourceBuffer before actually completing.
+ *     SegmentBuffer before actually completing.
  *
  * You can use this event as a hint that a new `RepresentationStream` can be
  * created.
@@ -332,7 +332,7 @@ export interface INeedsMediaSourceReload {
 }
 
 /**
- * Event emitted after the SourceBuffer have been "cleaned" to remove from it
+ * Event emitted after the SegmentBuffer have been "cleaned" to remove from it
  * every non-decipherable segments - usually following an update of the
  * decipherability status of some `Representation`(s).
  *

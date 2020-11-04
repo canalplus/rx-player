@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-import HTMLTextSourceBuffer from "../../custom_source_buffers/text/html";
+/* tslint:disable max-line-length */
+import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
+/* tslint:enable max-line-length */
 import {
   addFeatures,
   IFeatureFunction,
 } from "../../features";
 
-/** Arguments for the `setTextTrack` method. */
+/** Argument for the `setTextTrack` method. */
 export interface ISetTextTrackArguments {
-  /** The text track data. */
+  /** The text track content. Should be a string in the format indicated by `type`. */
   data : string;
-  /** The format of the text track data in `data` (e.g. "ttml", "srt", "vtt" or "sami") */
+  /** The format the text track is in (e.g. "ttml" or "vtt") */
   type : string;
-  /**
-   * Offset, in seconds, that will be added to each subtitle's start and end time.
-   * If not set or if set to `0`, no offset will be added.
-   */
+  /** Offset, in seconds, that will be added to each subtitle's start and end time. */
   timeOffset? : number;
   /**
-   * Define the language of the subtitles.
-   * Only required by some formats, such as SAMI.
-   * Can be unset for most other cases.
+   * Language the text track is in. This is sometimes needed to properly parse
+   * the text track. For example for tracks in the "sami" format.
    */
   language? : string;
 }
@@ -53,7 +51,7 @@ export default class TextTrackRenderer {
     addFeatures(parsersList);
   }
 
-  private _sourceBuffer : HTMLTextSourceBuffer;
+  private _segmentBuffer : HTMLTextSegmentBuffer;
 
   /**
    * @param {HTMLMediaElement} videoElement - The media element the text track
@@ -66,7 +64,7 @@ export default class TextTrackRenderer {
       textTrackElement } : { videoElement : HTMLMediaElement;
                              textTrackElement : HTMLElement; }
   ) {
-    this._sourceBuffer = new HTMLTextSourceBuffer(videoElement, textTrackElement);
+    this._segmentBuffer = new HTMLTextSegmentBuffer(videoElement, textTrackElement);
   }
 
   /**
@@ -75,23 +73,28 @@ export default class TextTrackRenderer {
    * @param {Object} args
    */
   public setTextTrack(args : ISetTextTrackArguments) : void {
-    this._sourceBuffer.removeSync(0, Number.MAX_VALUE);
-    this._sourceBuffer.timestampOffset = typeof args.timeOffset === "number" ?
+    this._segmentBuffer.removeBufferSync(0, Number.MAX_VALUE);
+    const timestampOffset = typeof args.timeOffset === "number" ?
       args.timeOffset :
       0;
-    this._sourceBuffer.appendBufferSync({ timescale: 1,
-                                          start: 0,
-                                          end: Number.MAX_VALUE,
-                                          data: args.data,
-                                          language: args.language,
-                                          type: args.type });
+    this._segmentBuffer.pushChunkSync({ inventoryInfos: null,
+                                       data: { initSegment: null,
+                                               codec: args.type,
+                                               timestampOffset,
+                                               appendWindow: [0, Infinity],
+                                               chunk : { timescale: 1,
+                                                         start: 0,
+                                                         end: Number.MAX_VALUE,
+                                                         data: args.data,
+                                                         language: args.language,
+                                                         type: args.type } } });
   }
 
   /**
    * Completely remove the current text track.
    */
   public removeTextTrack() : void {
-    this._sourceBuffer.removeSync(0, Number.MAX_VALUE);
+    this._segmentBuffer.removeBufferSync(0, Number.MAX_VALUE);
   }
 
   /**
@@ -100,7 +103,6 @@ export default class TextTrackRenderer {
    * called.
    */
   public dispose() {
-    this._sourceBuffer.removeSync(0, Number.MAX_VALUE);
-    this._sourceBuffer.abort();
+    this._segmentBuffer.dispose();
   }
 }

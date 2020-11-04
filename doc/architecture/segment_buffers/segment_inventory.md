@@ -4,21 +4,22 @@
 ## Overview ####################################################################
 
 The SegmentInventory is a class which registers some information about every
-segments currently present in a SourceBuffer.
-One of them is created for every new `QueuedSourceBuffer`.
+segments currently present in a `SegmentBuffer`.
+
+One of them is created for every new `SegmentBuffer`.
 
 This helps the RxPlayer to avoid re-downloading segments unnecessarily and know
 when old one have been garbage collected.
 For example, we could decide not to re-download a segment in any of the
 following cases:
 
-  - The same segment is already completely present in the SourceBuffer
+  - The same segment is already completely present in the `SegmentBuffer`
 
-  - The same segment is partially present in the SourceBuffer (read: a part has
-    been removed or garbage collected), but enough is still there for what we
-    want to play
+  - The same segment is partially present in the `SegmentBuffer` (read: a part
+    has been removed or garbage collected), but enough is still there for what
+    we want to play
 
-  - Another segment is in the SourceBuffer at the wanted time, but it is the
+  - Another segment is in the `SegmentBuffer` at the wanted time, but it is the
     same content in a better or samey quality
 
 
@@ -46,17 +47,18 @@ The SegmentInventory is merely a "Store", meaning it will just store and
 process the data you give to it, without searching for the information itself.
 
 It contains in its state an array, the _inventory_, which stores every segments
-which should be present in the SourceBuffer in a chronological order.
+which should be present in the `SegmentBuffer` in a chronological order.
 
 To construct this inventory, three methods can be used:
 
   - one to add information about a new chunk (part of a segment or the whole
-    segment), which should have been pushed to the SourceBuffer.
+    segment), which should have been pushed to the `SegmentBuffer`.
 
   - one to indicate that every chunks from a given segment have been pushed.
 
-  - one to synchronize the currently pushed segments with what the real
-    SourceBuffer says it has buffered.
+  - one to synchronize the currently pushed segments with what the
+    `SegmentBuffer` says it has buffered (which can be different for example
+    after an automatic garbage collection).
 
 After calling the synchronization one, you should be able to tell which parts of
-which segments are currently _living_ in your SourceBuffer.
+which segments are currently _living_ in your `SegmentBuffer`.

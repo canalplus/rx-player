@@ -219,7 +219,7 @@ It's actually the ``transports`` code that does most of the conversion for the
 rest of the code (removing the offset when requesting new segments, re-adding it
 once the segment is downloaded.
 
-To be able to offset those segments in the source buffer, those are still
+To be able to offset those segments in the SourceBuffer, those are still
 informed of course of the ``timestampOffset`` by the ``transports`` code.
 Then, this ``timestampOffset`` will be exploited only by the final decoding
 code.

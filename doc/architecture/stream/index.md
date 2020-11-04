@@ -4,7 +4,8 @@
 ## Overview ####################################################################
 
 The Stream is the part of the RxPlayer choosing which segments to request and
-pushing them to the corresponding SourceBuffer.
+pushing them to the corresponding media buffer (called `SegmentBuffers` in the
+RxPlayer) so they can later be decoded.
 
 It tries to choose the optimal segments based on:
 
@@ -36,8 +37,7 @@ documentation](./stream_orchestrator.md).
 
 The ``PeriodStream`` creates and destroys ``AdaptationStream``s for a single
 Manifest's Period.
-If no SourceBuffer was created, it lazily creates one (this only applies to
-custom SourceBuffer - not managed by the browser - like text).
+If no `SegmentBuffer:` was created, it lazily creates one.
 
 
 

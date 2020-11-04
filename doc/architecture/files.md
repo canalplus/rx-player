@@ -13,7 +13,6 @@ a single directory or subdirectory, in alphabetical order.
 - [src/: the source code](#src)
   - [src/compat/: The compatibility files](#src-compat)
   - [src/core/: The core files](#src-core)
-  - [src/custom_source_buffers/: Custom SourceBuffers definitions](#src-sb)
   - [src/errors/: Error definitions](#src-errors)
   - [src/experimental/: Experimental features](#src-experimental)
   - [src/features/: Feature switching](#src-features)
@@ -28,7 +27,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/core/stream/: Load the right segments](#core-stream)
   - [src/core/eme/: Encryption management](#core-eme)
   - [src/core/fetchers/: The fetchers](#core-fetchers)
-  - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
+  - [src/core/segment_buffers/: The Media buffers](#core-sb)
   - [src/core/init/: Media streaming logic](#core-init)
 - [src/**/__tests__: the unit tests directories](#src-tests)
 - [tests/: the player's tests](#tests)
@@ -127,23 +126,6 @@ That's where:
 
 This directory contains other subdirectories which are listed in the next
 chapter.
-
-
-<a name="src-csb"></a>
-### src/custom_source_buffers/: Custom SourceBuffers definitions ###############
-
-SourceBuffers are the JavaScript objects through which media segments are added
-to the browser.
-
-Definition are usually already provided by the browser for the Audio and Video
-SourceBuffers. This directory allows to implement in JavaScript SourceBuffers
-for other type of media (e.g. text, overlays, images...).
-
-For example, when a new text chunk is pushed to the text SourceBuffer, the
-custom text SourceBuffer will:
-  - update its buffered information
-  - call the corresponding text parser
-  - display the right subtitle at the right timecode
 
 
 <a name="src-errors"></a>
@@ -257,7 +239,7 @@ interact with.
 ### src/core/stream/: Load the right segments ##################################
 
 The code there calculate which segments should be downloaded, ask for their
-download and push the segments into the SourceBuffers.
+download and push the segments into the `SegmentBuffers`.
 
 
 <a name="core-eme"></a>
@@ -278,14 +260,17 @@ the core.
 
 
 <a name="core-sb"></a>
-### src/core/source_buffers/: SourceBuffers definitions ########################
+### src/core/segment_buffers/: The media buffers ###############################
 
-Code allowing to interact with the `SourceBuffers`, the JavaScript object
-through which media segments are pushed to be able to play a content.
+Code allowing to interact with the media buffers called `SegmentBuffers`.
 
-For Audio and Video, SourceBuffers are already provided by the browser,
-for other type of contents (like subtitles), we rely on Custom SourceBuffers
-defined in `src/custom_source_buffers`.
+Those are the Objects to which segments are pushed so they can be decoded at the
+right time.
+
+For Audio and Video, `SegmentBuffers` rely on a native `SourceBuffer` object,
+already provided by the browser,
+for other type of contents (like subtitles), we rely on completely custom media
+buffers implementations.
 
 
 <a name="core-init"></a>
