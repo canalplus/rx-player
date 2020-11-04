@@ -35,6 +35,10 @@ import {
 
 const { onEncrypted$ } = events;
 
+/**
+ * Event emitted after deciding that no EME logic should be launched for the
+ * current content.
+ */
 export interface IEMEDisabledEvent { type: "eme-disabled"; }
 
 /**
