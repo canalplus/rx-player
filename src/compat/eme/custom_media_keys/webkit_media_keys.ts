@@ -86,11 +86,16 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
   private readonly _closeSession$: Subject<void>;
   private readonly _keyType: string;
   private _nativeSession: undefined | any;
-  private _serverCertificate: Uint8Array;
+  private _serverCertificate: Uint8Array | undefined;
 
+  /**
+   * @param {HTMLMediaElement} mediaElement
+   * @param {string} keyType
+   * @param {Uint8Array | undefined} serverCertificate
+   */
   constructor(mediaElement: HTMLMediaElement,
-              serverCertificate: Uint8Array,
-              keyType: string) {
+              keyType: string,
+              serverCertificate?: Uint8Array) {
     super();
     this._serverCertificate = serverCertificate;
     this._closeSession$ = new Subject();
@@ -141,9 +146,18 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
         (this._videoElement as any).webkitKeys.createSession === undefined) {
         throw new Error("No WebKitMediaKeys API.");
       }
-      const formattedInitData = isFairplayKeyType(this._keyType) ?
-        getWebKitFairplayInitData(initData, this._serverCertificate) :
-        initData;
+
+      let formattedInitData;
+      if (isFairplayKeyType(this._keyType)) {
+        if (this._serverCertificate === undefined) {
+          throw new Error(
+            "A server certificate is needed for creating fairplay session.");
+        }
+        formattedInitData = getWebKitFairplayInitData(initData, this._serverCertificate);
+      } else {
+        formattedInitData = initData;
+      }
+
       const keySession =
         (this._videoElement as any).webkitKeys.createSession("video/mp4",
           formattedInitData);
@@ -210,13 +224,12 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
 
   createSession(/* sessionType */): ICustomMediaKeySession {
     if (this._videoElement === undefined ||
-      this._mediaKeys === undefined ||
-      this._serverCertificate === undefined) {
+      this._mediaKeys === undefined) {
       throw new Error("Video not attached to the MediaKeys");
     }
     return new WebkitMediaKeySession(this._videoElement,
-                                     this._serverCertificate,
-                                     this._keyType);
+                                     this._keyType,
+                                     this._serverCertificate);
   }
 
   setServerCertificate(serverCertificate: Uint8Array): Promise<void> {
