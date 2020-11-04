@@ -6,13 +6,14 @@
  * application.
  */
 
+import RxPlayer from "rx-player";
 import { linkPlayerEventsToState } from "./events.js";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import $handleCatchUpMode from "./catchUp";
 
 const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
-  const player = new window.RxPlayer({
+  const player = new RxPlayer({
     limitVideoWidth: false,
     stopAtEnd: false,
     throttleVideoBitrateWhenHidden: true,
