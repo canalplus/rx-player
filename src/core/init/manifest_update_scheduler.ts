@@ -136,8 +136,8 @@ export default function manifestUpdateScheduler({
           .pipe(mapTo({ completeRefresh, unsafeMode }));
       }));
 
-    const timeSinceRequest = sendingTime == null ? 0 :
-                                                   performance.now() - sendingTime;
+    const timeSinceRequest = sendingTime === undefined ? 0 :
+                                                         performance.now() - sendingTime;
     const minInterval = Math.max(minimumManifestUpdateInterval - timeSinceRequest, 0);
 
     let autoRefresh$;
@@ -276,7 +276,7 @@ function startManualRefreshTimer(
   return observableDefer(() => {
     // The value allows to set a delay relatively to the last Manifest refresh
     // (to avoid asking for it too often).
-    const timeSinceLastRefresh = lastManifestRequestTime == null ?
+    const timeSinceLastRefresh = lastManifestRequestTime === undefined ?
                                    0 :
                                    performance.now() - lastManifestRequestTime;
     const _minInterval = Math.max(minimumManifestUpdateInterval - timeSinceLastRefresh,
