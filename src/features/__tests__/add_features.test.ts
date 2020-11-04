@@ -22,7 +22,7 @@ describe("Features - addFeatures", () => {
 
   it("should do nothing if an empty array is given", () => {
     const feat = {};
-    jest.mock("../index", () => ({
+    jest.mock("../features_object", () => ({
       __esModule: true as const,
       default: feat,
     }));
@@ -33,7 +33,7 @@ describe("Features - addFeatures", () => {
 
   it("should throw if something different than a function is given", () => {
     const feat = {};
-    jest.mock("../index", () => ({
+    jest.mock("../features_object", () => ({
       __esModule: true as const,
       default: feat,
     }));
@@ -46,7 +46,7 @@ describe("Features - addFeatures", () => {
 
   it("should call the given functions with the features object in argument", () => {
     const feat = { a: 412 };
-    jest.mock("../index", () => ({
+    jest.mock("../features_object", () => ({
       __esModule: true as const,
       default: feat,
     }));

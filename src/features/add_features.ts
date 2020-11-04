@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import features from "./index";
+import features from "./features_object";
 import { IFeatureFunction } from "./types";
 
 /**

@@ -30,24 +30,8 @@
  */
 
 import addFeatures from "./add_features";
-import {
-  IFeatureFunction,
-  IFeaturesObject,
-} from "./types";
-
-/**
- * Initial features object, with no feature activated by default.
- * @type {Object}
- */
-const features : IFeaturesObject = { directfile: null,
-                                     emeManager: null,
-                                     htmlTextTracksBuffer: null,
-                                     htmlTextTracksParsers: {},
-                                     imageBuffer: null,
-                                     imageParser: null,
-                                     nativeTextTracksBuffer: null,
-                                     nativeTextTracksParsers: {},
-                                     transports: {} };
+import features from "./features_object";
+import { IFeatureFunction } from "./types";
 
 export default features;
 export {
