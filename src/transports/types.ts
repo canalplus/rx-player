@@ -209,7 +209,7 @@ export type ISegmentLoaderEvent<T> = ILoaderProgressEvent |
 export interface IManifestParserArguments {
   /** Response obtained from the loader. */
   response : ILoaderDataLoadedValue<unknown>;
-  /** URL originally requested. */
+  /** Original URL used for the full version of the Manifest. */
   url? : string;
   /**
    * If set, offset to add to `performance.now()` to obtain the current

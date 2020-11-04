@@ -615,6 +615,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             defaultAudioTrack,
             defaultTextTrack,
             enableFastSwitching,
+            initialManifest,
             keySystems,
             lowLatencyMode,
             manualBitrateSwitchingMode,
@@ -723,17 +724,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     autoPlay,
                                                     bufferOptions,
                                                     clock$,
+                                                    content: { initialManifest,
+                                                               manifestUpdateUrl,
+                                                               url },
                                                     keySystems,
                                                     lowLatencyMode,
-                                                    manifestUpdateUrl,
                                                     mediaElement: videoElement,
                                                     minimumManifestUpdateInterval,
                                                     networkConfig,
                                                     transportPipelines,
                                                     speed$: this._priv_speed$,
                                                     startAt,
-                                                    textTrackOptions,
-                                                    url })
+                                                    textTrackOptions })
         .pipe(takeUntil(contentIsStopped$));
 
       playback$ = publish<IInitEvent>()(init$);
