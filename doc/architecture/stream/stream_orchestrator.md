@@ -4,14 +4,15 @@
 ## Overview ####################################################################
 
 To be able to play a content, the player has to be able to download chunks of
-media data - called segments - and has to push them to SourceBuffers.
+media data - called segments - and has to push them to media buffers, called
+`SegmentBuffers` in the RxPlayer code.
 
 In the RxPlayer, the _StreamOrchestrator_ is the entry point for performing all
 those tasks.
 
 Basically, the _StreamOrchestrator_:
 
-  - dynamically creates various SourceBuffers depending on the needs of the
+  - dynamically creates various `SegmentBuffers` depending on the needs of the
     given content
 
   - orchestrates segment downloading and "pushing" to allow the content to
@@ -25,14 +26,14 @@ More often than not, content are divised into multiple "types": "audio", "video"
 and "text" segments, for example. They are often completely distinct in a
 Manifest and as such, have to be downloaded and decoded separately.
 
-Each type has its own _SourceBuffer_. For "audio"/"video" contents, we use
+Each type has its own media buffer. For "audio"/"video" contents, we use
 regular browser-defined _MSE_ SourceBuffers.
-For any other types, such as "text" and "image", we defined custom SourceBuffers
-implementation adapted to these type of contents.
+For any other types, such as "text" and "image", those buffers are entirely
+defined in the code of the RxPlayer.
 
 We then create a different Stream for each type. Each will progressively
 download and push content of their respective type to their respective
-SourceBuffer:
+media buffer:
 
 ```
 - AUDIO STREAM -
@@ -49,51 +50,47 @@ SourceBuffer:
 ```
 _(the ``|`` sign delimits the temporal start and end of the buffer linked to a
 given Stream, the ``=`` sign represent a pushed segment in the corresponding
-SourceBuffer)_
+buffer)_
 
 
 
-## Native SourceBuffers ########################################################
+## A special case: SourceBuffers ###############################################
 
-SourceBuffers created for the audio and/or video types are called _native
-SourceBuffers_. This is because their management is managed by the browser,
-hence it's a "native" implementation.
-SourceBuffers for any other possible types (for example "text" and "image") are
-called _custom SourceBuffers_. This is because their management is done by the
-RxPlayer, to emulate the native behavior.
+Media buffers created for the audio and/or video types rely on a _native_
+(implemented by the browser) `SourceBuffer` Object implementation.
 
-Native SourceBuffers have several differences with the custom ones, especially:
+Media buffers relying on native SourceBuffers have several differences with the
+other "custom" (entirely defined in the RxPlayer) types of media buffers:
 
   - They are managed by the browser where custom ones are implemented in JS.
     As such, they must obey to various browser rules, among which:
 
       1. They cannot be lazily created as the content plays. We have to
-         initialize all native SourceBuffers beforehand.
+         initialize all of them beforehand.
 
       2. They have to be linked to a specific codec.
 
-      3. They have to be added to the MediaSource
-
-      4. They have to be added to the MediaSource after the media HTMLElement
-         has been linked to the MediaSource
+      3. The `SourceBuffer` has to be linked to the MediaSource, and they have
+         to the MediaSource after the media HTMLElement has been linked to the
+         MediaSource
 
   - They are in a way more "important" than custom ones. If a problem happens
-    with a native SourceBuffer, we interrupt playback. For a custom one, we can
-    just deactivate the SourceBuffer for the content.
+    with a SourceBuffer, we interrupt playback. For a custom media buffer, we
+    can just deactivate it for the rest of the content.
 
     For example, a problem with subtitles would just disable those with a
     warning. For a video problem however, we fail immediately.
 
-  - They affect buffering when custom SourceBuffers do not (no text segment for
+  - They affect buffering when custom media buffers do not (no text segment for
     a part of the content means we will just not have subtitles, no audio
-    segment means we will completely stop to await them)
+    segment means we will completely stop, to await them)
 
   - They affect various API linked to the media element in the DOM. Such as
     ``HTMLMediaElement.prototype.buffered``.
-    Custom SourceBuffers do not.
+    Custom media buffers do not.
 
-Due to these differences, native SourceBuffers are often managed in a less
-permissive way than custom ones:
+Due to these differences, media buffers relying on SourceBuffers are often
+managed in a less permissive way than custom ones:
 
   - They will be created at the very start of the content
 
@@ -271,7 +268,7 @@ Once P1, goes full again, we re-create P2:
 ```
 
 _Note that we still have the segment pushed to P2 available in the corresponding
-SourceBuffer_
+media buffer_
 
 When the current position go ahead of a _PeriodStream_ (here ahead of P1):
 

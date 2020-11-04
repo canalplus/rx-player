@@ -15,43 +15,43 @@
  */
 
 import BufferGarbageCollector from "./garbage_collector";
-import QueuedSourceBuffer, {
-  IBufferedChunk,
+import {
   IBufferType,
   IEndOfSegmentInfos,
   IEndOfSegmentOperation,
   IPushChunkInfos,
   IPushedChunkData,
-  IPushedChunkInventoryInfos,
   IPushOperation,
-  IQSBOperation,
   IRemoveOperation,
-  SourceBufferOperation,
-} from "./queued_source_buffer";
-import SourceBuffersStore, {
-  ISourceBufferOptions,
-  ITextTrackSourceBufferOptions,
-} from "./source_buffers_store";
+  ISBOperation,
+  SegmentBuffer,
+  SegmentBufferOperation,
+} from "./implementations";
+import SegmentBuffersStore, {
+  ISegmentBufferOptions,
+  ITextTrackSegmentBufferOptions,
+} from "./segment_buffers_store";
+import { IBufferedChunk } from "./segment_inventory";
 
-export default SourceBuffersStore;
+export default SegmentBuffersStore;
 export {
-  QueuedSourceBuffer,
   BufferGarbageCollector,
 
-  ISourceBufferOptions,
-  ITextTrackSourceBufferOptions,
+  ISegmentBufferOptions,
+  ITextTrackSegmentBufferOptions,
+
+  SegmentBuffer,
 
   IBufferType,
   IBufferedChunk,
 
   IPushChunkInfos,
   IPushedChunkData,
-  IPushedChunkInventoryInfos,
 
   IEndOfSegmentInfos,
 
-  SourceBufferOperation,
-  IQSBOperation,
+  SegmentBufferOperation,
+  ISBOperation,
   IEndOfSegmentOperation,
   IPushOperation,
   IRemoveOperation,

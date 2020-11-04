@@ -20,9 +20,9 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import SourceBuffersStore, {
+import SegmentBuffersStore, {
   IBufferType,
-} from "../source_buffers";
+} from "../segment_buffers";
 import { IRepresentationChangeEvent } from "../stream";
 import { IStallingItem } from "./get_stalled_events";
 import {
@@ -40,8 +40,8 @@ import {
  * Construct a "loaded" event.
  * @returns {Object}
  */
-function loaded(sourceBuffersStore : SourceBuffersStore | null) : ILoadedEvent {
-  return { type: "loaded", value: { sourceBuffersStore } };
+function loaded(segmentBuffersStore : SegmentBuffersStore | null) : ILoadedEvent {
+  return { type: "loaded", value: { segmentBuffersStore } };
 }
 
 /**
