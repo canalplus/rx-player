@@ -169,7 +169,7 @@ export default function StreamOrchestrator(
 
   // Emits the activePeriodChanged events every time the active Period changes.
   const activePeriodChanged$ = ActivePeriodEmitter(streamsArray).pipe(
-    filter((period) : period is Period => period != null),
+    filter((period) : period is Period => period !== null),
     map(period => {
       log.info("Stream: New active period", period);
       return EVENTS.activePeriodChanged(period);
@@ -412,16 +412,16 @@ export default function StreamOrchestrator(
                                          wantedBufferAhead$, }
     ).pipe(
       mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
-        const { type } = evt;
-        if (type === "full-stream") {
+        if (evt.type === "full-stream") {
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
-          if (nextPeriod == null) {
+          if (nextPeriod === null) {
             return observableOf(EVENTS.streamComplete(bufferType));
-          } else {
-            // current Stream is full, create the next one if not
-            createNextPeriodStream$.next(nextPeriod);
           }
-        } else if (type === "active-stream") {
+
+          // current Stream is full, create the next one if not
+          createNextPeriodStream$.next(nextPeriod);
+          return EMPTY;
+        } else if (evt.type === "active-stream") {
           // current Stream is active, destroy next Stream if created
           destroyNextStreams$.next();
         }
