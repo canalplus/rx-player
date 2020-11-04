@@ -25,7 +25,7 @@ import {
   scan,
 } from "rxjs/operators";
 import { Period } from "../../../manifest";
-import { IBufferType } from "../../source_buffers";
+import { IBufferType } from "../../segment_buffers";
 import { IMultiplePeriodStreamsEvent } from "../types";
 
 interface IPeriodObject { period : Period;

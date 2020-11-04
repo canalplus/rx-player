@@ -107,7 +107,7 @@ function resetMediaSource(
  * available in the current environment.
  *
  * On unsubscription, the mediaElement.src is cleaned, MediaSource SourceBuffers
- * and custom SourceBuffers are aborted and some minor cleaning is done.
+ * are aborted and some minor cleaning is done.
  *
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}

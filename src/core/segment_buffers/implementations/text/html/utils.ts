@@ -21,16 +21,16 @@ import {
 
 /**
  * Maximum time difference, in seconds, between two text segment's start times
- * and/or end times for them to be considered the same in the custom text's
- * SourceBuffer used for the "html" textTrackMode.
+ * and/or end times for them to be considered the same in the
+ * HTMLTextSegmentBuffer (used for the "html" textTrackMode).
  *
  * For example for two segments s1 and s2 which have a start time respectively
  * of st1 and st2 and end time of et1 and et2:
  *   - if both the absolute difference between st1 and st2 AND the one between
  *     et1 and et2 is inferior or equal to the MAX_DELTA_BUFFER_TIME, s1 and s2
  *     are considered to target the exact same time. As a consequence, if s2 is
- *     added after s1 in the SourceBuffer, s1 will be completely replaced by
- *     it and vice-versa.
+ *     added after s1 in the buffer, s1 will be completely replaced by it and
+ *     vice-versa.
  *   - if only one of the two (absolute difference between st1 and st2 OR et1
  *     and et2) is inferior to the MAX_DELTA_BUFFER_TIME then the last added
  *     is not completely considered the same. It WILL still replace - either
@@ -42,10 +42,10 @@ import {
  *     or completely each other.
  *
  * Setting a value too low might lead to two segments targeting the same time,
- * both being present in the SourceBuffer. In worst case scenarios, this could
- * lead to indicate that an unwanted text track is still here (theorically
- * though, this is a case that should never happen for reasons that might be too
- * long to explain here).
+ * both being present in the buffer. In worst case scenarios, this could lead
+ * to indicate that an unwanted text track is still here (theorically though,
+ * this is a case that should never happen for reasons that might be too long
+ * to explain here).
  *
  * Setting a value too high might lead to two segments targeting different times
  * to be wrongly believed to target the same time. In worst case scenarios, this

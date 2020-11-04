@@ -429,7 +429,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         throw new Error("Image data should not be downloaded in chunks");
       }
 
-      // TODO image Parsing should be more on the sourceBuffer side, no?
+      // TODO image Parsing should be more on the buffer side, no?
       if (data === null || features.imageParser === null) {
         return observableOf({ type: "parsed-segment",
                               value: { chunkData: null,

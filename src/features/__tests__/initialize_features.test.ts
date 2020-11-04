@@ -39,18 +39,18 @@ describe("Features - initializeFeaturesObject", () => {
     });
     (window as any).__RELATIVE_PATH__ = {
       EME_MANAGER: "../core/eme/index.ts",
-      IMAGE_BUFFER: "../custom_source_buffers/image/index.ts",
+      IMAGE_BUFFER: "../core/segment_buffers/implementations/image/index.ts",
       BIF_PARSER: "../parsers/images/bif.ts",
       SMOOTH: "../transports/smooth/index.ts",
       DASH: "../transports/dash/index.ts",
       LOCAL_MANIFEST: "../transports/local/index.ts",
       METAPLAYLIST: "../transports/metaplaylist/index.ts",
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index.ts",
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_VTT: "../parsers/texttracks/webvtt/native/index.ts",
       NATIVE_SRT: "../parsers/texttracks/srt/native.ts",
       NATIVE_TTML: "../parsers/texttracks/ttml/native/index.ts",
       NATIVE_SAMI: "../parsers/texttracks/sami/native.ts",
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_VTT: "../parsers/texttracks/webvtt/html/index.ts",
       HTML_SRT: "../parsers/texttracks/srt/html.ts",
       HTML_TTML: "../parsers/texttracks/ttml/html/index.ts",
@@ -88,9 +88,11 @@ describe("Features - initializeFeaturesObject", () => {
         mediaElementTrackChoiceManager:
           require("../../core/api/media_element_track_choice_manager").default,
       },
-      imageBuffer: require("../../custom_source_buffers/image/index").default,
+      imageBuffer: require(
+        "../../core/segment_buffers/implementations/image/index"
+      ).default,
       imageParser: require("../../parsers/images/bif").default,
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         vtt: require("../../parsers/texttracks/webvtt/native/index").default,
@@ -98,7 +100,7 @@ describe("Features - initializeFeaturesObject", () => {
         sami: require("../../parsers/texttracks/sami/native").default,
         srt: require("../../parsers/texttracks/srt/native").default,
       },
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         vtt: require("../../parsers/texttracks/webvtt/html/index").default,
@@ -119,7 +121,7 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
     (window as any).__RELATIVE_PATH__ = {
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_VTT: "../parsers/texttracks/webvtt/html/index.ts",
     };
     const feat = {
@@ -133,7 +135,7 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         vtt: require("../../parsers/texttracks/webvtt/html/index").default,
@@ -151,7 +153,7 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
     (window as any).__RELATIVE_PATH__ = {
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_SAMI: "../parsers/texttracks/sami/html",
     };
     const feat = {
@@ -165,7 +167,7 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         sami: require("../../parsers/texttracks/sami/html").default,
@@ -183,7 +185,7 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
     (window as any).__RELATIVE_PATH__ = {
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_TTML: "../parsers/texttracks/ttml/html/index",
     };
     const feat = {
@@ -197,7 +199,7 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         ttml: require("../../parsers/texttracks/ttml/html/index").default,
@@ -215,7 +217,7 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
     (window as any).__RELATIVE_PATH__ = {
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_SRT: "../parsers/texttracks/srt/html",
     };
     const feat = {
@@ -229,7 +231,7 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         srt: require("../../parsers/texttracks/srt/html").default,
@@ -247,7 +249,7 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
     (window as any).__RELATIVE_PATH__ = {
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index",
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index",
       NATIVE_VTT: "../parsers/texttracks/webvtt/native/index",
     };
     const feat = {
@@ -261,7 +263,7 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         vtt: require("../../parsers/texttracks/webvtt/native/index").default,
@@ -279,7 +281,7 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
     (window as any).__RELATIVE_PATH__ = {
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index.ts",
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_SAMI: "../parsers/texttracks/sami/native",
     };
     const feat = {
@@ -293,7 +295,7 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         sami: require("../../parsers/texttracks/sami/native").default,
@@ -311,7 +313,7 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
     (window as any).__RELATIVE_PATH__ = {
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index.ts",
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_TTML: "../parsers/texttracks/ttml/native/index",
     };
     const feat = {
@@ -325,7 +327,7 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         ttml: require("../../parsers/texttracks/ttml/native/index").default,
@@ -343,7 +345,7 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
     (window as any).__RELATIVE_PATH__ = {
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index.ts",
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_SRT: "../parsers/texttracks/srt/native",
     };
     const feat = {
@@ -357,7 +359,7 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         srt: require("../../parsers/texttracks/srt/native").default,
