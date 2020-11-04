@@ -184,11 +184,11 @@ export default function initializeDirectfileContent({
   // Manage "loaded" event and warn if autoplay is blocked on the current browser
   const loadedEvent$ = emeManager$.pipe(
     filter(function isEMEReady(evt) {
-      return evt.type === "eme-disabled" ||
-             evt.type === "attached-media-keys" ||
-             (evt.type === "created-media-keys" &&
-              evt.value.mediaKeysInfos.keySystemOptions
-                .disableMediaKeysAttachmentLock === true);
+      if (evt.type === "created-media-keys") {
+        evt.value.attachMediaKeys$.next();
+        return true;
+      }
+      return evt.type === "eme-disabled" || evt.type === "attached-media-keys";
     }),
     take(1),
     mergeMapTo(load$),

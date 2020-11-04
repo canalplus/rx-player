@@ -48,7 +48,7 @@ export default function initMediaKeys(
 ): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
-      const attachMediaKeys$ = (new ReplaySubject<void>(1));
+      const attachMediaKeys$ = new ReplaySubject<void>(1);
       const shouldDisableOldMediaKeys =
         mediaElement.mediaKeys !== null &&
         mediaElement.mediaKeys !== undefined &&
