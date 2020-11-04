@@ -224,7 +224,7 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
 
   createSession(/* sessionType */): ICustomMediaKeySession {
     if (this._videoElement === undefined ||
-      this._mediaKeys === undefined) {
+        this._mediaKeys === undefined) {
       throw new Error("Video not attached to the MediaKeys");
     }
     return new WebkitMediaKeySession(this._videoElement,
