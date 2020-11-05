@@ -13,19 +13,19 @@ const VideoTrackKnobBase = ({
   currentVideoTrack,
 }) => {
   let options = [];
-  let selectedIndex;
+  let selectedIndex = 0;
 
   if (!availableVideoTracks.length) {
     options = ["Not available"];
-    selectedIndex = 0;
   } else {
     options = ["no video track"].concat(
       availableVideoTracks.map((track, i) => `track ${i}: ${track.id}`),
     );
 
-    selectedIndex = currentVideoTrack ?
-      Math.max(findVideoTrackIndex(currentVideoTrack, availableVideoTracks), 1)
-      : 0;
+    if (currentVideoTrack) {
+      selectedIndex =
+        1 + findVideoTrackIndex(currentVideoTrack, availableVideoTracks);
+    }
   }
 
   const onTrackChange = (evt) => {
