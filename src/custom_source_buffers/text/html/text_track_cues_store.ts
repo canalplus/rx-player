@@ -54,7 +54,8 @@ export default class TextTrackCuesStore {
    * updated, for example).
    *
    * @param {Number} time
-   * @returns {HTMLElement|undefined} - The cue to display
+   * @returns {Array.<HTMLElement>} - The cues that need to be displayed at that
+   * time.
    */
   get(time : number) : HTMLElement[] {
     const cuesBuffer = this._cuesBuffer;

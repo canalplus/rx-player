@@ -135,11 +135,18 @@ export default class HTMLTextSourceBuffer
   // regular check.
   private _clearSizeUpdates$ : Subject<void>;
 
-  // Information on the cue currently displayed in `_textTrackElement`.
-  private _currentCues : Array<{ element : HTMLElement;
-                                 resolution : { columns : number;
-                                                rows : number; } |
-                                              null; }>;
+  /** Information on cues currently displayed. */
+  private _currentCues : Array<{
+    /** The HTMLElement containing the cues, appended to `_textTrackElement`. */
+    element : HTMLElement;
+    /**
+     * Anounced resolution for this element.
+     * Necessary to properly render proportional sizes.
+     */
+    resolution : { columns : number;
+                   rows : number; } |
+                 null;
+  }>;
 
   /**
    * @param {HTMLMediaElement} videoElement
