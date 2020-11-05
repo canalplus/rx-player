@@ -335,17 +335,20 @@ export default class HTMLTextSourceBuffer
       this._textTrackElement.appendChild(element);
     }
 
-    if (this._currentCues.some(cue => cue.resolution !== null)) {
+    const proportionalCues = this._currentCues
+      .filter((cue) : cue is { resolution: { rows : number;
+                                             columns : number; };
+                                element : HTMLElement; } => cue.resolution !== null);
+
+    if (proportionalCues.length > 0) {
       // update propertionally-sized elements periodically
       onHeightWidthChange(this._textTrackElement, TEXT_TRACK_SIZE_CHECKS_INTERVAL)
         .pipe(takeUntil(this._clearSizeUpdates$),
               takeUntil(this._destroy$))
         .subscribe(({ height, width }) => {
-          for (let i = 0; i < this._currentCues.length; i++) {
-            const { resolution, element } = this._currentCues[i];
-            if (resolution !== null) {
-              updateProportionalElements(height, width, resolution, element);
-            }
+          for (let i = 0; i < proportionalCues.length; i++) {
+            const { resolution, element } = proportionalCues[i];
+            updateProportionalElements(height, width, resolution, element);
           }
         });
       }
