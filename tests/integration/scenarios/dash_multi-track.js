@@ -172,7 +172,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
 
     await goToSecondPeriod();
-    checkAudioTrack("sw", "swa", false);
+    checkAudioTrack("be", "bel", false);
     checkNoTextTrack();
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
   });
@@ -359,7 +359,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
 
     await goToSecondPeriod();
-    checkAudioTrack("sw", "swa", false);
+    checkAudioTrack("be", "bel", false);
     checkNoTextTrack();
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
   });
@@ -458,7 +458,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkNoVideoTrack();
 
     await goToSecondPeriod();
-    checkAudioTrack("sw", "swa", false);
+    checkAudioTrack("be", "bel", false);
     checkNoTextTrack();
     checkNoVideoTrack();
   });
@@ -487,7 +487,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkNoVideoTrack();
 
     await goToSecondPeriod();
-    checkAudioTrack("sw", "swa", false);
+    checkAudioTrack("be", "bel", false);
     checkNoTextTrack();
     checkNoVideoTrack();
   });
@@ -511,7 +511,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
 
     await goToSecondPeriod();
-    checkAudioTrack("sw", "swa", false);
+    checkAudioTrack("be", "bel", false);
     checkNoTextTrack();
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
   });
