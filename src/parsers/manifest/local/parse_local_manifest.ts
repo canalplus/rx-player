@@ -56,7 +56,7 @@ export default function parseLocalManifest(
            isDynamic: !localManifest.isFinished,
            isLive: false,
            uris: [],
-           timeBounds: { absoluteMinimum: getMinimumPosition(parsedPeriods) ?? 0,
+           timeBounds: { absoluteMinimumTime: getMinimumPosition(parsedPeriods) ?? 0,
                          timeshiftDepth: null,
                          maximumTimeData: { isLinear: false,
                                             value: getMaximumPosition(parsedPeriods) ?? 0,

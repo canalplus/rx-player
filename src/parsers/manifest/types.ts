@@ -211,7 +211,7 @@ export interface IParsedManifest {
      * The minimum time, in seconds, available in this Manifest.
      * `undefined` if that value is unknown.
      */
-    absoluteMinimum? : number;
+    absoluteMinimumTime? : number;
     /**
      * Some dynamic contents have the concept of a "window depth" (or "buffer
      * depth") which allows to set a minimum position for all reachable

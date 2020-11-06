@@ -327,7 +327,7 @@ function parseCompleteIntermediateRepresentation(
     periods: parsedPeriods,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,
     transportType: "dash",
-    timeBounds: { absoluteMinimum: minimumTime,
+    timeBounds: { absoluteMinimumTime: minimumTime,
                   timeshiftDepth,
                   maximumTimeData },
     lifetime,

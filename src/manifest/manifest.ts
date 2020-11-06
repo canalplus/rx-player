@@ -234,17 +234,17 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
      *   - if `timeshiftDepth` is not set, the minimum seekable time is a
      *     constant that corresponds to this value.
      *
-     *    - if `timeshiftDepth` is set, `absoluteMinimum` will act as the
+     *    - if `timeshiftDepth` is set, `absoluteMinimumTime` will act as the
      *      absolute minimum seekable time we can never seek below, even when
      *      `timeshiftDepth` indicates a possible lower position.
      *      This becomes useful for example when playing live contents which -
      *      despite having a large window depth - just begun and as such only
      *      have a few segment available for now.
-     *      Here, `absoluteMinimum` would be the start time of the initial
+     *      Here, `absoluteMinimumTime` would be the start time of the initial
      *      segment, and `timeshiftDepth` would be the whole depth that will
      *      become available once enough segments have been generated.
      */
-    absoluteMinimum? : number;
+    absoluteMinimumTime? : number;
     /**
      * Some dynamic contents have the concept of a "window depth" (or "buffer
      * depth") which allows to set a minimum position for all reachable
@@ -425,7 +425,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public getMinimumPosition() : number {
     const windowData = this._timeBounds;
     if (windowData.timeshiftDepth === null) {
-      return windowData.absoluteMinimum ?? 0;
+      return windowData.absoluteMinimumTime ?? 0;
     }
 
     const { maximumTimeData } = windowData;
@@ -437,7 +437,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       maximumTime = maximumTimeData.value + timeDiff / 1000;
     }
     const theoricalMinimum = maximumTime - windowData.timeshiftDepth;
-    return Math.max(windowData.absoluteMinimum ?? 0, theoricalMinimum);
+    return Math.max(windowData.absoluteMinimumTime ?? 0, theoricalMinimum);
   }
 
   /**
