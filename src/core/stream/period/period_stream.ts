@@ -163,6 +163,7 @@ export default function PeriodStream({
       const newStream$ = clock$.pipe(
         take(1),
         mergeMap((tick) => {
+          const { audioTrackSwitchingMode } = options;
           const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
                                                            bufferType,
                                                            adaptation,
@@ -172,7 +173,8 @@ export default function PeriodStream({
           const strategy = getAdaptationSwitchStrategy(segmentBuffer,
                                                        period,
                                                        adaptation,
-                                                       playbackInfos);
+                                                       playbackInfos,
+                                                       audioTrackSwitchingMode);
           if (strategy.type === "needs-reload") {
             return observableOf(EVENTS.needsMediaSourceReload(period, tick));
           }
@@ -180,8 +182,7 @@ export default function PeriodStream({
           const cleanBuffer$ = strategy.type === "clean-buffer" ?
             observableConcat(...strategy.value.map(({ start, end }) =>
                                segmentBuffer.removeBuffer(start, end))
-                            ).pipe(ignoreElements()) :
-            EMPTY;
+                            ).pipe(ignoreElements()) : EMPTY;
 
           const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
           const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);

@@ -152,20 +152,6 @@ export default class AudioVideoSegmentBuffer
                              null;
 
   /**
-   * Current `type` of the underlying SourceBuffer.
-   * Might be changed for codec-switching purposes.
-   */
-  private _currentCodec : string;
-
-  /**
-   * Public access to the SourceBuffer's current codec.
-   * @returns {string}
-   */
-  public get codec() : string {
-    return this._currentCodec;
-  }
-
-  /**
    * @constructor
    * @param {string} bufferType
    * @param {string} codec
@@ -186,7 +172,7 @@ export default class AudioVideoSegmentBuffer
     this._queue = [];
     this._pendingTask = null;
     this._lastInitSegment = null;
-    this._currentCodec = codec;
+    this.codec = codec;
 
     // Some browsers (happened with firefox 66) sometimes "forget" to send us
     // `update` or `updateend` events.

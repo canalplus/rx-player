@@ -19,6 +19,7 @@ import {
   Adaptation,
   Period,
 } from "../../../manifest";
+import areCodecsCompatible from "../../../utils/are_codecs_compatible";
 import {
   convertToRanges,
   excludeFromRanges,
@@ -37,6 +38,7 @@ const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 export type IAdaptationSwitchStrategy =
   { type: "continue"; value: undefined } |
   { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
+  { type: "needs-buffer-flush"; value:  Array<{ start: number; end: number }> } |
   { type: "needs-reload"; value: undefined };
 
 /**
@@ -52,7 +54,8 @@ export default function getAdaptationSwitchStrategy(
   segmentBuffer : SegmentBuffer<unknown>,
   period : Period,
   adaptation : Adaptation,
-  playbackInfo : { currentTime : number; readyState : number }
+  playbackInfo : { currentTime : number; readyState : number },
+  audioTrackSwitchingMode: "seamless" | "direct"
 ) : IAdaptationSwitchStrategy {
   const buffered = segmentBuffer.getBufferedRanges();
   if (buffered.length === 0) {
@@ -96,9 +99,26 @@ export default function getAdaptationSwitchStrategy(
   if (adaptation.type === "video" &&
       // We're playing the current Period
       isTimeInRange({ start, end }, currentTime) &&
-      // There is data for the current position
-      playbackInfo.readyState > 1 &&
+      // There is data for the current position or the codecs are differents
+      (playbackInfo.readyState > 1 || !adaptation.getPlayableRepresentations()
+        .some(rep =>
+          areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""))) &&
       // We're not playing the current wanted video Adaptation
+      !isTimeInRanges(adaptationInBuffer, currentTime))
+  {
+    return { type: "needs-reload", value: undefined };
+  }
+
+  if (adaptation.type === "audio" &&
+      // We have been explicitly asked to reload
+      audioTrackSwitchingMode === "direct" &&
+      // We're playing the current Period
+      isTimeInRange({ start, end }, currentTime) &&
+      // There is data for the current position or the codecs are differents
+      (playbackInfo.readyState > 1 || !adaptation.getPlayableRepresentations()
+        .some(rep =>
+          areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""))) &&
+      // We're not playing the current wanted audio Adaptation yet
       !isTimeInRanges(adaptationInBuffer, currentTime))
   {
     return { type: "needs-reload", value: undefined };

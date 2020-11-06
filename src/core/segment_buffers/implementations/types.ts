@@ -70,6 +70,16 @@ export abstract class SegmentBuffer<T> {
   /** Default implementation of an inventory of segment metadata. */
   protected _segmentInventory : SegmentInventory;
 
+  /**
+   * Mimetype+codec combination the SegmentBuffer is currently working with.
+   * Depending on the implementation, segments with a different codecs could be
+   * incompatible.
+   *
+   * `undefined` either if unknown or if the codec does not matter for this
+   * SegmentBuffer implementation.
+   */
+  public codec : string | undefined;
+
   constructor() {
     // Use SegmentInventory by default for inventory purposes
     this._segmentInventory = new SegmentInventory();

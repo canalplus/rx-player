@@ -153,6 +153,17 @@ export interface IAdaptationStreamOptions {
    * those devices.
    */
   enableFastSwitching : boolean;
+  /**
+   * Strategy to adopt when manually switching of audio adaptation.
+   * Can be either:
+   *    - "seamless": transitions are smooth but could be not immediate.
+   *    - "direct": strategy will be "smart", if the mimetype and the codec,
+   *    change, we will perform a hard reload of the media source, however, if it
+   *    doesn't change, we will just perform a small flush by removing buffered range
+   *    and performing, a small seek on the media element.
+   *    Transitions are faster, but, we could see appear a reloading or seeking state.
+   */
+  audioTrackSwitchingMode : "seamless" | "direct";
 }
 
 /**

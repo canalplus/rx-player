@@ -389,6 +389,7 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
                                  // From an AdaptationStream
 
                                  IBitrateEstimationChangeEvent |
+                                 INeedsMediaSourceReload |
                                  INeedsDecipherabilityFlush |
                                  IRepresentationChangeEvent |
 
@@ -416,6 +417,7 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
                                           // From an AdaptationStream
 
                                           IBitrateEstimationChangeEvent |
+                                          INeedsMediaSourceReload |
                                           INeedsDecipherabilityFlush |
                                           IRepresentationChangeEvent |
 
@@ -446,6 +448,7 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
                                        // From an AdaptationStream
 
                                        IBitrateEstimationChangeEvent |
+                                       INeedsMediaSourceReload |
                                        INeedsDecipherabilityFlush |
                                        IRepresentationChangeEvent |
 
