@@ -22,6 +22,7 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
 import {
   IParsedAdaptation,
   IParsedAdaptations,
+  IParsedAdaptationType,
 } from "../types";
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import inferAdaptationType from "./infer_adaptation_type";
@@ -223,7 +224,15 @@ export default function parseAdaptationSets(
   const parsedAdaptations : IParsedAdaptations = {};
   const adaptationSwitchingInfos : IAdaptationSwitchingInfos = {};
   const parsedAdaptationsIDs : string[] = [];
-  let videoMainAdaptation : IParsedAdaptation | null = null;
+
+  /**
+   * Index of the last parsed AdaptationSet with a Role set as "main" in
+   * `parsedAdaptations` for a given type.
+   * Not defined for a type with no main Adaptation inside.
+   * This is used to put main AdaptationSet first in the resulting array of
+   * Adaptation while still preserving the MPD order among them.
+   */
+  const lastMainAdaptationIndex : Partial<Record<IParsedAdaptationType, number>> = {};
 
   // first sort AdaptationSets by absolute priority.
   adaptationsIR.sort((a, b) => {
@@ -297,7 +306,16 @@ export default function parseAdaptationSets(
       timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,
       unsafelyBaseOnPreviousAdaptation: null,
     };
-    if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
+
+    if (type === "video" &&
+        isMainAdaptation &&
+        parsedAdaptations.video !== undefined &&
+        parsedAdaptations.video.length > 0 &&
+        lastMainAdaptationIndex.video !== undefined)
+    {
+      // Add to the already existing main video adaptation
+      // TODO remove that ugly custom logic?
+      const videoMainAdaptation = parsedAdaptations.video[lastMainAdaptationIndex.video];
       adaptationInfos.unsafelyBaseOnPreviousAdaptation = periodInfos
         .unsafelyBaseOnPreviousPeriod?.getAdaptation(videoMainAdaptation.id) ?? null;
       const representations = parseRepresentations(representationsIR,
@@ -370,8 +388,8 @@ export default function parseAdaptationSets(
       const adaptationsOfTheSameType = parsedAdaptations[type];
       if (adaptationsOfTheSameType === undefined) {
         parsedAdaptations[type] = [parsedAdaptationSet];
-        if (isMainAdaptation && type === "video") {
-          videoMainAdaptation = parsedAdaptationSet;
+        if (isMainAdaptation) {
+          lastMainAdaptationIndex[type] = 0;
         }
       } else {
         let mergedInto : IParsedAdaptation|null = null;
@@ -402,21 +420,25 @@ export default function parseAdaptationSets(
           }
         }
 
-        if (isMainAdaptation && type === "video") {
-          if (mergedInto == null) {
-            // put "main" adaptation as the first
-            adaptationsOfTheSameType.unshift(parsedAdaptationSet);
-            videoMainAdaptation = parsedAdaptationSet;
+        if (isMainAdaptation) {
+          const oldLastMainIdx = lastMainAdaptationIndex[type];
+          const newLastMainIdx = oldLastMainIdx === undefined ? 0 :
+                                                                oldLastMainIdx + 1;
+          if (mergedInto === null) {
+            // put "main" Adaptation after all other Main Adaptations
+            adaptationsOfTheSameType.splice(newLastMainIdx, 0, parsedAdaptationSet);
+            lastMainAdaptationIndex[type] = newLastMainIdx;
           } else {
-            // put the resulting adaptation first instead
             const indexOf = adaptationsOfTheSameType.indexOf(mergedInto);
-            if (indexOf < 0) {
-              adaptationsOfTheSameType.unshift(parsedAdaptationSet);
-            } else if (indexOf !== 0) {
+            if (indexOf < 0) { // Weird, not found
+              adaptationsOfTheSameType.splice(newLastMainIdx, 0, parsedAdaptationSet);
+              lastMainAdaptationIndex[type] = newLastMainIdx;
+            } else if (oldLastMainIdx === undefined || indexOf > oldLastMainIdx) {
+              // Found but was not main
               adaptationsOfTheSameType.splice(indexOf, 1);
-              adaptationsOfTheSameType.unshift(mergedInto);
+              adaptationsOfTheSameType.splice(newLastMainIdx, 0, mergedInto);
+              lastMainAdaptationIndex[type] = newLastMainIdx;
             }
-            videoMainAdaptation = mergedInto;
           }
         } else if (mergedInto === null) {
           adaptationsOfTheSameType.push(parsedAdaptationSet);

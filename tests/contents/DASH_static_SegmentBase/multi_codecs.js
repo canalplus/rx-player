@@ -24,6 +24,44 @@ export default {
         audio: [
           {
             isAudioDescription: undefined,
+            language: "en",
+            normalizedLanguage: "eng",
+            representations: [
+              {
+                bitrate: 130107,
+                codec: "mp4a.40.2",
+                mimeType: "audio/mp4",
+                index: {
+                  init: {
+                    mediaURLs: [BASE_URL + "a-eng-0128k-aac.mp4"],
+                    range: [0, 745],
+                  },
+                  segments: [],
+                },
+              },
+            ],
+          },
+          {
+            isAudioDescription: undefined,
+            language: "en",
+            normalizedLanguage: "eng",
+            representations: [
+              {
+                bitrate: 135879,
+                codec: "opus",
+                mimeType: "audio/webm",
+                index: {
+                  init: {
+                    mediaURLs: [BASE_URL + "a-eng-0128k-libopus.webm"],
+                    range: [0, 319],
+                  },
+                  segments: [],
+                },
+              },
+            ],
+          },
+          {
+            isAudioDescription: undefined,
             language: "es",
             normalizedLanguage: "spa",
             representations: [
@@ -73,44 +111,6 @@ export default {
                   init: {
                     mediaURLs: [BASE_URL + "a-fra-0128k-aac.mp4"],
                     range: [0, 745],
-                  },
-                  segments: [],
-                },
-              },
-            ],
-          },
-          {
-            isAudioDescription: undefined,
-            language: "en",
-            normalizedLanguage: "eng",
-            representations: [
-              {
-                bitrate: 130107,
-                codec: "mp4a.40.2",
-                mimeType: "audio/mp4",
-                index: {
-                  init: {
-                    mediaURLs: [BASE_URL + "a-eng-0128k-aac.mp4"],
-                    range: [0, 745],
-                  },
-                  segments: [],
-                },
-              },
-            ],
-          },
-          {
-            isAudioDescription: undefined,
-            language: "en",
-            normalizedLanguage: "eng",
-            representations: [
-              {
-                bitrate: 135879,
-                codec: "opus",
-                mimeType: "audio/webm",
-                index: {
-                  init: {
-                    mediaURLs: [BASE_URL + "a-eng-0128k-libopus.webm"],
-                    range: [0, 319],
                   },
                   segments: [],
                 },
@@ -216,31 +216,6 @@ export default {
         text: [
           {
             isClosedCaption: undefined,
-            language: "el",
-            normalizedLanguage: "ell",
-            representations: [
-              {
-                bitrate: 256,
-                codec: undefined,
-                mimeType: "text/vtt",
-                index: {
-                  init: {
-                    mediaURLs: [BASE_URL + "s-el.webvtt"],
-                  },
-                  segments: [
-                    {
-                      mediaURLs: [BASE_URL + "s-el.webvtt"],
-                      time: 0,
-                      timescale: 1,
-                      duration: 60.022,
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-          {
-            isClosedCaption: undefined,
             language: "en",
             normalizedLanguage: "eng",
             representations: [
@@ -255,6 +230,31 @@ export default {
                   segments: [
                     {
                       mediaURLs: [BASE_URL + "s-en.webvtt"],
+                      time: 0,
+                      timescale: 1,
+                      duration: 60.022,
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+          {
+            isClosedCaption: undefined,
+            language: "el",
+            normalizedLanguage: "ell",
+            representations: [
+              {
+                bitrate: 256,
+                codec: undefined,
+                mimeType: "text/vtt",
+                index: {
+                  init: {
+                    mediaURLs: [BASE_URL + "s-el.webvtt"],
+                  },
+                  segments: [
+                    {
+                      mediaURLs: [BASE_URL + "s-el.webvtt"],
                       time: 0,
                       timescale: 1,
                       duration: 60.022,
