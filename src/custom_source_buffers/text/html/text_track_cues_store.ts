@@ -39,7 +39,7 @@ export default class TextTrackCuesStore {
   }
 
   /**
-   * Get corresponding cue for the given time.
+   * Get corresponding cue(s) for the given time.
    * A cue is an object with three properties:
    *   - start {Number}: start time for which the cue should be displayed.
    *   - end {Number}: end time for which the cue should be displayed.
@@ -54,27 +54,28 @@ export default class TextTrackCuesStore {
    * updated, for example).
    *
    * @param {Number} time
-   * @returns {HTMLElement|undefined} - The cue to display
+   * @returns {Array.<HTMLElement>} - The cues that need to be displayed at that
+   * time.
    */
-  get(time : number) : IHTMLCue|undefined {
+  get(time : number) : HTMLElement[] {
     const cuesBuffer = this._cuesBuffer;
+    const ret = [];
 
     // begins at the end as most of the time the player will ask for the last
     // CuesGroup
     for (let i = cuesBuffer.length - 1; i >= 0; i--) {
-      const cues = cuesBuffer[i].cues;
-      for (let j = cues.length - 1; j >= 0; j--) {
-        const cue = cues[j];
-        if (time >= cue.start) {
-          if (time < cue.end) {
-            return cue;
-          } else {
-            return undefined;
+      const segment = cuesBuffer[i];
+      if (time < segment.end && time >= segment.start) {
+        const cues = segment.cues;
+        for (let j = 0; j < cues.length; j++) {
+          if (time >= cues[j].start && time < cues[j].end) {
+            ret.push(cues[j].element);
           }
         }
+        return ret;
       }
     }
-    return undefined;
+    return [];
   }
 
   /**

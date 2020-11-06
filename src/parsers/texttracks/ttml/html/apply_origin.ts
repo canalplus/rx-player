@@ -41,10 +41,8 @@ export default function applyOrigin(
         firstOrigin[2] === "%" ||
         firstOrigin[2] === "em")
     {
-      element.style.position = "relative";
       element.style.left = firstOrigin[1] + firstOrigin[2];
     } else if (firstOrigin[2] === "c") {
-      element.style.position = "relative";
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-left", firstOrigin[1]);
     } else {
@@ -55,10 +53,8 @@ export default function applyOrigin(
         secondOrigin[2] === "%" ||
         secondOrigin[2] === "em")
     {
-      element.style.position = "relative";
       element.style.top = secondOrigin[1] + secondOrigin[2];
     } else if (secondOrigin[2] === "c") {
-      element.style.position = "relative";
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-top", secondOrigin[1]);
     } else {

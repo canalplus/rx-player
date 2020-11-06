@@ -135,12 +135,18 @@ export default class HTMLTextSourceBuffer
   // regular check.
   private _clearSizeUpdates$ : Subject<void>;
 
-  // Information on the cue currently displayed in `_textTrackElement`.
-  private _currentCue : { element : HTMLElement;
-                          resolution : { columns : number;
-                                         rows : number; } |
-                                       null; } |
-                        null;
+  /** Information on cues currently displayed. */
+  private _currentCues : Array<{
+    /** The HTMLElement containing the cues, appended to `_textTrackElement`. */
+    element : HTMLElement;
+    /**
+     * Anounced resolution for this element.
+     * Necessary to properly render proportional sizes.
+     */
+    resolution : { columns : number;
+                   rows : number; } |
+                 null;
+  }>;
 
   /**
    * @param {HTMLMediaElement} videoElement
@@ -157,14 +163,14 @@ export default class HTMLTextSourceBuffer
     this._clearSizeUpdates$ = new Subject();
     this._destroy$ = new Subject();
     this._buffer = new TextTrackCuesStore();
-    this._currentCue = null;
+    this._currentCues = [];
 
     // update text tracks
     generateClock(this._videoElement)
       .pipe(takeUntil(this._destroy$))
       .subscribe((shouldDisplay) => {
         if (!shouldDisplay) {
-          this._hideCurrentCue();
+          this._disableCurrentCues();
           return;
         }
 
@@ -172,11 +178,11 @@ export default class HTMLTextSourceBuffer
         const time = Math.max(this._videoElement.currentTime +
                               (MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 1000) / 2,
                               0);
-        const cue = this._buffer.get(time);
-        if (cue === undefined) {
-          this._hideCurrentCue();
+        const cues = this._buffer.get(time);
+        if (cues.length === 0) {
+          this._disableCurrentCues();
         } else {
-          this._displayCue(cue.element);
+          this._displayCues(cues);
         }
       });
   }
@@ -282,7 +288,7 @@ export default class HTMLTextSourceBuffer
    */
   _abort() : void {
     log.debug("HTSB: Aborting html text track SourceBuffer");
-    this._hideCurrentCue();
+    this._disableCurrentCues();
     this._remove(0, Infinity);
     this._destroy$.next();
     this._destroy$.complete();
@@ -291,11 +297,13 @@ export default class HTMLTextSourceBuffer
   /**
    * Remove the current cue from being displayed.
    */
-  private _hideCurrentCue() : void {
+  private _disableCurrentCues() : void {
     this._clearSizeUpdates$.next();
-    if (this._currentCue !== null) {
-      safelyRemoveChild(this._textTrackElement, this._currentCue.element);
-      this._currentCue = null;
+    if (this._currentCues.length > 0) {
+      for (let i = 0; i < this._currentCues.length; i++) {
+        safelyRemoveChild(this._textTrackElement, this._currentCues[i].element);
+      }
+      this._currentCues = [];
     }
   }
 
@@ -303,35 +311,46 @@ export default class HTMLTextSourceBuffer
    * Display a new Cue. If one was already present, it will be replaced.
    * @param {HTMLElement} element
    */
-  private _displayCue(element : HTMLElement) : void {
-    if (this._currentCue !== null && this._currentCue.element === element) {
-      return; // we're already good
+  private _displayCues(elements : HTMLElement[]) : void {
+    const nothingChanged = this._currentCues.length === elements.length &&
+      this._currentCues.every((current, index) => current.element === elements[index]);
+
+    if (nothingChanged) {
+      return;
     }
+
+    // Remove and re-display everything
+    // TODO More intelligent handling
 
     this._clearSizeUpdates$.next();
-    if (this._currentCue !== null) {
-      safelyRemoveChild(this._textTrackElement, this._currentCue.element);
+    for (let i = 0; i < this._currentCues.length; i++) {
+      safelyRemoveChild(this._textTrackElement, this._currentCues[i].element);
     }
 
-    const resolution = getElementResolution(element);
-    this._currentCue = { element, resolution };
-    if (resolution !== null) {
+    this._currentCues = [];
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      const resolution = getElementResolution(element);
+      this._currentCues.push({ element, resolution });
+      this._textTrackElement.appendChild(element);
+    }
+
+    const proportionalCues = this._currentCues
+      .filter((cue) : cue is { resolution: { rows : number;
+                                             columns : number; };
+                                element : HTMLElement; } => cue.resolution !== null);
+
+    if (proportionalCues.length > 0) {
       // update propertionally-sized elements periodically
       onHeightWidthChange(this._textTrackElement, TEXT_TRACK_SIZE_CHECKS_INTERVAL)
         .pipe(takeUntil(this._clearSizeUpdates$),
               takeUntil(this._destroy$))
         .subscribe(({ height, width }) => {
-          if (this._currentCue !== null && this._currentCue.resolution !== null) {
-            const hasProport = updateProportionalElements(height,
-                                                          width,
-                                                          this._currentCue.resolution,
-                                                          this._currentCue.element);
-            if (!hasProport) {
-              this._clearSizeUpdates$.next();
-            }
+          for (let i = 0; i < proportionalCues.length; i++) {
+            const { resolution, element } = proportionalCues[i];
+            updateProportionalElements(height, width, resolution, element);
           }
         });
-    }
-    this._textTrackElement.appendChild(element);
+      }
   }
 }
