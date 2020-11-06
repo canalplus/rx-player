@@ -83,19 +83,19 @@ export default function trySettingServerCertificate(
       return EMPTY;
     }
 
-    if (ServerCertificateStore.has(mediaKeys, serverCertificate)) {
-      log.debug("EME: Server certificate already set on the MediaKeys");
+    if (ServerCertificateStore.hasOne(mediaKeys) === true) {
+      log.info("EME: The MediaKeys already has a server certificate, skipping...");
       return EMPTY;
     }
 
     log.info("EME: Setting server certificate on the MediaKeys");
     // Because of browser errors, or a user action that can lead to interrupting
-    // server certificate setting, we might delete the mediaKeys entry in the
-    // server certificate store. Next time we'll try to set server certificate,
-    // in case of doubt, we will consider the certificate not to be set on mediaKeys.
-    ServerCertificateStore.delete(mediaKeys);
+    // server certificate setting, we might be left in a status where we don't
+    // know if we attached the server certificate or not.
+    // Calling `prepare` allow to invalidate temporarily that status.
+    ServerCertificateStore.prepare(mediaKeys);
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
-      tap(() => { ServerCertificateStore.add(mediaKeys, serverCertificate); }),
+      tap(() => { ServerCertificateStore.set(mediaKeys, serverCertificate); }),
       ignoreElements(),
       catchError(error => observableOf({ type: "warning" as const, value: error })));
   });

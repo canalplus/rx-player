@@ -19,25 +19,54 @@ import hashBuffer from "../../utils/hash_buffer";
 
 /**
  * Keep track of server certificate which have been set for a MediaKeys.
- * As it is impossible for a MediaKeys to have his server certificate set
- * to a nullish value, we consider that once it has been set, it will remain
- * set until the MediaKeys instance is killed.
+ * As it is impossible for a MediaKeys to have his server certificate reset
+ * or updated, we consider that once it has been set, it will remain set until
+ * the MediaKeys instance is killed.
  *
  * So, a WeakMap helps keeping a trace of which server certificate (identified
  * with a unique hash) is set on a MediaKeys.
+ * `null` indicate that we don't know (and not `undefined`, because this is the
+ * default value for when a WeakMap has no value for a key) which server
+ * certificate is attached to a MediaKeys instance (most likely because related
+ * EME APIs failed or had an unexpected behavior).
  */
-let serverCertificateHashesMap: WeakMap<MediaKeys | ICustomMediaKeys,
-                                        { hash: number; serverCertificate: Uint8Array }> =
+const serverCertificateHashesMap =
   new WeakMap<MediaKeys | ICustomMediaKeys,
-              { hash: number; serverCertificate: Uint8Array }>();
+              { hash: number; serverCertificate: Uint8Array } | null>();
 
 /** ServerCertificateStore */
 export default {
   /**
+   * Tells the ServerCertificateStore that you begin to call the APIs to set a
+   * ServerCertificate on `mediaKeys`.
+   *
+   * Calling this function is necessary due to how server certificate work
+   * currently in EME APIs:
+   * Because right now, it is impossible to tell if a MediaKeys instance has an
+   * attached ServerCertificate or not when the corresponding API fails or if it
+   * never answers, we prefer to anounce through this function that the current
+   * server certificate attached to this MediaKeys is for now invalid.
    * @param {MediaKeys | Object} mediaKeys
-   * @param {BufferSource} serverCertificate
    */
-  add(mediaKeys: MediaKeys | ICustomMediaKeys, serverCertificate: BufferSource): void {
+  prepare(mediaKeys : MediaKeys | ICustomMediaKeys) : void {
+    serverCertificateHashesMap.set(mediaKeys, null);
+  },
+
+  /**
+   * Attach a new server certificate to a MediaKeys in the
+   * ServerCertificateStore.
+   *
+   * Only one server certificate should ever be attached to a MediaKeys
+   * instance and the `prepare` function should have been called before any
+   * action to update the server certificate took place (this function does not
+   * enforce either of those behaviors).
+   * @param {MediaKeys | Object} mediaKeys
+   * @param {ArrayBufferView | BufferSource} serverCertificate
+   */
+  set(
+    mediaKeys: MediaKeys | ICustomMediaKeys,
+    serverCertificate: ArrayBufferView | BufferSource
+  ) : void {
     const formattedServerCertificate: Uint8Array =
     serverCertificate instanceof Uint8Array ?
       serverCertificate :
@@ -48,20 +77,37 @@ export default {
     serverCertificateHashesMap.set(
       mediaKeys, { hash, serverCertificate: formattedServerCertificate });
   },
+
   /**
-   * @param {MediaKeys | Object} mediaKeys
+   * Returns `true` if the MediaKeys instance has an attached ServerCertificate.
+   * Returns `false` if it doesn't.
+   *
+   * Returns `undefined` if we cannot know, most likely because related EME APIs
+   * failed or had an unexpected behavior.
+   * @param {MediaKeys} mediaKeys
+   * @returns {Boolean|undefined}
    */
-  delete(mediaKeys: MediaKeys | ICustomMediaKeys): void {
-    serverCertificateHashesMap.delete(mediaKeys);
+  hasOne(mediaKeys : MediaKeys | ICustomMediaKeys) : boolean | undefined {
+    const currentServerCertificate = serverCertificateHashesMap.get(mediaKeys);
+    return currentServerCertificate === undefined ? false :
+           currentServerCertificate === null ? undefined :
+                                               true;
   },
+
   /**
+   * Returns `true` if the given `mediaKeys` has `serverCertificate` attached to
+   * it.
+   * Returns `false` either if it doesn't of if we doesn't know if it does.
    * @param {MediaKeys | Object} mediaKeys
-   * @param {BufferSource} serverCertificate
+   * @param {ArrayBufferView | BufferSource} serverCertificate
    * @returns {boolean}
    */
-  has(mediaKeys: MediaKeys | ICustomMediaKeys, serverCertificate: BufferSource): boolean {
+  has(
+    mediaKeys: MediaKeys | ICustomMediaKeys,
+    serverCertificate: ArrayBufferView | BufferSource
+  ): boolean {
     const serverCertificateHash = serverCertificateHashesMap.get(mediaKeys);
-    if (serverCertificateHash === undefined) {
+    if (serverCertificateHash === undefined || serverCertificateHash === null) {
       return false;
     }
     const { hash: oldHash, serverCertificate: oldServerCertificate } =
@@ -83,10 +129,5 @@ export default {
       }
     }
     return true;
-  },
-  clear() {
-    serverCertificateHashesMap =
-      new WeakMap<MediaKeys | ICustomMediaKeys,
-                  { hash: number; serverCertificate: Uint8Array }>();
   },
 };
