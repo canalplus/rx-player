@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import { IParsedManifest } from "../types";
+import { IParsedPeriod } from "../types";
 import getFirstPositionFromAdaptation from "./get_first_time_from_adaptation";
 
 /**
@@ -23,10 +23,10 @@ import getFirstPositionFromAdaptation from "./get_first_time_from_adaptation";
  * @returns {number | undefined}
  */
 export default function getMinimumPosition(
-  manifest: IParsedManifest
+  periods : IParsedPeriod[]
 ) : number | undefined {
-  for (let i = 0; i <= manifest.periods.length - 1; i++) {
-    const periodAdaptations = manifest.periods[i].adaptations;
+  for (let i = 0; i <= periods.length - 1; i++) {
+    const periodAdaptations = periods[i].adaptations;
     const firstAudioAdaptationFromPeriod = periodAdaptations.audio === undefined ?
       undefined :
       periodAdaptations.audio[0];

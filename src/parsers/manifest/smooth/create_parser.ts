@@ -511,8 +511,9 @@ function createSmoothStreamingParser(
 
     let suggestedPresentationDelay : number|undefined;
     let availabilityStartTime : number|undefined;
-    let minimumTime : { isContinuous : boolean; value : number; time : number}|undefined;
-    let maximumTime : { isContinuous : boolean; value : number; time : number}|undefined;
+    let minimumTime : number | undefined;
+    let timeshiftDepth : number | null = null;
+    let maximumTimeData : { isLinear : boolean; value : number; time : number };
 
     const firstVideoAdaptation = adaptations.video !== undefined ?
       adaptations.video[0] :
@@ -580,44 +581,28 @@ function createSmoothStreamingParser(
       suggestedPresentationDelay = parserOptions.suggestedPresentationDelay;
       availabilityStartTime = referenceDateTime;
 
-      const time = performance.now();
-      maximumTime = { isContinuous: true,
-                      value: lastTimeReference != null ?
-                        lastTimeReference :
-                        (Date.now() / 1000 - availabilityStartTime),
-                      time };
-      if (timeShiftBufferDepth == null) {
-        // infinite buffer
-        minimumTime = { isContinuous: false,
-                        value: firstTimeReference != null ? firstTimeReference :
-                                                            availabilityStartTime,
-                        time };
-      } else {
-        minimumTime = { isContinuous: true,
-                        value: Math.min(maximumTime.value - timeShiftBufferDepth + 5,
-                                        maximumTime.value),
-                        time };
-      }
+      minimumTime = firstTimeReference ?? availabilityStartTime;
+      const maximumTime = lastTimeReference != null ?
+        lastTimeReference :
+        (Date.now() / 1000 - availabilityStartTime);
+      maximumTimeData = { isLinear: true,
+                          value: maximumTime,
+                          time: performance.now() };
+      timeshiftDepth = timeShiftBufferDepth ?? null;
     } else {
-      minimumTime = { isContinuous: false,
-                      value: firstTimeReference != null ? firstTimeReference :
-                                                          0,
-                      time: performance.now() };
-      if (lastTimeReference !== undefined) {
-        maximumTime = { isContinuous: false,
-                        value: lastTimeReference,
-                        time: performance.now() };
-      } else if (duration !== undefined) {
-        maximumTime = { isContinuous: false,
-                        value: minimumTime.value + duration,
-                        time: performance.now() };
-      }
+      minimumTime = firstTimeReference ?? 0;
+      const maximumTime = lastTimeReference !== undefined ? lastTimeReference :
+                          duration !== undefined ? minimumTime + duration :
+                                                   Infinity;
+      maximumTimeData = { isLinear: false,
+                          value: maximumTime,
+                          time: performance.now() };
     }
 
     const periodStart = isLive ? 0 :
-                                 minimumTime.value;
+                                 minimumTime;
     const periodEnd = isLive ? undefined :
-                               maximumTime?.value;
+                               maximumTimeData.value;
     const manifest = {
       availabilityStartTime: availabilityStartTime === undefined ?
         0 :
@@ -625,8 +610,9 @@ function createSmoothStreamingParser(
       clockOffset: serverTimeOffset,
       isLive,
       isDynamic: isLive,
-      maximumTime,
-      minimumTime,
+      timeBounds: { absoluteMinimumTime: minimumTime,
+                    timeshiftDepth,
+                    maximumTimeData },
       periods: [{ adaptations,
                   duration: periodEnd !== undefined ?
                     periodEnd - periodStart : duration,

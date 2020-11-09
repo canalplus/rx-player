@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import { IParsedManifest } from "../types";
+import { IParsedPeriod } from "../types";
 import getLastPositionFromAdaptation from "./get_last_time_from_adaptation";
 
 /**
@@ -23,10 +23,10 @@ import getLastPositionFromAdaptation from "./get_last_time_from_adaptation";
  * @returns {number | undefined}
  */
 export default function getMaximumPosition(
-  manifest: IParsedManifest
+  periods : IParsedPeriod[]
 ) : number | undefined {
-  for (let i = manifest.periods.length - 1; i >= 0; i--) {
-    const periodAdaptations = manifest.periods[i].adaptations;
+  for (let i = periods.length - 1; i >= 0; i--) {
+    const periodAdaptations = periods[i].adaptations;
     const firstAudioAdaptationFromPeriod = periodAdaptations.audio === undefined ?
       undefined :
       periodAdaptations.audio[0];

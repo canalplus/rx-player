@@ -122,10 +122,20 @@ export interface IManifestEvents {
  * @class Manifest
  */
 export default class Manifest extends EventEmitter<IManifestEvents> {
-  /** ID uniquely identifying this Manifest. */
+  /**
+   * ID uniquely identifying this Manifest.
+   * No two Manifests should have this ID.
+   * This ID is automatically calculated each time a `Manifest` instance is
+   * created.
+   */
   public readonly id : string;
 
-  /** Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`). */
+  /**
+   * Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`).
+   *
+   * TODO This should never be needed as this structure is transport-agnostic.
+   * But it is specified in the Manifest API. Deprecate?
+   */
   public transport : string;
 
   /**
@@ -135,25 +145,29 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public readonly periods : Period[];
 
-  /** When that promise resolves, the whole Manifest needs to be updated */
+  /**
+   * When that promise resolves, the whole Manifest needs to be requested again
+   * so it can be refreshed.
+   */
   public expired : Promise<void> | null;
 
   /**
-   * Deprecated. Equivalent to manifest.periods[0].adaptations.
+   * Deprecated. Equivalent to `manifest.periods[0].adaptations`.
    * @deprecated
    */
   public adaptations : IManifestAdaptations;
 
   /**
-   * If true, the Manifest can evolve over time. New content can be downloaded,
-   * properties of the manifest can be changed.
+   * If true, the Manifest can evolve over time:
+   * New segments can become available in the future, properties of the manifest
+   * can change...
    */
   public isDynamic : boolean;
 
   /**
    * If true, this Manifest describes a live content.
-   * A live content is a specific kind of dynamic content where you want to play
-   * as close as possible to the maximum position.
+   * A live content is a specific kind of content where you want to play very
+   * close to the maximum position (here called the "live edge").
    * E.g., a TV channel is a live content.
    */
   public isLive : boolean;
@@ -166,16 +180,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public uris : string[];
 
   /**
-   * Suggested delay from the "live edge" the content is suggested to start
+   * Suggested delay from the "live edge" (i.e. the position corresponding to
+   * the current broadcast for a live content) the content is suggested to start
    * from.
    * This only applies to live contents.
    */
   public suggestedPresentationDelay? : number;
 
   /**
-   * Amount of time, in seconds, this Manifest is valid from its fetching time.
-   * If not valid, you will need to refresh and update this Manifest (the latter
-   * can be done through the `update` method).
+   * Amount of time, in seconds, this Manifest is valid from the time when it
+   * has been fetched.
    * If no lifetime is set, this Manifest does not become invalid after an
    * amount of time.
    */
@@ -188,20 +202,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * time.
    */
   public availabilityStartTime? : number;
-
-  /** Information about the first seekable position. */
-  public minimumTime? : {
-    isContinuous : boolean; // Whether this value continuously evolve over time
-    value : number; // Minimum seekable time in milliseconds calculated at `time`.
-    time : number; // `Performance.now()` output at the time `value` was calculated
-  };
-
-  /** Information about the last seekable position. */
-  public maximumTime? : {
-    isContinuous : boolean; // Whether this value continuously evolve over time
-    value : number; // Maximum seekable time in milliseconds calculated at `time`.
-    time : number; // `Performance.now()` output at the time `value` was calculated
-  };
 
   /**
    * Array containing every minor errors that happened when the Manifest has
@@ -216,6 +216,77 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * `undefined` if we did not obtain the server's time
    */
   public clockOffset : number | undefined;
+
+  /**
+   * Data allowing to calculate the minimum and maximum seekable positions at
+   * any given time.
+   */
+  private _timeBounds : {
+    /**
+     * The minimum time, in seconds, that was available the last time the
+     * Manifest was fetched.
+     *
+     * `undefined` if that value is unknown.
+     *
+     * Together with `timeshiftDepth` and the `maximumTimeData` object, this
+     * value allows to compute at any time the minimum seekable time:
+     *
+     *   - if `timeshiftDepth` is not set, the minimum seekable time is a
+     *     constant that corresponds to this value.
+     *
+     *    - if `timeshiftDepth` is set, `absoluteMinimumTime` will act as the
+     *      absolute minimum seekable time we can never seek below, even when
+     *      `timeshiftDepth` indicates a possible lower position.
+     *      This becomes useful for example when playing live contents which -
+     *      despite having a large window depth - just begun and as such only
+     *      have a few segment available for now.
+     *      Here, `absoluteMinimumTime` would be the start time of the initial
+     *      segment, and `timeshiftDepth` would be the whole depth that will
+     *      become available once enough segments have been generated.
+     */
+    absoluteMinimumTime? : number;
+    /**
+     * Some dynamic contents have the concept of a "window depth" (or "buffer
+     * depth") which allows to set a minimum position for all reachable
+     * segments, in function of the maximum reachable position.
+     *
+     * This is justified by the fact that a server might want to remove older
+     * segments when new ones become available, to free storage size.
+     *
+     * If this value is set to a number, it is the amount of time in seconds
+     * that needs to be substracted from the current maximum seekable position,
+     * to obtain the minimum seekable position.
+     * As such, this value evolves at the same rate than the maximum position
+     * does (if it does at all).
+     *
+     * If set to `null`, this content has no concept of a "window depth".
+     */
+    timeshiftDepth : number | null;
+    /** Data allowing to calculate the maximum position at any given time. */
+    maximumTimeData : {
+      /** Maximum seekable time in milliseconds calculated at `time`. */
+      value : number;
+      /**
+       * `Performance.now()` output at the time `value` was calculated.
+       * This can be used to retrieve the maximum position from `value` when it
+       * linearly evolves over time (see `isLinear` property).
+       */
+      time : number;
+      /**
+       * Whether the maximum seekable position evolves linearly over time.
+       *
+       * If set to `false`, `value` indicates the constant maximum position.
+       *
+       * If set to `true`, the maximum seekable time continuously increase at
+       * the same rate than the time since `time` does.
+       * For example, a `value` of 50000 (50 seconds) will indicate a maximum time
+       * of 51 seconds after 1 second have passed, of 56 seconds after 6 seconds
+       * have passed (we know how many seconds have passed since the initial
+       * calculation of value by checking the `time` property) etc.
+       */
+      isLinear: boolean;
+    };
+  };
 
   /**
    * Construct a Manifest instance from a parsed Manifest object (as returned by
@@ -252,7 +323,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                        this.periods[0].adaptations;
     /* tslint:enable:deprecation */
 
-    this.minimumTime = parsedManifest.minimumTime;
+    this._timeBounds = parsedManifest.timeBounds;
     this.isDynamic = parsedManifest.isDynamic;
     this.isLive = parsedManifest.isLive;
     this.uris = parsedManifest.uris === undefined ? [] :
@@ -261,7 +332,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.lifetime = parsedManifest.lifetime;
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
-    this.maximumTime = parsedManifest.maximumTime;
 
     if (supplementaryImageTracks.length > 0) {
       this.addSupplementaryImageAdaptations(supplementaryImageTracks);
@@ -353,15 +423,21 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMinimumPosition() : number {
-    const { minimumTime } = this;
-    if (minimumTime === undefined) {
-      return 0;
+    const windowData = this._timeBounds;
+    if (windowData.timeshiftDepth === null) {
+      return windowData.absoluteMinimumTime ?? 0;
     }
-    if (!minimumTime.isContinuous) {
-      return minimumTime.value;
+
+    const { maximumTimeData } = windowData;
+    let maximumTime : number;
+    if (!windowData.maximumTimeData.isLinear) {
+      maximumTime = maximumTimeData.value;
+    } else {
+      const timeDiff = performance.now() - maximumTimeData.time;
+      maximumTime = maximumTimeData.value + timeDiff / 1000;
     }
-    const timeDiff = performance.now() - minimumTime.time;
-    return minimumTime.value + timeDiff / 1000;
+    const theoricalMinimum = maximumTime - windowData.timeshiftDepth;
+    return Math.max(windowData.absoluteMinimumTime ?? 0, theoricalMinimum);
   }
 
   /**
@@ -369,26 +445,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMaximumPosition() : number {
-    const { maximumTime } = this;
-    if (maximumTime === undefined) {
-      if (this.isLive) {
-        const ast = this.availabilityStartTime !== undefined ?
-          this.availabilityStartTime :
-          0;
-        if (this.clockOffset === undefined) {
-          // server's time not known, rely on user's clock
-          return (Date.now() / 1000) - ast;
-       }
-        const serverTime = performance.now() + this.clockOffset;
-        return (serverTime / 1000) - ast;
-      }
-      return Infinity;
+    const { maximumTimeData } = this._timeBounds;
+    if (!maximumTimeData.isLinear) {
+      return maximumTimeData.value;
     }
-    if (!maximumTime.isContinuous) {
-      return maximumTime.value;
-    }
-    const timeDiff = performance.now() - maximumTime.time;
-    return maximumTime.value + timeDiff / 1000;
+    const timeDiff = performance.now() - maximumTimeData.time;
+    return maximumTimeData.value + timeDiff / 1000;
   }
 
   /**
@@ -610,16 +672,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.isDynamic = newManifest.isDynamic;
     this.isLive = newManifest.isLive;
     this.lifetime = newManifest.lifetime;
-    this.maximumTime = newManifest.maximumTime;
     this.parsingErrors = newManifest.parsingErrors;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
 
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
-      this.minimumTime = newManifest.minimumTime;
+      this._timeBounds = newManifest._timeBounds;
       this.uris = newManifest.uris;
       replacePeriods(this.periods, newManifest.periods);
     } else {
+      this._timeBounds.maximumTimeData = newManifest._timeBounds.maximumTimeData;
       updatePeriods(this.periods, newManifest.periods);
 
       // Partial updates do not remove old Periods.
