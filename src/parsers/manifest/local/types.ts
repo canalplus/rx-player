@@ -166,7 +166,7 @@ export interface ILocalIndex {
 
 /** A quality for a given "local" Manifest track (`ILocalAdaptation`). */
 export interface ILocalRepresentation {
-  /** Average number of bytes per second for the segments contained in this quality. */
+  /** Maximum number of bytes per second for the segments contained in this quality. */
   bitrate : number;
   /** DRM information. */
   contentProtections? : IContentProtections;
@@ -209,8 +209,8 @@ export interface ILocalAdaptation {
 export interface ILocalPeriod {
   /** Start time at which the Period begins, in seconds. */
   start: number;
-  /** Duration of the Period (from the start to the end), in seconds. */
-  duration: number;
+  /** End time at which the Period ends, in seconds. */
+  end: number;
   /** The different "tracks" available for this Period. */
   adaptations: ILocalAdaptation[];
 }
@@ -230,9 +230,29 @@ export interface ILocalManifest {
    *        parse it
    * MINOR: Retro-compatible format change.
    *
-   * The current version defined here is "0.1".
+   * The exception is the `0` MAJOR version (i.e. experimental versions).
+   * A parser for a version in that major (let's say `0.1`) might be unable to
+   * parse local Manifests of another version (e.g. `0.2`).
+   *
+   * There are two versions defined for now and we are compatible to both:
+   *
+   *   - "0.1": initial version
+   *
+   *   - "0.2": `minimumPosition` and `maximumPosition` are now defined.
+   *            `duration` has been removed.
+   *
+   *            `start` and `duration` from a ILocalPeriod and `time` and
+   *            `duration` from a `ILocalIndexSegment` are now in seconds
+   *            instead of milliseconds.
    */
   version : string;
+  /**
+   * Minimum position reachable in this content once fully downloaded, in
+   * seconds.
+   *
+   * Set to `0` by default.
+   */
+  minimumPosition? : number;
   /**
    * Maximum position reachable in this content once fully downloaded, in
    * seconds.
