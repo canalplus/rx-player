@@ -85,6 +85,9 @@ const STYLE_ATTRIBUTES = [ "backgroundColor",
  *        -----------------------------------------------
  *
  * @param {Object} cue
+ * TODO This code can be seen as risky because we might not predict every
+ * possible styles that can enter in conflict.
+ * A better solution should be found in the future
  */
 function applyDefaultTTMLCSSStyle(cue: ITTMLHTMLCue): void {
   const { element } = cue;
