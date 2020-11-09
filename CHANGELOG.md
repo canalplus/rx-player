@@ -1,5 +1,44 @@
 # Changelog
 
+## v3.22.0
+
+### Features
+
+  - Add `audioTrackSwitchingMode` `loadVideo` option to allow different strategies when switching between audio tracks [#801, #806]
+  - Add `enableFastSwitching` `loadVideo` option to enable or disable optimizations doing segment replacement in the browser's buffer [#779]
+  - Add `initialManifest` `loadVideo` option to provide the Manifest to the RxPlayer when it has already been loaded [#807]
+  - tools: Add `StringUtils` utilitary functions to tools to convert bytes to strings and the other way around [#809]
+  - tools: The `TextTrackRenderer` tool is not experimental anymore: it now has a stable API [#810]
+  - experimental/local-manifest: The RxPlayer now (only) plays the new `"0.2"` format version of the "LocalManifest" (in the experimental `"local"` transport) [#810]
+
+### Bug fixes
+
+  - directfile: Fix impossibility to play an encrypted content in directfile mode (regression brought in v3.21.1) [#827, #830]
+  - subtitles: Display multiple cues with overlapping times [#829]
+  - smooth: Fix minimum position in a Smooth live content when fewer segments than the dvr window length are available [#826]
+  - dash/metaplaylist: Fix possible playback issues on multi-Period contents, where segments from multiple Periods overlap [#837]
+  - Fix very rare race condition which triggered a "setting priority of null" error after synchronous segment requests were done [#817]
+  - local-manifest: LocalManifest that transition from not finished to finished while playing now end properly [#818]
+  - local-manifest: Fix and clarify the duration and maximum position reported for a playing LocalManifest [#818]
+  - compatibility/drm: On some webkit-based browsers, do not require the use of a server certificate for DRM if the key system used is not FairPlay [#833]
+  - drm: Properly update to a different server certificate on the MediaKeys or remove it if needed [#835]
+
+### Other improvements
+
+  - subtitles/ttml: Apply default position to TTML subtitles in `"html"` `textTrackMode` when no style is found [#815]
+  - subtitles/ttml: Set default text color to white to TTML subtitles in `"html"` textTrackMode [#832]
+  - drm: Avoid re-setting a server certificate we know has already been pushed to improve loading performance [#824, #835]
+  - dash: Always prefer a "main" AdaptationSet when hesitating between multiple ones [#828]
+  - dash: Improve minimum position precision for dynamic DASH contents when less segments are available than what would be guessed from the timeShiftBufferDepth [#826]
+  - drm/logs: Better log why a MediaKeySession is not considered as "usable" [#822]
+  - drm/logs: Be more verbose with DRM-related logs, even at lower logger levels [#821]
+  - tests/conformance: Add "conformance tests", to quickly test the capabilities of new devices and targets [#814]
+  - code: avoid circular dependency in `src/features` in original typescript source files [#805]
+  - demo: Fix default position for the video track select element in the demo to always be at the currently selected video track [#813]
+  - demo/code: Better integrate the RxPlayer to the demo: through a simple import, instead of adding a script tag for the bundled version [#811]
+  - dev: Remove all enforced git-hooks (on pre-commit and pre-push) [#808]
+
+
 ## v3.21.1 (2020/09/21)
 
 ### Bug fixes
