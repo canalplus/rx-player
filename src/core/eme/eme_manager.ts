@@ -183,15 +183,13 @@ export default function EMEManager(
           };
         }));
 
-      if (i === 0) { // first encrypted event for the current content
-        return observableMerge(
-          serverCertificate != null ?
-            observableConcat(setServerCertificate(mediaKeys, serverCertificate),
-                             session$) :
-            session$
-        );
+      // set server certificate when it is defined, at first received encrypted
+      // event
+      if (i === 0 && serverCertificate !== undefined) {
+          return observableConcat(
+            setServerCertificate(mediaKeys, serverCertificate),
+            session$);
       }
-
       return session$;
     }),
 

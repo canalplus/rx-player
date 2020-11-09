@@ -23,12 +23,14 @@ import {
 import {
   catchError,
   ignoreElements,
+  tap,
 } from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
 import tryCatch from "../../utils/rx-try_catch";
+import ServerCertificateStore from "./server_certificate_store";
 import { IEMEWarningEvent } from "./types";
 
 /**
@@ -81,8 +83,19 @@ export default function trySettingServerCertificate(
       return EMPTY;
     }
 
+    if (ServerCertificateStore.hasOne(mediaKeys) === true) {
+      log.info("EME: The MediaKeys already has a server certificate, skipping...");
+      return EMPTY;
+    }
+
     log.info("EME: Setting server certificate on the MediaKeys");
+    // Because of browser errors, or a user action that can lead to interrupting
+    // server certificate setting, we might be left in a status where we don't
+    // know if we attached the server certificate or not.
+    // Calling `prepare` allow to invalidate temporarily that status.
+    ServerCertificateStore.prepare(mediaKeys);
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
+      tap(() => { ServerCertificateStore.set(mediaKeys, serverCertificate); }),
       ignoreElements(),
       catchError(error => observableOf({ type: "warning" as const, value: error })));
   });
