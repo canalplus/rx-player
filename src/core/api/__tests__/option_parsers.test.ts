@@ -467,10 +467,16 @@ describe("API - parseLoadVideoOptions", () => {
     }
     expect(err1).toBeDefined();
     expect(opt1).not.toBeDefined();
-    expect(err1.message).toEqual("No url set on loadVideo");
+    expect(err1.message).toEqual(
+      "Unable to load a content: no url set on loadVideo.\n" +
+      "Please provide at least either an `url` argument, a `transportOptions.initialManifest` option or a `transportOptions.manifestLoader` option so the RxPlayer can load the content."
+    );
     expect(err2).toBeDefined();
     expect(opt2).not.toBeDefined();
-    expect(err2.message).toEqual("No url set on loadVideo");
+    expect(err2.message).toEqual(
+      "Unable to load a content: no url set on loadVideo.\n" +
+      "Please provide at least either an `url` argument, a `transportOptions.initialManifest` option or a `transportOptions.manifestLoader` option so the RxPlayer can load the content."
+    );
   });
 
   it("should throw if no transport is given", () => {
