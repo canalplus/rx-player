@@ -258,9 +258,9 @@ function applyGeneralStyle(
 
   // applies to region
   const displayAlign = style.displayAlign;
-  element.style.display = "flex";
-  element.style.flexDirection = "column";
   if (isNonEmptyString(displayAlign)) {
+    element.style.display = "flex";
+    element.style.flexDirection = "column";
     switch (displayAlign) {
       case "before":
         element.style.justifyContent = "flex-start";
