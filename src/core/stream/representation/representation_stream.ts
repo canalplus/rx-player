@@ -91,8 +91,8 @@ import pushMediaSegment from "./push_media_segment";
 
 /** Object emitted by the Stream's clock$ at each tick. */
 export interface IRepresentationStreamClockTick {
-  /** The current position, in seconds the media element is in, in seconds. */
-  currentTime : number;
+  /** The position, in seconds, the media element was in at the time of the tick. */
+  position : number;
  /**
   * Gap between the current position and the edge of a live content.
   * Not set for non-live contents.
@@ -101,7 +101,7 @@ export interface IRepresentationStreamClockTick {
   /** If set, the player is currently stalled (blocked). */
   stalled : IStalledStatus|null;
   /**
-   * Offset in seconds to add to `currentTime` to obtain the position we
+   * Offset in seconds to add to the time to obtain the position we
    * actually want to download from.
    * This is mostly useful when starting to play a content, where `currentTime`
    * might still be equal to `0` but you actually want to download from a
@@ -275,7 +275,7 @@ export default function RepresentationStream<T>({
       const neededRange = getWantedRange(period, timing, bufferGoal);
 
       const discontinuity = timing.stalled != null ?
-        representation.index.checkDiscontinuity(timing.currentTime) :
+        representation.index.checkDiscontinuity(timing.position) :
         -1;
 
       const shouldRefreshManifest =
@@ -296,7 +296,7 @@ export default function RepresentationStream<T>({
         }
       } else {
         neededSegments = getNeededSegments({ content,
-                                             currentPlaybackTime: timing.currentTime,
+                                             currentPlaybackTime: timing.position,
                                              knownStableBitrate,
                                              neededRange,
                                              queuedSourceBuffer })

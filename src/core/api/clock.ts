@@ -65,8 +65,8 @@ interface IMediaInfos {
   currentRange : { start : number;
                    end : number; } |
                  null;
-  /** Current `currentTime` (position) set on the media element. */
-  currentTime : number;
+  /** `currentTime` (position) set on the media element at the time of the tick. */
+  position : number;
   /** Current `duration` set on the media element. */
   duration : number;
   /** Current `ended` set on the media element. */
@@ -187,7 +187,7 @@ function getMediaInfos(
   return { bufferGap: getLeftSizeOfRange(buffered, currentTime),
            buffered,
            currentRange: getRange(buffered, currentTime),
-           currentTime,
+           position: currentTime,
            duration,
            ended,
            paused,
@@ -215,7 +215,7 @@ function getStalledStatus(
   { withMediaSource, lowLatencyMode } : IClockOptions
 ) : IStalledStatus {
   const { state: currentState,
-          currentTime,
+          position: currentTime,
           bufferGap,
           currentRange,
           duration,
@@ -225,7 +225,7 @@ function getStalledStatus(
 
   const { stalled: prevStalled,
           state: prevState,
-          currentTime: prevTime } = prevTimings;
+          position: prevTime } = prevTimings;
 
   const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode);
 
@@ -360,7 +360,7 @@ function createClock(
           if (log.getLevel() === "DEBUG") {
             log.debug("API: current playback timeline:\n" +
                       prettyPrintBuffered(lastTimings.buffered,
-                                          lastTimings.currentTime),
+                                          lastTimings.position),
                       `\n${state}`);
           }
           return lastTimings;

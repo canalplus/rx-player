@@ -129,7 +129,7 @@ export default function StreamOrchestrator(
                                 Infinity;
       return BufferGarbageCollector({
         queuedSourceBuffer: qSourceBuffer,
-        clock$: clock$.pipe(map(tick => tick.currentTime)),
+        clock$: clock$.pipe(map(tick => tick.position)),
         maxBufferBehind$: maxBufferBehind$
                             .pipe(map(val => Math.min(val, defaultMaxBehind))),
         maxBufferAhead$: maxBufferAhead$
@@ -140,14 +140,14 @@ export default function StreamOrchestrator(
   // trigger warnings when the wanted time is before or after the manifest's
   // segments
   const outOfManifest$ = clock$.pipe(
-    filterMap(({ currentTime, wantedTimeOffset }) => {
-      const position = wantedTimeOffset + currentTime;
-      if (position < manifest.getMinimumPosition()) {
+    filterMap(({ position, wantedTimeOffset }) => {
+      const offsetedPosition = wantedTimeOffset + position;
+      if (offsetedPosition < manifest.getMinimumPosition()) {
         const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
                                        "The current position is behind the " +
                                        "earliest time announced in the Manifest.");
         return EVENTS.warning(warning);
-      } else if (position > manifest.getMaximumPosition()) {
+      } else if (offsetedPosition > manifest.getMaximumPosition()) {
         const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
                                        "The current position is after the latest " +
                                        "time announced in the Manifest.");
@@ -266,23 +266,22 @@ export default function StreamOrchestrator(
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
     const restartStreamsWhenOutOfBounds$ = clock$.pipe(
-      filter(({ currentTime, wantedTimeOffset }) => {
+      filter(({ position, wantedTimeOffset }) => {
         return enableOutOfBoundsCheck &&
-               manifest.getPeriodForTime(wantedTimeOffset +
-                                           currentTime) !== undefined &&
-               isOutOfPeriodList(wantedTimeOffset + currentTime);
+               manifest.getPeriodForTime(wantedTimeOffset + position) !== undefined &&
+               isOutOfPeriodList(wantedTimeOffset + position);
       }),
-      tap(({ currentTime, wantedTimeOffset }) => {
+      tap(({ position, wantedTimeOffset }) => {
         log.info("SO: Current position out of the bounds of the active periods," +
                  "re-creating Streams.",
                  bufferType,
-                 currentTime + wantedTimeOffset);
+                 position + wantedTimeOffset);
         enableOutOfBoundsCheck = false;
         destroyStreams$.next();
       }),
-      mergeMap(({ currentTime, wantedTimeOffset }) => {
+      mergeMap(({ position, wantedTimeOffset }) => {
         const newInitialPeriod = manifest
-          .getPeriodForTime(currentTime + wantedTimeOffset);
+          .getPeriodForTime(position + wantedTimeOffset);
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND",
                                "The wanted position is not found in the Manifest.");
@@ -309,7 +308,7 @@ export default function StreamOrchestrator(
             return observableConcat(
               observableOf(EVENTS.needsDecipherabilityFlush(lastTick)),
               observableDefer(() => {
-                const lastPosition = lastTick.currentTime + lastTick.wantedTimeOffset;
+                const lastPosition = lastTick.position + lastTick.wantedTimeOffset;
                 const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
                 if (newInitialPeriod == null) {
                   throw new MediaError("MEDIA_TIME_NOT_FOUND",
@@ -368,9 +367,9 @@ export default function StreamOrchestrator(
 
     // Emits when the current position goes over the end of the current Stream.
     const endOfCurrentStream$ = clock$
-      .pipe(filter(({ currentTime, wantedTimeOffset }) =>
+      .pipe(filter(({ position, wantedTimeOffset }) =>
                      basePeriod.end != null &&
-                    (currentTime + wantedTimeOffset) >= basePeriod.end));
+                    (position + wantedTimeOffset) >= basePeriod.end));
 
     // Create Period Stream for the next Period.
     const nextPeriodStream$ = createNextPeriodStream$

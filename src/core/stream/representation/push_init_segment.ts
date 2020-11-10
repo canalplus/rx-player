@@ -48,7 +48,7 @@ export default function pushInitSegment<T>(
     content,
     segment,
     segmentData,
-    queuedSourceBuffer } : { clock$ : Observable<{ currentTime : number }>;
+    queuedSourceBuffer } : { clock$ : Observable<{ position : number }>;
                              content: { adaptation : Adaptation;
                                         manifest : Manifest;
                                         period : Period;

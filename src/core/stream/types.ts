@@ -296,10 +296,10 @@ export interface INeedsMediaSourceReload {
   type: "needs-media-source-reload";
   value: {
     /**
-     * The current position in seconds and the time at which the MediaSource
-     * should be reset once it has been reloaded.
+     * The position in seconds and the time at which the MediaSource should be
+     * reset once it has been reloaded.
      */
-    currentTime : number;
+    position : number;
     /**
      * If `true`, the HTMLMediaElement was paused when this event was sent.
      * Otherwise, it is set to `false`.
@@ -343,12 +343,11 @@ export interface INeedsDecipherabilityFlush {
   type: "needs-decipherability-flush";
   value: {
     /**
-     * The current position in seconds.
-     * This is indicated in the case where the MediaSource has to be reloaded,
+     * Indicated in the case where the MediaSource has to be reloaded,
      * in which case the time of the HTMLMediaElement should be reset to that
-     * value once reloaded.
+     * position, in seconds, once reloaded.
      */
-    currentTime : number;
+    position : number;
     /**
      * If `true` the HTMLMediaElement is currently paused.
      * This is indicated in the case where the MediaSource has to be reloaded,

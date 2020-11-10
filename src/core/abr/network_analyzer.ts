@@ -40,7 +40,7 @@ interface IPlaybackConditionsInfo {
    */
   bufferGap : number;
   /** Current playback position on the concerned media element, in seconds. */
-  currentTime : number;
+  position : number;
   /**
    * Last "playback rate" set by the user. This is the ideal "playback rate" at
    * which the media should play.
@@ -146,7 +146,7 @@ function estimateStarvationModeBitrate(
   currentRepresentation : Representation | null,
   lastEstimatedBitrate : number|undefined
 ) : number|undefined {
-  const nextNeededPosition = playbackInfo.currentTime + playbackInfo.bufferGap;
+  const nextNeededPosition = playbackInfo.position + playbackInfo.bufferGap;
   const concernedRequests = getConcernedRequests(pendingRequests, nextNeededPosition);
 
   if (concernedRequests.length !== 1) { // 0  == no request
@@ -212,7 +212,7 @@ function shouldDirectlySwitchToLowBitrate(
   playbackInfo : IPlaybackConditionsInfo,
   requests : IRequestInfo[]
 ) : boolean {
-  const nextNeededPosition = playbackInfo.currentTime + playbackInfo.bufferGap;
+  const nextNeededPosition = playbackInfo.position + playbackInfo.bufferGap;
   const nextRequest = arrayFind(requests, (r) =>
     r.duration > 0 && (r.time + r.duration) > nextNeededPosition);
 
@@ -290,11 +290,11 @@ export default class NetworkAnalyzer {
     let newBitrateCeil; // bitrate ceil for the chosen Representation
     let bandwidthEstimate;
     const localConf = this._config;
-    const { bufferGap, currentTime, duration } = playbackInfo;
+    const { bufferGap, position, duration } = playbackInfo;
 
     // check if should get in/out of starvation mode
     if (isNaN(duration) ||
-        bufferGap + currentTime < duration - ABR_STARVATION_DURATION_DELTA)
+        bufferGap + position < duration - ABR_STARVATION_DURATION_DELTA)
     {
       if (!this._inStarvationMode && bufferGap <= localConf.starvationGap) {
         log.info("ABR: enter starvation mode.");

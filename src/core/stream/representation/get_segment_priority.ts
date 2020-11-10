@@ -34,7 +34,7 @@ const { SEGMENT_PRIORITIES_STEPS } = config;
  */
 export default function getSegmentPriority(
   segment : ISegment,
-  clockTick : { currentTime : number;
+  clockTick : { position : number;
                 wantedTimeOffset : number; }
 ) : number {
   const segmentStart = segment.time / segment.timescale;
@@ -55,10 +55,10 @@ export default function getSegmentPriority(
  */
 export function getPriorityForTime(
   timeWanted : number,
-  clockTick : { currentTime : number;
+  clockTick : { position : number;
                 wantedTimeOffset : number; }
 ) : number {
-  const currentTime = clockTick.currentTime + clockTick.wantedTimeOffset;
+  const currentTime = clockTick.position + clockTick.wantedTimeOffset;
   const distance = timeWanted - currentTime;
 
   for (let priority = 0;

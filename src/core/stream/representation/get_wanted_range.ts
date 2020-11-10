@@ -15,7 +15,7 @@
  */
 
 export interface IClockTick {
-  currentTime : number;
+  position : number;
   wantedTimeOffset : number;
   liveGap? : number;
 }
@@ -35,7 +35,7 @@ export default function getWantedRange(
   tick : IClockTick,
   bufferGoal : number
 ) : { start : number; end : number } {
-  const currentTime = tick.currentTime + tick.wantedTimeOffset;
+  const currentTime = tick.position + tick.wantedTimeOffset;
   const startHardLimit = hardLimits.start == null ? 0 :
                                                     hardLimits.start;
   const endHardLimit = hardLimits.end == null ? Infinity :

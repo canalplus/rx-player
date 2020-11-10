@@ -42,14 +42,14 @@ export type IAdaptationSwitchStrategy =
  * @param {Object} queuedSourceBuffer
  * @param {Object} period
  * @param {Object} adaptation
- * @param {Object} clockTick
+ * @param {Object} playbackInfo
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
   queuedSourceBuffer : QueuedSourceBuffer<unknown>,
   period : Period,
   adaptation : Adaptation,
-  clockTick : { currentTime : number; readyState : number }
+  playbackInfo : { position : number; readyState : number }
 ) : IAdaptationSwitchStrategy {
   const buffered = queuedSourceBuffer.getBufferedRanges();
   if (buffered.length === 0) {
@@ -68,12 +68,12 @@ export default function getAdaptationSwitchStrategy(
   const adaptationInBuffer = getBufferedRangesFromAdaptation(queuedSourceBuffer,
                                                              period,
                                                              adaptation);
-  const { currentTime } = clockTick;
+  const { position } = playbackInfo;
   if (adaptation.type === "video" &&
-      clockTick.readyState > 1 &&
-      isTimeInRange({ start, end }, currentTime) &&
-      (isTimeInRanges(bufferedRanges, currentTime) &&
-       !isTimeInRanges(adaptationInBuffer, currentTime)))
+      playbackInfo.readyState > 1 &&
+      isTimeInRange({ start, end }, position) &&
+      (isTimeInRanges(bufferedRanges, position) &&
+       !isTimeInRanges(adaptationInBuffer, position)))
   {
     return { type: "needs-reload", value: undefined };
   }
@@ -89,8 +89,8 @@ export default function getAdaptationSwitchStrategy(
     paddingAfter = 0;
   }
   const toRemove = excludeFromRanges(unwantedData, [{
-    start: Math.max(currentTime - paddingBefore, start),
-    end: Math.min(currentTime + paddingAfter, end),
+    start: Math.max(position - paddingBefore, start),
+    end: Math.min(position + paddingAfter, end),
   }]);
 
   return toRemove.length > 0 ?  { type: "clean-buffer", value: toRemove } :

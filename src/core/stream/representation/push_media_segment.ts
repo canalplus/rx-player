@@ -47,7 +47,7 @@ export default function pushMediaSegment<T>(
     initSegmentData,
     parsedSegment,
     segment,
-    queuedSourceBuffer } : { clock$ : Observable<{ currentTime : number }>;
+    queuedSourceBuffer } : { clock$ : Observable<{ position : number }>;
                              content: { adaptation : Adaptation;
                                         manifest : Manifest;
                                         period : Period;

@@ -2552,7 +2552,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :
                                                 undefined;
     const positionData : IPositionUpdateItem = {
-      position: clockTick.currentTime,
+      position: clockTick.position,
       duration: clockTick.duration,
       playbackRate: clockTick.playbackRate,
       maximumBufferTime: maximumPosition,
@@ -2565,11 +2565,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (manifest !== null &&
         maximumPosition !== undefined &&
         manifest.isLive &&
-        clockTick.currentTime > 0
+        clockTick.position > 0
     ) {
       const ast = manifest.availabilityStartTime ?? 0;
-      positionData.wallClockTime = clockTick.currentTime + ast;
-      positionData.liveGap = maximumPosition - clockTick.currentTime;
+      positionData.wallClockTime = clockTick.position + ast;
+      positionData.liveGap = maximumPosition - clockTick.position;
     }
 
     this.trigger("positionUpdate", positionData);

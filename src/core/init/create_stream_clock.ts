@@ -68,11 +68,11 @@ export default function createStreamClock(
       .pipe(map(([tick, speed]) => {
         const { isLive } = manifest;
         return {
-          currentTime: tick.currentTime,
+          position: tick.position,
           duration: tick.duration,
           isPaused: initialPlayPerformed ? tick.paused :
                                            !autoPlay,
-          liveGap: isLive ? manifest.getMaximumPosition() - tick.currentTime :
+          liveGap: isLive ? manifest.getMaximumPosition() - tick.position :
                             Infinity,
           readyState: tick.readyState,
           speed,
@@ -85,7 +85,7 @@ export default function createStreamClock(
           // effective starting position will be _startTime_.
           // Thus we initially set a wantedTimeOffset equal to startTime.
           wantedTimeOffset: initialSeekPerformed ? 0 :
-                                                   startTime - tick.currentTime,
+                                                   startTime - tick.position,
         };
       }));
 

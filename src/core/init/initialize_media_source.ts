@@ -375,18 +375,18 @@ export default function InitializeOnMediaSource(
        * This function recursively re-call itself when a MediaSource reload is
        * wanted.
        * @param {MediaSource} mediaSource
-       * @param {number} position
+       * @param {number} startingPos
        * @param {boolean} shouldPlay
        * @returns {Observable}
        */
       function recursivelyLoadOnMediaSource(
         mediaSource : MediaSource,
-        position : number,
+        startingPos : number,
         shouldPlay : boolean
       ) : Observable<IInitEvent> {
-        const reloadMediaSource$ = new Subject<{ currentTime : number;
+        const reloadMediaSource$ = new Subject<{ position : number;
                                                  isPaused : boolean; }>();
-        const mediaSourceLoader$ = mediaSourceLoader(mediaSource, position, shouldPlay)
+        const mediaSourceLoader$ = mediaSourceLoader(mediaSource, startingPos, shouldPlay)
           .pipe(tap(evt => {
             switch (evt.type) {
               case "needs-manifest-refresh":
@@ -415,11 +415,11 @@ export default function InitializeOnMediaSource(
 
                 // simple seek close to the current position
                 // to flush the buffers
-                const { currentTime } = evt.value;
-                if (currentTime + 0.001 < evt.value.duration) {
+                const { position } = evt.value;
+                if (position + 0.001 < evt.value.duration) {
                   mediaElement.currentTime += 0.001;
                 } else {
-                  mediaElement.currentTime = currentTime;
+                  mediaElement.currentTime = position;
                 }
                 break;
               case "protected-segment":
@@ -432,10 +432,10 @@ export default function InitializeOnMediaSource(
           mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
 
         const handleReloads$ = reloadMediaSource$.pipe(
-          switchMap(({ currentTime, isPaused }) => {
+          switchMap(({ position, isPaused }) => {
             return openMediaSource(mediaElement).pipe(
               mergeMap(newMS => recursivelyLoadOnMediaSource(newMS,
-                                                             currentTime,
+                                                             position,
                                                              !isPaused)),
               startWith(EVENTS.reloadingMediaSource())
             );
