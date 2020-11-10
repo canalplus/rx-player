@@ -105,21 +105,19 @@ export default function getAdaptationSwitchStrategy(
 
   const rangesToExclude = [];
 
-  // First, if we are currently playing before or right at the beginning of the
-  // current Period, we don't want to accidentally remove some segments from the
-  // previous Period (which overlap a little with this one)
-  if (currentTime < (period.start + 2)) {
-    /** Last segment before one for the current period. */
-    const lastSegmentBefore = getLastSegmentBeforePeriod(inventory, period);
-    if (lastSegmentBefore !== null &&
-        (lastSegmentBefore.bufferedEnd === undefined ||
-         period.start - lastSegmentBefore.bufferedEnd < 1)) // Close to Period's start
-    {
-      // Exclude data close to the period's start to avoid cleaning
-      // to much
-      rangesToExclude.push({ start: 0,
-                             end: period.start + 1 });
-    }
+  // First, we don't want to accidentally remove some segments from the previous
+  // Period (which overlap a little with this one)
+
+  /** Last segment before one for the current period. */
+  const lastSegmentBefore = getLastSegmentBeforePeriod(inventory, period);
+  if (lastSegmentBefore !== null &&
+    (lastSegmentBefore.bufferedEnd === undefined ||
+      period.start - lastSegmentBefore.bufferedEnd < 1)) // Close to Period's start
+  {
+    // Exclude data close to the period's start to avoid cleaning
+    // to much
+    rangesToExclude.push({ start: 0,
+      end: period.start + 1 });
   }
 
   // Next, exclude data around current position to avoid decoding issues
@@ -139,7 +137,7 @@ export default function getAdaptationSwitchStrategy(
 
   // Now remove possible small range from the end if there is a segment from the
   // next Period
-  if (period.end !== undefined && period.end - currentTime < 2) {
+  if (period.end !== undefined) {
     /** first segment after for the current period. */
     const firstSegmentAfter = getFirstSegmentAfterPeriod(inventory, period);
     if (firstSegmentAfter !== null &&
@@ -150,6 +148,7 @@ export default function getAdaptationSwitchStrategy(
                              end: Number.MAX_VALUE });
     }
   }
+
   const toRemove = excludeFromRanges(unwantedRange, rangesToExclude);
 
   return toRemove.length > 0 ? { type: "clean-buffer", value: toRemove } :
