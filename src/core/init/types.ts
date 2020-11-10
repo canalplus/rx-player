@@ -27,6 +27,7 @@ import { IStallingItem } from "./get_stalled_events";
 
 // Object emitted when the clock ticks
 export interface IInitClockTick { position : number;
+                                  getCurrentTime : () => number;
                                   buffered : TimeRanges;
                                   duration : number;
                                   bufferGap : number;

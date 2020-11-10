@@ -49,7 +49,7 @@ export default function getAdaptationSwitchStrategy(
   queuedSourceBuffer : QueuedSourceBuffer<unknown>,
   period : Period,
   adaptation : Adaptation,
-  playbackInfo : { position : number; readyState : number }
+  playbackInfo : { currentTime : number; readyState : number }
 ) : IAdaptationSwitchStrategy {
   const buffered = queuedSourceBuffer.getBufferedRanges();
   if (buffered.length === 0) {
@@ -68,12 +68,12 @@ export default function getAdaptationSwitchStrategy(
   const adaptationInBuffer = getBufferedRangesFromAdaptation(queuedSourceBuffer,
                                                              period,
                                                              adaptation);
-  const { position } = playbackInfo;
+  const { currentTime } = playbackInfo;
   if (adaptation.type === "video" &&
       playbackInfo.readyState > 1 &&
-      isTimeInRange({ start, end }, position) &&
-      (isTimeInRanges(bufferedRanges, position) &&
-       !isTimeInRanges(adaptationInBuffer, position)))
+      isTimeInRange({ start, end }, currentTime) &&
+      (isTimeInRanges(bufferedRanges, currentTime) &&
+       !isTimeInRanges(adaptationInBuffer, currentTime)))
   {
     return { type: "needs-reload", value: undefined };
   }
@@ -89,8 +89,8 @@ export default function getAdaptationSwitchStrategy(
     paddingAfter = 0;
   }
   const toRemove = excludeFromRanges(unwantedData, [{
-    start: Math.max(position - paddingBefore, start),
-    end: Math.min(position + paddingAfter, end),
+    start: Math.max(currentTime - paddingBefore, start),
+    end: Math.min(currentTime + paddingAfter, end),
   }]);
 
   return toRemove.length > 0 ?  { type: "clean-buffer", value: toRemove } :

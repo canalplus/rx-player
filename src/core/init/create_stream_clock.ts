@@ -69,6 +69,7 @@ export default function createStreamClock(
         const { isLive } = manifest;
         return {
           position: tick.position,
+          getCurrentTime: tick.getCurrentTime,
           duration: tick.duration,
           isPaused: initialPlayPerformed ? tick.paused :
                                            !autoPlay,

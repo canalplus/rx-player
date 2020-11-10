@@ -62,6 +62,7 @@ import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
 export interface IPeriodStreamClockTick {
   position : number; // the position we are in the video in s at the time of the tic
+  getCurrentTime : () => number; // fetch the current time
   duration : number; // duration of the HTMLMediaElement
   isPaused: boolean; // If true, the player is on pause
   liveGap? : number; // gap between the current position and the edge of a
@@ -161,10 +162,12 @@ export default function PeriodStream({
                                                                 bufferType,
                                                                 adaptation,
                                                                 options);
+          const playbackInfos = { currentTime: tick.getCurrentTime(),
+                                  readyState: tick.readyState };
           const strategy = getAdaptationSwitchStrategy(qSourceBuffer,
                                                        period,
                                                        adaptation,
-                                                       tick);
+                                                       playbackInfos);
           if (strategy.type === "needs-reload") {
             return observableOf(EVENTS.needsMediaSourceReload(period, tick));
           }

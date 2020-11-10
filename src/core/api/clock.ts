@@ -100,6 +100,7 @@ export type IStalledStatus =
 export interface IClockTick extends IMediaInfos {
   /** Set if the player is stalled. */
   stalled : IStalledStatus;
+  getCurrentTime : () => number;
 }
 
 const { SAMPLING_INTERVAL_MEDIASOURCE,
@@ -329,15 +330,18 @@ function createClock(
   options : IClockOptions
 ) : Observable<IClockTick> {
   return observableDefer(() : Observable<IClockTick> => {
-    let lastTimings : IClockTick = objectAssign(getMediaInfos(mediaElement, "init"),
-                                                { stalled: null });
+    let lastTimings : IClockTick = objectAssign(
+      getMediaInfos(mediaElement, "init"),
+      { stalled: null, getCurrentTime: () => mediaElement.currentTime });
 
     function getCurrentClockTick(state : IMediaInfosState) : IClockTick {
       const mediaTimings = getMediaInfos(mediaElement, state);
       const stalledState = getStalledStatus(lastTimings, mediaTimings, options);
 
       // /!\ Mutate mediaTimings
-      return objectAssign(mediaTimings, { stalled: stalledState });
+      return objectAssign(mediaTimings,
+                          { stalled: stalledState,
+                            getCurrentTime: () => mediaElement.currentTime });
     }
 
     const eventObs : Array< Observable< IMediaInfosState > > =
