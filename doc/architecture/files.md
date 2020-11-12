@@ -31,7 +31,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
   - [src/core/init/: Media streaming logic](#core-init)
 - [src/**/__tests__: the unit tests directories](#src-tests)
-- [tests/: Test strategies, integration and memory tests](#tests)
+- [tests/: the player's tests](#tests)
 
 
 <a name="demo"></a>
@@ -321,17 +321,31 @@ but should still be suffixed by `.test.ts`.
 
 
 <a name="tests"></a>
-## The tests/ directory: Test strategies, integration and memory tests #########
+## The tests/ directory: the player's tests ####################################
 
-The rx-player contains integration tests (test the whole player), unit tests
-(test specific parts of the code) and memory tests (tests the memory usage of
-the player).
+This directory contains most testing code for the RxPlayer.
 
-Integration tests are entirely written in the ``tests/integration``
-subdirectory.
+The rx-player contains multiple type of tests:
 
-Memory tests are entirely written in the ``tests/memory`` subdirectory.
+  - integration tests: test the whole player API and its behavior when playing
+    different contents. The main goal of those tests is to quickly detect
+    regressions.
 
-As for unit tests, they are written alongside the code, in ``__tests__``
-directories. All its configuration can be found at the root of the project,
-in `jest.config.js` (we use the jest library for unit tests).
+    Those are entirely written in the ``tests/integration`` sub-directory.
+
+  - conformance tests: Provide standalone page which allows to quickly test the
+    support of various media-related API on a given device and/or browser.
+
+    The html documents you will find here are basic templates that can be easily
+    modified and deployed for quick testing.
+
+  - unit tests: test specific parts of the code. The main goal here is to check
+    the implementation of smaller units of code.
+
+    They are written alongside the code, in ``__tests__``
+    directories. All its configuration can be found at the root of the project,
+    in `jest.config.js` (we use the jest library for unit tests).
+
+  - memory tests: test the memory usage of the player.
+
+    They are entirely written in the ``tests/memory`` subdirectory.
