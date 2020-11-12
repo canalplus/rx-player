@@ -89,14 +89,14 @@ export default class ABRManager {
    * observable emitting the best representation (given the network/buffer
    * state).
    * @param {string} type
-   * @param {Array.<Representation>|undefined} representations
+   * @param {Array.<Representation>} representations
    * @param {Observable<Object>} clock$
    * @param {Observable<Object>} streamEvents$
    * @returns {Observable}
    */
   public get$(
     type : IBufferType,
-    representations : Representation[] = [],
+    representations : Representation[],
     clock$ : Observable<IABRManagerClockTick>,
     streamEvents$ : Observable<IABRStreamEvents>
   ) : Observable<IABREstimate> {
