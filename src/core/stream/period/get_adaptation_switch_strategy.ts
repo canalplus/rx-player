@@ -142,7 +142,7 @@ export default function getAdaptationSwitchStrategy(
     const firstSegmentAfter = getFirstSegmentAfterPeriod(inventory, period);
     if (firstSegmentAfter !== null &&
         (firstSegmentAfter.bufferedStart === undefined ||
-         (firstSegmentAfter.bufferedStart - period.end) < 1)) // Close to Period's start
+         (firstSegmentAfter.bufferedStart - period.end) < 1)) // Close to Period's end
     {
       rangesToExclude.push({ start: period.end - 1,
                              end: Number.MAX_VALUE });
