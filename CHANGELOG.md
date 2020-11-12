@@ -5,7 +5,7 @@
 ### Features
 
   - Add `audioTrackSwitchingMode` `loadVideo` option to allow different strategies when switching between audio tracks [#801, #806]
-  - Add `enableFastSwitching` `loadVideo` option to enable or disable optimizations doing segment replacement in the browser's buffer [#779]
+  - Add `enableFastSwitching` `loadVideo` option to enable or disable optimizations doing segment replacement in the browser's buffer [#779, #780]
   - Add `initialManifest` `loadVideo` option to provide the Manifest to the RxPlayer when it has already been loaded [#807]
   - tools: Add `StringUtils` utilitary functions to tools to convert bytes to strings and the other way around [#809]
   - tools: The `TextTrackRenderer` tool is not experimental anymore: it now has a stable API [#810]
