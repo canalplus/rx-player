@@ -61,7 +61,8 @@ import createEmptyStream from "./create_empty_adaptation_stream";
 import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
 export interface IPeriodStreamClockTick {
-  currentTime : number; // the current position we are in the video in s
+  position : number; // the position we are in the video in s at the time of the tic
+  getCurrentTime : () => number; // fetch the current time
   duration : number; // duration of the HTMLMediaElement
   isPaused: boolean; // If true, the player is on pause
   liveGap? : number; // gap between the current position and the edge of a
@@ -69,7 +70,7 @@ export interface IPeriodStreamClockTick {
   readyState : number; // readyState of the HTMLMediaElement
   speed : number; // playback rate at which the content plays
   stalled : IStalledStatus|null; // if set, the player is currently stalled
-  wantedTimeOffset : number; // offset in s to add to currentTime to obtain the
+  wantedTimeOffset : number; // offset in s to add to the time to obtain the
                              // position we actually want to download from
 }
 
@@ -161,10 +162,12 @@ export default function PeriodStream({
                                                                 bufferType,
                                                                 adaptation,
                                                                 options);
+          const playbackInfos = { currentTime: tick.getCurrentTime(),
+                                  readyState: tick.readyState };
           const strategy = getAdaptationSwitchStrategy(qSourceBuffer,
                                                        period,
                                                        adaptation,
-                                                       tick);
+                                                       playbackInfos);
           if (strategy.type === "needs-reload") {
             return observableOf(EVENTS.needsMediaSourceReload(period, tick));
           }
@@ -208,7 +211,7 @@ export default function PeriodStream({
       return objectAssign({},
                           tick,
                           { bufferGap: getLeftSizeOfRange(buffered,
-                                                          tick.currentTime) });
+                                                          tick.position) });
     }));
     return AdaptationStream({ abrManager,
                               clock$: adaptationStreamClock$,

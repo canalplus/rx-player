@@ -119,8 +119,8 @@ export interface IRepresentationEstimatorClockTick {
    * position where no segment data is available and the current position.
    */
   bufferGap : number;
-  /** Current playback position on the concerned media element, in seconds. */
-  currentTime : number;
+  /** The position, in seconds, the media element was in at the time of the tick. */
+  position : number;
   /**
    * Last "playback rate" set by the user. This is the ideal "playback rate" at
    * which the media should play.
@@ -497,9 +497,9 @@ export default function RepresentationEstimator({
       const bufferBasedClock$ = streamEvents$.pipe(
         filter((e) : e is IABRAddedSegmentEvent => e.type === "added-segment"),
         withLatestFrom(clock$),
-        map(([{ value: evtValue }, { speed, currentTime } ]) => {
+        map(([{ value: evtValue }, { speed, position } ]) => {
           const timeRanges = evtValue.buffered;
-          const bufferGap = getLeftSizeOfRange(timeRanges, currentTime);
+          const bufferGap = getLeftSizeOfRange(timeRanges, position);
           const { representation } = evtValue.content;
           const currentScore = scoreCalculator.getEstimate(representation);
           const currentBitrate = representation.bitrate;

@@ -65,8 +65,8 @@ interface IMediaInfos {
   currentRange : { start : number;
                    end : number; } |
                  null;
-  /** Current `currentTime` (position) set on the media element. */
-  currentTime : number;
+  /** `currentTime` (position) set on the media element at the time of the tick. */
+  position : number;
   /** Current `duration` set on the media element. */
   duration : number;
   /** Current `ended` set on the media element. */
@@ -100,6 +100,7 @@ export type IStalledStatus =
 export interface IClockTick extends IMediaInfos {
   /** Set if the player is stalled. */
   stalled : IStalledStatus;
+  getCurrentTime : () => number;
 }
 
 const { SAMPLING_INTERVAL_MEDIASOURCE,
@@ -187,7 +188,7 @@ function getMediaInfos(
   return { bufferGap: getLeftSizeOfRange(buffered, currentTime),
            buffered,
            currentRange: getRange(buffered, currentTime),
-           currentTime,
+           position: currentTime,
            duration,
            ended,
            paused,
@@ -215,7 +216,7 @@ function getStalledStatus(
   { withMediaSource, lowLatencyMode } : IClockOptions
 ) : IStalledStatus {
   const { state: currentState,
-          currentTime,
+          position: currentTime,
           bufferGap,
           currentRange,
           duration,
@@ -225,7 +226,7 @@ function getStalledStatus(
 
   const { stalled: prevStalled,
           state: prevState,
-          currentTime: prevTime } = prevTimings;
+          position: prevTime } = prevTimings;
 
   const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode);
 
@@ -329,15 +330,18 @@ function createClock(
   options : IClockOptions
 ) : Observable<IClockTick> {
   return observableDefer(() : Observable<IClockTick> => {
-    let lastTimings : IClockTick = objectAssign(getMediaInfos(mediaElement, "init"),
-                                                { stalled: null });
+    let lastTimings : IClockTick = objectAssign(
+      getMediaInfos(mediaElement, "init"),
+      { stalled: null, getCurrentTime: () => mediaElement.currentTime });
 
     function getCurrentClockTick(state : IMediaInfosState) : IClockTick {
       const mediaTimings = getMediaInfos(mediaElement, state);
       const stalledState = getStalledStatus(lastTimings, mediaTimings, options);
 
       // /!\ Mutate mediaTimings
-      return objectAssign(mediaTimings, { stalled: stalledState });
+      return objectAssign(mediaTimings,
+                          { stalled: stalledState,
+                            getCurrentTime: () => mediaElement.currentTime });
     }
 
     const eventObs : Array< Observable< IMediaInfosState > > =
@@ -360,7 +364,7 @@ function createClock(
           if (log.getLevel() === "DEBUG") {
             log.debug("API: current playback timeline:\n" +
                       prettyPrintBuffered(lastTimings.buffered,
-                                          lastTimings.currentTime),
+                                          lastTimings.position),
                       `\n${state}`);
           }
           return lastTimings;

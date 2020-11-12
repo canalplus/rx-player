@@ -44,7 +44,7 @@ import forceGarbageCollection from "./force_garbage_collection";
  * @returns {Observable}
  */
 export default function appendSegmentToSourceBuffer<T>(
-  clock$ : Observable<{ currentTime : number }>,
+  clock$ : Observable<{ position : number }>,
   queuedSourceBuffer : QueuedSourceBuffer<T>,
   dataInfos : IPushChunkInfos<T>
 ) : Observable<unknown> {

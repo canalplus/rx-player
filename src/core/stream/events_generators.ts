@@ -126,23 +126,23 @@ const EVENTS = {
 
   needsMediaSourceReload(
     period : Period,
-    { currentTime,
-      isPaused } : { currentTime : number;
+    { position,
+      isPaused } : { position : number;
                      isPaused : boolean; }
   ) : INeedsMediaSourceReload {
     return { type: "needs-media-source-reload",
-             value: { currentTime, isPaused, period } };
+             value: { position, isPaused, period } };
   },
 
   needsDecipherabilityFlush(
-    { currentTime,
+    { position,
       isPaused,
-      duration } : { currentTime : number;
+      duration } : { position : number;
                      isPaused : boolean;
                      duration : number; }
   ) : INeedsDecipherabilityFlush {
     return { type: "needs-decipherability-flush",
-             value: { currentTime, isPaused, duration } };
+             value: { position, isPaused, duration } };
   },
 
   periodStreamReady(

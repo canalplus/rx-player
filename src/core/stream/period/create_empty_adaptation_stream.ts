@@ -39,7 +39,7 @@ import { IStreamStateFull } from "../types";
  * @returns {Observable}
  */
 export default function createEmptyAdaptationStream(
-  streamClock$ : Observable<{ currentTime : number }>,
+  streamClock$ : Observable<{ position : number }>,
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,
   content : { period : Period }
@@ -47,7 +47,7 @@ export default function createEmptyAdaptationStream(
   const { period } = content;
   return observableCombineLatest([streamClock$, wantedBufferAhead$]).pipe(
     filter(([clockTick, wantedBufferAhead]) =>
-      period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
+      period.end != null && clockTick.position + wantedBufferAhead >= period.end
     ),
     map(() => {
       log.debug("Stream: full \"empty\" AdaptationStream", bufferType);

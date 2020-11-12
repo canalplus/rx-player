@@ -42,7 +42,7 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
  * @returns {Observable}
  */
 export default function forceGarbageCollection(
-  timings$ : Observable<{ currentTime: number }>,
+  timings$ : Observable<{ position: number }>,
   bufferingQueue : QueuedSourceBuffer<unknown>
 ) : Observable<unknown> {
   // wait for next timing event
@@ -51,11 +51,11 @@ export default function forceGarbageCollection(
     mergeMap((timing) => {
       log.warn("Stream: Running garbage collector");
       const buffered = bufferingQueue.getBufferedRanges();
-      let cleanedupRanges = selectGCedRanges(timing.currentTime, buffered, GC_GAP_CALM);
+      let cleanedupRanges = selectGCedRanges(timing.position, buffered, GC_GAP_CALM);
 
       // more aggressive GC if we could not find any range to clean
       if (cleanedupRanges.length === 0) {
-        cleanedupRanges = selectGCedRanges(timing.currentTime, buffered, GC_GAP_BEEFY);
+        cleanedupRanges = selectGCedRanges(timing.position, buffered, GC_GAP_BEEFY);
       }
 
       log.debug("Stream: GC cleaning", cleanedupRanges);
@@ -73,19 +73,19 @@ export default function forceGarbageCollection(
  * playing time.
  * See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
  *
- * @param {Number} currentTime
+ * @param {Number} position
  * @param {TimeRanges} buffered - current buffered ranges
  * @param {Number} gcGap - delta gap from current timestamp from which we
  * should consider cleaning up.
  * @returns {Array.<Object>} - Ranges selected for clean up
  */
 function selectGCedRanges(
-  currentTime : number,
+  position : number,
   buffered : TimeRanges,
   gcGap : number
 ) : Array<{ start : number; end : number }> {
   const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(buffered,
-                                                                 currentTime);
+                                                                 position);
   const cleanedupRanges : Array<{ start : number;
                                   end: number; }> = [];
 
@@ -94,10 +94,10 @@ function selectGCedRanges(
   // respect the gcGap? FIXME?
   for (let i = 0; i < outerRanges.length; i++) {
     const outerRange = outerRanges[i];
-    if (currentTime - gcGap < outerRange.end) {
+    if (position - gcGap < outerRange.end) {
       cleanedupRanges.push(outerRange);
     }
-    else if (currentTime + gcGap > outerRange.start) {
+    else if (position + gcGap > outerRange.start) {
       cleanedupRanges.push(outerRange);
     }
   }
@@ -105,13 +105,13 @@ function selectGCedRanges(
   // try to clean up some space in the current range
   if (innerRange != null) {
     log.debug("Stream: GC removing part of inner range", cleanedupRanges);
-    if (currentTime - gcGap > innerRange.start) {
+    if (position - gcGap > innerRange.start) {
       cleanedupRanges.push({ start: innerRange.start,
-                             end: currentTime - gcGap });
+                             end: position - gcGap });
     }
 
-    if (currentTime + gcGap < innerRange.end) {
-      cleanedupRanges.push({ start: currentTime + gcGap,
+    if (position + gcGap < innerRange.end) {
+      cleanedupRanges.push({ start: position + gcGap,
                              end: innerRange.end });
     }
   }
