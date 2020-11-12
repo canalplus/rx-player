@@ -126,7 +126,7 @@ function parseRangeHeader(rangeHeader, dataLength) {
   if (rangesNb[1] <= rangesNb[0]) {
     return [0, 0];
   }
-  if (rangesNb[0] == null || rangesNb === 0) {
+  if (rangesNb[0] == null || rangesNb[0] === 0) {
     if (rangesNb[1] == null) {
       return [0, dataLength - 1];
     }
