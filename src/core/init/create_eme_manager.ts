@@ -54,9 +54,11 @@ export default function createEMEManager(
   keySystems : IKeySystemOption[],
   contentProtections$ : Observable<IContentProtection>
 ) : Observable<IEMEManagerEvent|IEMEDisabledEvent> {
+  const encryptedEvents$ = observableMerge(onEncrypted$(mediaElement),
+                                           contentProtections$);
   if (features.emeManager == null) {
     return observableMerge(
-      onEncrypted$(mediaElement).pipe(map(() => {
+      encryptedEvents$.pipe(map(() => {
         log.error("Init: Encrypted event but EME feature not activated");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
                                       "EME feature not activated.");
@@ -66,7 +68,7 @@ export default function createEMEManager(
 
   if (keySystems.length === 0) {
     return observableMerge(
-      onEncrypted$(mediaElement).pipe(map(() => {
+      encryptedEvents$.pipe(map(() => {
         log.error("Init: Ciphered media and no keySystem passed");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
                                       "Media is encrypted and no `keySystems` given");
@@ -76,7 +78,7 @@ export default function createEMEManager(
 
   if (!hasEMEAPIs()) {
     return observableMerge(
-      onEncrypted$(mediaElement).pipe(map(() => {
+      encryptedEvents$.pipe(map(() => {
         log.error("Init: Encrypted event but no EME API available");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
                                       "Encryption APIs not found.");
