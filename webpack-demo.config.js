@@ -123,15 +123,6 @@ module.exports = {
       },
     }),
   ],
-  node: {
-    console: false,
-    global: true,
-    process: false,
-    Buffer: false,
-    __filename: false,
-    __dirname: false,
-    setImmediate: false,
-  },
   watchOptions: {
     ignored: /node_modules/,
   },
