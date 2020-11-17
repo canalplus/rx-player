@@ -52,8 +52,14 @@ export default [
     "live": false,
   },
   {
-    "name": "Wowza - Big Buck Bunny",
-    "url": "https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/manifest_mpm4sav_mvtime_w925796611.mpd",
+    "name": "DASH IF - SegmentTemplate",
+    "url": "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd",
+    "transport": "dash",
+    "live": true,
+  },
+  {
+    "name": "DASH IF - SegmentTimeline",
+    "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
     "transport": "dash",
     "live": true,
   },
