@@ -1,4 +1,4 @@
-<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Local contents (offline playback) - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Local%20contents%20(offline%20playback)">Local contents (offline playback)</a></p>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Local Manifest format version 0.1 - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Local%20Manifest%20format%20version%200.1">Local Manifest format version 0.1</a></p>
 <ul>
 <li><a href="#chapter-Preamble">Preamble</a></li>
 <li><a href="#chapter-Overview">Overview</a></li>
@@ -32,10 +32,14 @@
 </ul>
 </li>
 <li><a href="#chapter-About%20DRMs">About DRMs</a></li>
-<li><a href="#chapter-Difference%20with%20the%20%600.1%60%20format">Difference with the <code>0.1</code> format</a></li>
 </ul>
-</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Local%20contents%20(offline%20playback)"></a></p>
-<h1>Local contents (offline playback)</h1>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Local%20Manifest%20format%20version%200.1"></a></p>
+<h1>Local Manifest format version 0.1</h1>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> The <code>0.1</code> version of the local Manifest format is an old version which
+is not properly understood by the RxPlayer anymore.</p>
+<p>The last version of this specification can be found <a href="local_manifest.html">here</a>.</p>
+<hr>
 <p><a name="chapter-Preamble"></a></p>
 <h2>Preamble</h2>
 <p>The RxPlayer is also able to load downloaded DASH, Smooth, MetaPlaylist or even
@@ -138,12 +142,9 @@ object) to the lower ones (the representation Object).</p>
 <p>First, let&#x2019;s go into an example, before describing what each property is for:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;local&quot;</span>, <span class="hljs-comment">// always set to &quot;local&quot;</span>
-  <span class="hljs-attr">version</span>: <span class="hljs-string">&quot;0.2&quot;</span>, <span class="hljs-comment">// version number, in a MAJOR.MINOR form</span>
-  <span class="hljs-attr">minimumPosition</span>: <span class="hljs-number">0</span>, <span class="hljs-comment">// Minimum possible reachable position in the content,</span>
-                      <span class="hljs-comment">// in seconds</span>
-  maximumPosition: <span class="hljs-number">120</span>, <span class="hljs-comment">// Maximum possible reachable position in the content,</span>
-                        <span class="hljs-comment">// in seconds</span>
-  isFinished: <span class="hljs-literal">true</span>, <span class="hljs-comment">// if `false`, the content is still downloading</span>
+  <span class="hljs-attr">version</span>: <span class="hljs-string">&quot;0.1&quot;</span>, <span class="hljs-comment">// version number, in a MAJOR.MINOR form</span>
+  <span class="hljs-attr">duration</span>: <span class="hljs-number">60000</span>, <span class="hljs-comment">// duration of the whole content, in ms</span>
+  <span class="hljs-attr">isFinished</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// if `false`, the content is still downloading</span>
   <span class="hljs-attr">periods</span>: [ <span class="hljs-comment">// different &quot;periods&quot; in the content - see below</span>
     <span class="hljs-comment">// ...</span>
   ],
@@ -162,7 +163,7 @@ RxPlayer that the current content is a local manifest.</p>
 </li>
 <li>
 <p>version (<code>string</code>): Version number, in a MAJOR.MINOR form.
-The present documentation is for the <code>&quot;0.2&quot;</code> version.</p>
+The present documentation is for the <code>&quot;0.1&quot;</code> version.</p>
 <p>A parser for a version with the a given MAJOR version should be able to
 parse and play contents for any of the corresponding MINOR versions.</p>
 <p>The exception is the <code>0</code> MAJOR version (i.e. experimental versions).
@@ -170,14 +171,9 @@ A parser for a version with that major (let&#x2019;s say <code>0.1</code>) might
 parse local Manifests of another version (e.g. <code>0.2</code>).</p>
 </li>
 <li>
-<p>minimumPosition (<code>number|undefined</code>): Optional minimum position reachable in
-this content once it has been fully loaded, in seconds.</p>
-<p>If not set or set to <code>undefined</code>, the RxPlayer will assume that the content
-starts at a <code>0</code> position.</p>
-</li>
-<li>
-<p>maximumPosition (<code>number</code>): Maximum position reachable in this content once
-it has been fully loaded, in seconds.</p>
+<p>duration (<code>number</code>): duration of the whole content, in milliseconds. This
+means the difference between the absolute maximum position and the absolute
+minimum position.</p>
 </li>
 <li>
 <p>isFinished (<code>boolean</code>): <code>true</code> indicates that the content has been
@@ -214,8 +210,8 @@ an american film, each with its own language choices and qualities.</p>
 for your local manifest.</p>
 <p>Here&#x2019;s an example of a period object:</p>
 <pre><code class="language-js">{
-  <span class="hljs-attr">start</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// starting position in the whole content, in seconds</span>
-  <span class="hljs-attr">end</span>: <span class="hljs-number">20</span>, <span class="hljs-comment">// ending position, in seconds</span>
+  <span class="hljs-attr">start</span>: <span class="hljs-number">10000</span>, <span class="hljs-comment">// starting position in the whole content, in ms</span>
+  <span class="hljs-attr">end</span>: <span class="hljs-number">20000</span>, <span class="hljs-comment">// ending position, in ms</span>
   <span class="hljs-attr">adaptations</span>: [ <span class="hljs-comment">// available tracks for this period</span>
     <span class="hljs-comment">// ***</span>
   ]
@@ -225,24 +221,23 @@ for your local manifest.</p>
 look like:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;local&quot;</span>,
-  <span class="hljs-attr">version</span>: <span class="hljs-string">&quot;0.2&quot;</span>,
-  <span class="hljs-attr">minimumPosition</span>: <span class="hljs-number">0</span>,
-  <span class="hljs-attr">maximumPosition</span>: <span class="hljs-number">60</span>,
+  <span class="hljs-attr">version</span>: <span class="hljs-string">&quot;0.1&quot;</span>,
+  <span class="hljs-attr">duration</span>: <span class="hljs-number">60000</span>,
   <span class="hljs-attr">isFinished</span>: <span class="hljs-literal">true</span>,
   <span class="hljs-attr">periods</span>: [ <span class="hljs-comment">// Here we have 3 consecutive periods:</span>
     {
       <span class="hljs-attr">start</span>: <span class="hljs-number">0</span>,
-      <span class="hljs-attr">end</span>: <span class="hljs-number">10</span>,
+      <span class="hljs-attr">end</span>: <span class="hljs-number">10000</span>,
       <span class="hljs-attr">adaptations</span>: [ <span class="hljs-comment">/* ... */</span> ]
     },
     {
-      <span class="hljs-attr">start</span>: <span class="hljs-number">10</span>,
-      <span class="hljs-attr">end</span>: <span class="hljs-number">30</span>,
+      <span class="hljs-attr">start</span>: <span class="hljs-number">10000</span>,
+      <span class="hljs-attr">end</span>: <span class="hljs-number">30000</span>,
       <span class="hljs-attr">adaptations</span>: [ <span class="hljs-comment">/* ... */</span> ]
     },
     {
-      <span class="hljs-attr">start</span>: <span class="hljs-number">30</span>,
-      <span class="hljs-attr">end</span>: <span class="hljs-number">60</span>,
+      <span class="hljs-attr">start</span>: <span class="hljs-number">30000</span>,
+      <span class="hljs-attr">end</span>: <span class="hljs-number">60000</span>,
       <span class="hljs-attr">adaptations</span>: [ <span class="hljs-comment">/* ... */</span> ]
     },
   ],
@@ -253,10 +248,10 @@ look like:</p>
 <p>The following properties are found in a period object:</p>
 <ul>
 <li>
-<p>start (<code>number</code>): The position in seconds at which the period starts.</p>
+<p>start (<code>number</code>): The position in milliseconds at which the period starts.</p>
 </li>
 <li>
-<p>end (<code>number</code>): The position in seconds at which the period ends.</p>
+<p>end (<code>number</code>): The position in milliseconds at which the period ends.</p>
 </li>
 <li>
 <p>adaptations (<code>Array.&lt;Object&gt;</code>): The different tracks available. See below
@@ -304,7 +299,7 @@ with a simple video track example:</p>
 <p>Here how it looks when adaptations are integrated in a given period:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">start</span>: <span class="hljs-number">0</span>,
-  <span class="hljs-attr">end</span>: <span class="hljs-number">10</span>,
+  <span class="hljs-attr">end</span>: <span class="hljs-number">10000</span>,
   <span class="hljs-attr">adaptations</span>: [
     {
       <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;video&quot;</span>,
@@ -492,30 +487,30 @@ if this notion is not relevant, like for subtitles.</p>
 each object describing a single segment of media data. Each object has the
 following properties:</p>
 <ul>
-<li>time (<code>number</code>): starting position of the segment, in seconds</li>
-<li>duration (<code>number</code>): duration of the segment, in seconds</li>
+<li>time (<code>number</code>): starting position of the segment, in milliseconds</li>
+<li>duration (<code>number</code>): duration of the segment, in milliseconds</li>
 <li>timestampOffset (<code>number|undefined</code>): optional time offset to add to the
-segment&#x2019;s internal time in seconds to convert its media time to its
-presentation time, in seconds.
+segment&#x2019;s internal time to convert its media time to its presentation time,
+in milliseconds.
 If you don&#x2019;t know what it is, you will most likely not need it.</li>
 </ul>
 <p>Let&#x2019;s see a simple example with four segments of 2 seconds:</p>
 <pre><code class="language-js">[
   {
     <span class="hljs-attr">time</span>: <span class="hljs-number">0</span>,
-    <span class="hljs-attr">duration</span>: <span class="hljs-number">2</span>
+    <span class="hljs-attr">duration</span>: <span class="hljs-number">2000</span>
   },
   {
-    <span class="hljs-attr">time</span>: <span class="hljs-number">2</span>,
-    <span class="hljs-attr">duration</span>: <span class="hljs-number">2</span>
+    <span class="hljs-attr">time</span>: <span class="hljs-number">2000</span>,
+    <span class="hljs-attr">duration</span>: <span class="hljs-number">2000</span>
   },
   {
-    <span class="hljs-attr">time</span>: <span class="hljs-number">4</span>,
-    <span class="hljs-attr">duration</span>: <span class="hljs-number">2</span>
+    <span class="hljs-attr">time</span>: <span class="hljs-number">4000</span>,
+    <span class="hljs-attr">duration</span>: <span class="hljs-number">2000</span>
   },
   {
-    <span class="hljs-attr">time</span>: <span class="hljs-number">6</span>,
-    <span class="hljs-attr">duration</span>: <span class="hljs-number">2</span>
+    <span class="hljs-attr">time</span>: <span class="hljs-number">6000</span>,
+    <span class="hljs-attr">duration</span>: <span class="hljs-number">2000</span>
   }
 ]
 </code></pre>
@@ -614,43 +609,4 @@ specified in the corresponding containers (e.g. in PSSH boxes for mp4 and other
 ISOBMFF containers).</p>
 <p>We also look into adding supplementary encryption information into the local
 manifest format, but this is not available for now.</p>
-<p><a name="chapter-Difference%20with%20the%20%600.1%60%20format"></a></p>
-<h2>Difference with the <code>0.1</code> format</h2>
-<p>The previous <code>0.1</code> version of the local Manifest is now obsolete and is not
-compatible with the new versions of the RxPlayer.
-Its documentation can be found <a href="local_manifest_v0.1.html">here</a>.</p>
-<p>If you were relying on this version before and would like to switch the the
-<code>0.2</code> version, to be able to play it on newer versions of the RxPlayer, here
-is the exhaustive list of what changed:</p>
-<ul>
-<li>
-<p>a <code>minimumPosition</code> has been added to the &#x201C;period object&#x201D;</p>
-</li>
-<li>
-<p>a <code>maximumPosition</code> has been added to the &#x201C;period object&#x201D;</p>
-</li>
-<li>
-<p>the <code>duration</code> property of the &#x201C;period object&#x201D; has been removed</p>
-</li>
-<li>
-<p>the <code>start</code> property from a &#x201C;period object&#x201D; is now expressed in seconds
-instead of in milliseconds.</p>
-</li>
-<li>
-<p>the <code>end</code> property from a &#x201C;period object&#x201D; is now expressed in seconds
-instead of in milliseconds.</p>
-</li>
-<li>
-<p>the <code>time</code> property from a segment in the &#x201C;segments array&#x201D; is now expressed
-in seconds instead of in milliseconds.</p>
-</li>
-<li>
-<p>the <code>duration</code> property from a segment in the &#x201C;segments array&#x201D; is now
-expressed in seconds instead of in milliseconds.</p>
-</li>
-<li>
-<p>the <code>timestampOffset</code> property from a segment in the &#x201C;segments array&#x201D; is now
-expressed in seconds. In the <code>0.1</code> version the unit of time was unclear.</p>
-</li>
-</ul>
 </body></html></div></div></div></body>

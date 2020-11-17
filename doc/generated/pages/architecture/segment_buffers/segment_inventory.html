@@ -8,23 +8,23 @@
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
 <p>The SegmentInventory is a class which registers some information about every
-segments currently present in a SourceBuffer.
-One of them is created for every new <code>QueuedSourceBuffer</code>.</p>
+segments currently present in a <code>SegmentBuffer</code>.</p>
+<p>One of them is created for every new <code>SegmentBuffer</code>.</p>
 <p>This helps the RxPlayer to avoid re-downloading segments unnecessarily and know
 when old one have been garbage collected.
 For example, we could decide not to re-download a segment in any of the
 following cases:</p>
 <ul>
 <li>
-<p>The same segment is already completely present in the SourceBuffer</p>
+<p>The same segment is already completely present in the <code>SegmentBuffer</code></p>
 </li>
 <li>
-<p>The same segment is partially present in the SourceBuffer (read: a part has
-been removed or garbage collected), but enough is still there for what we
-want to play</p>
+<p>The same segment is partially present in the <code>SegmentBuffer</code> (read: a part
+has been removed or garbage collected), but enough is still there for what
+we want to play</p>
 </li>
 <li>
-<p>Another segment is in the SourceBuffer at the wanted time, but it is the
+<p>Another segment is in the <code>SegmentBuffer</code> at the wanted time, but it is the
 same content in a better or samey quality</p>
 </li>
 </ul>
@@ -53,21 +53,22 @@ is just too short).</p>
 <p>The SegmentInventory is merely a &#x201C;Store&#x201D;, meaning it will just store and
 process the data you give to it, without searching for the information itself.</p>
 <p>It contains in its state an array, the <em>inventory</em>, which stores every segments
-which should be present in the SourceBuffer in a chronological order.</p>
+which should be present in the <code>SegmentBuffer</code> in a chronological order.</p>
 <p>To construct this inventory, three methods can be used:</p>
 <ul>
 <li>
 <p>one to add information about a new chunk (part of a segment or the whole
-segment), which should have been pushed to the SourceBuffer.</p>
+segment), which should have been pushed to the <code>SegmentBuffer</code>.</p>
 </li>
 <li>
 <p>one to indicate that every chunks from a given segment have been pushed.</p>
 </li>
 <li>
-<p>one to synchronize the currently pushed segments with what the real
-SourceBuffer says it has buffered.</p>
+<p>one to synchronize the currently pushed segments with what the
+<code>SegmentBuffer</code> says it has buffered (which can be different for example
+after an automatic garbage collection).</p>
 </li>
 </ul>
 <p>After calling the synchronization one, you should be able to tell which parts of
-which segments are currently <em>living</em> in your SourceBuffer.</p>
+which segments are currently <em>living</em> in your <code>SegmentBuffer</code>.</p>
 </body></html></div></div></div></body>

@@ -2,7 +2,7 @@
 <ul>
 <li><a href="#chapter-Overview">Overview</a></li>
 <li><a href="#chapter-Multiple%20types%20handling">Multiple types handling</a></li>
-<li><a href="#chapter-Native%20SourceBuffers">Native SourceBuffers</a></li>
+<li><a href="#chapter-A%20special%20case:%20SourceBuffers">A special case: SourceBuffers</a></li>
 <li><a href="#chapter-PeriodStreams">PeriodStreams</a>
 <ul>
 <li><a href="#subchapter-Multi-Period%20management">Multi-Period management</a></li>
@@ -15,13 +15,14 @@
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
 <p>To be able to play a content, the player has to be able to download chunks of
-media data - called segments - and has to push them to SourceBuffers.</p>
+media data - called segments - and has to push them to media buffers, called
+<code>SegmentBuffers</code> in the RxPlayer code.</p>
 <p>In the RxPlayer, the <em>StreamOrchestrator</em> is the entry point for performing all
 those tasks.</p>
 <p>Basically, the <em>StreamOrchestrator</em>:</p>
 <ul>
 <li>
-<p>dynamically creates various SourceBuffers depending on the needs of the
+<p>dynamically creates various <code>SegmentBuffers</code> depending on the needs of the
 given content</p>
 </li>
 <li>
@@ -34,13 +35,13 @@ play in the best conditions possible.</p>
 <p>More often than not, content are divised into multiple &#x201C;types&#x201D;: &#x201C;audio&#x201D;, &#x201C;video&#x201D;
 and &#x201C;text&#x201D; segments, for example. They are often completely distinct in a
 Manifest and as such, have to be downloaded and decoded separately.</p>
-<p>Each type has its own <em>SourceBuffer</em>. For &#x201C;audio&#x201D;/&#x201C;video&#x201D; contents, we use
+<p>Each type has its own media buffer. For &#x201C;audio&#x201D;/&#x201C;video&#x201D; contents, we use
 regular browser-defined <em>MSE</em> SourceBuffers.
-For any other types, such as &#x201C;text&#x201D; and &#x201C;image&#x201D;, we defined custom SourceBuffers
-implementation adapted to these type of contents.</p>
+For any other types, such as &#x201C;text&#x201D; and &#x201C;image&#x201D;, those buffers are entirely
+defined in the code of the RxPlayer.</p>
 <p>We then create a different Stream for each type. Each will progressively
 download and push content of their respective type to their respective
-SourceBuffer:</p>
+media buffer:</p>
 <pre><code>- AUDIO STREAM -
 |======================    |
 
@@ -55,16 +56,13 @@ SourceBuffer:</p>
 </code></pre>
 <p><em>(the <code>|</code> sign delimits the temporal start and end of the buffer linked to a
 given Stream, the <code>=</code> sign represent a pushed segment in the corresponding
-SourceBuffer)</em></p>
-<p><a name="chapter-Native%20SourceBuffers"></a></p>
-<h2>Native SourceBuffers</h2>
-<p>SourceBuffers created for the audio and/or video types are called <em>native
-SourceBuffers</em>. This is because their management is managed by the browser,
-hence it&#x2019;s a &#x201C;native&#x201D; implementation.
-SourceBuffers for any other possible types (for example &#x201C;text&#x201D; and &#x201C;image&#x201D;) are
-called <em>custom SourceBuffers</em>. This is because their management is done by the
-RxPlayer, to emulate the native behavior.</p>
-<p>Native SourceBuffers have several differences with the custom ones, especially:</p>
+buffer)</em></p>
+<p><a name="chapter-A%20special%20case:%20SourceBuffers"></a></p>
+<h2>A special case: SourceBuffers</h2>
+<p>Media buffers created for the audio and/or video types rely on a <em>native</em>
+(implemented by the browser) <code>SourceBuffer</code> Object implementation.</p>
+<p>Media buffers relying on native SourceBuffers have several differences with the
+other &#x201C;custom&#x201D; (entirely defined in the RxPlayer) types of media buffers:</p>
 <ul>
 <li>
 <p>They are managed by the browser where custom ones are implemented in JS.
@@ -72,40 +70,38 @@ As such, they must obey to various browser rules, among which:</p>
 <ol>
 <li>
 <p>They cannot be lazily created as the content plays. We have to
-initialize all native SourceBuffers beforehand.</p>
+initialize all of them beforehand.</p>
 </li>
 <li>
 <p>They have to be linked to a specific codec.</p>
 </li>
 <li>
-<p>They have to be added to the MediaSource</p>
-</li>
-<li>
-<p>They have to be added to the MediaSource after the media HTMLElement
-has been linked to the MediaSource</p>
+<p>The <code>SourceBuffer</code> has to be linked to the MediaSource, and they have
+to the MediaSource after the media HTMLElement has been linked to the
+MediaSource</p>
 </li>
 </ol>
 </li>
 <li>
 <p>They are in a way more &#x201C;important&#x201D; than custom ones. If a problem happens
-with a native SourceBuffer, we interrupt playback. For a custom one, we can
-just deactivate the SourceBuffer for the content.</p>
+with a SourceBuffer, we interrupt playback. For a custom media buffer, we
+can just deactivate it for the rest of the content.</p>
 <p>For example, a problem with subtitles would just disable those with a
 warning. For a video problem however, we fail immediately.</p>
 </li>
 <li>
-<p>They affect buffering when custom SourceBuffers do not (no text segment for
+<p>They affect buffering when custom media buffers do not (no text segment for
 a part of the content means we will just not have subtitles, no audio
-segment means we will completely stop to await them)</p>
+segment means we will completely stop, to await them)</p>
 </li>
 <li>
 <p>They affect various API linked to the media element in the DOM. Such as
 <code>HTMLMediaElement.prototype.buffered</code>.
-Custom SourceBuffers do not.</p>
+Custom media buffers do not.</p>
 </li>
 </ul>
-<p>Due to these differences, native SourceBuffers are often managed in a less
-permissive way than custom ones:</p>
+<p>Due to these differences, media buffers relying on SourceBuffers are often
+managed in a less permissive way than custom ones:</p>
 <ul>
 <li>
 <p>They will be created at the very start of the content</p>
@@ -242,7 +238,7 @@ changed):</p>
    ^
 </code></pre>
 <p><em>Note that we still have the segment pushed to P2 available in the corresponding
-SourceBuffer</em></p>
+media buffer</em></p>
 <p>When the current position go ahead of a <em>PeriodStream</em> (here ahead of P1):</p>
 <pre><code>   P1     P2
 |======|===   |

@@ -8,7 +8,6 @@
 <ul>
 <li><a href="#subchapter-src/compat/:%20The%20compatibility%20files">src/compat/: The compatibility files</a></li>
 <li><a href="#subchapter-src/core/:%20The%20core%20files">src/core/: The core files</a></li>
-<li><a href="#subchapter-src/custom_source_buffers/:%20Custom%20SourceBuffers%20definitions">src/custom_source_buffers/: Custom SourceBuffers definitions</a></li>
 <li><a href="#subchapter-src/errors/:%20Error%20definitions">src/errors/: Error definitions</a></li>
 <li><a href="#subchapter-src/experimental/:%20Experimental%20features">src/experimental/: Experimental features</a></li>
 <li><a href="#subchapter-src/features/:%20Feature%20switching">src/features/: Feature switching</a></li>
@@ -26,12 +25,12 @@
 <li><a href="#subchapter-src/core/stream/:%20Load%20the%20right%20segments">src/core/stream/: Load the right segments</a></li>
 <li><a href="#subchapter-src/core/eme/:%20Encryption%20management">src/core/eme/: Encryption management</a></li>
 <li><a href="#subchapter-src/core/fetchers/:%20The%20fetchers">src/core/fetchers/: The fetchers</a></li>
-<li><a href="#subchapter-src/core/source_buffers/:%20SourceBuffers%20definitions">src/core/source_buffers/: SourceBuffers definitions</a></li>
+<li><a href="#subchapter-src/core/segment_buffers/:%20The%20media%20buffers">src/core/segment_buffers/: The media buffers</a></li>
 <li><a href="#subchapter-src/core/init/:%20Content%20initialization">src/core/init/: Content initialization</a></li>
 </ul>
 </li>
 <li><a href="#chapter-src/**/__tests__:%20the%20unit%20tests%20directories">src/**/<strong>tests</strong>: the unit tests directories</a></li>
-<li><a href="#chapter-The%20tests/%20directory:%20Test%20strategies,%20integration%20and%20memory%20tests">The tests/ directory: Test strategies, integration and memory tests</a></li>
+<li><a href="#chapter-The%20tests/%20directory:%20the%20player's%20tests">The tests/ directory: the player’s tests</a></li>
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-File%20architecture"></a></p>
 <h1>File architecture</h1>
@@ -122,21 +121,6 @@ the streaming technology used.</p>
 </ul>
 <p>This directory contains other subdirectories which are listed in the next
 chapter.</p>
-<p><a name="src-csb"></a>
-<a name="subchapter-src/custom_source_buffers/:%20Custom%20SourceBuffers%20definitions"></a></p>
-<h3>src/custom_source_buffers/: Custom SourceBuffers definitions</h3>
-<p>SourceBuffers are the JavaScript objects through which media segments are added
-to the browser.</p>
-<p>Definition are usually already provided by the browser for the Audio and Video
-SourceBuffers. This directory allows to implement in JavaScript SourceBuffers
-for other type of media (e.g. text, overlays, images&#x2026;).</p>
-<p>For example, when a new text chunk is pushed to the text SourceBuffer, the
-custom text SourceBuffer will:</p>
-<ul>
-<li>update its buffered information</li>
-<li>call the corresponding text parser</li>
-<li>display the right subtitle at the right timecode</li>
-</ul>
 <p><a name="src-errors"></a>
 <a name="subchapter-src/errors/:%20Error%20definitions"></a></p>
 <h3>src/errors/: Error definitions</h3>
@@ -222,7 +206,7 @@ interact with.</p>
 <a name="subchapter-src/core/stream/:%20Load%20the%20right%20segments"></a></p>
 <h3>src/core/stream/: Load the right segments</h3>
 <p>The code there calculate which segments should be downloaded, ask for their
-download and push the segments into the SourceBuffers.</p>
+download and push the segments into the <code>SegmentBuffers</code>.</p>
 <p><a name="core-eme"></a>
 <a name="subchapter-src/core/eme/:%20Encryption%20management"></a></p>
 <h3>src/core/eme/: Encryption management</h3>
@@ -236,13 +220,15 @@ defined in the <code>src/transports/</code> directory.</p>
 It facilitates the role of loading the Manifest and new segments for the rest of
 the core.</p>
 <p><a name="core-sb"></a>
-<a name="subchapter-src/core/source_buffers/:%20SourceBuffers%20definitions"></a></p>
-<h3>src/core/source_buffers/: SourceBuffers definitions</h3>
-<p>Code allowing to interact with the <code>SourceBuffers</code>, the JavaScript object
-through which media segments are pushed to be able to play a content.</p>
-<p>For Audio and Video, SourceBuffers are already provided by the browser,
-for other type of contents (like subtitles), we rely on Custom SourceBuffers
-defined in <code>src/custom_source_buffers</code>.</p>
+<a name="subchapter-src/core/segment_buffers/:%20The%20media%20buffers"></a></p>
+<h3>src/core/segment_buffers/: The media buffers</h3>
+<p>Code allowing to interact with the media buffers called <code>SegmentBuffers</code>.</p>
+<p>Those are the Objects to which segments are pushed so they can be decoded at the
+right time.</p>
+<p>For Audio and Video, <code>SegmentBuffers</code> rely on a native <code>SourceBuffer</code> object,
+already provided by the browser,
+for other type of contents (like subtitles), we rely on completely custom media
+buffers implementations.</p>
 <p><a name="core-init"></a>
 <a name="subchapter-src/core/init/:%20Content%20initialization"></a></p>
 <h3>src/core/init/: Content initialization</h3>
@@ -269,15 +255,33 @@ itself directly at the root of the corresponding <code>__tests__</code> director
 Their filename don&#x2019;t follow the same convention than single-source unit tests
 but should still be suffixed by <code>.test.ts</code>.</p>
 <p><a name="tests"></a>
-<a name="chapter-The%20tests/%20directory:%20Test%20strategies,%20integration%20and%20memory%20tests"></a></p>
-<h2>The tests/ directory: Test strategies, integration and memory tests</h2>
-<p>The rx-player contains integration tests (test the whole player), unit tests
-(test specific parts of the code) and memory tests (tests the memory usage of
-the player).</p>
-<p>Integration tests are entirely written in the <code>tests/integration</code>
-subdirectory.</p>
-<p>Memory tests are entirely written in the <code>tests/memory</code> subdirectory.</p>
-<p>As for unit tests, they are written alongside the code, in <code>__tests__</code>
+<a name="chapter-The%20tests/%20directory:%20the%20player&apos;s%20tests"></a></p>
+<h2>The tests/ directory: the player&#x2019;s tests</h2>
+<p>This directory contains most testing code for the RxPlayer.</p>
+<p>The rx-player contains multiple type of tests:</p>
+<ul>
+<li>
+<p>integration tests: test the whole player API and its behavior when playing
+different contents. The main goal of those tests is to quickly detect
+regressions.</p>
+<p>Those are entirely written in the <code>tests/integration</code> sub-directory.</p>
+</li>
+<li>
+<p>conformance tests: Provide standalone page which allows to quickly test the
+support of various media-related API on a given device and/or browser.</p>
+<p>The html documents you will find here are basic templates that can be easily
+modified and deployed for quick testing.</p>
+</li>
+<li>
+<p>unit tests: test specific parts of the code. The main goal here is to check
+the implementation of smaller units of code.</p>
+<p>They are written alongside the code, in <code>__tests__</code>
 directories. All its configuration can be found at the root of the project,
 in <code>jest.config.js</code> (we use the jest library for unit tests).</p>
+</li>
+<li>
+<p>memory tests: test the memory usage of the player.</p>
+<p>They are entirely written in the <code>tests/memory</code> subdirectory.</p>
+</li>
+</ul>
 </body></html></div></div></div></body>

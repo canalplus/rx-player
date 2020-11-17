@@ -178,7 +178,7 @@ on which tracks will be filtered):</p>
                    <span class="hljs-comment">// If not set or set to `undefined`, the RxPlayer won&apos;t</span>
                    <span class="hljs-comment">// filter based on the language of the track.</span>
 
-  <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean|undefined} Whether the audio track should</span>
+  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean|undefined} Whether the audio track should</span>
                           <span class="hljs-comment">// be an audio description for the visually impaired</span>
                           <span class="hljs-comment">// or not.</span>
                           <span class="hljs-comment">// If not set or set to `undefined`, the RxPlayer</span>
@@ -187,7 +187,7 @@ on which tracks will be filtered):</p>
   <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
            <span class="hljs-comment">// if not set or set to `undefined` we won&apos;t filter based on codecs.</span>
 
-    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
+    test: <span class="hljs-regexp">/ec-3/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
 
     all: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
                <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
@@ -266,7 +266,7 @@ subtitles:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
                        <span class="hljs-comment">// caption for the hard of hearing</span>
 }
 </code></pre>
@@ -321,7 +321,7 @@ on which tracks will be filtered):</p>
   <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
            <span class="hljs-comment">// if not set or set to `undefined` we won&apos;t filter based on codecs.</span>
 
-    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/hvc/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
+    test: <span class="hljs-regexp">/hvc/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
 
     all: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
                <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>

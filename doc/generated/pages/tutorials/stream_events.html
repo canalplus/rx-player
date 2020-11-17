@@ -107,7 +107,7 @@ information.</p>
              <span class="hljs-comment">// A start at `10` here means that the event began when the player</span>
              <span class="hljs-comment">// reached the position at 10 seconds.</span>
 
-  <span class="hljs-attr">end</span>: <span class="hljs-number">25</span>, <span class="hljs-comment">// Optional end time of the event, in seconds.</span>
+  end: <span class="hljs-number">25</span>, <span class="hljs-comment">// Optional end time of the event, in seconds.</span>
            <span class="hljs-comment">//</span>
            <span class="hljs-comment">// It can be undefined or unset for events without any duration.</span>
            <span class="hljs-comment">// A end at `25` here indicates that this event only last from the</span>
@@ -118,7 +118,7 @@ information.</p>
            <span class="hljs-comment">// event is reached by adding an `onExit` callback to that event</span>
            <span class="hljs-comment">// (continue reading this tutorial for more information).</span>
 
-  <span class="hljs-attr">data</span>: { <span class="hljs-comment">// The event&apos;s data itself.</span>
+  data: { <span class="hljs-comment">// The event&apos;s data itself.</span>
 
     <span class="hljs-attr">type</span>: EVENT_TYPE, <span class="hljs-comment">// String describing the source of the event.</span>
 
@@ -146,12 +146,12 @@ MP4&#x2019;s <code>emsg</code> box.</p>
   <span class="hljs-attr">end</span>: <span class="hljs-number">15</span>, <span class="hljs-comment">// optional end position of the event, in seconds.</span>
            <span class="hljs-comment">// Can be not set or set to `undefined` for events without a duration</span>
 
-  <span class="hljs-attr">data</span>: {
+  data: {
 
     <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;dash-event-stream&quot;</span>, <span class="hljs-comment">// Type corresponding to a DASH&apos;s EventStream&apos;s</span>
                                <span class="hljs-comment">// Event element</span>
 
-    <span class="hljs-attr">value</span>: {
+    value: {
       <span class="hljs-attr">schemeIdUri</span>: SCHEME_ID_URI,
       <span class="hljs-attr">element</span>: EVENT_ELEMENT,
       <span class="hljs-attr">timescale</span>: EVENT_TIMESCALE,

@@ -45,23 +45,28 @@ current network, user settings and viewing conditions.</p>
 </li>
 <li>
 <p><strong>the <a href="stream/index.html">Stream</a></strong></p>
-<p>Choose which media segments to download and push them to SourceBuffers to
-then be able to decode them.</p>
+<p>Choose which media segments to download and push them to media buffers (here
+called the <code>SegmentBuffers</code>) to then be able to decode them.</p>
 <p>Various files documenting the Stream architecture should be available in
 the <code>doc/architecture/stream</code> directory.</p>
 </li>
 <li>
-<p><strong>the <a href="source-buffers/index.html">SourceBuffers</a></strong></p>
-<p>Provides abstractions on top of the browser&#x2019;s SourceBuffers, which are used
-to push media segments.
-These files help to handle those &#x201C;native&#x201D; SourceBuffers (defined by the
-browser), but also define custom ones for media managed entirely by the
-RxPlayer like subtitles and thumbnails.</p>
+<p><strong>the <a href="segment_buffers/index.html">SegmentBuffers</a></strong></p>
+<p>Implement media buffers on which loaded segments will be pushed.
+The corresponding media data contained in them will then be decoded at the
+right time.</p>
+<p>Those buffers can depend on browser implementations (for example for audio
+and video contents, we rely on <code>SourceBuffer</code> JS objects) or may be
+completely defined in the code (for example, text track buffers in the
+<code>&quot;html&quot;</code> <code>textTrackMode</code> are entirely defined in the RxPlayer).</p>
+<p>Those <code>SegmentBuffers</code> have added niceties over just being simple data
+buffers. For example, they include an inventory which allows to retrieve the
+metadata about every segments that is still contained within it.</p>
 </li>
 <li>
 <p><strong>the <a href="transports/index.html">transports</a></strong></p>
-<p>Perform manifest/segment requests, and parse them.
-<code>transports</code> in essence abstracts the transport protocol used (example:
+<p>Perform manifest/segment requests, and parse them.</p>
+<p><code>transports</code> in essence abstracts the transport protocol used (example:
 Smooth Streaming/DASH) to provide an unified definition of a segment or
 manifest to the other modules.
 In theory, it should be the only directory to update when adding /
@@ -69,9 +74,9 @@ modifying / deleting a transport protocol</p>
 </li>
 <li>
 <p><strong>the <a href="fetchers/index.html">fetchers</a></strong></p>
-<p>Link the <code>transport</code> module with the rest of the code, to download segments,
-download/refresh the manifest and collect data (such as the user&#x2019;s
-bandwidth) for the other modules.</p>
+<p>Link the <code>transports</code> module with the rest of the code, to download
+segments, download/refresh the manifest and collect data (such as the
+user&#x2019;s bandwidth) for the other modules.</p>
 </li>
 </ul>
 <p>The RxPlayer also has a multitude of isolated helpers (for manifest management,
@@ -124,11 +129,11 @@ Stream                           | ~                                            
 |                            | ~          | ~            | ~     |                    | ~
 |                  (audio)   v ~  (video) V ~     (text) v ~     |                    | ~
 | Create the right +----------+   +----------+    +----------+   |  +--------------+  | ~
-| AdaptationStream |          |   |          |    |          |----&gt; | SourceBuffer |  | ~
+| AdaptationStream |          |   |          |    |          |----&gt; |SegmentBuffers|  | ~
 | depending on the |  Period  |-+ |  Period  |-+  |  Period  |-+ |  |   Store (1)  |  | ~
 | wanted track     |  Stream  | | |  Stream  | |  |  Stream  | | |  +--------------+  | ~
 | (One per Period  |          | | |          | |  |          | | |  Create one        | ~
-| and one per type +----------+ | +----------+ |  +----------+ | |  SourceBuffer per  | ~
+| and one per type +----------+ | +----------+ |  +----------+ | |  media buffer per  | ~
 | of media)         |           |  |           |   |           | |  type of media     | ~
 |                   +-----------+  +-----------+   +-----------+ |                    | ~
 |                          | ^            | ^            | ^     |                    | ~
@@ -160,7 +165,7 @@ Stream                           | ~                                            
 |                                                                |
 +----------------------------------------------------------------+
 
-(1) The SourceBuffer Store, Segment fetcher and ABRManager are actually created by the
+(1) The SegmentBuffersStore, Segment fetcher and ABRManager are actually created by the
 Init and then used by the Stream.
 </code></pre>
 </body></html></div></div></div></body>

@@ -278,7 +278,7 @@ it, you can serve directly the file through the use of a Manifest Loader:</p>
   <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;metaplaylist&quot;</span>,
   <span class="hljs-attr">transportOptions</span>: {
     <span class="hljs-comment">// Note: `_url` here will be `undefined`</span>
-    manifestLoader(_url, callbacks) {
+    <span class="hljs-function"><span class="hljs-title">manifestLoader</span>(<span class="hljs-params">_url, callbacks</span>)</span> {
       <span class="hljs-comment">// where `myMetaPlaylistObject` is the MetaPlaylist in either Object or</span>
       <span class="hljs-comment">// String form</span>
       callbacks.resolve({ <span class="hljs-attr">data</span>: myMetaPlaylistObject });
