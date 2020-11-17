@@ -1,0 +1,146 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Tutorial: Quick Start - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Tutorial:%20Quick%20Start">Tutorial: Quick Start</a></p>
+<ul>
+<li><a href="#chapter-Instanciating%20a%20Player">Instanciating a Player</a></li>
+<li><a href="#chapter-Loading%20a%20content">Loading a content</a></li>
+<li><a href="#chapter-Reacting%20to%20basic%20events">Reacting to basic events</a></li>
+<li><a href="#chapter-Interacting%20with%20the%20player">Interacting with the player</a></li>
+<li><a href="#chapter-And%20now?">And now?</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Tutorial:%20Quick%20Start"></a></p>
+<h1>Tutorial: Quick Start</h1>
+<p>Because the RxPlayer exports a lot of functionnalities, you might want to
+quickly test basic use cases before you dive deep into the <a href="../api/index.html">whole API
+documentation</a>.</p>
+<p>We will here learn how to simply load a video and to react to basic events.</p>
+<p><a name="chapter-Instanciating%20a%20Player"></a></p>
+<h2>Instanciating a Player</h2>
+<p>The first step is to instanciate a new RxPlayer.</p>
+<p>Each RxPlayer instance is attached to a single video (or audio) HTML element,
+and is able to play a single content at once.</p>
+<p>To instanciate it with a linked video element you can just do something along
+the lines of:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
+
+<span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;video&quot;</span>);
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({ videoElement });
+</code></pre>
+<p><code>videoElement</code> is an RxPlayer option and will be the HTMLElement the RxPlayer
+will load your media on.</p>
+<p>Despite its name, you can also give it an <code>&lt;audio&gt;</code> element. It will still be
+able to play an audio content without issue.</p>
+<p>When you are ready to make use of more advanced features, you can look at the
+other possible options in the <a href="../api/player_options.html">Player Options page</a>.</p>
+<p><a name="chapter-Loading%20a%20content"></a></p>
+<h2>Loading a content</h2>
+<p>The next logical step is to load a content (audio, video or both).</p>
+<p>Loading a new content is done through the <code>loadVideo</code> method.</p>
+<p><code>loadVideo</code> takes an object as arguments. There is here also <a href="../api/loadVideo_options.html">a lot of
+possible options</a>, but to simplify we will start
+with just three:</p>
+<ul>
+<li>
+<p><code>transport</code>: String describing the transport protocol (can be <code>&quot;dash&quot;</code>,
+<code>&quot;smooth&quot;</code> or <code>&quot;directfile&quot;</code> for now).</p>
+</li>
+<li>
+<p><code>url</code>: URL to the content (to the Manifest for Smooth contents, to the MPD
+for DASH contents or to the whole file for DirectFile contents).</p>
+</li>
+<li>
+<p><code>autoPlay</code>: Boolean indicating if you want the content to automatically
+begin to play once loaded. <code>false</code> by default (which means, the player
+will not begin to play on its own).</p>
+</li>
+</ul>
+<p>Here is a quick example which will load and play a DASH content:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd&quot;</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">autoPlay</span>: <span class="hljs-literal">true</span>,
+});
+</code></pre>
+<p><a name="chapter-Reacting%20to%20basic%20events"></a></p>
+<h2>Reacting to basic events</h2>
+<p>Now that we are loading a content, we might want to know:</p>
+<ul>
+<li>if it succeed</li>
+<li>if it failed</li>
+<li>when we are able to interact with the content</li>
+</ul>
+<p>To do all three of those things, you will need to listen to player events.
+This is done through the <a href="../api/index.html#meth-addEventListener">addEventListener
+method</a>.</p>
+<p>This method works the same way than the native one you might already use on
+HTML elements.</p>
+<p>For example, to know if a fatal error happened (this is an error which
+interrupted the playback of the current content), you will just have to do:</p>
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content stopped with the following error&quot;</span>, err);
+});
+</code></pre>
+<p>And to know if the player successfully loaded a content and if you can now
+interact with it, you can just do:</p>
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (state === <span class="hljs-string">&quot;LOADED&quot;</span>) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is loaded&quot;</span>);
+    <span class="hljs-comment">// interact with the content...</span>
+  }
+});
+</code></pre>
+<p>There is multiple other events, all documented in <a href="../api/player_events.html">the events documentation
+</a>.</p>
+<p>As the state is a central focus of our API, we also heavily documented states in
+<a href="../api/states.html">the player states documentation</a>.</p>
+<p><a name="chapter-Interacting%20with%20the%20player"></a></p>
+<h2>Interacting with the player</h2>
+<p>We&#x2019;re now ready to interact with the current content.</p>
+<p>There is <a href="../api/index.html">a huge list of APIs</a> you can use.
+Some are useful only when a content is currently loaded (like <code>play</code>,
+<code>pause</code>, <code>seekTo</code> or <code>setAudioTrack</code>) and others can be used in any case
+(like <code>setVolume</code>, <code>getVideoElement</code> or <code>loadVideo</code>).</p>
+<p>Here is a complete example where I:</p>
+<ol>
+<li>Instanciate an RxPlayer</li>
+<li>load a content with it with autoPlay</li>
+<li>toggle between play and pause once the content is loaded and the user click
+on the video element.</li>
+</ol>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
+
+<span class="hljs-comment">// take the first video element on the page</span>
+<span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;video&quot;</span>);
+
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({ videoElement });
+
+player.addEventListener(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content stopped with the following error&quot;</span>, err);
+});
+
+player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (state === <span class="hljs-string">&quot;LOADED&quot;</span>) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is loaded&quot;</span>);
+
+    <span class="hljs-comment">// toggle between play and pause when the user clicks on the video</span>
+    videoElement.onclick = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+      <span class="hljs-keyword">if</span> (player.getPlayerState() === <span class="hljs-string">&quot;PLAYING&quot;</span>) {
+        player.pause();
+      } <span class="hljs-keyword">else</span> {
+        player.play();
+      }
+    };
+  }
+});
+
+player.loadVideo({
+  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd&quot;</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">autoPlay</span>: <span class="hljs-literal">true</span>,
+});
+</code></pre>
+<p><a name="chapter-And%20now?"></a></p>
+<h2>And now?</h2>
+<p>Now that you know the basic RxPlayer APIs, you might want to dive deep into <a href="./api/index.md">the
+whole API documentation</a>.</p>
+<p>You can also read our next tutorial, on how to play contents with DRM,
+<a href="contents_with_DRM.html">here</a>.</p>
+</body></html></div></div></div></body>

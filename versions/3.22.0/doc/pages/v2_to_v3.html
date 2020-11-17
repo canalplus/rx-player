@@ -1,0 +1,1259 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Switching from version 2.x.x to 3.x.x - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Switching%20from%20version%202.x.x%20to%203.x.x">Switching from version 2.x.x to 3.x.x</a></p>
+<ul>
+<li><a href="#chapter-General%20Changes">General Changes</a>
+<ul>
+<li><a href="#subchapter-Features%20disabled%20by%20default">Features disabled by default</a></li>
+<li><a href="#subchapter-Normalized%20language%20codes">Normalized language codes</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Constructor%20options">Constructor options</a>
+<ul>
+<li><a href="#subchapter-defaultLanguage">defaultLanguage</a></li>
+<li><a href="#subchapter-defaultSubtitle">defaultSubtitle</a></li>
+<li><a href="#subchapter-initVideoBitrate%20/%20initAudioBitrate">initVideoBitrate / initAudioBitrate</a></li>
+<li><a href="#subchapter-defaultAudioTrack">defaultAudioTrack</a></li>
+<li><a href="#subchapter-defaultTextTrack">defaultTextTrack</a></li>
+<li><a href="#subchapter-transport">transport</a></li>
+<li><a href="#subchapter-transportOptions">transportOptions</a></li>
+</ul>
+</li>
+<li><a href="#chapter-loadVideo">loadVideo</a>
+<ul>
+<li><a href="#subchapter-Return%20value">Return value</a></li>
+<li><a href="#subchapter-defaultLanguage%20parameter">defaultLanguage parameter</a></li>
+<li><a href="#subchapter-defaultSubtitle%20parameter">defaultSubtitle parameter</a></li>
+<li><a href="#subchapter-images%20parameter">images parameter</a></li>
+<li><a href="#subchapter-subtitles%20parameter">subtitles parameter</a></li>
+<li><a href="#subchapter-timeFragment%20parameter">timeFragment parameter</a></li>
+<li><a href="#subchapter-manifests%20parameter">manifests parameter</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Removed%20methods">Removed methods</a>
+<ul>
+<li><a href="#subchapter-getVideoMaxBitrate%20/%20getAudioMaxBitrate%20/%20setVideoMaxBitrate%20/%20setAudioMaxBitrate">getVideoMaxBitrate / getAudioMaxBitrate / setVideoMaxBitrate / setAudioMaxBitrate</a></li>
+<li><a href="#subchapter-setVideoBufferSize%20/%20setAudioBufferSize%20/%20getVideoBufferSize%20/%20getAudioBufferSize">setVideoBufferSize / setAudioBufferSize / getVideoBufferSize / getAudioBufferSize</a></li>
+<li><a href="#subchapter-asObservable">asObservable</a></li>
+<li><a href="#subchapter-getAvailableLanguages">getAvailableLanguages</a></li>
+<li><a href="#subchapter-getAvailableSubtitles">getAvailableSubtitles</a></li>
+<li><a href="#subchapter-getAverageBitrates">getAverageBitrates</a></li>
+<li><a href="#subchapter-getCurrentTime">getCurrentTime</a></li>
+<li><a href="#subchapter-getDebug%20/%20showDebug%20/%20hideDebug%20/%20toggleDebug">getDebug / showDebug / hideDebug / toggleDebug</a></li>
+<li><a href="#subchapter-getEndTime">getEndTime</a></li>
+<li><a href="#subchapter-static%20getErrorCodes">static getErrorCodes</a></li>
+<li><a href="#subchapter-static%20getErrorTypes">static getErrorTypes</a></li>
+<li><a href="#subchapter-getImageTrack">getImageTrack</a></li>
+<li><a href="#subchapter-getLanguage">getLanguage</a></li>
+<li><a href="#subchapter-getMetrics">getMetrics</a></li>
+<li><a href="#subchapter-getStartTime">getStartTime</a></li>
+<li><a href="#subchapter-getSubtitle">getSubtitle</a></li>
+<li><a href="#subchapter-goToStart">goToStart</a></li>
+<li><a href="#subchapter-isLanguageAvailable%20/%20isSubtitleAvailable">isLanguageAvailable / isSubtitleAvailable</a></li>
+<li><a href="#subchapter-normalizeLanguageCode">normalizeLanguageCode</a></li>
+<li><a href="#subchapter-setLanguage">setLanguage</a></li>
+<li><a href="#subchapter-setSubtitle">setSubtitle</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Changed%20methods">Changed methods</a>
+<ul>
+<li><a href="#subchapter-seekTo">seekTo</a></li>
+<li><a href="#subchapter-setVideoBitrate%20/%20setAudioBitrate">setVideoBitrate / setAudioBitrate</a></li>
+<li><a href="#subchapter-getUrl">getUrl</a></li>
+<li><a href="#subchapter-isLive">isLive</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Removed%20events">Removed events</a>
+<ul>
+<li><a href="#subchapter-currentTimeChange">currentTimeChange</a></li>
+<li><a href="#subchapter-progress">progress</a></li>
+<li><a href="#subchapter-languageChange">languageChange</a></li>
+<li><a href="#subchapter-subtitleChange">subtitleChange</a></li>
+<li><a href="#subchapter-nativeTextTrackChange">nativeTextTrackChange</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Changed%20events">Changed events</a>
+<ul>
+<li><a href="#subchapter-positionUpdate">positionUpdate</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Switching%20from%20version%202.x.x%20to%203.x.x"></a></p>
+<h1>Switching from version 2.x.x to 3.x.x</h1>
+<p>The <code>3.0.0</code> release brought multiple breaking changes that may impact your
+codebase if you were based on a <code>2.x.x</code> version (or inferior) previously.</p>
+<p>Those breaking changes are mainly here to bring new features and simplify the
+player maintenance. This file enumerates each one of those changes and propose
+alternatives.</p>
+<p>The simplest way of switching here would be to:</p>
+<ol>
+<li>Check the <em>General changes</em> chapter</li>
+<li>Check the constructor options you use (<em>constructor options</em> chapter)</li>
+<li>Check the way you use the <code>loadVideo</code> method (<em>loadVideo</em> chapter)</li>
+<li>Replace every method listed in the <em>Removed methods</em> chapter you use in
+your codebase</li>
+<li>Make sure that the methods listed in the <em>Changed methods</em> chapter are
+correctly used now</li>
+<li>Replace events listed in <em>Removed events</em></li>
+<li>Check events you use listed in <em>Changed events</em></li>
+</ol>
+<p>If you were only using documented APIs and you follow this, you&#x2019;ll be ready to
+completely switch to a <code>3.x.x</code> release !</p>
+<p>If you don&#x2019;t know if you were using documented APIs, you can still check if the
+options, methods and events you use now are documented in the <a href="api/index.html">new
+API</a>. Now, most non-documented (private) APIs begin by the
+string <code>_priv_</code>, to simplify this process.</p>
+<p><a name="general"></a>
+<a name="chapter-General%20Changes"></a></p>
+<h2>General Changes</h2>
+<p><a name="general-feat"></a>
+<a name="subchapter-Features%20disabled%20by%20default"></a></p>
+<h3>Features disabled by default</h3>
+<h4>What Changed</h4>
+<p>Two features, previously activated by default, are now disabled by default.</p>
+<p>Those features are:</p>
+<ol>
+<li>The automatic limitation of the video track to filter those with a width
+superior to the current video element&#x2019;s width.</li>
+<li>The automatic throttle on the audio and video bitrates set when the page is
+hidden for more than one minute.</li>
+</ol>
+<p>If you want to activate the feature 1, you have to set the <code>limitVideoWidth</code>
+boolean to <code>true</code> in the constructor&#x2019;s option. For the feature 2, it is the
+<code>throttleWhenHidden</code> constructor&#x2019;s option you will have to set to <code>true</code>.</p>
+<p>If you had set them to <code>false</code> to disable them before, you can now safely
+remove those options from the constructor argument.</p>
+<p>If you don&#x2019;t know what to do with them, you might want to disable both features
+(by not setting them on the constructor). They only are optimizations for
+specific usecases.</p>
+<h4>Examples</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player = <span class="hljs-keyword">new</span> RxPlayer();
+
+<span class="hljs-comment">// becomes</span>
+player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">limitVideoWidth</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">throttleWhenHidden</span>: <span class="hljs-literal">true</span>
+});
+</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">limitVideoWidth</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">throttleWhenHidden</span>: <span class="hljs-literal">false</span>
+});
+
+<span class="hljs-comment">// becomes</span>
+player = <span class="hljs-keyword">new</span> RxPlayer();
+</code></pre>
+<p><a name="general-lang"></a>
+<a name="subchapter-Normalized%20language%20codes"></a></p>
+<h3>Normalized language codes</h3>
+<h4>What Changed</h4>
+<p>Previously, every language set in the manifest went through a translation step
+to be translated into an ISO 639-2 language code.</p>
+<p>This led the following APIs:</p>
+<ul>
+<li><code>getAvailableAudioTracks</code></li>
+<li><code>getAvailableTextTracks</code></li>
+<li><code>getAudioTrack</code></li>
+<li><code>getTextTrack</code></li>
+<li><code>getManifest</code></li>
+<li><code>getCurrentAdaptations</code></li>
+</ul>
+<p>To not reflect exactly the language as set in the manifest (just one of the ISO
+639-2 translation of it). For example, <code>&quot;fra&quot;</code> was translated to <code>&quot;fre&quot;</code>
+(even though both are valid ISO 639-2 language codes for the same language).</p>
+<p>Because this behavior hide the true language value and ISO 639-2 language codes
+have synonyms, we decided to:</p>
+<ol>
+<li>switch to ISO 639-3 language codes instead. This standard has more
+languages and does not have synonyms.</li>
+<li>keep both the information of what is set in the manifest and the result of
+our ISO 639-3 translation in two different properties</li>
+</ol>
+<p>Now, the tracks returned by:</p>
+<ul>
+<li><code>getAvailableAudioTracks</code></li>
+<li><code>getAvailableTextTracks</code></li>
+<li><code>getAudioTrack</code></li>
+<li><code>getTextTrack</code></li>
+</ul>
+<p>Will:</p>
+<ol>
+<li>keep the <code>language</code> property, though this time it is the exact same one
+than set in the manifest</li>
+<li>will also have a <code>normalized</code> property, which is the ISO 639-3
+translation attempt. If the translation attempt fails (no corresponding ISO
+639-3 language code is found), <code>normalized</code> will equal the value of
+<code>language</code>.</li>
+</ol>
+<p>Likewise for the adaptations with a language set returned by:</p>
+<ul>
+<li><code>getManifest</code></li>
+<li><code>getCurrentAdaptations</code></li>
+</ul>
+<p>They will have both a <code>language</code> and a <code>normalizedLanguage</code> property, which
+follow the same rule.</p>
+<h4>Difference between the previous and new language codes used</h4>
+<p>In most cases, if you were manually checking language codes in your codebase you
+could just replace here the key <code>language</code> with its normalized counterpart
+(either <code>normalized</code> or <code>normalizedLanguage</code> depending on the API you&#x2019;re
+using, see previous chapter).</p>
+<p>However, while switching from ISO 639-2 to ISO 639-3, some language codes have
+changed (all were synonyms in ISO 639-2):</p>
+<ul>
+<li><code>&quot;alb&quot;</code> became <code>&quot;sqi&quot;</code> (for Albanian)</li>
+<li><code>&quot;arm&quot;</code> became <code>&quot;hye&quot;</code> (for Armenian)</li>
+<li><code>&quot;baq&quot;</code> became <code>&quot;eus&quot;</code> (for Basque)</li>
+<li><code>&quot;bur&quot;</code> became <code>&quot;mya&quot;</code> (for Burmese)</li>
+<li><code>&quot;chi&quot;</code> became <code>&quot;zho&quot;</code> (for Chinese)</li>
+<li><code>&quot;dut&quot;</code> became <code>&quot;nld&quot;</code> (for Dutch, Flemish)</li>
+<li><code>&quot;fre&quot;</code> became <code>&quot;fra&quot;</code> (for French)</li>
+<li><code>&quot;geo&quot;</code> became <code>&quot;kat&quot;</code> (for Georgian)</li>
+<li><code>&quot;ice&quot;</code> became <code>&quot;isl&quot;</code> (for Icelandic)</li>
+<li><code>&quot;mac&quot;</code> became <code>&quot;mkd&quot;</code> (for Macedonian)</li>
+<li><code>&quot;mao&quot;</code> became <code>&quot;mri&quot;</code> (for Maori)</li>
+<li><code>&quot;may&quot;</code> became <code>&quot;msa&quot;</code> (for Malay)</li>
+</ul>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(player.getAvailableAudioTrack());
+
+<span class="hljs-comment">// For a manifest with two audiotracks: &quot;fr&quot; and &quot;en&quot; without audio description</span>
+
+<span class="hljs-comment">// -- in the old version --:</span>
+<span class="hljs-keyword">const</span> oldVersionResult = [
+  {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fre&quot;</span>, <span class="hljs-comment">// translated from &quot;fr&quot;</span>
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_1&quot;</span>
+  },
+  {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// translated from &quot;en&quot;</span>
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_2&quot;</span>
+  }
+];
+
+<span class="hljs-comment">// -- became --:</span>
+<span class="hljs-keyword">const</span> result = [
+  {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fr&quot;</span>, <span class="hljs-comment">// stays the same than in the manifest</span>
+    <span class="hljs-attr">normalized</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// translated from &quot;fr&quot;</span>
+                       <span class="hljs-comment">// (notice that it&apos;s not &quot;fre&quot; like before)</span>
+    audioDescription: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_1&quot;</span>
+  },
+  {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>, <span class="hljs-comment">// stays the same than in the manifest</span>
+    <span class="hljs-attr">normalized</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// translated from &quot;en&quot;</span>
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_2&quot;</span>
+  }
+];
+</code></pre>
+<p><a name="cons"></a>
+<a name="chapter-Constructor%20options"></a></p>
+<h2>Constructor options</h2>
+<p><a name="cons-defaultLanguage"></a>
+<a name="subchapter-defaultLanguage"></a></p>
+<h3>defaultLanguage</h3>
+<h4>What changed</h4>
+<p>This option has been removed from the constructor to simplify the API. Now you
+have to set the wanted transport per-<code>loadVideo</code> calls via its
+<code>defaultAudioTrack</code> option.</p>
+<h4>Examples</h4>
+<p>Without audio description:</p>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">defaultLanguage</span>: <span class="hljs-string">&quot;en&quot;</span>
+});
+
+<span class="hljs-comment">// becomes</span>
+player = <span class="hljs-keyword">new</span> RxPlayer();
+player.loadVideo({
+  <span class="hljs-attr">defaultAudioTrack</span>: {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>
+  },
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>With audio description:</p>
+<pre><code class="language-js">player = <span class="hljs-keyword">new</span> RxPlayer();
+player.loadVideo({
+  <span class="hljs-attr">defaultAudioTrack</span>: {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>,
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">true</span>
+  },
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p><a name="cons-defaultSubtitle"></a>
+<a name="subchapter-defaultSubtitle"></a></p>
+<h3>defaultSubtitle</h3>
+<h4>What changed</h4>
+<p>This option has been removed from the constructor to simplify the API. Now you
+have to set the wanted transport per-<code>loadVideo</code> calls via its
+<code>defaultTextTrack</code> option.</p>
+<h4>Examples</h4>
+<p>Without closed caption:</p>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">defaultSubtitle</span>: <span class="hljs-string">&quot;en&quot;</span>
+});
+
+<span class="hljs-comment">// becomes</span>
+player = <span class="hljs-keyword">new</span> RxPlayer();
+player.loadVideo({
+  <span class="hljs-attr">defaultTextTrack</span>: {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>
+  },
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>With closed caption:</p>
+<pre><code class="language-js">player = <span class="hljs-keyword">new</span> RxPlayer();
+player.loadVideo({
+  <span class="hljs-attr">defaultTextTrack</span>: {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>,
+    <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">true</span>
+  },
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p><a name="cons-initVideoBitrate"></a>
+<a name="subchapter-initVideoBitrate%20/%20initAudioBitrate"></a></p>
+<h3>initVideoBitrate / initAudioBitrate</h3>
+<h4>What changed</h4>
+<p>Those options just changed their name:</p>
+<ul>
+<li><code>initVideoBitrate</code> becomes <code>initialVideoBitrate</code></li>
+<li><code>initAudioBitrate</code> becomes <code>initialAudioBitrate</code></li>
+</ul>
+<p>This is to mainly to add clarity to the API.</p>
+<h4>Examples</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">initVideoBitrate</span>: <span class="hljs-number">1e6</span>,
+  <span class="hljs-attr">initAudioBitrateBitrate</span>: <span class="hljs-number">2e4</span>
+});
+
+<span class="hljs-comment">// becomes</span>
+player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">initialVideoBitrate</span>: <span class="hljs-number">1e6</span>,
+  <span class="hljs-attr">initialAudioBitrateBitrate</span>: <span class="hljs-number">2e4</span>
+});
+</code></pre>
+<p><a name="cons-defaultAudioTrack"></a>
+<a name="subchapter-defaultAudioTrack"></a></p>
+<h3>defaultAudioTrack</h3>
+<h4>What changed</h4>
+<p>This option has been removed from the constructor to simplify the API. Now you
+have to set the wanted transport per-<code>loadVideo</code> calls via its
+<code>defaultAudioTrack</code> option, which has the exact same format.</p>
+<p><a name="cons-defaultTextTrack"></a>
+<a name="subchapter-defaultTextTrack"></a></p>
+<h3>defaultTextTrack</h3>
+<h4>What changed</h4>
+<p>This option has been removed from the constructor to simplify the API. Now you
+have to set the wanted transport per-<code>loadVideo</code> calls via its
+<code>defaultTextTrack</code> option, which has the exact same format.</p>
+<p><a name="cons-transport"></a>
+<a name="subchapter-transport"></a></p>
+<h3>transport</h3>
+<h4>What changed</h4>
+<p>This option has been removed from the constructor to simplify the API. Now you
+have to set the wanted transport per-<code>loadVideo</code> calls via its <code>transport</code>
+option, which has the exact same format.</p>
+<p><a name="cons-transportOptions"></a>
+<a name="subchapter-transportOptions"></a></p>
+<h3>transportOptions</h3>
+<h4>What changed</h4>
+<p>This option has been removed from the constructor to simplify the API. Now you
+have to set the wanted transport options per-<code>loadVideo</code> calls via its
+<code>transportOptions</code> option, which has the exact same format.</p>
+<p><a name="load"></a>
+<a name="chapter-loadVideo"></a></p>
+<h2>loadVideo</h2>
+<p><code>loadVideo</code> is the central method of the RxPlayer and changed enough to earn
+its own chapter.</p>
+<p>Both parameters and the return value changed.</p>
+<p><a name="load-return"></a>
+<a name="subchapter-Return%20value"></a></p>
+<h3>Return value</h3>
+<h4>What changed</h4>
+<p><code>loadVideo</code> does not return anything anymore.</p>
+<h4>Replacement examples</h4>
+<p>If you want to know when the player is on error, you will have to listen to the
+<code>error</code> events:</p>
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">error</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;content on error&quot;</span>);
+});
+</code></pre>
+<p>If you want to know when the content is loaded, you will have to listen to when
+the <code>playerStateChange</code> events:</p>
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
+  <span class="hljs-keyword">switch</span> (state) {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;LOADING&quot;</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is loading&quot;</span>);
+      <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;LOADED&quot;</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content has loaded&quot;</span>);
+      <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;PLAYING&quot;</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is now playing&quot;</span>);
+      <span class="hljs-keyword">break</span>;
+  }
+});
+</code></pre>
+<p>Bear in mind however that both are triggered when ANY content you choosed to
+play are loaded/on error, not just the last one.</p>
+<p><a name="load-defaultLanguage"></a>
+<a name="subchapter-defaultLanguage%20parameter"></a></p>
+<h3>defaultLanguage parameter</h3>
+<h4>What changed</h4>
+<p><code>defaultLanguage</code> is replaced by the <code>defaultAudioTrack</code> option, which
+supports audio description.</p>
+<h4>Replacement example</h4>
+<p>Without audio description:</p>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">defaultLanguage</span>: <span class="hljs-string">&quot;en&quot;</span>
+});
+
+<span class="hljs-comment">// becomes</span>
+player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">defaultAudioTrack</span>: {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>
+  }
+});
+</code></pre>
+<p>With audio description:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">defaultAudioTrack</span>: {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>,
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">true</span>
+  }
+});
+</code></pre>
+<p><a name="load-defaultSubtitle"></a>
+<a name="subchapter-defaultSubtitle%20parameter"></a></p>
+<h3>defaultSubtitle parameter</h3>
+<h4>What changed</h4>
+<p><code>defaultSubtitle</code> is replaced by the <code>defaultTextTrack</code> option, which
+supports closed caption.</p>
+<h4>Replacement example</h4>
+<p>Without closed caption:</p>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">defaultSubtitle</span>: <span class="hljs-string">&quot;en&quot;</span>
+});
+
+<span class="hljs-comment">// becomes</span>
+player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">defaultTextTrack</span>: {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>
+  }
+});
+</code></pre>
+<p>With closed caption:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">defaultTextTrack</span>: {
+    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>,
+    <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">true</span>
+  }
+});
+</code></pre>
+<p><a name="load-images"></a>
+<a name="subchapter-images%20parameter"></a></p>
+<h3>images parameter</h3>
+<h4>What changed</h4>
+<p><code>images</code> is renamed as <code>supplementaryImageTracks</code> for clarity.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">images</span>: {
+    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/bif&quot;</span>,
+    <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;&quot;</span>,
+  },
+});
+
+<span class="hljs-comment">// becomes</span>
+player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">supplementaryImageTracks</span>: {
+    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/bif&quot;</span>,
+    <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;&quot;</span>,
+  },
+});
+</code></pre>
+<p><a name="load-subtitles"></a>
+<a name="subchapter-subtitles%20parameter"></a></p>
+<h3>subtitles parameter</h3>
+<h4>What changed</h4>
+<p>You have two possibilities. Either:</p>
+<ol>
+<li>Use the exernal <code>TextTrackRenderer</code> tool, documented
+<a href="api/TextTrackRenderer.html">here</a>. This is the preferred way.</li>
+<li>Replace <code>subtitles</code> by <code>supplementaryTextTracks</code>. Please note
+however that <code>supplementaryTextTracks</code> is a deprecated feature.</li>
+</ol>
+<h4>Replacement example</h4>
+<p>If you go under the <code>supplementaryTextTracks</code> route:</p>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">subtitles</span>: {
+    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/x-sami&quot;</span>,
+    <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;&quot;</span>,
+  },
+});
+
+<span class="hljs-comment">// becomes</span>
+player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL,
+  <span class="hljs-attr">supplementaryTextTracks</span>: {
+    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/x-sami&quot;</span>,
+    <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;&quot;</span>,
+  },
+});
+</code></pre>
+<p>If you prefer to use the <code>TextTrackRenderer</code> instead, I invite you to directly
+read, <a href="api/TextTrackRenderer.html">its documentation</a>, as the API is completely
+different there.</p>
+<p><a name="load-timeFragment"></a>
+<a name="subchapter-timeFragment%20parameter"></a></p>
+<h3>timeFragment parameter</h3>
+<h4>What changed</h4>
+<p>The <code>timeFragment</code> parameter has been completely removed.</p>
+<p>If you want to start at a precize point in the content, you can use the
+<code>startAt</code> parameter instead, documented
+<a href="./loadVideo_options.md#prop-startAt">here</a>.</p>
+<p>If you want to end at a precize point in the content, this has not been
+re-implemented as I do not know for now any usecase for that. Please open an
+issue if you need that feature.</p>
+<a name="load-manifests">
+</a><a name="subchapter-manifests%20parameter"></a>
+### manifests parameter ########################################################
+<h4>What changed</h4>
+<p>The <code>manifests</code> parameter has been completely removed. Its behavior can easily
+be replaced by two existing options: <code>url</code> and <code>keySystems</code>:</p>
+<ul>
+<li>
+<p>The url of the first object in the <code>manifests</code> array should be put in the
+<code>url</code> parameter</p>
+</li>
+<li>
+<p>Each <code>keySystem</code> property defined in the <code>manifests</code> array should be put
+in the <code>keySystems</code> array, in the same order</p>
+</li>
+</ul>
+<p>Doing this should lead to the exact same behavior.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.loadVideo({
+  <span class="hljs-attr">manifests</span>: [
+    {
+      <span class="hljs-attr">url</span>: someURL1
+      <span class="hljs-attr">keySystem</span>: keySystem1
+    },
+    {
+      <span class="hljs-attr">url</span>: someURL2
+    },
+    {
+      <span class="hljs-attr">url</span>: someURL3
+      <span class="hljs-attr">keySystem</span>: keySystem3
+    },
+    {
+      <span class="hljs-attr">url</span>: someURL4
+      <span class="hljs-attr">keySystem</span>: keySystem4
+    }
+  ],
+});
+
+<span class="hljs-comment">// becomes</span>
+player.loadVideo({
+  <span class="hljs-attr">url</span>: someURL1,
+  <span class="hljs-attr">keySystems</span>: [
+    keySystem1,
+    keySystem3,
+    keySystem4
+  ],
+});
+</code></pre>
+<p><a name="rem"></a>
+<a name="chapter-Removed%20methods"></a></p>
+<h2>Removed methods</h2>
+<p><a name="rem-setVideoMaxBitrate"></a>
+<a name="subchapter-getVideoMaxBitrate%20/%20getAudioMaxBitrate%20/%20setVideoMaxBitrate%20/%20setAudioMaxBitrate"></a></p>
+<h3>getVideoMaxBitrate / getAudioMaxBitrate / setVideoMaxBitrate / setAudioMaxBitrate</h3>
+<h4>What changed</h4>
+<p>Those methods just changed their name to have a more coherent API:</p>
+<ul>
+<li><code>setVideoMaxBitrate</code> becomes <code>setMaxVideoBitrate</code></li>
+<li><code>setAudioMaxBitrate</code> becomes <code>setMaxAudioBitrate</code></li>
+<li><code>getVideoMaxBitrate</code> becomes <code>getMaxVideoBitrate</code></li>
+<li><code>getAudioMaxBitrate</code> becomes <code>getMaxAudioBitrate</code></li>
+</ul>
+<p>This is mostly done to be aligned with the <code>maxVideoBitrate</code> and
+<code>maxAudioBitrate</code> constructor options.</p>
+<h4>Replacement examples</h4>
+<h5>setVideoMaxBitrate</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.setVideoMaxBitrate(<span class="hljs-number">1500</span>);
+
+<span class="hljs-comment">// becomes</span>
+player.setMaxVideoBitrate(<span class="hljs-number">1500</span>);
+</code></pre>
+<h5>setAudioMaxBitrate</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.setAudioMaxBitrate(<span class="hljs-number">999</span>);
+
+<span class="hljs-comment">// becomes</span>
+player.setMaxAudioBitrate(<span class="hljs-number">999</span>);
+</code></pre>
+<h5>getVideoMaxBitrate</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+maxBitrate = player.getVideoMaxBitrate();
+
+<span class="hljs-comment">// becomes</span>
+maxBitrate = player.getMaxVideoBitrate();
+</code></pre>
+<h5>getAudioMaxBitrate</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+maxBitrate = player.getAudioMaxBitrate();
+
+<span class="hljs-comment">// becomes</span>
+maxBitrate = player.getMaxAudioBitrate();
+</code></pre>
+<p><a name="rem-setVideoBufferSize"></a>
+<a name="subchapter-setVideoBufferSize%20/%20setAudioBufferSize%20/%20getVideoBufferSize%20/%20getAudioBufferSize"></a></p>
+<h3>setVideoBufferSize / setAudioBufferSize / getVideoBufferSize / getAudioBufferSize</h3>
+<h4>What changed</h4>
+<p>Those four methods were removed to be replaced with simpler generic
+<code>getWantedBufferAhead</code>/<code>setWantedBufferAhead</code> methods. They also take
+seconds in argument.</p>
+<p>The only difference is that you cannot discriminate by type of buffer
+(audio/video) anymore. This is for done for multiple reasons:</p>
+<ul>
+<li>
+<p>There are more than two types of buffers (for now there are four: audio,
+video, text and image). Adding one methods per type could be cumbersome for
+the user (for example, when wanting to set the limit for three or four of
+them)</p>
+</li>
+<li>
+<p>More buffer-related APIs were added which are type-agnostic. Adding one
+A per-type would be heavy both for the rx-player and for the application
+using it</p>
+</li>
+<li>
+<p>It&#x2019;s easier to explain through the documentation, for people that do not
+want to understand the nitty-gritty of a player</p>
+</li>
+<li>
+<p>We did not encounter any usecase for separate methods yet</p>
+</li>
+</ul>
+<h4>Replacement examples</h4>
+<h5>setVideoBufferSize</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.setVideoBufferSize(<span class="hljs-number">15</span>);
+
+<span class="hljs-comment">// becomes (also affect audio, text and image buffer)</span>
+player.setWantedBufferAhead(<span class="hljs-number">15</span>);
+</code></pre>
+<h5>setAudioBufferSize</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.setAudioBufferSize(<span class="hljs-number">10</span>);
+
+<span class="hljs-comment">// becomes (also affect video, text and image buffer)</span>
+player.setWantedBufferAhead(<span class="hljs-number">10</span>);
+</code></pre>
+<h5>getVideoBufferSize</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+bufferSize = player.getVideoBufferSize();
+
+<span class="hljs-comment">// becomes</span>
+bufferSize = player.getWantedBufferAhead();
+</code></pre>
+<h5>getAudioBufferSize</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+bufferSize = player.getAudioBufferSize();
+
+<span class="hljs-comment">// becomes</span>
+bufferSize = player.setWantedBufferAhead();
+</code></pre>
+<p><a name="rem-asObservable"></a>
+<a name="subchapter-asObservable"></a></p>
+<h3>asObservable</h3>
+<h4>What Changed</h4>
+<p><code>asObservable</code> has been completely removed for the following reasons:</p>
+<ul>
+<li>
+<p>it exposed too much of the player. Guaranteeing compatibility between
+versions was too hard.</p>
+</li>
+<li>
+<p>it exposed the internal RxJS library, which we now stop to do for various
+reasons.</p>
+</li>
+</ul>
+<p><a name="rem-getAvailableLanguages"></a>
+<a name="subchapter-getAvailableLanguages"></a></p>
+<h3>getAvailableLanguages</h3>
+<h4>What Changed</h4>
+<p>This method now has been completely replaced by <code>getAvailableAudioTracks</code>
+which adds audio description support. See <a href="api/index.html">the API
+documentation</a> for more infos.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+audioTracks = player.getAvailableLanguages();
+
+<span class="hljs-keyword">if</span> (audioTracks &amp;&amp; audioTracks.length) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;audio languages:&quot;</span>, ...audioTracks);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no audio language&quot;</span>);
+}
+
+<span class="hljs-comment">// -------------------------------</span>
+
+<span class="hljs-comment">// becomes</span>
+audioTracks = player.getAvailableAudioTracks();
+
+<span class="hljs-keyword">if</span> (audioTracks &amp;&amp; audioTracks.length) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;audio languages:&quot;</span>, ...audioTracks.map(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.language));
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no audio language&quot;</span>);
+}
+</code></pre>
+<p><a name="rem-getAvailableSubtitles"></a>
+<a name="subchapter-getAvailableSubtitles"></a></p>
+<h3>getAvailableSubtitles</h3>
+<h4>What Changed</h4>
+<p>This method now has been completely replaced by <code>getAvailableTextTracks</code> which
+adds closed caption support. See <a href="api/index.html">the API documentation</a> for
+more infos.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+subtitleTracks = player.getAvailableSubtitles();
+
+<span class="hljs-keyword">if</span> (subtitleTracks &amp;&amp; subtitleTracks.length) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;subtitle languages:&quot;</span>, ...subtitleTracks);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no subtitle language&quot;</span>);
+}
+
+<span class="hljs-comment">// -------------------------------</span>
+
+<span class="hljs-comment">// becomes</span>
+subtitleTracks = player.getAvailableTextTracks();
+
+<span class="hljs-keyword">if</span> (subtitleTracks &amp;&amp; subtitleTracks.length) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;subtitle languages:&quot;</span>,
+    ...subtitleTracks.map(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.language));
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no subtitle language&quot;</span>);
+}
+</code></pre>
+<p><a name="rem-getAverageBitrates"></a>
+<a name="subchapter-getAverageBitrates"></a></p>
+<h3>getAverageBitrates</h3>
+<h4>What Changed</h4>
+<p><code>getAverageBitrates</code> is deleted. It can normally be completely replaced by the
+<a href="api/player_events.html#events-bitrateEstimationChange">bitrateEstimationChange
+event</a> which can be
+listened thanks to the <a href="api/index.html#meth-addEventListener">addEventListener
+method</a>.</p>
+<p><a name="rem-getCurrentTime"></a>
+<a name="subchapter-getCurrentTime"></a></p>
+<h3>getCurrentTime</h3>
+<h4>What Changed</h4>
+<p>getCurrentTime was separated in two methods:</p>
+<ul>
+<li>
+<p>getWallClockTime: returns the wall-clock-time of the current position in
+seconds.
+That is:</p>
+<ul>
+<li>for live content, get a timestamp in seconds of the current position.</li>
+<li>for static content, returns the position from beginning, also in
+seconds.</li>
+</ul>
+<p>This is the closest implementation of getCurrentTime. The only difference
+being that for live contents, a timestamp will be returned (in seconds), not
+a Date object</p>
+</li>
+<li>
+<p>getPosition: returns the video element&#x2019;s current position, in seconds. The
+difference with getWallClockTime is that for live contents the position is
+not re-calculated to match a live timestamp.</p>
+</li>
+</ul>
+<p>If you do not know if you want to use getWallClockTime or getPosition:</p>
+<ul>
+<li>If what you want is to display the current time to the user, you will most
+probably want to use getWallClockTime.</li>
+<li>If what you want is to interact with the player&#x2019;s API or perform other
+actions with the real player data, use getPosition.</li>
+</ul>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+currentTime = player.getCurrentTime();
+
+<span class="hljs-keyword">if</span> (currentTime <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Date</span>) {
+  currentTime = currentTime.getTime() / <span class="hljs-number">1000</span>;
+}
+
+<span class="hljs-comment">// -------------------------------</span>
+
+<span class="hljs-comment">// becomes</span>
+currentTime = player.getWallClockTime();
+</code></pre>
+<p><a name="rem-getDebug"></a>
+<a name="subchapter-getDebug%20/%20showDebug%20/%20hideDebug%20/%20toggleDebug"></a></p>
+<h3>getDebug / showDebug / hideDebug / toggleDebug</h3>
+<h4>What Changed</h4>
+<p>Those will be removed from the API and won&#x2019;t be replaced.</p>
+<p>Those methods were used internally, but were exposed like regular APIs.
+They have not much usage either as other APIs should be sufficient.</p>
+<p><a name="rem-getEndTime"></a>
+<a name="subchapter-getEndTime"></a></p>
+<h3>getEndTime</h3>
+<h4>What Changed</h4>
+<p><code>getEndTime</code> was removed from the API. Its role can be replaced by the new
+<code>getMaximumPosition</code> API which will return the maximum position the user can
+seek to.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+endTime = player.getEndTime();
+
+<span class="hljs-comment">// becomes</span>
+endTime = player.getMaximumPosition();
+</code></pre>
+<p><a name="rem-static-error-codes"></a>
+<a name="subchapter-static%20getErrorCodes"></a></p>
+<h3>static getErrorCodes</h3>
+<h4>What Changed</h4>
+<p>This static method was updated to a static property <code>ErrorCodes</code>.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+errorCodes = player.getErrorCodes();
+
+<span class="hljs-comment">// becomes</span>
+errorCodes = player.ErrorCodes;
+</code></pre>
+<p><a name="rem-static-error-types"></a>
+<a name="subchapter-static%20getErrorTypes"></a></p>
+<h3>static getErrorTypes</h3>
+<h4>What Changed</h4>
+<p>This static method was updated to a static property <code>ErrorTypes</code>.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+errorTypes = player.getErrorTypes();
+
+<span class="hljs-comment">// becomes</span>
+errorTypes = player.ErrorTypes;
+</code></pre>
+<p><a name="rem-getImageTrack"></a>
+<a name="subchapter-getImageTrack"></a></p>
+<h3>getImageTrack</h3>
+<h4>What Changed</h4>
+<p><code>getImageTrack</code> is now replaced by both:</p>
+<ul>
+<li>
+<p>the <code>imageTrackUpdate</code> event (the closest to <code>getImageTrack</code> previous
+behavior) triggered each time new image data is received with the complete
+image data as a payload (all the image data from the current image
+adaptation) in a <code>data</code> property.</p>
+</li>
+<li>
+<p>the <code>getImageTrackData</code> method, which returns an array for all the
+currently referenced image data for the seekable content.</p>
+</li>
+</ul>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.getImageTrack().subscribe(<span class="hljs-function"><span class="hljs-params">images</span> =&gt;</span> {
+  displaySomeImages(images);
+});
+
+<span class="hljs-comment">// becomes</span>
+player.addEventListener(<span class="hljs-string">&quot;imageTrackUpdate&quot;</span>, <span class="hljs-function">(<span class="hljs-params">{ data }</span>) =&gt;</span> {
+  displaySomeImages(data);
+});
+</code></pre>
+<p><a name="rem-getLanguage"></a>
+<a name="subchapter-getLanguage"></a></p>
+<h3>getLanguage</h3>
+<h4>What Changed</h4>
+<p><code>getLanguage</code> has been replaced by <code>getAudioTrack</code> which adds audio
+description support.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+track = player.getLanguage();
+
+<span class="hljs-keyword">if</span> (track) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;audio language:&quot;</span>, track);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no audio language&quot;</span>);
+}
+
+<span class="hljs-comment">// ------------------------</span>
+
+<span class="hljs-comment">// becomes</span>
+track = player.getAudioTrack();
+
+<span class="hljs-keyword">if</span> (track) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;audio language:&quot;</span>, track.language);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no audio language&quot;</span>);
+}
+</code></pre>
+<p><a name="rem-getMetrics"></a>
+<a name="subchapter-getMetrics"></a></p>
+<h3>getMetrics</h3>
+<h4>What Changed</h4>
+<p>getMetrics is removed from the API and is not replaced. This is due to the fact
+that the ABR (adaptive bitrate) strategy completely changed, and re-implementing
+this method is not straightforward.</p>
+<p><a name="rem-getStartTime"></a>
+<a name="subchapter-getStartTime"></a></p>
+<h3>getStartTime</h3>
+<h4>What Changed</h4>
+<p><code>getStartTime</code> was removed from the API. Its role can be replaced by the new
+<code>getMinimumPosition</code> API which will return the minimum position the user can
+seek to.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+startTime = player.getStartTime();
+
+<span class="hljs-comment">// becomes</span>
+startTime = player.getMinimumPosition();
+</code></pre>
+<p><a name="rem-getSubtitle"></a>
+<a name="subchapter-getSubtitle"></a></p>
+<h3>getSubtitle</h3>
+<h4>What Changed</h4>
+<p><code>getSubtitle</code> has been replaced by <code>getTextTrack</code> which adds closed caption
+support.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+track = player.getSubtitle();
+
+<span class="hljs-keyword">if</span> (track) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;text language:&quot;</span>, track);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no text language&quot;</span>);
+}
+
+<span class="hljs-comment">// ------------------------</span>
+
+<span class="hljs-comment">// becomes</span>
+track = player.getTextTrack();
+
+<span class="hljs-keyword">if</span> (track) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;text language:&quot;</span>, track.language);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no text language&quot;</span>);
+}
+</code></pre>
+<p><a name="rem-goToStart"></a>
+<a name="subchapter-goToStart"></a></p>
+<h3>goToStart</h3>
+<h4>What Changed</h4>
+<p><code>goToStart</code> is removed from the API and not replaced. You might want to use
+both <code>getMinimumPosition</code> and <code>seekTo</code> to seek to the earliest part of the
+content.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.goToStart();
+
+<span class="hljs-comment">// becomes</span>
+player.seekTo(player.getMinimumPosition());
+</code></pre>
+<p><a name="rem-isLanguageAvailable"></a>
+<a name="subchapter-isLanguageAvailable%20/%20isSubtitleAvailable"></a></p>
+<h3>isLanguageAvailable / isSubtitleAvailable</h3>
+<h4>What Changed</h4>
+<p>Those methods are removed and not replaced. Use <code>getAvailableAudioTracks</code> /
+<code>getAvailableTextTracks</code> instead.</p>
+<h4>Replacement examples</h4>
+<h5>isLanguageAvailable</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+<span class="hljs-built_in">console</span>.log(player.isLanguageAvailable(<span class="hljs-string">&quot;fr&quot;</span>));
+
+<span class="hljs-comment">// becomes</span>
+<span class="hljs-keyword">const</span> tracks = player.getAvailableAudioTracks();
+<span class="hljs-built_in">console</span>.log(!!tracks &amp;&amp; tracks.some(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>));
+</code></pre>
+<h5>isSubtitleAvailable</h5>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+<span class="hljs-built_in">console</span>.log(player.isSubtitleAvailable(<span class="hljs-string">&quot;fr&quot;</span>));
+
+<span class="hljs-comment">// becomes</span>
+<span class="hljs-keyword">const</span> tracks = player.getAvailableTextTracks();
+<span class="hljs-built_in">console</span>.log(!!tracks &amp;&amp; tracks.some(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>));
+</code></pre>
+<p><a name="rem-normalizeLanguageCode"></a>
+<a name="subchapter-normalizeLanguageCode"></a></p>
+<h3>normalizeLanguageCode</h3>
+<h4>What Changed</h4>
+<p><code>normalizeLanguageCode</code> is removed and not replaced. Switching audio and text
+tracks is now id-based, so the language code has much less use than before.</p>
+<p><a name="rem-setLanguage"></a>
+<a name="subchapter-setLanguage"></a></p>
+<h3>setLanguage</h3>
+<h4>What Changed</h4>
+<p><code>setLanguage</code> has been replaced by <code>setAudioTrack</code> which adds audio
+description support.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+<span class="hljs-keyword">try</span> {
+  player.setLanguage(<span class="hljs-string">&quot;fr&quot;</span>);
+} <span class="hljs-function"><span class="hljs-title">catch</span>(<span class="hljs-params">e</span>)</span> {
+  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
+}
+
+<span class="hljs-comment">// -------------------------</span>
+
+<span class="hljs-comment">// becomes</span>
+track = player.getAvailableAudioTracks();
+<span class="hljs-keyword">const</span> indexOf = tracks &amp;&amp; tracks.indexOf(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>);
+
+<span class="hljs-keyword">if</span> (tracks &amp;&amp; indexOf !== -<span class="hljs-number">1</span>) {
+  player.setAudioTrack(tracks[indexOf].id);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
+}
+</code></pre>
+<p><a name="rem-setSubtitle"></a>
+<a name="subchapter-setSubtitle"></a></p>
+<h3>setSubtitle</h3>
+<h4>What Changed</h4>
+<p><code>setSubtitle</code> has been replaced by <code>setTextTrack</code> which adds closed caption
+support.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+<span class="hljs-keyword">try</span> {
+  player.setSubtitle(<span class="hljs-string">&quot;fr&quot;</span>);
+} <span class="hljs-function"><span class="hljs-title">catch</span>(<span class="hljs-params">e</span>)</span> {
+  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
+}
+
+<span class="hljs-comment">// -------------------------</span>
+
+<span class="hljs-comment">// becomes</span>
+track = player.getAvailableTextTracks();
+<span class="hljs-keyword">const</span> indexOf = tracks &amp;&amp; tracks.indexOf(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>);
+
+<span class="hljs-keyword">if</span> (tracks &amp;&amp; indexOf !== -<span class="hljs-number">1</span>) {
+  player.setTextTrack(tracks[indexOf].id);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
+}
+</code></pre>
+<p><a name="chan"></a>
+<a name="chapter-Changed%20methods"></a></p>
+<h2>Changed methods</h2>
+<p><a name="chan-seekTo"></a>
+<a name="subchapter-seekTo"></a></p>
+<h3>seekTo</h3>
+<h4>What Changed</h4>
+<p>In the previous version, you could give directly a Number or Date object to
+<code>seekTo</code>. What it would do with that depended on if the content was a live
+content or not:</p>
+<ul>
+<li>
+<p>for live content, a time in milliseconds or a Date object was expected
+corresponding to the WallClock time (timestamp of the live content)</p>
+</li>
+<li>
+<p>for non-live content, the time in seconds was expected, which was the time
+the video tag seek to.</p>
+</li>
+</ul>
+<p>Now, you can only give a number or an Object to this function. If you give a
+number, it will allways be the new time in seconds the video tag will seek to.
+This call is documented <a href="api/index.html#meth-seekTo">here</a>.</p>
+<h4>Replacement example</h4>
+<p>To copy the old behavior for live contents, you can set the <code>wallClockTime</code>
+property:</p>
+<pre><code class="language-js"><span class="hljs-comment">// seeking at 30 minute before now on what is broadcasted live</span>
+
+<span class="hljs-comment">// In the previous version:</span>
+player.seekTo(<span class="hljs-built_in">Date</span>.now() - <span class="hljs-number">30</span>*<span class="hljs-number">60</span> * <span class="hljs-number">1000</span>);
+
+<span class="hljs-comment">// becomes</span>
+player.seekTo({ <span class="hljs-attr">wallClockTime</span>: <span class="hljs-built_in">Date</span>.now() / <span class="hljs-number">1000</span> - <span class="hljs-number">30</span>*<span class="hljs-number">60</span>});
+</code></pre>
+<p>To copy the old behavior for non-live contents, nothing has changed:</p>
+<pre><code class="language-js"><span class="hljs-comment">// seek to the tenth second for a non live content</span>
+
+<span class="hljs-comment">// In the previous version:</span>
+player.seekTo(<span class="hljs-number">10</span>);
+
+<span class="hljs-comment">// becomes</span>
+player.seekTo(<span class="hljs-number">10</span>);
+</code></pre>
+<p><a name="chan-setVideoBitrate"></a>
+<a name="subchapter-setVideoBitrate%20/%20setAudioBitrate"></a></p>
+<h3>setVideoBitrate / setAudioBitrate</h3>
+<h4>What Changed</h4>
+<p>Previously, calling this method in the following situation threw an error:</p>
+<ul>
+<li>no content is playing</li>
+<li>the set bitrate does not exist</li>
+</ul>
+<p>Now, this call never throws:</p>
+<ul>
+<li>
+<p>if you call it while no content is playing, the limit is still set for the
+next content played.</p>
+</li>
+<li>
+<p>if the set bitrate does not exist on the current content, the value will
+just act as a ceil (the chosen bitrate will be the one immediately
+inferior). If still no bitrate is inferior to it, the lowest bitrate will be
+chosen instead.</p>
+</li>
+</ul>
+<p><a name="chan-getUrl"></a>
+<a name="subchapter-getUrl"></a></p>
+<h3>getUrl</h3>
+<h4>What Changed</h4>
+<p>Previously, calling this method when no content is playing threw an error.</p>
+<p>Now, doing so will just return <code>undefined</code>.</p>
+<p><a name="chan-isLive"></a>
+<a name="subchapter-isLive"></a></p>
+<h3>isLive</h3>
+<h4>What Changed</h4>
+<p>Previously, calling this method when no content is playing threw an error.</p>
+<p>Now, doing so will just return <code>false</code>.</p>
+<p><a name="remev"></a>
+<a name="chapter-Removed%20events"></a></p>
+<h2>Removed events</h2>
+<p><a name="remev-currentTimeChange"></a>
+<a name="subchapter-currentTimeChange"></a></p>
+<h3>currentTimeChange</h3>
+<h4>What Changed</h4>
+<p>The <code>currentTimeChange</code> is replaced by the <code>positionUpdate</code> event.</p>
+<p>It is similar to <code>currentTimeChange</code> but with the following properties
+removed:</p>
+<ul>
+<li><code>buffered</code></li>
+<li><code>paused</code></li>
+<li><code>range</code></li>
+<li><code>readyState</code></li>
+<li><code>stalled</code></li>
+<li><code>ts</code> (replaced by <code>position</code>)</li>
+<li><code>playback</code> (replaced by <code>playbackRate</code>)</li>
+<li><code>gap</code> (replaced by <code>bufferGap</code>)</li>
+</ul>
+<p>And with the following property updated:</p>
+<ul>
+<li><code>wallClockTime</code>: will go from a Date object to the same indication in
+seconds.</li>
+</ul>
+<p><a name="remev-progress"></a>
+<a name="subchapter-progress"></a></p>
+<h3>progress</h3>
+<h4>What Changed</h4>
+<p><code>progress</code> events are removed and not replaced. This is because it exposed to
+much of our internal logic.</p>
+<p><a name="remev-languageChange"></a>
+<a name="subchapter-languageChange"></a></p>
+<h3>languageChange</h3>
+<h4>What Changed</h4>
+<p><code>languageChange</code> is replaced by the <code>audioTrackChange</code> event, which supports
+audio description.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.addEventListener(<span class="hljs-string">&quot;languageChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">lang</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;language changed to&quot;</span>, lang);
+});
+
+<span class="hljs-comment">// becomes</span>
+player.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> { language, id, audioDescription } = track;
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;language changed to&quot;</span>, language);
+});
+</code></pre>
+<p><a name="remev-subtitleChange"></a>
+<a name="subchapter-subtitleChange"></a></p>
+<h3>subtitleChange</h3>
+<h4>What Changed</h4>
+<p><code>subtitleChange</code> is replaced by the <code>textTrackChange</code> event, which supports
+closed caption.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.addEventListener(<span class="hljs-string">&quot;subtitleChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">lang</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;subtitle changed to&quot;</span>, lang);
+});
+
+<span class="hljs-comment">// becomes</span>
+player.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> { language, id, closedCaption } = track;
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;language changed to&quot;</span>, language);
+});
+</code></pre>
+<p><a name="remev-nativeTextTrackChange"></a>
+<a name="subchapter-nativeTextTrackChange"></a></p>
+<h3>nativeTextTrackChange</h3>
+<h4>What Changed</h4>
+<p><code>nativeTextTrackChange</code> is replace by the <code>nativeTextTracksChange</code> (notice
+the supplementary &#x201C;s&#x201D;) event.</p>
+<p>Three things have changed comparatively:</p>
+<ul>
+<li>
+<p>The payload of this event now is an array of <code>TextTrack</code> element.
+Previously, it was a single <code>TextTrackElement</code> (which correspond to the
+first in the array).</p>
+</li>
+<li>
+<p>The event is also triggered when a <code>TextTrackElement</code> is removed from the
+<code>&lt;video&gt;</code> tag. Previously, it was only when added.</p>
+</li>
+<li>
+<p>The event is fired even if no content is playing</p>
+</li>
+</ul>
+<p>This is to support edge cases where the <code>&lt;track&gt;</code> element could be modified by
+the user of our library, in which case the RxPlayer could give false
+information. Also, this allows to signal when a <code>TextTrack</code> has been removed
+from the DOM to help you free up ressources on your side.</p>
+<h4>Replacement example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
+player.addEventListener(<span class="hljs-string">&quot;nativeTextTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the track changed:&quot;</span>, track);
+});
+
+<span class="hljs-comment">// becomes</span>
+player.addEventListener(<span class="hljs-string">&quot;nativeTextTracksChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">tracks</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (tracks.length === <span class="hljs-number">0</span>) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no active track!&quot;</span>);
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-comment">// in most usecases you can just check the first element.</span>
+    <span class="hljs-comment">// (this will have the exact same effect than the previous event)</span>
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the track changed:&quot;</span>, tracks[<span class="hljs-number">0</span>]);
+  }
+});
+</code></pre>
+<p><a name="chanev"></a>
+<a name="chapter-Changed%20events"></a></p>
+<h2>Changed events</h2>
+<p><a name="chanev-positionUpdate"></a>
+<a name="subchapter-positionUpdate"></a></p>
+<h3>positionUpdate</h3>
+<h4>What Changed</h4>
+<p>The <code>maximumBufferTime</code> property has now been removed from <code>positionUpdate</code>
+events. This is because this is now the exact same thing than:</p>
+<ul>
+<li><code>liveGap + position</code> (from the same event) for live contents</li>
+<li><code>duration</code> (from the same event) for non-live contents</li>
+</ul>
+</body></html></div></div></div></body>

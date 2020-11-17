@@ -1,0 +1,1199 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>loadVideo options - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-loadVideo%20options">loadVideo options</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Properties">Properties</a>
+<ul>
+<li><a href="#subchapter-transport">transport</a></li>
+<li><a href="#subchapter-url">url</a></li>
+<li><a href="#subchapter-keySystems">keySystems</a></li>
+<li><a href="#subchapter-autoPlay">autoPlay</a></li>
+<li><a href="#subchapter-startAt">startAt</a></li>
+<li><a href="#subchapter-transportOptions">transportOptions</a></li>
+<li><a href="#subchapter-textTrackMode">textTrackMode</a></li>
+<li><a href="#subchapter-textTrackElement">textTrackElement</a></li>
+<li><a href="#subchapter-audioTrackSwitchingMode">audioTrackSwitchingMode</a></li>
+<li><a href="#subchapter-manualBitrateSwitchingMode">manualBitrateSwitchingMode</a></li>
+<li><a href="#subchapter-lowLatencyMode">lowLatencyMode</a></li>
+<li><a href="#subchapter-networkConfig">networkConfig</a></li>
+<li><a href="#subchapter-enableFastSwitching">enableFastSwitching</a></li>
+<li><a href="#subchapter-hideNativeSubtitle">hideNativeSubtitle</a></li>
+<li><a href="#subchapter-supplementaryImageTracks">supplementaryImageTracks</a></li>
+<li><a href="#subchapter-supplementaryTextTracks">supplementaryTextTracks</a></li>
+<li><a href="#subchapter-defaultAudioTrack">defaultAudioTrack</a></li>
+<li><a href="#subchapter-defaultTextTrack">defaultTextTrack</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-loadVideo%20options"></a></p>
+<h1>loadVideo options</h1>
+<p><a name="overview"></a>
+<a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>This page describes the options given to the <code>loadVideo</code> method, which is the
+method to use to load a new video.</p>
+<p>These options take the form of a single objects with multiple properties, like
+this:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Simply loading a DASH MPD</span>
+<span class="hljs-keyword">const</span> options = {
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">url</span>: myManifestUrl
+};
+player.loadVideo(options);
+</code></pre>
+<p><a name="prop"></a>
+<a name="chapter-Properties"></a></p>
+<h2>Properties</h2>
+<p><a name="prop-transport"></a>
+<a name="subchapter-transport"></a></p>
+<h3>transport</h3>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>The transport protocol used for this content.
+This property is mandatory.</p>
+<p>Can be either:</p>
+<ul>
+<li>
+<p><code>&quot;dash&quot;</code> - for DASH contents</p>
+</li>
+<li>
+<p><code>&quot;smooth&quot;</code> - for Microsoft Smooth Streaming contents</p>
+</li>
+<li>
+<p><code>&quot;directfile&quot;</code> - for loading a video in <em>DirectFile</em> mode, which allows to
+directly play media files (example: <code>.mp4</code> or <code>.webm</code> files) without
+using a transport protocol. With that option, you can even play HLS
+contents on multiple browsers (mainly safari and iOS browsers).</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> In that mode, multiple APIs won&#x2019;t have any effect.
+This is documented in the documentation of each concerned method, option or
+event in the API.</p>
+</li>
+<li>
+<p><code>&quot;metaplaylist&quot;</code> for <a href="metaplaylist.html">MetaPlaylist</a> streams, which are
+a concatenation of multiple smooth and DASH contents</p>
+</li>
+<li>
+<p><code>&quot;local&quot;</code> for <a href="local_manifest.html">local manifests</a>, which allows to play
+downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).</p>
+</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-comment">// play some dash content</span>
+rxPlayer.loadVideo({
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">url</span>: https:<span class="hljs-comment">//www.example.com/dash.mpd</span>
+})
+</code></pre>
+<p><a name="prop-url"></a>
+<a name="subchapter-url"></a></p>
+<h3>url</h3>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>For Smooth, DASH or MetaPlaylist contents, the URL to the
+<a href="../terms.html#manifest">Manifest</a> (or equivalent)</p>
+<p>For <em>DirectFile</em> mode contents, the URL of the content (the supported contents
+depends on the current browser).</p>
+<p>This property is mandatory unless either:</p>
+<ul>
+<li>
+<p>a <code>manifestLoader</code> is defined in the
+<a href="#prop-transportOptions">transportOptions</a>, in which case that callback will
+be called instead any time we want to load the Manifest.</p>
+</li>
+<li>
+<p>an <code>initialManifest</code> is defined in the
+<a href="#prop-transportOptions">transportOptions</a>, in which case this will be used
+as the first version of the Manifest.
+Note however that if the Manifest needs to be refreshed and no <code>url</code> nor
+<code>manifestLoader</code> has been set, the RxPlayer will most likely fail and stop
+playback.</p>
+</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-comment">// play some dash content</span>
+rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: https:<span class="hljs-comment">//www.example.com/dash.mpd,</span>
+  transport: <span class="hljs-string">&quot;dash&quot;</span>
+})
+</code></pre>
+<p><a name="prop-keySystems"></a>
+<a name="subchapter-keySystems"></a></p>
+<h3>keySystems</h3>
+<p><em>type</em>: <code>Array.&lt;Object&gt;|undefined</code></p>
+<p>This property is mandatory if the content uses DRM.</p>
+<p>It is here that is defined every options relative to the encryption of your
+content. There&#x2019;s a lot of configuration possible here. In the case you find
+this documentation hard to grasp, we&#x2019;ve written a <a href="../tutorials/contents_with_DRM.html">tutorial on DRM configuration
+here</a>.</p>
+<p>This property is an array of objects with the following properties (only
+<code>type</code> and <code>getLicense</code> are mandatory here):</p>
+<ul>
+<li>
+<p><strong>type</strong> (<code>string</code>): name of the DRM system used. Can be either
+<code>&quot;widevine&quot;</code>, <code>&quot;playready&quot;</code> or <code>clearkey</code> or the type (reversed domain
+name) of the keySystem (e.g. <code>&quot;com.widevine.alpha&quot;</code>,
+<code>&quot;com.microsoft.playready&quot;</code> &#x2026;).</p>
+</li>
+<li>
+<p><strong>getLicense</strong> (<code>Function</code>): Callback which will be triggered everytime a
+message is sent by the Content Decryption Module (CDM), usually to
+fetch/renew the license.</p>
+<p>Gets two arguments when called:</p>
+<ol>
+<li>the message (<code>Uint8Array</code>): The message, formatted to an Array of
+bytes.</li>
+<li>the messageType (<code>string</code>): String describing the type of message
+received.
+There is only 4 possible message types, all defined in <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype">the w3c
+specification</a>.</li>
+</ol>
+<p>This function should return either synchronously the license, <code>null</code> to
+not set a license for this <code>message</code> event or a Promise which should
+either:
+- resolves if the license was fetched, with the licence in argument
+- resolve with <code>null</code> if you do not want to set a license for this
+<code>message</code> event
+- reject if an error was encountered.</p>
+<p>Note: We set a 10 seconds timeout by default on this request (configurable
+through the <code>getLicenseConfig</code> object).
+If the returned Promise do not resolve or reject under this limit, the
+player will stop with an error.</p>
+<p>In any case, the license provided by this function should be of a
+<code>BufferSource</code> type (example: an <code>Uint8Array</code> or an <code>ArrayBuffer</code>).</p>
+<p>Even in case of an error, you can (this is not mandatory) set any of the
+following properties on the rejected value which will be interpreted by
+the RxPlayer:</p>
+<pre><code>- `noRetry` (`Boolean`): If set to `true`, we will throw directly a
+  `KEY_LOAD_ERROR` to call `getLicense`. If not set or set to `false`,
+  the current retry parameters will be applied (see `getLicenseConfig`)
+
+- `message` (`string`): If the `message` property is set as a &quot;string&quot;,
+  this message will be set as the `message` property of the
+  corresponding `EncryptedMediaError` (either communicated through an
+  `&quot;error&quot;` event if we&apos;re not retrying or through a `&quot;warning&quot;` event
+  if we&apos;re retrying).
+  As every other `getLicense`-related errors, this error will have the
+  `KEY_LOAD_ERROR` `code` property.
+
+- `fallbackOnLastTry`: If this getLicense is the last retry (if the
+  `noRetry` property is set to `true`, this is always true), we will not
+  throw immediately but rather try to fallback on other Representations
+  (e.g. qualities) which might have a different decryption key. If no
+  Representation is left, we will throw a MediaError with a
+  `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
+  documentation](./errors.md#types-media_error).
+
+  You will receive a `decipherabilityUpdate` event when we fallback from
+  a given Representation. You can find documentation on this event [in
+  the corresponding chapter of the events
+  documentation](./player_events.md#events-decipherabilityUpdate).
+
+  This option is thus only useful for contents depending on multiple
+  licenses.
+
+  When fallbacking, we might need to reload the current MediaSource,
+  leading to a black screen during a brief instant. When reloading, the
+  RxPlayer will have the `&quot;reloading&quot;` [player state](./states.md).
+  on most situations, we will however not reload the media source but
+  only perform a very little seek (of some milliseconds). you might see
+  the stream stutter for a very brief instant at that point.
+
+  On the Edge browser, we found an issue that can arise when this option
+  is set if PlayReady is used. This issue can make the player loads the
+  content indefinitely.
+  Sadly, no work-around has been found for now for this issue. We&apos;re
+  currently trying to create a reproducible scenario and document that
+  issue so it can hopefully be fixed in the future. In the meantime,
+  you&apos;re encouraged either to use Widevine (only on Chromium-based Edge)
+  or to not make use of the `fallBackOnLastTry` option on that browser.
+</code></pre>
+</li>
+<li>
+<p><strong>getLicenseConfig</strong> (<code>Object|undefined</code>): Optional configuration for the
+<code>getLicense</code> callback. Can contain the following properties:</p>
+<ul>
+<li>
+<p><code>retry</code> (<code>Number</code>|<code>undefined</code>) (default: <code>2</code>): number of time
+<code>getLicense</code> is retried on error or on timeout before we fail on a
+<code>KEY_LOAD_ERROR</code></p>
+</li>
+<li>
+<p><code>timeout</code> (<code>Number</code>|<code>undefined</code>) (default: <code>10000</code>): timeout, in ms,
+after which we consider the <code>getLicense</code> callback to have failed.</p>
+<p>Set it to <code>-1</code> to disable any timeout.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>serverCertificate</strong> (<code>BufferSource|undefined</code>): Eventual certificate
+used to encrypt messages to the license server.
+If set, we will try to set this certificate on the CDM. If it fails, we will
+still continue to try deciphering the content (albeit a
+<a href="errors.html">warning</a> will be emitted in that case with the code
+<code>&quot;LICENSE_SERVER_CERTIFICATE_ERROR&quot;</code>).</p>
+</li>
+<li>
+<p><strong>persistentLicense</strong> (<code>Boolean|undefined</code>): Set it to <code>true</code> if you
+want the ability to persist the license for later retrieval.
+In that case, you will also need to set the <code>licenseStorage</code> attribute to
+be able to persist the license through your preferred method. This is not
+needed for most usecases.</p>
+</li>
+<li>
+<p><strong>licenseStorage</strong> (<code>Object|undefined</code>): Required only if
+<code>persistentLicense</code> has been set to <code>true</code>. It&#x2019;s an object containing
+two functions <code>load</code> and <code>save</code>:</p>
+<ul>
+<li><code>save</code>: take into argument an <code>Array.&lt;Object&gt;</code> which will be the set
+of sessionId to save. No return value needed.</li>
+<li><code>load</code>: take no argument and returns the stored <code>Array.&lt;Object&gt;</code>
+(the last given to <code>save</code>) synchronously.</li>
+</ul>
+</li>
+<li>
+<p><strong>persistentStateRequired</strong> (<code>Boolean|undefined</code>): Set it to <code>true</code> if
+the chosen CDM should have the ability to persist a license, <code>false</code> if
+you don&#x2019;t care. This is not needed for most usecases. <code>false</code> by default.
+You do not have to set it to <code>true</code> if the <code>persistentLicense</code> option is
+set.</p>
+</li>
+<li>
+<p><strong>distinctiveIdentifierRequired</strong> (<code>Boolean|undefined</code>): When set to
+<code>true</code>, the use of
+<a href="https://www.w3.org/TR/encrypted-media/#distinctive-identifier">Distinctive Indentifier(s)</a>
+or
+<a href="https://www.w3.org/TR/encrypted-media/#uses-distinctive-permanent-identifiers">Distinctive Permanent Identifier(s)</a>
+will be required. This is not needed for most usecases. <code>false</code> if you do
+not care. <code>false</code> by default.</p>
+</li>
+<li>
+<p><strong>throwOnLicenseExpiration</strong> (<code>Boolean|undefined</code>): <code>true</code> by default.</p>
+<p>If set to <code>true</code> or not set, the playback will be interrupted as soon as one
+of the current licenses expires. In that situation, you will be warned with
+an <a href="errors.html"><code>error</code> event</a> with, as a payload, an error with the code
+<code>KEY_STATUS_CHANGE_ERROR</code>.</p>
+<p>If set to <code>false</code>, the playback of the current content will not be
+interrupted even if one of the current licenses is expired. It might however
+stop decoding in that situation.
+It&#x2019;s then up to you to update the problematic license, usually through the
+usual <code>getLicense</code> callback.</p>
+<p>You may want to set this value to <code>false</code> if a session expiration leads to
+a license renewal.
+In that case, content may continue to play once the license has been
+updated.</p>
+</li>
+<li>
+<p><strong>fallbackOn</strong> (<code>Object</code>): This advanced option allows to fallback on other
+Representations (e.g. qualities) when one of them has its decription key
+refused.</p>
+<p>This option is thus only useful for contents depending on multiple
+keys.</p>
+<p>This object can have two properties:
+- <code>keyInternalError</code>: fallback when the corresponding key has the
+<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+<code>&quot;internal-error&quot;</code>. We found that most widevine implementation use
+this error when a key is refused.
+- <code>keyOutputRestricted</code>: fallback when the corresponding key has the
+<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+<code>&quot;output-restricted&quot;</code>. This is the proper status for a key refused due
+to output restrictions.</p>
+<p>For most cases where you want to fallback in case of a refused key, we
+recommend setting both properties to <code>true</code>.</p>
+<p>You will receive a <code>decipherabilityUpdate</code> event when we fallback from
+a given Representation. You can find documentation on this event
+<a href="player_events.html#events-decipherabilityUpdate">in the corresponding chapter of the events
+documentation</a>.</p>
+<p>When fallbacking, we might need to reload the current MediaSource, leading
+to a black screen during a brief instant. When reloading, the RxPlayer
+will have the <code>&quot;reloading&quot;</code> <a href="states.html">player state</a>.
+on most situations, we will however not reload the media source but only
+perform a very little seek (of some milliseconds). you might see the
+stream twitch for a very brief instant at that point.</p>
+<p>If we have no Representation to fallback to anymore, we will throw a
+MediaError with a <code>NO_PLAYABLE_REPRESENTATION</code> code, as documented <a href="errors.html#types-media_error">in
+the errors documentation</a>.</p>
+</li>
+<li>
+<p><strong>onKeyStatusesChange</strong> (<code>Function|undefined</code>): Not needed for most
+usecases.</p>
+<p>Triggered each time the key statuses of the current session
+changes, except for the following statuses (which throws immediately):</p>
+<ul>
+<li><code>expired</code> if (and only if) <code>throwOnLicenseExpiration</code> is not set to
+<code>false</code></li>
+<li><code>internal-error</code></li>
+</ul>
+<p>Takes 2 arguments:</p>
+<ol>
+<li>The keystatuseschange event <code>{Event}</code></li>
+<li>The session associated with the event <code>{MediaKeySession}</code></li>
+</ol>
+<p>Like <code>getLicense</code>, this function should return a promise which emit a
+license or <code>null</code> (for no license) when resolved. It can also return
+directly the license or <code>null</code> if it can be done synchronously.</p>
+<p>In case of an error, you can set the <code>message</code> property on the
+rejected value as a &#x201C;string&#x201D;. This message will be set as the <code>message</code>
+property of the corresponding <code>EncryptedMediaError</code> communicated through
+an <code>&quot;error&quot;</code> event.
+As every other <code>onKeyStatusesChange</code>-related errors, this error will have
+the <code>KEY_STATUS_CHANGE_ERROR</code> <code>code</code> property.</p>
+</li>
+<li>
+<p><strong>closeSessionsOnStop</strong> (<code>Boolean|undefined</code>): If set to <code>true</code>, the
+<code>MediaKeySession</code> created for a content will be immediately closed when
+the content stops its playback. This might be required by your key system
+implementation (most often, it is not).</p>
+<p>If set to <code>false</code> or not set, the <code>MediaKeySession</code> can be reused if the
+same content needs to be re-decrypted.</p>
+</li>
+<li>
+<p><strong>disableMediaKeysAttachmentLock</strong> (<code>Boolean|undefined</code>):
+In regular conditions, we might want to wait for the media element to have
+decryption capabilities (what we call here &#x201C;MediaKeys attachment&#x201D;) before
+beginning to load the actual content.</p>
+<p>Waiting for that capability validation allows for example to play a content
+which contains both encrypted and unencrypted data on the Chrome browser.</p>
+<p>However, we found that in some peculiar devices (like some set-top boxes)
+this can create a deadlock: the browser sometimes wait for some
+content to be loaded before validating the media element&#x2019;s decryption
+capabilities.</p>
+<p>Because we didn&#x2019;t find a good enough compromise for now, we added the
+<code>disableMediaKeysAttachmentLock</code> boolean.
+By setting it to <code>true</code>, we won&#x2019;t wait for &#x201C;MediaKeys attachment&#x201D; before
+pushing the first content. The downside being that content of mixed
+unencrypted/encrypted data might not be playable with that configuration.</p>
+<p>You can try that property if your encrypted contents seems to load
+indefinitely on peculiar targets.</p>
+</li>
+</ul>
+<h4>Example</h4>
+<p>Example of a simple DRM configuration for widevine and playready DRMs:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: manifestURL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
+    <span class="hljs-function"><span class="hljs-title">getLicense</span>(<span class="hljs-params">challenge</span>)</span> {
+      <span class="hljs-comment">// ajaxPromise is here an AJAX implementation doing a POST request on the</span>
+      <span class="hljs-comment">// widevineLicenseServer with the challenge in its body.</span>
+      <span class="hljs-keyword">return</span> ajaxPromise(widevineLicenseServer, challenge);
+    }
+  }, {
+    <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;playready&quot;</span>,
+    <span class="hljs-function"><span class="hljs-title">getLicense</span>(<span class="hljs-params">challenge</span>)</span> {
+      <span class="hljs-comment">// idem</span>
+      <span class="hljs-comment">// Note: you may need to format the challenge before doing the request</span>
+      <span class="hljs-comment">// depending on the server configuration.</span>
+      <span class="hljs-keyword">return</span> ajaxPromise(playreadyLicenseServer, challenge);
+    }
+  }]
+})
+</code></pre>
+<p><a name="prop-autoPlay"></a>
+<a name="subchapter-autoPlay"></a></p>
+<h3>autoPlay</h3>
+<p><em>type</em>: <code>Boolean|undefined</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<p>If set to <code>true</code>, the video will play immediately after being loaded.</p>
+<p>Note: On some browsers, auto-playing a media without user interaction is blocked
+due to the browser&#x2019;s policy.
+In that case, the player won&#x2019;t be able to play (it will stay in a <code>&quot;LOADED&quot;</code>
+state) and you will receive a <a href="errors.html">warning event</a> containing a
+<code>MEDIA_ERROR</code> with the code: <code>MEDIA_ERR_BLOCKED_AUTOPLAY</code>.
+A solution in that case would be to propose to your users an UI element to
+trigger the play with an interaction.</p>
+<p><a name="prop-startAt"></a>
+<a name="subchapter-startAt"></a></p>
+<h3>startAt</h3>
+<p><em>type</em>: <code>Object|undefined</code></p>
+<p><code>startAt</code> allows to define a starting position in the played content whether
+it is a live content or not.</p>
+<p>This option is only defining the starting position, not the beginning of the
+content. The user will then be able to navigate anywhere in the content through
+the <code>seekTo</code> API.</p>
+<p>If defined, this property must be an object containing a single key. This key
+can be either:</p>
+<ul>
+<li>
+<p><strong>position</strong> (<code>Number</code>): The starting position, in seconds.</p>
+</li>
+<li>
+<p><strong>wallClockTime</strong> (<code>Number|Date</code>): The starting wall-clock time (re-scaled
+position from <a href="../terms.html#manifest">Manifest</a> information to obtain a
+timestamp on live contents), in seconds.
+Useful to use the type of time returned by the <code>getWallClockTime</code> API for
+live contents. If a Date object is given, it will automatically be converted
+into seconds.</p>
+</li>
+<li>
+<p><strong>fromFirstPosition</strong> (<code>Number</code>): relative position from the minimum
+possible one, in seconds.
+That is:</p>
+<ul>
+<li>for dynamic (live) contents, from the beginning of the buffer depth (as
+defined by the Manifest).</li>
+<li>for non-dynamic (vod) contents, from the position <code>0</code> (this option
+should be equivalent to <code>position</code>)</li>
+</ul>
+</li>
+<li>
+<p><strong>fromLastPosition</strong> (<code>Number</code>): relative position from the maximum
+possible one, in seconds. Should be a negative number:</p>
+<ul>
+<li>for dynamic (e.g. live) contents, it is the difference between the
+starting position and the currently last possible position, as defined
+by the manifest.</li>
+<li>for VoD contents, it is the difference between the starting position and
+the end position of the content.</li>
+</ul>
+</li>
+<li>
+<p><strong>percentage</strong> (<code>Number</code>): percentage of the wanted position. <code>0</code> being
+the minimum position possible (0 for static content, buffer depth for
+dynamic contents) and <code>100</code> being the maximum position possible
+(<code>duration</code> for VoD content, last currently possible position for dynamic
+contents).</p>
+</li>
+</ul>
+<p>Note: Only one of those properties will be considered, in the same order of
+priority they are written here.</p>
+<p>If the value set is inferior to the minimum possible position, the minimum
+possible position will be used instead. If it is superior to the maximum
+possible position, the maximum will be used instead as well.</p>
+<p>More information on how the initial position is chosen can be found <a href="../infos/initial_position.html">in the
+specific documentation page on this subject</a>.</p>
+<h4>Notes for dynamic contents</h4>
+<p>For dynamic contents, <code>startAt</code> could work not as expected:</p>
+<ul>
+<li>
+<p>Depending on the type of Manifest, it will be more or less precize to guess
+the current last position of the content. This will mostly affect the
+<code>fromLastPosition</code> option.</p>
+</li>
+<li>
+<p>If the Manifest does not allow to go far enough in the past (not enough
+buffer, server-side) to respect the position wanted, the maximum buffer
+depth will be used as a starting time instead.</p>
+</li>
+<li>
+<p>If the Manifest does not allow to go far enough in the future to respect the
+position wanted, the current last available position will be used to define
+the starting time instead.</p>
+</li>
+</ul>
+<p>If <code>startAt</code> is not set on live contents, the time suggested by the Manifest
+will be considered. If it is also not set, the initial position will be based on
+the real live edge.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// using position</span>
+player.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">startAt</span>: {
+    <span class="hljs-attr">position</span>: <span class="hljs-number">10</span> <span class="hljs-comment">// start at position == 10 (in seconds)</span>
+  }
+});
+
+<span class="hljs-comment">// using wall-clock time</span>
+player.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">startAt</span>: {
+    <span class="hljs-attr">wallClockTime</span>: <span class="hljs-built_in">Date</span>.now() / <span class="hljs-number">1000</span> - <span class="hljs-number">60</span> <span class="hljs-comment">// 1 minute before what&apos;s broadcasted</span>
+                                          <span class="hljs-comment">// now</span>
+  }
+});
+
+<span class="hljs-comment">// using fromFirstPosition</span>
+player.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">startAt</span>: {
+    <span class="hljs-attr">fromFirstPosition</span>: <span class="hljs-number">30</span> <span class="hljs-comment">// 30 seconds after the beginning of the buffer</span>
+  }
+})
+
+<span class="hljs-comment">// using fromLastPosition</span>
+player.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">startAt</span>: {
+    <span class="hljs-attr">fromLastPosition</span>: -<span class="hljs-number">60</span> <span class="hljs-comment">// 1 minute before the end</span>
+  }
+})
+</code></pre>
+<p><a name="prop-transportOptions"></a>
+<a name="subchapter-transportOptions"></a></p>
+<h3>transportOptions</h3>
+<p><em>type</em>: <code>Object|undefined</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>Options concerning the &#x201C;transport&#x201D;.</p>
+<p>That is, the part of the code:</p>
+<ul>
+<li>performing <a href="../terms.html#manifest">Manifest</a> and segment requests</li>
+<li>parsing the Manifest</li>
+<li>parsing/updating/creating segments</li>
+</ul>
+<p>This Object can contain multiple properties. Only those documented here are
+considered stable:</p>
+<ul>
+<li>
+<p><strong>minimumManifestUpdateInterval</strong> (<code>number|undefined</code>):</p>
+<p>Set the minimum time, in milliseconds, we have to wait between Manifest
+updates.</p>
+<p>A Manifest may need to be updated in regular intervals (e.g. many DASH
+dynamic contents depend on that behavior).</p>
+<p>The frequency at which we normally update a Manifest depends on multiple
+factors: the information taken from the Manifest, the transport chosen or
+the current playback conditions. You might want to use
+<code>minimumManifestUpdateInterval</code> to limit that frequency to a minimum.</p>
+<p>This option is principally useful on some embedded devices where resources
+are scarce. The request and data decompression done at each Manifest update
+might be too heavy for some and reducing the interval at which they are done
+might help.</p>
+<p>Please note however than reducing that frequency can raise the chance of
+rebuffering, as we might be aware of newly generated segments later than we
+would be without that option.</p>
+<p>Example:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-attr">minimumManifestUpdateInterval</span>: <span class="hljs-number">5000</span>, <span class="hljs-comment">// Perform Manifest updates at most</span>
+                                         <span class="hljs-comment">// every 5 seconds</span>
+  }
+});
+</code></pre>
+</li>
+<li>
+<p><strong>initialManifest</strong> (<code>string|Document|Object</code>):</p>
+<p>Manifest that will be initially used (before any potential Manifest
+refresh).</p>
+<p>Some applications pre-load the Manifest to parse some information from it
+before calling <code>loadVideo</code>.
+As in that case the Manifest has already been loaded, an application can
+optimize content loading time by giving to the RxPlayer that already-loaded
+Manifest so the latter can avoid doing another request for it.</p>
+<p>The format accepted for that option depends on the current chosen
+<a href="#prop-transport"><code>transport</code></a>:</p>
+<ul>
+<li>
+<p>for <code>&quot;dash&quot;</code> and <code>&quot;smooth&quot;</code> contents either a <code>string</code> (of the whole
+Manifest&#x2019;s xml data) or a corresponding <code>Document</code> format is accepted.</p>
+</li>
+<li>
+<p>for <code>&quot;metaplaylist&quot;</code>, either a <code>string</code> (for the whole JSON) or the
+corresponding JS Object is accepted.</p>
+</li>
+<li>
+<p>for <code>&quot;local&quot;</code>, only the corresponding local Manifest as a JS object is
+accepted.</p>
+</li>
+</ul>
+<p>Note that using this option could have implications for live contents.
+Depending on the content, the initial playing position and maximum position
+could be calculated based on that option&#x2019;s value.</p>
+<p>In a case where the corresponding Manifest request was performed long before
+the <code>loadVideo</code> call, the RxPlayer could be for example initially playing
+far from the real live edge.
+Because of that, it is recommended to only set that options for live/dynamic
+contents if its request was done immediately before the <code>loadVideo</code>
+call.</p>
+</li>
+<li>
+<p><strong>manifestUpdateUrl</strong> (<code>string|undefined</code>):</p>
+<p>Set a custom Manifest URL for Manifest updates.
+This URL can point to another version of the Manifest with a shorter
+timeshift window, to lighten the CPU, memory and bandwidth impact of
+Manifest updates.</p>
+<p>Example:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://example.com/full-content.mpd&quot;</span>,
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-attr">manifestUpdateUrl</span>: <span class="hljs-string">&quot;https://example.com/content-with-shorter-window.mpd&quot;</span>
+  }
+});
+</code></pre>
+<p>When the RxPlayer plays a live content, it may have to refresh frequently
+the Manifest to be aware of where to find new media segments.
+It generally uses the regular Manifest URL when doing so, meaning that the
+information about the whole content is downloaded again.</p>
+<p>This is generally not a problem though: The Manifest is generally short
+enough meaning that this process won&#x2019;t waste much bandwidth memory or
+parsing time.
+However, we found that for huge Manifests (multiple MB uncompressed), this
+behavior could be a problem on some low-end devices (some set-top-boxes,
+chromecasts) where slowdowns can be observed when Manifest refresh are
+taking place.</p>
+<p>The <code>manifestUpdateUrl</code> will thus allow an application to provide a second
+URL, specifically used for Manifest updates, which can represent the same
+content with a shorter timeshift window (e.g. using only 5 minutes of
+timeshift window instead of 10 hours for the full Manifest). The content
+will keep its original timeshift window and the RxPlayer will be able to get
+information about new segments at a lower cost.</p>
+</li>
+<li>
+<p><strong>representationFilter</strong> (<code>Function|undefined</code>):</p>
+<p>Allows to filter out <code>Representation</code>s (i.e. media qualities) from the
+Manifest to avoid playing them.</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-function"><span class="hljs-title">representationFilter</span>(<span class="hljs-params">representations, infos</span>)</span> {
+      <span class="hljs-comment">// ...</span>
+    }
+  }
+});
+</code></pre>
+<p>More infos on it can be found <a href="plugins.html#representationFilter">here</a>.</p>
+</li>
+<li>
+<p><strong>segmentLoader</strong> (<code>Function|undefined</code>):</p>
+<p>Defines a custom segment loader for when you want to perform the requests
+yourself.</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-function"><span class="hljs-title">segmentLoader</span>(<span class="hljs-params">infos, callbacks</span>)</span> {
+      <span class="hljs-comment">// logic to download a segment</span>
+    }
+  }
+});
+</code></pre>
+<p>More info on it can be found <a href="plugins.html#segmentLoader">here</a>.</p>
+</li>
+<li>
+<p><strong>manifestLoader</strong> (<code>function|undefined</code>):</p>
+<p>Defines a custom Manifest loader (allows to set a custom logic for the
+Manifest request).</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-function"><span class="hljs-title">manifestLoader</span>(<span class="hljs-params">url, callbacks</span>)</span> {
+      <span class="hljs-comment">// logic to fetch the Manifest</span>
+    }
+  }
+});
+</code></pre>
+<p>More info on it can be found <a href="plugins.html#manifestLoader">here</a>.</p>
+</li>
+<li>
+<p><strong>checkMediaSegmentIntegrity</strong> (<code>boolean|undefined</code>):</p>
+<p>If set to true, the RxPlayer will retry a media segment request if that
+segment seems corrupted.</p>
+<p>If not set or set to false, the RxPlayer might interrupt playback in the
+same situation.</p>
+<p>You can set this option if you suspect the CDN providing your contents to
+sometimes send you incomplete/corrupted segments.</p>
+<p>Example:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-attr">checkMediaSegmentIntegrity</span>: <span class="hljs-literal">true</span>,
+  }
+});
+</code></pre>
+</li>
+<li>
+<p><strong>serverSyncInfos</strong> (<code>Object|undefined</code>):</p>
+<p>Allows to provide a time synchronization mechanism between the client and
+the server.</p>
+<p>This value is mainly useful for live DASH contents based on a
+SegmentTemplate scheme without SegmentTimeline elements as those rely on
+having a synchronized clock on the client side.</p>
+<p>The <code>serverSyncInfos</code> object contains two keys:</p>
+<ul>
+<li>
+<p><code>serverTimestamp</code> (<code>number</code>): Unix timestamp of the server at a given
+point in time, in milliseconds.</p>
+</li>
+<li>
+<p><code>clientTime</code> (<code>number</code>): Value of the <code>performance.now()</code> API at the time
+the <code>serverTimestamp</code> value was true. Please note that if your page contains
+multiple worker, the <code>performance.now()</code> call should be done on the same
+worker than the one in which loadVideo is called.</p>
+<p><em>The <code>performance.now()</code> API is used here because it is the main API to
+obtain a monotically increasing clock on the client-side.</em></p>
+</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> timeResponse = <span class="hljs-keyword">await</span> fetch(timeServerURL);
+<span class="hljs-keyword">const</span> clientTime = performance.now();
+<span class="hljs-keyword">const</span> serverTimestamp = <span class="hljs-keyword">await</span> timeResponse.text();
+<span class="hljs-keyword">const</span> serverSyncInfos = { serverTimestamp, clientTime };
+rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: { serverSyncInfos }
+})
+</code></pre>
+<p>If indicated, we will ignore any time indication on the MPD and only consider
+<code>serverSyncInfos</code> to calculate the time on the server side.</p>
+<p>This value is also very useful for low-latency contents, as some of them do not
+indicate any server&#x2019;s time, relying on the client one instead.</p>
+<p>Note that there is a risk of us losing synchronization when leap seconds are
+added/substracted to unix time. However we consider those situations rare enough
+(and the effect should be relatively weak) to let this as is for the moment. For
+a complete explanation, you can look at the <a href="low_latency.html#note-time-sync">corresponding chapter of the
+low-latency documentation</a>.</p>
+</li>
+<li>
+<p><strong>aggressiveMode</strong> (<code>boolean|undefined</code>):</p>
+<p>If set to true, we will try to download segments very early, even if we are
+not sure they had time to be completely generated.</p>
+<p>For the moment, this mode has only an effect for all Smooth contents and
+some DASH contents relying on a number-based SegmentTemplate segment
+indexing scheme.</p>
+<p>The upside is that you might have the last segments sooner.
+The downside is that requests for segments which did not had time to
+generate might trigger a <code>NetworkError</code>. Depending on your other settings
+(especially the <code>networkConfig</code> loadVideo options), those errors might just
+be sent as warnings and the corresponding requests be retried.</p>
+<p>Example:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-attr">aggressiveMode</span>: <span class="hljs-literal">true</span>,
+  }
+});
+</code></pre>
+</li>
+<li>
+<p><strong>referenceDateTime</strong> (<code>number|undefined</code>):</p>
+<p>Only useful for live contents. This is the default amount of time, in
+seconds, to add as an offset to a given media content&#x2019;s time, to obtain the
+real live time.</p>
+<p>For example, if the media has it&#x2019;s <code>0</code> time corresponding to the 30th of
+January 2010 at midnight, you can set the <code>referenceDateTime</code> to <code>new Date(2010-01-30) / 1000</code>. This value is useful to communicate back to you
+the &#x201C;live time&#x201D;, for example through the <code>getWallClockTime</code> method.</p>
+<p>This will only be taken into account for live contents, and if the Manifest
+/ MPD does not already contain an offset (example: an
+&#x201C;availabilityStartTime&#x201D; attribute in a DASH MPD).</p>
+<p>Example:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-attr">referenceDateTime</span>: <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(<span class="hljs-number">2015</span>-<span class="hljs-number">0</span>5-<span class="hljs-number">29</span>) / <span class="hljs-number">1000</span>,
+  }
+});
+</code></pre>
+</li>
+</ul>
+<p><a name="prop-textTrackMode"></a>
+<a name="subchapter-textTrackMode"></a></p>
+<h3>textTrackMode</h3>
+<p><em>type</em>: <code>string</code></p>
+<p><em>defaults</em>: <code>&quot;native&quot;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>This option allows to specify how the text tracks should be displayed.</p>
+<p>There is two possible values:</p>
+<ul>
+<li><code>&quot;native&quot;</code></li>
+<li><code>&quot;html&quot;</code></li>
+</ul>
+<p>In the default <code>&quot;native&quot;</code> mode, a <code>&lt;track&gt;</code> element will be created on the
+video and the subtitles will be displayed by it, with a minimal style.
+There is no action on your side, the subtitles will be correctly displayed at
+the right time.</p>
+<p>In <code>&quot;html&quot;</code> mode, the text tracks will be displayed on a specific HTML
+element. This mode allows us to do much more stylisation, such as the one
+defined by TTML styling attributes or SAMI&#x2019;s CSS. It is particularly useful to
+correctly manage complex closed captions (with multiple colors, positionning
+etc.).
+With this mode, you will need to provide a wrapper HTML element with the
+<a href="#prop-textTrackElement">textTrackElement option</a>.</p>
+<p>All text track formats supported in <code>&quot;native&quot;</code> mode also work in <code>&quot;html&quot;</code>
+mode.</p>
+<p>More infos on supported text tracks can be found in the <a href="text_tracks.html">text track
+documentation</a>.</p>
+<p><a name="prop-textTrackElement"></a>
+<a name="subchapter-textTrackElement"></a></p>
+<h3>textTrackElement</h3>
+<p><em>type</em>: <code>HTMLElement</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p><code>textTrackElement</code> is only required and used if you provided a <code>&quot;html&quot;</code>
+<a href="#prop-textTrackMode">textTrackMode</a>.</p>
+<p>This property will be the element on which text tracks will be set, as child
+elements, at the right time. We expect that this element is the exact same size
+than the media element it applies to (this allows us to properly place the
+subtitles position without polling where the video is in your UI).
+You can however re-size or update the style of it as you wish, to better suit
+your UI needs.</p>
+<p><a name="prop-audioTrackSwitchingMode"></a>
+<a name="subchapter-audioTrackSwitchingMode"></a></p>
+<h3>audioTrackSwitchingMode</h3>
+<p><em>type</em>: <code>string</code></p>
+<p><em>defaults</em>: <code>&quot;seamless&quot;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>Behavior taken by the player when switching to a different audio track, through
+the <code>setAudioTrack</code> method.</p>
+<p>There are two possible values:</p>
+<ul>
+<li>
+<p><code>&quot;seamless&quot;</code>: The transition between the old audio track and the new one
+happens seamlessly, without interruption.
+This is the default behavior.</p>
+<p>As an inconvenient, you might have at worst a few seconds in the previous
+audio track before the new one can be heard.</p>
+</li>
+<li>
+<p><code>&quot;direct&quot;</code>: The player will try to switch to the new audio track as soon
+as possible, which might lead to an interruption while it is doing so.</p>
+<p>Note that while switching audio track with a <code>&quot;direct&quot;</code>
+<code>audioTrackSwitchingMode</code>, it is possible that the player goes into the
+<code>&quot;RELOADING&quot;</code> state (during which the video will disappear and many APIs
+will become unavailable) to be able to switch to the new track.</p>
+<p>More information about the <code>&quot;RELOADING&quot;</code> state can be found in <a href="./states">the
+player states documentation</a>.</p>
+</li>
+</ul>
+<p><a name="prop-manualBitrateSwitchingMode"></a>
+<a name="subchapter-manualBitrateSwitchingMode"></a></p>
+<h3>manualBitrateSwitchingMode</h3>
+<p><em>type</em>: <code>string</code></p>
+<p><em>defaults</em>: <code>&quot;seamless&quot;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>Strategy you want to adopt when updating &#x201C;manually&#x201D; the video and audio quality
+through respectively the <code>setVideoBitrate</code> and <code>setAudioBitrate</code> API while
+the content is playing.</p>
+<p>There is two possible values:</p>
+<ul>
+<li>
+<p><code>&quot;seamless&quot;</code>: Manual quality updates will be only visible after a little
+time. This gives the advantage of a very smooth &#x201C;seamless&#x201D; transition.</p>
+<p>In this mode, you will have the following behavior:</p>
+<ul>
+<li>there will be no visual &#x201C;cut&#x201D; between the previous and new quality</li>
+<li>parts of the content with a better (or the same) quality won&#x2019;t be
+replaced.</li>
+<li>parts of the content with a lower quality will be only replaced when the
+better quality is downloaded.</li>
+</ul>
+</li>
+<li>
+<p><code>&quot;direct&quot;</code>: Manual quality updates will be visible more directly, but with
+a complete reload of the current content. You might encounter a black screen
+while the player go through the <code>&quot;RELOADING&quot;</code> state [1].</p>
+<p>In this mode, you will have the following behavior:</p>
+<ul>
+<li>there will be a black screen between the previous and new quality</li>
+<li>the previous content will be entirely removed</li>
+<li>you will only have content with the new quality</li>
+</ul>
+<p>[1] More information about the <code>&quot;RELOADING&quot;</code> state can be found in <a href="./states">the
+player states documentation</a>.</p>
+</li>
+</ul>
+<p><a name="prop-lowLatencyMode"></a>
+<a name="subchapter-lowLatencyMode"></a></p>
+<h3>lowLatencyMode</h3>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<p>Allow to play DASH low-latency contents (with Chunk-encoded and
+chunk-transferred CMAF segments) with a low latency efficiently.</p>
+<p>In the some rare browsers who do not support the <code>fetch</code> API (like IE11 or the
+BlackBerry browser), we might be more prone to rebuffering in that mode the
+first few seconds. If you want to have a better experience on those browsers,
+you might want to begin to play further from the live edge in those cases
+through the <code>startAt</code> option.</p>
+<p>More information on playing low-latency DASH contents can be found in the
+<a href="low_latency.html">corresponding documentation page</a>.</p>
+<p><a name="prop-networkConfig"></a>
+<a name="subchapter-networkConfig"></a></p>
+<h3>networkConfig</h3>
+<p><em>type</em>: <code>Object</code></p>
+<p><em>defaults</em>: <code>{}</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>Configuration linked to <a href="../terms.html#manifest">Manifest</a> and segment requests.
+This object can take the following properties (all are optional):</p>
+<ul>
+<li>
+<p><code>segmentRetry</code> (<code>Number</code>): Maximum number of times a segment request
+will be retried when an error happen - only on some condition [1].</p>
+<p>Those retry will be done with a progressive delay, to avoid overloading a
+CDN. When this count is reached, the player will stop and throw a fatal
+error.</p>
+<p>Defaults to <code>4</code>.</p>
+</li>
+<li>
+<p><code>manifestRetry</code> (<code>Number</code>): Maximum number of times a Manifest request
+will be retried when a request error happen - only on some condition [1].
+Defaults to <code>4</code>.</p>
+<p>Those retry will be done with a progressive delay, to avoid overloading a
+CDN. When this count is reached, the player will stop and throw a fatal
+error.</p>
+<p>Defaults to <code>4</code>.</p>
+</li>
+<li>
+<p><code>offlineRetry</code> (<code>Number</code>): Maximum number of times a request will be
+retried when the request fails because the user is offline.</p>
+<p>Those retry will be done with a progressive delay, to avoid overloading the
+user&#x2019;s ressources. When this count is reached, the player will stop and
+throw a fatal error.</p>
+<p>Defaults to <code>Infinity</code>.</p>
+</li>
+</ul>
+<p>[1] To retry a request, one of the following condition should be met:</p>
+<ul>
+<li>
+<p>The request failed because of a <code>404</code> HTTP code</p>
+</li>
+<li>
+<p>The request failed because of an HTTP code in the <code>500</code> family</p>
+</li>
+<li>
+<p>The request failed because of a timeout</p>
+</li>
+<li>
+<p>the request failed because of an unknown XHR error (might be a
+parsing/interface error)</p>
+</li>
+</ul>
+<p><a name="prop-enableFastSwitching"></a>
+<a name="subchapter-enableFastSwitching"></a></p>
+<h3>enableFastSwitching</h3>
+<p><em>type</em>: <code>boolean</code></p>
+<p><em>defaults</em>: <code>true</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>Enable (when set to <code>true</code> and by default) or disable (when set to <code>false</code>) the
+&#x201C;fast-switching&#x201D; feature.</p>
+<p>&#x201C;Fast-switching&#x201D; is an optimization which allows the RxPlayer to replace
+low-quality segments (i.e.  with a low bitrate) with higher-quality segments
+(higher bitrate) in the buffer in some situations.</p>
+<p>This is used for example to obtain a faster quality transition when the user&#x2019;s
+network bandwidth raise up: instead of pushing the new high-quality segments at
+the end of the current buffer, we push them much sooner - &#x201C;on top&#x201D; of already
+pushed low-quality segments - so the user can quickly see the better quality.</p>
+<p>In most cases, this is a feature you want. On some rare devices however,
+replacing segments is poorly supported.
+We&#x2019;ve for example seen on a few devices that old replaced segments were still
+decoded (and not the new better-quality segments that should have replaced
+them). On other devices, replacing segments resulted in visible small decoding
+issues.</p>
+<p>Setting <code>enableFastSwitching</code> to <code>false</code> thus allows to disable the
+fast-switching behavior. Note that it is - sadly - difficult to know when you
+need to disable it.
+In the great majority of cases, enabling fast-switching (the default behavior)
+won&#x2019;t lead to any problem. So we advise to only disable it when you suspect that
+segment replacement when the quality raises is at the source of some issues
+you&#x2019;re having (in which case it will help to see if that&#x2019;s really the case).</p>
+<p>It is also important to add that setting <code>enableFastSwitching</code> to <code>false</code> only
+disable the fast-switching feature and not all the logic where the RxPlayer is
+replacing segments it already pushed to the buffer.
+Forbiding the RxPlayer to replace segments altogether is today not possible and
+would even break playback in some situations: when multi-Period DASH contents
+have overlapping segments, when the browser garbage-collect partially a
+segment&#x2026;</p>
+<p><a name="prop-hideNativeSubtitle"></a>
+<a name="subchapter-hideNativeSubtitle"></a></p>
+<h3>hideNativeSubtitle</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>If set to <code>true</code>, the eventual <track> element will be put on mode <code>hidden</code>
+when added to the video element, so it won&#x2019;t actually display the subtitles the
+rx-player add to it.</p>
+<p>This has an effect only if:</p>
+<ul>
+<li>
+<p>the current <code>textTrackMode</code> is equal to <code>&quot;native&quot;</code> (see <a href="#prop-textTrackMode">textTrackMode
+option</a>)</p>
+</li>
+<li>
+<p>a text track is currently active</p>
+</li>
+<li>
+<p>the text track format is understood by the rx-player</p>
+</li>
+</ul>
+<p><a name="prop-supplementaryImageTracks"></a>
+<a name="subchapter-supplementaryImageTracks"></a></p>
+<h3>supplementaryImageTracks</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<p>If you want to parse and display a BIF image track, you can use the
+<a href="parseBifThumbnails.html"><code>parseBifThumbnails</code></a> tool, which will also work for
+Directfile contents.</p>
+<hr>
+<p><em>type</em>: <code>Array.&lt;Object&gt;|Object|undefined</code>
+<em>defaults</em>: <code>[]</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>This option allows to specify information about supplementary image tracks you
+might want to add to those already declared in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
+<p>This only work under the following conditions:</p>
+<ul>
+<li>
+<p>the image track is not fragmented</p>
+</li>
+<li>
+<p>the image track can be retrieved by fetching a single URL</p>
+</li>
+<li>
+<p>the image track is in an understood format and enough information has been
+given to infer it.</p>
+</li>
+</ul>
+<p>Each of those can have the following properties:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> supplementaryImageTracks = [{
+  <span class="hljs-attr">url</span>: ImageTrackURL, <span class="hljs-comment">// {string} The url on which the complete image track can</span>
+                      <span class="hljs-comment">// be obtained</span>
+
+  mimeType: <span class="hljs-string">&quot;application/bif&quot;</span>, <span class="hljs-comment">// {string} A mimeType used to describe</span>
+                               <span class="hljs-comment">// the image format.</span>
+}];
+</code></pre>
+<p><a name="prop-supplementaryTextTracks"></a>
+<a name="subchapter-supplementaryTextTracks"></a></p>
+<h3>supplementaryTextTracks</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<p>If you want to use supplementary text tracks not defined in the content itself,
+you can use the <code>TextTrackRenderer</code>(./TextTrackRenderer.md) tool, which will
+also work for Directfile contents.</p>
+<hr>
+<p><em>type</em>: <code>Array.&lt;Object&gt;|Object|undefined</code>
+<em>defaults</em>: <code>[]</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>This option allows to specify information about supplementary text tracks you
+might want to add to those already declared in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
+<p>This only work under the following conditions:</p>
+<ul>
+<li>
+<p>the text track is not fragmented</p>
+</li>
+<li>
+<p>the text track can be retrieved by fetching a single URL</p>
+</li>
+<li>
+<p>the text track is in an understood format and enough information has been
+given to infer it.</p>
+</li>
+</ul>
+<p>Each of those can have the following properties:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> supplementaryTextTracks = [{
+  <span class="hljs-attr">url</span>: textTrackURL, <span class="hljs-comment">// {string} The url on which the complete text track can be</span>
+                     <span class="hljs-comment">// obtained</span>
+
+  language: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// {string} The language the text track is in</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+
+                   <span class="hljs-comment">// Note for SAMI subtitles:</span>
+                   <span class="hljs-comment">// For SAMI subtitles, you have to provide the same language</span>
+                   <span class="hljs-comment">// string than the one indicated in the CSS and p elements.</span>
+                   <span class="hljs-comment">// It usually follows the ISO639-ISO3166 naming conventions</span>
+                   <span class="hljs-comment">// (e.g. en-US or fr-FR).</span>
+                   <span class="hljs-comment">// If we cannot find the provided language in the downloaded</span>
+                   <span class="hljs-comment">// SAMI text track, it won&apos;t be displayed.</span>
+
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track is a closed caption</span>
+                       <span class="hljs-comment">// for the hard of hearing</span>
+
+  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/mp4&quot;</span>, <span class="hljs-comment">// {string} A mimeType used to describe</span>
+                               <span class="hljs-comment">// the text format. Can be &quot;application/mp4&quot; when</span>
+                               <span class="hljs-comment">// encapsulated in an mp4 file. In that case, the</span>
+                               <span class="hljs-comment">// &quot;codecs&quot; argument will be needed.</span>
+
+  codecs: <span class="hljs-string">&quot;stpp&quot;</span>               <span class="hljs-comment">// {string|undefined} Depending on the mimeType,</span>
+                               <span class="hljs-comment">// you might need to add codec information.</span>
+                               <span class="hljs-comment">// Here the mimeType is too generic, the codec</span>
+                               <span class="hljs-comment">// helps us understand this is ttml in an mp4</span>
+                               <span class="hljs-comment">// container</span>
+}];
+</code></pre>
+<p>To know which type of formats are supported and how to add them, you can read
+the <a href="text_tracks.html">text track documentation</a>.</p>
+<p><a name="prop-defaultAudioTrack"></a>
+<a name="subchapter-defaultAudioTrack"></a></p>
+<h3>defaultAudioTrack</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<p>Please use the <a href="player_options.html#prop-preferredAudioTracks"><code>preferredAudioTracks</code> constructor
+option</a> or the
+<a href="index.html#meth-setPreferredAudioTracks"><code>setPreferredAudioTracks</code> method</a>
+instead.</p>
+<hr>
+<p><em>type</em>: <code>Object|string|undefined</code></p>
+<p>The starting default audio track.</p>
+<p>This can be under the form of an object with the following properties:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> defaultAudioTrack = {
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+                          <span class="hljs-comment">// audio description for the visually impaired</span>
+};
+</code></pre>
+<p>or under the form of the language string directly, in which case the
+<code>&quot;audioDescription&quot;</code> option is inferred to be false.</p>
+<pre><code class="language-js"><span class="hljs-comment">// equivalent to the previous example</span>
+<span class="hljs-keyword">const</span> defaultAudioTrack = <span class="hljs-string">&quot;fra&quot;</span>;
+</code></pre>
+<p>If the corresponding audio track is not found, the first track defined will be
+taken instead.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p><a name="prop-defaultTextTrack"></a>
+<a name="subchapter-defaultTextTrack"></a></p>
+<h3>defaultTextTrack</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<p>Please use the <a href="player_options.html#prop-preferredTextTracks"><code>preferredTextTracks</code> constructor
+option</a> or the
+<a href="index.html#meth-setPreferredTextTracks"><code>setPreferredTextTracks</code> method</a>
+instead.</p>
+<hr>
+<p><em>type</em>: <code>Object|string|undefined</code></p>
+<p>The starting default text track.</p>
+<p>This can be under the form of an object with the following properties:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> defaultTextTrack = {
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+                       <span class="hljs-comment">// caption for the hard of hearing</span>
+};
+</code></pre>
+<p>or under the form of the language string directly, in which case the
+<code>&quot;closedCaption&quot;</code> option is inferred to be false:</p>
+<pre><code class="language-js"><span class="hljs-comment">// equivalent to the previous example</span>
+<span class="hljs-keyword">const</span> defaultTextTrack = <span class="hljs-string">&quot;fra&quot;</span>;
+</code></pre>
+<p>If the corresponding text track is not found, the first track defined will be
+taken instead.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+</body></html></div></div></div></body>

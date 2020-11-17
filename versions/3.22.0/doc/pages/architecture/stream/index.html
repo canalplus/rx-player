@@ -1,0 +1,59 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>The Stream - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-The%20Stream">The Stream</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-The%20StreamOrchestrator">The StreamOrchestrator</a></li>
+<li><a href="#chapter-The%20PeriodStream">The PeriodStream</a></li>
+<li><a href="#chapter-The%20AdaptationStream">The AdaptationStream</a></li>
+<li><a href="#chapter-The%20RepresentationStream">The RepresentationStream</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-The%20Stream"></a></p>
+<h1>The Stream</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The Stream is the part of the RxPlayer choosing which segments to request and
+pushing them to the corresponding media buffer (called <code>SegmentBuffers</code> in the
+RxPlayer) so they can later be decoded.</p>
+<p>It tries to choose the optimal segments based on:</p>
+<ul>
+<li>
+<p>current network conditions</p>
+</li>
+<li>
+<p>browser capacities</p>
+</li>
+<li>
+<p>the current playing conditions</p>
+</li>
+<li>
+<p>what segments it already has bufferized</p>
+</li>
+</ul>
+<p><a name="chapter-The%20StreamOrchestrator"></a></p>
+<h2>The StreamOrchestrator</h2>
+<p>The <code>StreamOrchestrator</code> is the main entry point to interact with this part of
+the code.</p>
+<p>It completely takes care of segment downloading and pushing for a whole content.</p>
+<p>To do so, it creates the right <code>PeriodStream</code>s depending on the current
+conditions.
+For more information on it, you can look at <a href="stream_orchestrator.html">the StreamOrchestrator
+documentation</a>.</p>
+<p><a name="chapter-The%20PeriodStream"></a></p>
+<h2>The PeriodStream</h2>
+<p>The <code>PeriodStream</code> creates and destroys <code>AdaptationStream</code>s for a single
+Manifest&#x2019;s Period.
+If no <code>SegmentBuffer:</code> was created, it lazily creates one.</p>
+<p><a name="chapter-The%20AdaptationStream"></a></p>
+<h2>The AdaptationStream</h2>
+<p>The <code>AdaptationStream</code> creates and destroys <code>RepresentationStream</code>s for a
+single manifest&#x2019;s Adaptation (such as a particular audio language, a video track
+etc.) based on the current conditions (network bandwidth, browser
+conditions&#x2026;).</p>
+<p>The <code>RepresentationStream</code> will then have the task to do the
+segment-downloading and pushing itself.</p>
+<p><a name="chapter-The%20RepresentationStream"></a></p>
+<h2>The RepresentationStream</h2>
+<p>The <code>RepresentationStream</code> is the part that actually process which segments
+should be downloaded.</p>
+<p>You can have more information on it in <a href="representation_stream.html">the RepresentationStream
+documentation</a>.</p>
+</body></html></div></div></div></body>
