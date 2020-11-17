@@ -22,6 +22,7 @@
   - local-manifest: Fix and clarify the duration and maximum position reported for a playing LocalManifest [#818]
   - compatibility/drm: On some webkit-based browsers, do not require the use of a server certificate for DRM if the key system used is not FairPlay [#833]
   - drm: Properly update to a different server certificate on the MediaKeys or remove it if needed [#835]
+  - drm: throw MEDIA_IS_ENCRYPTED_ERROR again when playing an encrypted event without either the `EME` feature, EME APIs or a `keySystems` option [#841]
 
 ### Other improvements
 
