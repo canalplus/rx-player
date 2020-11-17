@@ -141,15 +141,6 @@ export default [
     "live": false,
   },
   {
-    "name": "Canal + - BIF Thumbnail Track example",
-    "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
-    "transport": "smooth",
-    "supplementaryImageTracks": {
-      "mimeType": "application/bif",
-      "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
-    },
-  },
-  {
     "name": "Mix of DASH and Smooth VOD Contents",
     "url": MetaPlaylistDASHSmoothURL,
     "transport": "metaplaylist",
