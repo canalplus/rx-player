@@ -837,7 +837,8 @@ describe("API - parseLoadVideoOptions", () => {
     });
   });
 
-  it("should set a 'seamess' audioTrackSwitching mode when the parameter is invalid or not specified", () => {
+  it("should set a 'seamless' audioTrackSwitching mode when the parameter is invalid or not specified", () => {
+    logWarnMock.mockReturnValue(undefined);
     expect(parseLoadVideoOptions({
       audioTrackSwitchingMode: "foo-bar" as any,
       url: "foo",
@@ -848,6 +849,13 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
       audioTrackSwitchingMode: "seamless",
     });
+    expect(logWarnMock).toHaveBeenCalledTimes(1);
+    expect(logWarnMock).toHaveBeenCalledWith(`The \`audioTrackSwitchingMode\` loadVideo option must match one of the following strategy name:
+- \`seamless\`
+- \`direct\`
+If badly set, seamless strategy will be used as default`);
+    logWarnMock.mockReset();
+    logWarnMock.mockReturnValue(undefined);
 
     expect(parseLoadVideoOptions({
       url: "foo",
@@ -858,6 +866,7 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
       audioTrackSwitchingMode: "seamless",
     });
+    expect(logWarnMock).not.toHaveBeenCalled();
   });
 
   it("should authorize setting a valid enableFastSwitching option", () => {
