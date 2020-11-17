@@ -105,6 +105,8 @@ export interface IInitializeArguments {
      * higher-quality ones to have a faster transition.
      */
     enableFastSwitching : boolean;
+    /** Strategy when switching of audio track. */
+    audioTrackSwitchingMode : "seamless" | "direct";
   };
   /** Regularly emit current playback conditions. */
   clock$ : Observable<IInitClockTick>;

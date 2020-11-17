@@ -13,6 +13,7 @@
     - [transportOptions](#prop-transportOptions)
     - [textTrackMode](#prop-textTrackMode)
     - [textTrackElement](#prop-textTrackElement)
+    - [audioTrackSwitchingMode](#prop-audioTrackSwitchingMode)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
     - [lowLatencyMode](#prop-lowLatencyMode)
     - [networkConfig](#prop-networkConfig)
@@ -892,6 +893,44 @@ than the media element it applies to (this allows us to properly place the
 subtitles position without polling where the video is in your UI).
 You can however re-size or update the style of it as you wish, to better suit
 your UI needs.
+
+
+<a name="prop-audioTrackSwitchingMode"></a>
+### audioTrackSwitchingMode ####################################################
+
+_type_: ``string``
+
+_defaults_: ``"seamless"``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Behavior taken by the player when switching to a different audio track, through
+the `setAudioTrack` method.
+
+There are two possible values:
+
+  - ``"seamless"``: The transition between the old audio track and the new one
+    happens seamlessly, without interruption.
+    This is the default behavior.
+
+    As an inconvenient, you might have at worst a few seconds in the previous
+    audio track before the new one can be heard.
+
+  - ``"direct"``: The player will try to switch to the new audio track as soon
+    as possible, which might lead to an interruption while it is doing so.
+
+    Note that while switching audio track with a `"direct"`
+    `audioTrackSwitchingMode`, it is possible that the player goes into the
+    `"RELOADING"` state (during which the video will disappear and many APIs
+    will become unavailable) to be able to switch to the new track.
+
+    More information about the ``"RELOADING"`` state can be found in [the
+    player states documentation](./states).
 
 
 <a name="prop-manualBitrateSwitchingMode"></a>
