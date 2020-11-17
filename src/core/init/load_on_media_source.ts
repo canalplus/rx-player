@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -36,11 +35,9 @@ import log from "../../log";
 import Manifest from "../../manifest";
 import ABRManager from "../abr";
 import { SegmentFetcherCreator } from "../fetchers";
-import SourceBuffersStore, {
-  ITextTrackSourceBufferOptions,
-} from "../source_buffers";
+import SegmentBuffersStore from "../segment_buffers";
 import StreamOrchestrator, {
-  IStreamOrchestratorEvent,
+  IStreamOrchestratorOptions,
 } from "../stream";
 import { setDurationToMediaSource } from "./create_media_source";
 import createStreamClock from "./create_stream_clock";
@@ -50,53 +47,39 @@ import getDiscontinuities from "./get_discontinuities";
 import getStalledEvents from "./get_stalled_events";
 import handleDiscontinuity from "./handle_discontinuity";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import streamEventsEmitter, {
-  IStreamEvent
-} from "./stream_events_emitter";
+import streamEventsEmitter from "./stream_events_emitter";
 import {
   IInitClockTick,
-  ILoadedEvent,
-  ISpeedChangedEvent,
-  IStalledEvent,
-  IWarningEvent,
+  IMediaSourceLoaderEvent,
 } from "./types";
 import updatePlaybackRate from "./update_playback_rate";
 
-// Arguments needed by `createMediaSourceLoader`
+/** Arguments needed by `createMediaSourceLoader`. */
 export interface IMediaSourceLoaderArguments {
-  abrManager : ABRManager; // Helps to choose the right Representation
-  bufferOptions : { // Buffers-related options
-    wantedBufferAhead$ : BehaviorSubject<number>; // buffer "goal"
-    maxBufferAhead$ : Observable<number>; // To GC after the current position
-    maxBufferBehind$ : Observable<number>; // to GC before the current position
-    textTrackOptions : ITextTrackSourceBufferOptions; // TextTrack configuration
-
-    // strategy when switching the current bitrate manually
-    manualBitrateSwitchingMode : "seamless"|"direct";
-  };
-  clock$ : Observable<IInitClockTick>; // Emit position information
-  manifest : Manifest; // Manifest of the content we want to play
-  mediaElement : HTMLMediaElement; // Media Element on which the content will be
-                                   // played
-  segmentFetcherCreator : SegmentFetcherCreator<any>; // Interface to download
-                                                        // segments
-  speed$ : Observable<number>; // Emit the speed.
-                               // /!\ Should replay the last value on subscription.
+  /** Module helping to choose the right Representation. */
+  abrManager : ABRManager;
+  /** Various stream-related options. */
+  bufferOptions : IStreamOrchestratorOptions;
+  /** Observable emitting playback conditions regularly. */
+  clock$ : Observable<IInitClockTick>;
+  /* Manifest of the content we want to play. */
+  manifest : Manifest;
+  /** Media Element on which the content will be played. */
+  mediaElement : HTMLMediaElement;
+  /** Module to facilitate segment fetching. */
+  segmentFetcherCreator : SegmentFetcherCreator<any>;
+  /**
+   * Observable emitting the wanted playback rate as it changes.
+   * Replay the last value on subscription.
+   */
+  speed$ : Observable<number>;
 }
-
-// Events emitted when loading content in the MediaSource
-export type IMediaSourceLoaderEvent = IStalledEvent |
-                                      ISpeedChangedEvent |
-                                      ILoadedEvent |
-                                      IWarningEvent |
-                                      IStreamOrchestratorEvent |
-                                      IStreamEvent;
 
 /**
  * Returns a function allowing to load or reload the content in arguments into
  * a single or multiple MediaSources.
  * @param {Object} args
- * @returns {Observable}
+ * @returns {Function}
  */
 export default function createMediaSourceLoader({
   mediaElement,
@@ -133,9 +116,8 @@ export default function createMediaSourceLoader({
                            "Wanted starting time not found in the Manifest.");
     }
 
-    // Creates SourceBuffersStore allowing to create and keep track of a
-    // single SourceBuffer per type.
-    const sourceBuffersStore = new SourceBuffersStore(mediaElement, mediaSource);
+    /** Interface to create media buffers for loaded segments. */
+    const segmentBuffersStore = new SegmentBuffersStore(mediaElement, mediaSource);
 
     const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
                                                         mediaElement,
@@ -163,7 +145,7 @@ export default function createMediaSourceLoader({
     const streams$ = StreamOrchestrator({ manifest, initialPeriod },
                                           streamClock$,
                                           abrManager,
-                                          sourceBuffersStore,
+                                          segmentBuffersStore,
                                           segmentFetcherCreator,
                                           bufferOptions
     ).pipe(
@@ -180,7 +162,7 @@ export default function createMediaSourceLoader({
             return EMPTY;
           case "discontinuity-encountered":
             const { bufferType, gap } = evt.value;
-            if (SourceBuffersStore.isNative(bufferType)) {
+            if (SegmentBuffersStore.isNative(bufferType)) {
               handleDiscontinuity(gap[1], mediaElement);
             }
             return EMPTY;
@@ -194,7 +176,7 @@ export default function createMediaSourceLoader({
     // little longer while the buffer is empty.
     const playbackRate$ =
       updatePlaybackRate(mediaElement, speed$, clock$, { pauseWhenStalled: true })
-        .pipe(map(EVENTS.speedChanged));
+        .pipe(ignoreElements());
 
     // Create Stalling Manager, an observable which will try to get out of
     // various infinite stalling issues
@@ -216,7 +198,7 @@ export default function createMediaSourceLoader({
                                        "Cannot trigger auto-play automatically: " +
                                        "your browser does not allow it.");
           return observableOf(EVENTS.warning(error),
-                              EVENTS.loaded(sourceBuffersStore));
+                              EVENTS.loaded(segmentBuffersStore));
         } else if (evt === "not-loaded-metadata") {
           const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
                                        "Cannot load automatically: your browser " +
@@ -224,7 +206,7 @@ export default function createMediaSourceLoader({
           return observableOf(EVENTS.warning(error));
         }
         log.debug("Init: The current content is loaded.");
-        return observableOf(EVENTS.loaded(sourceBuffersStore));
+        return observableOf(EVENTS.loaded(segmentBuffersStore));
       }));
 
     return observableMerge(handledDiscontinuities$,
@@ -234,8 +216,8 @@ export default function createMediaSourceLoader({
                            streams$,
                            streamEvents$
     ).pipe(finalize(() => {
-        // clean-up every created SourceBuffers
-        sourceBuffersStore.disposeAll();
+        // clean-up every created SegmentBuffers
+        segmentBuffersStore.disposeAll();
       }));
   };
 }

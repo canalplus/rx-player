@@ -24,7 +24,7 @@ import {
 } from "rxjs/operators";
 import log from "../../../log";
 import { Period } from "../../../manifest";
-import { IBufferType } from "../../source_buffers";
+import { IBufferType } from "../../segment_buffers";
 import { IStreamStateFull } from "../types";
 
 /**

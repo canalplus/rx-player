@@ -69,18 +69,18 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
                       s/[[:<:]]__FEATURES__\.BIF_PARSER[[:>:]]/false/g; \
 
                       s/[[:<:]]__RELATIVE_PATH__\.EME_MANAGER[[:>:]]/\"..\/core\/eme\/index.js\"/g; \
-                      s/[[:<:]]__RELATIVE_PATH__\.IMAGE_BUFFER[[:>:]]/\"..\/custom_source_buffers\/image\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.IMAGE_BUFFER[[:>:]]/\"..\/core\/segment_buffers\/implementations\/image\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.BIF_PARSER[[:>:]]/\"..\/parsers\/images\/bif.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.SMOOTH[[:>:]]/\"..\/transports\/smooth\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.DASH[[:>:]]/\"..\/transports\/dash\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.LOCAL_MANIFEST[[:<:]]/\"..\/transports\/local\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.METAPLAYLIST[[:>:]]/\"..\/transports\/metaplaylist\/index.js\"/g; \
-                      s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER[[:>:]]/\"..\/custom_source_buffers\/text\/native\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER[[:>:]]/\"..\/core\/segment_buffers\/implementations\/text\/native\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.NATIVE_VTT[[:>:]]/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.NATIVE_SRT[[:>:]]/\"..\/parsers\/texttracks\/srt\/native.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TTML[[:>:]]/\"..\/parsers\/texttracks\/ttml\/native\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.NATIVE_SAMI[[:>:]]/\"..\/parsers\/texttracks\/sami\/native.js\"/g; \
-                      s/[[:<:]]__RELATIVE_PATH__\.HTML_TEXT_BUFFER[[:>:]]/\"..\/custom_source_buffers\/text\/html\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.HTML_TEXT_BUFFER[[:>:]]/\"..\/core\/segment_buffers\/implementations\/text\/html\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.HTML_VTT[[:>:]]/\"..\/parsers\/texttracks\/webvtt\/html\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.HTML_SRT[[:>:]]/\"..\/parsers\/texttracks\/srt\/html.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.HTML_TTML[[:>:]]/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g; \
@@ -112,18 +112,18 @@ else
                s/\b__FEATURES__\.BIF_PARSER\b/false/g; \
 
                s/\b__RELATIVE_PATH__\.EME_MANAGER\b/\"..\/core\/eme\/index.js\"/g; \
-               s/\b__RELATIVE_PATH__\.IMAGE_BUFFER\b/\"..\/custom_source_buffers\/image\/index.js\"/g; \
+               s/\b__RELATIVE_PATH__\.IMAGE_BUFFER\b/\"..\/core\/segment_buffers\/implementations\/image\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.BIF_PARSER\b/\"..\/parsers\/images\/bif.js\"/g; \
                s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/transports\/smooth\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.DASH\b/\"..\/transports\/dash\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.LOCAL_MANIFEST\b/\"..\/transports\/local\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.METAPLAYLIST\b/\"..\/transports\/dash\/index.js\"/g; \
-               s/\b__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER\b/\"..\/custom_source_buffers\/text\/native\/index.js\"/g; \
+               s/\b__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER\b/\"..\/core\/segment_buffers\/implementations\/text\/native\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.NATIVE_VTT\b/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g; \
                s/\b__RELATIVE_PATH__\.NATIVE_SRT\b/\"..\/parsers\/texttracks\/srt\/native.js\"/g; \
                s/\b__RELATIVE_PATH__\.NATIVE_TTML\b/\"..\/parsers\/texttracks\/ttml\/native\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.NATIVE_SAMI\b/\"..\/parsers\/texttracks\/sami\/native.js\"/g; \
-               s/\b__RELATIVE_PATH__\.HTML_TEXT_BUFFER\b/\"..\/custom_source_buffers\/text\/html\/index.js\"/g; \
+               s/\b__RELATIVE_PATH__\.HTML_TEXT_BUFFER\b/\"..\/core\/segment_buffers\/implementations\/text\/html\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.HTML_VTT\b/\"..\/parsers\/texttracks\/webvtt\/html\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.HTML_SRT\b/\"..\/parsers\/texttracks\/srt\/html.js\"/g; \
                s/\b__RELATIVE_PATH__\.HTML_TTML\b/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g; \
@@ -162,6 +162,30 @@ export * from \"../dist/_esm5.processed/features/list/index.js\";" > features/in
 echo "${copyright_text}
 export * from \"../dist/_esm5.processed/features/list/index\";" > features/index.d.ts
 
+echo "creating tools build..."
+rm -rf tools
+mkdir tools
+echo "${copyright_text}
+export * from \"../dist/_esm5.processed/tools/index.js\";" > tools/index.js
+echo "${copyright_text}
+export * from \"../dist/_esm5.processed/tools/index\";" > tools/index.d.ts
+echo "${copyright_text}
+import StringUtils from \"../dist/_esm5.processed/tools/string_utils.js\";
+export * from \"../dist/_esm5.processed/tools/string_utils.js\";
+export default StringUtils;" > tools/string-utils.js
+echo "${copyright_text}
+import StringUtils from \"../dist/_esm5.processed/tools/string_utils\";
+export * from \"../dist/_esm5.processed/tools/string_utils\";
+export default StringUtils;" > tools/string-utils.d.ts
+echo "${copyright_text}
+import TextTrackRenderer from \"../dist/_esm5.processed/tools/TextTrackRenderer/index.js\";
+export * from \"../dist/_esm5.processed/tools/TextTrackRenderer/index.js\";
+export default TextTrackRenderer;" > tools/TextTrackRenderer.js
+echo "${copyright_text}
+import TextTrackRenderer from \"../dist/_esm5.processed/tools/TextTrackRenderer/index\";
+export * from \"../dist/_esm5.processed/tools/TextTrackRenderer/index\";
+export default TextTrackRenderer;" > tools/TextTrackRenderer.d.ts
+
 echo "creating experimental build..."
 rm -rf experimental
 mkdir -p experimental/tools
@@ -169,14 +193,6 @@ echo "${copyright_text}
 export * from \"../../dist/_esm5.processed/experimental/tools/index.js\";" > experimental/tools/index.js
 echo "${copyright_text}
 export * from \"../../dist/_esm5.processed/experimental/tools/index\";" > experimental/tools/index.d.ts
-echo "${copyright_text}
-import TextTrackRenderer from \"../../dist/_esm5.processed/experimental/tools/TextTrackRenderer/index.js\";
-export * from \"../../dist/_esm5.processed/experimental/tools/TextTrackRenderer/index.js\";
-export default TextTrackRenderer;" > experimental/tools/TextTrackRenderer.js
-echo "${copyright_text}
-import TextTrackRenderer from \"../../dist/_esm5.processed/experimental/tools/TextTrackRenderer/index\";
-export * from \"../../dist/_esm5.processed/experimental/tools/TextTrackRenderer/index\";
-export default TextTrackRenderer;" > experimental/tools/TextTrackRenderer.d.ts
 
 mkdir -p experimental/features
 echo "${copyright_text}

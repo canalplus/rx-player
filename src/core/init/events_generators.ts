@@ -20,9 +20,9 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import SourceBuffersStore, {
+import SegmentBuffersStore, {
   IBufferType,
-} from "../source_buffers";
+} from "../segment_buffers";
 import { IRepresentationChangeEvent } from "../stream";
 import { IStallingItem } from "./get_stalled_events";
 import {
@@ -31,7 +31,6 @@ import {
   IManifestReadyEvent,
   IManifestUpdateEvent,
   IReloadingMediaSourceEvent,
-  ISpeedChangedEvent,
   IStalledEvent,
   IWarningEvent,
 } from "./types";
@@ -40,8 +39,8 @@ import {
  * Construct a "loaded" event.
  * @returns {Object}
  */
-function loaded(sourceBuffersStore : SourceBuffersStore | null) : ILoadedEvent {
-  return { type: "loaded", value: { sourceBuffersStore } };
+function loaded(segmentBuffersStore : SegmentBuffersStore | null) : ILoadedEvent {
+  return { type: "loaded", value: { segmentBuffersStore } };
 }
 
 /**
@@ -87,15 +86,6 @@ function manifestUpdate() : IManifestUpdateEvent {
 }
 
 /**
- * Construct a "speedChanged" event.
- * @param {Number} speed
- * @returns {Object}
- */
-function speedChanged(speed : number) : ISpeedChangedEvent {
-  return { type: "speedChanged", value: speed };
-}
-
-/**
  * Construct a "representationChange" event.
  * @param {string} type
  * @param {Object} period
@@ -134,7 +124,6 @@ const INIT_EVENTS = { loaded,
                       manifestUpdate,
                       nullRepresentation,
                       reloadingMediaSource,
-                      speedChanged,
                       stalled,
                       warning };
 

@@ -415,10 +415,13 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   const defaultLoadVideoOptions = {
+    audioTrackSwitchingMode: "seamless",
     autoPlay: false,
     defaultAudioTrack: undefined,
     defaultTextTrack: undefined,
+    enableFastSwitching: true,
     hideNativeSubtitle: false,
+    initialManifest: undefined,
     keySystems: [],
     lowLatencyMode: false,
     manualBitrateSwitchingMode: "seamless",
@@ -432,6 +435,7 @@ describe("API - parseLoadVideoOptions", () => {
       supplementaryTextTracks: [],
       supplementaryImageTracks: [],
     },
+    url: undefined,
   };
 
   it("should throw if no option is given", () => {
@@ -464,10 +468,16 @@ describe("API - parseLoadVideoOptions", () => {
     }
     expect(err1).toBeDefined();
     expect(opt1).not.toBeDefined();
-    expect(err1.message).toEqual("No url set on loadVideo");
+    expect(err1.message).toEqual(
+      "Unable to load a content: no url set on loadVideo.\n" +
+      "Please provide at least either an `url` argument, a `transportOptions.initialManifest` option or a `transportOptions.manifestLoader` option so the RxPlayer can load the content."
+    );
     expect(err2).toBeDefined();
     expect(opt2).not.toBeDefined();
-    expect(err2.message).toEqual("No url set on loadVideo");
+    expect(err2.message).toEqual(
+      "Unable to load a content: no url set on loadVideo.\n" +
+      "Please provide at least either an `url` argument, a `transportOptions.initialManifest` option or a `transportOptions.manifestLoader` option so the RxPlayer can load the content."
+    );
   });
 
   it("should throw if no transport is given", () => {
@@ -510,6 +520,42 @@ describe("API - parseLoadVideoOptions", () => {
                           manifestLoader,
                           supplementaryImageTracks: [],
                           supplementaryTextTracks: [] },
+    });
+  });
+
+  /* tslint:disable max-line-length */
+  it("should set a default object if both an initialManifest and transport is given", () => {
+  /* tslint:enable max-line-length */
+    expect(parseLoadVideoOptions({
+      transport: "bar",
+      transportOptions: { initialManifest: "test" },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      transport: "bar",
+      initialManifest: "test",
+    });
+  });
+
+  it("should authorize setting an initialManifest option", () => {
+    expect(parseLoadVideoOptions({
+      transportOptions: { initialManifest: "baz" },
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      initialManifest: "baz",
+    });
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      transportOptions: { initialManifest: "" },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      initialManifest: "",
     });
   });
 
@@ -764,6 +810,86 @@ describe("API - parseLoadVideoOptions", () => {
       url: "foo",
       transport: "bar",
       manualBitrateSwitchingMode: "seamless",
+    });
+  });
+
+  it("should authorize setting a valid audioTrackSwitchingMode option", () => {
+    expect(parseLoadVideoOptions({
+      audioTrackSwitchingMode: "direct",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      audioTrackSwitchingMode: "direct",
+    });
+
+    expect(parseLoadVideoOptions({
+      audioTrackSwitchingMode: "seamless",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      audioTrackSwitchingMode: "seamless",
+    });
+  });
+
+  it("should set a 'seamless' audioTrackSwitching mode when the parameter is invalid or not specified", () => {
+    logWarnMock.mockReturnValue(undefined);
+    expect(parseLoadVideoOptions({
+      audioTrackSwitchingMode: "foo-bar" as any,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      audioTrackSwitchingMode: "seamless",
+    });
+    expect(logWarnMock).toHaveBeenCalledTimes(1);
+    expect(logWarnMock).toHaveBeenCalledWith(`The \`audioTrackSwitchingMode\` loadVideo option must match one of the following strategy name:
+- \`seamless\`
+- \`direct\`
+If badly set, seamless strategy will be used as default`);
+    logWarnMock.mockReset();
+    logWarnMock.mockReturnValue(undefined);
+
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      audioTrackSwitchingMode: "seamless",
+    });
+    expect(logWarnMock).not.toHaveBeenCalled();
+  });
+
+  it("should authorize setting a valid enableFastSwitching option", () => {
+    expect(parseLoadVideoOptions({
+      enableFastSwitching: false,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      enableFastSwitching: false,
+    });
+
+    expect(parseLoadVideoOptions({
+      enableFastSwitching: true,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      enableFastSwitching: true,
     });
   });
 

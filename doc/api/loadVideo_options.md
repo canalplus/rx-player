@@ -13,9 +13,11 @@
     - [transportOptions](#prop-transportOptions)
     - [textTrackMode](#prop-textTrackMode)
     - [textTrackElement](#prop-textTrackElement)
+    - [audioTrackSwitchingMode](#prop-audioTrackSwitchingMode)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
     - [lowLatencyMode](#prop-lowLatencyMode)
     - [networkConfig](#prop-networkConfig)
+    - [enableFastSwitching](#prop-enableFastSwitching)
     - [hideNativeSubtitle (deprecated)](#prop-hideNativeSubtitle)
     - [supplementaryImageTracks (deprecated)](#prop-supplementaryImageTracks)
     - [supplementaryTextTracks (deprecated)](#prop-supplementaryTextTracks)
@@ -96,9 +98,18 @@ For Smooth, DASH or MetaPlaylist contents, the URL to the
 For _DirectFile_ mode contents, the URL of the content (the supported contents
 depends on the current browser).
 
-This property is mandatory unless a `manifestLoader` is defined in the
-[transportOptions](#prop-transportOptions), in which case that callback will be
-called instead any time we want to load the Manifest.
+This property is mandatory unless either:
+
+  - a `manifestLoader` is defined in the
+    [transportOptions](#prop-transportOptions), in which case that callback will
+    be called instead any time we want to load the Manifest.
+
+  - an `initialManifest` is defined in the
+    [transportOptions](#prop-transportOptions), in which case this will be used
+    as the first version of the Manifest.
+    Note however that if the Manifest needs to be refreshed and no `url` nor
+    `manifestLoader` has been set, the RxPlayer will most likely fail and stop
+    playback.
 
 Example:
 ```js
@@ -576,6 +587,41 @@ considered stable:
     });
     ```
 
+  - __initialManifest__ (`string|Document|Object`):
+
+    Manifest that will be initially used (before any potential Manifest
+    refresh).
+
+    Some applications pre-load the Manifest to parse some information from it
+    before calling `loadVideo`.
+    As in that case the Manifest has already been loaded, an application can
+    optimize content loading time by giving to the RxPlayer that already-loaded
+    Manifest so the latter can avoid doing another request for it.
+
+    The format accepted for that option depends on the current chosen
+    [`transport`](#prop-transport):
+
+      - for `"dash"` and `"smooth"` contents either a `string` (of the whole
+        Manifest's xml data) or a corresponding `Document` format is accepted.
+
+      - for `"metaplaylist"`, either a `string` (for the whole JSON) or the
+        corresponding JS Object is accepted.
+
+      - for `"local"`, only the corresponding local Manifest as a JS object is
+        accepted.
+
+    Note that using this option could have implications for live contents.
+    Depending on the content, the initial playing position and maximum position
+    could be calculated based on that option's value.
+
+    In a case where the corresponding Manifest request was performed long before
+    the `loadVideo` call, the RxPlayer could be for example initially playing
+    far from the real live edge.
+    Because of that, it is recommended to only set that options for live/dynamic
+    contents if its request was done immediately before the `loadVideo`
+    call.
+
+
   - __manifestUpdateUrl__ (`string|undefined`):
 
     Set a custom Manifest URL for Manifest updates.
@@ -849,6 +895,44 @@ You can however re-size or update the style of it as you wish, to better suit
 your UI needs.
 
 
+<a name="prop-audioTrackSwitchingMode"></a>
+### audioTrackSwitchingMode ####################################################
+
+_type_: ``string``
+
+_defaults_: ``"seamless"``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Behavior taken by the player when switching to a different audio track, through
+the `setAudioTrack` method.
+
+There are two possible values:
+
+  - ``"seamless"``: The transition between the old audio track and the new one
+    happens seamlessly, without interruption.
+    This is the default behavior.
+
+    As an inconvenient, you might have at worst a few seconds in the previous
+    audio track before the new one can be heard.
+
+  - ``"direct"``: The player will try to switch to the new audio track as soon
+    as possible, which might lead to an interruption while it is doing so.
+
+    Note that while switching audio track with a `"direct"`
+    `audioTrackSwitchingMode`, it is possible that the player goes into the
+    `"RELOADING"` state (during which the video will disappear and many APIs
+    will become unavailable) to be able to switch to the new track.
+
+    More information about the ``"RELOADING"`` state can be found in [the
+    player states documentation](./states).
+
+
 <a name="prop-manualBitrateSwitchingMode"></a>
 ### manualBitrateSwitchingMode #################################################
 
@@ -967,6 +1051,57 @@ This object can take the following properties (all are optional):
 
   - the request failed because of an unknown XHR error (might be a
     parsing/interface error)
+
+
+
+<a name="prop-enableFastSwitching"></a>
+### enableFastSwitching ########################################################
+
+_type_: ``boolean``
+
+_defaults_: ``true``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Enable (when set to `true` and by default) or disable (when set to `false`) the
+"fast-switching" feature.
+
+"Fast-switching" is an optimization which allows the RxPlayer to replace
+low-quality segments (i.e.  with a low bitrate) with higher-quality segments
+(higher bitrate) in the buffer in some situations.
+
+This is used for example to obtain a faster quality transition when the user's
+network bandwidth raise up: instead of pushing the new high-quality segments at
+the end of the current buffer, we push them much sooner - "on top" of already
+pushed low-quality segments - so the user can quickly see the better quality.
+
+In most cases, this is a feature you want. On some rare devices however,
+replacing segments is poorly supported.
+We've for example seen on a few devices that old replaced segments were still
+decoded (and not the new better-quality segments that should have replaced
+them). On other devices, replacing segments resulted in visible small decoding
+issues.
+
+Setting `enableFastSwitching` to `false` thus allows to disable the
+fast-switching behavior. Note that it is - sadly - difficult to know when you
+need to disable it.
+In the great majority of cases, enabling fast-switching (the default behavior)
+won't lead to any problem. So we advise to only disable it when you suspect that
+segment replacement when the quality raises is at the source of some issues
+you're having (in which case it will help to see if that's really the case).
+
+It is also important to add that setting `enableFastSwitching` to `false` only
+disable the fast-switching feature and not all the logic where the RxPlayer is
+replacing segments it already pushed to the buffer.
+Forbiding the RxPlayer to replace segments altogether is today not possible and
+would even break playback in some situations: when multi-Period DASH contents
+have overlapping segments, when the browser garbage-collect partially a
+segment...
 
 
 

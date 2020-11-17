@@ -108,7 +108,7 @@ perspective.</p>
 </tr>
 <tr>
 <td>TS</td>
-<td>Timescale used by PTO and sementTime, to transform them into seconds</td>
+<td>Timescale used by PTO and segmentTime, to transform them into seconds</td>
 </tr>
 <tr>
 <td>periodStart</td>
@@ -233,7 +233,7 @@ Meanwhile, the <code>real time</code> group is used everywhere else.</p>
 <p>It&#x2019;s actually the <code>transports</code> code that does most of the conversion for the
 rest of the code (removing the offset when requesting new segments, re-adding it
 once the segment is downloaded.</p>
-<p>To be able to offset those segments in the source buffer, those are still
+<p>To be able to offset those segments in the SourceBuffer, those are still
 informed of course of the <code>timestampOffset</code> by the <code>transports</code> code.
 Then, this <code>timestampOffset</code> will be exploited only by the final decoding
 code.</p>

@@ -21,24 +21,24 @@ import {
   Representation,
 } from "../../../manifest";
 import { IRange } from "../../../utils/ranges";
-import { QueuedSourceBuffer } from "../../source_buffers";
+import { SegmentBuffer } from "../../segment_buffers";
 
 /**
  * Returns the buffered ranges which hold the given content.
  * Returns the whole buffered ranges if some of it is unknown.
- * @param {Object} queuedSourceBuffer
+ * @param {Object} segmentBuffer
  * @param {Array.<Object>} contents
  * @returns {Array.<Object>}
  */
 export default function getBlacklistedRanges(
-  queuedSourceBuffer : QueuedSourceBuffer<unknown>,
+  segmentBuffer : SegmentBuffer<unknown>,
   contents : Array<{ adaptation : Adaptation;
                      period : Period;
                      representation : Representation; }>
 ) : IRange[] {
-  queuedSourceBuffer.synchronizeInventory();
+  segmentBuffer.synchronizeInventory();
   const accumulator : IRange[] = [];
-  const inventory = queuedSourceBuffer.getInventory();
+  const inventory = segmentBuffer.getInventory();
 
   for (let i = 0; i < inventory.length; i++) {
     const chunk = inventory[i];
@@ -51,7 +51,7 @@ export default function getBlacklistedRanges(
       const { bufferedStart, bufferedEnd } = chunk;
       if (bufferedStart === undefined || bufferedEnd === undefined) {
         log.warn("SO: No buffered start or end found from a segment.");
-        const buffered = queuedSourceBuffer.getBufferedRanges();
+        const buffered = segmentBuffer.getBufferedRanges();
         const len = buffered.length;
         if (len === 0) {
           return [];

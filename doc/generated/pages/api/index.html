@@ -120,8 +120,9 @@
 </li>
 <li><a href="#chapter-Tools">Tools</a>
 <ul>
-<li><a href="#subchapter-MediaCapabilitiesProber">MediaCapabilitiesProber</a></li>
+<li><a href="#subchapter-StringUtils">StringUtils</a></li>
 <li><a href="#subchapter-TextTrackRenderer">TextTrackRenderer</a></li>
+<li><a href="#subchapter-MediaCapabilitiesProber">MediaCapabilitiesProber</a></li>
 <li><a href="#subchapter-parseBifThumbnails">parseBifThumbnails</a></li>
 <li><a href="#subchapter-createMetaplaylist">createMetaplaylist</a></li>
 </ul>
@@ -448,7 +449,7 @@ player.seekTo(<span class="hljs-number">54</span>);
 player.seekTo({ <span class="hljs-attr">relative</span>: <span class="hljs-number">5</span> });
 
 <span class="hljs-comment">// seeking 5 seconds before the current position</span>
-player.seekTo({ <span class="hljs-attr">relative</span>: <span class="hljs-number">-5</span> });
+player.seekTo({ <span class="hljs-attr">relative</span>: -<span class="hljs-number">5</span> });
 
 <span class="hljs-comment">// seeking to live content</span>
 player.seekTo({ <span class="hljs-attr">wallClockTime</span>: <span class="hljs-built_in">Date</span>.now() / <span class="hljs-number">1000</span> });
@@ -1078,7 +1079,7 @@ that you would prefer having no text track - by setting its second argument to
 <p>Change the current video track.</p>
 <p>The argument to this method is the wanted track&#x2019;s <code>id</code> property. This <code>id</code> can
 for example be obtained on the corresponding track object returned by the
-<code>getAvailableAudioTracks</code> method.</p>
+<code>getAvailableVideoTracks</code> method.</p>
 <p>Setting a new video track when a previous one was already playing can lead the
 rx-player to &#x201C;reload&#x201D; this content.</p>
 <p>During this period of time:</p>
@@ -1173,7 +1174,7 @@ on which tracks will be filtered):</p>
                    <span class="hljs-comment">// If not set or set to `undefined`, the RxPlayer won&apos;t</span>
                    <span class="hljs-comment">// filter based on the language of the track.</span>
 
-  <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean|undefined} Whether the audio track should</span>
+  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean|undefined} Whether the audio track should</span>
                           <span class="hljs-comment">// be an audio description for the visually impaired</span>
                           <span class="hljs-comment">// or not.</span>
                           <span class="hljs-comment">// If not set or set to `undefined`, the RxPlayer</span>
@@ -1182,7 +1183,7 @@ on which tracks will be filtered):</p>
   <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
            <span class="hljs-comment">// if not set or set to `undefined` we won&apos;t filter based on codecs.</span>
 
-    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
+    test: <span class="hljs-regexp">/ec-3/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
 
     all: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
                <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
@@ -1298,7 +1299,7 @@ constraints a text track should respect.</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
                        <span class="hljs-comment">// caption for the hard of hearing</span>
 }
 </code></pre>
@@ -1375,7 +1376,7 @@ it was called:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
                        <span class="hljs-comment">// caption for the hard of hearing</span>
 }
 </code></pre>
@@ -1396,7 +1397,7 @@ on which tracks will be filtered):</p>
   <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
            <span class="hljs-comment">// if not set or set to `undefined` we won&apos;t filter based on codecs.</span>
 
-    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/hvc/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
+    test: <span class="hljs-regexp">/hvc/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
 
     all: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
                <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
@@ -2052,6 +2053,119 @@ RxPlayer.LogLevel = <span class="hljs-string">&quot;WARNING&quot;</span>;
 <p>The RxPlayer has several &#x201C;tools&#x201D;, which are utils which can be imported without
 importing the whole RxPlayer itself.</p>
 <p>They are all documented here.</p>
+<p><a name="tools-string-utils"></a>
+<a name="subchapter-StringUtils"></a></p>
+<h3>StringUtils</h3>
+<p>Tools to convert strings into bytes and vice-versa.</p>
+<p>The RxPlayer internally has a lot of code dealing with strings to bytes
+conversion (and vice-versa). This tool exports that logic so you don&#x2019;t have to
+rewrite it yourself.</p>
+<p>You might need one of those functions for example when dealing with challenge
+and licenses, which are often under a binary format.</p>
+<h4>How to import it</h4>
+<p>The simplest way to import the StringUtils is by importing it as a named export
+from &#x201C;rx-player/tools&#x201D;, like so:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+
+<span class="hljs-built_in">console</span>.log(StringUtils.strToUtf8(<span class="hljs-string">&quot;hello&#x1F600;&quot;</span>));
+</code></pre>
+<p>You can also import only the function(s) you want to use by importing it
+directly from &#x201C;rx-player/tools/string-utils&#x201D;:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { strToUtf8 } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools/string-utils&quot;</span>;
+<span class="hljs-built_in">console</span>.log(strToUtf8(<span class="hljs-string">&quot;hello&#x1F600;&quot;</span>));
+</code></pre>
+<h4>StringUtils functions</h4>
+<p><code>StringUtils</code> is an object containing the following functions:</p>
+<ul>
+<li>
+<p><code>strToUtf8</code>: Convert a JS string passed as argument to an Uint8Array of its
+corresponding representation in UTF-8.</p>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+StringUtils.strToUtf8(<span class="hljs-string">&quot;hello&#x1F600;&quot;</span>);
+<span class="hljs-comment">// =&gt; Uint8Array(9) [ 104, 101, 108, 108, 111, 240, 159, 152, 128 ]</span>
+<span class="hljs-comment">//                    &quot;h&quot;  &quot;e&quot;  &quot;l&quot;  &quot;l&quot;  &quot;o&quot;  &quot;grinning face&quot; emoji</span>
+</code></pre>
+</li>
+<li>
+<p><code>utf8ToStr</code>: Convert a Uint8Array containing a string encoded with UTF-8
+into a JS string.</p>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+<span class="hljs-keyword">const</span> uint8Arr = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Uint8Array</span>([<span class="hljs-number">104</span>, <span class="hljs-number">101</span>, <span class="hljs-number">108</span>, <span class="hljs-number">108</span>, <span class="hljs-number">111</span>, <span class="hljs-number">240</span>, <span class="hljs-number">159</span>, <span class="hljs-number">152</span>, <span class="hljs-number">128</span>]);
+StringUtils.utf8ToStr(uint8Arr);
+<span class="hljs-comment">// =&gt; &quot;hello&#x1F600;&quot;</span>
+</code></pre>
+<p>Note: if what you have is an <code>ArrayBuffer</code>, you have to convert it to an
+<code>Uint8Array</code> first:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+<span class="hljs-keyword">const</span> toUint8Array = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Uint8Array</span>(myArrayBuffer);
+<span class="hljs-built_in">console</span>.log(StringUtils.utf8ToStr(toUint8Array));
+</code></pre>
+</li>
+<li>
+<p><code>strToUtf16LE</code>: Convert a JS string passed as argument to an Uint8Array
+containing its corresponding representation in UTF-16-LE (little endian
+UTF-16).</p>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+StringUtils.strToUtf16LE(<span class="hljs-string">&quot;hi&#x1F600;&quot;</span>);
+<span class="hljs-comment">// =&gt; Uint8Array(9) [ 104, 0, 105, 0, 61, 216, 0, 222 ]</span>
+<span class="hljs-comment">//                    &quot;h&quot;     &quot;i&quot;     &quot;grinning face&quot; emoji</span>
+</code></pre>
+</li>
+<li>
+<p><code>utf16LEToStr</code>: Convert a Uint8Array containing a string encoded with
+UTF-16-LE (little endian UTF-16) into a JS string.</p>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+<span class="hljs-keyword">const</span> uint8Arr = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Uint8Array</span>([<span class="hljs-number">104</span>, <span class="hljs-number">0</span>, <span class="hljs-number">105</span>, <span class="hljs-number">0</span>, <span class="hljs-number">61</span>, <span class="hljs-number">216</span>, <span class="hljs-number">0</span>, <span class="hljs-number">222</span>]);
+StringUtils.utf16LEToStr(uint8Arr);
+<span class="hljs-comment">// =&gt; &quot;hi&#x1F600;&quot;</span>
+</code></pre>
+<p>Note: if what you have is an <code>ArrayBuffer</code>, you have to convert it to an
+<code>Uint8Array</code> first:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+<span class="hljs-keyword">const</span> toUint8Array = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Uint8Array</span>(myArrayBuffer);
+<span class="hljs-built_in">console</span>.log(StringUtils.utf16LEToStr(toUint8Array));
+</code></pre>
+</li>
+<li>
+<p><code>strToUtf16BE</code>: Convert a JS string passed as argument to an Uint8Array
+containing its corresponding representation in UTF-16-BE (big endian
+UTF-16).</p>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+StringUtils.strToUtf16BE(<span class="hljs-string">&quot;hi&#x1F600;&quot;</span>);
+<span class="hljs-comment">// =&gt; Uint8Array(9) [ 0, 104, 0, 105, 216, 61, 222, 0 ]</span>
+<span class="hljs-comment">//                    &quot;h&quot;     &quot;i&quot;     &quot;grinning face&quot; emoji</span>
+</code></pre>
+</li>
+<li>
+<p><code>utf16BEToStr</code>: Convert a Uint8Array containing a string encoded with
+UTF-16-BE (big endian UTF-16) into a JS string.</p>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+<span class="hljs-keyword">const</span> uint8Arr = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Uint8Array</span>([<span class="hljs-number">0</span>, <span class="hljs-number">104</span>, <span class="hljs-number">0</span>, <span class="hljs-number">105</span>, <span class="hljs-number">216</span>, <span class="hljs-number">61</span>, <span class="hljs-number">222</span>, <span class="hljs-number">0</span>]);
+StringUtils.utf16BEToStr(uint8Arr);
+<span class="hljs-comment">// =&gt; &quot;hi&#x1F600;&quot;</span>
+</code></pre>
+<p>Note: if what you have is an <code>ArrayBuffer</code>, you have to convert it to an
+<code>Uint8Array</code> first:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { StringUtils } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools&quot;</span>;
+<span class="hljs-keyword">const</span> toUint8Array = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Uint8Array</span>(myArrayBuffer);
+<span class="hljs-built_in">console</span>.log(StringUtils.utf16BEToStr(toUint8Array));
+</code></pre>
+</li>
+</ul>
+<p><a name="tools-textTrackRenderer"></a>
+<a name="subchapter-TextTrackRenderer"></a></p>
+<h3>TextTrackRenderer</h3>
+<p>The TextTrackRenderer allows to easily render subtitles synchronized to a video
+element.</p>
+<p>It allows easily to dynamically add subtitles (as long as it is in one of the
+following format: srt, ttml, webVTT or SAMI) to a played video.</p>
+<p>This tool is documented <a href="TextTrackRenderer.html">here</a>.</p>
 <p><a name="tools-mediaCapabilitiesProber"></a>
 <a name="subchapter-MediaCapabilitiesProber"></a></p>
 <h3>MediaCapabilitiesProber</h3>
@@ -2068,19 +2182,6 @@ note).</p>
 <li>Display capabilities</li>
 </ul>
 <p>You can find its documentation <a href="mediaCapabilitiesProber.html">here</a>.</p>
-<p><a name="tools-textTrackRenderer"></a>
-<a name="subchapter-TextTrackRenderer"></a></p>
-<h3>TextTrackRenderer</h3>
-<p>&#x2013;</p>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This tool is experimental. This only means that its API can change at
-any new RxPlayer version (with all the details in the corresponding release
-note).</p>
-<p>&#x2013;</p>
-<p>The TextTrackRenderer allows to easily render subtitles synchronized to a video
-element.</p>
-<p>It allows easily to dynamically add subtitles (as long as it is in one of the
-following format: srt, ttml, webVTT or SAMI) to a played video.</p>
-<p>This tool is documented <a href="TextTrackRenderer.html">here</a>.</p>
 <p><a name="tools-parseBifThumbnails"></a>
 <a name="subchapter-parseBifThumbnails"></a></p>
 <h3>parseBifThumbnails</h3>

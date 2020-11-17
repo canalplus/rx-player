@@ -44,7 +44,7 @@ import {
   IABRRequestEndEvent,
   IABRRequestProgressEvent,
 } from "../../abr";
-import { IBufferType } from "../../source_buffers";
+import { IBufferType } from "../../segment_buffers";
 import { IBackoffOptions } from "../utils/try_urls_with_backoff";
 import createSegmentLoader, {
   ISegmentLoaderChunk,

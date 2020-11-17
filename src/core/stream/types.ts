@@ -22,7 +22,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
-import { IBufferType } from "../source_buffers";
+import { IBufferType } from "../segment_buffers";
 
 /** Event sent when a minor error happened, which doesn't stop playback. */
 export interface IStreamWarningEvent {
@@ -31,7 +31,7 @@ export interface IStreamWarningEvent {
   value : ICustomError;
 }
 
-/** Emitted after a new segment has been succesfully added to the SourceBuffer */
+/** Emitted after a new segment has been succesfully added to the SegmentBuffer */
 export interface IStreamEventAddedSegment<T> {
   type : "added-segment";
   value : {
@@ -41,7 +41,7 @@ export interface IStreamEventAddedSegment<T> {
                representation : Representation; };
     /** The concerned Segment. */
     segment : ISegment;
-    /** TimeRanges of the concerned SourceBuffer after the segment was pushed. */
+    /** TimeRanges of the concerned SegmentBuffer after the segment was pushed. */
     buffered : TimeRanges;
     /* The data pushed */
     segmentData : T;
@@ -50,7 +50,8 @@ export interface IStreamEventAddedSegment<T> {
 
 /**
  * The Manifest needs to be refreshed.
- * Note that the Stream might still be active even after sending this event:
+ * Note that a `RepresentationStream` might still be active even after sending
+ * this event:
  * It might download and push segments, send any other event etc.
  */
 export interface IStreamNeedsManifestRefresh {
@@ -60,6 +61,7 @@ export interface IStreamNeedsManifestRefresh {
 
 /**
  * The Manifest is possibly out-of-sync and needs to be refreshed completely.
+ *
  * The Stream made that guess because a segment that should have been available
  * is not and because it suspects this is due to a synchronization problem.
  */
@@ -79,7 +81,10 @@ export interface IStreamNeedsDiscontinuitySeek {
   };
 }
 
-/** Event emitted when a Stream is scheduling new segments to be loaded. */
+/**
+ * Event emitted when a `RepresentationStream` is scheduling new segments to be
+ * loaded.
+ */
 export interface IStreamStateActive {
   type : "active-stream";
   value : {
@@ -88,7 +93,10 @@ export interface IStreamStateActive {
   };
 }
 
-/** Event emitted when the Stream has loaded segments to the end of its SourceBuffer. */
+/**
+ * Event emitted when a `RepresentationStream` has pushed segments its SegmentBuffer
+ * filling until the end of the associated Period.
+ */
 export interface IStreamStateFull {
   type : "full-stream";
   value : {
@@ -122,7 +130,7 @@ export interface IProtectedSegmentEvent {
  *   - it has stopped regularly checking for its current status.
  *
  *   - it only waits until all the segments it has loaded have been pushed to the
- *     SourceBuffer before actually completing.
+ *     SegmentBuffer before actually completing.
  *
  * You can use this event as a hint that a new `RepresentationStream` can be
  * created.
@@ -131,17 +139,6 @@ export interface IStreamTerminatingEvent {
   type : "stream-terminating";
   value : undefined;
 }
-
-/** Event sent by a `RepresentationStream`. */
-export type IRepresentationStreamEvent<T> = IStreamEventAddedSegment<T> |
-                                            IProtectedSegmentEvent |
-                                            IStreamStateFull |
-                                            IStreamStateActive |
-                                            IStreamManifestMightBeOutOfSync |
-                                            IStreamNeedsDiscontinuitySeek |
-                                            IStreamNeedsManifestRefresh |
-                                            IStreamTerminatingEvent |
-                                            IStreamWarningEvent;
 
 /** Emitted as new bitrate estimates are done. */
 export interface IBitrateEstimationChangeEvent {
@@ -158,7 +155,7 @@ export interface IBitrateEstimationChangeEvent {
 }
 
 /**
- * Emitted when a new `RepresentationStream` is created for a given
+ * Emitted when a new `RepresentationStream` is created to load segments from a
  * `Representation`.
  */
 export interface IRepresentationChangeEvent {
@@ -176,16 +173,9 @@ export interface IRepresentationChangeEvent {
                      null; };
 }
 
-/** Event sent by an `AdaptationStream`. */
-export type IAdaptationStreamEvent<T> = IRepresentationStreamEvent<T> |
-                                        IBitrateEstimationChangeEvent |
-                                        INeedsMediaSourceReload |
-                                        INeedsDecipherabilityFlush |
-                                        IRepresentationChangeEvent;
-
 /**
- * Emitted when a new `AdaptationStream` is created for a given
- * `Representation`.
+ * Emitted when a new `AdaptationStream` is created to load segments from an
+ * `Adaptation`.
  */
 export interface IAdaptationChangeEvent {
   type : "adaptationChange";
@@ -332,7 +322,7 @@ export interface INeedsMediaSourceReload {
 }
 
 /**
- * Event emitted after the SourceBuffer have been "cleaned" to remove from it
+ * Event emitted after the SegmentBuffer have been "cleaned" to remove from it
  * every non-decipherable segments - usually following an update of the
  * decipherability status of some `Representation`(s).
  *
@@ -363,19 +353,111 @@ export interface INeedsDecipherabilityFlush {
   };
 }
 
+/** Event sent by a `RepresentationStream`. */
+export type IRepresentationStreamEvent<T> = IStreamEventAddedSegment<T> |
+                                            IProtectedSegmentEvent |
+                                            IStreamStateFull |
+                                            IStreamStateActive |
+                                            IStreamManifestMightBeOutOfSync |
+                                            IStreamNeedsDiscontinuitySeek |
+                                            IStreamNeedsManifestRefresh |
+                                            IStreamTerminatingEvent |
+                                            IStreamWarningEvent;
+
+/** Event sent by an `AdaptationStream`. */
+export type IAdaptationStreamEvent<T> = IBitrateEstimationChangeEvent |
+                                        INeedsMediaSourceReload |
+                                        INeedsDecipherabilityFlush |
+                                        IRepresentationChangeEvent |
+
+                                        // From a RepresentationStream
+
+                                        IStreamEventAddedSegment<T> |
+                                        IProtectedSegmentEvent |
+                                        IStreamStateFull |
+                                        IStreamStateActive |
+                                        IStreamManifestMightBeOutOfSync |
+                                        IStreamNeedsDiscontinuitySeek |
+                                        IStreamNeedsManifestRefresh |
+                                        IStreamWarningEvent;
+
 /** Event sent by a `PeriodStream`. */
 export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
-                                 IAdaptationStreamEvent<unknown> |
                                  INeedsMediaSourceReload |
-                                 IAdaptationChangeEvent;
+                                 IAdaptationChangeEvent |
+
+                                 // From an AdaptationStream
+
+                                 IBitrateEstimationChangeEvent |
+                                 INeedsMediaSourceReload |
+                                 INeedsDecipherabilityFlush |
+                                 IRepresentationChangeEvent |
+
+                                 // From a RepresentationStream
+
+                                 IStreamEventAddedSegment<unknown> |
+                                 IProtectedSegmentEvent |
+                                 IStreamStateFull |
+                                 IStreamStateActive |
+                                 IStreamManifestMightBeOutOfSync |
+                                 IStreamNeedsDiscontinuitySeek |
+                                 IStreamNeedsManifestRefresh |
+                                 IStreamWarningEvent;
 
 /** Event coming from function(s) managing multiple PeriodStreams. */
-export type IMultiplePeriodStreamsEvent = IPeriodStreamEvent |
-                                          IPeriodStreamClearedEvent |
-                                          ICompletedStreamEvent;
+export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
+                                          ICompletedStreamEvent |
+
+                                          // From a PeriodStream
+
+                                          IPeriodStreamReadyEvent |
+                                          INeedsMediaSourceReload |
+                                          IAdaptationChangeEvent |
+
+                                          // From an AdaptationStream
+
+                                          IBitrateEstimationChangeEvent |
+                                          INeedsMediaSourceReload |
+                                          INeedsDecipherabilityFlush |
+                                          IRepresentationChangeEvent |
+
+                                          // From a RepresentationStream
+
+                                          IStreamEventAddedSegment<unknown> |
+                                          IProtectedSegmentEvent |
+                                          IStreamStateActive |
+                                          IStreamManifestMightBeOutOfSync |
+                                          IStreamNeedsDiscontinuitySeek |
+                                          IStreamNeedsManifestRefresh |
+                                          IStreamWarningEvent;
 
 /** Every event sent by the `StreamOrchestrator`. */
 export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
-                                       IMultiplePeriodStreamsEvent |
                                        IEndOfStreamEvent |
-                                       IResumeStreamEvent;
+                                       IResumeStreamEvent |
+
+                                       IPeriodStreamClearedEvent |
+                                       ICompletedStreamEvent |
+
+                                       // From a PeriodStream
+
+                                       IPeriodStreamReadyEvent |
+                                       INeedsMediaSourceReload |
+                                       IAdaptationChangeEvent |
+
+                                       // From an AdaptationStream
+
+                                       IBitrateEstimationChangeEvent |
+                                       INeedsMediaSourceReload |
+                                       INeedsDecipherabilityFlush |
+                                       IRepresentationChangeEvent |
+
+                                       // From a RepresentationStream
+
+                                       IStreamEventAddedSegment<unknown> |
+                                       IProtectedSegmentEvent |
+                                       IStreamStateActive |
+                                       IStreamManifestMightBeOutOfSync |
+                                       IStreamNeedsDiscontinuitySeek |
+                                       IStreamNeedsManifestRefresh |
+                                       IStreamWarningEvent;

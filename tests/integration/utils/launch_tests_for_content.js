@@ -146,6 +146,36 @@ export default function launchTestsForContent(manifestInfos) {
           }
         }
       });
+
+      if (transport === "dash" || transport === "smooth") {
+        it("should not do the initial manifest request if an `initialManifest` option is set as a string", async function () {
+          const initialManifest = await (
+            (await fetch(manifestInfos.url))
+              .text());
+          xhrMock.lock();
+          player.loadVideo({ url: manifestInfos.url,
+                             transport,
+                             transportOptions: { initialManifest } });
+
+          await sleep(5);
+          expect(xhrMock.getLockedXHR().length).to.be.at.least(1);
+          expect(xhrMock.getLockedXHR()[0].url).not.to.equal(manifestInfos.url);
+        });
+        it("should not do the initial manifest request if an `initialManifest` option is set as a document", async function () {
+          const initialManifestStr = await (
+            (await fetch(manifestInfos.url))
+              .text());
+          const initialManifest = new DOMParser().parseFromString(initialManifestStr, "text/xml");
+          xhrMock.lock();
+          player.loadVideo({ url: manifestInfos.url,
+                             transport,
+                             transportOptions: { initialManifest } });
+
+          await sleep(5);
+          expect(xhrMock.getLockedXHR().length).to.be.at.least(1);
+          expect(xhrMock.getLockedXHR()[0].url).not.to.equal(manifestInfos.url);
+        });
+      }
     });
 
     describe("getError", () => {

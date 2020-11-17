@@ -137,13 +137,13 @@ They all have a ``type`` property equal to ``"MEDIA_ERROR"``.
 A MediaError can have the following codes (``code`` property):
 
   - ``"BUFFER_APPEND_ERROR"``: A media segment could not have been added to the
-    corresponding SourceBuffer. This often happens with malformed segments.
+    corresponding media buffer. This often happens with malformed segments.
 
   - ``"BUFFER_FULL_ERROR"``: The needed segment could not have been added
-    because the SourceBuffer was full.
+    because the corresponding media buffer was full.
 
   - ``"BUFFER_TYPE_UNKNOWN"``: The type of buffer considered (e.g. "audio" /
-    "video" / "text") has no SourceBuffer implementation in your build.
+    "video" / "text") has no media buffer implementation in your build.
 
   - ``"MANIFEST_INCOMPATIBLE_CODECS_ERROR"``: An
     [Adaptation](../terms.md#adaptation) (or track) has none of its

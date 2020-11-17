@@ -41,7 +41,7 @@ how it can be used:</p>
   VTT_PARSER,
   SRT_PARSER,
   SAMI_PARSER,
-} <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools/TextTrackRenderer&quot;</span>;
+} <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools/TextTrackRenderer&quot;</span>;
 
 <span class="hljs-comment">// Add the needed parsers to the TextTrackRenderer</span>
 TextTrackRenderer.addParsers([ TTML_PARSER, VTT_PARSER, SRT_PARSER, SAMI_PARSER ]);
@@ -86,11 +86,8 @@ Adding subtitles is very easy to do
 </code></pre>
 <p><a name="chapter-How%20to%20import%20it"></a></p>
 <h2>How to import it</h2>
-<p>The TextTrackRenderer is still considered an &#x201C;experimental&#x201D; tool. This means
-that its API could change at any new version of the RxPlayer (don&#x2019;t worry, we
-would still document all changes made to it in the corresponding release note).</p>
-<p>As an experimental tool, the TextTrackRenderer is imported as such:</p>
-<pre><code class="language-ts"><span class="hljs-keyword">import</span> TextTrackRenderer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools/TextTrackRenderer&quot;</span>;
+<p>The TextTrackRenderer alone can be imported as such:</p>
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> TextTrackRenderer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools/TextTrackRenderer&quot;</span>;
 </code></pre>
 <p>But just importing the TextTrackRenderer alone is pointless, you also have to
 import the text track parsers you want to use manually (this is a choice we
@@ -102,7 +99,7 @@ of:</p>
 <span class="hljs-keyword">import</span> TextTrackRenderer, {
   TTML_PARSER,
   SRT_PARSER,
-} <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools/TextTrackRenderer&quot;</span>;
+} <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/tools/TextTrackRenderer&quot;</span>;
 TextTrackRenderer.addParsers([ TTML_PARSER, SRT_PARSER ]);
 </code></pre>
 <p>Here are the different available parsers:</p>
@@ -245,7 +242,7 @@ and disappear (for when subtitles are too late):</p>
 <pre><code class="language-js">textTrackRenderer.setTextTrack({
   <span class="hljs-attr">data</span>: textTrackData,
   <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;srt&quot;</span>,
-  <span class="hljs-attr">timeOffset</span>: <span class="hljs-number">-1.3</span>,
+  <span class="hljs-attr">timeOffset</span>: -<span class="hljs-number">1.3</span>,
 });
 </code></pre>
 <p><a name="subchapter-Removing%20the%20current%20text%20track"></a></p>

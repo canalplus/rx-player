@@ -17,6 +17,7 @@
 import PeriodStream, {
   IPeriodStreamArguments,
   IPeriodStreamClockTick,
+  IPeriodStreamOptions,
 } from "./period_stream";
 
 export default PeriodStream;
@@ -24,4 +25,5 @@ export default PeriodStream;
 export {
   IPeriodStreamArguments,
   IPeriodStreamClockTick,
+  IPeriodStreamOptions,
 };

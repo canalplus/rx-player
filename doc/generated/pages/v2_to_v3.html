@@ -238,7 +238,7 @@ changed (all were synonyms in ISO 639-2):</p>
     <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fr&quot;</span>, <span class="hljs-comment">// stays the same than in the manifest</span>
     <span class="hljs-attr">normalized</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// translated from &quot;fr&quot;</span>
                        <span class="hljs-comment">// (notice that it&apos;s not &quot;fre&quot; like before)</span>
-    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+    audioDescription: <span class="hljs-literal">false</span>,
     <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_1&quot;</span>
   },
   {
@@ -1015,7 +1015,7 @@ description support.</p>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 <span class="hljs-keyword">try</span> {
   player.setLanguage(<span class="hljs-string">&quot;fr&quot;</span>);
-} <span class="hljs-keyword">catch</span>(e) {
+} <span class="hljs-function"><span class="hljs-title">catch</span>(<span class="hljs-params">e</span>)</span> {
   <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
 }
 
@@ -1025,7 +1025,7 @@ description support.</p>
 track = player.getAvailableAudioTracks();
 <span class="hljs-keyword">const</span> indexOf = tracks &amp;&amp; tracks.indexOf(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>);
 
-<span class="hljs-keyword">if</span> (tracks &amp;&amp; indexOf !== <span class="hljs-number">-1</span>) {
+<span class="hljs-keyword">if</span> (tracks &amp;&amp; indexOf !== -<span class="hljs-number">1</span>) {
   player.setAudioTrack(tracks[indexOf].id);
 } <span class="hljs-keyword">else</span> {
   <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
@@ -1041,7 +1041,7 @@ support.</p>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 <span class="hljs-keyword">try</span> {
   player.setSubtitle(<span class="hljs-string">&quot;fr&quot;</span>);
-} <span class="hljs-keyword">catch</span>(e) {
+} <span class="hljs-function"><span class="hljs-title">catch</span>(<span class="hljs-params">e</span>)</span> {
   <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
 }
 
@@ -1051,7 +1051,7 @@ support.</p>
 track = player.getAvailableTextTracks();
 <span class="hljs-keyword">const</span> indexOf = tracks &amp;&amp; tracks.indexOf(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>);
 
-<span class="hljs-keyword">if</span> (tracks &amp;&amp; indexOf !== <span class="hljs-number">-1</span>) {
+<span class="hljs-keyword">if</span> (tracks &amp;&amp; indexOf !== -<span class="hljs-number">1</span>) {
   player.setTextTrack(tracks[indexOf].id);
 } <span class="hljs-keyword">else</span> {
   <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);

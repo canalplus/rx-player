@@ -11,7 +11,8 @@
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
 <p>The Stream is the part of the RxPlayer choosing which segments to request and
-pushing them to the corresponding SourceBuffer.</p>
+pushing them to the corresponding media buffer (called <code>SegmentBuffers</code> in the
+RxPlayer) so they can later be decoded.</p>
 <p>It tries to choose the optimal segments based on:</p>
 <ul>
 <li>
@@ -40,8 +41,7 @@ documentation</a>.</p>
 <h2>The PeriodStream</h2>
 <p>The <code>PeriodStream</code> creates and destroys <code>AdaptationStream</code>s for a single
 Manifest&#x2019;s Period.
-If no SourceBuffer was created, it lazily creates one (this only applies to
-custom SourceBuffer - not managed by the browser - like text).</p>
+If no <code>SegmentBuffer:</code> was created, it lazily creates one.</p>
 <p><a name="chapter-The%20AdaptationStream"></a></p>
 <h2>The AdaptationStream</h2>
 <p>The <code>AdaptationStream</code> creates and destroys <code>RepresentationStream</code>s for a

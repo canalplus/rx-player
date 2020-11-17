@@ -37,9 +37,9 @@ import objectAssign from "../../../utils/object_assign";
 import {
   IBufferedChunk,
   IEndOfSegmentOperation,
-  QueuedSourceBuffer,
-  SourceBufferOperation,
-} from "../../source_buffers";
+  SegmentBuffer,
+  SegmentBufferOperation,
+} from "../../segment_buffers";
 
 const { CONTENT_REPLACEMENT_PADDING,
         BITRATE_REBUFFERING_RATIO,
@@ -52,10 +52,10 @@ export interface ISegmentFilterArgument {
              period : Period;
              representation : Representation; };
   currentPlaybackTime: number;
-  knownStableBitrate : number | undefined;
+  fastSwitchThreshold : number | undefined;
   neededRange : { start: number;
                   end: number; };
-  queuedSourceBuffer : QueuedSourceBuffer<unknown>;
+  segmentBuffer : SegmentBuffer<unknown>;
 }
 
 /**
@@ -71,18 +71,18 @@ const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
 export default function getNeededSegments({
   content,
   currentPlaybackTime,
-  knownStableBitrate,
+  fastSwitchThreshold,
   neededRange,
-  queuedSourceBuffer,
+  segmentBuffer,
 } : ISegmentFilterArgument) : ISegment[] {
-  const segmentInventory = queuedSourceBuffer.getInventory();
+  const segmentInventory = segmentBuffer.getInventory();
   /**
    * Every segment awaiting an "EndOfSegment" operation, which indicates that a
-   * completely-loaded segment is still being pushed to the QueuedSourceBuffer.
+   * completely-loaded segment is still being pushed to the SegmentBuffer.
    */
-  const segmentsBeingPushed = queuedSourceBuffer.getPendingOperations()
+  const segmentsBeingPushed = segmentBuffer.getPendingOperations()
     .filter((operation) : operation is IEndOfSegmentOperation =>
-      operation.type === SourceBufferOperation.EndOfSegment
+      operation.type === SegmentBufferOperation.EndOfSegment
     ).map(operation => operation.value);
 
   // 1 - construct lists of segments possible and actually pushed
@@ -99,7 +99,7 @@ export default function getNeededSegments({
     !shouldContentBeReplaced(bufferedSegment.infos,
                              content,
                              currentPlaybackTime,
-                             knownStableBitrate));
+                             fastSwitchThreshold));
 
   // 3 - remove from that list the segments who appeared to have been GCed
   bufferedSegments = filterGarbageCollectedSegments(bufferedSegments, neededRange);
@@ -152,7 +152,7 @@ export default function getNeededSegments({
         return !shouldContentBeReplaced(pendingSegment,
                                         contentObject,
                                         currentPlaybackTime,
-                                        knownStableBitrate);
+                                        fastSwitchThreshold);
       });
       if (waitForPushedSegment) {
         return false;
@@ -212,7 +212,7 @@ export default function getNeededSegments({
  * @param {Object} oldContent
  * @param {Object} currentContent
  * @param {number} currentPlaybackTime
- * @param {number} [knownStableBitrate]
+ * @param {number} [fastSwitchThreshold]
  * @returns {boolean}
  */
 function shouldContentBeReplaced(
@@ -224,7 +224,7 @@ function shouldContentBeReplaced(
                      period : Period;
                      representation : Representation; },
   currentPlaybackTime: number,
-  knownStableBitrate? : number
+  fastSwitchThreshold? : number
 ) : boolean {
   if (oldContent.period.id !== currentContent.period.id) {
     return false; // keep segments from another Period by default.
@@ -243,7 +243,7 @@ function shouldContentBeReplaced(
 
   return canFastSwitch(oldContent.representation,
                        currentContent.representation,
-                       knownStableBitrate);
+                       fastSwitchThreshold);
 }
 
 /**
@@ -253,21 +253,21 @@ function shouldContentBeReplaced(
  * This behavior is called "fast-switching".
  * @param {Object} oldSegmentRepresentation
  * @param {Object} newSegmentRepresentation
- * @param {number|undefined} knownStableBitrate
+ * @param {number|undefined} fastSwitchThreshold
  * @returns {boolean}
  */
 function canFastSwitch(
   oldSegmentRepresentation : Representation,
   newSegmentRepresentation : Representation,
-  knownStableBitrate : number | undefined
+  fastSwitchThreshold : number | undefined
 ) : boolean {
   const oldContentBitrate = oldSegmentRepresentation.bitrate;
-  if (knownStableBitrate === undefined) {
+  if (fastSwitchThreshold === undefined) {
     // only re-load comparatively-poor bitrates for the same Adaptation.
     const bitrateCeil = oldContentBitrate * BITRATE_REBUFFERING_RATIO;
     return newSegmentRepresentation.bitrate > bitrateCeil;
   }
-  return oldContentBitrate < knownStableBitrate &&
+  return oldContentBitrate < fastSwitchThreshold &&
          newSegmentRepresentation.bitrate > oldContentBitrate;
 }
 

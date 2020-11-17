@@ -25,8 +25,10 @@ import { IRepresentationFilter } from "../../manifest";
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
+  ILoadedManifest,
   ITransportOptions as IParsedTransportOptions,
 } from "../../transports";
+import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
   normalizeAudioTrack,
@@ -42,9 +44,11 @@ import {
 } from "./track_choice_manager";
 
 const { DEFAULT_AUTO_PLAY,
+        DEFAULT_ENABLE_FAST_SWITCHING,
         DEFAULT_INITIAL_BITRATES,
         DEFAULT_LIMIT_VIDEO_WIDTH,
         DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
+        DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
         DEFAULT_MAX_BITRATES,
         DEFAULT_MAX_BUFFER_AHEAD,
         DEFAULT_MAX_BUFFER_BEHIND,
@@ -77,6 +81,8 @@ export interface ITransportOptions {
    * request if that's the case.
    */
   checkMediaSegmentIntegrity? : boolean;
+  /** Manifest object that will be used initially. */
+  initialManifest? : ILoadedManifest;
   /** Custom implementation for performing Manifest requests. */
   manifestLoader? : CustomManifestLoader;
   /** Possible custom URL pointing to a shorter form of the Manifest. */
@@ -240,6 +246,8 @@ export interface ILoadVideoOptions {
   hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
   manualBitrateSwitchingMode? : "seamless"|"direct";
+  enableFastSwitching? : boolean;
+  audioTrackSwitchingMode? : "seamless"|"direct";
 
   /* tslint:disable deprecation */
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
@@ -254,9 +262,10 @@ export interface ILoadVideoOptions {
  * `loadVideo` method exend.
  */
 interface IParsedLoadVideoOptionsBase {
-  url? : string;
+  url : string | undefined;
   transport : string;
   autoPlay : boolean;
+  initialManifest : ILoadedManifest | undefined;
   keySystems : IKeySystemOption[];
   lowLatencyMode : boolean;
   manifestUpdateUrl : string | undefined;
@@ -267,6 +276,8 @@ interface IParsedLoadVideoOptionsBase {
   defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
+  enableFastSwitching : boolean;
+  audioTrackSwitchingMode : "seamless"|"direct";
 }
 
 /**
@@ -508,8 +519,15 @@ function parseLoadVideoOptions(
 
   if (!isNullOrUndefined(options.url)) {
     url = String(options.url);
-  } else if (isNullOrUndefined(options.transportOptions?.manifestLoader)) {
-    throw new Error("No url set on loadVideo");
+  } else if (
+    isNullOrUndefined(options.transportOptions?.initialManifest) &&
+    isNullOrUndefined(options.transportOptions?.manifestLoader)
+  ) {
+    throw new Error("Unable to load a content: no url set on loadVideo.\n" +
+                    "Please provide at least either an `url` argument, a " +
+                    "`transportOptions.initialManifest` option or a " +
+                    "`transportOptions.manifestLoader` option so the RxPlayer " +
+                    "can load the content.");
   }
 
   if (isNullOrUndefined(options.transport)) {
@@ -544,9 +562,20 @@ function parseLoadVideoOptions(
     options.transportOptions :
     {};
 
+  const initialManifest = options.transportOptions?.initialManifest;
   const manifestUpdateUrl = options.transportOptions?.manifestUpdateUrl;
   const minimumManifestUpdateInterval =
     options.transportOptions?.minimumManifestUpdateInterval ?? 0;
+  let audioTrackSwitchingMode = isNullOrUndefined(options.audioTrackSwitchingMode)
+                                  ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
+                                  : options.audioTrackSwitchingMode;
+  if (!arrayIncludes(["seamless", "direct"], audioTrackSwitchingMode)) {
+    log.warn("The `audioTrackSwitchingMode` loadVideo option must match one of the following strategy name:\n" +
+             "- `seamless`\n" +
+             "- `direct`\n" +
+             "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE + " strategy will be used as default");
+    audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
+  }
 
   const transportOptions = objectAssign({}, transportOptsArg, {
     /* tslint:disable deprecation */
@@ -557,6 +586,7 @@ function parseLoadVideoOptions(
   });
 
   // remove already parsed data to simplify the `transportOptions` object
+  delete transportOptions.initialManifest;
   delete transportOptions.manifestUpdateUrl;
   delete transportOptions.minimumManifestUpdateInterval;
 
@@ -626,6 +656,10 @@ function parseLoadVideoOptions(
   const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
                                      DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
+  const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching) ?
+    DEFAULT_ENABLE_FAST_SWITCHING :
+    options.enableFastSwitching;
+
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
     if (isNullOrUndefined(options.textTrackElement)) {
@@ -667,10 +701,13 @@ function parseLoadVideoOptions(
   return { autoPlay,
            defaultAudioTrack,
            defaultTextTrack,
+           enableFastSwitching,
            hideNativeSubtitle,
            keySystems,
+           initialManifest,
            lowLatencyMode,
            manualBitrateSwitchingMode,
+           audioTrackSwitchingMode,
            manifestUpdateUrl,
            minimumManifestUpdateInterval,
            networkConfig,

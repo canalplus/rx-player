@@ -52,8 +52,14 @@ export default [
     "live": false,
   },
   {
-    "name": "Wowza - Big Buck Bunny",
-    "url": "https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/manifest_mpm4sav_mvtime_w925796611.mpd",
+    "name": "DASH IF - SegmentTemplate",
+    "url": "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd",
+    "transport": "dash",
+    "live": true,
+  },
+  {
+    "name": "DASH IF - SegmentTimeline",
+    "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
     "transport": "dash",
     "live": true,
   },
@@ -133,15 +139,6 @@ export default [
     "url": "https://utils.ssl.cdn.cra.cz/dash/1/manifest.mpd",
     "transport": "dash",
     "live": false,
-  },
-  {
-    "name": "Canal + - BIF Thumbnail Track example",
-    "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
-    "transport": "smooth",
-    "supplementaryImageTracks": {
-      "mimeType": "application/bif",
-      "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
-    },
   },
   {
     "name": "Mix of DASH and Smooth VOD Contents",

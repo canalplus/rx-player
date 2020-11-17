@@ -50,8 +50,20 @@ export interface IPublicStreamEvent {
   onExit?: () => void;
 }
 
-/** Events sent by the `streamEventsEmitter`. */
-export interface IStreamEvent {
-  type: "stream-event" | "stream-event-skip";
-  value: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
+/** Event emitted when a stream event is encountered. */
+export interface IStreamEventEvent {
+  type: "stream-event";
+  value: IPublicStreamEvent |
+         IPublicNonFiniteStreamEvent;
 }
+
+/** Event emitted when a stream event has just been skipped. */
+export interface IStreamEventSkipEvent {
+  type: "stream-event-skip";
+  value: IPublicStreamEvent |
+         IPublicNonFiniteStreamEvent;
+}
+
+/** Events sent by the `streamEventsEmitter`. */
+export type IStreamEvent = IStreamEventEvent |
+                           IStreamEventSkipEvent;

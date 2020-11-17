@@ -242,7 +242,7 @@ disable any timeout.</p>
       getLicense,
       <span class="hljs-attr">getLicenseConfig</span>: {
         <span class="hljs-attr">retry</span>: <span class="hljs-literal">Infinity</span>,
-        <span class="hljs-attr">timeout</span>: <span class="hljs-number">-1</span>,
+        <span class="hljs-attr">timeout</span>: -<span class="hljs-number">1</span>,
       },
     },
     <span class="hljs-comment">// ...</span>
@@ -282,7 +282,7 @@ quality.</p>
   <span class="hljs-attr">keySystems</span>: [
     {
       <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
-      getLicense(challenge) {
+      <span class="hljs-function"><span class="hljs-title">getLicense</span>(<span class="hljs-params">challenge</span>)</span> {
         <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =&gt;</span> {
           <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> XMLHttpRequest();
           xhr.open(<span class="hljs-string">&quot;POST&quot;</span>, LICENSE_SERVER_URL, <span class="hljs-literal">true</span>);
@@ -321,7 +321,7 @@ quality.</p>
       },
       <span class="hljs-attr">getLicenseConfig</span>: {
         <span class="hljs-attr">retry</span>: <span class="hljs-literal">Infinity</span>,
-        <span class="hljs-attr">timeout</span>: <span class="hljs-number">-1</span>,
+        <span class="hljs-attr">timeout</span>: -<span class="hljs-number">1</span>,
       },
     },
     <span class="hljs-comment">// ...</span>
@@ -549,10 +549,10 @@ browser API:</p>
       getLicense,
       <span class="hljs-attr">persistentLicense</span>: <span class="hljs-literal">true</span>,
       <span class="hljs-attr">licenseStorage</span>: {
-        save(data) {
+        <span class="hljs-function"><span class="hljs-title">save</span>(<span class="hljs-params">data</span>)</span> {
           <span class="hljs-built_in">localStorage</span>.setItem(<span class="hljs-string">&quot;RxPlayer-licenseStorage&quot;</span>, <span class="hljs-built_in">JSON</span>.stringify(data));
         },
-        load() {
+        <span class="hljs-function"><span class="hljs-title">load</span>(<span class="hljs-params"></span>)</span> {
           <span class="hljs-keyword">const</span> item = <span class="hljs-built_in">localStorage</span>.getItem(<span class="hljs-string">&quot;RxPlayer-licenseStorage&quot;</span>);
           <span class="hljs-keyword">return</span> item === <span class="hljs-literal">null</span> ? [] :
                                  <span class="hljs-built_in">JSON</span>.parse(item);

@@ -17,20 +17,25 @@
 import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";
 
-interface ICustomSourceBufferEvents { updatestart : Event|undefined;
+interface ICompatSourceBufferEvents { updatestart : Event|undefined;
                                       update : Event|undefined;
                                       updateend : Event|undefined;
                                       error : Event; }
 
-export interface ICustomSourceBuffer<T>
-  extends IEventEmitter<ICustomSourceBufferEvents> {
+/**
+ * Definition of a SourceBuffer Object.
+ * Adds some non-standard APIs to the regular one like `changeType`, which exist
+ * on some browsers.
+ */
+export interface ICompatSourceBuffer
+  extends IEventEmitter<ICompatSourceBufferEvents> {
     buffered : TimeRanges;
     changeType? : (type: string) => void;
     updating : boolean;
     appendWindowStart : number;
     appendWindowEnd : number;
     timestampOffset : number;
-    appendBuffer(data : T) : void;
+    appendBuffer(data : BufferSource) : void;
     remove(from : number, to : number) : void;
     abort() : void;
   }
@@ -44,7 +49,7 @@ export interface ICustomSourceBuffer<T>
  * @returns {boolean}
  */
 export default function tryToChangeSourceBufferType(
-  sourceBuffer : ICustomSourceBuffer<unknown>,
+  sourceBuffer : ICompatSourceBuffer,
   codec : string
 ) : boolean {
   if (typeof sourceBuffer.changeType === "function") {

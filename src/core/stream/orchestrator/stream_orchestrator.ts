@@ -48,15 +48,15 @@ import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
 import { SegmentFetcherCreator } from "../../fetchers";
-import SourceBuffersStore, {
+import SegmentBuffersStore, {
   BufferGarbageCollector,
   IBufferType,
-  ITextTrackSourceBufferOptions,
-  QueuedSourceBuffer,
-} from "../../source_buffers";
+  SegmentBuffer,
+} from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import PeriodStream, {
   IPeriodStreamClockTick,
+  IPeriodStreamOptions,
 } from "../period";
 import {
   IMultiplePeriodStreamsEvent,
@@ -72,13 +72,20 @@ export type IStreamOrchestratorClockTick = IPeriodStreamClockTick;
 const { MAXIMUM_MAX_BUFFER_AHEAD,
         MAXIMUM_MAX_BUFFER_BEHIND } = config;
 
+/** Options tweaking the behavior of the StreamOrchestrator. */
+export type IStreamOrchestratorOptions =
+  IPeriodStreamOptions &
+  { wantedBufferAhead$ : BehaviorSubject<number>;
+    maxBufferAhead$ : Observable<number>;
+    maxBufferBehind$ : Observable<number>; };
+
 /**
  * Create and manage the various Stream Observables needed for the content to
  * play:
  *
- *   - Create or dispose SourceBuffers depending on the chosen Adaptations.
+ *   - Create or dispose SegmentBuffers depending on the chosen Adaptations.
  *
- *   - Push the right segments to those SourceBuffers depending on the user's
+ *   - Push the right segments to those SegmentBuffers depending on the user's
  *     preferences, the current position, the bandwidth, the decryption
  *     conditions...
  *
@@ -94,8 +101,8 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  * @param {Observable} clock$ - Emit position information
  * @param {Object} abrManager - Emit bitrate estimates and best Representation
  * to play.
- * @param {Object} sourceBuffersStore - Will be used to lazily create
- * SourceBuffer instances associated with the current content.
+ * @param {Object} segmentBuffersStore - Will be used to lazily create
+ * SegmentBuffer instances associated with the current content.
  * @param {Object} segmentFetcherCreator - Allow to download segments.
  * @param {Object} options
  * @returns {Observable}
@@ -105,22 +112,18 @@ export default function StreamOrchestrator(
               initialPeriod : Period; },
   clock$ : Observable<IStreamOrchestratorClockTick>,
   abrManager : ABRManager,
-  sourceBuffersStore : SourceBuffersStore,
+  segmentBuffersStore : SegmentBuffersStore,
   segmentFetcherCreator : SegmentFetcherCreator<any>,
-  options: { wantedBufferAhead$ : BehaviorSubject<number>;
-             maxBufferAhead$ : Observable<number>;
-             maxBufferBehind$ : Observable<number>;
-             textTrackOptions? : ITextTrackSourceBufferOptions;
-             manualBitrateSwitchingMode : "seamless" | "direct"; }
+  options: IStreamOrchestratorOptions
 ) : Observable<IStreamOrchestratorEvent> {
   const { manifest, initialPeriod } = content;
   const { maxBufferAhead$, maxBufferBehind$, wantedBufferAhead$ } = options;
 
   // Keep track of a unique BufferGarbageCollector created per
-  // QueuedSourceBuffer.
+  // SegmentBuffer.
   const garbageCollectors =
-    new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<unknown>) => {
-      const { bufferType } = qSourceBuffer;
+    new WeakMapMemory((segmentBuffer : SegmentBuffer<unknown>) => {
+      const { bufferType } = segmentBuffer;
       const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ?
                                  MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number :
                                  Infinity;
@@ -128,7 +131,7 @@ export default function StreamOrchestrator(
                                 MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number :
                                 Infinity;
       return BufferGarbageCollector({
-        queuedSourceBuffer: qSourceBuffer,
+        segmentBuffer,
         clock$: clock$.pipe(map(tick => tick.position)),
         maxBufferBehind$: maxBufferBehind$
                             .pipe(map(val => Math.min(val, defaultMaxBehind))),
@@ -156,7 +159,7 @@ export default function StreamOrchestrator(
       return null;
     }, null));
 
-  const bufferTypes = sourceBuffersStore.getBufferTypes();
+  const bufferTypes = segmentBuffersStore.getBufferTypes();
 
   // Every PeriodStreams for every possible types
   const streamsArray = bufferTypes.map((bufferType) => {
@@ -166,7 +169,7 @@ export default function StreamOrchestrator(
 
   // Emits the activePeriodChanged events every time the active Period changes.
   const activePeriodChanged$ = ActivePeriodEmitter(streamsArray).pipe(
-    filter((period) : period is Period => period != null),
+    filter((period) : period is Period => period !== null),
     map(period => {
       log.info("Stream: New active period", period);
       return EVENTS.activePeriodChanged(period);
@@ -292,18 +295,18 @@ export default function StreamOrchestrator(
 
     const handleDecipherabilityUpdate$ = fromEvent(manifest, "decipherabilityUpdate")
       .pipe(mergeMap((updates) => {
-        const sourceBufferStatus = sourceBuffersStore.getStatus(bufferType);
+        const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
         const hasType = updates.some(update => update.adaptation.type === bufferType);
-        if (!hasType || sourceBufferStatus.type !== "initialized") {
+        if (!hasType || segmentBufferStatus.type !== "initialized") {
           return EMPTY; // no need to stop the current Streams.
         }
-        const queuedSourceBuffer = sourceBufferStatus.value;
-        const rangesToClean = getBlacklistedRanges(queuedSourceBuffer, updates);
+        const segmentBuffer = segmentBufferStatus.value;
+        const rangesToClean = getBlacklistedRanges(segmentBuffer, updates);
         enableOutOfBoundsCheck = false;
         destroyStreams$.next();
         return observableConcat(
           ...rangesToClean.map(({ start, end }) =>
-            queuedSourceBuffer.removeBuffer(start, end).pipe(ignoreElements())),
+            segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),
           clock$.pipe(take(1), mergeMap((lastTick) => {
             return observableConcat(
               observableOf(EVENTS.needsDecipherabilityFlush(lastTick)),
@@ -403,21 +406,21 @@ export default function StreamOrchestrator(
                                          content: { manifest, period: basePeriod },
                                          garbageCollectors,
                                          segmentFetcherCreator,
-                                         sourceBuffersStore,
+                                         segmentBuffersStore,
                                          options,
                                          wantedBufferAhead$, }
     ).pipe(
       mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
-        const { type } = evt;
-        if (type === "full-stream") {
+        if (evt.type === "full-stream") {
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
-          if (nextPeriod == null) {
+          if (nextPeriod === null) {
             return observableOf(EVENTS.streamComplete(bufferType));
-          } else {
-            // current Stream is full, create the next one if not
-            createNextPeriodStream$.next(nextPeriod);
           }
-        } else if (type === "active-stream") {
+
+          // current Stream is full, create the next one if not
+          createNextPeriodStream$.next(nextPeriod);
+          return EMPTY;
+        } else if (evt.type === "active-stream") {
           // current Stream is active, destroy next Stream if created
           destroyNextStreams$.next();
         }

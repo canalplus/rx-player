@@ -20,12 +20,17 @@ import {
   IPublicStreamEvent,
   IStreamEvent,
   IStreamEventData,
+  IStreamEventEvent,
+  IStreamEventSkipEvent,
 } from "./types";
 
 export {
   IStreamEvent,
   IStreamEventData,
   IPublicNonFiniteStreamEvent,
-  IPublicStreamEvent
+  IPublicStreamEvent,
+
+  IStreamEventEvent,
+  IStreamEventSkipEvent,
 };
 export default streamEventsEmitter;

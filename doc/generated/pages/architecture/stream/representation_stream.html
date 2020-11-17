@@ -12,9 +12,10 @@
 Representation.</p>
 <p>It constructs a list of segments to download, which depend on the current timing
 values and parameters.
-It then download and push them to a linked SourceBuffer.</p>
+It then download and push them to a linked <code>SegmentBuffer</code> (the media buffer
+containing the segments for later decoding).</p>
 <p>Multiple RepresentationStream observables can be ran on the same
-SourceBuffer without problems. This allows for example smooth transitions
+<code>SegmentBuffer</code> without problems. This allows for example smooth transitions
 between multiple periods.</p>
 <p><a name="chapter-Return%20value"></a></p>
 <h2>Return value</h2>
@@ -29,7 +30,7 @@ notifications depending on what is happening at its core.</p>
 <p>The RepresentationStream has no segment left for download</p>
 </li>
 <li>
-<p>The RepresentationStream appended a new Segment to the SourceBuffer</p>
+<p>The RepresentationStream appended a new Segment to the <code>SegmentBuffer</code></p>
 </li>
 <li>
 <p>The Manifest should be refreshed to allow the RepresentationStream to
@@ -50,7 +51,7 @@ currently most needed Segment.</p>
 position and the buffer size we want to achieve.
 This list goes then through multiple filters to ensure we&#x2019;re not queueing them
 unnecessarly. Such cases would be, for example, if the segment is already
-present in the SourceBuffer at a better quality.</p>
+present in the <code>SegmentBuffer</code> at a better quality.</p>
 <p>For a clock based on various video events, the strategy is the following:</p>
 <ol>
 <li>
@@ -95,7 +96,7 @@ During this time, step <em>2</em> to <em>5</em> can run in parallel, and as such
 </li>
 <li>
 <p>Once the request is finished, run those tasks in parallel:</p>
-<p>9-1. Append the segment to the corresponding SourceBuffer</p>
+<p>9-1. Append the segment to the corresponding <code>SegmentBuffer</code></p>
 <p>9-1. go back to step <em>4</em>.</p>
 </li>
 </ol>

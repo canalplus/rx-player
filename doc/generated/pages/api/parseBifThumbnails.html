@@ -42,14 +42,14 @@ fetch(<span class="hljs-string">&quot;http://www.example.com/thumbnails.bif&quot
 <pre><code class="language-js">{
   <span class="hljs-attr">version</span>: <span class="hljs-string">&quot;0.0.0.0&quot;</span>, <span class="hljs-comment">// BIF version. For the moment, only &quot;0.0.0.0&quot; is</span>
                       <span class="hljs-comment">// specified.</span>
-  <span class="hljs-attr">images</span>: [    <span class="hljs-comment">// Array of thumbnails for this content</span>
+  images: [    <span class="hljs-comment">// Array of thumbnails for this content</span>
     {
       <span class="hljs-attr">startTime</span>: <span class="hljs-number">0</span>, <span class="hljs-comment">// Start position at which the thumbnail should be applied</span>
                     <span class="hljs-comment">// to, in milliseconds.</span>
                     <span class="hljs-comment">// For example, a time of `5000`, indicates that this</span>
                     <span class="hljs-comment">// thumbnail should be shown from the 5 second mark in the</span>
                     <span class="hljs-comment">// content (until the next image is displayed instead)</span>
-      <span class="hljs-attr">image</span>: <span class="hljs-built_in">ArrayBuffer</span>() <span class="hljs-comment">// The thumbnail itself, in an ArrayBuffer form.</span>
+      image: <span class="hljs-built_in">ArrayBuffer</span>() <span class="hljs-comment">// The thumbnail itself, in an ArrayBuffer form.</span>
     },
     {
       <span class="hljs-attr">startTime</span>: <span class="hljs-number">10000</span>,
