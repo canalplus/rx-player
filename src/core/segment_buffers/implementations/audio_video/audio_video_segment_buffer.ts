@@ -501,14 +501,14 @@ export default class AudioVideoSegmentBuffer
             appendWindow } = data;
     let hasUpdatedSourceBufferType : boolean = false;
 
-    if (codec !== this._currentCodec) {
+    if (codec !== this.codec) {
       log.debug("AVSB: updating codec", codec);
       hasUpdatedSourceBufferType = tryToChangeSourceBufferType(this._sourceBuffer,
                                                                codec);
       if (hasUpdatedSourceBufferType) {
-        this._currentCodec = codec;
+        this.codec = codec;
       } else {
-        log.debug("AVSB: could not update codec", codec, this._currentCodec);
+        log.debug("AVSB: could not update codec", codec, this.codec);
       }
     }
 
