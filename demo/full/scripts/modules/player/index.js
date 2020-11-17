@@ -21,6 +21,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   });
 
   // facilitate DEV mode
+  window.RxPlayer = RxPlayer;
   window.player = window.rxPlayer = player;
 
   // initial state. Written here to easily showcase it exhaustively
