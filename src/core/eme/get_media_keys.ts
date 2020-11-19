@@ -73,9 +73,8 @@ export default function getMediaKeysInfos(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[]
 ) : Observable<IMediaKeysInfos> {
-    return getMediaKeySystemAccess(mediaElement,
-                                   keySystemsConfigs
-    ).pipe(mergeMap((evt) => {
+  return getMediaKeySystemAccess(mediaElement, keySystemsConfigs).pipe(
+    mergeMap((evt) => {
       const { options, mediaKeySystemAccess } = evt.value;
       const currentState = MediaKeysInfosStore.getState(mediaElement);
       const persistentSessionsStore = createPersistentSessionsStorage(options);

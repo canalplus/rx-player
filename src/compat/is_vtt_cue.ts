@@ -24,8 +24,8 @@ import { ICompatVTTCue } from "./browser_compatibility_types";
 export default function isVTTCue(
   cue : ICompatVTTCue|TextTrackCue
 ) : cue is ICompatVTTCue {
-  /* tslint:disable no-unsafe-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   return typeof (window as any).VTTCue === "function" &&
          cue instanceof (window as any).VTTCue;
-  /* tslint:enable no-unsafe-any */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }

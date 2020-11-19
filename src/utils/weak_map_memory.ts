@@ -52,6 +52,7 @@
  * ```
  * @class WeakMapMemory
  */
+// eslint-disable-next-line @typescript-eslint/ban-types
 export default class WeakMapMemory<T extends object, U> {
   private readonly _fn : (obj : T) => U;
   private _weakMap : WeakMap<T, U>;
@@ -82,7 +83,7 @@ export default class WeakMapMemory<T extends object, U> {
   /**
    * @param {Object} obj
    */
-  public destroy(obj : T) {
+  public destroy(obj : T) : void {
     this._weakMap.delete(obj);
   }
 }

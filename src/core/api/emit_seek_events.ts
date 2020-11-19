@@ -41,8 +41,8 @@ import { IClockTick } from "./clock";
  * @returns {Observable}
  */
 export default function emitSeekEvents(
- mediaElement : HTMLMediaElement | null,
- clock$ : Observable<IClockTick>
+  mediaElement : HTMLMediaElement | null,
+  clock$ : Observable<IClockTick>
 ) : Observable<"seeking" | "seeked"> {
   return observableDefer(() => {
     if (mediaElement === null) {

@@ -94,13 +94,13 @@ export default function constructTimelineFromPreviousTimeline(
     const nextItem = items[i + 1] === undefined ?
       null :
       items[i + 1];
-      const timelineElement = convertElementToIndexSegment(item,
-                                                           previousItem,
-                                                           nextItem,
-                                                           scaledPeriodStart);
-      if (timelineElement !== null) {
-        newEltsToPush.push(timelineElement);
-      }
+    const timelineElement = convertElementToIndexSegment(item,
+                                                         previousItem,
+                                                         nextItem,
+                                                         scaledPeriodStart);
+    if (timelineElement !== null) {
+      newEltsToPush.push(timelineElement);
+    }
   }
   return newTimeline.concat(newEltsToPush);
 }

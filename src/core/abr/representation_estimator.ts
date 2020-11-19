@@ -462,10 +462,10 @@ export default function RepresentationEstimator({
 
     if (representations.length === 1) {
       return observableOf({ bitrate: undefined,
-        representation: representations[0],
-        manual: false,
-        urgent: true,
-        knownStableBitrate: undefined });
+                            representation: representations[0],
+                            manual: false,
+                            urgent: true,
+                            knownStableBitrate: undefined });
     }
 
     return manualBitrate$.pipe(switchMap(manualBitrate => {
@@ -582,7 +582,7 @@ export default function RepresentationEstimator({
                                                       requests,
                                                       clock),
                      manual: false,
-                     knownStableBitrate, };
+                     knownStableBitrate };
           }
           const limitedBitrate = Math.min(bufferBasedBitrate, maxAutoBitrate);
           const chosenRepresentation = (() => {
@@ -606,7 +606,7 @@ export default function RepresentationEstimator({
                                                     requests,
                                                     clock),
                    manual: false,
-                   knownStableBitrate, };
+                   knownStableBitrate };
         })
       );
     }));

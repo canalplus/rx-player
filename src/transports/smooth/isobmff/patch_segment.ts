@@ -68,10 +68,11 @@ export default function patchSegment(
 
   const newTrunBox = updateTrunDataOffset(oldTrunBox,
                                           oldTrunOffsets[1] - oldTrunOffsets[0]);
-  const sencContent = getUuidContent(trafContent, 0xA2394F52,
-                                                  0x5A9B4F14,
-                                                  0xA2446C42,
-                                                  0x7C648DF4);
+  const sencContent = getUuidContent(trafContent,
+                                     0xA2394F52,
+                                     0x5A9B4F14,
+                                     0xA2446C42,
+                                     0x7C648DF4);
   const newTrafBox = createTrafBox(tfhdBox, tfdtBox, newTrunBox, mfhdBox, sencContent);
   const newMoof = createBoxWithChildren("moof", [mfhdBox, newTrafBox]);
 
@@ -82,8 +83,7 @@ export default function patchSegment(
     throw new Error("Smooth: Invalid moof, trun or traf generation");
   }
   /** index of the `data_offset` property from the trun box in the whole "moof". */
-  const indexOfTrunDataOffsetInMoof = /* new moof size + name */ +
-                                      (newMoofOffsets[1] - newMoofOffsets[0]) +
+  const indexOfTrunDataOffsetInMoof = (newMoofOffsets[1] - newMoofOffsets[0]) +
                                       mfhdBox.length +
 
                                       /* new traf size + name */

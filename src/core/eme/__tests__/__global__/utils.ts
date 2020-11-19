@@ -13,7 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* tslint:disable no-unsafe-any */
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable no-restricted-properties */
 
 import {
   defer as observableDefer,
@@ -48,7 +55,7 @@ export const defaultKSConfig = [{
                        { contentType: "video/mp4;codecs=\"avc1.42e01e\"",
                          robustness: undefined },
                        { contentType: "video/webm;codecs=\"vp8\"",
-                         robustness: undefined} ],
+                         robustness: undefined } ],
 }];
 
 /** Default Widevine MediaKeySystemAccess configuration used by the RxPlayer. */
@@ -73,9 +80,7 @@ export const defaultWidevineConfig = (() => {
               robustness } ];
   });
   return defaultKSConfig.map(conf => {
-    /* tslint:disable ban */
-    return Object.assign({}, conf, { audioCapabilities, videoCapabilities });
-    /* tslint:enable ban */
+    return { ...conf,  audioCapabilities, videoCapabilities };
   });
 })();
 
@@ -105,14 +110,19 @@ export class MediaKeyStatusMapImpl {
     return this._map.has(keyIdAB);
   }
 
-  public forEach(callbackfn: (value: MediaKeyStatus,
-                              key: BufferSource,
-                              parent: MediaKeyStatusMapImpl) => void, thisArg?: any
+  public forEach(
+    callbackfn: (
+      value: MediaKeyStatus,
+      key: BufferSource,
+      parent: MediaKeyStatusMapImpl
+    ) => void,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    thisArg?: any
   ): void {
     this._map.forEach((value, key) => callbackfn.bind(thisArg, value, key, this));
   }
 
-  public __setKeyStatus(keyId : BufferSource, value : MediaKeyStatus | undefined) {
+  public _setKeyStatus(keyId : BufferSource, value : MediaKeyStatus | undefined) : void {
     const keyIdAB = keyId instanceof ArrayBuffer ? keyId :
                                                    keyId.buffer;
     if (value === undefined) {
@@ -143,11 +153,9 @@ export class MediaKeySessionImpl extends EventEmitter<any> {
     this.expiration = Number.MAX_VALUE;
     this.keyStatuses = new MediaKeyStatusMapImpl();
 
-    /* tslint:disable ban */
     this.closed = new Promise((res) => {
       this._close = res;
     });
-    /* tslint:enable ban */
 
     this.onkeystatuseschange = null;
     this.onmessage = null;
@@ -158,15 +166,12 @@ export class MediaKeySessionImpl extends EventEmitter<any> {
     if (this._close !== undefined) {
       this._close();
     }
-    /* tslint:disable ban */
     return Promise.resolve();
-    /* tslint:enable ban */
   }
 
   public generateRequest(initDataType: string, initData: BufferSource) : Promise<void> {
     const msg = formatFakeChallengeFromInitData(initData, initDataType);
     const event : MediaKeyMessageEvent =
-      /* tslint:disable ban */
       Object.assign(new CustomEvent("message"),
                     { message: msg.buffer,
                       messageType: "license-request" as const });
@@ -175,9 +180,7 @@ export class MediaKeySessionImpl extends EventEmitter<any> {
     if (this.onmessage !== null && this.onmessage !== undefined) {
       this.onmessage(event);
     }
-    /* tslint:disable ban */
     return Promise.resolve();
-    /* tslint:enable ban */
   }
 
   public load(_sessionId: string): Promise<boolean> {
@@ -185,22 +188,18 @@ export class MediaKeySessionImpl extends EventEmitter<any> {
   }
 
   public remove(): Promise<void> {
-    /* tslint:disable ban */
     return Promise.resolve();
-    /* tslint:enable ban */
   }
 
   public update(_response: BufferSource): Promise<void> {
-    this.keyStatuses.__setKeyStatus(new Uint8Array([0, 1, 2, this._currentKeyId++]),
-                                    "usable");
+    this.keyStatuses._setKeyStatus(new Uint8Array([0, 1, 2, this._currentKeyId++]),
+                                   "usable");
     const event = new CustomEvent("keystatuseschange");
     this.trigger("keyStatusesChange", event);
     if (this.onkeystatuseschange !== null && this.onkeystatuseschange !== undefined) {
       this.onkeystatuseschange(event);
     }
-    /* tslint:disable ban */
     return Promise.resolve();
-    /* tslint:enable ban */
   }
 }
 
@@ -209,14 +208,12 @@ export class MediaKeySessionImpl extends EventEmitter<any> {
  * @class MediaKeysImpl
  */
 export class MediaKeysImpl {
-  createSession(_sessionType? : MediaKeySessionType) {
+  createSession(_sessionType? : MediaKeySessionType) : MediaKeySessionImpl {
     return new MediaKeySessionImpl();
   }
 
-  setServerCertificate(_serverCertificate : BufferSource) {
-    /* tslint:disable ban */
+  setServerCertificate(_serverCertificate : BufferSource) : Promise<true> {
     return Promise.resolve(true);
-    /* tslint:enable ban */
   }
 }
 
@@ -231,12 +228,10 @@ export class MediaKeySystemAccessImpl {
     this.keySystem = keySystem;
     this._config = config;
   }
-  createMediaKeys() {
-    /* tslint:disable ban */
+  createMediaKeys() : Promise<MediaKeysImpl> {
     return Promise.resolve(new MediaKeysImpl());
-    /* tslint:enable ban */
   }
-  getConfiguration() {
+  getConfiguration() : MediaKeySystemConfiguration[] {
     return this._config;
   }
 }
@@ -244,13 +239,14 @@ export class MediaKeySystemAccessImpl {
 export function requestMediaKeySystemAccessImpl(
   keySystem : string,
   config : MediaKeySystemConfiguration[]
-) {
+) : Observable<MediaKeySystemAccessImpl> {
   return observableOf(new MediaKeySystemAccessImpl(keySystem, config));
 }
 
 /**
  * Mock functions coming from the compat directory.
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function mockCompat(exportedFunctions = {}) {
   const triggerEncrypted = new Subject();
   const triggerKeyMessage = new Subject();
@@ -287,15 +283,12 @@ export function mockCompat(exportedFunctions = {}) {
   });
 
   jest.mock("../../../../compat", () => (
-    /* tslint:disable ban */
-    Object.assign({ events: eventSpies,
-                    requestMediaKeySystemAccess: rmksaSpy,
-                    setMediaKeys: setMediaKeysSpy,
-                    getInitData: getInitDataSpy,
-                    generateKeyRequest: generateKeyRequestSpy },
-                  exportedFunctions))
-    /* tslint:enable ban */
-  );
+    { events: eventSpies,
+      requestMediaKeySystemAccess: rmksaSpy,
+      setMediaKeys: setMediaKeysSpy,
+      getInitData: getInitDataSpy,
+      generateKeyRequest: generateKeyRequestSpy,
+      ...exportedFunctions }));
 
   return { eventSpies,
            eventTriggers: { triggerEncrypted,
@@ -320,7 +313,10 @@ export function mockCompat(exportedFunctions = {}) {
  * @returns {Promise}
  */
 export function testEMEManagerImmediateError(
+  /* eslint-disable @typescript-eslint/naming-convention */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   EMEManager : any,
+  /* eslint-enable @typescript-eslint/naming-convention */
   mediaElement : HTMLMediaElement,
   keySystemsConfigs : unknown[],
   contentProtections$ : Observable<unknown>
@@ -329,7 +325,7 @@ export function testEMEManagerImmediateError(
     EMEManager(mediaElement, keySystemsConfigs, contentProtections$)
       .subscribe(
         (evt : unknown) => {
-           const eventStr = JSON.stringify(evt as any);
+          const eventStr = JSON.stringify(evt as any);
           rej(new Error("Received an EMEManager event: " + eventStr));
         },
         (err : unknown) => { res(err); },

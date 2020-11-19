@@ -25,25 +25,25 @@ describe("DASH - isWEBMEmbeddedTrack", () => {
   it("should return true for any webm-embedded mimeTypes", () => {
     webmEmbeddedMimeTypes.forEach(mimeType => {
       expect(isWEBMEmbeddedTrack({ bitrate: 0,
-                                  id: "1",
-                                  index: {},
-                                  mimeType } as any))
+                                   id: "1",
+                                   index: {},
+                                   mimeType } as any))
         .toBe(true);
     });
   });
 
   it("should return false for no mimeType", () => {
     expect(isWEBMEmbeddedTrack({ bitrate: 0,
-                                id: "1",
-                                index: {} } as any))
+                                 id: "1",
+                                 index: {} } as any))
       .toBe(false);
   });
 
   it("should return false for any other mimeType", () => {
     expect(isWEBMEmbeddedTrack({ bitrate: 0,
-                                id: "1",
-                                index: {},
-                                mimeType: "foo/bar" } as any))
+                                 id: "1",
+                                 index: {},
+                                 mimeType: "foo/bar" } as any))
       .toBe(false);
   });
 });

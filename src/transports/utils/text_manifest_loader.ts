@@ -44,7 +44,7 @@ function regularManifestLoader(
  * @returns {Function}
  */
 export default function generateManifestLoader(
-   { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
+  { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
 ) : (x : IManifestLoaderArguments) => Observable< IManifestLoaderEvent > {
   if (isNullOrUndefined(customManifestLoader)) {
     return regularManifestLoader;

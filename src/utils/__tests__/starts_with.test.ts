@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
+/* eslint-disable no-restricted-properties */
+
 import startsWith from "../starts_with";
 
-/* tslint:disable no-unbound-method */
+/* eslint-disable @typescript-eslint/unbound-method */
 const initialStartsWith = String.prototype.startsWith;
-/* tslint:enable no-unbound-method */
+/* eslint-enable @typescript-eslint/unbound-method */
 
 describe("utils - starts-with", () => {
   beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     (String.prototype as any).startsWith = undefined;
   });
 

@@ -83,12 +83,12 @@ function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
 
   const manualRefresh$ = observableMerge(seeked$, ended$);
   const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
-                         .pipe(startWith(null));
+    .pipe(startWith(null));
 
   return manualRefresh$.pipe(
     startWith(null),
-    switchMapTo(observableConcat(autoRefresh$
-                                   .pipe(mapTo(true), takeUntil(seeking$)),
+    switchMapTo(observableConcat(autoRefresh$.pipe(mapTo(true),
+                                                   takeUntil(seeking$)),
                                  observableOf(false))));
 }
 
@@ -129,9 +129,7 @@ function getElementResolution(
  * HTML element.
  * @class HTMLTextSegmentBuffer
  */
-export default class HTMLTextSegmentBuffer
-                 extends SegmentBuffer<IHTMLTextTrackData>
-{
+export default class HTMLTextSegmentBuffer extends SegmentBuffer<IHTMLTextTrackData> {
   readonly bufferType : "text";
 
   /**
@@ -444,7 +442,7 @@ export default class HTMLTextSegmentBuffer
     const proportionalCues = this._currentCues
       .filter((cue) : cue is { resolution: { rows : number;
                                              columns : number; };
-                                element : HTMLElement; } => cue.resolution !== null);
+                               element : HTMLElement; } => cue.resolution !== null);
 
     if (proportionalCues.length > 0) {
       // update propertionally-sized elements periodically
@@ -457,6 +455,6 @@ export default class HTMLTextSegmentBuffer
             updateProportionalElements(height, width, resolution, element);
           }
         });
-      }
+    }
   }
 }

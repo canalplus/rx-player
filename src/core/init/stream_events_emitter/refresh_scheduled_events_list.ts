@@ -50,7 +50,7 @@ function refreshScheduledEventsList(
                                     id,
                                     data,
                                     publicEvent: { start,
-                                                   data }};
+                                                   data } };
         scheduledEvents.push(newScheduledEvent);
       } else {
         const newScheduledEvent = { start,
@@ -59,7 +59,7 @@ function refreshScheduledEventsList(
                                     data,
                                     publicEvent: { start,
                                                    end,
-                                                   data }};
+                                                   data } };
         scheduledEvents.push(newScheduledEvent);
       }
 

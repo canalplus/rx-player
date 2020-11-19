@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("MediaCapabilitiesProber - getProbedConfiguration", () => {
   it("should return result from filtered configuration", () => {
     const expectedResult = { key: "test" };
@@ -23,10 +30,8 @@ describe("MediaCapabilitiesProber - getProbedConfiguration", () => {
       extend: mockExtend,
       filterConfigurationWithCapabilities: mockFilterConfigurationWithCapabilities,
     }));
-     /* tslint:disable no-unsafe-any */
     const getProbedConfiguration = require("../capabilities").default;
     expect(getProbedConfiguration({}, ["Athos", "Portos", "Aramis"]))
       .toEqual(expectedResult);
-     /* tslint:enable no-unsafe-any */
   });
 });

@@ -26,7 +26,8 @@ interface IWebKitMediaKeysConstructor {
 let WebKitMediaKeysConstructor: undefined|IWebKitMediaKeysConstructor;
 
 if (!isNode) {
-  /* tslint:disable no-unsafe-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   const { WebKitMediaKeys } = (window as any);
 
   if (WebKitMediaKeys !== undefined &&
@@ -35,7 +36,8 @@ if (!isNode) {
       typeof (HTMLMediaElement.prototype as any).webkitSetMediaKeys === "function") {
     WebKitMediaKeysConstructor = WebKitMediaKeys;
   }
-  /* tslint:enable no-unsafe-any */
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }
 
 export {

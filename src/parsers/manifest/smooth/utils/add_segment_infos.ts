@@ -47,7 +47,7 @@ export default function _addSegmentInfos(
 
   const scaledNewSegment = newSegment.timescale === timescale ?
     { time: newSegment.time,
-      duration: newSegment.duration, } :
+      duration: newSegment.duration } :
     { time: (newSegment.time / newSegment.timescale) * timescale,
       duration: (newSegment.duration / newSegment.timescale) * timescale };
 

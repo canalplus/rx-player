@@ -75,12 +75,12 @@ function canPlay(
       return false;
     }),
     take(1),
-    mapTo("can-play" as "can-play")
+    mapTo("can-play" as const)
   );
 
   if (shouldValidateMetadata() && mediaElement.duration === 0) {
     return observableConcat(
-      observableOf("not-loaded-metadata" as "not-loaded-metadata"),
+      observableOf("not-loaded-metadata" as const),
       isLoaded$
     );
   }
@@ -97,13 +97,13 @@ function autoPlay$(
   mediaElement: HTMLMediaElement
 ): Observable<"autoplay"|"autoplay-blocked"> {
   return play$(mediaElement).pipe(
-    mapTo("autoplay" as "autoplay"),
+    mapTo("autoplay" as const),
     catchError((error : unknown) => {
       if (error instanceof Error && error.name === "NotAllowedError") {
         // auto-play was probably prevented.
         log.warn("Init: Media element can't play." +
                  " It may be due to browser auto-play policies.");
-        return observableOf("autoplay-blocked" as "autoplay-blocked");
+        return observableOf("autoplay-blocked" as const);
       } else {
         throw error;
       }
@@ -153,7 +153,7 @@ export default function seekAndLoadOnMediaEvents(
         mergeMap((evt) => {
           if (evt === "can-play") {
             if (!mustAutoPlay) {
-              return observableOf("loaded" as "loaded");
+              return observableOf("loaded" as const);
             }
             return autoPlay$(mediaElement);
           }

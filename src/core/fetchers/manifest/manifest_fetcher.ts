@@ -171,11 +171,7 @@ export default class ManifestFetcher {
     // TODO Remove the resolver completely in the next major version
     const resolver : IManifestResolverFunction =
       this._pipelines.resolver ??
-      // TODO Wrong implem seems to be considered by the linter here.
-      // Is this a tslint bug?
-      /* tslint:disable deprecation */
       observableOf;
-      /* tslint:enable deprecation */
 
     const loader : IManifestLoaderFunction = this._pipelines.loader;
 
@@ -192,10 +188,12 @@ export default class ManifestFetcher {
           map((evt) => {
             return evt.type === "retry" ?
               ({ type: "warning" as const, value: errorSelector(evt.value) }) :
-              ({ type: "response" as const,
-                 parse: (parserOptions : IManifestFetcherParserOptions) => {
-                   return this._parseLoadedManifest(evt.value.value, parserOptions);
-                 } });
+              ({
+                type: "response" as const,
+                parse: (parserOptions : IManifestFetcherParserOptions) => {
+                  return this._parseLoadedManifest(evt.value.value, parserOptions);
+                },
+              });
           }));
       }));
   }
@@ -236,53 +234,53 @@ export default class ManifestFetcher {
     parserOptions : IManifestFetcherParserOptions
   ) : Observable<IManifestFetcherWarningEvent |
                  IManifestFetcherParsedResult> {
-  const { sendingTime, receivedTime } = loaded;
-  const parsingTimeStart = performance.now();
+    const { sendingTime, receivedTime } = loaded;
+    const parsingTimeStart = performance.now();
 
-  // Prepare RequestScheduler
-  // TODO Remove the need of a subject
-  type IRequestSchedulerData = ILoaderDataLoadedValue<string | Document>;
-  const schedulerWarnings$ = new Subject<ICustomError>();
-  const scheduleRequest =
-    createRequestScheduler<IRequestSchedulerData>(this._backoffOptions,
-                                                  schedulerWarnings$);
+    // Prepare RequestScheduler
+    // TODO Remove the need of a subject
+    type IRequestSchedulerData = ILoaderDataLoadedValue<string | Document>;
+    const schedulerWarnings$ = new Subject<ICustomError>();
+    const scheduleRequest =
+      createRequestScheduler<IRequestSchedulerData>(this._backoffOptions,
+                                                    schedulerWarnings$);
 
-  return observableMerge(
-    schedulerWarnings$
-      .pipe(map(err => ({ type: "warning" as const, value: err }))),
-    this._pipelines.parser({ response: loaded,
-                             url: this._manifestUrl,
-                             externalClockOffset: parserOptions.externalClockOffset,
-                             previousManifest: parserOptions.previousManifest,
-                             scheduleRequest,
-                             unsafeMode: parserOptions.unsafeMode,
-    }).pipe(
-      catchError((error: unknown) => {
-        throw formatError(error, {
-          defaultCode: "PIPELINE_PARSE_ERROR",
-          defaultReason: "Unknown error when parsing the Manifest",
-        });
-      }),
-      map((parsingEvt) => {
-        if (parsingEvt.type === "warning") {
-          const formatted = formatError(parsingEvt.value, {
+    return observableMerge(
+      schedulerWarnings$
+        .pipe(map(err => ({ type: "warning" as const, value: err }))),
+      this._pipelines.parser({ response: loaded,
+                               url: this._manifestUrl,
+                               externalClockOffset: parserOptions.externalClockOffset,
+                               previousManifest: parserOptions.previousManifest,
+                               scheduleRequest,
+                               unsafeMode: parserOptions.unsafeMode,
+      }).pipe(
+        catchError((error: unknown) => {
+          throw formatError(error, {
             defaultCode: "PIPELINE_PARSE_ERROR",
             defaultReason: "Unknown error when parsing the Manifest",
           });
-          return { type: "warning" as const,
-                   value: formatted };
-        }
+        }),
+        map((parsingEvt) => {
+          if (parsingEvt.type === "warning") {
+            const formatted = formatError(parsingEvt.value, {
+              defaultCode: "PIPELINE_PARSE_ERROR",
+              defaultReason: "Unknown error when parsing the Manifest",
+            });
+            return { type: "warning" as const,
+                     value: formatted };
+          }
 
-        // 2 - send response
-        const parsingTime = performance.now() - parsingTimeStart;
-        return { type: "parsed" as const,
-                 manifest: parsingEvt.value.manifest,
-                 sendingTime,
-                 receivedTime,
-                 parsingTime };
+          // 2 - send response
+          const parsingTime = performance.now() - parsingTimeStart;
+          return { type: "parsed" as const,
+                   manifest: parsingEvt.value.manifest,
+                   sendingTime,
+                   receivedTime,
+                   parsingTime };
 
-      }),
-      finalize(() => { schedulerWarnings$.complete(); })
-    ));
+        }),
+        finalize(() => { schedulerWarnings$.complete(); })
+      ));
   }
 }

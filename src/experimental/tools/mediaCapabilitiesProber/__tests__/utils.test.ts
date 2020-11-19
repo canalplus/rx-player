@@ -16,11 +16,11 @@
 
 import {
   ICapabilities,
-  IMediaConfiguration
+  IMediaConfiguration,
 } from "../types";
 import {
   extend,
-  filterConfigurationWithCapabilities
+  filterConfigurationWithCapabilities,
 } from "../utils";
 
 describe("MediaCapabilitiesProber utils - extends", () => {

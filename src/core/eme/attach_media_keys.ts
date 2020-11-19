@@ -67,10 +67,10 @@ export default function attachMediaKeys(
     return closeAllSessions$.pipe(
       mergeMap(() => {
         MediaKeysInfosStore.setState(mediaElement,
-                                    { keySystemOptions,
-                                      mediaKeySystemAccess,
-                                      mediaKeys,
-                                      loadedSessionsStore });
+                                     { keySystemOptions,
+                                       mediaKeySystemAccess,
+                                       mediaKeys,
+                                       loadedSessionsStore });
         if (mediaElement.mediaKeys === mediaKeys) {
           return observableOf(null);
         }

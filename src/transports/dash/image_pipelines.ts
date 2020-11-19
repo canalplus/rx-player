@@ -80,8 +80,8 @@ export function imageParser(
                                                               segment.time,
                                        timescale: segment.timescale } :
                                      null,
-                                    chunkOffset,
-                                    appendWindow: [period.start, period.end] } });
+                                   chunkOffset,
+                                   appendWindow: [period.start, period.end] } });
   }
 
   const bifObject = features.imageParser(new Uint8Array(data));

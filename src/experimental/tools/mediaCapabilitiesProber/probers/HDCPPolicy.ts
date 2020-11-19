@@ -71,9 +71,8 @@ export default function probeHDCPPolicy(
             throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
               "getStatusForPolicy API not available");
           }
-          /* tslint:disable no-unsafe-any */
+          // eslint-disable-next-line
           return (mediaKeys as any).getStatusForPolicy(policy)
-          /* tslint:enable no-unsafe-any */
             .then((result: IMediaKeyStatus) => {
               if (result === "usable") {
                 resolve([ProberStatus.Supported]);
@@ -81,8 +80,7 @@ export default function probeHDCPPolicy(
                 resolve([ProberStatus.NotSupported]);
               }
             });
-        })
-        .catch(() => {
+        }).catch(() => {
           resolve([ProberStatus.Unknown]);
         });
       });

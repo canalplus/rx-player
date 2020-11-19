@@ -38,14 +38,15 @@ interface IObservableLike<T> { subscribe(next : (i: T) => void,
 function castToObservable<T>(
   value : Observable<T>|IObservableLike<T>|Promise<T>) : Observable<T>;
 function castToObservable<T>(value? : T) : Observable<T>;
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 function castToObservable<T>(value? : any) : Observable<T> {
   if (value instanceof Observable) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return value;
   }
 
-  /* tslint:disable no-unsafe-any */
+  /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
   if (!isNullOrUndefined(value) && typeof value.subscribe === "function") {
-  /* tslint:enable no-unsafe-any */
     const valObsLike = value as IObservableLike<T>;
     return new Observable((obs) => {
       const sub = valObsLike.subscribe((val : T)   => { obs.next(val); },
@@ -61,12 +62,12 @@ function castToObservable<T>(value? : any) : Observable<T> {
     });
   }
 
-  /* tslint:disable no-unsafe-any */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (!isNullOrUndefined(value) && typeof value.then === "function") {
-  /* tslint:enable no-unsafe-any */
     return observableFrom(value as Promise<T>);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return observableOf(value);
 }
 

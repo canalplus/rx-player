@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("transports utils - checkISOBMFFIntegrity", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -86,9 +92,9 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `moov` box");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should throw an other error if a regular segment is missing a complete moof", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D6F6F66 ? -1 : 45);
     jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
@@ -109,9 +115,9 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `moof` box");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should throw an other error if a regular segment is missing a complete mdat", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D646174 ? -1 : 45);
     jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
@@ -132,4 +138,3 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `mdat` box");
   });
 });
-/* tslint:enable no-unsafe-any */

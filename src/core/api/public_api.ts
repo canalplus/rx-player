@@ -102,7 +102,7 @@ import SegmentBuffersStore, {
   IBufferType,
 } from "../segment_buffers";
 import createClock, {
-  IClockTick
+  IClockTick,
 } from "./clock";
 import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
@@ -126,6 +126,8 @@ import TrackChoiceManager, {
   ITMVideoTrackListItem,
   IVideoTrackPreference,
 } from "./track_choice_manager";
+
+/* eslint-disable @typescript-eslint/naming-convention */
 
 const { DEFAULT_UNMUTED_VOLUME } = config;
 
@@ -465,7 +467,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.22.0";
+    this.version = /* PLAYER_VERSION */"3.22.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -480,9 +482,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /** @deprecated */
     onFullscreenChange$(videoElement)
       .pipe(takeUntil(this._priv_destroy$))
-      /* tslint:disable deprecation */
+      /* eslint-disable import/no-deprecated */
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
-      /* tslint:enable deprecation */
+      /* eslint-enable import/no-deprecated */
 
     /** @deprecated */
     onTextTrackChanges$(videoElement.textTracks)
@@ -687,9 +689,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           throttle: this._priv_throttleWhenHidden ?
             {
               video: isActive().pipe(
-                  map(active => active ? Infinity :
+                map(active => active ? Infinity :
                                          0),
-                  takeUntil(this._priv_stopCurrentContent$)),
+                takeUntil(this._priv_stopCurrentContent$)),
             } :
             {},
           throttleBitrate: this._priv_throttleVideoBitrateWhenHidden ?
@@ -765,18 +767,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         .setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
 
       this.trigger("availableAudioTracksChange",
-        this._priv_mediaElementTrackChoiceManager.getAvailableAudioTracks());
+                   this._priv_mediaElementTrackChoiceManager.getAvailableAudioTracks());
       this.trigger("availableVideoTracksChange",
-        this._priv_mediaElementTrackChoiceManager.getAvailableVideoTracks());
+                   this._priv_mediaElementTrackChoiceManager.getAvailableVideoTracks());
       this.trigger("availableTextTracksChange",
-        this._priv_mediaElementTrackChoiceManager.getAvailableTextTracks());
+                   this._priv_mediaElementTrackChoiceManager.getAvailableTextTracks());
 
       this.trigger("audioTrackChange",
-        this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack() ?? null);
+                   this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack()
+                   ?? null);
       this.trigger("textTrackChange",
-        this._priv_mediaElementTrackChoiceManager.getChosenTextTrack() ?? null);
+                   this._priv_mediaElementTrackChoiceManager.getChosenTextTrack()
+                   ?? null);
       this.trigger("videoTrackChange",
-        this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack() ?? null);
+                   this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack()
+                   ?? null);
 
       this._priv_mediaElementTrackChoiceManager
         .addEventListener("availableVideoTracksChange", (val) =>
@@ -806,7 +811,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                              speed$: this._priv_speed$,
                                              startAt,
                                              url })
-        .pipe(takeUntil(contentIsStopped$));
+          .pipe(takeUntil(contentIsStopped$));
 
       playback$ = publish<IInitEvent>()(directfileInit$);
     }
@@ -828,8 +833,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       .pipe(filter((evt) : evt is IReloadingMediaSourceEvent =>
         evt.type === "reloading-media-source"
       ),
-      share()
-    );
+            share());
 
     /** Emit when the media element emits an "ended" event. */
     const endedEvent$ = onEnded$(videoElement);
@@ -1298,9 +1302,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const playPromise = this.videoElement.play();
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     if (isNullOrUndefined(playPromise) || typeof playPromise.catch !== "function") {
-    /* tslint:enable no-unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
       return PPromise.resolve();
     }
     return playPromise.catch((error: Error) => {
@@ -1920,9 +1924,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return null;
     }
-    /* tslint:disable deprecation */
+    /* eslint-disable import/no-deprecated */
     return this._priv_contentInfos.thumbnails;
-    /* tslint:enable deprecation */
+    /* eslint-enable import/no-deprecated */
   }
 
   /**
@@ -1984,7 +1988,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return null;
     }
     const segmentBufferStatus = this._priv_contentInfos
-                                 .segmentBuffersStore.getStatus(bufferType);
+      .segmentBuffersStore.getStatus(bufferType);
     return segmentBufferStatus.type === "initialized" ?
       segmentBufferStatus.value.getInventory() :
       null;
@@ -2097,11 +2101,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               (segmentData as { type : string }).type === "bif")
           {
             const imageData = (segmentData as { data : IBifThumbnail[] }).data;
-            /* tslint:disable deprecation */
+            /* eslint-disable import/no-deprecated */
             this._priv_contentInfos.thumbnails = imageData;
             this.trigger("imageTrackUpdate",
                          { data: this._priv_contentInfos.thumbnails });
-            /* tslint:enable deprecation */
+            /* eslint-enable import/no-deprecated */
           }
         }
     }
@@ -2629,7 +2633,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return activeRepresentations[currentPeriod.id];
   }
 }
-Player.version = /*PLAYER_VERSION*/"3.22.0";
+Player.version = /* PLAYER_VERSION */"3.22.0";
 
 export default Player;
 export { IStreamEventData };

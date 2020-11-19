@@ -17,9 +17,9 @@
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 
 describe("DASH parsers - ManifestBoundsCalculator", () => {
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return undefined through `getMinimumBound` if the live edge was never set for a dynamic content with a timeShiftBufferDepth", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
       timeShiftBufferDepth: 5,
@@ -29,9 +29,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     expect(manifestBoundsCalculator.getMinimumBound()).toEqual(undefined);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return 0 through `getMinimumBound` if the live edge was never set for a static content", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: false,
       timeShiftBufferDepth: 5,
@@ -41,9 +41,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return 0 through `getMinimumBound` if the live edge was never set for a dynamic content with no timeShiftBufferDepth", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: false,
     });
@@ -52,9 +52,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return `false` through `lastPositionIsKnown` if `setLastPositionOffset` was never called", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
       timeShiftBufferDepth: 5,
@@ -64,9 +64,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     expect(manifestBoundsCalculator.lastPositionIsKnown()).toEqual(false);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return `true` through `lastPositionIsKnown` if `setLastPositionOffset` was called for a dynamic content", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
       timeShiftBufferDepth: 5,
@@ -75,9 +75,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     expect(manifestBoundsCalculator.lastPositionIsKnown()).toEqual(true);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return `true` through `lastPositionIsKnown` if `setLastPositionOffset` was called for a non dynamic content", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: false,
       timeShiftBufferDepth: 5,
@@ -86,9 +86,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     expect(manifestBoundsCalculator.lastPositionIsKnown()).toEqual(true);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return how much time has elapsed through `getMinimumBound` since the live edge was set for a dynamic content", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     let date = 5000;
     const performanceSpy = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
@@ -104,9 +104,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     performanceSpy.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return 0 even when a last position has been set for a static content", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     let date = 5000;
     const performanceSpy = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
@@ -122,9 +122,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     performanceSpy.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should authorize and handle multiple `setLastPositionOffset` calls for dynamic contents", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     let date = 5000;
     const performanceSpy = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));

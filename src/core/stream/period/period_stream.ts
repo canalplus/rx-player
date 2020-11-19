@@ -181,8 +181,8 @@ export default function PeriodStream({
 
           const cleanBuffer$ = strategy.type === "clean-buffer" ?
             observableConcat(...strategy.value.map(({ start, end }) =>
-                               segmentBuffer.removeBuffer(start, end))
-                            ).pipe(ignoreElements()) : EMPTY;
+              segmentBuffer.removeBuffer(start, end))
+            ).pipe(ignoreElements()) : EMPTY;
 
           const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
           const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
@@ -225,27 +225,27 @@ export default function PeriodStream({
                               options,
                               segmentBuffer,
                               segmentFetcherCreator,
-                              wantedBufferAhead$ })
-    .pipe(catchError((error : unknown) => {
-      // Stream linked to a non-native media buffer should not impact the
-      // stability of the player. ie: if a text buffer sends an error, we want
-      // to continue playing without any subtitles
-      if (!SegmentBuffersStore.isNative(bufferType)) {
-        log.error(`Stream: ${bufferType} Stream crashed. Aborting it.`, error);
-        segmentBuffersStore.disposeSegmentBuffer(bufferType);
+                              wantedBufferAhead$ }).pipe(
+      catchError((error : unknown) => {
+        // Stream linked to a non-native media buffer should not impact the
+        // stability of the player. ie: if a text buffer sends an error, we want
+        // to continue playing without any subtitles
+        if (!SegmentBuffersStore.isNative(bufferType)) {
+          log.error(`Stream: ${bufferType} Stream crashed. Aborting it.`, error);
+          segmentBuffersStore.disposeSegmentBuffer(bufferType);
 
-        const formattedError = formatError(error, {
-          defaultCode: "NONE",
-          defaultReason: "Unknown `AdaptationStream` error",
-        });
-        return observableConcat<IAdaptationStreamEvent<T>|IStreamWarningEvent>(
-          observableOf(EVENTS.warning(formattedError)),
-          createEmptyStream(clock$, wantedBufferAhead$, bufferType, { period })
-        );
-      }
-      log.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`, error);
-      throw error;
-    }));
+          const formattedError = formatError(error, {
+            defaultCode: "NONE",
+            defaultReason: "Unknown `AdaptationStream` error",
+          });
+          return observableConcat<IAdaptationStreamEvent<T>|IStreamWarningEvent>(
+            observableOf(EVENTS.warning(formattedError)),
+            createEmptyStream(clock$, wantedBufferAhead$, bufferType, { period })
+          );
+        }
+        log.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`, error);
+        throw error;
+      }));
   }
 }
 
@@ -263,10 +263,12 @@ function createOrReuseSegmentBuffer<T>(
   const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
   if (segmentBufferStatus.type === "initialized") {
     log.info("Stream: Reusing a previous SegmentBuffer for the type", bufferType);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return segmentBufferStatus.value;
   }
   const codec = getFirstDeclaredMimeType(adaptation);
   const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return segmentBuffersStore.createSegmentBuffer(bufferType, codec, sbOptions);
 }
 

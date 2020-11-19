@@ -26,6 +26,7 @@ import tryCatch from "../rx-try_catch";
 describe("utils - tryCatch (RxJS)", () => {
   it("should return a throwing observable if the function throws", (done) => {
     function func() : Observable<never> {
+      // eslint-disable-next-line no-throw-literal
       throw 4;
     }
 
@@ -47,9 +48,9 @@ describe("utils - tryCatch (RxJS)", () => {
     tryCatch(func, 4).subscribe({ error() { done(); } });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should emit when the returned Observable emits and complete when it completes", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     function func() {
       return observableOf(1, 2, 3);
     }

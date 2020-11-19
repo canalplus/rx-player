@@ -26,14 +26,16 @@ interface IMinimalAudioTrackObject { language: string;
 interface IMinimalTextTrackObject { language: string;
                                     closedCaption?: boolean; }
 
-interface INormalizedAudioTrackObject
-          extends IMinimalAudioTrackObject { normalized: string;
-                                             isDub? : boolean;
-                                             audioDescription : boolean; }
+interface INormalizedAudioTrackObject extends IMinimalAudioTrackObject {
+  normalized: string;
+  isDub? : boolean;
+  audioDescription : boolean;
+}
 
-interface INormalizedTextTrackObject
-          extends IMinimalTextTrackObject { normalized: string;
-                                            closedCaption : boolean; }
+interface INormalizedTextTrackObject extends IMinimalTextTrackObject {
+  normalized: string;
+  closedCaption : boolean;
+}
 /**
  * Normalize language given.
  * Basically:

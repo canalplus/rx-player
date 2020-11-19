@@ -69,9 +69,9 @@ describe("parsers utils - getFirstPositionFromAdaptation", function() {
       .toEqual(null);
   });
 
-  /* tslint:disable max-line-length*/
+  /* eslint-disable max-len */
   it("should return the maximum first position if many representations is present", () => {
-  /* tslint:enable max-line-length*/
+  /* eslint-enable max-len */
     const representation1 = { id: "1",
                               bitrate: 12,
                               index: generateRepresentationIndex(37) };

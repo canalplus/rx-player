@@ -162,14 +162,14 @@ function streamEventsEmitter(manifest: Manifest,
         interval(STREAM_EVENT_EMITTER_POLL_INTERVAL).pipe(startWith(null)),
         clock$,
       ]).pipe(
-          map(([_, clockTick]) => {
-            const { seeking } = clockTick;
-            return { isSeeking: seeking,
-                     currentTime: mediaElement.currentTime };
-          }),
-          pairwise(),
-          mergeMap(([oldTick, newTick]) =>
-            emitStreamEvents$(lastScheduledEvents, oldTick, newTick))
+        map(([_, clockTick]) => {
+          const { seeking } = clockTick;
+          return { isSeeking: seeking,
+                   currentTime: mediaElement.currentTime };
+        }),
+        pairwise(),
+        mergeMap(([oldTick, newTick]) =>
+          emitStreamEvents$(lastScheduledEvents, oldTick, newTick))
       );
     })
   );

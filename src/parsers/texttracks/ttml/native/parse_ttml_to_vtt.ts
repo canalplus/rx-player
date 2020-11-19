@@ -39,7 +39,7 @@ import {
   getStyleNodes,
   getTextNodes,
 } from "../nodes";
-import { REGXP_PERCENT_VALUES, } from "../regexps";
+import { REGXP_PERCENT_VALUES } from "../regexps";
 import resolveStylesInheritance from "../resolve_styles_inheritance";
 
 /**
@@ -155,15 +155,19 @@ function parseTTMLStringToVTT(
       const paragraph = paragraphNodes[i];
       if (paragraph instanceof Element) {
         const divs = getParentElementsByTagName(paragraph , "div");
-        const paragraphStyle = objectAssign({}, bodyStyle,
-          getStylingAttributes(
-            WANTED_STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
-        );
+        const paragraphStyle =
+          objectAssign({},
+                       bodyStyle,
+                       getStylingAttributes(WANTED_STYLE_ATTRIBUTES,
+                                            [paragraph, ...divs],
+                                            styles,
+                                            regions));
 
         const paragraphSpaceAttribute = paragraph.getAttribute("xml:space");
         const shouldTrimWhiteSpaceOnParagraph =
-          isNonEmptyString(paragraphSpaceAttribute) ? paragraphSpaceAttribute === "default" :
-                                                      shouldTrimWhiteSpaceOnBody;
+          isNonEmptyString(paragraphSpaceAttribute) ?
+            paragraphSpaceAttribute === "default" :
+            shouldTrimWhiteSpaceOnBody;
 
         const cue = parseCue(paragraph,
                              timeOffset,

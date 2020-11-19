@@ -36,7 +36,7 @@ function extractISML(doc : Document) : string|null {
  * @returns {string}
  */
 function extractToken(url : string) : string {
-  const tokenMatch = url.match(TOKEN_REG);
+  const tokenMatch = TOKEN_REG.exec(url);
   if (tokenMatch !== null) {
     const match = tokenMatch[1];
     if (match !== undefined) {

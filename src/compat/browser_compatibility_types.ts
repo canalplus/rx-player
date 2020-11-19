@@ -158,13 +158,15 @@ export interface ICompatPictureInPictureWindow
   extends EventTarget { width: number;
                         height: number; }
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 /**
  * Shortcut to the global browser object `window`. Set to an empty object in
  * non-browser platforms
  */
 const win = isNode ? {} :
                      window as any;
-/* tslint:disable no-unsafe-any */
 
 /** Browser implementation of an HTMLElement. */
 const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
@@ -173,23 +175,20 @@ const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
 const VTTCue_ : ICompatVTTCueConstructor | undefined =
   !isNullOrUndefined(win.VTTCue) ? win.VTTCue :
                                    win.TextTrackCue;
-/* tslint:enable no-unsafe-any */
 
-/* tslint:disable no-unsafe-any */
 /** MediaSource implementation, including vendored implementations. */
 const MediaSource_ : typeof MediaSource | undefined =
   !isNullOrUndefined(win.MediaSource)       ? win.MediaSource :
   !isNullOrUndefined(win.MozMediaSource)    ? win.MozMediaSource :
   !isNullOrUndefined(win.WebKitMediaSource) ? win.WebKitMediaSource :
                                               win.MSMediaSource;
-/* tslint:enable no-unsafe-any */
 
 /**
  * MediaKeys implementation, including vendored implementations and a fallback
  * one which will throw when calling one of its methods.
  */
 const MediaKeys_ : ICompatMediaKeysConstructor = (() => {
-  /* tslint:disable no-unsafe-any */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return !isNullOrUndefined(win.MediaKeys)    ? win.MediaKeys :
          !isNullOrUndefined(win.MozMediaKeys) ? win.MozMediaKeys :
 
@@ -200,19 +199,21 @@ const MediaKeys_ : ICompatMediaKeysConstructor = (() => {
            public readonly createSession : () => never;
            public readonly setServerCertificate : () => never;
            constructor() {
-            const noMediaKeys = () => {
-              throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
-                                   "No `MediaKeys` implementation found " +
-                                   "in the current browser.");
-            };
+             const noMediaKeys = () => {
+               throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
+                                    "No `MediaKeys` implementation found " +
+                                    "in the current browser.");
+             };
              this.create = noMediaKeys;
              this.createSession = noMediaKeys;
              this.isTypeSupported = noMediaKeys;
              this.setServerCertificate = noMediaKeys;
            }
          };
-  /* tslint:enable no-unsafe-any */
 })();
+
+/* eslint-enable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 /** List an HTMLMediaElement's possible values for its readyState property. */
 const READY_STATES = { HAVE_NOTHING: 0,

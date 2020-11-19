@@ -153,13 +153,16 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
         span.appendChild(spanChild);
       } else if (
         currentNode.nodeName === "FONT" &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (currentNode as any).color != null
       ) {
         // TODO loop through attributes to find color?
+        /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
         const spanChild = _loop(currentNode);
-        /* tslint:disable no-unsafe-any */
         spanChild.style.color = (currentNode as any).color;
-        /* tslint:enable no-unsafe-any */
+        /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         span.appendChild(spanChild);
       } else {
         const spanChild = _loop(currentNode);

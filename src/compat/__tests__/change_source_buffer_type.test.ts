@@ -17,11 +17,10 @@
 import log from "../../log";
 import tryToChangeSourceBufferType from "../change_source_buffer_type";
 
-/* tslint:disable no-unsafe-any */
 describe("Compat - tryToChangeSourceBufferType", () => {
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should just return false if the SourceBuffer provided does not have a changeType method", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     const spy = jest.spyOn(log, "warn");
     const fakeSourceBuffer : any = {};
@@ -30,9 +29,9 @@ describe("Compat - tryToChangeSourceBufferType", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return true if the SourceBuffer provided does have a changeType method and the API returned normally", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     const spy = jest.spyOn(log, "warn");
     const changeTypeFn = jest.fn();
@@ -42,9 +41,9 @@ describe("Compat - tryToChangeSourceBufferType", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return false and warn if the SourceBuffer provided does have a changeType method and the API threw", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     const spy = jest.spyOn(log, "warn");
     const err = new Error("bar");
@@ -59,4 +58,3 @@ describe("Compat - tryToChangeSourceBufferType", () => {
     );
   });
 });
-/* tslint:enable no-unsafe-any */

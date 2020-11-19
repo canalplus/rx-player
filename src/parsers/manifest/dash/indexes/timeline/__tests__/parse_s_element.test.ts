@@ -20,9 +20,9 @@ import parseS from "../parse_s_element";
 function testNumberAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an S element with a correct ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<S ${attributeName}="012" />`, "text/xml")
@@ -46,9 +46,9 @@ function testNumberAttribute(attributeName : string, variableName? : string) : v
     spyLog.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an S element with an incorrect ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<S ${attributeName}="toto" />`, "text/xml")

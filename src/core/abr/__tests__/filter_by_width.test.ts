@@ -53,7 +53,7 @@ describe("ABR - filterByWidth", () => {
 
     it("should return no representation when specified array is empty", () => {
       expect(filterByWidth([], 0))
-      .toEqual([]);
+        .toEqual([]);
     });
   });
 

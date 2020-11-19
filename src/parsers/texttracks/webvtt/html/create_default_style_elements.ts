@@ -1,4 +1,3 @@
-/* tslint:disable file-header */
 import { IStyleElements } from "./parse_style_block";
 
 /**

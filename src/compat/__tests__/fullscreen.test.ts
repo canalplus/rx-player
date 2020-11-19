@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("compat - isFullScreen", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -246,7 +252,7 @@ describe("compat - exitFullScreen", () => {
     (document as any).msExitFullscreen = undefined;
     (document as any).mozCancelFullScreen = undefined;
     (document as any).webkitExitFullscreen = jest.fn(() =>
-    (document as any).webkitFullscreenElement = undefined);
+      (document as any).webkitFullscreenElement = undefined);
 
     const { exitFullscreen } = require("../fullscreen");
 
@@ -263,4 +269,3 @@ describe("compat - exitFullScreen", () => {
     (document as any).webkitExitFullscreen = origwebkitExitFullscreen;
   });
 });
-/* tslint:enable no-unsafe-any */

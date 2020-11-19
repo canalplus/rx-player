@@ -60,8 +60,7 @@ const STYLE_ATTRIBUTES = [ "backgroundColor",
 
                            // Not managed anywhere for now
                            // "showBackground",
-                           // "zIndex",
-                           ];
+                           /* "zIndex", */ ];
 
 /**
  * Apply a default style to TTML cue if no style has been already
@@ -94,8 +93,7 @@ function applyDefaultTTMLCSSStyle(cue: ITTMLHTMLCue): void {
   const { style: cueStyle } = element;
   const { childNodes: paragraphNodes } = element;
   const mainParagraphNode = paragraphNodes[0] as HTMLElement;
-  if (// cue region dimensions
-      cueStyle.width === "" &&
+  if (cueStyle.width === "" && // cue region dimensions
       cueStyle.height === "" &&
       // cue region position
       cueStyle.position === "" &&

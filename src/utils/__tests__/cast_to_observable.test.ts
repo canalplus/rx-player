@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 import {
   Observable,
   Subject,
@@ -72,9 +74,9 @@ describe("utils - castToObservable", () => {
     reject(errorItem);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should translate Observable implementation not from RxJS into RxJS Observables", (done) => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 
     const sub1 = new Subject<number>();
     const sub2 = new Subject<number>();
@@ -132,9 +134,9 @@ describe("utils - castToObservable", () => {
     sub1.error(new Error("ffob"));
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should call dispose on unsubscription if the Observable implementation has a dispose function", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 
     let disposeHasBeenCalled = 0;
     const myObs = {
@@ -164,9 +166,9 @@ describe("utils - castToObservable", () => {
     expect(disposeHasBeenCalled).toBe(1);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should call unsubscribe on unsubscription if the Observable implementation has an unsubscribe function", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 
     let disposeHasBeenCalled = 0;
     const myObs = {

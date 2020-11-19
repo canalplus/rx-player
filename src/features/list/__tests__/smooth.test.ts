@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import SmoothFeature from "../../../transports/smooth";
 import addSmoothFeature from "../smooth";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../transports/smooth", () => ({
   __esModule: true as const,
   default: jest.fn(),
@@ -31,4 +32,3 @@ describe("Features list - Smooth", () => {
     expect(featureObject.transports.smooth).toBe(SmoothFeature);
   });
 });
-/* tslint:enable no-unsafe-any */

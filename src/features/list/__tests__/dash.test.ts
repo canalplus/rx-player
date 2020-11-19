@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import DASHFeature from "../../../transports/dash";
 import addDASHFeature from "../dash";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../transports/dash", () => ({
   __esModule: true as const,
   default: jest.fn(),
@@ -31,4 +32,3 @@ describe("Features list - DASH", () => {
     expect(featureObject.transports.dash).toBe(DASHFeature);
   });
 });
-/* tslint:enable no-unsafe-any */

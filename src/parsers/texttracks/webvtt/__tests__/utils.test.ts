@@ -217,16 +217,16 @@ describe("parsers - webvtt - utils", () => {
       expect(isStartOfNoteBlock(["", "NOTE ", "TOTO"], 1)).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return true if called on line containing `NOTE` and spaces and text", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isStartOfNoteBlock(webvtt1, 9)).toBe(true);
       expect(isStartOfNoteBlock(webvtt1, 19)).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return false if called on a line containing `NOTE` and text attached", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isStartOfNoteBlock(["NOTEdsj f"], 0)).toBe(false);
       expect(isStartOfNoteBlock(["aaa", "NOTEoej ewj ", "aaa"], 1)).toBe(false);
     });
@@ -259,17 +259,17 @@ describe("parsers - webvtt - utils", () => {
       expect(isStartOfRegionBlock(["REGION         "], 0)).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return true if called on line containing `REGION` and spaces and text", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isStartOfRegionBlock(["REGION dsj f"], 0)).toBe(true);
       expect(isStartOfRegionBlock(["REGION   oej ewj "], 0)).toBe(true);
       expect(isStartOfRegionBlock(["REGION         eowj pogj qpeoj"], 0)).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return false if called on a line containing `REGION` and text attached", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isStartOfRegionBlock(["REGIONdsj f"], 0)).toBe(false);
       expect(isStartOfRegionBlock(["REGIONoej ewj "], 0)).toBe(false);
       expect(isStartOfRegionBlock(["REGIONeowj pogj qpeoj"], 0)).toBe(false);
@@ -310,17 +310,17 @@ describe("parsers - webvtt - utils", () => {
       expect(isStartOfStyleBlock(["STYLE         "], 0)).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return true if called on line containing `STYLE` and spaces and text", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isStartOfStyleBlock(["STYLE dsj f"], 0)).toBe(true);
       expect(isStartOfStyleBlock(["STYLE   oej ewj "], 0)).toBe(true);
       expect(isStartOfStyleBlock(["STYLE         eowj pogj qpeoj"], 0)).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return false if called on a line containing `STYLE` and text attached", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isStartOfStyleBlock(["STYLEdsj f"], 0)).toBe(false);
       expect(isStartOfStyleBlock(["STYLEoej ewj "], 0)).toBe(false);
       expect(isStartOfStyleBlock(["STYLEeowj pogj qpeoj"], 0)).toBe(false);

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import bifParser from "../../../parsers/images/bif";
 import addBIFParserFeature from "../bif_parser";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/images/bif", () => ({
   __esModule: true as const,
   default: jest.fn(),
@@ -31,4 +32,3 @@ describe("Features list - BIF Parser", () => {
     expect(featureObject.imageParser).toBe(bifParser);
   });
 });
-/* tslint:enable no-unsafe-any */

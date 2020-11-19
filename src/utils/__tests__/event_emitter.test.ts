@@ -46,7 +46,8 @@ describe("utils - EventEmitter", () => {
     }>();
     let wasCalledWithString = 0;
     let wasCalledWithObject = 0;
-    eventEmitter.addEventListener("something",
+    eventEmitter.addEventListener(
+      "something",
       (payload : undefined|"a"|{ a: string }) => {
         if (payload === "a") {
           wasCalledWithString++;
@@ -273,9 +274,9 @@ describe("utils - EventEmitter", () => {
     eventEmitter.removeEventListener();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should remove every callback for an event if no callback is provided to removeEventListener", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const eventEmitter = new EventEmitter<{
       something: undefined|"a"|{ a: string };
       nope: undefined|"a"|{ a: string };
@@ -401,9 +402,9 @@ describe("utils - EventEmitter", () => {
     eventEmitter.removeEventListener();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should remove every callback for any event if no callback and no event is provided to removeEventListener", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const eventEmitter = new EventEmitter<{
       something: undefined|"a"|{ a: string };
       nope: undefined|"a"|{ a: string };

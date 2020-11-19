@@ -45,7 +45,7 @@ function getUpdatingSourceBuffers(sourceBuffers : SourceBufferList) : SourceBuff
   for (let i = 0; i < sourceBuffers.length; i++) {
     const SourceBuffer = sourceBuffers[i];
     if (SourceBuffer.updating) {
-        updatingSourceBuffers.push(SourceBuffer);
+      updatingSourceBuffers.push(SourceBuffer);
     }
   }
   return updatingSourceBuffers;

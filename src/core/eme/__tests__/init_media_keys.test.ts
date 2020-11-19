@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import {
   isObservable,
   of as observableOf,
@@ -21,7 +28,6 @@ import {
 } from "rxjs";
 import { skip, take, tap } from "rxjs/operators";
 
-/* tslint:disable no-unsafe-any */
 describe("core - eme - initMediaKeys", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -201,6 +207,5 @@ describe("core - eme - initMediaKeys", () => {
 
         done();
       });
- });
+  });
 });
-/* tslint:enable no-unsafe-any */

@@ -16,8 +16,8 @@
 
 import config from "../../../../../config";
 import {
- ICustomError,
- NetworkError,
+  ICustomError,
+  NetworkError,
 } from "../../../../../errors";
 import log from "../../../../../log";
 import {
@@ -39,6 +39,7 @@ import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
 import { createIndexURLs } from "../tokens";
 import constructTimelineFromElements from "./construct_timeline_from_elements";
+// eslint-disable-next-line max-len
 import constructTimelineFromPreviousTimeline from "./construct_timeline_from_previous_timeline";
 
 const { MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY } = config;
@@ -280,9 +281,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                       undefined :
                       {
                         mediaURLs: createIndexURLs(representationBaseURLs,
-                                                  index.initialization.media,
-                                                  representationId,
-                                                  representationBitrate),
+                                                   index.initialization.media,
+                                                   representationId,
+                                                   representationBitrate),
                         range: index.initialization.range,
                       },
                     mediaURLs: createIndexURLs(representationBaseURLs,

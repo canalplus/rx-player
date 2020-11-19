@@ -19,19 +19,20 @@ import {
   Representation,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
+// eslint-disable-next-line max-len
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import {
   BaseRepresentationIndex,
   ListRepresentationIndex,
   TemplateRepresentationIndex,
-  TimelineRepresentationIndex
+  TimelineRepresentationIndex,
 } from "./indexes";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
-  IAdaptationSetIntermediateRepresentation
+  IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
 import {
-  IRepresentationIntermediateRepresentation
+  IRepresentationIntermediateRepresentation,
 } from "./node_parsers/Representation";
 import { IParsedSegmentTemplate } from "./node_parsers/SegmentTemplate";
 import resolveBaseURLs from "./resolve_base_urls";

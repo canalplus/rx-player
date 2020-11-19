@@ -103,10 +103,7 @@ function isPSSHAlreadyEncountered(
  */
 export default function getInitData(
   encryptedEvent : MediaEncryptedEvent
-) : {
-  initData : Uint8Array|null;
-  initDataType : string|undefined;
-} {
+) : { initData : Uint8Array|null; initDataType : string|undefined } {
   const { initData, initDataType } = encryptedEvent;
   if (initData == null) {
     log.warn("Compat: No init data found on media encrypted event.");

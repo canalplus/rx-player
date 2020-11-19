@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import {
   EMPTY,
+  Observable,
   of as observableOf,
   Subject,
   throwError as observableThrow,
 } from "rxjs";
 import { takeUntil } from "rxjs/operators";
+import { ICustomMediaKeySystemAccess } from "../../../../compat";
 import {
   defaultKSConfig,
   defaultWidevineConfig,
@@ -33,16 +40,20 @@ import {
 export function requestMediaKeySystemAccessNoMediaKeys(
   keySystem : string,
   config : MediaKeySystemConfiguration[]
-) {
+) : Observable<ICustomMediaKeySystemAccess> {
+  if (config.length === 0) {
+    throw new Error("requestMediaKeySystemAccessNoMediaKeys: no config given");
+  }
   return observableOf({
     keySystem,
-    getConfiguration() { return config; },
+    getConfiguration() { return config[0]; },
     createMediaKeys() { return new Promise(() => { /* noop */ }); },
   });
 }
 
 const incompatibleMKSAErrorMessage =
-  "EncryptedMediaError (INCOMPATIBLE_KEYSYSTEMS) No key system compatible with your wanted configuration has been found in the current browser.";
+  "EncryptedMediaError (INCOMPATIBLE_KEYSYSTEMS) No key system compatible " +
+  "with your wanted configuration has been found in the current browser.";
 
 /**
  * Check that the given `keySystemsConfigs` lead directly to an
@@ -66,7 +77,6 @@ async function checkIncompatibleKeySystemsErrorMessage(
   expect(error.code).toEqual("INCOMPATIBLE_KEYSYSTEMS");
 }
 
-/* tslint:disable no-unsafe-any */
 describe("core - eme - global tests - media key system access", () => {
   // Used to implement every functions that should never be called.
   const neverCalledFn = jest.fn();
@@ -113,9 +123,9 @@ describe("core - eme - global tests - media key system access", () => {
       .toHaveBeenNthCalledWith(3, "baz", defaultKSConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should throw an error if no implementation of requestMediaKeySystemAccess is set", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     mockCompat({ requestMediaKeySystemAccess: undefined });
     const mediaElement = document.createElement("video");
     const EMEManager = require("../../eme_manager").default;
@@ -139,9 +149,9 @@ describe("core - eme - global tests - media key system access", () => {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledWith("foo", defaultKSConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should change persistentState value if persistentStateRequired is set to true", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const requestMediaKeySystemAccessSpy = jest.fn(() => observableThrow("nope"));
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
     await checkIncompatibleKeySystemsErrorMessage([{ type: "foo",
@@ -150,16 +160,14 @@ describe("core - eme - global tests - media key system access", () => {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
 
     const expectedConfig = defaultKSConfig.map(conf => {
-      /* tslint:disable ban */
-      return Object.assign({}, conf, { persistentState: "required" });
-      /* tslint:enable ban */
+      return { ...conf, persistentState: "required" };
     });
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledWith("foo", expectedConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should not change persistentState value if persistentStateRequired is set to false", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const requestMediaKeySystemAccessSpy = jest.fn(() => observableThrow("nope"));
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
     await checkIncompatibleKeySystemsErrorMessage([{ type: "foo",
@@ -169,9 +177,9 @@ describe("core - eme - global tests - media key system access", () => {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledWith("foo", defaultKSConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should change distinctiveIdentifier value if distinctiveIdentifierRequired is set to true", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const requestMediaKeySystemAccessSpy = jest.fn(() => observableThrow("nope"));
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
     await checkIncompatibleKeySystemsErrorMessage([{
@@ -182,16 +190,14 @@ describe("core - eme - global tests - media key system access", () => {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
 
     const expectedConfig = defaultKSConfig.map(conf => {
-      /* tslint:disable ban */
-      return Object.assign({}, conf, { distinctiveIdentifier: "required" });
-      /* tslint:enable ban */
+      return { ...conf, distinctiveIdentifier: "required" };
     });
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledWith("foo", expectedConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should not change distinctiveIdentifier value if distinctiveIdentifierRequired is set to false", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const requestMediaKeySystemAccessSpy = jest.fn(() => observableThrow("nope"));
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
     await checkIncompatibleKeySystemsErrorMessage([{
@@ -215,9 +221,9 @@ describe("core - eme - global tests - media key system access", () => {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledWith("foo", defaultKSConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should want persistent sessions if both persistentLicense and licenseStorage are set", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const requestMediaKeySystemAccessSpy = jest.fn(() => observableThrow("nope"));
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
     const licenseStorage = { save() { throw new Error("Should not save."); },
@@ -229,18 +235,17 @@ describe("core - eme - global tests - media key system access", () => {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
 
     const expectedConfig = defaultKSConfig.map(conf => {
-      /* tslint:disable ban */
-      return Object.assign({}, conf, { persistentState: "required",
-                                       sessionTypes: ["temporary",
-                                                      "persistent-license"] });
-      /* tslint:enable ban */
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary",
+                              "persistent-license"] };
     });
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledWith("foo", expectedConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should want persistent sessions if just persistentLicense is set to true", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const requestMediaKeySystemAccessSpy = jest.fn(() => observableThrow("nope"));
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
     await checkIncompatibleKeySystemsErrorMessage([{ type: "foo",
@@ -249,11 +254,9 @@ describe("core - eme - global tests - media key system access", () => {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
 
     const expectedConfig = defaultKSConfig.map(conf => {
-      /* tslint:disable ban */
-      return Object.assign({}, conf, { persistentState: "required",
-                                       sessionTypes: ["temporary",
-                                                      "persistent-license"] });
-      /* tslint:enable ban */
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary", "persistent-license"] };
     });
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledWith("foo", expectedConfig);
   });
@@ -334,9 +337,9 @@ describe("core - eme - global tests - media key system access", () => {
       .toHaveBeenNthCalledWith(5, "org.w3.clearkey", defaultKSConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should translate a multiple keySystems at the same time with different configs", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const requestMediaKeySystemAccessSpy = jest.fn(() => observableThrow("nope"));
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
     await checkIncompatibleKeySystemsErrorMessage([{ type: "playready",
@@ -346,16 +349,13 @@ describe("core - eme - global tests - media key system access", () => {
                                                      distinctiveIdentifierRequired: true,
                                                      getLicense: neverCalledFn }]);
     const expectedPersistentConfig = defaultKSConfig.map(conf => {
-      /* tslint:disable ban */
-      return Object.assign({}, conf, { persistentState: "required",
-                                       sessionTypes: ["temporary",
-                                                      "persistent-license"] });
-      /* tslint:enable ban */
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary",
+                              "persistent-license"] };
     });
     const expectedIdentifierConfig = defaultKSConfig.map(conf => {
-      /* tslint:disable ban */
-      return Object.assign({}, conf, { distinctiveIdentifier: "required" });
-      /* tslint:enable ban */
+      return { ...conf, distinctiveIdentifier: "required" };
     });
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(5);
     expect(requestMediaKeySystemAccessSpy)
@@ -370,9 +370,9 @@ describe("core - eme - global tests - media key system access", () => {
       .toHaveBeenNthCalledWith(5, "org.w3.clearkey", expectedIdentifierConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should set widevine robustnesses for a `com.widevine.alpha` keySystem", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const requestMediaKeySystemAccessSpy = jest.fn(() => observableThrow("nope"));
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
     await checkIncompatibleKeySystemsErrorMessage([{ type: "playready",
@@ -382,16 +382,12 @@ describe("core - eme - global tests - media key system access", () => {
                                                      distinctiveIdentifierRequired: true,
                                                      getLicense: neverCalledFn }]);
     const expectedPersistentConfig = defaultKSConfig.map(conf => {
-      /* tslint:disable ban */
-      return Object.assign({}, conf, { persistentState: "required",
-                                       sessionTypes: ["temporary",
-                                                      "persistent-license"] });
-      /* tslint:enable ban */
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary", "persistent-license"] };
     });
     const expectedIdentifierConfig = defaultKSConfig.map(conf => {
-      /* tslint:disable ban */
-      return Object.assign({}, conf, { distinctiveIdentifier: "required" });
-      /* tslint:enable ban */
+      return { ...conf,  distinctiveIdentifier: "required" };
     });
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(5);
     expect(requestMediaKeySystemAccessSpy)
@@ -406,9 +402,9 @@ describe("core - eme - global tests - media key system access", () => {
       .toHaveBeenNthCalledWith(5, "org.w3.clearkey", expectedIdentifierConfig);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should successfully create a MediaKeySystemAccess if given the right configuration", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     return new Promise((res, rej) => {
       const requestMediaKeySystemAccessSpy = jest.fn((keyType, conf) => {
         return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
@@ -422,7 +418,7 @@ describe("core - eme - global tests - media key system access", () => {
       EMEManager(mediaElement, config, new Subject())
         .subscribe(
           (evt : unknown) => {
-             const eventStr = JSON.stringify(evt as any);
+            const eventStr = JSON.stringify(evt as any);
             rej(new Error("Received an EMEManager event: " + eventStr));
           },
           (err : unknown) => { rej(err); },
@@ -435,9 +431,9 @@ describe("core - eme - global tests - media key system access", () => {
     });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should successfully create a MediaKeySystemAccess if given multiple configurations where one works", async () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     return new Promise((res, rej) => {
       let callNb = 0;
       const requestMediaKeySystemAccessSpy = jest.fn((keyType, conf) => {
@@ -449,15 +445,15 @@ describe("core - eme - global tests - media key system access", () => {
       mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
       const config = [{ type: "com.widevine.alpha",
                         getLicense: neverCalledFn },
-                       { type: "some-other-working-key-system",
-                         getLicense: neverCalledFn }];
+                      { type: "some-other-working-key-system",
+                        getLicense: neverCalledFn }];
 
       const mediaElement = document.createElement("video");
       const EMEManager = require("../../eme_manager").default;
       EMEManager(mediaElement, config, new Subject())
         .subscribe(
           (evt : unknown) => {
-             const eventStr = JSON.stringify(evt as any);
+            const eventStr = JSON.stringify(evt as any);
             rej(new Error("Received an EMEManager event: " + eventStr));
           },
           (err : unknown) => { rej(err); },
@@ -502,6 +498,6 @@ describe("core - eme - global tests - media key system access", () => {
             setTimeout(() => { res(); }, 10);
           }
         );
-      });
+    });
   });
 });

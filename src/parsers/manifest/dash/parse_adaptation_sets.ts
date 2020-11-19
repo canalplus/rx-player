@@ -24,6 +24,7 @@ import {
   IParsedAdaptations,
   IParsedAdaptationType,
 } from "../types";
+// eslint-disable-next-line max-len
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import inferAdaptationType from "./infer_adaptation_type";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
@@ -412,7 +413,7 @@ export default function parseAdaptationSets(
                 adaptationToMergeInto.language === parsedAdaptationSet.language)
             {
               log.info("DASH Parser: merging \"switchable\" AdaptationSets",
-                originalID, id);
+                       originalID, id);
               adaptationToMergeInto.representations
                 .push(...parsedAdaptationSet.representations);
               mergedInto = adaptationToMergeInto;

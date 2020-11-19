@@ -95,7 +95,7 @@ export default class ManifestBoundsCalculator {
    * @param {number} lastPosition
    * @param {number|undefined} positionTime
    */
-  setLastPosition(lastPosition : number, positionTime?: number) {
+  setLastPosition(lastPosition : number, positionTime?: number) : void {
     this._lastPosition = lastPosition;
     this._positionTime = positionTime;
   }
@@ -138,8 +138,8 @@ export default class ManifestBoundsCalculator {
   getMaximumBound() : number | undefined {
     if (this._isDynamic &&
         this._positionTime != null &&
-        this._lastPosition != null
-      ) {
+        this._lastPosition != null)
+    {
       return Math.max((this._lastPosition - this._positionTime) +
                         (performance.now() / 1000),
                       0);

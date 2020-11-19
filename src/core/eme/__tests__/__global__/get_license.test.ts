@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-restricted-properties */
 
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
@@ -30,8 +37,7 @@ import {
 /** Default video element used in our tests. */
 const videoElt = document.createElement("video");
 
-/* tslint:disable no-unsafe-any */
-/* tslint:disable max-line-length */
+/* eslint-disable max-len */
 describe("core - eme - global tests - getLicense", () => {
 
   beforeEach(() => {
@@ -250,9 +256,9 @@ function checkGetLicense(
        * This value will be forced to `true` if the `getTimeout` call for the
        * corresponding `getLicense` returns something other than `undefined`.
        */
-      isGetLicensePromiseBased : boolean;
+    isGetLicensePromiseBased : boolean;
       /** Maximum amount of retries: value of getLicenseConfig.retry. */
-      configuredRetries : number | undefined;
+    configuredRetries : number | undefined;
       /**
        * Return getLicense timeout after which the response will be emitted, in
        * milliseconds.
@@ -260,20 +266,20 @@ function checkGetLicense(
        * Note that if a timeout is given, getLicense will return a Promise.
        * As such, `isGetLicensePromiseBased` will be ignored.
        */
-      getTimeout : (callIdx : number) => number | undefined;
+    getTimeout : (callIdx : number) => number | undefined;
       /** Maximum configured timeout: value of getLicenseConfig.timeout. */
-      configuredTimeout : number | undefined;
+    configuredTimeout : number | undefined;
       /**
        * Nb of times getLicense should fail in a row.
        * If put at a higher value or equal to `configuredRetries`, no license
        * will be obtained.
        */
-      nbRetries : number;
+    nbRetries : number;
       /**
        * If `true`, getLicense will return `null` - to ignore a request - when
        * it succeed.
        */
-      ignoreLicenseRequests : boolean; },
+    ignoreLicenseRequests : boolean; },
   done : () => void
 ) {
   // == mocks ==
@@ -294,9 +300,7 @@ function checkGetLicense(
           setTimeout(() => resolve(result), timeout);
         });
       }
-      /* tslint:disable ban */
       return isGetLicensePromiseBased ? Promise.resolve(result) :
-      /* tslint:enable ban */
                                         result;
     }
     remainingRetries--;
@@ -310,9 +314,7 @@ function checkGetLicense(
     if (!isGetLicensePromiseBased) {
       throw new Error("AAAA");
     }
-    /* tslint:disable ban */
     return Promise.reject(new Error("AAAA"));
-    /* tslint:enable ban */
   });
 
   // == vars ==

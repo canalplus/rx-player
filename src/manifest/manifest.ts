@@ -78,12 +78,12 @@ interface ISupplementaryTextTrack {
 
 /** Options given to the `Manifest` constructor. */
 interface IManifestParsingOptions {
-  /* tslint:disable deprecation */
+  /* eslint-disable import/no-deprecated */
   /** Text tracks to add manually to the Manifest instance. */
   supplementaryTextTracks? : ISupplementaryTextTrack[];
   /** Image tracks to add manually to the Manifest instance. */
   supplementaryImageTracks? : ISupplementaryImageTrack[];
-  /* tslint:enable deprecation */
+  /* eslint-enable import/no-deprecated */
   /** External callback peforming an automatic filtering of wanted Representations. */
   representationFilter? : IRepresentationFilter;
 }
@@ -318,10 +318,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
      * @deprecated It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
-    /* tslint:disable:deprecation */
+    /* eslint-disable import/no-deprecated */
     this.adaptations = this.periods[0] === undefined ? {} :
                                                        this.periods[0].adaptations;
-    /* tslint:enable:deprecation */
+    /* eslint-enable import/no-deprecated */
 
     this._timeBounds = parsedManifest.timeBounds;
     this.isDynamic = parsedManifest.isDynamic;
@@ -334,10 +334,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
 
     if (supplementaryImageTracks.length > 0) {
-      this.addSupplementaryImageAdaptations(supplementaryImageTracks);
+      this._addSupplementaryImageAdaptations(supplementaryImageTracks);
     }
     if (supplementaryTextTracks.length > 0) {
-      this.addSupplementaryTextAdaptations(supplementaryTextTracks);
+      this._addSupplementaryTextAdaptations(supplementaryTextTracks);
     }
   }
 
@@ -471,9 +471,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       for (let i = 0; i < contentKIDs.length; i++) {
         const elt = contentKIDs[i];
         for (let j = 0; j < keyIDs.length; j++) {
-           if (isABEqualBytes(keyIDs[j], elt.keyId)) {
-             return false;
-           }
+          if (isABEqualBytes(keyIDs[j], elt.keyId)) {
+            return false;
+          }
         }
       }
       return true;
@@ -562,9 +562,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public getAdaptation(wantedId : number|string) : Adaptation|undefined {
     warnOnce("manifest.getAdaptation(id) is deprecated." +
              " Please use manifest.period[].getAdaptation(id) instead");
-    /* tslint:disable:deprecation */
+    /* eslint-disable import/no-deprecated */
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
-    /* tslint:enable:deprecation */
+    /* eslint-enable import/no-deprecated */
   }
 
   /**
@@ -572,10 +572,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @private
    * @param {Object|Array.<Object>} imageTracks
    */
-  private addSupplementaryImageAdaptations(
-    /* tslint:disable deprecation */
+  private _addSupplementaryImageAdaptations(
+    /* eslint-disable import/no-deprecated */
     imageTracks : ISupplementaryImageTrack | ISupplementaryImageTrack[]
-    /* tslint:enable deprecated */
   ) : void {
     const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
@@ -589,9 +588,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                mimeType,
                                                index: new StaticRepresentationIndex({
                                                  media: url,
-                                               }),
-                                             }], },
-                                             { isManuallyAdded: true });
+                                               }) }] },
+                                           { isManuallyAdded: true });
       this.parsingErrors.push(...newAdaptation.parsingErrors);
       return newAdaptation;
     });
@@ -609,10 +607,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @private
    * @param {Object|Array.<Object>} textTracks
    */
-  private addSupplementaryTextAdaptations(
-    /* tslint:disable deprecation */
+  private _addSupplementaryTextAdaptations(
+    /* eslint-disable import/no-deprecated */
     textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
-    /* tslint:enable deprecation */
+    /* eslint-enable import/no-deprecated */
   ) : void {
     const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
     const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
@@ -620,9 +618,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       codecs,
       url,
       language,
-      /* tslint:disable deprecation */
+      /* eslint-disable import/no-deprecated */
       languages,
-      /* tslint:enable deprecation */
+      /* eslint-enable import/no-deprecated */
       closedCaption,
     }) => {
       const langsToMapOn : string[] = language != null ? [language] :
@@ -643,9 +641,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                  codecs,
                                                  index: new StaticRepresentationIndex({
                                                    media: url,
-                                                 }),
-                                               }], },
-                                               { isManuallyAdded: true });
+                                                 }) }] },
+                                             { isManuallyAdded: true });
         this.parsingErrors.push(...newAdaptation.parsingErrors);
         return newAdaptation;
       }));
@@ -698,11 +695,11 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
 
     // Re-set this.adaptations for retro-compatibility in v3.x.x
-    /* tslint:disable:deprecation */
+    /* eslint-disable import/no-deprecated */
     this.adaptations = this.periods[0] === undefined ?
                          {} :
                          this.periods[0].adaptations;
-    /* tslint:enable:deprecation */
+    /* eslint-enable import/no-deprecated */
 
     // Let's trigger events at the end, as those can trigger side-effects.
     // We do not want the current Manifest object to be incomplete when those

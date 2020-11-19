@@ -135,7 +135,7 @@ export default class PersistentSessionsStore {
     initData : Uint8Array,
     initDataType : string|undefined
   ) : IPersistentSessionInfo | null {
-    const index = this.getIndex(initData, initDataType);
+    const index = this._getIndex(initData, initDataType);
     return index === -1 ? null :
                           this._entries[index];
   }
@@ -155,7 +155,7 @@ export default class PersistentSessionsStore {
     initData : Uint8Array,
     initDataType : string | undefined
   ) : IPersistentSessionInfo | null {
-    const index = this.getIndex(initData, initDataType);
+    const index = this._getIndex(initData, initDataType);
     if (index === -1) {
       return null;
     }
@@ -208,7 +208,7 @@ export default class PersistentSessionsStore {
     initData : Uint8Array,
     initDataType : string|undefined
   ) : void {
-    const index = this.getIndex(initData, initDataType);
+    const index = this._getIndex(initData, initDataType);
     if (index === -1) {
       log.warn("EME-PSS: initData to delete not found.");
       return;
@@ -250,7 +250,7 @@ export default class PersistentSessionsStore {
    * @param {string|undefined} initDataType
    * @returns {number}
    */
-  private getIndex(
+  private _getIndex(
     initData : Uint8Array,
     initDataType : string|undefined
   ) : number {

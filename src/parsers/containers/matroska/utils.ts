@@ -135,7 +135,7 @@ export function getSegmentsFromCues(
   initialOffset : number
 ) : ICuesSegment[]|null {
   const segmentRange = findNextElement(
-   SEGMENT_ID, [], buffer, [initialOffset, buffer.length]);
+    SEGMENT_ID, [], buffer, [initialOffset, buffer.length]);
   if (segmentRange == null) {
     return null;
   }

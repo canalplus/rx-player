@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+
 describe("Manifest - Manifest", () => {
   const fakeLogger = { warn: jest.fn(() => undefined),
                        info: jest.fn(() => undefined) };
@@ -131,9 +138,9 @@ describe("Manifest - Manifest", () => {
                                      default: fakePeriod }));
     const Manifest = require("../manifest").default;
 
-    /* tslint:disable no-unused-expression */
+    /* eslint-disable @typescript-eslint/no-unused-expressions */
     new Manifest(simpleFakeManifest, { representationFilter });
-    /* tslint:enable no-unused-expression */
+    /* eslint-enable @typescript-eslint/no-unused-expressions */
 
     expect(fakePeriod).toHaveBeenCalledTimes(2);
     expect(fakePeriod).toHaveBeenCalledWith(period1, representationFilter);
@@ -298,14 +305,11 @@ describe("Manifest - Manifest", () => {
                                              maximumTimeData: { isLinear: false,
                                                                 value: 10,
                                                                 time: 10 } },
-                              parsingErrors: [new Error("a"), new Error("b")],
-                               periods: [
-                                 { id: "0", start: 4, adaptations: {} },
-                                 { id: "1", start: 12, adaptations: {} },
-                               ],
+                               parsingErrors: [new Error("a"), new Error("b")],
+                               periods: [ { id: "0", start: 4, adaptations: {} },
+                                          { id: "1", start: 12, adaptations: {} } ],
                                suggestedPresentationDelay: 99,
-                               uris: ["url1", "url2"],
-                             };
+                               uris: ["url1", "url2"] };
 
     const manifest1 = new Manifest(oldManifestArgs1, {});
     expect(manifest1.getUrl()).toEqual("url1");
@@ -317,10 +321,8 @@ describe("Manifest - Manifest", () => {
                                isLive: false,
                                lifetime: 13,
                                parsingErrors: [new Error("a"), new Error("b")],
-                               periods: [
-                                 { id: "0", start: 4, adaptations: {} },
-                                 { id: "1", start: 12, adaptations: {} },
-                               ],
+                               periods: [ { id: "0", start: 4, adaptations: {} },
+                                          { id: "1", start: 12, adaptations: {} } ],
                                suggestedPresentationDelay: 99,
                                timeBounds: { absoluteMinimumTime: 0,
                                              timeshiftDepth: null,
@@ -748,4 +750,3 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 });
-/* tslint:enable no-unsafe-any */

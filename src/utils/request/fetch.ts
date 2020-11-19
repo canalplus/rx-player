@@ -104,7 +104,8 @@ function fetchRequest(
     function abortRequest(): void {
       if (!isDone) {
         if (!isNullOrUndefined(abortController)) {
-          return abortController.abort();
+          abortController.abort();
+          return;
         }
         log.warn("Fetch: AbortController API not available.");
       }

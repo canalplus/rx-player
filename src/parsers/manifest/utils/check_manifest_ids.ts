@@ -55,7 +55,7 @@ export default function checkManifestIDs(
         const adaptationID = adaptation.id;
         if (arrayIncludes(adaptationIDs, adaptationID)) {
           log.warn("Two adaptations with the same ID found. Updating.",
-            adaptationID);
+                   adaptationID);
           const newID =  adaptationID + "-dup";
           adaptation.id = newID;
           checkManifestIDs(manifest);
@@ -68,7 +68,7 @@ export default function checkManifestIDs(
           const representationID = representation.id;
           if (arrayIncludes(representationIDs, representationID)) {
             log.warn("Two representations with the same ID found. Updating.",
-              representationID);
+                     representationID);
             const newID =  representationID + "-dup";
             representation.id = newID;
             checkManifestIDs(manifest);

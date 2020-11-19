@@ -40,7 +40,7 @@ export default function formatTypeSupportedWithFeaturesConfigForAPI(
       audio.contentType !== undefined &&
       audio.contentType.length > 0) {
     const regex = /codecs="(.*?)"/;
-    const match = audio.contentType.match(regex);
+    const match = regex.exec(audio.contentType);
     if (match != null) {
       const codec = match[1];
       str = str.substring(0, str.length - 2) + "," + codec;

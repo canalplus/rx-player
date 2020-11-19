@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
+
 import PPromise from "../../../../../utils/promise";
 
 import probeDecodingInfos from "../../probers/decodingInfo";
@@ -63,28 +71,28 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   it("should throw if no video and audio config", (done) => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration = {
-      type: "media-source" as "media-source",
+      type: "media-source" as const,
     };
 
-  expect.assertions(2);
-  probeDecodingInfos(configuration)
-    .then(() => {
-      resetDecodingInfos();
-      done();
-    })
-    .catch(({ message }: { message: string }) => {
-      expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
+    expect.assertions(2);
+    probeDecodingInfos(configuration)
+      .then(() => {
+        resetDecodingInfos();
+        done();
+      })
+      .catch(({ message }: { message: string }) => {
+        expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
         "Not enough arguments for calling mediaCapabilites.");
-      expect(decodingInfoStub).not.toHaveBeenCalled();
-      resetDecodingInfos();
-      done();
-    });
+        expect(decodingInfoStub).not.toHaveBeenCalled();
+        resetDecodingInfos();
+        done();
+      });
   });
 
   it("should throw if incomplete video config", (done) => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration = {
-      type: "media-source" as "media-source",
+      type: "media-source" as const,
       video: {
         contentType: "video/wmv",
       },
@@ -108,7 +116,7 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   it("should throw if incomplete audio config", (done) => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration = {
-      type: "media-source" as "media-source",
+      type: "media-source" as const,
       audio: {
         contentType: "audio/wma",
       },
@@ -173,31 +181,27 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   it("should throw if API mediaCapabilities not available", () => {
     const origMediaCapabilities = (navigator as any).mediaCapabilities;
     delete (navigator as any).mediaCapabilities;
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDecodingInfos({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: MediaCapabilities API not available"
     );
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
     (navigator as any).mediaCapabilities = origMediaCapabilities;
   });
 
   it("should throw if API decodingInfo not available", () => {
     if ((navigator as any).mediaCapabilities) {
-      /* tslint:disable no-unsafe-any */
       delete (navigator as any).mediaCapabilities.decodingInfo;
-      /* tslint:enable no-unsafe-any */
     } else {
       (navigator as any).mediaCapabilities = {};
     }
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDecodingInfos({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: Decoding Info not available"
     );
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
     if ((navigator as any).mediaCapabilities) {
-      /* tslint:disable no-unsafe-any */
       (navigator as any).mediaCapabilities.decodingInfo = origDecodingInfo;
-      /* tslint:enable no-unsafe-any */
     } else {
       (navigator as any).mediaCapabilities = undefined;
     }

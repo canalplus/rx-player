@@ -29,7 +29,9 @@ import Prioritizer, {
   ITaskEvent,
 } from "../prioritizer";
 
-/* tslint:disable no-floating-promises */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
+/* eslint-disable no-restricted-properties */
 
 function assert(condition: any, msg?: string): asserts condition {
   if (!condition) {
@@ -76,7 +78,7 @@ describe("SegmentFetchers Prioritizer", () => {
     expect(completed).toEqual(1);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should throw if the given high priority is a higher (or equal) number than the given low priority", () => {
     expect(() => new Prioritizer({ prioritySteps: { high: 7, low: 6 } })).toThrow();
     expect(() => new Prioritizer({ prioritySteps: { high: 7, low: 7 } })).toThrow();
@@ -158,7 +160,7 @@ describe("SegmentFetchers Prioritizer", () => {
       expect(obs3Started).toEqual(shouldHaveStartedObs);
       expect(obs4Started).toEqual(shouldHaveStartedObs);
       assert(evt.type === "data",
-            `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+             `evt.type should be equal to "data" but was equal to "${evt.type}"`);
       expect(evt.value).toEqual(expectedData);
     }
 
@@ -219,7 +221,7 @@ describe("SegmentFetchers Prioritizer", () => {
       expect(obs3Started).toEqual(shouldHaveStartedObs);
       expect(obs4Started).toEqual(shouldHaveStartedObs);
       assert(evt.type === "data",
-            `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+             `evt.type should be equal to "data" but was equal to "${evt.type}"`);
       expect(evt.value).toEqual(expectedData);
     }
 
@@ -277,7 +279,7 @@ describe("SegmentFetchers Prioritizer", () => {
           switch (emitted) {
             case 0:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(0);
               break;
             case 1:
@@ -286,7 +288,7 @@ describe("SegmentFetchers Prioritizer", () => {
               expect(obs3Started).toEqual(false);
               expect(obs4Started).toEqual(false);
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(1);
               break;
             case 2:
@@ -298,7 +300,7 @@ describe("SegmentFetchers Prioritizer", () => {
               expect(obs3Started).toEqual(false);
               expect(obs4Started).toEqual(false);
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(2);
               break;
             case 4:
@@ -310,7 +312,7 @@ describe("SegmentFetchers Prioritizer", () => {
               expect(obs3Started).toEqual(true);
               expect(obs4Started).toEqual(false);
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(3);
               break;
             case 6:
@@ -322,7 +324,7 @@ describe("SegmentFetchers Prioritizer", () => {
               expect(obs3Started).toEqual(true);
               expect(obs4Started).toEqual(true);
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(4);
               break;
             case 8:
@@ -372,7 +374,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 1:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(2);
               expect(obs1Started).toEqual(1);
               expect(obs2Started).toEqual(1);
@@ -384,7 +386,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 3:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(3);
               expect(obs1Started).toEqual(1);
               expect(obs2Started).toEqual(1);
@@ -396,7 +398,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 5:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(4);
               expect(obs1Started).toEqual(1);
               expect(obs2Started).toEqual(1);
@@ -408,7 +410,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 7:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(1);
               expect(obs1Started).toEqual(2);
               expect(obs2Started).toEqual(1);
@@ -461,7 +463,7 @@ describe("SegmentFetchers Prioritizer", () => {
               prioritizer.updatePriority(pObs4, 5 + 1);
 
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(1);
               expect(obs1Started).toEqual(true);
               expect(obs2Started).toEqual(false);
@@ -473,7 +475,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 2:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(4);
               expect(obs1Started).toEqual(true);
               expect(obs2Started).toEqual(false);
@@ -485,7 +487,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 4:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(2);
               expect(obs1Started).toEqual(true);
               expect(obs2Started).toEqual(true);
@@ -497,7 +499,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 6:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(3);
               expect(obs1Started).toEqual(true);
               expect(obs2Started).toEqual(true);
@@ -555,7 +557,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 1:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(2);
               expect(obs1Started).toEqual(2);
               expect(obs2Started).toEqual(1);
@@ -567,7 +569,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 3:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(3);
               expect(obs1Started).toEqual(2);
               expect(obs2Started).toEqual(1);
@@ -579,7 +581,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 5:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(1);
               expect(obs1Started).toEqual(2);
               expect(obs2Started).toEqual(1);
@@ -591,7 +593,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 7:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(4);
               expect(obs1Started).toEqual(2);
               expect(obs2Started).toEqual(1);
@@ -658,7 +660,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 2:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(3);
               expect(obs1Started).toEqual(1);
               expect(obs2Started).toEqual(1);
@@ -670,7 +672,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 4:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(1);
               expect(obs1Started).toEqual(2);
               expect(obs2Started).toEqual(1);
@@ -682,7 +684,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 6:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(4);
               expect(obs1Started).toEqual(2);
               expect(obs2Started).toEqual(1);
@@ -694,7 +696,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 8:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(2);
               expect(obs1Started).toEqual(2);
               expect(obs2Started).toEqual(2);
@@ -740,9 +742,7 @@ describe("SegmentFetchers Prioritizer", () => {
     const pObs4 = prioritizer.create(obs4$, 20);
 
     // Put in microtask
-    /* tslint:disable ban */
     Promise.resolve().then(() => {
-    /* tslint:enable ban*/
       prioritizer.updatePriority(pObs4, 5);
     });
 
@@ -765,7 +765,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 3:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(4);
               break;
             case 4:
@@ -777,7 +777,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 5:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(1);
               expect(obs1Started).toEqual(2);
               expect(obs2Started).toEqual(2);
@@ -789,7 +789,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 7:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(2);
               break;
             case 8:
@@ -797,7 +797,7 @@ describe("SegmentFetchers Prioritizer", () => {
               break;
             case 9:
               assert(evt.type === "data",
-                    `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+                     `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(3);
               break;
             case 10:
@@ -848,7 +848,7 @@ describe("SegmentFetchers Prioritizer", () => {
       expect(obs3Started).toEqual(shouldArray[2]);
       expect(obs4Started).toEqual(shouldArray[3]);
       assert(evt.type === "data",
-            `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+             `evt.type should be equal to "data" but was equal to "${evt.type}"`);
       expect(evt.value).toEqual(expectedData);
     }
 
@@ -862,9 +862,7 @@ describe("SegmentFetchers Prioritizer", () => {
                           (e : ITaskEvent<unknown>) => expect(e.type).toEqual("ended") ];
 
     // Put in microtask
-    /* tslint:disable ban*/
     Promise.resolve().then(() => {
-    /* tslint:enable ban*/
       prioritizer.updatePriority(pObs4, 5 + 2);
     });
 
@@ -925,7 +923,7 @@ describe("SegmentFetchers Prioritizer", () => {
       expect(obs3Started).toEqual(shouldArray[2]);
       expect(obs4Started).toEqual(shouldArray[3]);
       assert(evt.type === "data",
-            `evt.type should be equal to "data" but was equal to "${evt.type}"`);
+             `evt.type should be equal to "data" but was equal to "${evt.type}"`);
       expect(evt.value).toEqual(expectedData);
     }
 
@@ -940,9 +938,7 @@ describe("SegmentFetchers Prioritizer", () => {
                           (e : ITaskEvent<unknown>) => expect(e.type).toEqual("ended") ];
 
     // Put in microtask
-    /* tslint:disable ban*/
     Promise.resolve().then(() => {
-    /* tslint:enable ban*/
       prioritizer.updatePriority(pObs2, 5);
     });
 

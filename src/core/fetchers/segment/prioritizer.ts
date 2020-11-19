@@ -38,7 +38,7 @@ import arrayFindIndex from "../../../utils/array_find_index";
  * The task will restart (from scratch) when tasks with more priority are
  * finished.
  */
-export interface IInterruptedTaskEvent { type : "interrupted"; }
+export interface IInterruptedTaskEvent { type : "interrupted" }
 
 /** Event sent when the corresponding task emit an event. */
 export interface ITaskDataEvent<T> { type : "data";
@@ -49,7 +49,7 @@ export interface ITaskDataEvent<T> { type : "data";
  * You can use this event to schedule another task you wanted to perform after
  * that one.
  */
-export interface IEndedTaskEvent { type : "ended"; }
+export interface IEndedTaskEvent { type : "ended" }
 
 /** Events sent when a task has been created through the `create` method. */
 export type ITaskEvent<T> = IInterruptedTaskEvent |
@@ -269,8 +269,10 @@ export default class ObservablePrioritizer<T> {
                         // To be sure no harm is done, we put that code at the last
                         // possible position (the previous Observable sould be
                         // performing all its initialization synchronously).
-                        observableDefer(() => { this._interruptCancellableTasks();
-                                                return EMPTY; }));
+                        observableDefer(() => {
+                          this._interruptCancellableTasks();
+                          return EMPTY;
+                        }));
     });
 
     return pObs$;

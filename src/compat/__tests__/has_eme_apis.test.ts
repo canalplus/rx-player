@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("compat - hasEMEAPIs", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return true if we could define a requestMediaKeySystemAccess function", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     jest.mock("../eme", () => {
       return {
@@ -34,9 +40,9 @@ describe("compat - hasEMEAPIs", () => {
     expect(hasEMEAPIs.default()).toBe(true);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return false if we could not define a requestMediaKeySystemAccess function", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     jest.mock("../eme", () => {
       return {
@@ -48,4 +54,3 @@ describe("compat - hasEMEAPIs", () => {
     expect(hasEMEAPIs.default()).toBe(false);
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -36,22 +36,25 @@ function objectAssign<T, U>(target : T, ...sources : U[]) : T & U {
   if (target === null || target === undefined) {
     throw new TypeError("Cannot convert undefined or null to object");
   }
+  // eslint-disable-next-line  @typescript-eslint/no-unsafe-assignment
   const to = Object(target);
   for (let i = 0; i < sources.length; i++) {
     const source = sources[i];
     for (const key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
-        /* tslint:disable no-unnecessary-type-assertion */
+        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         (to as any)[key] = source[key];
-        /* tslint:enable no-unnecessary-type-assertion */
+        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       }
     }
   }
   return to as T & U;
 }
 
-/* tslint:disable no-unbound-method */
+// eslint-disable-next-line @typescript-eslint/unbound-method, no-restricted-properties
 export default typeof Object.assign === "function" ?
+  // eslint-disable-next-line no-restricted-properties
   Object.assign :
-/* tslint:enable no-unbound-method */
+  // eslint-disable-next-line  @typescript-eslint/unbound-method
   objectAssign;

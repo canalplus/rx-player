@@ -30,9 +30,9 @@ import {
   IPushChunkInfos,
   SegmentBuffer,
 } from "../../types";
+import ManualTimeRanges from "../../utils/manual_time_ranges";
 import parseTextTrackToCues from "./parsers";
 
-import ManualTimeRanges from "../../utils/manual_time_ranges";
 
 /** Format of the data pushed to the `NativeTextSegmentBuffer`. */
 export interface INativeTextTrackData {
@@ -59,8 +59,7 @@ export interface INativeTextTrackData {
  * expected behavior to display subtitles synchronized to the video.
  * @class NativeTextSegmentBuffer
  */
-export default class NativeTextSegmentBuffer
-                 extends SegmentBuffer<INativeTextTrackData> {
+export default class NativeTextSegmentBuffer extends SegmentBuffer<INativeTextTrackData> {
   public readonly bufferType : "text";
 
   private readonly _videoElement : HTMLMediaElement;

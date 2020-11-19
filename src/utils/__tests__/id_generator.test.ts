@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import idGenerator from "../id_generator";
 
 const oldNumberDef = window.Number;

@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable no-restricted-properties */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+
 
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
@@ -26,13 +34,10 @@ import {
   mockCompat,
 } from "./utils";
 
-/* tslint:disable no-unsafe-any */
 describe("core - eme - global tests - server certificate", () => {
 
   const getLicenseSpy = jest.fn(() => {
-    /* tslint:disable ban */
     return new Promise(() => { /* noop */ });
-    /* tslint:enable ban */
   });
 
   /** Default video element used in our tests. */
@@ -50,21 +55,19 @@ describe("core - eme - global tests - server certificate", () => {
     jest.restoreAllMocks();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should set the serverCertificate after receiving the first encrypted event", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     mockCompat();
     const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
     const serverCertificateSpy =
       jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-      .mockImplementation((_serverCertificate : BufferSource) => {
-        expect(createSessionSpy).not.toHaveBeenCalled();
-        /* tslint:disable ban */
-        return Promise.resolve(true);
-        /* tslint:enable ban */
-      });
+        .mockImplementation((_serverCertificate : BufferSource) => {
+          expect(createSessionSpy).not.toHaveBeenCalled();
+          return Promise.resolve(true);
+        });
 
     // == vars ==
     let eventsReceived = 0;
@@ -112,21 +115,19 @@ describe("core - eme - global tests - server certificate", () => {
       });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should emit warning if serverCertificate call rejects but still continue", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     mockCompat();
     const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
     const serverCertificateSpy =
       jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-      .mockImplementation((_serverCertificate : BufferSource) => {
-        expect(createSessionSpy).not.toHaveBeenCalled();
-        /* tslint:disable ban */
-        return Promise.reject("some error");
-        /* tslint:enable ban */
-      });
+        .mockImplementation((_serverCertificate : BufferSource) => {
+          expect(createSessionSpy).not.toHaveBeenCalled();
+          return Promise.reject("some error");
+        });
 
     // == vars ==
     let eventsReceived = 0;
@@ -156,7 +157,9 @@ describe("core - eme - global tests - server certificate", () => {
             expect(evt.value.type).toEqual("ENCRYPTED_MEDIA_ERROR");
             expect(evt.value.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
             expect(evt.value.message)
-              .toEqual("EncryptedMediaError (LICENSE_SERVER_CERTIFICATE_ERROR) `setServerCertificate` error");
+              .toEqual(
+                "EncryptedMediaError (LICENSE_SERVER_CERTIFICATE_ERROR) " +
+                "`setServerCertificate` error");
             break;
           case 4:
             expectLicenseRequestMessage(evt, initData, "cenc");
@@ -182,19 +185,19 @@ describe("core - eme - global tests - server certificate", () => {
       });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should emit warning if serverCertificate call throws but still continue", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     mockCompat();
     const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
     const serverCertificateSpy =
       jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-      .mockImplementation((_serverCertificate : BufferSource) => {
-        expect(createSessionSpy).not.toHaveBeenCalled();
-        throw new Error("some error");
-      });
+        .mockImplementation((_serverCertificate : BufferSource) => {
+          expect(createSessionSpy).not.toHaveBeenCalled();
+          throw new Error("some error");
+        });
 
     // == vars ==
     let eventsReceived = 0;
@@ -224,7 +227,9 @@ describe("core - eme - global tests - server certificate", () => {
             expect(evt.value.type).toEqual("ENCRYPTED_MEDIA_ERROR");
             expect(evt.value.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
             expect(evt.value.message)
-              .toEqual("EncryptedMediaError (LICENSE_SERVER_CERTIFICATE_ERROR) Error: some error");
+              .toEqual(
+                "EncryptedMediaError (LICENSE_SERVER_CERTIFICATE_ERROR) Error: some error"
+              );
             break;
           case 4:
             expectLicenseRequestMessage(evt, initData, "cenc");
@@ -250,9 +255,9 @@ describe("core - eme - global tests - server certificate", () => {
       });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should just continue if serverCertificate is undefined", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     mockCompat();
@@ -261,18 +266,14 @@ describe("core - eme - global tests - server certificate", () => {
       .mockImplementation(() => {
         const mediaKeys = new MediaKeysImpl();
         (mediaKeys as any).setServerCertificate = undefined;
-        /* tslint:disable ban */
         return Promise.resolve(mediaKeys);
-        /* tslint:enable ban */
       });
     const serverCertificateSpy =
       jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-      .mockImplementation((_serverCertificate : BufferSource) => {
-        expect(createSessionSpy).not.toHaveBeenCalled();
-        /* tslint:disable ban */
-        return Promise.resolve(true);
-        /* tslint:enable ban */
-      });
+        .mockImplementation((_serverCertificate : BufferSource) => {
+          expect(createSessionSpy).not.toHaveBeenCalled();
+          return Promise.resolve(true);
+        });
 
     // == vars ==
     let eventsReceived = 0;

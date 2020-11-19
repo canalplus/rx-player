@@ -74,10 +74,10 @@ function createMetaplaylist(
                      endTime: startTime + val.duration });
           return acc;
         }, []);
-    return { type: "MPL" as const,
-             version: "0.1",
-             dynamic: false,
-             contents };
+      return { type: "MPL" as const,
+               version: "0.1",
+               dynamic: false,
+               contents };
     })
   ).toPromise(PPromise);
 }

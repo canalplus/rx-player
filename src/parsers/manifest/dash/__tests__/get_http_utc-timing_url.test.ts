@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("DASH Parser - getHTTPUTCTimingURL", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return undefined if the given intermediate representation has no UTCTimings element", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [],
@@ -33,9 +39,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return undefined if the given intermediate representation has no http-iso UTCTimings element", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [
@@ -55,9 +61,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return undefined if the given intermediate representation has no value for its http-iso UTCTimings element", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [
@@ -79,9 +85,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return the value of a single http-iso UTCTimings element", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [
@@ -97,9 +103,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return the first value of multiple http-iso UTCTimings elements", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [
@@ -123,9 +129,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar1000");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return the first value of a http-iso UTCTimings element when mixed with other elements", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [
@@ -157,4 +163,3 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 });
-/* tslint:enable no-unsafe-any */

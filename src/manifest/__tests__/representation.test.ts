@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 const minimalIndex = { getInitSegment() { return null; },
                        getSegments() { return []; },
                        shouldRefresh() { return false; },
@@ -161,12 +167,9 @@ describe("Manifest - Representation", () => {
                    mimeType: "video/mp4",
                    codecs: "vp12",
                    contentProtections: { keyIds: [{ keyId: new Uint8Array([45]) }],
-                                         initData: {
-                                           cenc: [{
-                                             systemId: "EDEF",
-                                             data: new Uint8Array([78]),
-                                           }],
-                                         } } };
+                                         initData: { cenc: [{
+                                           systemId: "EDEF",
+                                           data: new Uint8Array([78]) }] } } };
     const representation = new Representation(args, { type: "video" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
@@ -290,4 +293,3 @@ describe("Manifest - Representation", () => {
     expect(notSupportedSpy).toHaveBeenCalledTimes(0);
   });
 });
-/* tslint:enable no-unsafe-any */

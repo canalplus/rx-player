@@ -114,9 +114,9 @@ describe("flattenOverlappingPeriods", function() {
   //             [ Period 3 ]
   //                  ...
   //             [   100    ]
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should keep last announced period from multiple periods with same start and end", function() {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
     const periods = [

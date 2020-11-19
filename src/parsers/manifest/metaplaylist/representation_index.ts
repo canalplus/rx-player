@@ -73,7 +73,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   /**
    * Returns information about the initialization segment.
    */
-  public getInitSegment() {
+  public getInitSegment() : ISegment | null {
     const segment = this._wrappedIndex.getInitSegment();
     if (segment === null) {
       return null;

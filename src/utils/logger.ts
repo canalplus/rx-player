@@ -22,7 +22,7 @@ export type ILoggerLevel = "NONE" |
                            "INFO" |
                            "DEBUG";
 
-type tConsoleFn = (...args : unknown[]) => void;
+type IConsoleFn = (...args : unknown[]) => void;
 
 const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
 
@@ -31,58 +31,58 @@ const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
  * @class Logger
  */
 export default class Logger {
-  public error : tConsoleFn;
-  public warn : tConsoleFn;
-  public info : tConsoleFn;
-  public debug : tConsoleFn;
-  private currentLevel : ILoggerLevel;
-  private readonly LEVELS : Record<ILoggerLevel, number>;
+  public error : IConsoleFn;
+  public warn : IConsoleFn;
+  public info : IConsoleFn;
+  public debug : IConsoleFn;
+  private _currentLevel : ILoggerLevel;
+  private readonly _levels : Record<ILoggerLevel, number>;
 
   constructor() {
     this.error = noop;
     this.warn = noop;
     this.info = noop;
     this.debug = noop;
-    this.LEVELS = { NONE: 0,
-                    ERROR: 1,
-                    WARNING: 2,
-                    INFO: 3,
-                    DEBUG: 4 };
-    this.currentLevel = DEFAULT_LOG_LEVEL;
+    this._levels = { NONE: 0,
+                     ERROR: 1,
+                     WARNING: 2,
+                     INFO: 3,
+                     DEBUG: 4 };
+    this._currentLevel = DEFAULT_LOG_LEVEL;
   }
 
   /**
    * @param {string} levelStr
    */
-  public setLevel(levelStr : string) {
+  public setLevel(levelStr : string) : void {
     let level : number;
-    const foundLevel = this.LEVELS[levelStr as ILoggerLevel];
+    const foundLevel = this._levels[levelStr as ILoggerLevel];
     if (typeof foundLevel === "number") {
       level = foundLevel;
-      this.currentLevel = levelStr as ILoggerLevel;
+      this._currentLevel = levelStr as ILoggerLevel;
     } else { // not found
       level = 0;
-      this.currentLevel = "NONE";
+      this._currentLevel = "NONE";
     }
 
-    /* tslint:disable no-invalid-this */
-    /* tslint:disable no-console */
-    this.error = (level >= this.LEVELS.ERROR) ? console.error.bind(console) :
-                                                noop;
-    this.warn = (level >= this.LEVELS.WARNING) ? console.warn.bind(console) :
+    /* eslint-disable no-invalid-this */
+    /* eslint-disable no-console */
+    this.error = (level >= this._levels.ERROR) ? console.error.bind(console) :
                                                  noop;
-    this.info = (level >= this.LEVELS.INFO) ? console.info.bind(console) :
-                                              noop;
-    this.debug = (level >= this.LEVELS.DEBUG) ? console.log.bind(console) :
-                                                noop;
-    /* tslint:enable no-console */
-    /* tslint:enable no-invalid-this */
+    this.warn = (level >= this._levels.WARNING) ? console.warn.bind(console) :
+                                                  noop;
+    this.info = (level >= this._levels.INFO) ? console.info.bind(console) :
+                                               noop;
+    this.debug = (level >= this._levels.DEBUG) ? console.log.bind(console) :
+                                                 noop;
+    /* eslint-enable no-console */
+    /* eslint-enable no-invalid-this */
   }
 
   /**
    * @returns {string}
    */
   public getLevel() : ILoggerLevel {
-    return this.currentLevel;
+    return this._currentLevel;
   }
 }

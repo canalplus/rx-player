@@ -54,6 +54,7 @@ import onHeightWidthChange from "./on_height_width_change";
 import patchWebkitSourceBuffer from "./patch_webkit_source_buffer";
 import play$ from "./play";
 import setElementSrc$ from "./set_element_src";
+// eslint-disable-next-line max-len
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "./should_reload_media_source_on_decipherability_update";
 import shouldRenewMediaKeys from "./should_renew_media_keys";
 import shouldUnsetMediaKeys from "./should_unset_media_keys";

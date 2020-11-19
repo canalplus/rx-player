@@ -83,7 +83,7 @@ import {
 } from "../types";
 import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority, {
-  getPriorityForTime
+  getPriorityForTime,
 } from "./get_segment_priority";
 import getWantedRange from "./get_wanted_range";
 import pushInitSegment from "./push_init_segment";

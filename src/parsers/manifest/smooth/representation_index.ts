@@ -15,8 +15,8 @@
  */
 
 import {
- ICustomError,
- NetworkError,
+  ICustomError,
+  NetworkError,
 } from "../../../errors";
 import log from "../../../log";
 import {

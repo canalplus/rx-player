@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable max-len */
+
 function testStringAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
-  /* tslint:disable max-line-length */
   it(`should correctly parse a ContentProtection element with a correct ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
-
     const parseContentProtection = require("../ContentProtection").default;
     const element1 = new DOMParser()
       .parseFromString(`<ContentProtection ${attributeName}="foobar" />`, "text/xml")
@@ -59,9 +63,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
   testStringAttribute("schemeIdUri");
   testStringAttribute("value");
 
-  /* tslint:disable max-line-length */
   it("should correctly parse a ContentProtection element with a correct cenc:default_KID attribute", () => {
-  /* tslint:enable max-line-length */
 
     const keyId = new Uint8Array([0, 1, 2, 3]);
     const hexToBytesSpy = jest.fn().mockImplementation(() => {
@@ -72,7 +74,6 @@ describe("DASH Node Parsers - ContentProtection", () => {
     }));
     const parseContentProtection = require("../ContentProtection").default;
     const element1 = new DOMParser()
-      /* tslint:disable max-line-length */
       .parseFromString(`<?xml version="1.0" encoding="utf-8"?>
 <MPD
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -84,7 +85,6 @@ describe("DASH Node Parsers - ContentProtection", () => {
   <ContentProtection cenc:default_KID=\"dead-beef\" />
 </MPD>
 `, "text/xml")
-      /* tslint:enable max-line-length */
       .getElementsByTagName("ContentProtection")[0];
 
     expect(parseContentProtection(element1))
@@ -221,4 +221,3 @@ describe("DASH Node Parsers - ContentProtection", () => {
       .toEqual("`cenc:pssh` is not a valid base64 string: \"AA!BCC\"");
   });
 });
-/* tslint:enable no-unsafe-any */

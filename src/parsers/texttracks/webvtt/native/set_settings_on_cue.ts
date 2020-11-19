@@ -42,7 +42,7 @@ export default function setSettingsOnCue(
     //   3 -> optional follow-up of the string indicating alignment value
     //   4 -> alignment value
     const percentagePosition = /^(\d+(\.\d+)?)%(,([a-z]+))?/;
-    const percentageMatches = settings.line.match(percentagePosition);
+    const percentageMatches = percentagePosition.exec(settings.line);
     if (Array.isArray(percentageMatches)) {
       cue.line = Number(percentageMatches[1]);
       cue.snapToLines = false;
@@ -55,7 +55,7 @@ export default function setSettingsOnCue(
       //   2 -> optional follow-up of the string indicating alignment value
       //   3 -> alignment value
       const linePosition = /^(-?\d+)(,([a-z]+))?/;
-      const lineMatches = settings.line.match(linePosition);
+      const lineMatches = linePosition.exec(settings.line);
 
       if (Array.isArray(lineMatches)) {
         cue.line = Number(lineMatches[1]);

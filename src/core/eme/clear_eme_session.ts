@@ -51,7 +51,7 @@ export default function clearEMESession(
         .pipe(ignoreElements());
     }
     log.info("EME: Nothing to clear. Returning right away. No state =",
-              currentState === null);
+             currentState === null);
     return EMPTY;
   });
 }

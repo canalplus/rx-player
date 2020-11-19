@@ -81,19 +81,16 @@ export interface IMediaSourceLoaderArguments {
  * @param {Object} args
  * @returns {Function}
  */
-export default function createMediaSourceLoader({
-  mediaElement,
-  manifest,
-  clock$,
-  speed$,
-  bufferOptions,
-  abrManager,
-  segmentFetcherCreator,
-} : IMediaSourceLoaderArguments) : (
-  mediaSource : MediaSource,
-  initialTime : number,
-  autoPlay : boolean
-) => Observable<IMediaSourceLoaderEvent> {
+export default function createMediaSourceLoader(
+  { mediaElement,
+    manifest,
+    clock$,
+    speed$,
+    bufferOptions,
+    abrManager,
+    segmentFetcherCreator } : IMediaSourceLoaderArguments
+) : (mediaSource : MediaSource, initialTime : number, autoPlay : boolean) =>
+  Observable<IMediaSourceLoaderEvent> {
   /**
    * Load the content on the given MediaSource.
    * @param {MediaSource} mediaSource
@@ -143,11 +140,11 @@ export default function createMediaSourceLoader({
 
     // Creates Observable which will manage every Stream for the given Content.
     const streams$ = StreamOrchestrator({ manifest, initialPeriod },
-                                          streamClock$,
-                                          abrManager,
-                                          segmentBuffersStore,
-                                          segmentFetcherCreator,
-                                          bufferOptions
+                                        streamClock$,
+                                        abrManager,
+                                        segmentBuffersStore,
+                                        segmentFetcherCreator,
+                                        bufferOptions
     ).pipe(
       mergeMap((evt) : Observable<IMediaSourceLoaderEvent> => {
         switch (evt.type) {
@@ -217,7 +214,7 @@ export default function createMediaSourceLoader({
                            streamEvents$
     ).pipe(finalize(() => {
         // clean-up every created SegmentBuffers
-        segmentBuffersStore.disposeAll();
-      }));
+      segmentBuffersStore.disposeAll();
+    }));
   };
 }

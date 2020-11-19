@@ -34,15 +34,17 @@ import { ICompatPictureInPictureWindow } from "./browser_compatibility_types";
 export default function safelyRequestPIP(
   mediaElement : HTMLMediaElement
 ) : Observable<ICompatPictureInPictureWindow|null> {
-  /* tslint:disable no-unsafe-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   if (typeof (mediaElement as any).requestPictureInPicture !== "function") {
-  /* tslint:enable no-unsafe-any */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     return observableOf(null);
   }
   return observableDefer(() => {
-    /* tslint:disable no-unsafe-any */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
     return castToObservable((mediaElement as any).requestPictureInPicture());
-    /* tslint:enable no-unsafe-any */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
   }).pipe(catchError(() => {
     log.warn("Compat: Couldn't request a Picture-in-Picture window.");
     return observableOf(null);

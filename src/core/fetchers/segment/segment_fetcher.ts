@@ -74,7 +74,7 @@ export interface ISegmentFetcherChunkEvent<T> {
  * Event sent when all "chunk" of the segments have been communicated through
  * `ISegmentFetcherChunkEvent` events.
  */
-export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
+export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete" }
 
 /** Event sent by the SegmentFetcher when fetching a segment. */
 export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
@@ -109,6 +109,7 @@ export default function createSegmentFetcher<T>(
   const segmentLoader = createSegmentLoader<any>(transport[bufferType].loader,
                                                  cache,
                                                  options);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const segmentParser = transport[bufferType].parser as any; // deal with it
 
   /**
@@ -177,20 +178,20 @@ export default function createSegmentFetcher<T>(
                         ISegmentLoaderChunkComplete |
                         ISegmentLoaderData<T> |
                         ISegmentFetcherWarning => {
-                          switch (e.type) {
-                            case "warning":
-                            case "chunk":
-                            case "chunk-complete":
-                            case "data":
-                              return true;
-                            case "progress":
-                            case "metrics":
-                            case "request":
-                              return false;
-                            default:
-                              assertUnreachable(e);
-                          }
-                        }),
+        switch (e.type) {
+          case "warning":
+          case "chunk":
+          case "chunk-complete":
+          case "data":
+            return true;
+          case "progress":
+          case "metrics":
+          case "request":
+            return false;
+          default:
+            assertUnreachable(e);
+        }
+      }),
       mergeMap((evt) => {
         if (evt.type === "warning") {
           return observableOf(evt);
@@ -209,9 +210,13 @@ export default function createSegmentFetcher<T>(
            */
           parse(initTimescale? : number) : Observable<ISegmentParserResponse<T>> {
             const response = { data: evt.value.responseData, isChunked };
-            /* tslint:disable no-unsafe-any */
+            /* eslint-disable @typescript-eslint/no-unsafe-call */
+            /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+            /* eslint-disable @typescript-eslint/no-unsafe-return */
             return segmentParser({ response, initTimescale, content })
-            /* tslint:enable no-unsafe-any */
+            /* eslint-enable @typescript-eslint/no-unsafe-call */
+            /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+            /* eslint-enable @typescript-eslint/no-unsafe-return */
               .pipe(catchError((error: unknown) => {
                 throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
                                            defaultReason: "Unknown parsing error" });

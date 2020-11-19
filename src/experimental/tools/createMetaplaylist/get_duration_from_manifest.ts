@@ -119,8 +119,7 @@ function getDurationFromManifest(url: string,
   return request({ url, responseType: "text" }).pipe(
     map(({ value }) => {
       const { responseData } = value;
-      let metaplaylist;
-      metaplaylist = JSON.parse(responseData) as IMetaPlaylist;
+      const metaplaylist = JSON.parse(responseData) as IMetaPlaylist;
       if (metaplaylist.contents === undefined ||
           metaplaylist.contents.length === undefined ||
           metaplaylist.contents.length === 0) {

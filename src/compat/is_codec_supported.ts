@@ -30,9 +30,9 @@ export default function isCodecSupported(mimeType : string) : boolean {
     return false;
   }
 
-  /* tslint:disable no-unbound-method */
+  /* eslint-disable @typescript-eslint/unbound-method */
   if (typeof MediaSource_.isTypeSupported === "function") {
-  /* tslint:enable no-unbound-method */
+  /* eslint-enable @typescript-eslint/unbound-method */
     return MediaSource_.isTypeSupported(mimeType);
   }
 

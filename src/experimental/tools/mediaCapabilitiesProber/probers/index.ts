@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+import {
+  ICompatibleKeySystem,
+  IMediaConfiguration,
+  ProberStatus,
+} from "../types";
 import probeFromDecodingConfig from "./decodingInfo";
 import probeFromDRMInfos from "./DRMInfos";
 import probeFromHDCPPolicy from "./HDCPPolicy";
@@ -21,17 +26,12 @@ import probeFromMediaContentType from "./mediaContentType";
 import probeFromMediaContentTypeWithFeatures from "./mediaContentTypeWithFeatures";
 import probeFromMediaDisplayInfos from "./mediaDisplayInfos";
 
-import {
-  ICompatibleKeySystem,
-  IMediaConfiguration,
-  ProberStatus,
-} from "../types";
 
 export type IResultsFromAPI = ICompatibleKeySystem;
 
 const probers: {
   [id: string]: (config: IMediaConfiguration) =>
-    Promise<[ProberStatus, IResultsFromAPI?]>;
+  Promise<[ProberStatus, IResultsFromAPI?]>;
 } = {
   isTypeSupported: probeFromMediaContentType,
   isTypeSupportedWithFeatures: probeFromMediaContentTypeWithFeatures,

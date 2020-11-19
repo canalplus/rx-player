@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { of as observableOf } from "rxjs";
 import { map } from "rxjs/operators";
 import { ProberStatus } from "../../types";
 
-/* tslint:disable no-unsafe-any */
 
 describe("MediaCapabilitiesProber probers - DRMInfos", () => {
   beforeEach(() => {
@@ -28,12 +34,12 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
   it("should throw if no keySystem provided", () => {
     const configuration = {};
     const probeDRMInfos = require("../../probers/DRMInfos").default;
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDRMInfos(configuration)).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: " +
       "Missing a type argument to request a media key system access."
     );
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should throw if no type of keySystem provided", () => {
@@ -41,12 +47,12 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
       keySystem: {},
     };
     const probeDRMInfos = require("../../probers/DRMInfos").default;
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDRMInfos(configuration)).rejects.toThrow(
       "MediaCapabilitiesProber >>> API_CALL: " +
       "Missing a type argument to request a media key system access."
     );
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should resolve with `NotSupported` if no requestMediaKeySystemAccess", () => {
@@ -59,10 +65,10 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
       requestMediaKeySystemAccess: null,
     }));
     const probeDRMInfos = require("../../probers/DRMInfos").default;
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDRMInfos(configuration)).resolves.toEqual(
       [ProberStatus.NotSupported, { configuration: {}, type: "clearkick" }]
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
     );
   });
 
@@ -136,4 +142,3 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
   });
 });
 
-/* tslint:enable no-unsafe-any */

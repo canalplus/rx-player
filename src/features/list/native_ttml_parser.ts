@@ -21,7 +21,7 @@ import { IFeaturesObject } from "../types";
  * Add ability to parse TTML text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeTTMLFeature(features : IFeaturesObject) {
+function addNativeTTMLFeature(features : IFeaturesObject) : void {
   features.nativeTextTracksParsers.ttml = ttmlParser;
 }
 

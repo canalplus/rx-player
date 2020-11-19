@@ -141,9 +141,11 @@ export default class Adaptation {
 
     if (!isSupportedAdaptationType(parsedAdaptation.type)) {
       log.info("Manifest: Not supported adaptation type", parsedAdaptation.type);
+      /* eslint-disable @typescript-eslint/restrict-template-expressions */
       throw new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
                            `"${parsedAdaptation.type}" is not a valid ` +
                            "Adaptation type.");
+      /* eslint-enable @typescript-eslint/restrict-template-expressions */
     }
     this.type = parsedAdaptation.type;
 

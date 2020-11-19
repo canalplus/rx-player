@@ -17,7 +17,7 @@
 import arrayFind from "../../../utils/array_find";
 import {
   ICapabilities,
-  IMediaConfiguration
+  IMediaConfiguration,
 } from "./types";
 
 /**
@@ -42,12 +42,8 @@ export function extend(target: ICapabilities, objects: ICapabilities[]): ICapabi
           typeof targetElement !== "string" &&
           targetElement[key] !== undefined &&
           targetElement[key].length > 0
-        ) as (
-          undefined|
-          {
-            [key: string]: ICapabilities;
-          }
-        );
+        ) as (undefined|
+              { [key: string]: ICapabilities });
         if (foundTargetElement === undefined) {
           const toPush: { [key: string]: ICapabilities } = {};
           toPush[key] = extend([], [value]);

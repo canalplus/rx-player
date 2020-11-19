@@ -249,12 +249,12 @@ export interface ILoadVideoOptions {
   enableFastSwitching? : boolean;
   audioTrackSwitchingMode? : "seamless"|"direct";
 
-  /* tslint:disable deprecation */
+  /* eslint-disable import/no-deprecated */
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
-  /* tslint:enable deprecation */
+  /* eslint-enable import/no-deprecated */
 }
 
 /**
@@ -284,17 +284,19 @@ interface IParsedLoadVideoOptionsBase {
  * Options of the RxPlayer's `loadVideo` method once parsed when a "native"
  * `textTrackMode` is asked.
  */
-interface IParsedLoadVideoOptionsNative
-          extends IParsedLoadVideoOptionsBase { textTrackMode : "native";
-                                                hideNativeSubtitle : boolean; }
+interface IParsedLoadVideoOptionsNative extends IParsedLoadVideoOptionsBase {
+  textTrackMode : "native";
+  hideNativeSubtitle : boolean;
+}
 
 /**
  * Options of the RxPlayer's `loadVideo` method once parsed when an "html"
  * `textTrackMode` is asked.
  */
-interface IParsedLoadVideoOptionsHTML
-          extends IParsedLoadVideoOptionsBase { textTrackMode : "html";
-                                                textTrackElement : HTMLElement; }
+interface IParsedLoadVideoOptionsHTML extends IParsedLoadVideoOptionsBase {
+  textTrackMode : "html";
+  textTrackElement : HTMLElement;
+}
 
 /**
  * Type enumerating all possible forms for the parsed options of the RxPlayer's
@@ -320,7 +322,6 @@ function parseConstructorOptions(
   let maxBufferBehind : number;
   let wantedBufferAhead : number;
 
-  let limitVideoWidth : boolean;
   let throttleWhenHidden : boolean;
   let throttleVideoBitrateWhenHidden : boolean;
 
@@ -333,7 +334,6 @@ function parseConstructorOptions(
   let initialAudioBitrate : number;
   let maxAudioBitrate : number;
   let maxVideoBitrate : number;
-  let stopAtEnd : boolean;
 
   if (isNullOrUndefined(options.maxBufferAhead)) {
     maxBufferAhead = DEFAULT_MAX_BUFFER_AHEAD;
@@ -358,13 +358,13 @@ function parseConstructorOptions(
   } else {
     wantedBufferAhead = Number(options.wantedBufferAhead);
     if (isNaN(wantedBufferAhead)) {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       throw new Error("Invalid wantedBufferAhead parameter. Should be a number.");
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
     }
   }
 
-  limitVideoWidth = isNullOrUndefined(options.limitVideoWidth) ?
+  const limitVideoWidth = isNullOrUndefined(options.limitVideoWidth) ?
     DEFAULT_LIMIT_VIDEO_WIDTH :
     !!options.limitVideoWidth;
 
@@ -426,9 +426,9 @@ function parseConstructorOptions(
   } else if (options.videoElement instanceof HTMLMediaElement) {
     videoElement = options.videoElement;
   } else {
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     throw new Error("Invalid videoElement parameter. Should be a HTMLMediaElement.");
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
   }
 
   if (isNullOrUndefined(options.initialVideoBitrate)) {
@@ -436,9 +436,9 @@ function parseConstructorOptions(
   } else {
     initialVideoBitrate = Number(options.initialVideoBitrate);
     if (isNaN(initialVideoBitrate)) {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       throw new Error("Invalid initialVideoBitrate parameter. Should be a number.");
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
     }
   }
 
@@ -447,9 +447,9 @@ function parseConstructorOptions(
   } else {
     initialAudioBitrate = Number(options.initialAudioBitrate);
     if (isNaN(initialAudioBitrate)) {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       throw new Error("Invalid initialAudioBitrate parameter. Should be a number.");
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
     }
   }
 
@@ -471,8 +471,8 @@ function parseConstructorOptions(
     }
   }
 
-  stopAtEnd = isNullOrUndefined(options.stopAtEnd) ? DEFAULT_STOP_AT_END :
-                                                     !!options.stopAtEnd;
+  const stopAtEnd = isNullOrUndefined(options.stopAtEnd) ? DEFAULT_STOP_AT_END :
+                                                           !!options.stopAtEnd;
 
   return { maxBufferAhead,
            maxBufferBehind,
@@ -570,18 +570,20 @@ function parseLoadVideoOptions(
                                   ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
                                   : options.audioTrackSwitchingMode;
   if (!arrayIncludes(["seamless", "direct"], audioTrackSwitchingMode)) {
-    log.warn("The `audioTrackSwitchingMode` loadVideo option must match one of the following strategy name:\n" +
+    log.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " +
+             "the following strategy name:\n" +
              "- `seamless`\n" +
              "- `direct`\n" +
-             "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE + " strategy will be used as default");
+             "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
+             " strategy will be used as default");
     audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
   }
 
   const transportOptions = objectAssign({}, transportOptsArg, {
-    /* tslint:disable deprecation */
+    /* eslint-disable import/no-deprecated */
     supplementaryImageTracks: [] as ISupplementaryImageTrackOption[],
     supplementaryTextTracks: [] as ISupplementaryTextTrackOption[],
-    /* tslint:enable deprecation */
+    /* eslint-enable import/no-deprecated */
     lowLatencyMode,
   });
 
@@ -697,7 +699,7 @@ function parseLoadVideoOptions(
       segmentRetry: options.networkConfig.segmentRetry };
 
   // TODO without cast
-  /* tslint:disable no-object-literal-type-assertion */
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
   return { autoPlay,
            defaultAudioTrack,
            defaultTextTrack,
@@ -717,7 +719,7 @@ function parseLoadVideoOptions(
            transport,
            transportOptions,
            url } as IParsedLoadVideoOptions;
-  /* tslint:enable no-object-literal-type-assertion */
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 }
 
 export {

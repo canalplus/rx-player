@@ -13,7 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* tslint:disable no-unsafe-any */
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 
 /** Every chars defined in base64. */
 const CHARS = [
@@ -60,7 +66,7 @@ describe("base64ToBytes", () => {
     expect(base64ToBytes("JGV4cGVjdChiYXNlNjRUb1VpbnQ4QXJyYXkoIiIp"))
       .toEqual(new Uint8Array([ 36, 101, 120, 112, 101, 99, 116, 40, 98, 97,
                                 115, 101, 54, 52, 84, 111, 85, 105, 110, 116,
-                                56, 65, 114, 114, 97, 121, 40, 34, 34, 41, ]));
+                                56, 65, 114, 114, 97, 121, 40, 34, 34, 41 ]));
     expect(base64ToBytes(window.btoa("toto")))
       .toEqual(new Uint8Array([ 116, 111, 116, 111 ]));
     expect(logWarn).not.toHaveBeenCalled();
@@ -132,7 +138,7 @@ describe("bytesToBase64", () => {
       .toEqual("dG90b/CfjIM=");
     expect(bytesToBase64(new Uint8Array([ 36, 101, 120, 112, 101, 99, 116, 40, 98, 97,
                                           115, 101, 54, 52, 84, 111, 85, 105, 110, 116,
-                                          56, 65, 114, 114, 97, 121, 40, 34, 34, 41, ])))
+                                          56, 65, 114, 114, 97, 121, 40, 34, 34, 41 ])))
       .toEqual("JGV4cGVjdChiYXNlNjRUb1VpbnQ4QXJyYXkoIiIp");
     expect(bytesToBase64(new Uint8Array([ 116, 111, 116, 111 ])))
       .toEqual(window.btoa("toto"));

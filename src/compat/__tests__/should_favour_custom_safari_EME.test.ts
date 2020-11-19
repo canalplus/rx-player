@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 const originalWebKitMediaKeys = (window as any).WebKitMediaKeys;
 
-/* tslint:disable no-unsafe-any */
 describe("compat - shouldFavourSafariMediaKeys", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -35,9 +41,9 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return false if we are on Safari but WekitMediaKeys is not available", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     (window as any).WebKitMediaKeys = undefined;
     jest.mock("../browser_detection", () => {
@@ -48,9 +54,9 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return true if we are on Safari and a WebKitMediaKeys implementation is available", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     (window as any).WebKitMediaKeys = {
       isTypeSupported: () => ({}),
@@ -67,4 +73,3 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
     expect(shouldFavourCustomSafariEME.default()).toBe(true);
   });
 });
-/* tslint:enable no-unsafe-any */

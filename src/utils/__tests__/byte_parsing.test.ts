@@ -70,9 +70,9 @@ describe("utils - byte parsing", () => {
       expect(byteUtils.be2toi(arr, 45)).toBe(0);
     });
 
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should return the number value for the 2 first elements of an Uint8Array from the offset", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       // as the test would be equivalent to re-implement the function, I
       // directly take the expected result (number to hex and hex to
       // number) and compare
@@ -86,9 +86,9 @@ describe("utils - byte parsing", () => {
   });
 
   describe("be3toi", () => {
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should return the number value for the 2 first elements of an Uint8Array from the offset", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       // as the test would be equivalent to re-implement the function, I
       // directly take the expected result (number to hex and hex to
       // number) and compare
@@ -102,9 +102,9 @@ describe("utils - byte parsing", () => {
   });
 
   describe("be4toi", () => {
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should return the number value for the 4 first elements of an Uint8Array from the offset", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       // as the test would be equivalent to re-implement the function, I
       // directly take the expected result (number to hex and hex to
       // number) and compare
@@ -118,9 +118,9 @@ describe("utils - byte parsing", () => {
   });
 
   describe("be8toi", () => {
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should return the number value for the 8 first elements of an Uint8Array from the offset", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       // as the test would be equivalent to re-implement the function, I
       // directly take the expected result (number to hex and hex to
       // number) and compare
@@ -146,9 +146,9 @@ describe("utils - byte parsing", () => {
     });
 
     it(
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       "should return the number value for the 2 first elements of an Uint8Array from the offset, little-endian style",
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
       () => {
         // as the test would be equivalent to re-implement the function, I
         // directly take the expected result (number to hex and hex to
@@ -164,9 +164,9 @@ describe("utils - byte parsing", () => {
 
   describe("le4toi", () => {
     it(
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       "should return the number value for the 4 first elements of an Uint8Array from the offset, little-endian style",
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
       () => {
         // as the test would be equivalent to re-implement the function, I
         // directly take the expected result (number to hex and hex to
@@ -182,9 +182,9 @@ describe("utils - byte parsing", () => {
 
   describe("le8toi", () => {
     it(
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       "should return the number value for the 8 first elements of an Uint8Array from the offset, little-endian style",
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
       () => {
         // as the test would be equivalent to re-implement the function, I
         // directly take the expected result (number to hex and hex to
@@ -200,9 +200,9 @@ describe("utils - byte parsing", () => {
   });
 
   describe("itobe2", () => {
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should convert the number given into two elements in a Uint8Array", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       expect(byteUtils.itobe2(65535))
         .toEqual(new Uint8Array([255, 255]));
       expect(byteUtils.itobe2(65281))
@@ -213,9 +213,9 @@ describe("utils - byte parsing", () => {
   });
 
   describe("itobe4", () => {
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should convert the number given into four elements in a Uint8Array", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       expect(byteUtils.itobe4(1))
         .toEqual(new Uint8Array([0, 0, 0, 1]));
       expect(byteUtils.itobe4(511))
@@ -228,9 +228,9 @@ describe("utils - byte parsing", () => {
   });
 
   describe("itobe8", () => {
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should return the number value for the 8 first elements of an Uint8Array from the offset", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       expect(byteUtils.itobe8(1))
         .toEqual(new Uint8Array([0, 0, 0, 0, 0, 0, 0, 1]));
       expect(byteUtils.itobe8(1237106686452549))
@@ -239,9 +239,9 @@ describe("utils - byte parsing", () => {
   });
 
   describe("itole2", () => {
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should return a little-endian style Uint8Array of length 2 translated from the number given", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       const values = [264, 65281, 65535, 255];
       expect(byteUtils.itole2(values[0])).toEqual(new Uint8Array([8, 1]));
       expect(byteUtils.itole2(values[1])).toEqual(new Uint8Array([1, 255]));
@@ -250,9 +250,9 @@ describe("utils - byte parsing", () => {
   });
 
   describe("itole4", () => {
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should return a little-endian style Uint8Array of length 4 translated from the number given", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       const values = [ 33489666, 130819, 511, 1 ];
       expect(byteUtils.itole4(values[0]))
         .toEqual(new Uint8Array([2, 3, 255, 1]));

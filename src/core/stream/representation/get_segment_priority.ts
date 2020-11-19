@@ -61,10 +61,7 @@ export function getPriorityForTime(
   const currentTime = clockTick.position + clockTick.wantedTimeOffset;
   const distance = timeWanted - currentTime;
 
-  for (let priority = 0;
-       priority < SEGMENT_PRIORITIES_STEPS.length;
-       priority++
-  ) {
+  for (let priority = 0; priority < SEGMENT_PRIORITIES_STEPS.length; priority++) {
     if (distance < SEGMENT_PRIORITIES_STEPS[priority]) {
       return priority;
     }

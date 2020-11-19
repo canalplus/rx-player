@@ -194,63 +194,63 @@ export default function manifestUpdateScheduler({
    * @param {boolean} completeRefresh
    * @returns {Observable}
    */
-   function refreshManifest(
-     { completeRefresh,
-       unsafeMode } : { completeRefresh : boolean;
-                        unsafeMode : boolean; }
-   ) : Observable<IManifestFetcherParsedResult | IWarningEvent> {
-     const fullRefresh = completeRefresh || manifestUpdateUrl === undefined;
-     const refreshURL = fullRefresh ? manifest.getUrl() :
-                                      manifestUpdateUrl;
-     const externalClockOffset = manifest.clockOffset;
+  function refreshManifest(
+    { completeRefresh,
+      unsafeMode } : { completeRefresh : boolean;
+                       unsafeMode : boolean; }
+  ) : Observable<IManifestFetcherParsedResult | IWarningEvent> {
+    const fullRefresh = completeRefresh || manifestUpdateUrl === undefined;
+    const refreshURL = fullRefresh ? manifest.getUrl() :
+                                     manifestUpdateUrl;
+    const externalClockOffset = manifest.clockOffset;
 
-     if (unsafeMode) {
-       consecutiveUnsafeMode += 1;
-       log.info("Init: Refreshing the Manifest in \"unsafeMode\" for the " +
-                String(consecutiveUnsafeMode) + " consecutive time.");
-     } else if (consecutiveUnsafeMode > 0) {
-       log.info("Init: Not parsing the Manifest in \"unsafeMode\" anymore after " +
-                String(consecutiveUnsafeMode) + " consecutive times.");
-       consecutiveUnsafeMode = 0;
-     }
-     return fetchManifest(refreshURL, { externalClockOffset,
-                                        previousManifest: manifest,
-                                        unsafeMode })
-       .pipe(mergeMap((value) => {
-         if (value.type === "warning") {
-           return observableOf(value);
-         }
-         const { manifest: newManifest,
-                 sendingTime: newSendingTime,
-                 receivedTime,
-                 parsingTime } = value;
-         const updateTimeStart = performance.now();
+    if (unsafeMode) {
+      consecutiveUnsafeMode += 1;
+      log.info("Init: Refreshing the Manifest in \"unsafeMode\" for the " +
+               String(consecutiveUnsafeMode) + " consecutive time.");
+    } else if (consecutiveUnsafeMode > 0) {
+      log.info("Init: Not parsing the Manifest in \"unsafeMode\" anymore after " +
+               String(consecutiveUnsafeMode) + " consecutive times.");
+      consecutiveUnsafeMode = 0;
+    }
+    return fetchManifest(refreshURL, { externalClockOffset,
+                                       previousManifest: manifest,
+                                       unsafeMode })
+      .pipe(mergeMap((value) => {
+        if (value.type === "warning") {
+          return observableOf(value);
+        }
+        const { manifest: newManifest,
+                sendingTime: newSendingTime,
+                receivedTime,
+                parsingTime } = value;
+        const updateTimeStart = performance.now();
 
-         if (fullRefresh) {
-           manifest.replace(newManifest);
-         } else {
-           try {
-             manifest.update(newManifest);
-           } catch (e) {
-             const message = e instanceof Error ? e.message :
-                                                  "unknown error";
-             log.warn(`MUS: Attempt to update Manifest failed: ${message}`,
-                      "Re-downloading the Manifest fully");
-             return startManualRefreshTimer(FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
-                                            minimumManifestUpdateInterval,
-                                            newSendingTime)
-               .pipe(mergeMap(() =>
-                 refreshManifest({ completeRefresh: true, unsafeMode: false })));
-           }
-         }
-         return observableOf({ type: "parsed" as const,
-                               manifest,
-                               sendingTime: newSendingTime,
-                               receivedTime,
-                               parsingTime,
-                               updatingTime: performance.now() - updateTimeStart });
-       }));
-   }
+        if (fullRefresh) {
+          manifest.replace(newManifest);
+        } else {
+          try {
+            manifest.update(newManifest);
+          } catch (e) {
+            const message = e instanceof Error ? e.message :
+                                                 "unknown error";
+            log.warn(`MUS: Attempt to update Manifest failed: ${message}`,
+                     "Re-downloading the Manifest fully");
+            return startManualRefreshTimer(FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
+                                           minimumManifestUpdateInterval,
+                                           newSendingTime)
+              .pipe(mergeMap(() =>
+                refreshManifest({ completeRefresh: true, unsafeMode: false })));
+          }
+        }
+        return observableOf({ type: "parsed" as const,
+                              manifest,
+                              sendingTime: newSendingTime,
+                              receivedTime,
+                              parsingTime,
+                              updatingTime: performance.now() - updateTimeStart });
+      }));
+  }
 }
 
 /**

@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { timer } from "rxjs";
 import cleanOldLoadedSessions from "../clean_old_loaded_sessions";
 import LoadedSessionsStore from "../utils/loaded_sessions_store";
 
-/* tslint:disable no-unsafe-any */
 
 const entry1 = [ { initData: new Uint8Array([1, 6, 9]),
                    initDataType: "test" } ];
@@ -132,7 +138,7 @@ function checkEntriesCleaned(
                                entries[i].initData,
                                entries[i].initDataType);
   }
-      closeSessionSpy.mockRestore();
+  closeSessionSpy.mockRestore();
 }
 
 describe("core - eme - cleanOldLoadedSessions", () => {
@@ -187,4 +193,3 @@ describe("core - eme - cleanOldLoadedSessions", () => {
                         done);
   });
 });
-/* tslint:enable no-unsafe-any */

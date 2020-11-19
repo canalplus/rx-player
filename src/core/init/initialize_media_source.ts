@@ -210,8 +210,8 @@ export default function InitializeOnMediaSource(
    * Fetch and parse the manifest from the URL given.
    * Throttled to avoid doing multiple simultaneous requests.
    */
-  const fetchManifest = throttle((manifestURL : string | undefined,
-                                  options : IManifestFetcherParserOptions)
+  const fetchManifest = throttle(
+    (manifestURL : string | undefined, options : IManifestFetcherParserOptions)
     : Observable<IWarningEvent | IManifestFetcherParsedResult> =>
       manifestFetcher.fetch(manifestURL).pipe(
         mergeMap((response) => response.type === "warning" ?
@@ -258,8 +258,7 @@ export default function InitializeOnMediaSource(
     // `emeManager$` effectively starts after a very short delay, thus
     // ensuring that no such race condition can occur.
     deferSubscriptions(),
-    share()
-  );
+    share());
 
   /**
    * Translate errors coming from the media element into RxPlayer errors
@@ -287,9 +286,9 @@ export default function InitializeOnMediaSource(
           return openMediaSource$.pipe(mergeMap(() => {
             evt.value.attachMediaKeys$.next();
 
-            if (evt.value.mediaKeysInfos.keySystemOptions
-                  .disableMediaKeysAttachmentLock === true)
-            {
+            const shouldDisableLock = evt.value.mediaKeysInfos.keySystemOptions
+              .disableMediaKeysAttachmentLock === true;
+            if (shouldDisableLock) {
               return observableOf(undefined);
             }
             // wait for "attached-media-keys"
@@ -403,10 +402,7 @@ export default function InitializeOnMediaSource(
                 return null;
               case "needs-decipherability-flush":
                 const keySystem = getCurrentKeySystem(mediaElement);
-                if (shouldReloadMediaSourceOnDecipherabilityUpdate(
-                      keySystem
-                    )
-                ) {
+                if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem)) {
                   reloadMediaSource$.next(evt.value);
                   return null;
                 }
@@ -442,8 +438,7 @@ export default function InitializeOnMediaSource(
 
         return observableMerge(handleReloads$, currentLoad$);
       }
-    })
-  );
+    }));
 
   return observableMerge(loadContent$, mediaError$, emeManager$);
 }

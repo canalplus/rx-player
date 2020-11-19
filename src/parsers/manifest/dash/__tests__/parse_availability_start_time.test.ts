@@ -45,17 +45,17 @@ describe("parseAvailabilityStartTime", function() {
     }, 100)).toEqual(6);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should return the referenceDateTime if set and no availabilityStartTime if set for dynamic contents", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     expect(parseAvailabilityStartTime({
       type: "dynamic",
     }, 100)).toEqual(100);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should return `0` if neither a referenceDateTime is given nor an availabilityStartTime is set for dynamic contents", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     expect(parseAvailabilityStartTime({
       type: "dynamic",
     })).toEqual(0);

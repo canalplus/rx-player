@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { map } from "rxjs/operators";
 
-/* tslint:disable no-unsafe-any */
 describe("compat - setElementSrc", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -63,4 +69,3 @@ describe("compat - setElementSrc", () => {
     }, 200);
   });
 });
-/* tslint:enable no-unsafe-any */

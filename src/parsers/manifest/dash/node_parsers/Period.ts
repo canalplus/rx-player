@@ -19,10 +19,10 @@ import {
   IAdaptationSetIntermediateRepresentation,
 } from "./AdaptationSet";
 import parseBaseURL, {
-  IBaseURL
+  IBaseURL,
 } from "./BaseURL";
 import parseEventStream, {
-  IParsedStreamEvent
+  IParsedStreamEvent,
 } from "./EventStream";
 import parseSegmentTemplate, {
   IParsedSegmentTemplate,
@@ -130,20 +130,20 @@ function parsePeriodAttributes(periodElement : Element) : [IPeriodAttributes, Er
 
       case "start":
         parseValue(attr.value, { asKey: "start",
-                                      parser: parseDuration,
-                                      dashName: "start" });
+                                 parser: parseDuration,
+                                 dashName: "start" });
         break;
 
       case "duration":
         parseValue(attr.value, { asKey: "duration",
-                                      parser: parseDuration,
-                                      dashName: "duration" });
+                                 parser: parseDuration,
+                                 dashName: "duration" });
         break;
 
       case "bitstreamSwitching":
         parseValue(attr.value, { asKey: "bitstreamSwitching",
-                                      parser: parseBoolean,
-                                      dashName: "bitstreamSwitching" });
+                                 parser: parseBoolean,
+                                 dashName: "bitstreamSwitching" });
         break;
 
       case "xlink:href":

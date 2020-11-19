@@ -1,4 +1,4 @@
-{
+module.exports = {
   "env": {
     "es6": true,
     "browser": true,
@@ -122,4 +122,4 @@
     "react/jsx-uses-vars": [2],
     "react/jsx-uses-react": [2]
   }
-}
+};

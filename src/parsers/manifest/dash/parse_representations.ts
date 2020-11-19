@@ -23,10 +23,10 @@ import {
 } from "../types";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
-  IAdaptationSetIntermediateRepresentation
+  IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
 import {
-  IRepresentationIntermediateRepresentation
+  IRepresentationIntermediateRepresentation,
 } from "./node_parsers/Representation";
 import { IParsedSegmentTemplate } from "./node_parsers/SegmentTemplate";
 import parseRepresentationIndex from "./parse_representation_index";
@@ -83,11 +83,8 @@ export default function parseRepresentations(
   adaptationInfos : IAdaptationInfos
 ): IParsedRepresentation[] {
   const parsedRepresentations : IParsedRepresentation[] = [];
-  for (let representationIdx = 0;
-       representationIdx < representationsIR.length;
-       representationIdx++)
-  {
-    const representation = representationsIR[representationIdx];
+  for (let reprIdx = 0; reprIdx < representationsIR.length; reprIdx++) {
+    const representation = representationsIR[reprIdx];
 
     // Compute Representation ID
     let representationID = representation.attributes.id != null ?
@@ -185,8 +182,8 @@ export default function parseRepresentations(
               cp.attributes.schemeIdUri.substring(0, 9) === "urn:uuid:")
           {
             systemId = cp.attributes.schemeIdUri.substring(9)
-                         .replace(/-/g, "")
-                         .toLowerCase();
+              .replace(/-/g, "")
+              .toLowerCase();
           }
           if (cp.attributes.keyId !== undefined && cp.attributes.keyId.length > 0) {
             acc.keyIds.push({ keyId: cp.attributes.keyId, systemId });

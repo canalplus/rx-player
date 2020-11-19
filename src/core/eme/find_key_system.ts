@@ -122,8 +122,7 @@ function checkCachedMediaKeySystemAccess(
  * @param {string} ksType - Obtained via inversion
  * @returns {string|undefined} - Either the canonical name, or undefined.
  */
-function findKeySystemCanonicalName(ksType: string)
-: string | undefined {
+function findKeySystemCanonicalName(ksType: string) : string | undefined {
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
     if (arrayIncludes(EME_KEY_SYSTEMS[ksName] as string[], ksType)) {
       return ksName;
@@ -269,7 +268,7 @@ export default function getMediaKeySystemAccess(
       if (cachedKeySystemAccess !== null) {
         log.info("EME: Found cached compatible keySystem", cachedKeySystemAccess);
         return observableOf({
-          type: "reuse-media-key-system-access" as "reuse-media-key-system-access",
+          type: "reuse-media-key-system-access" as const,
           value: { mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
                    options: cachedKeySystemAccess.keySystemOptions },
         });
@@ -321,43 +320,43 @@ export default function getMediaKeySystemAccess(
     function recursivelyTestKeySystems(
       index : number
     ) : Observable<IFoundMediaKeySystemAccessEvent> {
-        // if we iterated over the whole keySystemsType Array, quit on error
-        if (index >= keySystemsType.length) {
-          const error = new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS",
-                                                "No key system compatible with your " +
-                                                "wanted configuration has been found " +
-                                                "in the current browser.");
-          return observableThrow(error);
-        }
+      // if we iterated over the whole keySystemsType Array, quit on error
+      if (index >= keySystemsType.length) {
+        const error = new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS",
+                                              "No key system compatible with your " +
+                                              "wanted configuration has been found " +
+                                              "in the current browser.");
+        return observableThrow(error);
+      }
 
-        if (requestMediaKeySystemAccess == null) {
-          const error = Error("requestMediaKeySystemAccess is not " +
-                              "implemented in your browser.");
-          return observableThrow(error);
-        }
+      if (requestMediaKeySystemAccess == null) {
+        const error = Error("requestMediaKeySystemAccess is not " +
+                            "implemented in your browser.");
+        return observableThrow(error);
+      }
 
-        const { keyName, keyType, keySystemOptions } = keySystemsType[index];
+      const { keyName, keyType, keySystemOptions } = keySystemsType[index];
 
-        const keySystemConfigurations = buildKeySystemConfigurations(keyName,
-                                                                     keySystemOptions);
+      const keySystemConfigurations = buildKeySystemConfigurations(keyName,
+                                                                   keySystemOptions);
 
-        log.debug(`EME: Request keysystem access ${keyType},` +
-                  `${index + 1} of ${keySystemsType.length}`,
-                  keySystemConfigurations);
+      log.debug(`EME: Request keysystem access ${keyType},` +
+                `${index + 1} of ${keySystemsType.length}`,
+                keySystemConfigurations);
 
-        return requestMediaKeySystemAccess(keyType, keySystemConfigurations).pipe(
-          map((keySystemAccess) => {
-            log.info("EME: Found compatible keysystem", keyType, keySystemConfigurations);
-            return { type: "create-media-key-system-access" as const,
-                     value: { options: keySystemOptions,
-                              mediaKeySystemAccess: keySystemAccess } };
-          }),
-          catchError(() => {
-            log.debug("EME: Rejected access to keysystem",
-                      keyType,
-                      keySystemConfigurations);
-            return recursivelyTestKeySystems(index + 1);
-          }));
+      return requestMediaKeySystemAccess(keyType, keySystemConfigurations).pipe(
+        map((keySystemAccess) => {
+          log.info("EME: Found compatible keysystem", keyType, keySystemConfigurations);
+          return { type: "create-media-key-system-access" as const,
+                   value: { options: keySystemOptions,
+                            mediaKeySystemAccess: keySystemAccess } };
+        }),
+        catchError(() => {
+          log.debug("EME: Rejected access to keysystem",
+                    keyType,
+                    keySystemConfigurations);
+          return recursivelyTestKeySystems(index + 1);
+        }));
     }
   });
 }

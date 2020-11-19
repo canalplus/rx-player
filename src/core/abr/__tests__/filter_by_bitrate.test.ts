@@ -49,7 +49,7 @@ describe("ABR - filterByBitrate", () => {
                                      { bitrate : 100 },
                                      { bitrate : 1000 } ];
       expect(filterByBitrate(fakeReps as Representation[], 1010))
-      .toEqual(expectedFilteredReps);
+        .toEqual(expectedFilteredReps);
     });
   });
 

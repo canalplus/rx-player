@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 
 import {
   EMPTY,
@@ -46,21 +52,15 @@ function generateEncryptedEvent(
   initDataType : string,
   initData : Uint8Array
 ) : Event & { initDataType : string; initData : ArrayBuffer } {
-  /* tslint:disable ban */
-  return Object.assign(new Event("encrypted"),
-                       { initDataType, initData: initData.buffer });
-  /* tslint:enable ban */
+  return { ...new Event("encrypted"), initDataType, initData: initData.buffer };
 }
 
-/* tslint:disable no-unsafe-any */
 describe("core - eme - global tests - init data", () => {
   /** Default video element used in our tests. */
   const videoElt = document.createElement("video");
 
   const getLicenseSpy = jest.fn(() => {
-    /* tslint:disable ban */
     return new Promise(() => { /* noop */ });
-    /* tslint:enable ban */
   });
 
   /** Default keySystems configuration used in our tests. */
@@ -71,9 +71,9 @@ describe("core - eme - global tests - init data", () => {
     jest.restoreAllMocks();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should create a session and generate a request when init data is sent through the arguments", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const { generateKeyRequestSpy } = mockCompat();
@@ -119,9 +119,9 @@ describe("core - eme - global tests - init data", () => {
     initDataSubject.next({ type: "cenc", data: initData });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should ignore init data already sent through the argument", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const { generateKeyRequestSpy } = mockCompat();
@@ -177,9 +177,9 @@ describe("core - eme - global tests - init data", () => {
     initDataSubject.next({ type: "cenc", data: initData });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should create multiple sessions for multiple sent init data when unknown", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const { generateKeyRequestSpy } = mockCompat();
@@ -250,9 +250,9 @@ describe("core - eme - global tests - init data", () => {
     initDataSubject.next({ type: "cenc", data: initData2 });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should create multiple sessions for multiple sent init data types", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const { generateKeyRequestSpy } = mockCompat();
@@ -326,9 +326,9 @@ describe("core - eme - global tests - init data", () => {
     initDataSubject.next({ type: "cenc2", data: initData2 });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should create a session and generate a request when init data is received from the browser", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const { generateKeyRequestSpy, eventTriggers, getInitDataSpy } = mockCompat();
@@ -380,9 +380,9 @@ describe("core - eme - global tests - init data", () => {
     triggerEncrypted.next(initDataEvent);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should ignore init data already received through the browser", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const { generateKeyRequestSpy, eventTriggers, getInitDataSpy } = mockCompat();
@@ -447,9 +447,9 @@ describe("core - eme - global tests - init data", () => {
     triggerEncrypted.next(initDataEvent);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should create multiple sessions for multiple received init data when unknown", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const { generateKeyRequestSpy, eventTriggers, getInitDataSpy } = mockCompat();
@@ -498,9 +498,10 @@ describe("core - eme - global tests - init data", () => {
           case 3: checkEncryptedEventReceived(evt, initDataEvent2, initData2, 3); break;
           case 4: checkEncryptedEventReceived(evt, initDataEvent1, initData1, 4); break;
           case 5: checkEncryptedEventReceived(evt, initDataEvent2, initData2, 5); break;
-          case 6: expect(evt.type).toEqual("created-media-keys");
-                  evt.value.attachMediaKeys$.next();
-                  break;
+          case 6:
+            expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
+            break;
           case 7: expect(evt.type).toEqual("attached-media-keys"); break;
           case 8: expectLicenseRequestMessage(evt, initData1, "cenc"); break;
           case 9: expectInitDataIgnored(evt, initData1, "cenc"); break;
@@ -532,9 +533,9 @@ describe("core - eme - global tests - init data", () => {
     triggerEncrypted.next(initDataEvent2);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should create multiple sessions for multiple received init data types", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const { generateKeyRequestSpy, eventTriggers, getInitDataSpy } = mockCompat();
@@ -583,9 +584,10 @@ describe("core - eme - global tests - init data", () => {
           case 2: checkEncryptedEventReceived(evt, initDataEvent2, initData1, 2); break;
           case 3: checkEncryptedEventReceived(evt, initDataEvent3, initData2, 3); break;
           case 4: checkEncryptedEventReceived(evt, initDataEvent4, initData2, 4); break;
-          case 5: expect(evt.type).toEqual("created-media-keys");
-                  evt.value.attachMediaKeys$.next();
-                  break;
+          case 5:
+            expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
+            break;
           case 6: expect(evt.type).toEqual("attached-media-keys"); break;
           case 7: expectLicenseRequestMessage(evt, initData1, "cenc"); break;
           case 8: expectLicenseRequestMessage(evt, initData1, "cenc2"); break;
@@ -621,6 +623,7 @@ describe("core - eme - global tests - init data", () => {
     triggerEncrypted.next(initDataEvent4);
   });
 
+  // eslint-disable-next-line max-len
   it("should consider sent event through arguments and received events through the browser the same way", (done) => {
     // == mocks ==
     const { generateKeyRequestSpy, eventTriggers, getInitDataSpy } = mockCompat();
@@ -667,9 +670,10 @@ describe("core - eme - global tests - init data", () => {
       .subscribe((evt : any) => {
         switch (++eventsReceived) {
           case 1: checkEncryptedEventReceived(evt, initDataEvent1, initData1, 1); break;
-          case 2: expect(evt.type).toEqual("created-media-keys");
-                  evt.value.attachMediaKeys$.next();
-                  break;
+          case 2:
+            expect(evt.type).toEqual("created-media-keys");
+            evt.value.attachMediaKeys$.next();
+            break;
           case 3:
             expect(evt.type).toEqual("attached-media-keys");
             expect(createSessionSpy).toHaveBeenCalledTimes(0);

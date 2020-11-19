@@ -168,7 +168,7 @@ export default class SegmentInventory {
   /**
    * Reset the whole inventory.
    */
-  public reset() {
+  public reset() : void {
     this.inventory.length = 0;
   }
 
@@ -337,7 +337,7 @@ export default class SegmentInventory {
     const bufferType = adaptation.type;
     if (start >= end) {
       log.warn("SI: Invalid chunked inserted: starts before it ends",
-                bufferType, start, end);
+               bufferType, start, end);
       return;
     }
 
@@ -932,7 +932,7 @@ function guessBufferedEndFromRangeEnd(
 function prettyPrintInventory(inventory : IBufferedChunk[]) : string {
   const roundingError = 1 / 60;
   const encounteredReps :
-    Partial<Record<string /* Period `id` */,
+  Partial<Record<string /* Period `id` */,
                    Partial<Record<string /* Representation `id` */,
                                   string /* associated letter */ >>>> = {};
   const letters : Array<{ letter : string;
@@ -981,7 +981,7 @@ function prettyPrintInventory(inventory : IBufferedChunk[]) : string {
       } else {
         str += `${(lastChunk.bufferedEnd as number).toFixed(2)} ~ ` +
                `${chunk.bufferedStart.toFixed(2)}|${currentLetter}|`;
-    }
+      }
       lastChunk = chunk;
       lastLetter = currentLetter;
     }
@@ -992,7 +992,7 @@ function prettyPrintInventory(inventory : IBufferedChunk[]) : string {
   letters.forEach(letterInfo => {
     str += `\n[${letterInfo.letter}] ` +
            `P: ${letterInfo.periodId} || R: ${letterInfo.representationId}` +
-           `(${letterInfo.bitrate})`;
+           `(${letterInfo.bitrate ?? "unknown bitrate"})`;
   });
   return str;
 }

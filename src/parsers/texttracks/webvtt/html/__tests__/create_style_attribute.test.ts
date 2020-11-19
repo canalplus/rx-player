@@ -59,10 +59,16 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = alwaysAppliedStyle + defaultWidth + defaultTop + defaultTextAlign + "transform:translate(0%, 0%);" + "left:10%;";
+    const expected = alwaysAppliedStyle +
+                     defaultWidth +
+                     defaultTop +
+                     defaultTextAlign +
+                     "transform:translate(0%, 0%);" +
+                     "left:10%;";
     isEqualStyle(attribute.value, expected);
   });
 
+  // eslint-disable-next-line max-len
   it("should set horizontal position and position alignment based on align if no position present", () => {
     const settings = {
       align: "right",
@@ -70,7 +76,12 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = alwaysAppliedStyle + defaultWidth + defaultTop + "left:100%;" + "transform:translate(-100%, 0%);" + "text-align:right;";
+    const expected = alwaysAppliedStyle +
+                     defaultWidth +
+                     defaultTop +
+                     "left:100%;" +
+                     "transform:translate(-100%, 0%);" +
+                     "text-align:right;";
     isEqualStyle(attribute.value, expected);
   });
 
@@ -81,7 +92,11 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = alwaysAppliedStyle + defaultWidth + defaultLeft + defaultTextAlign + "top:0%;" + "transform:translate(-50%, 0%);" ;
+    const expected = alwaysAppliedStyle +
+                     defaultWidth +
+                     defaultLeft +
+                     defaultTextAlign +
+                     "top:0%;" + "transform:translate(-50%, 0%);" ;
     isEqualStyle(attribute.value, expected);
   });
 
@@ -92,7 +107,11 @@ describe("parsers - webvtt - createStyleAttribute", () => {
 
     const attribute = createStyleAttribute(settings);
 
-    const expected = alwaysAppliedStyle + defaultWidth + defaultLeft + defaultTextAlign + "top:10%;" + "transform:translate(-50%, -50%);";
+    const expected = alwaysAppliedStyle +
+                     defaultWidth +
+                     defaultLeft +
+                     defaultTextAlign +
+      "top:10%;" + "transform:translate(-50%, -50%);";
     isEqualStyle(attribute.value, expected);
   });
 
@@ -107,7 +126,7 @@ describe("parsers - webvtt - createStyleAttribute", () => {
   });
 });
 
- const isEqualStyle = (style1: string, style2: string) => {
+const isEqualStyle = (style1: string, style2: string) => {
   const uniform = (str: string) => str.split(";")
     .map(s => s.replace(" ", ""))
     .filter(s => s !== "")

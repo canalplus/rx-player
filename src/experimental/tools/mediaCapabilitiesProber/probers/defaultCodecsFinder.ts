@@ -28,9 +28,9 @@ export function findDefaultVideoCodec(): string {
     "video/mp4;codecs=\"avc1.42e01e\"",
     "video/webm;codecs=\"vp8\"",
   ];
-  /* tslint:disable no-unbound-method */
+  /* eslint-disable @typescript-eslint/unbound-method */
   if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
-  /* tslint:enable no-unbound-method */
+  /* eslint-enable @typescript-eslint/unbound-method */
     throw new Error("Cannot check video codec support: No API available.");
   }
   for (const codec of videoCodecs) {
@@ -52,9 +52,9 @@ export function findDefaultAudioCodec(): string {
     "audio/mp4;codecs=\"mp4a.40.2\"",
     "audio/webm;codecs=opus",
   ];
-  /* tslint:disable no-unbound-method */
+  /* eslint-disable @typescript-eslint/unbound-method */
   if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
-  /* tslint:enable no-unbound-method */
+  /* eslint-enable @typescript-eslint/unbound-method */
     throw new Error("Cannot check audio codec support: No API available.");
   }
   for (const codec of audioCodecs) {

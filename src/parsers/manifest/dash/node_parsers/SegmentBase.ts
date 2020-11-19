@@ -78,50 +78,50 @@ export default function parseSegmentBase(
     switch (attr.name) {
       case "timescale":
         parseValue(attr.value, { asKey: "timescale",
-                                      parser: parseMPDInteger,
-                                      dashName: "timescale" });
+                                 parser: parseMPDInteger,
+                                 dashName: "timescale" });
         break;
 
       case "presentationTimeOffset":
         parseValue(attr.value, { asKey: "presentationTimeOffset",
-                                      parser: parseMPDFloat,
-                                      dashName: "presentationTimeOffset" });
+                                 parser: parseMPDFloat,
+                                 dashName: "presentationTimeOffset" });
         break;
 
       case "indexRange":
         parseValue(attr.value, { asKey: "indexRange",
-                                      parser: parseByteRange,
-                                      dashName: "indexRange" });
+                                 parser: parseByteRange,
+                                 dashName: "indexRange" });
         break;
 
       case "indexRangeExact":
         parseValue(attr.value, { asKey: "indexRangeExact",
-                                      parser: parseBoolean,
-                                      dashName: "indexRangeExact" });
+                                 parser: parseBoolean,
+                                 dashName: "indexRangeExact" });
         break;
 
       case "availabilityTimeOffset":
         parseValue(attr.value, { asKey: "availabilityTimeOffset",
-                                      parser: parseMPDFloat,
-                                      dashName: "availabilityTimeOffset" });
+                                 parser: parseMPDFloat,
+                                 dashName: "availabilityTimeOffset" });
         break;
 
       case "availabilityTimeComplete":
         parseValue(attr.value, { asKey: "availabilityTimeComplete",
-                                      parser: parseBoolean,
-                                      dashName: "availabilityTimeComplete" });
+                                 parser: parseBoolean,
+                                 dashName: "availabilityTimeComplete" });
         break;
 
       case "duration":
         parseValue(attr.value, { asKey: "duration",
-                                      parser: parseMPDInteger,
-                                      dashName: "duration" });
+                                 parser: parseMPDInteger,
+                                 dashName: "duration" });
         break;
 
       case "startNumber":
         parseValue(attr.value, { asKey: "startNumber",
-                                      parser: parseMPDInteger,
-                                      dashName: "startNumber" });
+                                 parser: parseMPDInteger,
+                                 dashName: "startNumber" });
         break;
     }
   }

@@ -14,32 +14,35 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("shouldAppendBufferAfterPadding", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
-it("should be true if on Safari", () => {
+  it("should be true if on Safari", () => {
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
                isSafari: true };
     });
-    /* tslint:disable no-unsafe-any */
     const shouldAppendBufferAfterPadding =
       require("../should_append_buffer_after_padding").default;
-    /* tslint:enable no-unsafe-any */
     expect(shouldAppendBufferAfterPadding).toBe(true);
   });
 
-it("should be false if not on Safari", () => {
+  it("should be false if not on Safari", () => {
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
                isSafari: false };
     });
-    /* tslint:disable no-unsafe-any */
     const shouldAppendBufferAfterPadding =
       require("../should_append_buffer_after_padding").default;
-    /* tslint:enable no-unsafe-any */
     expect(shouldAppendBufferAfterPadding).toBe(false);
   });
 });

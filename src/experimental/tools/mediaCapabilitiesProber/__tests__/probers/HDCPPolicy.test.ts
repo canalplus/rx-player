@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { of as observableOf } from "rxjs";
 import PPromise from "../../../../../utils/promise";
 import { ProberStatus } from "../../types";
 
-/* tslint:disable no-unsafe-any */
 
 describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
   beforeEach(() => {
@@ -30,10 +36,10 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       requestMediaKeySystemAccess: null,
     }));
     const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeHDCPPolicy({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: API not available");
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should throw if no hdcp attribute in config", () => {
@@ -41,12 +47,12 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       requestMediaKeySystemAccess: {},
     }));
     const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeHDCPPolicy({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: " +
       "Missing policy argument for calling getStatusForPolicy."
     );
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should resolve with `Unknown` if no getStatusForPolicy API", (done) => {
@@ -138,4 +144,3 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
   });
 });
 
-/* tslint:disable no-unsafe-any */

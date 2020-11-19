@@ -23,9 +23,9 @@ import { MPDError } from "../utils";
 function testBooleanAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="true" />`, "text/xml")
@@ -47,9 +47,9 @@ function testBooleanAttribute(attributeName : string, variableName? : string) : 
     spyLog.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="foobar" />`, "text/xml")
@@ -81,9 +81,9 @@ function testBooleanAttribute(attributeName : string, variableName? : string) : 
 function testStringAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="foobar" />`, "text/xml")
@@ -108,9 +108,9 @@ function testStringAttribute(attributeName : string, variableName? : string) : v
 function testNumberAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="012" />`, "text/xml")
@@ -140,9 +140,9 @@ function testNumberAttribute(attributeName : string, variableName? : string) : v
     spyLog.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="toto" />`, "text/xml")
@@ -193,9 +193,9 @@ function testNumberOrBooleanAttribute(
 ) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="012" />`, "text/xml")
@@ -225,9 +225,9 @@ function testNumberOrBooleanAttribute(
     spyLog.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="toto" />`, "text/xml")
@@ -271,9 +271,9 @@ function testNumberOrBooleanAttribute(
     spyLog.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a boolean ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const element1 = new DOMParser()
       .parseFromString(`<AdaptationSet ${attributeName}="true" />`, "text/xml")
@@ -298,9 +298,9 @@ function testNumberOrBooleanAttribute(
 
 describe("DASH Node Parsers - AdaptationSet", () => {
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should correctly parse an AdaptationSet element without attributes nor children", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const element = new DOMParser()
       .parseFromString("<AdaptationSet />", "text/xml")
       .childNodes[0] as Element;
@@ -358,6 +358,7 @@ describe("DASH Node Parsers - AdaptationSet", () => {
 
   it("should correctly parse a non-empty baseURLs", () => {
     const element1 = new DOMParser()
+      // eslint-disable-next-line max-len
       .parseFromString("<AdaptationSet><BaseURL availabilityTimeOffset=\"INF\">a</BaseURL></AdaptationSet>", "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
@@ -373,6 +374,7 @@ describe("DASH Node Parsers - AdaptationSet", () => {
 
     const element2 = new DOMParser()
       .parseFromString(
+      // eslint-disable-next-line max-len
         "<AdaptationSet><BaseURL availabilityTimeOffset=\"4\">foo bar</BaseURL></AdaptationSet>",
         "text/xml"
       ).childNodes[0] as Element;
@@ -390,18 +392,17 @@ describe("DASH Node Parsers - AdaptationSet", () => {
 
   it("should correctly parse multiple non-empty baseURLs", () => {
     const element1 = new DOMParser()
+      // eslint-disable-next-line max-len
       .parseFromString("<AdaptationSet><BaseURL availabilityTimeOffset=\"INF\">a</BaseURL><BaseURL availabilityTimeOffset=\"12\">b</BaseURL></AdaptationSet>", "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
       .toEqual([
         {
           attributes: {},
-          children: { baseURLs: [
-                                  { attributes: { availabilityTimeOffset: Infinity },
+          children: { baseURLs: [ { attributes: { availabilityTimeOffset: Infinity },
                                     value: "a" },
                                   { attributes: { availabilityTimeOffset: 12 },
-                                    value: "b" },
-                                ],
+                                    value: "b" } ],
                       representations: [] },
         },
         [],

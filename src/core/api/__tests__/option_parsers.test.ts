@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import config from "../../../config";
 import log from "../../../log";
 import {
@@ -26,7 +33,6 @@ import {
   parseLoadVideoOptions,
 } from "../option_parsers";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../log");
 jest.mock("../../../utils/languages");
 jest.mock("../../../utils/warn_once");
@@ -166,9 +172,9 @@ describe("API - parseConstructorOptions", () => {
                             "`throttleVideoBitrateWhenHidden` instead.");
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should not set `throttleVideoBitrateWhenHidden` if `throttleWhenHidden` is set", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     warnOnceMock.mockReturnValue(undefined);
     expect(parseConstructorOptions({
       throttleWhenHidden: false,
@@ -209,9 +215,9 @@ describe("API - parseConstructorOptions", () => {
     });
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should authorize setting a videoElement option which can be any media element", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     const _videoElement = document.createElement("video");
     const parsed1 = parseConstructorOptions({ videoElement: _videoElement });
     expect(parsed1).toEqual({
@@ -470,13 +476,17 @@ describe("API - parseLoadVideoOptions", () => {
     expect(opt1).not.toBeDefined();
     expect(err1.message).toEqual(
       "Unable to load a content: no url set on loadVideo.\n" +
-      "Please provide at least either an `url` argument, a `transportOptions.initialManifest` option or a `transportOptions.manifestLoader` option so the RxPlayer can load the content."
+      "Please provide at least either an `url` argument, a " +
+      "`transportOptions.initialManifest` option or a " +
+      "`transportOptions.manifestLoader` option so the RxPlayer can load the content."
     );
     expect(err2).toBeDefined();
     expect(opt2).not.toBeDefined();
     expect(err2.message).toEqual(
       "Unable to load a content: no url set on loadVideo.\n" +
-      "Please provide at least either an `url` argument, a `transportOptions.initialManifest` option or a `transportOptions.manifestLoader` option so the RxPlayer can load the content."
+      "Please provide at least either an `url` argument, a " +
+      "`transportOptions.initialManifest` option or a " +
+      "`transportOptions.manifestLoader` option so the RxPlayer can load the content."
     );
   });
 
@@ -504,9 +514,9 @@ describe("API - parseLoadVideoOptions", () => {
     });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should set a default object if both a Manifest loader and transport is given", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const manifestLoader = () : never => {
       throw new Error("Should not execute");
     };
@@ -523,9 +533,9 @@ describe("API - parseLoadVideoOptions", () => {
     });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should set a default object if both an initialManifest and transport is given", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     expect(parseLoadVideoOptions({
       transport: "bar",
       transportOptions: { initialManifest: "test" },
@@ -837,6 +847,7 @@ describe("API - parseLoadVideoOptions", () => {
     });
   });
 
+  // eslint-disable-next-line max-len
   it("should set a 'seamless' audioTrackSwitching mode when the parameter is invalid or not specified", () => {
     logWarnMock.mockReturnValue(undefined);
     expect(parseLoadVideoOptions({
@@ -850,7 +861,10 @@ describe("API - parseLoadVideoOptions", () => {
       audioTrackSwitchingMode: "seamless",
     });
     expect(logWarnMock).toHaveBeenCalledTimes(1);
-    expect(logWarnMock).toHaveBeenCalledWith(`The \`audioTrackSwitchingMode\` loadVideo option must match one of the following strategy name:
+    expect(logWarnMock)
+      .toHaveBeenCalledWith(
+        "The `audioTrackSwitchingMode` loadVideo option must match one of " +
+        `the following strategy name:
 - \`seamless\`
 - \`direct\`
 If badly set, seamless strategy will be used as default`);
@@ -1272,9 +1286,9 @@ If badly set, seamless strategy will be used as default`);
     expect(err.message).toEqual("Invalid textTrackMode.");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should throw when setting an html textTrackMode option with no textTrackElement", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     let err;
     let opt;
     try {
@@ -1292,9 +1306,9 @@ If badly set, seamless strategy will be used as default`);
       .toEqual("You have to provide a textTrackElement in \"html\" textTrackMode.");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should throw when setting an html textTrackMode option with no textTrackElement", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     let err;
     let opt;
     const textTrackElement = {};
@@ -1338,9 +1352,9 @@ If badly set, seamless strategy will be used as default`);
       "without being in an \"html\" textTrackMode. It will be ignored.");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should set non-documented variables in `transportOptions`", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
@@ -1357,4 +1371,3 @@ If badly set, seamless strategy will be used as default`);
   });
 
 });
-/* tslint:enable no-unsafe-any */

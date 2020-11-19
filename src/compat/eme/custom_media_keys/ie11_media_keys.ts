@@ -30,8 +30,10 @@ import {
   IMediaKeySessionEvents,
 } from "./types";
 
-class IE11MediaKeySession extends EventEmitter<IMediaKeySessionEvents>
-                          implements ICustomMediaKeySession {
+class IE11MediaKeySession
+  extends EventEmitter<IMediaKeySessionEvents>
+  implements ICustomMediaKeySession
+{
   public readonly update: (license: Uint8Array) => Promise<void>;
   public readonly closed: Promise<void>;
   public expiration: number;
@@ -54,11 +56,13 @@ class IE11MediaKeySession extends EventEmitter<IMediaKeySessionEvents>
           return reject("MediaKeySession not set.");
         }
         try {
+          /* eslint-disable @typescript-eslint/no-unsafe-call */
+          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
           resolve(
-            /* tslint:disable no-unsafe-any */
             (this._ss as any).update(license, /* sessionId */ "")
-            /* tslint:enable no-unsafe-any */
           );
+          /* eslint-enable @typescript-eslint/no-unsafe-call */
+          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         } catch (err) {
           reject(err);
         }
@@ -67,10 +71,12 @@ class IE11MediaKeySession extends EventEmitter<IMediaKeySessionEvents>
   }
   generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
     return new PPromise((resolve) => {
-      /* tslint:disable no-unsafe-any */
+      /* eslint-disable @typescript-eslint/no-unsafe-call */
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       this._ss = (this._mk as any).createSession("video/mp4",
                                                  initData) as MediaKeySession;
-      /* tslint:enable no-unsafe-any */
+      /* eslint-enable @typescript-eslint/no-unsafe-call */
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       observableMerge(events.onKeyMessage$(this._ss),
                       events.onKeyAdded$(this._ss),
                       events.onKeyError$(this._ss)
@@ -82,9 +88,9 @@ class IE11MediaKeySession extends EventEmitter<IMediaKeySessionEvents>
   close(): Promise<void> {
     return new PPromise((resolve) => {
       if (this._ss != null) {
-        /* tslint:disable no-floating-promises */
+        /* eslint-disable @typescript-eslint/no-floating-promises */
         this._ss.close();
-        /* tslint:enable no-floating-promises */
+        /* eslint-enable @typescript-eslint/no-floating-promises */
         this._ss = undefined;
       }
       this._closeSession$.next();
@@ -116,11 +122,14 @@ class IE11CustomMediaKeys implements ICustomMediaKeys {
 
   _setVideo(videoElement: HTMLMediaElement): void {
     this._videoElement = videoElement;
-    /* tslint:disable no-unsafe-any */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
     if ((this._videoElement as any).msSetMediaKeys !== undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return (this._videoElement as any).msSetMediaKeys(this._mediaKeys);
     }
-    /* tslint:enable no-unsafe-any */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
   }
 
   createSession(/* sessionType */): ICustomMediaKeySession {
@@ -135,7 +144,14 @@ class IE11CustomMediaKeys implements ICustomMediaKeys {
   }
 }
 
-export default function getIE11MediaKeysCallbacks() {
+export default function getIE11MediaKeysCallbacks() : {
+  isTypeSupported: (keyType: string) => boolean;
+  createCustomMediaKeys: (keyType: string) => IE11CustomMediaKeys;
+  setMediaKeys: (
+    elt: HTMLMediaElement,
+    mediaKeys: MediaKeys|ICustomMediaKeys|null
+  ) => void;
+} {
   const isTypeSupported = (keySystem: string, type?: string|null) => {
     if (MSMediaKeysConstructor === undefined) {
       throw new Error("No MSMediaKeys API.");
@@ -147,8 +163,10 @@ export default function getIE11MediaKeysCallbacks() {
   };
   const createCustomMediaKeys = (keyType: string) =>
     new IE11CustomMediaKeys(keyType);
-  const setMediaKeys = (elt: HTMLMediaElement,
-                        mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
+  const setMediaKeys = (
+    elt: HTMLMediaElement,
+    mediaKeys: MediaKeys|ICustomMediaKeys|null
+  ): void => {
     if (mediaKeys === null) {
       // msSetMediaKeys only accepts native MSMediaKeys as argument.
       // Calling it with null or undefined will raise an exception.

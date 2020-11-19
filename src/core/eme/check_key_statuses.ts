@@ -47,15 +47,17 @@ export default function checkKeyStatuses(
   const blacklistedKeyIDs : ArrayBuffer[] = [];
   const { fallbackOn = {}, throwOnLicenseExpiration } = keySystemOptions;
 
-  /* tslint:disable no-unsafe-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-disable @typescript-eslint/no-unsafe-call */
   (session.keyStatuses as any).forEach((_arg1 : unknown, _arg2 : unknown) => {
-    /* tslint:enable no-unsafe-any */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-enable @typescript-eslint/no-unsafe-call */
     // Hack present because the order of the arguments has changed in spec
     // and is not the same between some versions of Edge and Chrome.
     const [keyStatus, keyStatusKeyId] = (() => {
       return (typeof _arg1  === "string" ? [_arg1, _arg2] :
-                                           [_arg2, _arg1]
-             ) as [MediaKeyStatus, ArrayBuffer];
+                                           [_arg2, _arg1]) as [ MediaKeyStatus,
+                                                                ArrayBuffer ];
     })();
 
     const keyId = getUUIDKidFromKeyStatusKID(keySystem,

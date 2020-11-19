@@ -239,9 +239,9 @@ function getKeyStatusesEvents(
  */
 function formatGetLicenseError(error: unknown) : ICustomError {
   if (error instanceof TimeoutError) {
-     return new EncryptedMediaError("KEY_LOAD_TIMEOUT",
-                                    "The license server took too much time to " +
-                                    "respond.");
+    return new EncryptedMediaError("KEY_LOAD_TIMEOUT",
+                                   "The license server took too much time to " +
+                                   "respond.");
   }
 
   const err = new EncryptedMediaError("KEY_LOAD_ERROR",
@@ -272,7 +272,7 @@ function updateSessionWithMessage(
   if (isNullOrUndefined(message)) {
     log.info("EME: No message given, skipping session.update");
     return observableOf({ type: "no-update" as const,
-                          value: { initData, initDataType }});
+                          value: { initData, initDataType } });
   }
 
   log.info("EME: Updating MediaKeySession with message");
@@ -345,9 +345,8 @@ function getLicenseBackoffOptions(
     shouldRetry: (error : unknown) => error instanceof TimeoutError ||
                                       isNullOrUndefined(error) ||
                                       (error as { noRetry? : boolean }).noRetry !== true,
-    onRetry: (error : unknown) => sessionWarningSubject$.next({
-                                    type: "warning",
-                                    value: formatGetLicenseError(error),
-                                  }),
+    onRetry: (error : unknown) =>
+      sessionWarningSubject$.next({ type: "warning",
+                                    value: formatGetLicenseError(error) }),
   };
 }

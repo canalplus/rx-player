@@ -17,7 +17,6 @@
 import log from "../../../../log";
 import resolveStylesInheritance from "../resolve_styles_inheritance";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../../log");
 const logWarnMock = log.warn as jest.Mock<ReturnType<typeof log.warn>>;
 
@@ -29,15 +28,15 @@ describe("resolve_styles_inheritance", () => {
   it("should not update styles without any inheritance", () => {
     logWarnMock.mockReturnValue(undefined);
     const initialStyle = [
-      { id: "1", style: { titi: "toto", tata: "tutu"}, extendsStyles: [] },
-      { id: "2", style: { toti: "toti", tati: "totu"}, extendsStyles: [] },
-      { id: "3", style: { titu: "totu", tatu: "tatu"}, extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tutu" }, extendsStyles: [] },
+      { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
+      { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ];
     resolveStylesInheritance(initialStyle);
     expect(initialStyle).toEqual([
-      { id: "1", style: { titi: "toto", tata: "tutu"}, extendsStyles: [] },
-      { id: "2", style: { toti: "toti", tati: "totu"}, extendsStyles: [] },
-      { id: "3", style: { titu: "totu", tatu: "tatu"}, extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tutu" }, extendsStyles: [] },
+      { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
+      { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ]);
     expect(logWarnMock).not.toHaveBeenCalled();
   });
@@ -45,9 +44,9 @@ describe("resolve_styles_inheritance", () => {
   it("should resolve simple inheritance", () => {
     logWarnMock.mockReturnValue(undefined);
     const initialStyle1 = [
-      { id: "1", style: { titi: "toto", tata: "tutu"}, extendsStyles: ["2"] },
-      { id: "2", style: { toti: "toti", tati: "totu"}, extendsStyles: [] },
-      { id: "3", style: { titu: "totu", tatu: "tatu"}, extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tutu" }, extendsStyles: ["2"] },
+      { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
+      { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ];
     resolveStylesInheritance(initialStyle1);
     expect(initialStyle1).toEqual([
@@ -57,13 +56,13 @@ describe("resolve_styles_inheritance", () => {
                  toti: "toti",
                  tati: "totu" },
         extendsStyles: [] },
-      { id: "2", style: { toti: "toti", tati: "totu"}, extendsStyles: [] },
-      { id: "3", style: { titu: "totu", tatu: "tatu"}, extendsStyles: [] },
+      { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
+      { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ]);
     const initialStyle2 = [
-      { id: "1", style: { titi: "toto", tata: "tutu"}, extendsStyles: [] },
-      { id: "2", style: { toti: "toti", tati: "totu"}, extendsStyles: [] },
-      { id: "3", style: { titu: "totu", tatu: "tatu"}, extendsStyles: ["1"] },
+      { id: "1", style: { titi: "toto", tata: "tutu" }, extendsStyles: [] },
+      { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
+      { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: ["1"] },
     ];
     resolveStylesInheritance(initialStyle2);
     expect(initialStyle2).toEqual([
@@ -71,7 +70,7 @@ describe("resolve_styles_inheritance", () => {
         style: { titi: "toto",
                  tata: "tutu" },
         extendsStyles: [] },
-      { id: "2", style: { toti: "toti", tati: "totu"}, extendsStyles: [] },
+      { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
       { id: "3",
         style: { titu: "totu",
                  tatu: "tatu",
@@ -85,9 +84,9 @@ describe("resolve_styles_inheritance", () => {
   it("should be able to inherit multiple styles at once", () => {
     logWarnMock.mockReturnValue(undefined);
     const initialStyle = [
-      { id: "1", style: { titi: "toto", tata: "tutu"}, extendsStyles: ["2", "3"] },
-      { id: "2", style: { toti: "toti", tati: "totu"}, extendsStyles: [] },
-      { id: "3", style: { titu: "totu", tatu: "tatu"}, extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tutu" }, extendsStyles: ["2", "3"] },
+      { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
+      { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ];
     resolveStylesInheritance(initialStyle);
     expect(initialStyle).toEqual([
@@ -99,8 +98,8 @@ describe("resolve_styles_inheritance", () => {
                  titu: "totu",
                  tatu: "tatu" },
         extendsStyles: [] },
-      { id: "2", style: { toti: "toti", tati: "totu"}, extendsStyles: [] },
-      { id: "3", style: { titu: "totu", tatu: "tatu"}, extendsStyles: [] },
+      { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
+      { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ]);
     expect(logWarnMock).not.toHaveBeenCalled();
   });
@@ -108,9 +107,9 @@ describe("resolve_styles_inheritance", () => {
   it("should correctly overwrite inherited properties", () => {
     logWarnMock.mockReturnValue(undefined);
     const initialStyle = [
-      { id: "1", style: { titi: "toto", tata: "tuto"}, extendsStyles: ["2", "3"] },
-      { id: "2", style: { titi: "tito", tata: "titu"}, extendsStyles: [] },
-      { id: "3", style: { teti: "teto", tata: "tutu"}, extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tuto" }, extendsStyles: ["2", "3"] },
+      { id: "2", style: { titi: "tito", tata: "titu" }, extendsStyles: [] },
+      { id: "3", style: { teti: "teto", tata: "tutu" }, extendsStyles: [] },
     ];
     resolveStylesInheritance(initialStyle);
     expect(initialStyle).toEqual([
@@ -119,8 +118,8 @@ describe("resolve_styles_inheritance", () => {
                  tata: "tuto",
                  teti: "teto" },
         extendsStyles: [] },
-      { id: "2", style: { titi: "tito", tata: "titu"}, extendsStyles: [] },
-      { id: "3", style: { teti: "teto", tata: "tutu"}, extendsStyles: [] },
+      { id: "2", style: { titi: "tito", tata: "titu" }, extendsStyles: [] },
+      { id: "3", style: { teti: "teto", tata: "tutu" }, extendsStyles: [] },
     ]);
     expect(logWarnMock).not.toHaveBeenCalled();
   });
@@ -128,10 +127,10 @@ describe("resolve_styles_inheritance", () => {
   it("should correctly handle multiple levels of inheritance", () => {
     logWarnMock.mockReturnValue(undefined);
     const initialStyle = [
-      { id: "1", style: { titi: "toto", tata: "tuto"}, extendsStyles: ["2", "3"] },
-      { id: "2", style: { titi: "tito", tata: "titu"}, extendsStyles: ["4"] },
-      { id: "3", style: { teti: "teto", tata: "tutu"}, extendsStyles: [] },
-      { id: "4", style: { four: "4", four2: "four2"}, extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tuto" }, extendsStyles: ["2", "3"] },
+      { id: "2", style: { titi: "tito", tata: "titu" }, extendsStyles: ["4"] },
+      { id: "3", style: { teti: "teto", tata: "tutu" }, extendsStyles: [] },
+      { id: "4", style: { four: "4", four2: "four2" }, extendsStyles: [] },
     ];
     resolveStylesInheritance(initialStyle);
     expect(initialStyle).toEqual([
@@ -148,8 +147,8 @@ describe("resolve_styles_inheritance", () => {
                  four: "4",
                  four2: "four2" },
         extendsStyles: [] },
-      { id: "3", style: { teti: "teto", tata: "tutu"}, extendsStyles: [] },
-      { id: "4", style: { four: "4", four2: "four2"}, extendsStyles: [] },
+      { id: "3", style: { teti: "teto", tata: "tutu" }, extendsStyles: [] },
+      { id: "4", style: { four: "4", four2: "four2" }, extendsStyles: [] },
     ]);
     expect(logWarnMock).not.toHaveBeenCalled();
   });
@@ -159,9 +158,9 @@ describe("resolve_styles_inheritance", () => {
 
     // 1. simple case
     const initialStyle1 = [
-      { id: "1", style: { titi: "toto", tata: "tuto"}, extendsStyles: ["3"] },
-      { id: "2", style: { titi: "tito", teta: "tutu"}, extendsStyles: [] },
-      { id: "3", style: { tata: "toto", tota: "tutu"}, extendsStyles: ["1"] },
+      { id: "1", style: { titi: "toto", tata: "tuto" }, extendsStyles: ["3"] },
+      { id: "2", style: { titi: "tito", teta: "tutu" }, extendsStyles: [] },
+      { id: "3", style: { tata: "toto", tota: "tutu" }, extendsStyles: ["1"] },
     ];
     resolveStylesInheritance(initialStyle1);
     expect(initialStyle1).toEqual([
@@ -187,9 +186,9 @@ describe("resolve_styles_inheritance", () => {
 
     // 2. More complex case
     const initialStyle2 = [
-      { id: "1", style: { titi: "toto", tata: "tuto"}, extendsStyles: ["2", "3"] },
-      { id: "2", style: { titi: "tito", teta: "tutu"}, extendsStyles: ["3"] },
-      { id: "3", style: { tata: "toto", tota: "tutu"}, extendsStyles: ["2"] },
+      { id: "1", style: { titi: "toto", tata: "tuto" }, extendsStyles: ["2", "3"] },
+      { id: "2", style: { titi: "tito", teta: "tutu" }, extendsStyles: ["3"] },
+      { id: "3", style: { tata: "toto", tota: "tutu" }, extendsStyles: ["2"] },
     ];
     resolveStylesInheritance(initialStyle2);
     expect(initialStyle2).toEqual([
@@ -221,9 +220,9 @@ describe("resolve_styles_inheritance", () => {
   it("should ignore unknown IDs", () => {
     logWarnMock.mockReturnValue(undefined);
     const initialStyle = [
-      { id: "1", style: { titi: "toto", tata: "tuto"}, extendsStyles: ["3", "6", "2"] },
-      { id: "2", style: { titi: "tito", teta: "tutu"}, extendsStyles: [] },
-      { id: "3", style: { tata: "toto", tota: "tutu"}, extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tuto" }, extendsStyles: ["3", "6", "2"] },
+      { id: "2", style: { titi: "tito", teta: "tutu" }, extendsStyles: [] },
+      { id: "3", style: { tata: "toto", tota: "tutu" }, extendsStyles: [] },
     ];
     resolveStylesInheritance(initialStyle);
     expect(initialStyle).toEqual([
@@ -235,11 +234,11 @@ describe("resolve_styles_inheritance", () => {
         extendsStyles: [] },
       { id: "2",
         style: { titi: "tito",
-                 teta: "tutu"},
+                 teta: "tutu" },
         extendsStyles: [] },
       { id: "3",
         style: { tata: "toto",
-                 tota: "tutu"},
+                 tota: "tutu" },
         extendsStyles: [] },
     ]);
     expect(logWarnMock)

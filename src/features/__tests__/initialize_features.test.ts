@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable max-len */
+
 describe("Features - initializeFeaturesObject", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -26,7 +33,7 @@ describe("Features - initializeFeaturesObject", () => {
     });
     const feat = {};
     jest.mock("../features_object", () => ({ default: feat,
-                                   __esModule: true as const }));
+                                             __esModule: true as const }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect<unknown>(feat).toEqual({});
@@ -370,4 +377,3 @@ describe("Features - initializeFeaturesObject", () => {
     delete (window as any).__RELATIVE_PATH__;
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -58,12 +58,15 @@ function isFairplayKeyType(keyType: string): boolean {
  */
 function setWebKitMediaKeys(videoElement: HTMLMediaElement,
                             mediaKeys: IWebKitMediaKeys|null): void {
-  /* tslint:disable no-unsafe-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   if ((videoElement as any).webkitSetMediaKeys === undefined) {
     throw new Error("No webKitMediaKeys API.");
   }
+  /* eslint-disable @typescript-eslint/no-unsafe-return */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   return (videoElement as any).webkitSetMediaKeys(mediaKeys);
-  /* tslint:enable no-unsafe-any */
+  /* eslint-enable @typescript-eslint/no-unsafe-return */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }
 
 /**
@@ -74,10 +77,11 @@ function setWebKitMediaKeys(videoElement: HTMLMediaElement,
  * This class implements a standard EME API polyfill that wraps webkit prefixed Safari
  * EME custom APIs.
  */
-class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
-                            implements ICustomMediaKeySession {
-  public readonly update: (license: Uint8Array) =>
-    Promise<void>;
+class WebkitMediaKeySession
+  extends EventEmitter<IMediaKeySessionEvents>
+  implements ICustomMediaKeySession
+{
+  public readonly update: (license: Uint8Array) => Promise<void>;
   public readonly closed: Promise<void>;
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
@@ -93,9 +97,11 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
    * @param {string} keyType
    * @param {Uint8Array | undefined} serverCertificate
    */
-  constructor(mediaElement: HTMLMediaElement,
-              keyType: string,
-              serverCertificate?: Uint8Array) {
+  constructor(
+    mediaElement: HTMLMediaElement,
+    keyType: string,
+    serverCertificate?: Uint8Array
+  ) {
     super();
     this._serverCertificate = serverCertificate;
     this._closeSession$ = new Subject();
@@ -109,24 +115,26 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
     this.expiration = NaN;
 
     this.update = (license: Uint8Array) => {
-      /* tslint:disable no-unsafe-any */
       return new PPromise((resolve, reject) => {
+        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
         if (this._nativeSession === undefined ||
             this._nativeSession.update === undefined ||
             typeof this._nativeSession.update !== "function") {
           return reject("Unavailable WebKit key session.");
         }
         try {
+          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
           resolve(this._nativeSession.update(license));
+          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         } catch (err) {
           reject(err);
         }
+        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       });
-      /* tslint:enable no-unsafe-any */
     };
   }
 
-  /* tslint:disable no-unsafe-any */
   listenEvent(session: any) {
     observableMerge(events.onKeyMessage$(session),
                     events.onKeyAdded$(session),
@@ -136,16 +144,18 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
         this.trigger(evt.type, evt);
       });
   }
-  /* tslint:enable no-unsafe-any */
 
-  generateRequest(_initDataType: string,
-                  initData: ArrayBuffer): Promise<void> {
+  generateRequest(
+    _initDataType: string,
+    initData: ArrayBuffer
+  ): Promise<void> {
     return new PPromise((resolve) => {
-      /* tslint:disable no-unsafe-any */
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       if ((this._videoElement as any).webkitKeys === undefined ||
         (this._videoElement as any).webkitKeys.createSession === undefined) {
         throw new Error("No WebKitMediaKeys API.");
       }
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
       let formattedInitData;
       if (isFairplayKeyType(this._keyType)) {
@@ -158,14 +168,20 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
         formattedInitData = initData;
       }
 
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+      /* eslint-disable @typescript-eslint/no-unsafe-call */
       const keySession =
         (this._videoElement as any).webkitKeys.createSession("video/mp4",
-          formattedInitData);
-      /* tslint:enable no-unsafe-any */
+                                                             formattedInitData);
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+      /* eslint-enable @typescript-eslint/no-unsafe-call */
       if (keySession === undefined || keySession === null) {
         throw new Error("Impossible to get the key sessions");
       }
       this.listenEvent(keySession);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       this._nativeSession = keySession;
       resolve();
     });
@@ -175,12 +191,14 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
     return new PPromise((resolve, reject) => {
       this._closeSession$.next();
       this._closeSession$.complete();
-      /* tslint:disable no-unsafe-any */
       if (this._nativeSession === undefined) {
         reject("No session to close.");
       }
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-disable @typescript-eslint/no-unsafe-call */
       this._nativeSession.close();
-      /* tslint:enable no-unsafe-any */
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-enable @typescript-eslint/no-unsafe-call */
       resolve();
     });
   }
@@ -194,9 +212,11 @@ class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
   }
 
   get sessionId(): string {
-    /* tslint:disable */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-disable @typescript-eslint/no-unsafe-return */
     return this._nativeSession?.sessionId ?? "";
-    /* tslint:enable */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable @typescript-eslint/no-unsafe-return */
   }
 }
 
@@ -238,15 +258,24 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
   }
 }
 
-export default function getWebKitMediaKeysCallbacks() {
+export default function getWebKitMediaKeysCallbacks() : {
+  isTypeSupported: (keyType: string) => boolean;
+  createCustomMediaKeys: (keyType: string) => WebKitCustomMediaKeys;
+  setMediaKeys: (
+    elt: HTMLMediaElement,
+    mediaKeys: MediaKeys|ICustomMediaKeys|null
+  ) => void;
+} {
   if (WebKitMediaKeysConstructor === undefined) {
     throw new Error("No WebKitMediaKeys API.");
   }
   const isTypeSupported = WebKitMediaKeysConstructor.isTypeSupported;
   const createCustomMediaKeys = (keyType: string) =>
     new WebKitCustomMediaKeys(keyType);
-  const setMediaKeys = (elt: HTMLMediaElement,
-                        mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
+  const setMediaKeys = (
+    elt: HTMLMediaElement,
+    mediaKeys: MediaKeys|ICustomMediaKeys|null
+  ): void => {
     if (mediaKeys === null) {
       return setWebKitMediaKeys(elt, mediaKeys);
     }

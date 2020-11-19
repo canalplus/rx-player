@@ -112,13 +112,13 @@ export default function createSession(
         persistentSessionsStore == null ||
         keySystemOptions.persistentLicense !== true)
     {
-      return observableOf({ type: "created-session" as "created-session",
+      return observableOf({ type: "created-session" as const,
                             value: { mediaKeySession: session, sessionType } });
     }
 
     const storedEntry = persistentSessionsStore.getAndReuse(initData, initDataType);
     if (storedEntry === null) {
-      return observableOf({ type: "created-session" as "created-session",
+      return observableOf({ type: "created-session" as const,
                             value: { mediaKeySession: session, sessionType } });
     }
 
@@ -137,7 +137,7 @@ export default function createSession(
           const newSession = loadedSessionsStore.createSession(initData,
                                                                initDataType,
                                                                sessionType);
-          return { type: "created-session" as "created-session",
+          return { type: "created-session" as const,
                    value: { mediaKeySession: newSession, sessionType } };
         }));
     };
@@ -147,7 +147,7 @@ export default function createSession(
         if (!hasLoadedSession) {
           log.warn("EME: No data stored for the loaded session");
           persistentSessionsStore.delete(initData, initDataType);
-          return observableOf({ type: "created-session" as "created-session",
+          return observableOf({ type: "created-session" as const,
                                 value: { mediaKeySession: session, sessionType } });
         }
 

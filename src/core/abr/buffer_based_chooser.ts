@@ -43,7 +43,7 @@ export default function BufferBasedChooser(
 ) : Observable<number|undefined> {
   const levelsMap = getBufferLevels(bitrates);
   log.debug("ABR: Steps for buffer based chooser.",
-            levelsMap.map((l, i) => ({ bufferLevel: l, bitrate: bitrates[i]})));
+            levelsMap.map((l, i) => ({ bufferLevel: l, bitrate: bitrates[i] })));
   return update$.pipe(map((clockTick) => {
     return getEstimateFromBufferLevels(clockTick, bitrates, levelsMap);
   }));

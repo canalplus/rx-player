@@ -31,18 +31,18 @@ describe("ABR - fromBitrateCeil", () => {
         .toBe(fakeReps[fakeReps.length - 1]);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return the best representation when the bitrate given is superior to the maximum", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(fromBitrateCeil(
         fakeReps as Representation[],
         fakeReps[fakeReps.length - 1].bitrate + 1)
       ).toBe(fakeReps[fakeReps.length - 1]);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return the best representation when the bitrate given is equal to the maximum", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(fromBitrateCeil(
         fakeReps as Representation[],
         fakeReps[fakeReps.length - 1].bitrate)

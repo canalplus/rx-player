@@ -235,9 +235,9 @@ export default function AdaptationStream<T>({
 
   /** Recursively create `RepresentationStream`s according to the last estimate. */
   const representationStreams$ = abrEstimate$
-      .pipe(exhaustMap((estimate, i) : Observable<IAdaptationStreamEvent<T>> => {
-        return recursivelyCreateRepresentationStreams(estimate, i === 0);
-      }));
+    .pipe(exhaustMap((estimate, i) : Observable<IAdaptationStreamEvent<T>> => {
+      return recursivelyCreateRepresentationStreams(estimate, i === 0);
+    }));
 
   return observableMerge(representationStreams$, bitrateEstimate$);
 
@@ -291,23 +291,23 @@ export default function AdaptationStream<T>({
         }
       }));
 
-  /**
-   * "Fast-switching" is a behavior allowing to replace low-quality segments
-   * (i.e. with a low bitrate) with higher-quality segments (higher bitrate) in
-   * the buffer.
-   * This threshold defines a bitrate from which "fast-switching" is disabled.
-   * For example with a fastSwitchThreshold set to `100`, segments with a
-   * bitrate of `90` can be replaced. But segments with a bitrate of `100`
-   * onward won't be replaced by higher quality segments.
-   * Set to `undefined` to indicate that there's no threshold (anything can be
-   * replaced by higher-quality segments).
-   */
-  const fastSwitchThreshold$ = !options.enableFastSwitching ?
-    observableOf(0) : // Do not fast-switch anything
-    lastEstimate$.pipe(
-      map((estimate) => estimate === null ? undefined :
-                                            estimate.knownStableBitrate),
-      distinctUntilChanged());
+    /**
+     * "Fast-switching" is a behavior allowing to replace low-quality segments
+     * (i.e. with a low bitrate) with higher-quality segments (higher bitrate) in
+     * the buffer.
+     * This threshold defines a bitrate from which "fast-switching" is disabled.
+     * For example with a fastSwitchThreshold set to `100`, segments with a
+     * bitrate of `90` can be replaced. But segments with a bitrate of `100`
+     * onward won't be replaced by higher quality segments.
+     * Set to `undefined` to indicate that there's no threshold (anything can be
+     * replaced by higher-quality segments).
+     */
+    const fastSwitchThreshold$ = !options.enableFastSwitching ?
+      observableOf(0) : // Do not fast-switch anything
+      lastEstimate$.pipe(
+        map((estimate) => estimate === null ? undefined :
+                                              estimate.knownStableBitrate),
+        distinctUntilChanged());
 
     const representationChange$ =
       observableOf(EVENTS.representationChange(adaptation.type,
@@ -317,8 +317,7 @@ export default function AdaptationStream<T>({
     return observableConcat(representationChange$,
                             createRepresentationStream(representation,
                                                        terminateCurrentStream$,
-                                                       fastSwitchThreshold$))
-    .pipe(
+                                                       fastSwitchThreshold$)).pipe(
       tap((evt) : void => {
         if (evt.type === "representationChange" ||
             evt.type === "added-segment")
