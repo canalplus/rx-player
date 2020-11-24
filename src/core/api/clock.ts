@@ -339,10 +339,9 @@ function createClock(
       log.debug("API: current media element state", mediaTimings);
       const stalledState = getStalledStatus(lastTimings, mediaTimings, options);
 
-      return objectAssign({},
-                          mediaTimings,
-                          { stalled: stalledState,
-                            getCurrentTime: () => mediaElement.currentTime });
+      return objectAssign({ stalled: stalledState,
+                            getCurrentTime: () => mediaElement.currentTime },
+                          mediaTimings);
     }
 
     const eventObs : Array< Observable< IMediaInfosState > > =
