@@ -61,19 +61,24 @@ const STYLE_ATTRIBUTES = [ "align",
                            // "zIndex",
 ];
 
-export interface IParsedTTMLCue { paragraph: HTMLParagraphElement;
+export interface IParsedTTMLCue { /** The DOM Element that contains text node */
+                                  paragraph: HTMLParagraphElement;
+                                  /** An offset to apply to cues start and end */
                                   timeOffset: number;
+                                  /** An array of objects containing TTML styles */
                                   idStyles: IStyleObject[];
+                                  /** An array of objects containing region TTML style */
                                   regionStyles: IStyleObject[];
+                                  /** An object containing paragraph style */
                                   paragraphStyle: Partial<Record<string, string>>;
+                                  /** An object containing TTML parameters */
                                   ttParams: ITTParameters;
                                   shouldTrimWhiteSpace: boolean;
+                                  /** TTML body as a DOM Element */
                                   body: Element | null; }
 
 /**
  * Create array of objects which should represent the given TTML text track.
- * These objects have the following structure :
- *
  * TODO TTML parsing is still pretty heavy on the CPU.
  * Optimizations have been done, principally to avoid using too much XML APIs,
  * but we can still do better.
@@ -150,9 +155,8 @@ export default function parseTTMLString(
 
     // TODO Compute corresponding CSS style here (as soon as we now the TTML
     // style) to speed up the process even more.
-    const bodyStyle = body !== null ?
-      getStylingAttributes(STYLE_ATTRIBUTES, [body], idStyles, regionStyles) :
-      getStylingAttributes(STYLE_ATTRIBUTES, [], idStyles, regionStyles);
+    const bodyStyle = getStylingAttributes(
+      STYLE_ATTRIBUTES, body !== null ? [body] : [], idStyles, regionStyles);
 
     const bodySpaceAttribute = body !== null ? body.getAttribute("xml:space") :
                                                undefined;
