@@ -465,7 +465,7 @@ function generateTextContent(
  * @param {Array.<Object>} regions
  * @param {Array.<Object>} styles
  * @param {Object} paragraphStyle
- * @param {Boolean} shouldTrimWhiteSpaceOnParagraph
+ * @param {Boolean} shouldTrimWhiteSpace
  * @returns {HTMLElement}
  */
 export default function createElement(
