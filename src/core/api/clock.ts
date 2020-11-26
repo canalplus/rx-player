@@ -336,10 +336,11 @@ function createClock(
 
     function getCurrentClockTick(state : IMediaInfosState) : IClockTick {
       const mediaTimings = getMediaInfos(mediaElement, state);
-      log.debug("API: current media element state", mediaTimings);
       const stalledState = getStalledStatus(lastTimings, mediaTimings, options);
+      log.debug("API: current media element state", objectAssign({}, { stalled: stalledState }, mediaTimings));
 
-      return objectAssign({ stalled: stalledState,
+      return objectAssign({},
+                          { stalled: stalledState,
                             getCurrentTime: () => mediaElement.currentTime },
                           mediaTimings);
     }
