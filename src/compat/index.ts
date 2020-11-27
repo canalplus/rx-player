@@ -35,6 +35,7 @@ import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
+  loadSession,
   requestMediaKeySystemAccess,
   setMediaKeys,
 } from "./eme";
@@ -90,6 +91,7 @@ export {
   isOffline,
   isPlaybackStuck,
   isVTTCue,
+  loadSession,
   makeVTTCue,
   MediaSource_,
   onHeightWidthChange,

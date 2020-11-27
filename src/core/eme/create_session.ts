@@ -24,10 +24,12 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import { ICustomMediaKeySession } from "../../compat";
+import {
+  ICustomMediaKeySession,
+  loadSession,
+} from "../../compat";
 import log from "../../log";
 import arrayIncludes from "../../utils/array_includes";
-import castToObservable from "../../utils/cast_to_observable";
 import { IMediaKeysInfos } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
 
@@ -47,24 +49,6 @@ export interface IPersistentSessionRecoveryEvent {
 
 export type ICreateSessionEvent = INewSessionCreatedEvent |
                                   IPersistentSessionRecoveryEvent;
-
-/**
- * If session creating fails, retry once session creation/loading.
- * Emit true, if it has succeeded to load, false if there is no data for the
- * given sessionId.
- * @param {string} sessionId
- * @param {MediaKeySession} session
- * @returns {Observable}
- */
-function loadPersistentSession(
-  sessionId: string,
-  session: MediaKeySession|ICustomMediaKeySession
-) : Observable<boolean> {
-  return observableDefer(() => {
-    log.info("EME: Load persisted session", sessionId);
-    return castToObservable(session.load(sessionId));
-  });
-}
 
 /**
  * Create a new Session on the given MediaKeys, corresponding to the given
@@ -142,7 +126,7 @@ export default function createSession(
         }));
     };
 
-    return loadPersistentSession(storedEntry.sessionId, session).pipe(
+    return loadSession(session, storedEntry.sessionId).pipe(
       mergeMap((hasLoadedSession) : Observable<ICreateSessionEvent> => {
         if (!hasLoadedSession) {
           log.warn("EME: No data stored for the loaded session");
