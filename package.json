@@ -82,7 +82,7 @@
     "doc": "rm -rf doc/generated; node ./scripts/doc-generator/index.js doc/ doc/generated",
     "info": "npm-scripts-info",
     "lint": "eslint src -c .eslintrc.js",
-    "lint:demo": "eslint demo/full/scripts -c demo/.eslintrc.js",
+    "lint:demo": "eslint demo/full/scripts",
     "lint:tests": "eslint tests/**/*.js",
     "prepare:modular": "tsc -p tsconfig.modules.json",
     "prepublishOnly": "npm run build:modular",
