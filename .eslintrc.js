@@ -253,7 +253,12 @@ module.exports = {
       }
     ],
     "import/no-internal-modules": "off",
-    "import/order": "error",
+    "import/order": ["error", {
+      "alphabetize": {
+        "order": "asc",
+        "caseInsensitive": true
+      }
+    }],
     "jsdoc/check-alignment": "error",
     "jsdoc/no-types": "off",
     "linebreak-style": [

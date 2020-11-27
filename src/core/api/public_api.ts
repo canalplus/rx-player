@@ -45,8 +45,30 @@ import {
   take,
   takeUntil,
 } from "rxjs/operators";
+import {
+  events,
+  exitFullscreen,
+  isFullscreen,
+  requestFullscreen,
+} from "../../compat";
 import config from "../../config";
+import {
+  ErrorCodes,
+  ErrorTypes,
+  formatError,
+  ICustomError,
+  IErrorCode,
+  IErrorType,
+  MediaError,
+} from "../../errors";
+import features from "../../features";
 import log from "../../log";
+import Manifest, {
+  Adaptation,
+  Period,
+  Representation,
+} from "../../manifest";
+import { IBifThumbnail } from "../../parsers/images/bif";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
   fromEvent,
@@ -62,29 +84,6 @@ import {
   getSizeOfRange,
 } from "../../utils/ranges";
 import warnOnce from "../../utils/warn_once";
-
-import {
-  events,
-  exitFullscreen,
-  isFullscreen,
-  requestFullscreen,
-} from "../../compat";
-import {
-  ErrorCodes,
-  ErrorTypes,
-  formatError,
-  ICustomError,
-  IErrorCode,
-  IErrorType,
-  MediaError,
-} from "../../errors";
-import features from "../../features";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../manifest";
-import { IBifThumbnail } from "../../parsers/images/bif";
 import {
   clearEMESession,
   disposeEME,
