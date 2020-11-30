@@ -71,7 +71,7 @@ export default function probeHDCPPolicy(
         }
         return (mediaKeys as { getStatusForPolicy: (policy: {
           minHdcpVersion: string;
-        }) => Promise<IMediaKeyStatus> }).getStatusForPolicy(policy)
+        }) => Promise<IMediaKeyStatus>; }).getStatusForPolicy(policy)
           .then((result: IMediaKeyStatus) => {
             let status: [ProberStatus];
             if (result === "usable") {
