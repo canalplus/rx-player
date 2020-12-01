@@ -99,7 +99,6 @@ export default function getMediaKeysInfos(
         }
       }
 
-      log.info("EME: Calling createMediaKeys on the MediaKeySystemAccess");
       return createMediaKeys(mediaKeySystemAccess).pipe(map((mediaKeys) => {
         log.info("EME: MediaKeys created with success", mediaKeys);
         return { mediaKeys,
