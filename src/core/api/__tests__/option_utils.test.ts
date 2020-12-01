@@ -433,6 +433,7 @@ describe("API - parseLoadVideoOptions", () => {
     lowLatencyMode: false,
     manualBitrateSwitchingMode: "seamless",
     minimumManifestUpdateInterval: 0,
+    onCodecSwitch: "do-nothing",
     networkConfig: {},
     startAt: undefined,
     textTrackElement: undefined,
@@ -880,6 +881,62 @@ If badly set, seamless strategy will be used as default`);
       url: "foo",
       transport: "bar",
       audioTrackSwitchingMode: "seamless",
+    });
+    expect(logWarnMock).not.toHaveBeenCalled();
+  });
+
+  it("should authorize setting a valid onCodecSwitch option", () => {
+    expect(parseLoadVideoOptions({
+      onCodecSwitch: "reload",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      onCodecSwitch: "reload",
+    });
+
+    expect(parseLoadVideoOptions({
+      onCodecSwitch: "do-nothing",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      onCodecSwitch: "do-nothing",
+    });
+  });
+
+  it("should set a 'do-nothing' onCodecSwitch when the parameter is invalid or not specified", () => {
+    logWarnMock.mockReturnValue(undefined);
+    expect(parseLoadVideoOptions({
+      onCodecSwitch: "foo-bar" as any,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      onCodecSwitch: "do-nothing",
+    });
+    expect(logWarnMock).toHaveBeenCalledTimes(1);
+    expect(logWarnMock).toHaveBeenCalledWith(`The \`onCodecSwitch\` loadVideo option must match one of the following string:
+- \`do-nothing\`
+- \`reload\`
+If badly set, do-nothing will be used as default`);
+    logWarnMock.mockReset();
+    logWarnMock.mockReturnValue(undefined);
+
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      onCodecSwitch: "do-nothing",
     });
     expect(logWarnMock).not.toHaveBeenCalled();
   });
