@@ -41,6 +41,23 @@ export type IAdaptationSwitchStrategy =
   { type: "needs-buffer-flush"; value:  Array<{ start: number; end: number }> } |
   { type: "needs-reload"; value: undefined };
 
+export interface IAdaptationSwitchOptions {
+  /**
+   * Strategy to adopt when manually switching of audio adaptation.
+   * Can be either:
+   *    - "seamless": transitions are smooth but could be not immediate.
+   *    - "direct": strategy will be "smart", if the mimetype and the codec,
+   *    change, we will perform a hard reload of the media source, however, if it
+   *    doesn't change, we will just perform a small flush by removing buffered range
+   *    and performing, a small seek on the media element.
+   *    Transitions are faster, but, we could see appear a reloading or seeking state.
+   */
+  audioTrackSwitchingMode : "seamless" | "direct";
+
+  /** Behavior when a new video and/or audio codec is encountered. */
+  onCodecSwitch : "do-nothing" | "reload";
+}
+
 /**
  * Find out what to do when switching Adaptation, based on the current
  * situation.
@@ -55,8 +72,14 @@ export default function getAdaptationSwitchStrategy(
   period : Period,
   adaptation : Adaptation,
   playbackInfo : { currentTime : number; readyState : number },
-  audioTrackSwitchingMode: "seamless" | "direct"
+  options : IAdaptationSwitchOptions
 ) : IAdaptationSwitchStrategy {
+  if (options.onCodecSwitch === "reload" &&
+      !hasCompatibleCodec(adaptation, segmentBuffer))
+  {
+    return { type: "needs-reload", value: undefined };
+  }
+
   const buffered = segmentBuffer.getBufferedRanges();
   if (buffered.length === 0) {
     return { type: "continue", value: undefined };
@@ -111,13 +134,11 @@ export default function getAdaptationSwitchStrategy(
 
   if (adaptation.type === "audio" &&
       // We have been explicitly asked to reload
-      audioTrackSwitchingMode === "direct" &&
+      options.audioTrackSwitchingMode === "direct" &&
       // We're playing the current Period
       isTimeInRange({ start, end }, currentTime) &&
       // There is data for the current position or the codecs are differents
-      (playbackInfo.readyState > 1 || !adaptation.getPlayableRepresentations()
-        .some(rep =>
-          areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""))) &&
+      (playbackInfo.readyState > 1 || !hasCompatibleCodec(adaptation, segmentBuffer)) &&
       // We're not playing the current wanted audio Adaptation yet
       !isTimeInRanges(adaptationInBuffer, currentTime))
   {
@@ -176,6 +197,21 @@ export default function getAdaptationSwitchStrategy(
 
   return toRemove.length > 0 ? { type: "clean-buffer", value: toRemove } :
                                { type: "continue", value: undefined };
+}
+
+/**
+ * Returns `true` if at least one codec of the Representations in the given
+ * Adaptation has a codec compatible with the given SegmentBuffer.
+ * @param {Object} adaptation
+ * @param {Object} segmentBuffer
+ * @returns {boolean}
+ */
+function hasCompatibleCodec(
+  adaptation : Adaptation,
+  segmentBuffer : SegmentBuffer<unknown>
+) : boolean {
+  return adaptation.getPlayableRepresentations().some(rep =>
+    areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""));
 }
 
 /**

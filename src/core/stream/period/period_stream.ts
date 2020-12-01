@@ -90,9 +90,27 @@ export interface IPeriodStreamArguments {
 }
 
 /** Options tweaking the behavior of the PeriodStream. */
-export type IPeriodStreamOptions = IAdaptationStreamOptions &
-                                   { textTrackOptions? : ITextTrackSegmentBufferOptions };
+export type IPeriodStreamOptions =
+  IAdaptationStreamOptions &
+  {
+    /**
+     * Strategy to adopt when manually switching of audio adaptation.
+     * Can be either:
+     *    - "seamless": transitions are smooth but could be not immediate.
+     *    - "direct": strategy will be "smart", if the mimetype and the codec,
+     *    change, we will perform a hard reload of the media source, however, if it
+     *    doesn't change, we will just perform a small flush by removing buffered range
+     *    and performing, a small seek on the media element.
+     *    Transitions are faster, but, we could see appear a reloading or seeking state.
+     */
+    audioTrackSwitchingMode : "seamless" | "direct";
 
+    /** Behavior when a new video and/or audio codec is encountered. */
+    onCodecSwitch : "do-nothing" | "reload";
+
+    /** Options specific to the text SegmentBuffer. */
+    textTrackOptions? : ITextTrackSegmentBufferOptions;
+  };
 /**
  * Create single PeriodStream Observable:
  *   - Lazily create (or reuse) a SegmentBuffer for the given type.
@@ -163,7 +181,6 @@ export default function PeriodStream({
       const newStream$ = clock$.pipe(
         take(1),
         mergeMap((tick) => {
-          const { audioTrackSwitchingMode } = options;
           const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
                                                            bufferType,
                                                            adaptation,
@@ -174,7 +191,7 @@ export default function PeriodStream({
                                                        period,
                                                        adaptation,
                                                        playbackInfos,
-                                                       audioTrackSwitchingMode);
+                                                       options);
           if (strategy.type === "needs-reload") {
             return observableOf(EVENTS.needsMediaSourceReload(period, tick));
           }

@@ -690,6 +690,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             manifestUpdateUrl,
             minimumManifestUpdateInterval,
             networkConfig,
+            onCodecSwitch,
             startAt,
             transport,
             transportOptions,
@@ -803,9 +804,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         { textTrackMode: "html" as const,
           textTrackElement: options.textTrackElement };
 
-      const bufferOptions = objectAssign({ enableFastSwitching,
+      const bufferOptions = objectAssign({ audioTrackSwitchingMode,
+                                           enableFastSwitching,
                                            manualBitrateSwitchingMode,
-                                           audioTrackSwitchingMode },
+                                           onCodecSwitch },
                                          this._priv_bufferOptions);
 
       // We've every options set up. Start everything now

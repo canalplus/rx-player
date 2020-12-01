@@ -43,12 +43,13 @@ import {
   IVideoTrackPreference,
 } from "./track_choice_manager";
 
-const { DEFAULT_AUTO_PLAY,
+const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
+        DEFAULT_AUTO_PLAY,
+        DEFAULT_CODEC_SWITCHING_BEHAVIOR,
         DEFAULT_ENABLE_FAST_SWITCHING,
         DEFAULT_INITIAL_BITRATES,
         DEFAULT_LIMIT_VIDEO_WIDTH,
         DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-        DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
         DEFAULT_MAX_BITRATES,
         DEFAULT_MAX_BUFFER_AHEAD,
         DEFAULT_MAX_BUFFER_BEHIND,
@@ -248,6 +249,7 @@ export interface ILoadVideoOptions {
   manualBitrateSwitchingMode? : "seamless"|"direct";
   enableFastSwitching? : boolean;
   audioTrackSwitchingMode? : "seamless"|"direct";
+  onCodecSwitch? : "do-nothing"|"reload";
 
   /* eslint-disable import/no-deprecated */
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
@@ -278,6 +280,7 @@ interface IParsedLoadVideoOptionsBase {
   manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
   audioTrackSwitchingMode : "seamless"|"direct";
+  onCodecSwitch : "do-nothing"|"reload";
 }
 
 /**
@@ -592,6 +595,7 @@ function parseLoadVideoOptions(
   const manifestUpdateUrl = options.transportOptions?.manifestUpdateUrl;
   const minimumManifestUpdateInterval =
     options.transportOptions?.minimumManifestUpdateInterval ?? 0;
+
   let audioTrackSwitchingMode = isNullOrUndefined(options.audioTrackSwitchingMode)
                                   ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
                                   : options.audioTrackSwitchingMode;
@@ -603,6 +607,17 @@ function parseLoadVideoOptions(
              "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
              " strategy will be used as default");
     audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
+  }
+
+  let onCodecSwitch = isNullOrUndefined(options.onCodecSwitch)
+                        ? DEFAULT_CODEC_SWITCHING_BEHAVIOR
+                        : options.onCodecSwitch;
+  if (!arrayIncludes(["do-nothing", "reload"], onCodecSwitch)) {
+    log.warn("The `onCodecSwitch` loadVideo option must match one of the following string:\n" +
+             "- `do-nothing`\n" +
+             "- `reload`\n" +
+             "If badly set, " + DEFAULT_CODEC_SWITCHING_BEHAVIOR + " will be used as default");
+    onCodecSwitch = DEFAULT_CODEC_SWITCHING_BEHAVIOR;
   }
 
   const transportOptions = objectAssign({}, transportOptsArg, {
@@ -739,6 +754,7 @@ function parseLoadVideoOptions(
            manifestUpdateUrl,
            minimumManifestUpdateInterval,
            networkConfig,
+           onCodecSwitch,
            startAt,
            textTrackElement,
            textTrackMode,
