@@ -37,7 +37,7 @@ export default function probeDRMInfos(
 ): Promise<[ProberStatus, ICompatibleKeySystem?]> {
   const keySystem = mediaConfig.keySystem;
   if (keySystem == null || keySystem.type == null) {
-    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+    return PPromise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "Missing a type argument to request a media key system access.");
   }
 

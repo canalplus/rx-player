@@ -37,7 +37,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     }));
     const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
-    expect(probeHDCPPolicy({})).rejects.toThrowError(
+    expect(probeHDCPPolicy({})).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: API not available");
     /* eslint-enable @typescript-eslint/no-floating-promises */
   });
@@ -48,7 +48,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     }));
     const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
-    expect(probeHDCPPolicy({})).rejects.toThrowError(
+    expect(probeHDCPPolicy({})).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: " +
       "Missing policy argument for calling getStatusForPolicy."
     );

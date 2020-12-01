@@ -38,11 +38,11 @@ export default function probeHDCPPolicy(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
   if (requestMediaKeySystemAccess == null) {
-    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+    return PPromise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "API not available");
   }
   if (config.hdcp == null) {
-    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+    return PPromise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "Missing policy argument for calling getStatusForPolicy.");
   }
 

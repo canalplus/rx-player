@@ -35,7 +35,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
     const configuration = {};
     const probeDRMInfos = require("../../probers/DRMInfos").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
-    expect(probeDRMInfos(configuration)).rejects.toThrowError(
+    expect(probeDRMInfos(configuration)).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: " +
       "Missing a type argument to request a media key system access."
     );
@@ -48,7 +48,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
     };
     const probeDRMInfos = require("../../probers/DRMInfos").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
-    expect(probeDRMInfos(configuration)).rejects.toThrow(
+    expect(probeDRMInfos(configuration)).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: " +
       "Missing a type argument to request a media key system access."
     );
