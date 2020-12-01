@@ -33,6 +33,7 @@ import {
   switchMap,
   take,
 } from "rxjs/operators";
+import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
@@ -59,8 +60,11 @@ import {
   IPeriodStreamEvent,
   IStreamWarningEvent,
 } from "../types";
+import reloadAfterSwitch from "../utils";
 import createEmptyStream from "./create_empty_adaptation_stream";
 import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
+
+const { DELTA_POSITION_AFTER_RELOAD } = config;
 
 export interface IPeriodStreamClockTick {
   position : number; // the position we are in the video in s at the time of the tic
@@ -120,8 +124,21 @@ export default function PeriodStream({
   // `null` when no Adaptation is chosen (e.g. no subtitles)
   const adaptation$ = new ReplaySubject<Adaptation|null>(1);
   return adaptation$.pipe(
-    switchMap((adaptation) => {
-      if (adaptation === null) {
+    switchMap((adaptation, switchNb) => {
+      /**
+       * If this is not the first Adaptation choice, we might want to apply a
+       * delta to the current position so we can re-play back some media in the
+       * new Adaptation to give some context back.
+       * This value contains this relative position, in seconds.
+       * @see reloadAfterSwitch
+       */
+      const relativePosAfterSwitch =
+        switchNb === 0 ? 0 :
+        bufferType === "audio" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio :
+        bufferType === "video" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video :
+                                 DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
+
+      if (adaptation === null) { // Current type is disabled for that Period
         log.info(`Stream: Set no ${bufferType} Adaptation`, period);
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
         let cleanBuffer$ : Observable<unknown>;
@@ -129,9 +146,7 @@ export default function PeriodStream({
         if (segmentBufferStatus.type === "initialized") {
           log.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
           if (SegmentBuffersStore.isNative(bufferType)) {
-            return clock$.pipe(map((tick) => {
-              return EVENTS.needsMediaSourceReload(period, tick);
-            }));
+            return reloadAfterSwitch(period, clock$, relativePosAfterSwitch);
           }
           cleanBuffer$ = segmentBufferStatus.value
             .removeBuffer(period.start,
@@ -153,9 +168,7 @@ export default function PeriodStream({
       if (SegmentBuffersStore.isNative(bufferType) &&
           segmentBuffersStore.getStatus(bufferType).type === "disabled")
       {
-        return clock$.pipe(map((tick) => {
-          return EVENTS.needsMediaSourceReload(period, tick);
-        }));
+        return reloadAfterSwitch(period, clock$, relativePosAfterSwitch);
       }
 
       log.info(`Stream: Updating ${bufferType} adaptation`, adaptation, period);
@@ -176,7 +189,7 @@ export default function PeriodStream({
                                                        playbackInfos,
                                                        audioTrackSwitchingMode);
           if (strategy.type === "needs-reload") {
-            return observableOf(EVENTS.needsMediaSourceReload(period, tick));
+            return reloadAfterSwitch(period, clock$, relativePosAfterSwitch);
           }
 
           const cleanBuffer$ = strategy.type === "clean-buffer" ?

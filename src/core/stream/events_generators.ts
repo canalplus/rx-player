@@ -124,14 +124,23 @@ const EVENTS = {
              value : undefined };
   },
 
+  /**
+   * @param {Object} period - The Period to which the stream logic asking for a
+   * media source reload is linked.
+   * @param {number} reloadAt - Position at which we should reload
+   * @param {boolean} reloadOnPause - If `false`, stay on pause after reloading.
+   * if `true`, automatically play once reloaded.
+   * @returns {Object}
+   */
   needsMediaSourceReload(
     period : Period,
-    { position,
-      isPaused } : { position : number;
-                     isPaused : boolean; }
+    reloadAt : number,
+    reloadOnPause : boolean
   ) : INeedsMediaSourceReload {
     return { type: "needs-media-source-reload",
-             value: { position, isPaused, period } };
+             value: { position : reloadAt,
+                      isPaused : reloadOnPause,
+                      period } };
   },
 
   needsDecipherabilityFlush(

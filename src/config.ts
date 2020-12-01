@@ -90,6 +90,32 @@ export default {
                                                     "direct",
 
   /**
+   * In some cases after switching the current track or bitrate, the RxPlayer
+   * could be led to go into the `"RELOADING"` state, which corresponds to
+   * visually a black screen (with nothing audible) before restarting playback.
+   *
+   * We could want to seek back some milliseconds when doing that.
+   * For example, when switching the current audio track, it might make sense
+   * to restart some time before, so the beginning of the sentence can be heard
+   * again in the new language.
+   *
+   * This config property allows to set the relative position the RxPlayer will
+   * seek to after reloading, in seconds.
+   *
+   * For example: a value of `-0.7` means that will seek back 700 milliseconds
+   * when reloading due to a track or bitrate switch with necessitated a
+   * reloading.
+   */
+  DELTA_POSITION_AFTER_RELOAD: {
+    /** Relative position when switching the bitrate */
+    bitrateSwitch: -0.1,
+    /** Relative position when switching the track */
+    trackSwitch: { audio: -0.7,
+                   video: -0.1,
+                   other: 0 },
+  },
+
+  /**
    * If set to true, video through loadVideo will auto play by default
    * @type {Boolean}
    */
