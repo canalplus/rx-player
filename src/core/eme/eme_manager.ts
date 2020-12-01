@@ -42,6 +42,7 @@ import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import assertUnreachable from "../../utils/assert_unreachable";
 import filterMap from "../../utils/filter_map";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
 import cleanOldStoredPersistentInfo from "./clean_old_stored_persistent_info";
 import getSession, {
@@ -185,7 +186,7 @@ export default function EMEManager(
 
       // set server certificate when it is defined, at first received encrypted
       // event
-      if (i === 0 && serverCertificate !== undefined) {
+      if (i === 0 && !isNullOrUndefined(serverCertificate)) {
           return observableConcat(
             setServerCertificate(mediaKeys, serverCertificate),
             session$);
