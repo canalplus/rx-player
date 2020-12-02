@@ -31,7 +31,7 @@ export default function patchWebkitSourceBuffer() : void {
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
   if (!isNode && (window as any).WebKitSourceBuffer != null &&
-      typeof (window as any).WebKitSourceBuffer.prototype.addEventListener === "function")
+      (window as any).WebKitSourceBuffer.prototype.addEventListener === undefined)
   {
 
     /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -48,7 +48,7 @@ export default function patchWebkitSourceBuffer() : void {
 
     sourceBufferWebkitProto._listeners = [];
 
-    sourceBufferWebkitProto.__emitUpdate =
+    sourceBufferWebkitProto._emitUpdate =
       function(eventName : string, val : any) {
         nextTick(() => {
           /* eslint-disable no-invalid-this */
@@ -71,10 +71,10 @@ export default function patchWebkitSourceBuffer() : void {
         try {
           this.append(data);
         } catch (error) {
-          this.__emitUpdate("error", error);
+          this._emitUpdate("error", error);
           return;
         }
-        this.__emitUpdate("update");
+        this._emitUpdate("update");
         /* eslint-enable no-invalid-this */
       };
   }
