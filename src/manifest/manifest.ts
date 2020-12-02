@@ -370,20 +370,19 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * Returns the Period coming chronologically just after another given Period.
    * Returns `undefined` if not found.
    * @param {Object} period
-   * @returns {Object|null}
+   * @returns {Object|undefined}
    */
   public getPeriodAfter(
     period : Period
-  ) : Period | null {
+  ) : Period | undefined {
     const endOfPeriod = period.end;
     if (endOfPeriod === undefined) {
-      return null;
+      return undefined;
     }
-    const nextPeriod = arrayFind(this.periods, (_period) => {
+    return arrayFind(this.periods, (_period) => {
       return _period.end === undefined || endOfPeriod < _period.end;
     });
-    return nextPeriod === undefined ? null :
-                                      nextPeriod;
+
   }
 
   /**
