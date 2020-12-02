@@ -283,30 +283,92 @@ export interface IPersistentSessionInfoV0 {
 export interface IPersistentSessionStorage { load() : IPersistentSessionInfo[];
                                              save(x : IPersistentSessionInfo[]) : void; }
 
-// Options given by the caller
+/** Options related to a single key system. */
 export interface IKeySystemOption {
+  /**
+   * Key system wanted.
+   *
+   * Either as a canonical name (like "widevine" or "playready") or as  the
+   * complete reverse domain name denomination (e.g. "com.widevine.alpha").
+   */
   type : string;
+  /** Logic used to fetch the license */
   getLicense : (message : Uint8Array, messageType : string)
                  => Promise<BufferSource | null> |
                     BufferSource |
                     null;
+  /** Supplementary optional configuration for the getLicense call. */
   getLicenseConfig? : { retry? : number;
                         timeout? : number; };
-  serverCertificate? : BufferSource;
+  /**
+   * Optional `serverCertificate` we will try to set to speed-up the
+   * license-fetching process.
+   * `null` or `undefined` indicates that no serverCertificate should be
+   * set.
+   */
+  serverCertificate? : BufferSource | null;
+  /**
+   * If `true`, we will try to persist the licenses obtained as well as try to
+   * load already-persisted licenses.
+   */
   persistentLicense? : boolean;
+  /** Storage mechanism used to store and retrieve information on stored licenses. */
   licenseStorage? : IPersistentSessionStorage;
+  /**
+   * If true, we will require that the CDM is able to persist state.
+   * See EME specification related to the `persistentState` configuration.
+   */
   persistentStateRequired? : boolean;
+  /**
+   * If true, we will require that the CDM should use distinctive identyfiers.
+   * See EME specification related to the `distinctiveIdentifier` configuration.
+   */
   distinctiveIdentifierRequired? : boolean;
+  /**
+   * If true, all open MediaKeySession (used to decrypt the content) will be
+   * closed when the current playback stops.
+   */
   closeSessionsOnStop? : boolean;
+  /** Callback called when one of the key's status change. */
   onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
                                                  ICustomMediaKeySession)
                            => Promise<BufferSource | null> |
                               BufferSource |
                               null;
+  /** Allows to define custom robustnesses value for the video data. */
   videoRobustnesses?: Array<string|undefined>;
+  /** Allows to define custom robustnesses value for the audio data. */
   audioRobustnesses?: Array<string|undefined>;
+  /**
+   * If explicitely set to `false`, we won't throw on error when a used license
+   * is expired.
+   */
   throwOnLicenseExpiration? : boolean;
+  /**
+   * If set to `true`, we will not wait until the MediaKeys instance is attached
+   * to the media element before pushing segments to it.
+   * Setting it to `true` might be needed on some targets to work-around a
+   * deadlock in the browser-side logic (or most likely the CDM implementation)
+   * but it can also break playback of contents with both encrypted and
+   * unencrypted data, most especially on Chromium and Chromium-derived browsers.
+   */
   disableMediaKeysAttachmentLock? : boolean;
-  fallbackOn? : { keyInternalError? : boolean;
-                  keyOutputRestricted? : boolean; };
+  /**
+   * Enable fallback logic, to switch to other Representations when a key linked
+   * to another one fails with an error.
+   * Configure only this if you have contents with multiple keys depending on
+   * the Representation (also known as qualities/profiles).
+   */
+  fallbackOn? : {
+    /**
+     * If `true`, we will fallback when a key obtain the "internal-error" status.
+     * If `false`, we fill just throw a fatal error instead.
+     */
+    keyInternalError? : boolean;
+    /**
+     * If `true`, we will fallback when a key obtain the "internal-error" status.
+     * If `false`, we fill just throw a fatal error instead.
+     */
+    keyOutputRestricted? : boolean;
+  };
 }
