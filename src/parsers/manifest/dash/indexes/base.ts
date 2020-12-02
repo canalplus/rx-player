@@ -280,10 +280,10 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
   /**
    * We do not check for discontinuity in SegmentBase-based indexes.
-   * @returns {Number}
+   * @returns {null}
    */
-  checkDiscontinuity() : -1 {
-    return -1;
+  checkDiscontinuity() : null {
+    return null;
   }
 
   /**

@@ -231,10 +231,11 @@ export interface IRepresentationIndex {
    *   - The next range starts after the end of the current range.
    *
    * @param {Number} _time
-   * @returns {Number} - If a discontinuity is present, this is the Starting
-   * time for the next (discontinuited) range. If not this is equal to -1.
+   * @returns {Number|null} - If a discontinuity is present, this is the
+   * starting time for the next range.
+   * If not this is equal to `null`.
    */
-  checkDiscontinuity(time : number) : number;
+  checkDiscontinuity(time : number) : number | null;
 
   /**
    * Returns `true` if the last segments in this index have already been

@@ -170,7 +170,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * @param {Number} time
    * @returns {Number}
    */
-  public checkDiscontinuity(time: number): number {
+  public checkDiscontinuity(time: number): number | null {
     return this._wrappedIndex.checkDiscontinuity(time - this._timeOffset);
   }
 

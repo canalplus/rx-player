@@ -250,10 +250,10 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
 
   /**
    * We do not check for discontinuity in SegmentList-based indexes.
-   * @returns {Number}
+   * @returns {null}
    */
-  checkDiscontinuity() : -1 {
-    return -1;
+  checkDiscontinuity() : null {
+    return null;
   }
 
   /**

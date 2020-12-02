@@ -406,10 +406,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    *     is inferior to the timescale)
    *   - The next range starts after the end of the current range.
    * @param {Number} _time
-   * @returns {Number} - If a discontinuity is present, this is the Starting
-   * time for the next (discontinuited) range. If not this is equal to -1.
+   * @returns {Number|null}
    */
-  checkDiscontinuity(_time : number) : number {
+  checkDiscontinuity(_time : number) : number | null {
     this._refreshTimeline();
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
@@ -418,22 +417,22 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const scaledTime = toIndexTime(_time, this._index);
 
     if (scaledTime <= 0) {
-      return -1;
+      return null;
     }
 
     const segmentIndex = getSegmentIndex(this._index.timeline, scaledTime);
     if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
-      return -1;
+      return null;
     }
 
     const timelineItem = timeline[segmentIndex];
     if (timelineItem.duration === -1) {
-      return -1;
+      return null;
     }
 
     const nextTimelineItem = timeline[segmentIndex + 1];
     if (nextTimelineItem == null) {
-      return -1;
+      return null;
     }
 
     const rangeUp = timelineItem.start;
@@ -452,7 +451,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return fromIndexTime(nextTimelineItem.start, this._index);
     }
 
-    return -1;
+    return null;
   }
 
   /**
