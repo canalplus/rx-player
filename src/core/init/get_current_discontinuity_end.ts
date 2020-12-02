@@ -31,27 +31,26 @@ const { BUFFER_DISCONTINUITY_THRESHOLD } = config;
 
 /**
  * Perform various checks about discontinuities during playback.
+ * If a discontinuity is encountered, return the theorical end of
+ * discontinuity.
  * @param {Observable} clock$
  * @param {Object} manifest
  * @returns {Observable}
  */
-export default function getDiscontinuities(
+export default function getCurrentDiscontinuityEnd(
   clock$: Observable<IInitClockTick>,
   manifest: Manifest
-) : Observable< [ number, number ] > {
+) : Observable<number> {
   return clock$.pipe(
     filter(({ stalled }) => stalled !== null),
-    map((tick) : [number, number] | undefined => {
+    map((tick) : number | undefined => {
       const { buffered, position, currentRange, state, stalled } = tick;
       const nextBufferRangeGap = getNextRangeGap(buffered, position);
       // 1: Is it a browser bug? -> force seek at the same current time
-      if (isPlaybackStuck(position,
-                          currentRange,
-                          state,
-                          stalled !== null)
+      if (isPlaybackStuck(position, currentRange, state, stalled !== null)
       ) {
         log.warn("Init: After freeze seek", position, currentRange);
-        return [position, position];
+        return position;
 
       // 2. Is it a short discontinuity in buffer ? -> Seek at the beginning of the
       //                                               next range
@@ -62,7 +61,7 @@ export default function getDiscontinuities(
       // case of small discontinuity in the content.
       } else if (nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD) {
         const seekTo = (position + nextBufferRangeGap + 1 / 60);
-        return [position, seekTo];
+        return seekTo;
       }
 
       // 3. Is it a discontinuity between periods ? -> Seek at the beginning of the
@@ -76,11 +75,11 @@ export default function getDiscontinuities(
             position > (currentPeriod.end - 1) &&
             position <= nextPeriod.start &&
             nextPeriod.start - currentPeriod.end === 0) {
-          return [currentPeriod.end, nextPeriod.start];
+          return nextPeriod.start;
         }
       }
     }),
-    filter((x): x is [number, number] => x !== undefined),
+    filter((x): x is number => x !== undefined),
     distinctUntilChanged()
   );
 }

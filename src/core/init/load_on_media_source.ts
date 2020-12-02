@@ -43,7 +43,7 @@ import { setDurationToMediaSource } from "./create_media_source";
 import createStreamClock from "./create_stream_clock";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
-import getDiscontinuities from "./get_discontinuities";
+import getCurrentDiscontinuityEnd from "./get_current_discontinuity_end";
 import getStalledEvents from "./get_stalled_events";
 import handleDiscontinuity from "./handle_discontinuity";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
@@ -183,11 +183,8 @@ export default function createMediaSourceLoader({
     const stalled$ = getStalledEvents(clock$)
       .pipe(map(EVENTS.stalled));
 
-    const handledDiscontinuities$ = getDiscontinuities(clock$, manifest).pipe(
-      tap((gap) => {
-        const seekTo = gap[1];
-        handleDiscontinuity(seekTo, mediaElement);
-      }),
+    const handledDiscontinuities$ = getCurrentDiscontinuityEnd(clock$, manifest).pipe(
+      tap((seekTo) => handleDiscontinuity(seekTo, mediaElement)),
       ignoreElements()
     );
 
