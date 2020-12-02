@@ -67,14 +67,13 @@ export default function getCurrentDiscontinuityEnd(
       // 3. Is it a discontinuity between periods ? -> Seek at the beginning of the
       //                                               next period
       const currentPeriod = manifest.getPeriodForTime(position);
-      if (currentPeriod != null) {
+      if (currentPeriod !== undefined) {
         const nextPeriod = manifest.getPeriodAfter(currentPeriod);
-        if (currentPeriod != null &&
-            currentPeriod.end != null &&
-            nextPeriod != null &&
+        if (currentPeriod.end !== undefined &&
+            nextPeriod !== undefined &&
             position > (currentPeriod.end - 1) &&
             position <= nextPeriod.start &&
-            nextPeriod.start - currentPeriod.end === 0) {
+            (nextPeriod.start - currentPeriod.end) < 0.5) {
           return nextPeriod.start;
         }
       }
