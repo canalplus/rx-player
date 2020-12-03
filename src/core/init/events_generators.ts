@@ -31,6 +31,7 @@ import {
   IManifestReadyEvent,
   IManifestUpdateEvent,
   IReloadingMediaSourceEvent,
+  IReloadMediaSourceCallbackEvent,
   IStalledEvent,
   IWarningEvent,
 } from "./types";
@@ -118,12 +119,23 @@ function reloadingMediaSource() : IReloadingMediaSourceEvent {
   return { type: "reloading-media-source", value: undefined };
 }
 
+/**
+ *
+ */
+function reloadMediaSourceCallback(
+  value: ((positionObj?: { position?: number;
+                           relative?: number; }) => void)
+) : IReloadMediaSourceCallbackEvent {
+  return { type: "reload-media-source-callback", value };
+}
+
 const INIT_EVENTS = { loaded,
                       decipherabilityUpdate,
                       manifestReady,
                       manifestUpdate,
                       nullRepresentation,
                       reloadingMediaSource,
+                      reloadMediaSourceCallback,
                       stalled,
                       warning };
 

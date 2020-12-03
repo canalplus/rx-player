@@ -17,6 +17,7 @@
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
+  concat as observableConcat,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -384,6 +385,19 @@ export default function InitializeOnMediaSource(
       ) : Observable<IInitEvent> {
         const reloadMediaSource$ = new Subject<{ position : number;
                                                  isPaused : boolean; }>();
+        const reloadMediaSource = (positionObj?: { position?: number;
+                                                   relative?: number; }) => {
+          let newPosition = mediaElement.currentTime;
+          if (positionObj !== undefined) {
+            if (positionObj.position !== undefined) {
+              newPosition = positionObj.position;
+            } else if (positionObj.relative !== undefined) {
+              newPosition = mediaElement.currentTime + positionObj.relative;
+            }
+          }
+          reloadMediaSource$.next({ position: newPosition,
+                                    isPaused: mediaElement.paused });
+        };
         const mediaSourceLoader$ = mediaSourceLoader(mediaSource, startingPos, shouldPlay)
           .pipe(filterMap<IMediaSourceLoaderEvent, IInitEvent, null>((evt) => {
             switch (evt.type) {
@@ -440,7 +454,10 @@ export default function InitializeOnMediaSource(
             );
           }));
 
-        return observableMerge(handleReloads$, currentLoad$);
+        return observableConcat(
+          observableOf(EVENTS.reloadMediaSourceCallback(reloadMediaSource)),
+          observableMerge(handleReloads$, currentLoad$)
+        );
       }
     })
   );

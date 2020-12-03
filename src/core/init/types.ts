@@ -73,6 +73,17 @@ export interface IInitClockTick { position : number;
                                             null;
                                   seeking : boolean; }
 
+/**
+ * Event sent by the Stream when a callback for reloading
+ * the media source is available.
+ * It may be the first event to be sent by the Stream.
+ */
+export interface IReloadMediaSourceCallbackEvent {
+  type: "reload-media-source-callback";
+  value: (positionObj?: { position?: number;
+                          relative?: number; }) => void;
+}
+
 /** Event sent after the Manifest has been loaded and parsed for the first time. */
 export interface IManifestReadyEvent {
   type : "manifestReady";
@@ -150,7 +161,8 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
                                       IStreamNeedsManifestRefresh;
 
 /** Every events emitted by the `Init` module. */
-export type IInitEvent = IManifestReadyEvent |
+export type IInitEvent = IReloadMediaSourceCallbackEvent |
+                         IManifestReadyEvent |
                          IManifestUpdateEvent |
                          IReloadingMediaSourceEvent |
                          IDecipherabilityUpdateEvent |

@@ -397,6 +397,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** Store volume when mute is called, to restore it on unmute. */
   private _priv_mutedMemory : number;
 
+  /** Get the reload media source callback from current content */
+  private _priv_reloadMediaSourceContent:
+    ((positionObj?: { position?: number;
+                      relative?: number; }) => void) |
+    null;
+
   /**
    * Store last state of various values sent as events, to avoid re-triggering
    * them multiple times in a row.
@@ -555,6 +561,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_preferredAudioTracks = preferredAudioTracks;
     this._priv_preferredTextTracks = preferredTextTracks;
     this._priv_preferredVideoTracks = preferredVideoTracks;
+
+    this._priv_reloadMediaSourceContent = null;
   }
 
   /**
@@ -723,21 +731,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       // We've every options set up. Start everything now
       const init$ = initializeMediaSourcePlayback({ adaptiveOptions,
-                                                    autoPlay,
-                                                    bufferOptions,
-                                                    clock$,
-                                                    content: { initialManifest,
-                                                               manifestUpdateUrl,
-                                                               url },
-                                                    keySystems,
-                                                    lowLatencyMode,
-                                                    mediaElement: videoElement,
-                                                    minimumManifestUpdateInterval,
-                                                    networkConfig,
-                                                    transportPipelines,
-                                                    speed$: this._priv_speed$,
-                                                    startAt,
-                                                    textTrackOptions })
+                                        autoPlay,
+                                        bufferOptions,
+                                        clock$,
+                                        content: { initialManifest,
+                                                   manifestUpdateUrl,
+                                                   url },
+                                        keySystems,
+                                        lowLatencyMode,
+                                        mediaElement: videoElement,
+                                        minimumManifestUpdateInterval,
+                                        networkConfig,
+                                        transportPipelines,
+                                        speed$: this._priv_speed$,
+                                        startAt,
+                                        textTrackOptions })
         .pipe(takeUntil(contentIsStopped$));
 
       playback$ = publish<IInitEvent>()(init$);
@@ -929,6 +937,46 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         // start playback!
         playbackSubscription = playback$.connect();
       });
+  }
+
+  /**
+   * Reload media source with current played content.
+   * If no position is given, the content will reload at current video
+   * element time. The user may need to override this value to start
+   * playback at another position. For example, he may need to avoid issues
+   * that occur when trying to append buffer for current content / position.
+   * @param {number | undefined} wantedPosition
+   */
+  reloadMediaSource(
+    positionObj?: { position?: number;
+                    relative?: number; }
+  ) : void {
+    log.info("API: Triggering reloadMediaSource", positionObj);
+    if (this._priv_reloadMediaSourceContent === null) {
+      log.warn("API: No content to reload.");
+      return;
+    }
+    let newPositionObj: undefined | { position?: number;
+                                      relative?: number; };
+    if (positionObj !== undefined) {
+      if (typeof positionObj !== "object" ||
+          positionObj === null) {
+        throw Error("API: Bad argument type for reloadMediaSource.");
+      }
+      newPositionObj = {};
+      if (positionObj.position !== undefined) {
+        if (typeof newPositionObj.position !== "number") {
+          throw Error("API: Bad position type for reloadMediaSource");
+        }
+        newPositionObj.position = positionObj.position;
+      } else if (positionObj.relative !== undefined) {
+        if (typeof positionObj.relative !== "number") {
+          throw Error("API: Bad relative position type for reloadMediaSource");
+        }
+        newPositionObj.relative = positionObj.relative;
+      }
+    }
+    this._priv_reloadMediaSourceContent(newPositionObj);
   }
 
   /**
@@ -2003,6 +2051,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_trackChoiceManager = null;
     this._priv_mediaElementTrackChoiceManager?.dispose();
     this._priv_mediaElementTrackChoiceManager = null;
+    this._priv_reloadMediaSourceContent = null;
 
     this._priv_contentEventsMemory = {};
 
@@ -2040,6 +2089,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
+      case "reload-media-source-callback":
+        this._priv_reloadMediaSourceContent = event.value;
+        break;
       case "stream-event":
         this.trigger("streamEvent", event.value);
         break;
