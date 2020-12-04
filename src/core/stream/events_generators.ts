@@ -36,22 +36,17 @@ import {
   IProtectedSegmentEvent,
   IRepresentationChangeEvent,
   IResumeStreamEvent,
+  IStreamDownloadFinished,
+  IStreamDownloadingActive,
   IStreamEventAddedSegment,
   IStreamManifestMightBeOutOfSync,
   IStreamNeedsDiscontinuitySeek,
   IStreamNeedsManifestRefresh,
-  IStreamStateActive,
-  IStreamStateFull,
   IStreamTerminatingEvent,
   IStreamWarningEvent,
 } from "./types";
 
 const EVENTS = {
-  activeStream(bufferType: IBufferType) : IStreamStateActive {
-    return { type: "active-stream",
-             value: { bufferType } };
-  },
-
   activePeriodChanged(period : Period) : IActivePeriodChangedEvent {
     return { type : "activePeriodChanged",
              value : { period } };
@@ -104,14 +99,19 @@ const EVENTS = {
              value : { bufferType, gap } };
   },
 
+  downloadFinished(bufferType : IBufferType) : IStreamDownloadFinished {
+    return { type: "download-finished",
+             value: { bufferType } };
+  },
+
+  downloadingActive(bufferType: IBufferType) : IStreamDownloadingActive {
+    return { type: "downloading-segments",
+             value: { bufferType } };
+  },
+
   endOfStream() : IEndOfStreamEvent {
     return { type: "end-of-stream",
              value: undefined };
-  },
-
-  fullStream(bufferType : IBufferType) : IStreamStateFull {
-    return { type: "full-stream",
-             value: { bufferType } };
   },
 
   needsManifestRefresh() : IStreamNeedsManifestRefresh {

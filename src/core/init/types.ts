@@ -44,10 +44,10 @@ import {
   IPeriodStreamReadyEvent,
   IProtectedSegmentEvent,
   IRepresentationChangeEvent,
+  IStreamDownloadingActive,
   IStreamEventAddedSegment,
   IStreamManifestMightBeOutOfSync,
   IStreamNeedsManifestRefresh,
-  IStreamStateActive,
 } from "../stream";
 import { IEMEDisabledEvent } from "./create_eme_manager";
 import { IStallingItem } from "./get_stalled_events";
@@ -145,7 +145,7 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
                                       IRepresentationChangeEvent |
                                       IStreamEventAddedSegment<unknown> |
                                       IProtectedSegmentEvent |
-                                      IStreamStateActive |
+                                      IStreamDownloadingActive |
                                       IStreamManifestMightBeOutOfSync |
                                       IStreamNeedsManifestRefresh;
 
@@ -186,7 +186,7 @@ export type IInitEvent = IManifestReadyEvent |
                          IBitrateEstimationChangeEvent |
                          IRepresentationChangeEvent |
                          IStreamEventAddedSegment<unknown> |
-                         IStreamStateActive;
+                         IStreamDownloadingActive;
 
 /** Events emitted by the `Init` module for directfile contents. */
 export type IDirectfileEvent = IStalledEvent |

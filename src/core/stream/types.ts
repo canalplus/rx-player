@@ -85,8 +85,8 @@ export interface IStreamNeedsDiscontinuitySeek {
  * Event emitted when a `RepresentationStream` is scheduling new segments to be
  * loaded.
  */
-export interface IStreamStateActive {
-  type : "active-stream";
+export interface IStreamDownloadingActive {
+  type : "downloading-segments";
   value : {
     /** The type of the Representation concerned. */
     bufferType : IBufferType;
@@ -94,11 +94,14 @@ export interface IStreamStateActive {
 }
 
 /**
- * Event emitted when a `RepresentationStream` has pushed segments its SegmentBuffer
- * filling until the end of the associated Period.
+ * Event emitted when a `RepresentationStream` has finished downloading every
+ * segments it needs to download to the end of the corresponding Period.
+ * You will know if it needs to re-download segments in the future (e.g.
+ * because of a seek or of garbage collection) thanks to the
+ * `IStreamDownloadingActive` event being sent.
  */
-export interface IStreamStateFull {
-  type : "full-stream";
+export interface IStreamDownloadFinished {
+  type : "download-finished";
   value : {
    /** The type of the Representation concerned. */
     bufferType : IBufferType;
@@ -356,8 +359,8 @@ export interface INeedsDecipherabilityFlush {
 /** Event sent by a `RepresentationStream`. */
 export type IRepresentationStreamEvent<T> = IStreamEventAddedSegment<T> |
                                             IProtectedSegmentEvent |
-                                            IStreamStateFull |
-                                            IStreamStateActive |
+                                            IStreamDownloadFinished |
+                                            IStreamDownloadingActive |
                                             IStreamManifestMightBeOutOfSync |
                                             IStreamNeedsDiscontinuitySeek |
                                             IStreamNeedsManifestRefresh |
@@ -374,8 +377,8 @@ export type IAdaptationStreamEvent<T> = IBitrateEstimationChangeEvent |
 
                                         IStreamEventAddedSegment<T> |
                                         IProtectedSegmentEvent |
-                                        IStreamStateFull |
-                                        IStreamStateActive |
+                                        IStreamDownloadFinished |
+                                        IStreamDownloadingActive |
                                         IStreamManifestMightBeOutOfSync |
                                         IStreamNeedsDiscontinuitySeek |
                                         IStreamNeedsManifestRefresh |
@@ -397,8 +400,8 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
 
                                  IStreamEventAddedSegment<unknown> |
                                  IProtectedSegmentEvent |
-                                 IStreamStateFull |
-                                 IStreamStateActive |
+                                 IStreamDownloadFinished |
+                                 IStreamDownloadingActive |
                                  IStreamManifestMightBeOutOfSync |
                                  IStreamNeedsDiscontinuitySeek |
                                  IStreamNeedsManifestRefresh |
@@ -425,7 +428,7 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
 
                                           IStreamEventAddedSegment<unknown> |
                                           IProtectedSegmentEvent |
-                                          IStreamStateActive |
+                                          IStreamDownloadingActive |
                                           IStreamManifestMightBeOutOfSync |
                                           IStreamNeedsDiscontinuitySeek |
                                           IStreamNeedsManifestRefresh |
@@ -456,7 +459,7 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
 
                                        IStreamEventAddedSegment<unknown> |
                                        IProtectedSegmentEvent |
-                                       IStreamStateActive |
+                                       IStreamDownloadingActive |
                                        IStreamManifestMightBeOutOfSync |
                                        IStreamNeedsDiscontinuitySeek |
                                        IStreamNeedsManifestRefresh |

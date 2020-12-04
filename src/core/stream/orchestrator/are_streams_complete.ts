@@ -57,7 +57,7 @@ export default function areStreamsComplete(
       return stream.pipe(
         filter((evt) => {
           return evt.type === "complete-stream" ||
-                 evt.type === "active-stream";
+                 evt.type === "downloading-segments";
         }),
         map((evt) => evt.type === "complete-stream"),
         startWith(false),
