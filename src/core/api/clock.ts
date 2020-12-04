@@ -39,10 +39,7 @@ import {
 import config from "../../config";
 import log from "../../log";
 import objectAssign from "../../utils/object_assign";
-import {
-  getLeftSizeOfRange,
-  getRange,
-} from "../../utils/ranges";
+import { getRange } from "../../utils/ranges";
 
 /** "State" that triggered the clock tick. */
 export type IMediaInfosState = "init" | // set once on first emit
@@ -83,23 +80,19 @@ interface IMediaInfos {
   state : IMediaInfosState; }
 
 /** Describes when the player is "stalled" and what event started that status. */
-export type IStalledStatus =
-  /** Set if the player is stalled. */
-  {
-    /** What started the player to stall. */
-    reason : "seeking" | // Building buffer after seeking
-             "not-ready" | // Building buffer after low readyState
-             "buffering"; // Other cases
-    /** `performance.now` at the time the stalling happened. */
-    timestamp : number;
-  } |
-  /** The player is not stalled. */
-  null;
+export interface IStalledStatus {
+  /** What started the player to stall. */
+  reason : "seeking" | // Building buffer after seeking
+           "not-ready" | // Building buffer after low readyState
+           "buffering"; // Other cases
+  /** `performance.now` at the time the stalling happened. */
+  timestamp : number;
+}
 
 /** Information emitted on each clock tick. */
 export interface IClockTick extends IMediaInfos {
-  /** Set if the player is stalled. */
-  stalled : IStalledStatus;
+  /** Set if the player is stalled, `null` if not. */
+  stalled : IStalledStatus | null;
   getCurrentTime : () => number;
 }
 
@@ -185,9 +178,13 @@ function getMediaInfos(
           readyState,
           seeking } = mediaElement;
 
-  return { bufferGap: getLeftSizeOfRange(buffered, currentTime),
+  const currentRange = getRange(buffered, currentTime);
+  return { bufferGap: currentRange !== null ? currentRange.end - currentTime :
+                                              // TODO null/0 would probably be
+                                              // more appropriate
+                                              Infinity,
            buffered,
-           currentRange: getRange(buffered, currentTime),
+           currentRange,
            position: currentTime,
            duration,
            ended,
@@ -214,7 +211,7 @@ function getStalledStatus(
   prevTimings : IClockTick,
   currentTimings : IMediaInfos,
   { withMediaSource, lowLatencyMode } : IClockOptions
-) : IStalledStatus {
+) : IStalledStatus | null {
   const { state: currentState,
           position: currentTime,
           bufferGap,
