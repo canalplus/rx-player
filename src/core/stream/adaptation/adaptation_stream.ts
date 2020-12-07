@@ -65,11 +65,11 @@ import RepresentationStream, {
 import {
   IAdaptationStreamEvent,
   IRepresentationStreamEvent,
+  IStreamDownloadFinished,
+  IStreamDownloadingActive,
   IStreamEventAddedSegment,
   IStreamNeedsDiscontinuitySeek,
   IStreamNeedsManifestRefresh,
-  IStreamStateActive,
-  IStreamStateFull,
 } from "../types";
 import createRepresentationEstimator from "./create_representation_estimator";
 
@@ -399,6 +399,6 @@ export {
   IStreamEventAddedSegment,
   IStreamNeedsDiscontinuitySeek,
   IStreamNeedsManifestRefresh,
-  IStreamStateActive,
-  IStreamStateFull,
+  IStreamDownloadingActive,
+  IStreamDownloadFinished,
 };

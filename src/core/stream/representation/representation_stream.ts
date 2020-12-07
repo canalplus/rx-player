@@ -73,12 +73,12 @@ import EVENTS from "../events_generators";
 import {
   IProtectedSegmentEvent,
   IRepresentationStreamEvent,
+  IStreamDownloadFinished,
+  IStreamDownloadingActive,
   IStreamEventAddedSegment,
   IStreamManifestMightBeOutOfSync,
   IStreamNeedsDiscontinuitySeek,
   IStreamNeedsManifestRefresh,
-  IStreamStateActive,
-  IStreamStateFull,
   IStreamTerminatingEvent,
 } from "../types";
 import getNeededSegments from "./get_needed_segments";
@@ -275,7 +275,7 @@ export default function RepresentationStream<T>({
       [ [ timing, bufferGoal, terminate ],
         fastSwitchThreshold ]
     ) : { discontinuity : number;
-          isFull : boolean;
+          hasLoadedEverySegments : boolean;
           terminate : ITerminationOrder | null;
           neededSegments : IQueuedSegment[];
           shouldRefreshManifest : boolean; }
@@ -324,26 +324,26 @@ export default function RepresentationStream<T>({
       }
 
       /**
-       * `true` if the current Stream has loaded all the needed segments for
-       * this Representation until the end of the Period.
+       * `true` if the current `RepresentationStream` has loaded all the
+       * needed segments for this Representation until the end of the Period.
        */
-      let isFull : boolean;
+      let hasLoadedEverySegments : boolean;
       if (neededSegments.length > 0 || period.end == null) {
         // Either we still have segments to download or the current Period is
         // not yet ended: not full
-        isFull = false;
+        hasLoadedEverySegments = false;
       } else {
         const lastPosition = representation.index.getLastPosition();
         if (lastPosition === undefined) {
           // We do not know the end of this index.
           // If we reached the end of the period, check that all segments are
           // available.
-          isFull = neededRange.end >= period.end &&
-                   representation.index.isFinished();
+          hasLoadedEverySegments = neededRange.end >= period.end &&
+                                   representation.index.isFinished();
         } else if (lastPosition === null) {
           // There is no available segment in the index currently. If the index
           // tells us it has finished generating new segments, we're done.
-          isFull = representation.index.isFinished();
+          hasLoadedEverySegments = representation.index.isFinished();
         } else {
           // We have a declared end. Check that our range went until the last
           // position available in the index. If that's the case and we're left
@@ -352,13 +352,13 @@ export default function RepresentationStream<T>({
           const endOfRange = period.end != null ? Math.min(period.end,
                                                            lastPosition) :
                                                   lastPosition;
-          isFull = neededRange.end >= endOfRange &&
-                   representation.index.isFinished();
+          hasLoadedEverySegments = neededRange.end >= endOfRange &&
+                                   representation.index.isFinished();
         }
       }
 
       return { discontinuity,
-               isFull,
+               hasLoadedEverySegments,
                terminate,
                neededSegments,
                shouldRefreshManifest };
@@ -366,8 +366,8 @@ export default function RepresentationStream<T>({
 
     mergeMap(function handleStatus(status) : Observable<IStreamNeedsManifestRefresh |
                                                         IStreamNeedsDiscontinuitySeek |
-                                                        IStreamStateFull |
-                                                        IStreamStateActive |
+                                                        IStreamDownloadFinished |
+                                                        IStreamDownloadingActive |
                                                         IStreamTerminatingEvent
     > {
       const neededSegments = status.neededSegments;
@@ -421,8 +421,9 @@ export default function RepresentationStream<T>({
 
         return observableConcat(
           observableOf(...neededActions),
-          status.isFull ? observableOf(EVENTS.fullStream(bufferType)) :
-                          EMPTY
+          status.hasLoadedEverySegments ?
+            observableOf(EVENTS.downloadFinished(bufferType)) :
+            EMPTY
         );
       }
 
@@ -448,7 +449,7 @@ export default function RepresentationStream<T>({
       }
 
       return observableConcat(observableOf(...neededActions),
-                              observableOf(EVENTS.activeStream(bufferType)));
+                              observableOf(EVENTS.downloadingActive(bufferType)));
     }),
     takeWhile((e) => e.type !== "stream-terminating", true)
   );

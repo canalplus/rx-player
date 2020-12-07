@@ -25,7 +25,8 @@ import {
 import log from "../../../log";
 import { Period } from "../../../manifest";
 import { IBufferType } from "../../segment_buffers";
-import { IStreamStateFull } from "../types";
+import EVENTS from "../events_generators";
+import { IStreamDownloadFinished } from "../types";
 
 /**
  * Create empty AdaptationStream Observable, linked to a Period.
@@ -43,7 +44,7 @@ export default function createEmptyAdaptationStream(
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,
   content : { period : Period }
-) : Observable<IStreamStateFull> {
+) : Observable<IStreamDownloadFinished> {
   const { period } = content;
   return observableCombineLatest([streamClock$, wantedBufferAhead$]).pipe(
     filter(([clockTick, wantedBufferAhead]) =>
@@ -51,8 +52,7 @@ export default function createEmptyAdaptationStream(
     ),
     map(() => {
       log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
-      return { type: "full-stream" as "full-stream",
-               value: { bufferType } };
+      return EVENTS.downloadFinished(bufferType);
     })
   );
 }

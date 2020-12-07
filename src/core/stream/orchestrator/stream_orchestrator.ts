@@ -411,7 +411,7 @@ export default function StreamOrchestrator(
                                          wantedBufferAhead$, }
     ).pipe(
       mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
-        if (evt.type === "full-stream") {
+        if (evt.type === "download-finished") {
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
           if (nextPeriod === null) {
             return observableOf(EVENTS.streamComplete(bufferType));
@@ -420,7 +420,7 @@ export default function StreamOrchestrator(
           // current Stream is full, create the next one if not
           createNextPeriodStream$.next(nextPeriod);
           return EMPTY;
-        } else if (evt.type === "active-stream") {
+        } else if (evt.type === "downloading-segments") {
           // current Stream is active, destroy next Stream if created
           destroyNextStreams$.next();
         }
