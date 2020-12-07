@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("Compat - isCodecSupported", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -32,9 +38,9 @@ describe("Compat - isCodecSupported", () => {
     expect(isCodecSupported("")).toEqual(false);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return true in any case if the MediaSource does not have the right function", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     jest.mock("../browser_compatibility_types", () => {
       return {
         __esModule: true as const,
@@ -70,4 +76,3 @@ describe("Compat - isCodecSupported", () => {
     expect(isCodecSupported("")).toEqual(false);
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -61,7 +61,7 @@ export default function parseLocalManifest(
                          timeshiftDepth: null,
                          maximumTimeData: { isLinear: false,
                                             value: maximumPosition,
-                                            time: performance.now() }, },
+                                            time: performance.now() } },
            periods: parsedPeriods };
 }
 
@@ -72,8 +72,7 @@ export default function parseLocalManifest(
  */
 function parsePeriod(
   period : ILocalPeriod,
-  ctxt : { /** Generate next Period's id */
-           periodIdGenerator : () => string;
+  ctxt : { periodIdGenerator : () => string; /* Generate next Period's id */
            /** If true, the local Manifest has been fully downloaded. */
            isFinished : boolean; }
 ) : IParsedPeriod {
@@ -107,8 +106,7 @@ function parsePeriod(
  */
 function parseAdaptation(
   adaptation : ILocalAdaptation,
-  ctxt : { /** Generate next Adaptation's id */
-           adaptationIdGenerator : () => string;
+  ctxt : { adaptationIdGenerator : () => string; /* Generate next Adaptation's id */
            /** If true, the local Manifest has been fully downloaded. */
            isFinished : boolean; }
 ) : IParsedAdaptation {
@@ -132,8 +130,7 @@ function parseAdaptation(
  */
 function parseRepresentation(
   representation : ILocalRepresentation,
-  ctxt : { /** Generate next Adaptation's id */
-           representationIdGenerator : () => string;
+  ctxt : { representationIdGenerator : () => string;
            /** If true, the local Manifest has been fully downloaded. */
            isFinished : boolean; }
 ) : IParsedRepresentation {

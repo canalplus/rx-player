@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { IStyleElements } from "../parse_style_block";
 
-/* tslint:disable no-unsafe-any */
 describe("parsers - webvtt - toHTML", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -226,4 +232,3 @@ describe("parsers - webvtt - toHTML", () => {
       "</div>");
   });
 });
-/* tslint:enable no-unsafe-any */

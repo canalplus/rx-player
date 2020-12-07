@@ -131,12 +131,10 @@ export default function getSession(
                                EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS - 1),
         createSession(initData, initDataType, mediaKeysInfos)
           .pipe(map((evt) => ({ type: evt.type,
-                                value: {
-                                  mediaKeySession: evt.value.mediaKeySession,
-                                  sessionType: evt.value.sessionType,
-                                  initData,
-                                  initDataType,
-                                } })))
+                                value: { mediaKeySession: evt.value.mediaKeySession,
+                                         sessionType: evt.value.sessionType,
+                                         initData,
+                                         initDataType } })))
       );
     }));
   });

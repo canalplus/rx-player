@@ -185,9 +185,9 @@ describe("utils - Logger", () => {
     debugSpy.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should call console.{error,warn,info, log} if logger level is set to \"DEBUG\"", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
     const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
     const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());

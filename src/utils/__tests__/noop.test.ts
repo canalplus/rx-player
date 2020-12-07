@@ -17,7 +17,7 @@
 import noop from "../noop";
 
 describe("utils - noop", () => {
-    it("should do nothing at all", () => {
-        expect(noop()).toBe(undefined);
-    });
+  it("should do nothing at all", () => {
+    expect(noop()).toBe(undefined);
+  });
 });

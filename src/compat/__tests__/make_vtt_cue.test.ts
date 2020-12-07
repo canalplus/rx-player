@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("Compat - makeVTTCue", () => {
   class MockVTTCue {
     public startTime : number;
@@ -88,4 +94,3 @@ describe("Compat - makeVTTCue", () => {
     expect(logSpy.warn).not.toHaveBeenCalled();
   });
 });
-/* tslint:enable no-unsafe-any */

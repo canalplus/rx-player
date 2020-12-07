@@ -15,7 +15,7 @@
  */
 
 import parseBaseURL, {
-  IBaseURL
+  IBaseURL,
 } from "./BaseURL";
 import parseSegmentBase, {
   IParsedSegmentBase,
@@ -136,8 +136,8 @@ function parseRepresentationAttributes(
 
       case "bandwidth":
         parseValue(attr.value, { asKey: "bitrate",
-                                      parser: parseMPDInteger,
-                                      dashName: "bandwidth" });
+                                 parser: parseMPDInteger,
+                                 dashName: "bandwidth" });
         break;
 
       case "codecs":
@@ -146,8 +146,8 @@ function parseRepresentationAttributes(
 
       case "codingDependency":
         parseValue(attr.value, { asKey: "codingDependency",
-                                      parser: parseBoolean,
-                                      dashName: "codingDependency" });
+                                 parser: parseBoolean,
+                                 dashName: "codingDependency" });
         break;
 
       case "frameRate":
@@ -156,8 +156,8 @@ function parseRepresentationAttributes(
 
       case "height":
         parseValue(attr.value, { asKey: "height",
-                                      parser: parseMPDInteger,
-                                      dashName: "height" });
+                                 parser: parseMPDInteger,
+                                 dashName: "height" });
         break;
 
       case "id":
@@ -166,14 +166,14 @@ function parseRepresentationAttributes(
 
       case "maxPlayoutRate":
         parseValue(attr.value, { asKey: "maxPlayoutRate",
-                                      parser: parseMPDFloat,
-                                      dashName: "maxPlayoutRate" });
+                                 parser: parseMPDFloat,
+                                 dashName: "maxPlayoutRate" });
         break;
 
       case "maximumSAPPeriod":
         parseValue(attr.value, { asKey: "maximumSAPPeriod",
-                                      parser: parseMPDFloat,
-                                      dashName: "maximumSAPPeriod" });
+                                 parser: parseMPDFloat,
+                                 dashName: "maximumSAPPeriod" });
         break;
 
       case "mimeType":
@@ -186,8 +186,8 @@ function parseRepresentationAttributes(
 
       case "qualityRanking":
         parseValue(attr.value, { asKey: "qualityRanking",
-                                      parser: parseMPDInteger,
-                                      dashName: "qualityRanking" });
+                                 parser: parseMPDInteger,
+                                 dashName: "qualityRanking" });
         break;
 
       case "segmentProfiles":
@@ -196,8 +196,8 @@ function parseRepresentationAttributes(
 
       case "width":
         parseValue(attr.value, { asKey: "width",
-                                      parser: parseMPDInteger,
-                                      dashName: "width" });
+                                 parser: parseMPDInteger,
+                                 dashName: "width" });
         break;
     }
   }

@@ -27,10 +27,10 @@ import isNode from "../../is_node";
 import shouldFavourCustomSafariEME from "../../should_favour_custom_safari_EME";
 import CustomMediaKeySystemAccess from "./../custom_key_system_access";
 import getIE11MediaKeysCallbacks, {
-  MSMediaKeysConstructor
+  MSMediaKeysConstructor,
 } from "./ie11_media_keys";
 import getOldKitWebKitMediaKeyCallbacks, {
-  isOldWebkitMediaElement
+  isOldWebkitMediaElement,
 } from "./old_webkit_media_keys";
 import {
   ICustomMediaKeys,
@@ -46,36 +46,41 @@ let requestMediaKeySystemAccess : null |
                                                     CustomMediaKeySystemAccess>)
                                 = null;
 
-let _setMediaKeys : ((elt: HTMLMediaElement,
-                      mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =
-  function defaultSetMediaKeys(elt: HTMLMediaElement,
-                               mediaKeys: MediaKeys | ICustomMediaKeys | null) {
-    /* tslint:disable no-unbound-method */
+let _setMediaKeys :
+((elt: HTMLMediaElement, mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =
+  function defaultSetMediaKeys(
+    elt: HTMLMediaElement,
+    mediaKeys: MediaKeys | ICustomMediaKeys | null
+  ) {
+    /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof elt.setMediaKeys === "function") {
       return elt.setMediaKeys(mediaKeys as MediaKeys);
     }
-    /* tslint:enable no-unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
+
+    /* eslint-disable @typescript-eslint/strict-boolean-expressions */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-disable @typescript-eslint/no-unsafe-return */
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
 
     // If we get in the following code, it means that no compat case has been
     // found and no standard setMediaKeys API exists. This case is particulary
     // rare. We will try to call each API with native media keys.
     if ((elt as any).webkitSetMediaKeys) {
-      /* tslint:disable no-unsafe-any */
       return (elt as any).webkitSetMediaKeys(mediaKeys);
-      /* tslint:enable no-unsafe-any */
     }
 
     if ((elt as any).mozSetMediaKeys) {
-      /* tslint:disable no-unsafe-any */
       return (elt as any).mozSetMediaKeys(mediaKeys);
-      /* tslint:enable no-unsafe-any */
     }
 
     if ((elt as any).msSetMediaKeys && mediaKeys !== null) {
-      /* tslint:disable no-unsafe-any */
       return (elt as any).msSetMediaKeys(mediaKeys);
-      /* tslint:enable no-unsafe-any */
     }
+    /* eslint-enable @typescript-eslint/strict-boolean-expressions */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable @typescript-eslint/no-unsafe-return */
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
   };
 
 /**
@@ -90,20 +95,27 @@ let _setMediaKeys : ((elt: HTMLMediaElement,
 if (isNode ||
     (navigator.requestMediaKeySystemAccess != null && !shouldFavourCustomSafariEME())
 ) {
-  requestMediaKeySystemAccess = (a : string, b : MediaKeySystemConfiguration[]) =>
+  requestMediaKeySystemAccess = (
+    a : string,
+    b : MediaKeySystemConfiguration[]
+  ) : Observable<MediaKeySystemAccess> =>
     castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 } else {
+  /* eslint-disable @typescript-eslint/no-unsafe-call */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   let isTypeSupported = (keyType: string): boolean => {
     if ((MediaKeys_ as any).isTypeSupported === undefined) {
       throw new Error("No isTypeSupported on MediaKeys.");
     }
-    /* tslint:disable no-unsafe-any */
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return (MediaKeys_ as any).isTypeSupported(keyType);
-    /* tslint:enable no-unsafe-any */
   };
   let createCustomMediaKeys = (keyType: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return new (MediaKeys_ as any)(keyType);
   };
+  /* eslint-enable @typescript-eslint/no-unsafe-call */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
   // This is for Chrome with unprefixed EME api
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
@@ -114,29 +126,22 @@ if (isNode ||
   // This is for WebKit with prefixed EME api
   } else if (WebKitMediaKeysConstructor !== undefined) {
     const callbacks = getWebKitMediaKeysCallbacks();
-    /* tslint:disable no-unsafe-any */
     isTypeSupported = callbacks.isTypeSupported;
-    /* tslint:enable no-unsafe-any */
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
     _setMediaKeys = callbacks.setMediaKeys;
-  } else if (isIE11 && MSMediaKeysConstructor !== undefined)
-    {
-      const callbacks = getIE11MediaKeysCallbacks();
-      /* tslint:disable no-unsafe-any */
-      isTypeSupported = callbacks.isTypeSupported;
-      /* tslint:enable no-unsafe-any */
-      createCustomMediaKeys = callbacks.createCustomMediaKeys;
-      _setMediaKeys = callbacks.setMediaKeys;
-    }
+  } else if (isIE11 && MSMediaKeysConstructor !== undefined) {
+    const callbacks = getIE11MediaKeysCallbacks();
+    isTypeSupported = callbacks.isTypeSupported;
+    createCustomMediaKeys = callbacks.createCustomMediaKeys;
+    _setMediaKeys = callbacks.setMediaKeys;
+  }
 
   requestMediaKeySystemAccess = function(
     keyType : string,
     keySystemConfigurations : MediaKeySystemConfiguration[]
   ) : Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
     // TODO Why TS Do not understand that isTypeSupported exists here?
-    /* tslint:disable no-unsafe-any */
     if (!isTypeSupported(keyType)) {
-    /* tslint:enable no-unsafe-any */
       return observableThrow(undefined);
     }
 
@@ -157,17 +162,16 @@ if (isNode ||
           videoCapabilities,
           audioCapabilities,
           initDataTypes: ["cenc"],
-          distinctiveIdentifier: "not-allowed" as "not-allowed",
-          persistentState: "required" as "required",
+          distinctiveIdentifier: "not-allowed" as const,
+          persistentState: "required" as const,
           sessionTypes: ["temporary", "persistent-license"],
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const customMediaKeys = createCustomMediaKeys(keyType);
         return observableOf(
           new CustomMediaKeySystemAccess(keyType,
-                                         /* tslint:disable no-unsafe-any */
                                          customMediaKeys,
-                                         /* tslint:enable no-unsafe-any */
                                          keySystemConfigurationResponse)
         );
       }

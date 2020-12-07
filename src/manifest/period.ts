@@ -144,13 +144,11 @@ export default class Period {
    */
   getAdaptations() : Adaptation[] {
     const adaptationsByType = this.adaptations;
-    return objectValues(adaptationsByType)
-      .reduce<Adaptation[]>((acc, adaptations) =>
-        // Note: the second case cannot happen. TS is just being dumb here
-        adaptations != null ? acc.concat(adaptations) :
-                              acc,
-        []
-    );
+    return objectValues(adaptationsByType).reduce<Adaptation[]>(
+      // Note: the second case cannot happen. TS is just being dumb here
+      (acc, adaptations) => adaptations != null ? acc.concat(adaptations) :
+                                                  acc,
+      []);
   }
 
   /**
@@ -174,7 +172,7 @@ export default class Period {
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
   }
 
-  getPlayableAdaptations(type? : IAdaptationType) {
+  getPlayableAdaptations(type? : IAdaptationType) : Adaptation[] {
     if (type === undefined) {
       return this.getAdaptations().filter(ada => {
         return ada.isSupported && ada.decipherable !== false;

@@ -23,7 +23,7 @@ import isNullOrUndefined from "./is_null_or_undefined";
  * @param {string} [message] - Optional message property for the AssertionError.
  * @throws AssertionError - Throws if the assertion given is false
  */
-export default function assert(assertion : boolean, message? : string) {
+export default function assert(assertion : boolean, message? : string) : void {
   if (!assertion) {
     throw new AssertionError(message === undefined ? "invalid assertion" :
                                                      message);
@@ -49,9 +49,11 @@ export function assertInterface<T>(
   assert(!isNullOrUndefined(o), `${name} should be an object`);
   for (const k in iface) {
     if (iface.hasOwnProperty(k)) {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len  */
+      /* eslint-disable @typescript-eslint/restrict-template-expressions */
       assert(typeof o[k] === iface[k], `${name} should have property ${k} as a ${iface[k]}`);
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
+      /* eslint-enable @typescript-eslint/restrict-template-expressions */
     }
   }
 }

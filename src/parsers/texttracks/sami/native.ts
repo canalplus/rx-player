@@ -81,7 +81,7 @@ function getClassNameByLang(str : string) : Partial<Record<string, string>> {
  * @returns {string|null} - value of the property. Null if not found.
  */
 function getCSSProperty(str : string, name : string) : string|null {
-  const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"));
+  const matches = (new RegExp("\\s*" + name + ":\\s*(\\S+);", "i")).exec(str);
   return Array.isArray(matches) ? matches[1] :
                                   null;
 }
@@ -94,9 +94,7 @@ function getCSSProperty(str : string, name : string) : string|null {
 function decodeEntities(text : string) : string {
   return text
     .replace(BR, "\n")
-    /* tslint:disable no-unsafe-any */
     .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode($1));
-    /* tslint:enable no-unsafe-any */
 }
 
 /**
@@ -121,7 +119,7 @@ function parseSami(
 
   const subs : ISubs[] = [];
 
-  const styleMatches = smi.match(STYLE);
+  const styleMatches = STYLE.exec(smi);
   const css = styleMatches !== null ? styleMatches[1] :
                                       "";
   let up;
@@ -151,7 +149,7 @@ function parseSami(
     }
 
     const str = smi.slice(up.index, to.index);
-    const tim = str.match(START);
+    const tim = START.exec(str);
     if (tim === null) {
       throw new Error("parse error (sync time attribute)");
     }
@@ -170,7 +168,7 @@ function parseSami(
     let i = lines.length;
     let m;
     while (--i >= 0) {
-      m = lines[i].match(PARAG);
+      m = PARAG.exec(lines[i]);
       if (m === null) {
         continue;
       }

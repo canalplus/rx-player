@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable no-restricted-properties */
 
 import {
   EMPTY,
@@ -33,7 +39,6 @@ import {
   testEMEManagerImmediateError,
 } from "./utils";
 
-/* tslint:disable no-unsafe-any */
 describe("core - eme - global tests - media key system access", () => {
   /** Used to implement every functions that should never be called. */
   const neverCalledFn = jest.fn();
@@ -72,7 +77,9 @@ describe("core - eme - global tests - media key system access", () => {
     const error : any =
       await testEMEManagerImmediateError(EMEManager, videoElt, ksConfig, EMPTY);
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toEqual("EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no");
+    expect(error.message).toEqual(
+      "EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no"
+    );
     expect(error.name).toEqual("EncryptedMediaError");
     expect(error.code).toEqual("CREATE_MEDIA_KEYS_ERROR");
   });
@@ -83,11 +90,11 @@ describe("core - eme - global tests - media key system access", () => {
       keySystem : string,
       conf : MediaKeySystemConfiguration[]
     ) {
-      return observableOf({ keySystem,
-                            getConfiguration() { return conf; },
-                            /* tslint:disable ban */
-                            createMediaKeys() { return Promise.reject(new Error("No non no")); } });
-                            /* tslint:enable ban */
+      return observableOf({
+        keySystem,
+        getConfiguration: () => conf,
+        createMediaKeys: () => Promise.reject(new Error("No non no")),
+      });
     }
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessRejMediaKeys });
 
@@ -96,14 +103,16 @@ describe("core - eme - global tests - media key system access", () => {
     const error : any =
       await testEMEManagerImmediateError(EMEManager, videoElt, ksConfig, EMPTY);
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toEqual("EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no");
+    expect(error.message).toEqual(
+      "EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no"
+    );
     expect(error.name).toEqual("EncryptedMediaError");
     expect(error.code).toEqual("CREATE_MEDIA_KEYS_ERROR");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should emit a created-media-keys event if createMediaKeys resolves", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     mockCompat({});
     const EMEManager = require("../../eme_manager").default;
     const kill$ = new Subject();
@@ -116,9 +125,9 @@ describe("core - eme - global tests - media key system access", () => {
       });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should not create any session until if no encrypted event was received", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const setMediaKeysSpy = jest.fn(() => EMPTY);
@@ -145,9 +154,9 @@ describe("core - eme - global tests - media key system access", () => {
       });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should emit \"attached-media-keys\" event when the MediaKeys is attached", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const setMediaKeysSpy = jest.fn(() => observableOf(null));
@@ -178,9 +187,9 @@ describe("core - eme - global tests - media key system access", () => {
       });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should not create any session until if no encrypted event was received", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const setMediaKeysSpy = jest.fn(() => observableOf(null));
@@ -213,9 +222,9 @@ describe("core - eme - global tests - media key system access", () => {
       });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should not attach the MediaKeys but still emit the \"attached-media-keys\" event if already attached", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
 
     // == mocks ==
     const mediaElement = document.createElement("video");
@@ -223,9 +232,7 @@ describe("core - eme - global tests - media key system access", () => {
     const setMediaKeysSpy = jest.fn(() => observableOf(null));
     mockCompat({ setMediaKeys: setMediaKeysSpy });
     jest.spyOn(MediaKeySystemAccessImpl.prototype, "createMediaKeys")
-      /* tslint:disable ban */
       .mockReturnValue(Promise.resolve(defaultMediaKeys));
-      /* tslint:enable ban */
     Object.defineProperty(mediaElement, "mediaKeys", {
       get: jest.fn(() => defaultMediaKeys),
       set: jest.fn(() => { throw new Error("Should not set MediaKeys manually."); }),

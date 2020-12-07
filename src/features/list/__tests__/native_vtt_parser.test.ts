@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import vttParser from "../../../parsers/texttracks/webvtt/native";
 import addNativevttFeature from "../native_vtt_parser";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/webvtt/native", () => ({
   __esModule: true as const,
   default: jest.fn(),
@@ -33,4 +34,3 @@ describe("Features list - native vtt Parser", () => {
     expect(featureObject.nativeTextTracksParsers.vtt).toBe(vttParser);
   });
 });
-/* tslint:enable no-unsafe-any */

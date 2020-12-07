@@ -14,28 +14,34 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 
 import { ProberStatus } from "../../types";
 
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   it("should throw if matchMedia is undefined", () => {
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     const origWindowMatchMedia = window.matchMedia;
-    /* tslint:enable no-unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
     (window as any).matchMedia = undefined;
     const probeMediaDisplayInfos = require("../../probers/mediaDisplayInfos").default;
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeMediaDisplayInfos({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: matchMedia not available");
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
     (window as any).matchMedia  = origWindowMatchMedia;
   });
 
   it("should throw if no colorSpace in display configuration", (done) => {
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     const origWindowMatchMedia = window.matchMedia;
-    /* tslint:enable no-unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => true);
     (window as any).matchMedia = mockMatchMedia;
     const config = {
@@ -59,9 +65,9 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 
   it("should throw if no display in configuration", (done) => {
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     const origWindowMatchMedia = window.matchMedia;
-    /* tslint:enable no-unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => true);
     (window as any).matchMedia = mockMatchMedia;
     const config = {};
@@ -83,9 +89,9 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 
   it("should throw if mediaMatch called with bad arguments", (done) => {
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     const origWindowMatchMedia = window.matchMedia;
-    /* tslint:enable no-unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => ({
       media: "not all",
     }));
@@ -114,9 +120,9 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 
   it("should resolves with `Supported` if color space is supported", (done) => {
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     const origWindowMatchMedia = window.matchMedia;
-    /* tslint:enable no-unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => ({
       matches: true,
     }));
@@ -144,9 +150,9 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 
   it("should resolves with `NotSupported` if color space is not supported", (done) => {
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     const origWindowMatchMedia = window.matchMedia;
-    /* tslint:enable no-unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => ({
       matches: false,
     }));
@@ -174,4 +180,3 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 });
 
-/* tslint:enable no-unsafe-any */

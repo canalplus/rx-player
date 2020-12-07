@@ -16,7 +16,7 @@
 
 import {
   from as observableFrom,
-  Observable
+  Observable,
 } from "rxjs";
 import {
   concatAll,

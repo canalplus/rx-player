@@ -20,15 +20,16 @@
  * @returns {string}
  */
 function replaceRepresentationSmoothTokens(
-    url : string,
-    bitrate : string|number,
-    customAttributes : string[]
-  ) : string {
-    return url.replace(/\{bitrate\}/g, String(bitrate))
-              .replace(/{CustomAttributes}/g, customAttributes.length > 0 ?
-                                                customAttributes[0] :
-                                                "");
-  }
+  url : string,
+  bitrate : string|number,
+  customAttributes : string[]
+) : string {
+  return url
+    .replace(/\{bitrate\}/g, String(bitrate))
+    .replace(/{CustomAttributes}/g,
+             customAttributes.length > 0 ? customAttributes[0] :
+                                           "");
+}
 
 /**
  * @param {string} url
@@ -41,5 +42,5 @@ function replaceSegmentSmoothTokens(url : string, time : number) : string {
 
 export {
   replaceRepresentationSmoothTokens,
-  replaceSegmentSmoothTokens
+  replaceSegmentSmoothTokens,
 };

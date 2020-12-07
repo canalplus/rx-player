@@ -208,14 +208,14 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                                     ressource.transportType,
                                                     otherTransportOptions);
             const request$ = scheduleRequest(() =>
-                transport.manifest.loader({ url : ressource.url }).pipe(
-                  filter(
-                    (e): e is { type : "data-loaded";
-                                value : ILoaderDataLoadedValue<Document | string>; } =>
+              transport.manifest.loader({ url : ressource.url }).pipe(
+                filter(
+                  (e): e is { type : "data-loaded";
+                              value : ILoaderDataLoadedValue<Document | string>; } =>
                     e.type === "data-loaded"
-                  ),
-                  map((e) : ILoaderDataLoadedValue< Document | string > => e.value)
-                ));
+                ),
+                map((e) : ILoaderDataLoadedValue< Document | string > => e.value)
+              ));
 
             return request$.pipe(mergeMap((responseValue) => {
               return transport.manifest.parser({ response: responseValue,
@@ -320,6 +320,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { audio } = getTransportPipelinesFromSegment(segment);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return audio.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => {
           if (res.type === "parsed-init-segment") {
@@ -329,8 +330,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                             scaledOffset,
                                             contentEnd,
                                             res.value);
-         return objectAssign({ type: "parsed-segment",
-                               value: objectAssign({}, res.value, timeInfos) });
+         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return objectAssign({ type: "parsed-segment",
+                                value: objectAssign({}, res.value, timeInfos) });
         }));
     },
   };
@@ -349,6 +351,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { video } = getTransportPipelinesFromSegment(segment);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return video.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => {
           if (res.type === "parsed-init-segment") {
@@ -358,8 +361,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                             scaledOffset,
                                             contentEnd,
                                             res.value);
-         return objectAssign({ type: "parsed-segment",
-                               value: objectAssign({}, res.value, timeInfos) });
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return objectAssign({ type: "parsed-segment",
+                                value: objectAssign({}, res.value, timeInfos) });
         }));
     },
   };
@@ -378,6 +382,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { text } = getTransportPipelinesFromSegment(segment);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return text.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => {
           if (res.type === "parsed-init-segment") {
@@ -387,8 +392,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                             scaledOffset,
                                             contentEnd,
                                             res.value);
-         return objectAssign({ type: "parsed-segment",
-                               value: objectAssign({}, res.value, timeInfos) });
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return objectAssign({ type: "parsed-segment",
+                                value: objectAssign({}, res.value, timeInfos) });
         }));
     },
   };
@@ -407,6 +413,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { image } = getTransportPipelinesFromSegment(segment);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return image.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => {
           if (res.type === "parsed-init-segment") {
@@ -416,8 +423,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                             scaledOffset,
                                             contentEnd,
                                             res.value);
-         return objectAssign({ type: "parsed-segment",
-                               value: objectAssign({}, res.value, timeInfos) });
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return objectAssign({ type: "parsed-segment",
+                                value: objectAssign({}, res.value, timeInfos) });
         }));
     },
   };

@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import flatMap from "../flat_map";
 
-/* tslint:disable no-unbound-method */
+/* eslint-disable @typescript-eslint/unbound-method */
 const initialFlatMap = (Array.prototype as any).flatMap;
-/* tslint:enable no-unbound-method */
+/* eslint-enable @typescript-eslint/unbound-method */
 
 describe("utils - starts-with", () => {
   beforeEach(() => {
@@ -26,14 +29,14 @@ describe("utils - starts-with", () => {
   });
 
   afterEach(() => {
-   (Array.prototype as any).flatMap = initialFlatMap;
+    (Array.prototype as any).flatMap = initialFlatMap;
   });
 
   it("should mirror Array.prototype.flatMap behavior", () => {
     expect(flatMap([1, 2, 3], x => [x, x + 1, x - 1]))
-             .toEqual([ 1, 2, 0, 2, 3, 1, 3, 4, 2 ]);
+      .toEqual([ 1, 2, 0, 2, 3, 1, 3, 4, 2 ]);
     expect(flatMap([1, 2, 3], x => `${x}a`))
-             .toEqual([ "1a", "2a", "3a" ]);
+      .toEqual([ "1a", "2a", "3a" ]);
   });
 
   if (typeof initialFlatMap === "function") {
@@ -43,9 +46,9 @@ describe("utils - starts-with", () => {
       const func1 = (x : number) : number[] => [x, x + 1, x - 1];
       const func2 = (x : number) : string => String(x) + "a";
       expect(flatMap([1, 2, 3], func1))
-               .toEqual([ 1, 2, 0, 2, 3, 1, 3, 4, 2 ]);
+        .toEqual([ 1, 2, 0, 2, 3, 1, 3, 4, 2 ]);
       expect(flatMap([1, 2, 3], func2))
-               .toEqual([ "1a", "2a", "3a" ]);
+        .toEqual([ "1a", "2a", "3a" ]);
 
       expect(flatMapSpy).toHaveBeenCalledTimes(2);
       expect(flatMapSpy).toHaveBeenNthCalledWith(1, func1);

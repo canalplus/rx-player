@@ -172,7 +172,11 @@ class Representation {
    * @param {string} systemId
    * @param {Uint8Array} data
    */
-  _addProtectionData(initDataType : string, systemId : string, data : Uint8Array) {
+  _addProtectionData(
+    initDataType : string,
+    systemId : string,
+    data : Uint8Array
+  ) : void {
     const newElement = { systemId, data };
     if (this.contentProtections === undefined) {
       this.contentProtections = { keyIds: [],

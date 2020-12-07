@@ -82,9 +82,9 @@ describe("errors - NetworkError", () => {
     expect(networkError.isHttpError(0)).toBe(false);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return false in isHttpError if it is an HTTP error with a different code", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError("foo", 44, "ERROR_HTTP_CODE", xhr);
@@ -92,9 +92,9 @@ describe("errors - NetworkError", () => {
     expect(networkError.isHttpError(1)).toBe(false);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return true in isHttpError if it is an HTTP error with the same code", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError("foo", 33, "ERROR_HTTP_CODE", xhr);

@@ -35,34 +35,33 @@ export interface IMediaKeySystemInfos {
 export default function probeDRMInfos(
   mediaConfig: IMediaConfiguration
 ): Promise<[ProberStatus, ICompatibleKeySystem?]> {
-  return new PPromise((resolve) => {
-    const keySystem = mediaConfig.keySystem;
-    if (keySystem == null || keySystem.type == null) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "Missing a type argument to request a media key system access.");
-    }
+  const keySystem = mediaConfig.keySystem;
+  if (keySystem == null || keySystem.type == null) {
+    return PPromise.reject("MediaCapabilitiesProber >>> API_CALL: " +
+      "Missing a type argument to request a media key system access.");
+  }
 
-    const type = keySystem.type;
-    const configuration = keySystem.configuration === undefined ? {} :
-                                                                  keySystem.configuration;
-    const result: ICompatibleKeySystem = { type, configuration };
+  const type = keySystem.type;
+  const configuration = keySystem.configuration === undefined ? {} :
+                                                                keySystem.configuration;
+  const result: ICompatibleKeySystem = { type, configuration };
 
-    if (requestMediaKeySystemAccess == null) {
-      log.debug("MediaCapabilitiesProber >>> API_CALL: " +
-        "Your browser has no API to request a media key system access.");
-      // In that case, the API lack means that no EME workflow may be started.
-      // So, the DRM configuration is not supported.
-      resolve([ProberStatus.NotSupported, result]);
-      return;
-    }
+  if (requestMediaKeySystemAccess == null) {
+    log.debug("MediaCapabilitiesProber >>> API_CALL: " +
+      "Your browser has no API to request a media key system access.");
+    // In that case, the API lack means that no EME workflow may be started.
+    // So, the DRM configuration is not supported.
+    return PPromise.resolve([ProberStatus.NotSupported, result]);
+  }
 
-    return requestMediaKeySystemAccess(type, [configuration]).toPromise()
-      .then((keySystemAccess) => {
-        result.compatibleConfiguration = keySystemAccess.getConfiguration();
-        resolve([ProberStatus.Supported, result]);
-      })
-      .catch(() => {
-        resolve([ProberStatus.NotSupported, result]);
-      });
-  });
+  return requestMediaKeySystemAccess(type, [configuration]).toPromise(PPromise)
+    .then((keySystemAccess) => {
+      result.compatibleConfiguration = keySystemAccess.getConfiguration();
+      const status : [ProberStatus, ICompatibleKeySystem?] =
+        [ProberStatus.Supported, result];
+      return status;
+    })
+    .catch(() => {
+      return [ProberStatus.NotSupported, result];
+    });
 }

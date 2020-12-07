@@ -21,7 +21,7 @@ import { IFeaturesObject } from "../types";
  * Add ability to parse SAMI text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeSAMIFeature(features : IFeaturesObject) {
+function addNativeSAMIFeature(features : IFeaturesObject) : void {
   features.nativeTextTracksParsers.sami = samiParser;
 }
 

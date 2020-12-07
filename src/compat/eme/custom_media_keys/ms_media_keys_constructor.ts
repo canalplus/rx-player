@@ -24,7 +24,8 @@ interface IMSMediaKeysConstructor {
 
 let MSMediaKeysConstructor: IMSMediaKeysConstructor|undefined;
 if (!isNode) {
-  /* tslint:disable no-unsafe-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   const { MSMediaKeys } = (window as any);
   if (MSMediaKeys !== undefined &&
       MSMediaKeys.prototype !== undefined &&
@@ -32,6 +33,7 @@ if (!isNode) {
       typeof MSMediaKeys.prototype.createSession === "function") {
     MSMediaKeysConstructor = MSMediaKeys;
   }
-  /* tslint:enable no-unsafe-any */
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }
 export { MSMediaKeysConstructor };

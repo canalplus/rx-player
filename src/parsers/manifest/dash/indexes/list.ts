@@ -149,10 +149,10 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
                     initialization: index.initialization == null ?
                       undefined :
                       { mediaURLs: createIndexURLs(representationBaseURLs,
-                                                  index.initialization.media,
-                                                  representationId,
-                                                  representationBitrate),
-                        range: index.initialization.range, }, };
+                                                   index.initialization.media,
+                                                   representationId,
+                                                   representationBitrate),
+                        range: index.initialization.range } };
   }
 
   /**
@@ -294,7 +294,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
 
   _addSegments() : void {
     if (__DEV__) {
-      log.warn("List RepresentationIndex: Tried to add Segments to a list RepresentationIndex");
+      log.warn("List RepresentationIndex: Tried to add Segments to a list " +
+               "RepresentationIndex");
     }
   }
 }

@@ -24,38 +24,38 @@ describe("DASH - isMP4EmbeddedTextTrack", () => {
   it("should return true for any mp4-embedded mimeTypes", () => {
     mp4EmbeddedMimeTypes.forEach(mimeType => {
       expect(isMP4EmbeddedTextTrack({ bitrate: 0,
-                                  id: "1",
-                                  index: {},
-                                  mimeType } as any))
+                                      id: "1",
+                                      index: {},
+                                      mimeType } as any))
         .toBe(true);
     });
   });
 
   it("should return false for no mimeType", () => {
     expect(isMP4EmbeddedTextTrack({ bitrate: 0,
-                                id: "1",
-                                index: {} } as any))
+                                    id: "1",
+                                    index: {} } as any))
       .toBe(false);
   });
 
   it("should return false for a video or audio mimeType", () => {
     expect(isMP4EmbeddedTextTrack({ bitrate: 0,
-                                id: "1",
-                                index: {},
-                                mimeType: "audio/mp4" } as any))
+                                    id: "1",
+                                    index: {},
+                                    mimeType: "audio/mp4" } as any))
       .toBe(false);
     expect(isMP4EmbeddedTextTrack({ bitrate: 0,
-                                id: "1",
-                                index: {},
-                                mimeType: "video/mp4" } as any))
+                                    id: "1",
+                                    index: {},
+                                    mimeType: "video/mp4" } as any))
       .toBe(false);
   });
 
   it("should return false for any other mimeType", () => {
     expect(isMP4EmbeddedTextTrack({ bitrate: 0,
-                                id: "1",
-                                index: {},
-                                mimeType: "foo/bar" } as any))
+                                    id: "1",
+                                    index: {},
+                                    mimeType: "foo/bar" } as any))
       .toBe(false);
   });
 });

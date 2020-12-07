@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+// eslint-disable-next-line max-len
 import nativeTextTracksBuffer from "../../../core/segment_buffers/implementations/text/native";
 import addNativeTextBuffer from "../native_text_buffer";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../core/segment_buffers/implementations/text/native", () => ({
   __esModule: true as const,
   default: jest.fn(),
@@ -31,4 +33,3 @@ describe("Features list - native Text Buffer", () => {
     expect(featureObject.nativeTextTracksBuffer).toBe(nativeTextTracksBuffer);
   });
 });
-/* tslint:enable no-unsafe-any */

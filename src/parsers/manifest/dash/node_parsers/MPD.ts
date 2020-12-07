@@ -15,7 +15,7 @@
  */
 
 import parseBaseURL, {
-  IBaseURL
+  IBaseURL,
 } from "./BaseURL";
 import {
   createPeriodIntermediateRepresentation,

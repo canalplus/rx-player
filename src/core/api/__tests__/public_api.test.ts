@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("API - Public API", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -71,9 +77,9 @@ describe("API - Public API", () => {
 
 //     describe("getNativeTextTrack", () => {
 //       it("should return null in getNativeTextTrack by default", () => {
-//         /* tslint:disable deprecation */
+// eslint-disable import/no-deprecated
 //         expect(player.getNativeTextTrack()).toBe(null);
-//         /* tslint:enable deprecation */
+// eslint-enable import/no-deprecated
 //       });
 //     });
 
@@ -102,9 +108,9 @@ describe("API - Public API", () => {
     });
 
     describe("getVideoDuration", () => {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       it("should return the video element initial duration in getVideoDuration by default", () => {
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
 
@@ -177,9 +183,9 @@ describe("API - Public API", () => {
 
     // describe("isFullscreen", () => {
     //   it("should return false in isFullscreen by default", () => {
-    //     /* tslint:disable deprecation */
+    // eslint-disable import/no-deprecated
     //     expect(player.isFullscreen()).toBe(false);
-    //     /* tslint:enable deprecation */
+    // eslint-enable import/no-deprecated
     //   });
     // });
 
@@ -293,22 +299,22 @@ describe("API - Public API", () => {
 
     // describe("exitFullscreen", () => {
     //   it("should allow exitFullscreen by default", () => {
-    //     /* tslint:disable deprecation */
+    // eslint-disable import/no-deprecated
     //     player.exitFullscreen();
-    //     /* tslint:enable deprecation */
+    // eslint-enable import/no-deprecated
     //   });
     // });
 
     // describe("setFullscreen", () => {
     //   it("should allow setFullscreen by default", () => {
-    //     /* tslint:disable deprecation */
+    // eslint-disable import/no-deprecated
     //     player.setFullscreen();
-    //     /* tslint:enable deprecation */
+    // eslint-enable import/no-deprecated
 
     //     // TODO remove for v3.0.0
-    //     /* tslint:disable deprecation */
+    // eslint-disable import/no-deprecated
     //     player.setFullscreen(false);
-    //     /* tslint:enable deprecation */
+    // eslint-enable import/no-deprecated
     //   });
     // });
 
@@ -319,9 +325,9 @@ describe("API - Public API", () => {
         expect(() => player.setVolume(5)).toThrow();
       });
 
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       it("should set the volume in setVolume by default if a volume has been given", () => {
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
         const videoElement = player.getVideoElement();
@@ -347,6 +353,7 @@ describe("API - Public API", () => {
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (videoElement.muted) {
           videoElement.muted = false;
         }
@@ -370,6 +377,7 @@ describe("API - Public API", () => {
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (videoElement.muted) {
           videoElement.muted = false;
         }
@@ -476,9 +484,9 @@ describe("API - Public API", () => {
     });
 
     describe("setMaxVideoBitrate/getMaxVideoBitrate", () => {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       it("should update the maximum video bitrate when calling setMaxVideoBitrate by default", () => {
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
         const oldMax = player.getManualVideoBitrate();
@@ -501,9 +509,9 @@ describe("API - Public API", () => {
     });
 
     describe("setMaxAudioBitrate/getMaxAudioBitrate", () => {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       it("should update the maximum audio bitrate when calling setMaxAudioBitrate by default", () => {
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
         const oldMax = player.getManualAudioBitrate();
@@ -526,9 +534,9 @@ describe("API - Public API", () => {
     });
 
     describe("getMaxBufferBehind/setMaxBufferBehind", () => {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       it("should update the max buffer behind through setMaxBufferBehind by default", () => {
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
         player.setMaxBufferBehind(50);
@@ -540,9 +548,9 @@ describe("API - Public API", () => {
     });
 
     describe("getMaxBufferAhead/setMaxBufferAhead", () => {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       it("should update the max buffer behind through setMaxBufferAhead by default", () => {
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
         player.setMaxBufferAhead(50);
@@ -566,9 +574,9 @@ describe("API - Public API", () => {
     });
 
     describe("getAvailableAudioTracks", () => {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       it("should return an empty array through getAvailableAudioTracks by default", () => {
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
         expect(player.getAvailableAudioTracks()).toEqual([]);
@@ -584,9 +592,9 @@ describe("API - Public API", () => {
     });
 
     describe("getAvailableVideoTracks", () => {
-      /* tslint:disable:max-line-length */
+      /* eslint-disable max-len */
       it("should return an empty array through getAvailableVideoTracks by default", () => {
-      /* tslint:enable:max-line-length */
+      /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
         expect(player.getAvailableVideoTracks()).toEqual([]);
@@ -678,4 +686,3 @@ describe("API - Public API", () => {
     });
   });
 });
-/* tslint:enable no-unsafe-any */

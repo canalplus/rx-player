@@ -19,9 +19,9 @@ import parseContentComponent from "../ContentComponent";
 function testStringAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it(`should correctly parse a contentComponent element with a correct ${attributeName} attribute`, () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const element1 = new DOMParser()
       .parseFromString(`<contentComponent ${attributeName}="foobar" />`, "text/xml")
       .childNodes[0] as Element;

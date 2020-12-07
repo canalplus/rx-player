@@ -21,7 +21,7 @@ import { IFeaturesObject } from "../types";
  * Add ability to parse SRT text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeSRTFeature(features : IFeaturesObject) {
+function addNativeSRTFeature(features : IFeaturesObject) : void {
   features.nativeTextTracksParsers.srt = srtParser;
 }
 

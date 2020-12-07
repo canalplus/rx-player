@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import assertUnreachable from "../assert_unreachable";
 
 describe("utils - assert", () => {
@@ -23,16 +26,14 @@ describe("utils - assert", () => {
       assertUnreachable(4 as never);
     } catch (e) {
       error = e;
-      /* tslint:disable:no-unused-expression */
+      /* eslint-disable @typescript-eslint/no-unused-expressions */
       expect(e).toBeDefined();
-      /* tslint:enable:no-unused-expression */
+      /* eslint-enable @typescript-eslint/no-unused-expressions */
     }
-    /* tslint:disable:no-unused-expression */
+    /* eslint-disable @typescript-eslint/no-unused-expressions */
     expect(error).toBeDefined();
-    /* tslint:enable:no-unused-expression */
-    /* tslint:disable no-unsafe-any */
+    /* eslint-enable @typescript-eslint/no-unused-expressions */
     expect(error.message).toBe("Unreachable path taken");
     expect(error.name).toBe("AssertionError");
-    /* tslint:enable no-unsafe-any */
   });
 });

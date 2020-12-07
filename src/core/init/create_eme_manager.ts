@@ -39,7 +39,7 @@ const { onEncrypted$ } = events;
  * Event emitted after deciding that no EME logic should be launched for the
  * current content.
  */
-export interface IEMEDisabledEvent { type: "eme-disabled"; }
+export interface IEMEDisabledEvent { type: "eme-disabled" }
 
 /**
  * Create EMEManager if possible (has the APIs and configuration).
@@ -63,7 +63,7 @@ export default function createEMEManager(
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
                                       "EME feature not activated.");
       })),
-      observableOf({ type: "eme-disabled" as "eme-disabled" }));
+      observableOf({ type: "eme-disabled" as const }));
   }
 
   if (keySystems.length === 0) {
@@ -73,7 +73,7 @@ export default function createEMEManager(
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
                                       "Media is encrypted and no `keySystems` given");
       })),
-      observableOf({ type: "eme-disabled" as "eme-disabled" }));
+      observableOf({ type: "eme-disabled" as const }));
   }
 
   if (!hasEMEAPIs()) {
@@ -83,7 +83,7 @@ export default function createEMEManager(
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
                                       "Encryption APIs not found.");
       })),
-      observableOf({ type: "eme-disabled" as "eme-disabled" }));
+      observableOf({ type: "eme-disabled" as const }));
   }
 
   log.debug("Init: Creating EMEManager");

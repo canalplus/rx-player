@@ -49,10 +49,8 @@ function requestStringResource(
 ) : Observable< ILoaderDataLoadedValue< string > > {
   return request({ url,
                    responseType: "text" })
-  .pipe(
-    filter((e) => e.type === "data-loaded"),
-    map((e) => e.value)
-  );
+    .pipe(filter((e) => e.type === "data-loaded"),
+          map((e) => e.value));
 }
 
 /**

@@ -74,7 +74,7 @@ function parseEventStream(element: Element): [IParsedStreamEvent[], Error[]] {
         data: { type: "dash-event-stream" as const,
                 value: { schemeIdUri: attributes.schemeId ?? "",
                          timescale: attributes.timescale,
-                         element: node as Element }, }, };
+                         element: node as Element } } };
 
     const parseEventValue = ValueParser(streamEvent, warnings);
 

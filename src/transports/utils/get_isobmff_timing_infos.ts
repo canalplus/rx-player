@@ -79,8 +79,7 @@ export default function getISOBMFFTimingInfos(
       Math.min(timescale * 0.9,
                !isNullOrUndefined(segment.duration) ?
                  ((segment.duration / segment.timescale) * timescale) / 4 :
-                   0.25
-    );
+                   0.25);
     segmentDuration = !isNullOrUndefined(segment.duration) ?
                         (segment.duration / segment.timescale) * timescale :
                         undefined;

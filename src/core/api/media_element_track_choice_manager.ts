@@ -929,8 +929,8 @@ function disableAllTextTracksBut(
 ) {
   for (let i = 0; i < textTracks.length; i++) {
     const { nativeTrack } = textTracks[i];
-    if (nativeTrack !== track && (
-        nativeTrack.mode === "showing" || nativeTrack.mode === "hidden"))
+    if (nativeTrack !== track &&
+        (nativeTrack.mode === "showing" || nativeTrack.mode === "hidden"))
     {
       nativeTrack.mode = "disabled";
     }

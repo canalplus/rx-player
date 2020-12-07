@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 // FIXME We cannot mock navigator.onLine easily, sadly
-/* tslint:disable no-unsafe-any */
 xdescribe("Compat - isOffline", () => {
   it("should return true if navigator.onLine is `false`", () => {
     const oldNavigator = window.navigator;
@@ -49,4 +55,3 @@ xdescribe("Compat - isOffline", () => {
     (window as any).navigator = oldNavigator;
   });
 });
-/* tslint:enable no-unsafe-any */

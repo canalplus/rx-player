@@ -74,6 +74,7 @@ function isEventSupported(
     return true;
   } else {
     clone.setAttribute(eventName, "return;");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return typeof (clone as any)[eventName] === "function";
   }
 }
@@ -101,7 +102,7 @@ function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
   return eventNames.reduce((parent : string[], name : string) =>
     parent.concat((prefixes == null ? BROWSER_PREFIXES :
                                       prefixes)
-          .map((p) => p + name)), []);
+      .map((p) => p + name)), []);
 }
 
 export interface IEventEmitterLike {
@@ -147,8 +148,7 @@ function compatibleListener<T extends Event>(
     // otherwise, we need to listen to all the events
     // and merge them into one observable sequence
     return observableMerge(...prefixedEvents.map(eventName =>
-                             observableFromEvent(element, eventName))
-    );
+      observableFromEvent(element, eventName)));
   };
 }
 
@@ -243,18 +243,20 @@ function onPictureInPictureEvent$(
   mediaElement: HTMLMediaElement
 ): Observable<IPictureInPictureEvent> {
   return observableDefer(() => {
+    /* eslint-disable @typescript-eslint/strict-boolean-expressions */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     if ((mediaElement as any).webkitSupportsPresentationMode &&
         typeof (mediaElement as any).webkitSetPresentationMode === "function")
     {
       const isWebKitPIPEnabled =
         (mediaElement as any).webkitPresentationMode === "picture-in-picture";
-      return observableFromEvent(mediaElement, "webkitpresentationmodechanged")
-          .pipe(
-            map(() => ({ isEnabled: (mediaElement as any)
-                           .webkitPresentationMode === "picture-in-picture",
-                         pipWindow: null })),
-            startWith({ isEnabled: isWebKitPIPEnabled, pipWindow: null })
-          );
+      return observableFromEvent(mediaElement, "webkitpresentationmodechanged").pipe(
+        map(() => ({
+          isEnabled: (mediaElement as any)
+            .webkitPresentationMode === "picture-in-picture",
+          pipWindow: null,
+        })),
+        startWith({ isEnabled: isWebKitPIPEnabled, pipWindow: null }));
     }
 
     const isPIPEnabled = (
@@ -264,13 +266,16 @@ function onPictureInPictureEvent$(
     const initialState = { isEnabled: isPIPEnabled, pipWindow: null };
     return observableMerge(
       observableFromEvent(mediaElement, "enterpictureinpicture")
-        .pipe(map((evt: any) => ({ isEnabled: true,
-                                   /* tslint:disable no-unsafe-any */
-                                   pipWindow: evt.pictureInPictureWindow }))),
-                                   /* tslint:enable no-unsafe-any */
+        .pipe(map((evt: any) => ({
+          isEnabled: true,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          pipWindow: evt.pictureInPictureWindow,
+        }))),
       observableFromEvent(mediaElement, "leavepictureinpicture")
         .pipe(mapTo({ isEnabled: false, pipWindow: null }))
     ).pipe(startWith(initialState));
+    /* eslint-enable @typescript-eslint/strict-boolean-expressions */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
   });
 }
 

@@ -36,9 +36,8 @@ function isMediaCapabilitiesAPIAvailable(): Promise<void> {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaCapabilities API not available");
     }
-    /* tslint:disable no-unsafe-any */
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (!("decodingInfo" in (navigator as any).mediaCapabilities)) {
-    /* tslint:enable no-unsafe-any */
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "Decoding Info not available");
     }
@@ -53,6 +52,7 @@ function isMediaCapabilitiesAPIAvailable(): Promise<void> {
 export default function probeDecodingInfos(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return isMediaCapabilitiesAPIAvailable().then(() => {
     const hasVideoConfig = (
       config.type !== undefined && config.type.length > 0 &&
@@ -78,9 +78,8 @@ export default function probeDecodingInfos(
       "Not enough arguments for calling mediaCapabilites.");
     }
 
-    /* tslint:disable no-unsafe-any */
+    // eslint-disable-next-line
     return (navigator as any).mediaCapabilities.decodingInfo(config)
-    /* tslint:enable no-unsafe-any */
       .then((result: IDecodingInfos) => {
         return [
           result.supported ? ProberStatus.Supported : ProberStatus.NotSupported,

@@ -23,9 +23,9 @@ import {
 import deferSubscriptions from "../defer_subscriptions";
 
 describe("utils - deferSubscriptions", () => {
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should wait until all subscription in the current script are done before emitting", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     let logs = "";
     const myObservableDeferred = timer(5).pipe(mapTo("A"),
                                                startWith("S"),

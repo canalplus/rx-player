@@ -92,8 +92,7 @@ function be8toi(bytes : Uint8Array, offset : number) : number {
   return (((bytes[offset + 0] * 0x1000000) +
            (bytes[offset + 1] * 0x0010000) +
            (bytes[offset + 2] * 0x0000100) +
-           (bytes[offset + 3])
-          ) * 0x100000000 +
+           (bytes[offset + 3])) * 0x100000000 +
 
          (bytes[offset + 4] * 0x1000000) +
          (bytes[offset + 5] * 0x0010000) +

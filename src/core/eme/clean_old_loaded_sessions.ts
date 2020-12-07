@@ -63,17 +63,18 @@ export default function cleanOldLoadedSessions(
 
   const cleaningOldSessions$ : Array<Observable<ICleanedOldSessionEvent |
                                                  ICleaningOldSessionEvent>> = [];
-  const entries = loadedSessionsStore.getAll()
-                                     .slice(); // clone
+  const entries = loadedSessionsStore
+    .getAll()
+    .slice(); // clone
   const toDelete = entries.length - limit;
   for (let i = 0; i < toDelete; i++) {
     const entry = entries[i];
     const cleaning$ = loadedSessionsStore
       .closeSession(entry.initData, entry.initDataType)
-        .pipe(mapTo({ type: "cleaned-old-session" as const,
-                      value: entry }),
-              startWith({ type: "cleaning-old-session" as const,
-                          value: entry }));
+      .pipe(mapTo({ type: "cleaned-old-session" as const,
+                    value: entry }),
+            startWith({ type: "cleaning-old-session" as const,
+                        value: entry }));
     cleaningOldSessions$.push(cleaning$);
   }
   return observableMerge(...cleaningOldSessions$);

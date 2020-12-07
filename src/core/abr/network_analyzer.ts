@@ -257,10 +257,10 @@ export default class NetworkAnalyzer {
     this._initialBitrate = initialBitrate;
     this._inStarvationMode = false;
     if (lowLatencyMode) {
-    this._config = { starvationGap: ABR_STARVATION_GAP.LOW_LATENCY,
-                     outOfStarvationGap: OUT_OF_STARVATION_GAP.LOW_LATENCY,
-                     starvationBitrateFactor: ABR_STARVATION_FACTOR.LOW_LATENCY,
-                     regularBitrateFactor: ABR_REGULAR_FACTOR.LOW_LATENCY };
+      this._config = { starvationGap: ABR_STARVATION_GAP.LOW_LATENCY,
+                       outOfStarvationGap: OUT_OF_STARVATION_GAP.LOW_LATENCY,
+                       starvationBitrateFactor: ABR_STARVATION_FACTOR.LOW_LATENCY,
+                       regularBitrateFactor: ABR_REGULAR_FACTOR.LOW_LATENCY };
     } else {
       this._config = { starvationGap: ABR_STARVATION_GAP.DEFAULT,
                        outOfStarvationGap: OUT_OF_STARVATION_GAP.DEFAULT,
@@ -361,7 +361,7 @@ export default class NetworkAnalyzer {
     currentRepresentation : Representation | null,
     currentRequests : IRequestInfo[],
     playbackInfo: IPlaybackConditionsInfo
-   ) : boolean {
+  ) : boolean {
     if (currentRepresentation === null) {
       return true;
     } else if (bitrate === currentRepresentation.bitrate) {

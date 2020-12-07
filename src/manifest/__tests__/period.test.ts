@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("Manifest - Period", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -213,9 +219,9 @@ describe("Manifest - Period", () => {
     expect(error.type).toBe("MEDIA_ERROR");
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should throw if the adaptation throws for another reason than an unsupported type", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     const { MediaError } = require("../../errors");
     const adaptationSpy = jest.fn(arg => {
       if (arg.type === "bar") {
@@ -404,9 +410,9 @@ describe("Manifest - Period", () => {
     expect(period.getAdaptations()).toContain(period.adaptations.audio[0]);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should return every Adaptations from a given type with `getAdaptationsForType`", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
@@ -438,9 +444,9 @@ describe("Manifest - Period", () => {
     expect(period.getAdaptationsForType("text")).toHaveLength(0);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should return the first Adaptations with a given Id when calling `getAdaptation`", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
@@ -465,9 +471,9 @@ describe("Manifest - Period", () => {
     expect(period.getAdaptation("56")).toEqual(period.adaptations.audio[0]);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should return undefind if no adaptation has the given Id when calling `getAdaptation`", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
@@ -476,4 +482,3 @@ describe("Manifest - Period", () => {
     }));
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("compat - canPatchISOBMFFSegment", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -42,4 +48,3 @@ describe("compat - canPatchISOBMFFSegment", () => {
     expect(canPatchISOBMFFSegment.default()).toBe(false);
   });
 });
-/* tslint:enable no-unsafe-any */

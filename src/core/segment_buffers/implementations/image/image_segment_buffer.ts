@@ -46,8 +46,7 @@ export interface IImageTrackSegmentData {
  * Image SegmentBuffer implementation.
  * @class ImageSegmentBuffer
  */
-export default class ImageSegmentBuffer
-                 extends SegmentBuffer<IImageTrackSegmentData> {
+export default class ImageSegmentBuffer extends SegmentBuffer<IImageTrackSegmentData> {
   public readonly bufferType : "image";
   private _buffered : ManualTimeRanges;
 

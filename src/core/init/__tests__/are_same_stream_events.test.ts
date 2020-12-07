@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("core - init - areSameStreamEvents", () => {
   it("should consider two events to be the same with defined ends", () => {
     const evt1 = { start: 0,
@@ -22,11 +29,9 @@ describe("core - init - areSameStreamEvents", () => {
     const evt2 = { start: 0,
                    end: 10,
                    id: "1" };
-    /* tslint:disable no-unsafe-any */
     const areSameStreamEvents =
       require("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
-    /* tslint:enable no-unsafe-any */
     expect(result).toBe(true);
   });
   it("should consider two events to be the same with undefined ends", () => {
@@ -36,11 +41,9 @@ describe("core - init - areSameStreamEvents", () => {
     const evt2 = { start: 0,
                    end: undefined,
                    id: "1" };
-    /* tslint:disable no-unsafe-any */
     const areSameStreamEvents =
       require("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
-    /* tslint:enable no-unsafe-any */
     expect(result).toBe(true);
   });
   it("should consider two events not to be the same - different ids", () => {
@@ -50,11 +53,9 @@ describe("core - init - areSameStreamEvents", () => {
     const evt2 = { start: 0,
                    end: undefined,
                    id: "2" };
-    /* tslint:disable no-unsafe-any */
     const areSameStreamEvents =
       require("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
-    /* tslint:enable no-unsafe-any */
     expect(result).toBe(false);
   });
   it("should consider two events not to be the same - different starts", () => {
@@ -64,11 +65,9 @@ describe("core - init - areSameStreamEvents", () => {
     const evt2 = { start: 10,
                    end: undefined,
                    id: "1" };
-    /* tslint:disable no-unsafe-any */
     const areSameStreamEvents =
       require("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
-    /* tslint:enable no-unsafe-any */
     expect(result).toBe(false);
   });
   it("should consider two events not to be the same - different end", () => {
@@ -78,11 +77,9 @@ describe("core - init - areSameStreamEvents", () => {
     const evt2 = { start: 0,
                    end: 30,
                    id: "1" };
-    /* tslint:disable no-unsafe-any */
     const areSameStreamEvents =
       require("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
-    /* tslint:enable no-unsafe-any */
     expect(result).toBe(false);
   });
 });

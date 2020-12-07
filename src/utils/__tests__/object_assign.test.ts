@@ -31,7 +31,7 @@ describe("utils - objectAssign", () => {
     expect(objectAssign(obj)).toBe(obj);
     expect(obj).toEqual({});
 
-    expect(objectAssign(obj, { a: 4, c: { d: "toto" }})).toBe(obj);
+    expect(objectAssign(obj, { a: 4, c: { d: "toto" } })).toBe(obj);
     expect(obj).toEqual({ a: 4, c: { d: "toto" } });
 
     expect(objectAssign(obj, { f: /a/ })).toBe(obj);
@@ -41,6 +41,7 @@ describe("utils - objectAssign", () => {
     expect(obj).toEqual({ a: 4, c: { d: "toto" }, f: /a/, g: 18, h: 32, i: 4 });
   });
 
+  // eslint-disable-next-line max-len
   it("should overwrite properties existing in both sources and targets by the latest source", () => {
     const obj = { a: 4, c: { d: "toto" } };
 

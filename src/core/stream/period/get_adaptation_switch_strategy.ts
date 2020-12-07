@@ -140,7 +140,7 @@ export default function getAdaptationSwitchStrategy(
     // Exclude data close to the period's start to avoid cleaning
     // to much
     rangesToExclude.push({ start: 0,
-      end: period.start + 1 });
+                           end: period.start + 1 });
   }
 
   // Next, exclude data around current position to avoid decoding issues

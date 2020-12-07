@@ -29,9 +29,9 @@ describe("utils - WeakMapMemory", () => {
     expect(wasCalledCounter).toBe(1);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should not call the given function when `get` has already been called on this object", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const obj = {};
     let wasCalledCounter = 0;
     const wwm = new WeakMapMemory((arg : unknown) => {
@@ -55,9 +55,9 @@ describe("utils - WeakMapMemory", () => {
     expect(wasCalledCounter).toBe(1);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should remove from WeakMapMemory when destroy is called", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const obj = {};
     let wasCalledCounter = 0;
     const wwm = new WeakMapMemory((arg : unknown) => {

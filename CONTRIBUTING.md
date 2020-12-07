@@ -65,7 +65,7 @@ the whole documentation to be ready, only the parts you want to update
 <a name="code-lint"></a>
 ### Linting ####################################################################
 
-The code style in `src` is automatically checked by a "linter", `tslint`.
+The code style in `src` is automatically checked by a "linter", `eslint`.
 
 It basically follows those principles:
   - 2 spaces indentation

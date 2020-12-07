@@ -139,7 +139,7 @@ export default {
    */
   DEFAULT_MAX_BUFFER_BEHIND: Infinity,
 
-  /* tslint:disable no-object-literal-type-assertion */
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
   /**
    * Maximum possible buffer ahead for each type of buffer, to avoid too much
    * memory usage when playing for a long time.
@@ -149,9 +149,9 @@ export default {
   MAXIMUM_MAX_BUFFER_AHEAD: {
     text: 5 * 60 * 60,
   } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
-  /* tslint:enable no-object-literal-type-assertion */
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
-  /* tslint:disable no-object-literal-type-assertion */
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
   /**
    * Maximum possible buffer behind for each type of buffer, to avoid too much
    * memory usage when playing for a long time.
@@ -161,7 +161,7 @@ export default {
   MAXIMUM_MAX_BUFFER_BEHIND: {
     text: 5 * 60 * 60,
   } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
-  /* tslint:enable no-object-literal-type-assertion */
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
   /**
    * Default bitrate ceils initially set as the first content begins.
@@ -183,7 +183,7 @@ export default {
               // mechanism is triggered for them.
   },
 
-  /* tslint:disable no-object-literal-type-assertion */
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
   /**
    * Default bitrate ceil initially set to dictate the maximum bitrate the
    * ABR manager can automatically switch to.
@@ -201,7 +201,7 @@ export default {
                      // Though those are generally at a single bitrate, so no
                      // adaptive mechanism is triggered for them.
   } as Record<"audio"|"video"|"other", number>,
-  /* tslint:enable no-object-literal-type-assertion */
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
   /**
    * Delay after which, if the page is hidden, the user is considered inactive
@@ -745,7 +745,7 @@ export default {
    *
    * @type {Array.<Number>}
    */
-   SEGMENT_PRIORITIES_STEPS : [ 2,  // 1st Step (priority number = 0):  < 2
+  SEGMENT_PRIORITIES_STEPS : [ 2,   // 1st Step (priority number = 0):  < 2
                                4,   // 2nd Step (priority number = 1):  2-4
                                8,   // 3rd Step (priority number = 2):  4-8
                                12,  // 4th Step (priority number = 3):  8-12
@@ -802,7 +802,7 @@ export default {
    * or "playready" as a keySystem.
    * @type {Object}
    */
-  /* tslint:disable no-object-literal-type-assertion */
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
   EME_KEY_SYSTEMS: {
     clearkey:  [ "webkit-org.w3.clearkey",
                  "org.w3.clearkey" ],
@@ -812,7 +812,7 @@ export default {
                  "com.youtube.playready" ],
     fairplay: [ "com.apple.fps.1_0" ],
   } as Partial<Record<string, string[]>>,
-  /* tslint:enable no-object-literal-type-assertion */
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
   /**
    * The Manifest parsing logic has a notion of "unsafeMode" which allows to

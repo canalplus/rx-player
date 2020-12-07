@@ -23,6 +23,7 @@
  * position and what is currently buffered.
  */
 
+// eslint-disable-next-line max-len
 import shouldAppendBufferAfterPadding from "../../../compat/should_append_buffer_after_padding";
 import config from "../../../config";
 import log from "../../../log";
@@ -234,7 +235,7 @@ function shouldContentBeReplaced(
   if (shouldAppendBufferAfterPadding &&
       (segment.time / segment.timescale) <
       (currentPlaybackTime + CONTENT_REPLACEMENT_PADDING)) {
-      return false;
+    return false;
   }
 
   if (oldContent.adaptation.id !== currentContent.adaptation.id) {
@@ -333,7 +334,7 @@ function isStartGarbageCollected(
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
   {
     log.info("Stream: The start of the wanted segment has been garbage collected",
-              currentSeg);
+             currentSeg);
     return true;
   }
 
@@ -374,7 +375,7 @@ function isEndGarbageCollected(
       currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
   {
     log.info("Stream: The end of the wanted segment has been garbage collected",
-              currentSeg);
+             currentSeg);
     return true;
   }
 

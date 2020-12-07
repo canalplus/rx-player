@@ -16,7 +16,7 @@
 
 import {
   merge as observableMerge,
-  Observable
+  Observable,
 } from "rxjs";
 import {
   distinctUntilChanged,
@@ -85,7 +85,7 @@ export default function ActivePeriodEmitter(
         case "periodStreamCleared": {
           const { period, type } = evt.value;
           const currentInfos = acc[period.id];
-          if (currentInfos != null && currentInfos.buffers.has(type)) {
+          if (currentInfos !== undefined && currentInfos.buffers.has(type)) {
             currentInfos.buffers.delete(type);
             if (currentInfos.buffers.size === 0) {
               delete acc[period.id];
@@ -95,16 +95,23 @@ export default function ActivePeriodEmitter(
           break;
 
         case "adaptationChange": {
-          // `adaptationChange` with a null Adaptation will not lead to a
-          // `representationChange` event
-          if (evt.value.adaptation != null) {
+          // For Adaptations that are not null, we will receive a
+          // `representationChange` event. We can thus skip this event and only
+          // listen to the latter.
+          if (evt.value.adaptation !== null) {
             return acc;
           }
         }
+        // /!\ fallthrough done on purpose
+        // Note that we fall-through only when the Adaptation sent through the
+        // `adaptationChange` event is `null`. This is because in those cases,
+        // we won't receive any "representationChange" event. We however still
+        // need to register that Period as active for the current type.
+        // eslint-disable-next-line no-fallthrough
         case "representationChange": {
           const { period, type } = evt.value;
           const currentInfos = acc[period.id];
-          if (currentInfos != null && !currentInfos.buffers.has(type)) {
+          if (currentInfos !== undefined && !currentInfos.buffers.has(type)) {
             currentInfos.buffers.add(type);
           } else {
             const bufferSet = new Set<IBufferType>();
@@ -123,13 +130,13 @@ export default function ActivePeriodEmitter(
       const completePeriods : Period[] = [];
       for (let i = 0; i < activePeriodIDs.length; i++) {
         const periodInfos = list[activePeriodIDs[i]];
-        if (periodInfos != null && periodInfos.buffers.size === numberOfStreams) {
+        if (periodInfos !== undefined && periodInfos.buffers.size === numberOfStreams) {
           completePeriods.push(periodInfos.period);
         }
       }
 
       return completePeriods.reduce<Period|null>((acc, period) => {
-        if (acc == null) {
+        if (acc === null) {
           return period;
         }
         return period.start < acc.start ? period :
@@ -138,8 +145,8 @@ export default function ActivePeriodEmitter(
     }),
 
     distinctUntilChanged((a, b) => {
-      return a == null && b == null ||
-             a != null && b != null && a.id === b.id;
+      return a === null && b === null ||
+             a !== null && b !== null && a.id === b.id;
     })
   );
 }

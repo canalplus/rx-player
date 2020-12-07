@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable no-restricted-properties */
+
 /**
  * Array.prototype.find ponyfill.
  * @param {Array} arr
@@ -22,16 +28,12 @@
  * @returns {boolean}
  */
 export default function arrayFind<T>(
-    arr : T[],
-    predicate : (arg: T, index : number, arr : T[]) => boolean,
-    thisArg? : any
+  arr : T[],
+  predicate : (arg: T, index : number, fullArray : T[]) => boolean,
+  thisArg? : any
 ) : T | undefined {
   if (typeof (Array.prototype as any).find === "function") {
-    /* tslint:disable no-unsafe-any */
-    /* tslint:disable ban */
     return (arr as any).find(predicate, thisArg);
-    /* tslint:enable ban */
-    /* tslint:enable no-unsafe-any */
   }
 
   const len = arr.length >>> 0;

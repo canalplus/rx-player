@@ -188,8 +188,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                                      index.initialization !== undefined ?
                                        index.initialization.media :
                                        undefined,
-                                    representationId,
-                                    representationBitrate);
+                                      representationId,
+                                      representationBitrate);
 
     // TODO If indexRange is either undefined or behind the initialization segment
     // the following logic will not work.

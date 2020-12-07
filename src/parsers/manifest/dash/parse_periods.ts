@@ -24,6 +24,7 @@ import {
   IParsedAdaptations,
   IParsedPeriod,
 } from "../types";
+// eslint-disable-next-line max-len
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformation from "./get_periods_time_infos";
@@ -79,7 +80,7 @@ export interface IPeriodsContextInfos {
  * @param {Object} contextInfos
  * @returns {Array.<Object>}
  */
-  export default function parsePeriods(
+export default function parsePeriods(
   periodsIR : IPeriodIntermediateRepresentation[],
   contextInfos : IPeriodsContextInfos
 ): IParsedPeriod[] {

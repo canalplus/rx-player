@@ -24,13 +24,17 @@ export default function flatMap<T, U>(
   originalArray : T[],
   fn: (arg: T) => U[]|U
 ) : U[] {
-  /* tslint:disable no-unbound-method */
+  /* eslint-disable @typescript-eslint/unbound-method */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-disable @typescript-eslint/no-unsafe-return */
+  /* eslint-disable @typescript-eslint/no-unsafe-call */
   if (typeof (Array.prototype as any).flatMap === "function") {
-  /* tslint:enable no-unbound-method */
-    /* tslint:disable no-unsafe-any */
     return (originalArray as any).flatMap(fn);
-    /* tslint:enable no-unsafe-any */
   }
+  /* eslint-enable @typescript-eslint/unbound-method */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-enable @typescript-eslint/no-unsafe-return */
+  /* eslint-enable @typescript-eslint/no-unsafe-call */
 
   return originalArray.reduce((acc : U[], arg : T) : U[] => {
     const r = fn(arg);

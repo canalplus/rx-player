@@ -193,14 +193,14 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                     initialization: index.initialization == null ?
                       undefined :
                       { mediaURLs: createIndexURLs(representationBaseURLs,
-                                                  index.initialization.media,
-                                                  representationId,
-                                                 representationBitrate),
+                                                   index.initialization.media,
+                                                   representationId,
+                                                   representationBitrate),
                         range: index.initialization.range },
                     mediaURLs: createIndexURLs(representationBaseURLs,
-                                              index.media,
-                                              representationId,
-                                              representationBitrate),
+                                               index.media,
+                                               representationId,
+                                               representationBitrate),
                     presentationTimeOffset,
                     startNumber: index.startNumber };
     this._isDynamic = isDynamic;
@@ -259,10 +259,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     // the `0` number
     let numberIndexedToZero = Math.floor(startPosition / duration);
 
-    for (let timeFromPeriodStart = numberIndexedToZero * duration;
-         timeFromPeriodStart <= lastWantedStartPosition;
-         timeFromPeriodStart += duration)
-    {
+    for (
+      let timeFromPeriodStart = numberIndexedToZero * duration;
+      timeFromPeriodStart <= lastWantedStartPosition;
+      timeFromPeriodStart += duration
+    ) {
       // To obtain the real number, adds the real number from the Period's start
       const realNumber = numberIndexedToZero + numberOffset;
 

@@ -84,8 +84,8 @@ export default function getPeriodsTimeInformation(
     const periodEnd = periodDuration != null ? (periodStart + periodDuration) :
                                                undefined;
     periodsTimeInformation.push({ periodStart,
-                                   periodDuration,
-                                   periodEnd });
+                                  periodDuration,
+                                  periodEnd });
   });
   return periodsTimeInformation;
 }

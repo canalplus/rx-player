@@ -160,6 +160,7 @@ export default class LoadedSessionsStore {
           }
         })
         .catch((e : unknown) => {
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           log.warn(`EME-LSS: MediaKeySession.closed rejected: ${e}`);
         });
     }

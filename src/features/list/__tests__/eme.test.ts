@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import emeManager from "../../../core/eme";
 import addEMEFeature from "../eme";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../core/eme", () => ({
   __esModule: true as const,
   default: jest.fn(),
@@ -31,4 +32,3 @@ describe("Features list - EME", () => {
     expect(featureObject.emeManager).toBe(emeManager);
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import {
   IRepresentationInfos,
 } from "../adaptation";
 import Representation from "../representation";
 
-/* tslint:disable no-unsafe-any */
 
 const minimalRepresentationIndex = { getInitSegment() { return null; },
                                      getSegments() { return []; },
@@ -102,7 +108,7 @@ describe("Manifest - Adaptation", () => {
     const args1 = { id: "12",
                     representations: [],
                     language: "fr",
-                    type: "video"as "video" };
+                    type: "video"as const };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe("fr");
     expect(adaptation1.normalizedLanguage).toBe("frfoo");
@@ -218,7 +224,7 @@ describe("Manifest - Adaptation", () => {
     const args = { id: "12",
                    language: "fr",
                    representations,
-                   type: "text" as "text" };
+                   type: "text" as const };
     const adaptation = new Adaptation(args, { representationFilter });
 
     const parsedRepresentations = adaptation.representations;
@@ -254,7 +260,7 @@ describe("Manifest - Adaptation", () => {
     const representations = [rep1, rep2];
     const args = { id: "12",
                    representations,
-                   type: "text" as "text" };
+                   type: "text" as const };
     const adaptation = new Adaptation(args);
 
     const parsedRepresentations = adaptation.representations;
@@ -279,7 +285,7 @@ describe("Manifest - Adaptation", () => {
     const Adaptation = require("../adaptation").default;
     const args = { id: "12",
                    representations: [],
-                   type: "text" as "text" };
+                   type: "text" as const };
     const adaptation = new Adaptation(args);
 
     const parsedRepresentations = adaptation.representations;
@@ -407,9 +413,9 @@ describe("Manifest - Adaptation", () => {
     expect(normalizeSpy).not.toHaveBeenCalled();
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should filter Representation with duplicate bitrates in getAvailableBitrates", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 
     jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
@@ -430,7 +436,7 @@ describe("Manifest - Adaptation", () => {
     const representations = [rep1, rep2, rep3];
     const args = { id: "12",
                    representations,
-                   type: "text" as "text" };
+                   type: "text" as const };
     const adaptation = new Adaptation(args);
 
     const parsedRepresentations = adaptation.representations;
@@ -442,9 +448,9 @@ describe("Manifest - Adaptation", () => {
     expect(uniqSpy).toHaveBeenCalledWith(representations.map(r => r.bitrate));
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should return the first Representation with the given Id with `getRepresentation`", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 
     jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
@@ -460,16 +466,16 @@ describe("Manifest - Adaptation", () => {
                    id: "rep2",
                    index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3];
-    const args = { id: "12", representations, type: "text" as "text" };
+    const args = { id: "12", representations, type: "text" as const };
     const adaptation = new Adaptation(args);
 
     expect(adaptation.getRepresentation("rep1").bitrate).toEqual(10);
     expect(adaptation.getRepresentation("rep2").bitrate).toEqual(20);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should return undefined in `getRepresentation` if no representation is found with this Id", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 
     jest.mock("../representation", () => ({ __esModule: true as const,
                                             default: defaultRepresentationSpy }));
@@ -485,15 +491,15 @@ describe("Manifest - Adaptation", () => {
                    id: "rep2",
                    index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3];
-    const args = { id: "12", representations, type: "text" as "text" };
+    const args = { id: "12", representations, type: "text" as const };
     const adaptation = new Adaptation(args);
 
     expect(adaptation.getRepresentation("rep5")).toBe(undefined);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should return only supported and decipherable representation when calling `getPlayableRepresentations`", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     const representationSpy = jest.fn(arg => {
       return { bitrate: arg.bitrate,
                id: arg.id,
@@ -540,7 +546,7 @@ describe("Manifest - Adaptation", () => {
                              rep6,
                              rep7,
                              rep8];
-    const args = { id: "12", representations, type: "text" as "text" };
+    const args = { id: "12", representations, type: "text" as const };
     const adaptation = new Adaptation(args);
 
     const playableRepresentations = adaptation.getPlayableRepresentations();
@@ -553,4 +559,3 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.parsingErrors).toEqual([]);
   });
 });
-/* tslint:enable no-unsafe-any */

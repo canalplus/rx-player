@@ -17,6 +17,8 @@
 // Webpack-defined globals
 // Should be all replaced once the lib built.
 
+/* eslint-disable @typescript-eslint/naming-convention */
+
 declare const __DEV__: boolean;
 declare const __LOGGER_LEVEL__: string;
 declare const __FEATURES__ : {

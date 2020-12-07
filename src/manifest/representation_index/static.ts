@@ -20,7 +20,7 @@ import {
   ISegment,
 } from "./types";
 
-export interface IStaticRepresentationIndexInfos { media: string; }
+export interface IStaticRepresentationIndexInfos { media: string }
 
 /**
  * Simple RepresentationIndex implementation for static files.
@@ -66,7 +66,6 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    */
   getFirstPosition() : undefined {
     return ;
-    /* tslint:enable return-undefined */
   }
 
   /**

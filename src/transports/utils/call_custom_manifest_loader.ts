@@ -27,8 +27,9 @@ import {
 
 export default function callCustomManifestLoader(
   customManifestLoader : CustomManifestLoader,
-  fallbackManifestLoader : (x : IManifestLoaderArguments) =>
-                             Observable< IManifestLoaderEvent >
+  fallbackManifestLoader : (
+    x : IManifestLoaderArguments
+  ) => Observable< IManifestLoaderEvent >
 ) : (x : IManifestLoaderArguments) => Observable< IManifestLoaderEvent > {
 
   return (args : IManifestLoaderArguments) : Observable< IManifestLoaderEvent > => {

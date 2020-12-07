@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import arrayFindIndex from "../../utils/array_find_index";
 
-/* tslint:disable no-unsafe-any */
 describe("Compat - clearElementSrc", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -99,7 +105,7 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
     expect(spyHasChildNodes).toHaveBeenCalledTimes(1);
     expect(spyRemoveChild).toHaveBeenCalledTimes(2);
-    expect(spyRemoveChild).toHaveBeenCalledWith({ nodeName: "track"});
+    expect(spyRemoveChild).toHaveBeenCalledWith({ nodeName: "track" });
   });
 
   it("should log when failed to remove text track child node if on firefox", () => {
@@ -218,4 +224,3 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).not.toHaveBeenCalled();
   });
 });
-/* tslint:enable no-unsafe-any */

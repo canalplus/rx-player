@@ -1,4 +1,4 @@
-/* tslint:disable file-header */
+/* eslint-disable */
 /*
 MIT License
 Copyright (c) 2020 Egor Nepomnyaschih

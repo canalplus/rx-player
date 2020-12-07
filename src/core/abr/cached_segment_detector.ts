@@ -42,12 +42,13 @@ function mayBeFromCache(contentType: "audio"|"video",
  * from cache or not.
  * @returns {function}
  */
-export default function generateCachedSegmentDetector():
-  (content: { representation: Representation;
-               adaptation: Adaptation;
-               segment: ISegment; },
-   duration: number) => boolean
-{
+export default function generateCachedSegmentDetector()
+: (
+  content: { representation: Representation;
+             adaptation: Adaptation;
+             segment: ISegment; },
+  duration: number
+) => boolean {
   let hasAlreadyLoadedNonCachedContent = false;
 
   /**
@@ -58,10 +59,12 @@ export default function generateCachedSegmentDetector():
    * @param {number} duration
    * @returns {boolean}
    */
-  return function shouldIgnoreMetrics(content: { representation: Representation;
-                                                   adaptation: Adaptation;
-                                                   segment: ISegment; },
-                                      downloadDuration: number): boolean {
+  return function shouldIgnoreMetrics(
+    content: { representation: Representation;
+               adaptation: Adaptation;
+               segment: ISegment; },
+    downloadDuration: number
+  ): boolean {
     const contentType = content.adaptation.type;
     if (contentType === "text" || contentType === "image") {
       return false;

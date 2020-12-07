@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import PPromise from "../../utils/promise";
 
-/* tslint:disable no-unsafe-any */
 describe("compat - play", () => {
   it("should call play and returns an Observable if play returns a Promise", (done) => {
     const mockPlay = jest.fn(() => PPromise.resolve());
@@ -67,4 +73,3 @@ describe("compat - play", () => {
     });
   });
 });
-/* tslint:enable no-unsafe-any */

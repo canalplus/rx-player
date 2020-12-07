@@ -41,7 +41,7 @@ function createWidevineKeySystem(keyIdBytes : Uint8Array) : IKeySystem[] {
  */
 export default function parseProtectionNode(
   protectionNode : Element,
-  keySystemCreator : (keyIdBytes : Uint8Array) => IKeySystem[] = createWidevineKeySystem
+  keySystemCreator : (keyId : Uint8Array) => IKeySystem[] = createWidevineKeySystem
 ) : IContentProtectionSmooth {
   if (protectionNode.firstElementChild === null ||
       protectionNode.firstElementChild.nodeName !== "ProtectionHeader")
@@ -58,11 +58,15 @@ export default function parseProtectionNode(
   const systemIdAttr = header.getAttribute("SystemID");
   const systemId = (systemIdAttr !== null ? systemIdAttr :
                                             "")
-                     .toLowerCase()
-                     .replace(/\{|\}/g, "");
-  return { keyId: keyIdBytes,
-           keySystems: [ { systemId,
-                           privateData,
-                           /* keyIds: [keyIdBytes], */ }, ]
-            .concat(keySystemCreator(keyIdBytes)), };
+    .toLowerCase()
+    .replace(/\{|\}/g, "");
+
+  return {
+    keyId: keyIdBytes,
+    keySystems: [ {
+      systemId,
+      privateData,
+      /* keyIds: [keyIdBytes], */
+    } ].concat(keySystemCreator(keyIdBytes)),
+  };
 }

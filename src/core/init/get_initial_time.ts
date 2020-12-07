@@ -105,14 +105,13 @@ export default function getInitialTime(
       liveTime = Math.min(maximumPosition,
                           clockRelativeLiveTime);
     }
+    const diffFromLiveTime =
+      suggestedPresentationDelay !== undefined ? suggestedPresentationDelay :
+      lowLatencyMode                           ? DEFAULT_LIVE_GAP.LOW_LATENCY :
+                                                 DEFAULT_LIVE_GAP.DEFAULT;
     log.debug(`Init: ${liveTime} defined as the live time, applying a live gap` +
-              ` of ${suggestedPresentationDelay}`);
-    if (suggestedPresentationDelay !== undefined) {
-      return Math.max(liveTime - suggestedPresentationDelay, minimumPosition);
-    }
-    const defaultStartingPos = liveTime - (lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY :
-                                                            DEFAULT_LIVE_GAP.DEFAULT);
-    return Math.max(defaultStartingPos, minimumPosition);
+              ` of ${diffFromLiveTime}`);
+    return Math.max(liveTime - diffFromLiveTime, minimumPosition);
   }
 
   log.info("Init: starting at the minimum available position:", minimumPosition);

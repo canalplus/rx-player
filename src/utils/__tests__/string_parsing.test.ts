@@ -34,9 +34,9 @@ describe("utils - string parsing", () => {
       });
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return an Uint8Array of the UTF-8 representation of a complex string", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       const input = "t❁ლ";
       const res = strUtils.strToUtf8(input);
       expect(res).toEqual(new Uint8Array([116,
@@ -117,26 +117,26 @@ describe("utils - string parsing", () => {
     });
 
     it("should convert little-endian UTF-16 to its original string", () => {
-     const utf16 = new Uint8Array([65,
-                                   0, // 0x0041 (A)
+      const utf16 = new Uint8Array([65,
+                                    0, // 0x0041 (A)
 
-                                   65,
-                                   39, // 0x2741 (❁)
+                                    65,
+                                    39, // 0x2741 (❁)
 
-                                   218,
-                                   16, // 0x10DA (ლ)
+                                    218,
+                                    16, // 0x10DA (ლ)
 
-                                   101,
-                                   0,  // 0x065 (e)
+                                    101,
+                                    0,  // 0x065 (e)
 
-                                   119,
-                                   0, // etc.
+                                    119,
+                                    0, // etc.
 
-                                   97,
-                                   0,
+                                    97,
+                                    0,
 
-                                   116,
-                                   0 ]);
+                                    116,
+                                    0 ]);
       expect(strUtils.utf16LEToStr(utf16)).toEqual("A❁ლewat");
     });
   });
@@ -147,26 +147,26 @@ describe("utils - string parsing", () => {
     });
 
     it("should convert little-endian UTF-16 to its original string", () => {
-     const utf16 = new Uint8Array([0,
-                                   65, // 0x0041 (A)
+      const utf16 = new Uint8Array([0,
+                                    65, // 0x0041 (A)
 
-                                   39,
-                                   65, // 0x2741 (❁)
+                                    39,
+                                    65, // 0x2741 (❁)
 
-                                   16,
-                                   218, // 0x10DA (ლ)
+                                    16,
+                                    218, // 0x10DA (ლ)
 
-                                   0,
-                                   101,  // 0x065 (e)
+                                    0,
+                                    101,  // 0x065 (e)
 
-                                   0,
-                                   119, // etc.
+                                    0,
+                                    119, // etc.
 
-                                   0,
-                                   97,
+                                    0,
+                                    97,
 
-                                   0,
-                                   116 ]);
+                                    0,
+                                    116 ]);
       expect(strUtils.beUtf16ToStr(utf16)).toEqual("A❁ლewat");
     });
   });
@@ -200,9 +200,9 @@ describe("utils - string parsing", () => {
         .toEqual(new Uint8Array([254, 205, 135, 165, 152, 0, 0, 0, 5]));
     });
 
-    /* tslint:disable:max-line-length */
+    /* eslint-disable max-len */
     it("should translate a mix of higher case and lower case hexa codes into its Uint8Array counterpart", () => {
-    /* tslint:enable:max-line-length */
+    /* eslint-enable max-len */
       expect(strUtils.hexToBytes("FECD87A59800000005"))
         .toEqual(new Uint8Array([254, 205, 135, 165, 152, 0, 0, 0, 5]));
     });
@@ -237,9 +237,9 @@ describe("utils - string parsing", () => {
       expect(strUtils.utf8ToStr(new Uint8Array([]))).toBe("");
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should translate sequence of UTF-8 code units into the corresponding string", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(strUtils.utf8ToStr(new Uint8Array([
         0xF0, 0x9F, 0x98, 0x80,
         0xF0, 0x9F, 0x90, 0x80,

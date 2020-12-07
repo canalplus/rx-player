@@ -299,12 +299,12 @@ describe("HTML Text buffer utils - removeCuesInfosBetween", () => {
     expect(removeCuesInfosBetween(cueInfo, 2.5, 4.5)).toEqual([
       { cues: [ { start: 1, end: 2, element },
                 { start: 2, end: 3, element } ],
-              start: 1,
-              end: 2.5 },
+        start: 1,
+        end: 2.5 },
       { cues: [ { start: 4, end: 5, element },
                 { start: 5, end: 6, element } ],
-              start: 4.5,
-              end: 6 },
+        start: 4.5,
+        end: 6 },
     ]);
   });
 

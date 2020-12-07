@@ -26,19 +26,21 @@ import {
 function requestFullscreen(element : HTMLMediaElement) : void {
   if (!isFullscreen()) {
     const elt = element as ICompatHTMLMediaElement;
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof elt.requestFullscreen === "function") {
-    /* tslint:enable no-unbound-method */
-      /* tslint:disable no-floating-promises */
+    /* eslint-enable @typescript-eslint/unbound-method */
+      /* eslint-disable @typescript-eslint/no-floating-promises */
       elt.requestFullscreen();
-      /* tslint:enable no-floating-promises */
+      /* eslint-enable @typescript-eslint/no-floating-promises */
     } else if (typeof elt.msRequestFullscreen === "function") {
       elt.msRequestFullscreen();
     } else if (typeof elt.mozRequestFullScreen === "function") {
       elt.mozRequestFullScreen();
     } else if (typeof elt.webkitRequestFullscreen === "function") {
       (
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         elt.webkitRequestFullscreen as any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       )((Element as any).ALLOW_KEYBOARD_INPUT);
     }
   }
@@ -50,12 +52,12 @@ function requestFullscreen(element : HTMLMediaElement) : void {
 function exitFullscreen() : void {
   if (isFullscreen()) {
     const doc = document as ICompatDocument;
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof doc.exitFullscreen === "function") {
-    /* tslint:enable no-unbound-method */
-      /* tslint:disable no-floating-promises */
+    /* eslint-enable @typescript-eslint/unbound-method */
+      /* eslint-disable @typescript-eslint/no-floating-promises */
       doc.exitFullscreen();
-      /* tslint:enable no-floating-promises */
+      /* eslint-enable @typescript-eslint/no-floating-promises */
     } else if (typeof doc.msExitFullscreen === "function") {
       doc.msExitFullscreen();
     } else if (typeof doc.mozCancelFullScreen === "function") {

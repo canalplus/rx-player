@@ -15,13 +15,13 @@
  */
 
 import parseBaseURL, {
-  IBaseURL
+  IBaseURL,
 } from "./BaseURL";
 import parseContentComponent, {
-  IParsedContentComponent
+  IParsedContentComponent,
 } from "./ContentComponent";
 import parseContentProtection, {
-  IParsedContentProtection
+  IParsedContentProtection,
 } from "./ContentProtection";
 import {
   createRepresentationIntermediateRepresentation,
@@ -344,8 +344,8 @@ function parseAdaptationSetAttributes(
 
       case "codingDependency":
         parseValue(attribute.value, { asKey: "codingDependency",
-          parser: parseBoolean,
-          dashName: "codingDependency" });
+                                      parser: parseBoolean,
+                                      dashName: "codingDependency" });
         break;
 
       case "frameRate":

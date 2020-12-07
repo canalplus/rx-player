@@ -19,8 +19,8 @@ import getPeriodsTimeInformation from "../get_periods_time_infos";
 describe("DASH Parser - getPeriodsTimeInformation", () => {
   it("should guess duration and end from next period.", () => {
     const periodsInfos = [
-      { attributes: { start: 0 }},
-      { attributes: { start: 10 }},
+      { attributes: { start: 0 } },
+      { attributes: { start: 10 } },
     ];
     const timeInfos = getPeriodsTimeInformation(periodsInfos as any, {} as any);
     expect(timeInfos[0].periodDuration).toBe(10);
@@ -31,8 +31,8 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
 
   it("should guess start from previous period end", () => {
     const periodsInfos = [
-      { attributes: { start: 0, duration: 10 }},
-      { attributes: { duration: 10 }},
+      { attributes: { start: 0, duration: 10 } },
+      { attributes: { duration: 10 } },
     ];
     const timeInfos = getPeriodsTimeInformation(periodsInfos as any, {} as any);
     expect(timeInfos[0].periodEnd).toBe(10);
@@ -42,8 +42,8 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
 
   it("should return periods time infos corresponding to inputs", () => {
     const periodsInfos = [
-      { attributes: { start: 0, duration: 5 }},
-      { attributes: { start: 5, duration: 10 }},
+      { attributes: { start: 0, duration: 5 } },
+      { attributes: { start: 5, duration: 10 } },
     ];
     const timeInfos = getPeriodsTimeInformation(periodsInfos as any, {} as any);
     expect(timeInfos[0].periodStart).toEqual(periodsInfos[0].attributes.start);
@@ -54,7 +54,7 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
 
   it("should infer duration from manifest infos", () => {
     const periodsInfos = [
-      { attributes: { start: 0 }},
+      { attributes: { start: 0 } },
     ];
     const manifestInfos = {
       duration: 20,
@@ -66,7 +66,7 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
 
   it("should infer start from availability start time", () => {
     const periodsInfos = [
-      { attributes: { duration: 10 }},
+      { attributes: { duration: 10 } },
     ];
     const manifestInfos = {
       isDynamic: true,
@@ -81,7 +81,7 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
 
   it("should infer start from non-static manifest", () => {
     const periodsInfos = [
-      { attributes: { duration: 10 }},
+      { attributes: { duration: 10 } },
     ];
     const manifestInfos = {
       isDynamic: false,

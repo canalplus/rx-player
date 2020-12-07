@@ -20,6 +20,7 @@ import Manifest from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import { normalizeBaseURL } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
+// eslint-disable-next-line max-len
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
@@ -235,7 +236,7 @@ function parseCompleteIntermediateRepresentation(
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const { externalClockOffset: clockOffset,
-           unsafelyBaseOnPreviousManifest } = args;
+          unsafelyBaseOnPreviousManifest } = args;
   const availabilityTimeOffset =
     extractMinimumAvailabilityTimeOffset(rootChildren.baseURLs);
 

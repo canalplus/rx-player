@@ -17,7 +17,7 @@
 import objectAssign from "../../../../utils/object_assign";
 import { IParsedInitialization } from "./Initialization";
 import parseSegmentBase, {
-  IParsedSegmentBase
+  IParsedSegmentBase,
 } from "./SegmentBase";
 import createSegmentTimelineParser, {
   ITimelineParser,
@@ -66,7 +66,6 @@ export default function parseSegmentTemplate(
   const [base, segmentBaseWarnings] = parseSegmentBase(root);
   const warnings : Error[] = segmentBaseWarnings;
 
-  let ret : IParsedSegmentTemplate;
   let timelineParser : ITimelineParser|undefined;
 
   // First look for a possible SegmentTimeline
@@ -79,8 +78,8 @@ export default function parseSegmentTemplate(
     }
   }
 
-  ret = objectAssign({}, base, { duration: base.duration,
-                                 timelineParser });
+  const ret : IParsedSegmentTemplate = objectAssign({}, base, { duration: base.duration,
+                                                                timelineParser });
 
   const parseValue = ValueParser(ret, warnings);
   for (let i = 0; i < root.attributes.length; i++) {

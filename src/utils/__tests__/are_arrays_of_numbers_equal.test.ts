@@ -47,9 +47,9 @@ describe("are_arrays_of_numbers_equal", () => {
                                    new Uint8Array([1, 2]))).toEqual(false);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return false if both arrays have the same length with different values", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     expect(areArraysOfNumbersEqual([0, 1],
                                    [0, 4])).toEqual(false);
     expect(areArraysOfNumbersEqual([1, 2, 3],

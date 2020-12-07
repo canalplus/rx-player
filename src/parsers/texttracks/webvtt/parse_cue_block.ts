@@ -58,7 +58,7 @@ function parseTimeAndSettings(
   //   3 - settings
   const lineRegex = /^([\d:.]+)[ |\t]+-->[ |\t]+([\d:.]+)[ |\t]*(.*)$/;
 
-  const matches = timeString.match(lineRegex);
+  const matches = lineRegex.exec(timeString);
   if (matches === null) {
     return null;
   }

@@ -75,7 +75,10 @@ function applyTextStyle(
   // applies to span
   const textOutline = style.textOutline;
   if (isNonEmptyString(textOutline)) {
-    const outlineData = textOutline.trim().replace(/\s+/g, " ").split(" ");
+    const outlineData = textOutline
+      .trim()
+      .replace(/\s+/g, " ")
+      .split(" ");
     const len = outlineData.length;
     if (len === 3) {
       const outlineColor = ttmlColorToCSSColor(outlineData[0]);

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import imageBuffer from "../../../core/segment_buffers/implementations/image";
 import addImageBufferFeature from "../image_buffer";
 
-/* tslint:disable no-unsafe-any */
 describe("Features list - HTML Text Buffer", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -30,4 +31,3 @@ describe("Features list - HTML Text Buffer", () => {
     expect(featureObject.imageBuffer).toBe(imageBuffer);
   });
 });
-/* tslint:enable no-unsafe-any */

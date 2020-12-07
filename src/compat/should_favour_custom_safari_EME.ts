@@ -15,12 +15,17 @@
  */
 
 import { isSafari } from "./browser_detection";
-import { WebKitMediaKeysConstructor } from "./eme/custom_media_keys/webkit_media_keys_constructor";
+import {
+  WebKitMediaKeysConstructor,
+} from "./eme/custom_media_keys/webkit_media_keys_constructor";
 
-// On Safari 12.1, it seems that since fairplay CDM implementation
-// within the browser is not standard with EME w3c current spec, the
-// requestMediaKeySystemAccess API doesn't resolve positively, even
-// if the drm (fairplay in most cases) is supported.
-export default function shouldFavourCustomSafariEME() {
+/**
+ * On Safari 12.1, it seems that since fairplay CDM implementation
+ * within the browser is not standard with EME w3c current spec, the
+ * requestMediaKeySystemAccess API doesn't resolve positively, even
+ * if the drm (fairplay in most cases) is supported.
+ * @returns {boolean}
+ */
+export default function shouldFavourCustomSafariEME() : boolean {
   return isSafari && WebKitMediaKeysConstructor !== undefined;
 }

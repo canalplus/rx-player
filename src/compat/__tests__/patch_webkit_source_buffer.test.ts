@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import nextTick from "next-tick";
 import EventEmitter from "../../utils/event_emitter";
 import patchWebkitSourceBuffer from "../patch_webkit_source_buffer";
 
-/* tslint:disable no-unsafe-any */
 describe("compat - parseWebkitSourceBuffer", () => {
   it("should do nothing if no WebkitSourceBuffer", () => {
     const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
@@ -70,7 +76,7 @@ describe("compat - parseWebkitSourceBuffer", () => {
     const mockWebKitSourceBuffer = { prototype: {} };
 
     const mockTrigger = jest.fn(() => ({}));
-    const __mockEmitUpdate = jest.fn(() => ({}));
+    const _mockEmitUpdate = jest.fn(() => ({}));
     const mockAppend = jest.fn(() => ({}));
 
     (window as any).WebKitSourceBuffer = mockWebKitSourceBuffer;
@@ -80,15 +86,15 @@ describe("compat - parseWebkitSourceBuffer", () => {
       {
         updating: false,
         trigger: mockTrigger,
-        __emitUpdate: __mockEmitUpdate,
+        _emitUpdate: _mockEmitUpdate,
         append: mockAppend,
       }
     );
 
     expect(mockTrigger).toHaveBeenCalledTimes(1);
     expect(mockTrigger).toHaveBeenCalledWith("updatestart");
-    expect(__mockEmitUpdate).toHaveBeenCalledTimes(1);
-    expect(__mockEmitUpdate).toHaveBeenCalledWith("update");
+    expect(_mockEmitUpdate).toHaveBeenCalledTimes(1);
+    expect(_mockEmitUpdate).toHaveBeenCalledWith("update");
     (window as any).WebKitSourceBuffer = origWebKitSourceBuffer;
   });
 
@@ -97,7 +103,7 @@ describe("compat - parseWebkitSourceBuffer", () => {
     const mockWebKitSourceBuffer = { prototype: {} };
 
     const mockTrigger = jest.fn(() => ({}));
-    const __mockEmitUpdate = jest.fn(() => ({}));
+    const _mockEmitUpdate = jest.fn(() => ({}));
 
     (window as any).WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
@@ -106,16 +112,16 @@ describe("compat - parseWebkitSourceBuffer", () => {
       {
         updating: false,
         trigger: mockTrigger,
-        __emitUpdate: __mockEmitUpdate,
+        _emitUpdate: _mockEmitUpdate,
       }
     );
 
     expect(mockTrigger).toHaveBeenCalledTimes(1);
     expect(mockTrigger).toHaveBeenCalledWith("updatestart");
-    expect(__mockEmitUpdate).toHaveBeenCalledTimes(1);
+    expect(_mockEmitUpdate).toHaveBeenCalledTimes(1);
 
     const err = new TypeError("this.append is not a function");
-    expect(__mockEmitUpdate).toHaveBeenCalledWith("error", err);
+    expect(_mockEmitUpdate).toHaveBeenCalledWith("error", err);
     (window as any).WebKitSourceBuffer = origWebKitSourceBuffer;
   });
 
@@ -132,7 +138,7 @@ describe("compat - parseWebkitSourceBuffer", () => {
   });
 
   // FIXME
-  xit("(__emitUpdate) should behave normally (trigger two events)", () => {
+  xit("(_emitUpdate) should behave normally (trigger two events)", () => {
     const origNextTick = nextTick;
     (nextTick as any) = (func: any) => func();
     const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
@@ -143,7 +149,7 @@ describe("compat - parseWebkitSourceBuffer", () => {
     (window as any).WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    (window as any).WebKitSourceBuffer.prototype.__emitUpdate.call(
+    (window as any).WebKitSourceBuffer.prototype._emitUpdate.call(
       {
         updating: false,
         trigger: mockTrigger,
@@ -154,4 +160,3 @@ describe("compat - parseWebkitSourceBuffer", () => {
     (nextTick as any) = origNextTick;
   });
 });
-/* tslint:enable no-unsafe-any */

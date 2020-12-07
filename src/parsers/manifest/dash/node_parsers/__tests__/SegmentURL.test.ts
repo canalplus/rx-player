@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("DASH Node Parsers - SegmentURL", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -41,9 +47,9 @@ describe("DASH Node Parsers - SegmentURL", () => {
     logSpy.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should correctly parse an element with a well-formed `mediaRange` attribute", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../log", () => log);
@@ -97,9 +103,9 @@ describe("DASH Node Parsers - SegmentURL", () => {
     logSpy.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should correctly parse an element with a well-formed `indexRange` attribute", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const log = {
       __esModule: true as const,
       default: { warn: () => null },
@@ -197,4 +203,3 @@ describe("DASH Node Parsers - SegmentURL", () => {
     logSpy.mockRestore();
   });
 });
-/* tslint:enable no-unsafe-any */

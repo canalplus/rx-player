@@ -79,7 +79,7 @@ function getPCSSRules(str : string) : string {
  * @returns {string|null} - value of the property. Null if not found.
  */
 function getCSSProperty(str : string, name : string) : string|null {
-  const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"));
+  const matches = (new RegExp("\\s*" + name + ":\\s*(\\S+);", "i")).exec(str);
   return Array.isArray(matches) ? matches[1] :
                                   null;
 }
@@ -90,9 +90,7 @@ function getCSSProperty(str : string, name : string) : string|null {
  */
 function decodeEntities(text : string) : string {
   return text
-    /* tslint:disable no-unsafe-any */
     .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode($1));
-    /* tslint:enable no-unsafe-any */
 }
 
 /**
@@ -112,7 +110,7 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
 
   const subs : IHTMLCue[] = [];
 
-  const styleMatches = smi.match(STYLE);
+  const styleMatches = STYLE.exec(smi);
   const css = Array.isArray(styleMatches) ? styleMatches[1] :
                                             "";
   let up;
@@ -144,7 +142,7 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
     }
 
     const str = smi.slice(up.index, to.index);
-    const tim = str.match(START);
+    const tim = START.exec(str);
     if (!Array.isArray(tim)) {
       throw new Error("parse error (sync time attribute)");
     }
@@ -162,7 +160,7 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
   function appendToSubs(lines : string[], start : number) {
     let i = lines.length;
     while (--i >= 0) {
-      const paragraphInfos = lines[i].match(PARAG);
+      const paragraphInfos = PARAG.exec(lines[i]);
       if (!Array.isArray(paragraphInfos)) {
         continue;
       }
@@ -212,7 +210,7 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
 
         subs.push({ element: wrapperEl,
                     start: start + timeOffset,
-                    end: -1, /* Will be updated on a following iteration */ });
+                    end: -1 /* Will be updated on a following iteration */ });
       }
     }
   }

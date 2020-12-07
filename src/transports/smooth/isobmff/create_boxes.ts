@@ -178,10 +178,9 @@ function createDREFBox(url : Uint8Array) : Uint8Array {
  * @returns {Uint8Array}
  */
 function createFTYPBox(majorBrand : string, brands : string[]) : Uint8Array {
-  return createBox("ftyp", concat.apply(null, [
-    strToUtf8(majorBrand),
-    [0, 0, 0, 1],
-  ].concat(brands.map(strToUtf8))));
+  const content = concat(...[ strToUtf8(majorBrand),
+                              [0, 0, 0, 1] ].concat(brands.map(strToUtf8)));
+  return createBox("ftyp", content);
 }
 
 /**
@@ -261,11 +260,11 @@ function createFRMABox(dataFormat : string) : Uint8Array {
  * 1, "68ef3880")
  * @returns {Uint8Array}
  */
-  function createAVCCBox(
-    sps : Uint8Array,
-    pps : Uint8Array,
-    nalLen : number
-  ) : Uint8Array {
+function createAVCCBox(
+  sps : Uint8Array,
+  pps : Uint8Array,
+  nalLen : number
+) : Uint8Array {
   const nal = (nalLen === 2) ? 0x1 :
               (nalLen === 4) ? 0x3 :
               0x0;

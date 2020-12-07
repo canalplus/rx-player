@@ -15,9 +15,9 @@
  */
 
 // XML-Schema
-/* tslint:disable:max-line-length */
+/* eslint-disable max-len */
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
-/* tslint:enable:max-line-length */
+/* eslint-enable max-len */
 
 import log from "../../../../log";
 import { base64ToBytes } from "../../../../utils/base64";
@@ -327,8 +327,10 @@ function ValueParser<T>(
     val : string,
     { asKey, parser, dashName } : {
       asKey : keyof T;
-      parser : (val : string,
-                displayName : string) => [T[keyof T] | null, MPDError | null];
+      parser : (
+        value : string,
+        displayName : string
+      ) => [T[keyof T] | null, MPDError | null];
       dashName : string;
     }
   ) : void {

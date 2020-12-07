@@ -27,7 +27,7 @@ import {
 } from "rxjs/operators";
 import log from "../../log";
 import attachMediaKeys, {
-  disableMediaKeys
+  disableMediaKeys,
 } from "./attach_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
 import {
@@ -66,7 +66,7 @@ export default function initMediaKeys(
             mergeMap(() => attachMediaKeys(mediaKeysInfos, mediaElement)),
             take(1),
             mapTo({ type: "attached-media-keys" as const,
-                     value: mediaKeysInfos, }),
+                    value: mediaKeysInfos }),
             startWith({ type: "created-media-keys" as const,
                         value: { mediaKeysInfos,
                                  attachMediaKeys$ } })

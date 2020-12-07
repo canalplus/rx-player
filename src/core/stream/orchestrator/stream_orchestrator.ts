@@ -133,10 +133,10 @@ export default function StreamOrchestrator(
       return BufferGarbageCollector({
         segmentBuffer,
         clock$: clock$.pipe(map(tick => tick.position)),
-        maxBufferBehind$: maxBufferBehind$
-                            .pipe(map(val => Math.min(val, defaultMaxBehind))),
-        maxBufferAhead$: maxBufferAhead$
-                           .pipe(map(val => Math.min(val, defaultMaxAhead))),
+        maxBufferBehind$: maxBufferBehind$.pipe(
+          map(val => Math.min(val, defaultMaxBehind))),
+        maxBufferAhead$: maxBufferAhead$.pipe(
+          map(val => Math.min(val, defaultMaxAhead))),
       });
     });
 
@@ -220,9 +220,11 @@ export default function StreamOrchestrator(
       period : Period
     ) : Observable<IMultiplePeriodStreamsEvent> {
       return manageConsecutivePeriodStreams(bufferType, period, destroyStreams$).pipe(
-        filterMap<IMultiplePeriodStreamsEvent,
-                  IMultiplePeriodStreamsEvent,
-                  null>((message) => {
+        filterMap<
+          IMultiplePeriodStreamsEvent,
+          IMultiplePeriodStreamsEvent,
+          null
+        >((message) => {
           switch (message.type) {
             case "needs-media-source-reload":
               // Only reload the MediaSource when the more immediately required
@@ -314,7 +316,8 @@ export default function StreamOrchestrator(
                 const lastPosition = lastTick.position + lastTick.wantedTimeOffset;
                 const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
                 if (newInitialPeriod == null) {
-                  throw new MediaError("MEDIA_TIME_NOT_FOUND",
+                  throw new MediaError(
+                    "MEDIA_TIME_NOT_FOUND",
                     "The wanted position is not found in the Manifest.");
                 }
                 return launchConsecutiveStreamsForPeriod(newInitialPeriod);
@@ -371,7 +374,7 @@ export default function StreamOrchestrator(
     // Emits when the current position goes over the end of the current Stream.
     const endOfCurrentStream$ = clock$
       .pipe(filter(({ position, wantedTimeOffset }) =>
-                     basePeriod.end != null &&
+        basePeriod.end != null &&
                     (position + wantedTimeOffset) >= basePeriod.end));
 
     // Create Period Stream for the next Period.
@@ -408,7 +411,7 @@ export default function StreamOrchestrator(
                                          segmentFetcherCreator,
                                          segmentBuffersStore,
                                          options,
-                                         wantedBufferAhead$, }
+                                         wantedBufferAhead$ }
     ).pipe(
       mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
         if (evt.type === "download-finished") {
@@ -436,8 +439,7 @@ export default function StreamOrchestrator(
         observableOf(EVENTS.periodStreamCleared(bufferType, basePeriod))
           .pipe(tap(() => {
             log.info("SO: Destroying Stream for", bufferType, basePeriod);
-          }))
-        );
+          })));
 
     return observableMerge(currentStream$,
                            nextPeriodStream$,

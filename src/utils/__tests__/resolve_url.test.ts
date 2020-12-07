@@ -55,9 +55,9 @@ describe("utils - resolveURL", () => {
     ).toBe("torrent://g.a/b/a");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should have a - fairly simple - algorithm to simplify the current directory", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     expect(resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a/b/c/d", "./a"))
       .toBe("torrent://g.a/b/c/d/a");
     expect(

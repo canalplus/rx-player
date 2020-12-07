@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 import features from "./features_object";
 
 /**
@@ -22,19 +26,14 @@ import features from "./features_object";
  * @param {Object} features
  */
 export default function initializeFeaturesObject() : void {
-  /* tslint:disable no-unsafe-any */
-  /* tslint:disable no-var-requires */
   if (__FEATURES__.EME) {
     features.emeManager = require(__RELATIVE_PATH__.EME_MANAGER).default;
   }
-  /* tslint:enable no-var-requires */
 
-  /* tslint:disable no-var-requires */
   if (__FEATURES__.BIF_PARSER) {
     features.imageBuffer = require(__RELATIVE_PATH__.IMAGE_BUFFER).default;
     features.imageParser = require(__RELATIVE_PATH__.BIF_PARSER).default;
   }
-  /* tslint:enable no-var-requires */
 
   // Feature switching the Native TextTrack implementation
   const HAS_NATIVE_MODE = __FEATURES__.NATIVE_VTT ||
@@ -42,7 +41,6 @@ export default function initializeFeaturesObject() : void {
                           __FEATURES__.NATIVE_TTML ||
                           __FEATURES__.NATIVE_SRT;
 
-  /* tslint:disable no-var-requires */
   if (__FEATURES__.SMOOTH) {
     features.transports.smooth = require(__RELATIVE_PATH__.SMOOTH).default;
   }
@@ -55,9 +53,7 @@ export default function initializeFeaturesObject() : void {
   if (__FEATURES__.METAPLAYLIST) {
     features.transports.metaplaylist = require(__RELATIVE_PATH__.METAPLAYLIST).default;
   }
-  /* tslint:enable no-var-requires */
 
-  /* tslint:disable no-var-requires */
   if (HAS_NATIVE_MODE) {
     features.nativeTextTracksBuffer =
       require(__RELATIVE_PATH__.NATIVE_TEXT_BUFFER).default;
@@ -81,7 +77,6 @@ export default function initializeFeaturesObject() : void {
         require(__RELATIVE_PATH__.NATIVE_SRT).default;
     }
   }
-  /* tslint:enable no-var-requires */
 
   // Feature switching the HTML TextTrack implementation
   const HAS_HTML_MODE = __FEATURES__.HTML_VTT ||
@@ -89,7 +84,6 @@ export default function initializeFeaturesObject() : void {
                         __FEATURES__.HTML_TTML ||
                         __FEATURES__.HTML_SRT;
 
-  /* tslint:disable no-var-requires */
   if (HAS_HTML_MODE) {
     features.htmlTextTracksBuffer =
       require(__RELATIVE_PATH__.HTML_TEXT_BUFFER).default;
@@ -112,10 +106,8 @@ export default function initializeFeaturesObject() : void {
       features.htmlTextTracksParsers.vtt =
         require(__RELATIVE_PATH__.HTML_VTT).default;
     }
-    /* tslint:enable no-var-requires */
   }
 
-  /* tslint:disable no-var-requires */
   if (__FEATURES__.DIRECTFILE) {
     const initDirectFile = require(__RELATIVE_PATH__.DIRECTFILE).default;
     const mediaElementTrackChoiceManager =
@@ -123,6 +115,4 @@ export default function initializeFeaturesObject() : void {
     features.directfile = { initDirectFile,
                             mediaElementTrackChoiceManager };
   }
-  /* tslint:enable no-var-requires */
-  /* tslint:enable no-unsafe-any */
 }

@@ -29,7 +29,7 @@ import {
 import log from "../../log";
 import { IInitClockTick } from "./types";
 
-export interface IPlaybackRateOptions { pauseWhenStalled? : boolean; }
+export interface IPlaybackRateOptions { pauseWhenStalled? : boolean }
 
 /**
  * Manage playback speed.

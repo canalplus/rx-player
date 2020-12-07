@@ -104,8 +104,7 @@ type IPushTask = IPushOperation<BufferSource> & {
  *
  * @class AudioVideoSegmentBuffer
  */
-export default class AudioVideoSegmentBuffer
-                 extends SegmentBuffer<BufferSource> {
+export default class AudioVideoSegmentBuffer extends SegmentBuffer<BufferSource> {
   /** "Type" of the buffer concerned. */
   public readonly bufferType : "audio" | "video";
 

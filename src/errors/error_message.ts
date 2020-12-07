@@ -27,4 +27,4 @@ export default function errorMessage(
   reason : string
 ) : string {
   return `${name} (${code}) ${reason}`;
- }
+}

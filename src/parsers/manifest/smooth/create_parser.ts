@@ -117,9 +117,8 @@ interface ISmoothParsedQualityLevel {
  */
 function createSmoothStreamingParser(
   parserOptions : IHSSParserConfiguration = {}
-) : (manifest : Document,
-     url? : string,
-     manifestReceivedTime? : number) => IParsedManifest
+) : (manifest : Document, url? : string, manifestReceivedTime? : number)
+  => IParsedManifest
 {
   const referenceDateTime = parserOptions.referenceDateTime === undefined ?
     Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000 :
@@ -302,9 +301,10 @@ function createSmoothStreamingParser(
     }
 
     const { qualityLevels, cNodes } =
-      reduceChildren<{ qualityLevels: ISmoothParsedQualityLevel[];
-                       cNodes : Element[]; }>(root, (res, _name, node) =>
-      {
+      reduceChildren<
+        { qualityLevels: ISmoothParsedQualityLevel[];
+          cNodes : Element[]; }
+      >(root, (res, _name, node) => {
         switch (_name) {
           case "QualityLevel":
             const qualityLevel = parseQualityLevel(node, adaptationType);
@@ -387,7 +387,7 @@ function createSmoothStreamingParser(
                                     protection: firstProtection != null ? {
                                       keyId: firstProtection.keyId,
                                       keySystems: firstProtection.keySystems,
-                                    } : undefined, };
+                                    } : undefined };
 
       const aggressiveMode = parserOptions.aggressiveMode == null ?
         DEFAULT_AGGRESSIVE_MODE :
@@ -458,13 +458,13 @@ function createSmoothStreamingParser(
       adaptationNodes: Element[];
     }> (root, (res, name, node) => {
       switch (name) {
-      case "Protection":  {
-        res.protections.push(parseProtectionNode(node, parserOptions.keySystems));
-        break;
-      }
-      case "StreamIndex":
-        res.adaptationNodes.push(node);
-        break;
+        case "Protection":  {
+          res.protections.push(parseProtectionNode(node, parserOptions.keySystems));
+          break;
+        }
+        case "StreamIndex":
+          res.adaptationNodes.push(node);
+          break;
       }
       return res;
     }, {

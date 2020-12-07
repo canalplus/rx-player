@@ -334,7 +334,7 @@ export default class SegmentBuffersStore {
   /**
    * Dispose of all SegmentBuffer created on this SegmentBuffersStore.
    */
-  public disposeAll() {
+  public disposeAll() : void {
     POSSIBLE_BUFFER_TYPES.forEach((bufferType : IBufferType) => {
       if (this.getStatus(bufferType).type === "initialized") {
         this.disposeSegmentBuffer(bufferType);
@@ -349,16 +349,16 @@ export default class SegmentBuffersStore {
   private _areNativeBuffersUsable() {
     const nativeBufferTypes = this.getNativeBufferTypes();
 
-    if (nativeBufferTypes.some(sbType =>
-          this._initializedSegmentBuffers[sbType] === undefined))
-    {
+    const hasUnitializedBuffers = nativeBufferTypes.some(sbType =>
+      this._initializedSegmentBuffers[sbType] === undefined);
+    if (hasUnitializedBuffers) {
       // one is not yet initialized/disabled
       return false;
     }
 
-    if (nativeBufferTypes.every(sbType =>
-          this._initializedSegmentBuffers[sbType] === null))
-    {
+    const areAllDisabled = nativeBufferTypes.every(sbType =>
+      this._initializedSegmentBuffers[sbType] === null);
+    if (areAllDisabled) {
       // they all are disabled: we can't play the content
       return false;
     }

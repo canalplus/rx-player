@@ -97,7 +97,11 @@ export default function trySettingServerCertificate(
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
       tap(() => { ServerCertificateStore.set(mediaKeys, serverCertificate); }),
       ignoreElements(),
-      catchError(error => observableOf({ type: "warning" as const, value: error })));
+      catchError(error => observableOf({
+        type: "warning" as const,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        value: error,
+      })));
   });
 }
 

@@ -56,12 +56,12 @@ export default function arrayIncludes<T>(
   searchElement : T,
   fromIndex? : number
 ) : boolean {
-  /* tslint:disable no-unbound-method */
+  /* eslint-disable @typescript-eslint/unbound-method */
+  // eslint-disable-next-line no-restricted-properties
   if (typeof Array.prototype.includes === "function") {
-  /* tslint:enable no-unbound-method */
-    /* tslint:disable ban */
+  /* eslint-enable @typescript-eslint/unbound-method */
+    // eslint-disable-next-line no-restricted-properties
     return arr.includes(searchElement, fromIndex);
-    /* tslint:enable ban */
   }
 
   const len = arr.length >>> 0;
@@ -76,12 +76,11 @@ export default function arrayIncludes<T>(
     Math.max(len + n, 0);
 
   const areTheSame = (x : T, y : T) =>
-                       x === y ||
-                       // Viva las JavaScriptas!
-                       (
-                         typeof x === "number" &&
-                         typeof y === "number" &&
-                         isNaN(x) && isNaN(y));
+    x === y ||
+    // Viva las JavaScriptas!
+    (typeof x === "number" &&
+     typeof y === "number" &&
+     isNaN(x) && isNaN(y));
 
   while (k < len) {
     if (areTheSame(arr[k], searchElement)) {

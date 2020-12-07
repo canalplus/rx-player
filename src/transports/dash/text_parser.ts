@@ -182,7 +182,7 @@ export default function generateTextTrackParser(
       return parseISOBMFFEmbeddedTextTrack({ response: { data, isChunked },
                                              content,
                                              initTimescale },
-                                             __priv_patchLastSegmentInSidx);
+                                           __priv_patchLastSegmentInSidx);
     } else {
       return parsePlainTextTrack({ response: { data, isChunked }, content });
     }

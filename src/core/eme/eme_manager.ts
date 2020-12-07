@@ -137,8 +137,7 @@ export default function EMEManager(
     // Add attached MediaKeys info once available
     mergeMap((encryptedEvt) => attachedMediaKeys$.pipe(
       map((mediaKeysEvt) : [IInitializationDataInfo, IAttachedMediaKeysEvent] =>
-        [ encryptedEvt, mediaKeysEvt ])
-      )),
+        [ encryptedEvt, mediaKeysEvt ]))),
     /* Attach server certificate and create/reuse MediaKeySession */
     mergeMap(([encryptedEvent, mediaKeysEvent], i) => {
       const mediaKeysInfos = mediaKeysEvent.value;
@@ -187,9 +186,8 @@ export default function EMEManager(
       // set server certificate when it is defined, at first received encrypted
       // event
       if (i === 0 && !isNullOrUndefined(serverCertificate)) {
-          return observableConcat(
-            setServerCertificate(mediaKeys, serverCertificate),
-            session$);
+        return observableConcat(setServerCertificate(mediaKeys, serverCertificate),
+                                session$);
       }
       return session$;
     }),

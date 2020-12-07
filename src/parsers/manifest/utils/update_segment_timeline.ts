@@ -45,8 +45,8 @@ export default function updateSegmentTimeline(
   const oldLastElt = oldTimeline[prevTimelineLength - 1];
   const oldIndexEnd = getIndexSegmentEnd(oldLastElt, newTimeline[0]);
   if (oldIndexEnd < newIndexStart) {
-      throw new MediaError("MANIFEST_UPDATE_ERROR",
-                           "Cannot perform partial update: not enough data");
+    throw new MediaError("MANIFEST_UPDATE_ERROR",
+                         "Cannot perform partial update: not enough data");
   }
 
   for (let i = prevTimelineLength - 1; i >= 0; i--) {

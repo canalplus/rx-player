@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable max-line-length */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+/* eslint-disable max-len */
 import htmlTextTracksBuffer from "../../../core/segment_buffers/implementations/text/html";
-/* tslint:enable max-line-length */
+/* eslint-enable max-len */
 import addHTMLTextBuffer from "../html_text_buffer";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../core/segment_buffers/implementations/text/html", () => ({
   __esModule: true as const,
   default: jest.fn(),
@@ -33,4 +34,3 @@ describe("Features list - HTML Text Buffer", () => {
     expect(featureObject.htmlTextTracksBuffer).toBe(htmlTextTracksBuffer);
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -18,9 +18,13 @@ import isNode from "./is_node";
 
 // true on IE11
 // false on Edge and other IEs/browsers.
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 const isIE11 : boolean = !isNode &&
                          !!(window as any).MSInputMethodContext &&
                          !!(document as any).documentMode;
+/* eslint-enable @typescript-eslint/strict-boolean-expressions */
+/* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
 // true for IE / Edge
 const isIEOrEdge : boolean = isNode ?
@@ -38,16 +42,16 @@ const isFirefox : boolean = !isNode &&
 const isSamsungBrowser : boolean = !isNode &&
                                    /SamsungBrowser/.test(navigator.userAgent);
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 const isSafari : boolean =
   !isNode && (
-    /* tslint:disable ban */
     Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
-    /* tslint:enable ban */
-    /* tslint:disable no-unsafe-any */
     (window as any).safari?.pushNotification.toString() ===
       "[object SafariRemoteNotification]"
-    /* tslint:enable no-unsafe-any */
   );
+/* eslint-enable @typescript-eslint/no-unsafe-member-access */
+/* eslint-enable @typescript-eslint/no-unsafe-call */
 
 const isSafariMobile : boolean = !isNode &&
                                  typeof navigator.platform === "string" &&

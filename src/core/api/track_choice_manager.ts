@@ -95,15 +95,15 @@ export interface ITMVideoTrack { id : number|string;
 
 /** Audio track from a list of audio tracks returned by the TrackChoiceManager. */
 export interface ITMAudioTrackListItem
-  extends ITMAudioTrack { active : boolean; }
+  extends ITMAudioTrack { active : boolean }
 
 /** Text track from a list of text tracks returned by the TrackChoiceManager. */
 export interface ITMTextTrackListItem
-  extends ITMTextTrack { active : boolean; }
+  extends ITMTextTrack { active : boolean }
 
 /** Video track from a list of video tracks returned by the TrackChoiceManager. */
 export interface ITMVideoTrackListItem
-  extends ITMVideoTrack { active : boolean; }
+  extends ITMVideoTrack { active : boolean }
 
 /** Audio information stored for a single Period. */
 interface ITMPeriodAudioInfos { adaptations : Adaptation[];
@@ -302,7 +302,7 @@ export default class TrackChoiceManager {
       }
     } else {
       this._periods.add({ period,
-                          [bufferType]: { adaptations, adaptation$, } });
+                          [bufferType]: { adaptations, adaptation$ } });
     }
   }
 
@@ -677,7 +677,7 @@ export default class TrackChoiceManager {
     const videoTrack: ITMVideoTrack = {
       id: chosenVideoAdaptation.id,
       representations: chosenVideoAdaptation.representations
-                         .map(parseVideoRepresentation),
+        .map(parseVideoRepresentation),
     };
     if (chosenVideoAdaptation.isSignInterpreted === true) {
       videoTrack.signInterpreted = true;
@@ -780,7 +780,7 @@ export default class TrackChoiceManager {
           formatted.signInterpreted = true;
         }
         return formatted;
-    });
+      });
   }
 
   /**
@@ -941,7 +941,7 @@ export default class TrackChoiceManager {
         return;
       }
 
-      const { period, video: videoItem, } = periodItem;
+      const { period, video: videoItem } = periodItem;
       const videoAdaptations = period.getPlayableAdaptations("video");
       const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
@@ -1258,5 +1258,5 @@ function parseVideoRepresentation(
 function parseAudioRepresentation(
   { id, bitrate, codec } : Representation
 )  : ITMAudioRepresentation {
-  return { id, bitrate, codec};
+  return { id, bitrate, codec };
 }

@@ -21,16 +21,16 @@ import {
 
 /**
  * @param {Function} func - A function you want to execute
- * @param {*} args - The function's argument
+ * @param {*} argsForFunc - The function's argument
  * @returns {*} - If it fails, returns a throwing Observable, else the
  * function's result (which should be, in most cases, an Observable).
  */
 export default function tryCatch<T, I>(
   func : (args : T) => Observable<I>,
-  args : T
+  argsForFunc : T
 ) : Observable<I> {
   try {
-    return func(args);
+    return func(argsForFunc);
   } catch (e) {
     return observableThrow(e);
   }

@@ -61,26 +61,26 @@ const newAudioRepresentation = { parsingErrors: [],
                                           _replace() { /* noop */ } } };
 
 describe("Manifest - updatePeriodInPlace", () => {
-   let oldVideoRepresentation1ReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let oldVideoRepresentation2ReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let oldVideoRepresentation3ReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let oldVideoRepresentation4ReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let oldAudioRepresentationReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let oldVideoRepresentation1UpdateSpy : jest.MockInstance<void, []> | undefined;
-   let oldVideoRepresentation2UpdateSpy : jest.MockInstance<void, []> | undefined;
-   let oldVideoRepresentation3UpdateSpy : jest.MockInstance<void, []> | undefined;
-   let oldVideoRepresentation4UpdateSpy : jest.MockInstance<void, []> | undefined;
-   let oldAudioRepresentationUpdateSpy : jest.MockInstance<void, []> | undefined;
-   let newVideoRepresentation1ReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let newVideoRepresentation2ReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let newVideoRepresentation3ReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let newVideoRepresentation4ReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let newAudioRepresentationReplaceSpy : jest.MockInstance<void, []> | undefined;
-   let newVideoRepresentation1UpdateSpy : jest.MockInstance<void, []> | undefined;
-   let newVideoRepresentation2UpdateSpy : jest.MockInstance<void, []> | undefined;
-   let newVideoRepresentation3UpdateSpy : jest.MockInstance<void, []> | undefined;
-   let newVideoRepresentation4UpdateSpy : jest.MockInstance<void, []> | undefined;
-   let newAudioRepresentationUpdateSpy : jest.MockInstance<void, []> | undefined;
+  let oldVideoRepresentation1ReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let oldVideoRepresentation2ReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let oldVideoRepresentation3ReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let oldVideoRepresentation4ReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let oldAudioRepresentationReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let oldVideoRepresentation1UpdateSpy : jest.MockInstance<void, []> | undefined;
+  let oldVideoRepresentation2UpdateSpy : jest.MockInstance<void, []> | undefined;
+  let oldVideoRepresentation3UpdateSpy : jest.MockInstance<void, []> | undefined;
+  let oldVideoRepresentation4UpdateSpy : jest.MockInstance<void, []> | undefined;
+  let oldAudioRepresentationUpdateSpy : jest.MockInstance<void, []> | undefined;
+  let newVideoRepresentation1ReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let newVideoRepresentation2ReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let newVideoRepresentation3ReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let newVideoRepresentation4ReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let newAudioRepresentationReplaceSpy : jest.MockInstance<void, []> | undefined;
+  let newVideoRepresentation1UpdateSpy : jest.MockInstance<void, []> | undefined;
+  let newVideoRepresentation2UpdateSpy : jest.MockInstance<void, []> | undefined;
+  let newVideoRepresentation3UpdateSpy : jest.MockInstance<void, []> | undefined;
+  let newVideoRepresentation4UpdateSpy : jest.MockInstance<void, []> | undefined;
+  let newAudioRepresentationUpdateSpy : jest.MockInstance<void, []> | undefined;
 
   beforeEach(() => {
     oldVideoRepresentation1ReplaceSpy =
@@ -148,9 +148,9 @@ describe("Manifest - updatePeriodInPlace", () => {
     newAudioRepresentationUpdateSpy?.mockRestore();
   });
 
-/* tslint:disable max-line-length */
+/* eslint-disable max-len */
   it("should fully update the first Period given by the second one in a full update", () => {
-/* tslint:enable max-line-length */
+/* eslint-enable max-len */
     const oldVideoAdaptation1 = { parsingErrors: [],
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
@@ -158,22 +158,24 @@ describe("Manifest - updatePeriodInPlace", () => {
     const oldVideoAdaptation2 = { parsingErrors: [],
                                   id: "ada-video-2",
                                   representations: [oldVideoRepresentation3,
-                                                    oldVideoRepresentation4], };
+                                                    oldVideoRepresentation4] };
     const oldAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
-    const oldPeriod = { parsingErrors: [],
-                        start: 5,
-                        end: 15,
-                        duration: 10,
-                        adaptations: { video: [oldVideoAdaptation1,
-                                               oldVideoAdaptation2],
-                                       audio: [oldAudioAdaptation] },
-                        getAdaptations() {
-                          return [oldVideoAdaptation1,
-                                  oldVideoAdaptation2,
-                                  oldAudioAdaptation];
-                        } };
+    const oldPeriod = {
+      parsingErrors: [],
+      start: 5,
+      end: 15,
+      duration: 10,
+      adaptations: { video: [oldVideoAdaptation1,
+                             oldVideoAdaptation2],
+                     audio: [oldAudioAdaptation] },
+      getAdaptations() {
+        return [oldVideoAdaptation1,
+                oldVideoAdaptation2,
+                oldAudioAdaptation];
+      },
+    };
     const newVideoAdaptation1 = { parsingErrors: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
@@ -185,18 +187,20 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
-    const newPeriod = { parsingErrors: [],
-                        start: 500,
-                        end: 520,
-                        duration: 20,
-                        adaptations: { video: [newVideoAdaptation1,
-                                               newVideoAdaptation2],
-                        audio: [newAudioAdaptation] },
-                        getAdaptations() {
-                          return [ newVideoAdaptation1,
-                                   newVideoAdaptation2,
-                                   newAudioAdaptation ];
-                        } };
+    const newPeriod = {
+      parsingErrors: [],
+      start: 500,
+      end: 520,
+      duration: 20,
+      adaptations: { video: [newVideoAdaptation1,
+                             newVideoAdaptation2],
+                     audio: [newAudioAdaptation] },
+      getAdaptations() {
+        return [ newVideoAdaptation1,
+                 newVideoAdaptation2,
+                 newAudioAdaptation ];
+      },
+    };
 
     const oldPeriodAdaptationsSpy = jest.spyOn(oldPeriod, "getAdaptations");
     const newPeriodAdaptationsSpy = jest.spyOn(newPeriod, "getAdaptations");
@@ -255,9 +259,9 @@ describe("Manifest - updatePeriodInPlace", () => {
     logSpy.mockRestore();
   });
 
-/* tslint:disable max-line-length */
+/* eslint-disable max-len */
   it("should partially update the first Period given by the second one in a partial update", () => {
-/* tslint:enable max-line-length */
+/* eslint-enable max-len */
     const oldVideoAdaptation1 = { parsingErrors: [],
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
@@ -265,22 +269,24 @@ describe("Manifest - updatePeriodInPlace", () => {
     const oldVideoAdaptation2 = { parsingErrors: [],
                                   id: "ada-video-2",
                                   representations: [oldVideoRepresentation3,
-                                                    oldVideoRepresentation4], };
+                                                    oldVideoRepresentation4] };
     const oldAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
-    const oldPeriod = { parsingErrors: [],
-                        start: 5,
-                        end: 15,
-                        duration: 10,
-                        adaptations: { video: [oldVideoAdaptation1,
-                                               oldVideoAdaptation2],
-                                       audio: [oldAudioAdaptation] },
-                        getAdaptations() {
-                          return [oldVideoAdaptation1,
-                                  oldVideoAdaptation2,
-                                  oldAudioAdaptation];
-                        } };
+    const oldPeriod = {
+      parsingErrors: [],
+      start: 5,
+      end: 15,
+      duration: 10,
+      adaptations: { video: [oldVideoAdaptation1,
+                             oldVideoAdaptation2],
+                     audio: [oldAudioAdaptation] },
+      getAdaptations() {
+        return [oldVideoAdaptation1,
+                oldVideoAdaptation2,
+                oldAudioAdaptation];
+      },
+    };
     const newVideoAdaptation1 = { parsingErrors: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
@@ -292,18 +298,20 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
-    const newPeriod = { parsingErrors: [],
-                        start: 500,
-                        end: 520,
-                        duration: 20,
-                        adaptations: { video: [newVideoAdaptation1,
-                                               newVideoAdaptation2],
-                        audio: [newAudioAdaptation] },
-                        getAdaptations() {
-                          return [ newVideoAdaptation1,
-                                   newVideoAdaptation2,
-                                   newAudioAdaptation ];
-                        } };
+    const newPeriod = {
+      parsingErrors: [],
+      start: 500,
+      end: 520,
+      duration: 20,
+      adaptations: { video: [newVideoAdaptation1,
+                             newVideoAdaptation2],
+                     audio: [newAudioAdaptation] },
+      getAdaptations() {
+        return [ newVideoAdaptation1,
+                 newVideoAdaptation2,
+                 newAudioAdaptation ];
+      },
+    };
 
     const oldPeriodAdaptationsSpy = jest.spyOn(oldPeriod, "getAdaptations");
     const newPeriodAdaptationsSpy = jest.spyOn(newPeriod, "getAdaptations");
@@ -370,16 +378,18 @@ describe("Manifest - updatePeriodInPlace", () => {
     const oldAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
-    const oldPeriod = { parsingErrors: [],
-                        start: 5,
-                        end: 15,
-                        duration: 10,
-                        adaptations: { video: [oldVideoAdaptation1],
-                                       audio: [oldAudioAdaptation] },
-                        getAdaptations() {
-                          return [oldVideoAdaptation1,
-                                  oldAudioAdaptation];
-                        } };
+    const oldPeriod = {
+      parsingErrors: [],
+      start: 5,
+      end: 15,
+      duration: 10,
+      adaptations: { video: [oldVideoAdaptation1],
+                     audio: [oldAudioAdaptation] },
+      getAdaptations() {
+        return [oldVideoAdaptation1,
+                oldAudioAdaptation];
+      },
+    };
     const newVideoAdaptation1 = { parsingErrors: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
@@ -391,18 +401,20 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
-    const newPeriod = { parsingErrors: [],
-                        start: 500,
-                        end: 520,
-                        duration: 20,
-                        adaptations: { video: [newVideoAdaptation1,
-                                               newVideoAdaptation2],
-                                       audio: [newAudioAdaptation] },
-                        getAdaptations() {
-                          return [newVideoAdaptation1,
-                                  newVideoAdaptation2,
-                                  newAudioAdaptation];
-                        } };
+    const newPeriod = {
+      parsingErrors: [],
+      start: 500,
+      end: 520,
+      duration: 20,
+      adaptations: { video: [newVideoAdaptation1,
+                             newVideoAdaptation2],
+                     audio: [newAudioAdaptation] },
+      getAdaptations() {
+        return [newVideoAdaptation1,
+                newVideoAdaptation2,
+                newAudioAdaptation];
+      },
+    };
 
     const logSpy = jest.spyOn(log, "warn");
     updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
@@ -426,18 +438,20 @@ describe("Manifest - updatePeriodInPlace", () => {
     const oldAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
-    const oldPeriod = { parsingErrors: [],
-                        start: 500,
-                        end: 520,
-                        duration: 20,
-                        adaptations: { video: [oldVideoAdaptation1,
-                                               oldVideoAdaptation2],
-                                       audio: [oldAudioAdaptation], },
-                        getAdaptations() {
-                          return [oldVideoAdaptation1,
-                                  oldVideoAdaptation2,
-                                  oldAudioAdaptation];
-                        } };
+    const oldPeriod = {
+      parsingErrors: [],
+      start: 500,
+      end: 520,
+      duration: 20,
+      adaptations: { video: [oldVideoAdaptation1,
+                             oldVideoAdaptation2],
+                     audio: [oldAudioAdaptation] },
+      getAdaptations() {
+        return [oldVideoAdaptation1,
+                oldVideoAdaptation2,
+                oldAudioAdaptation];
+      },
+    };
     const newVideoAdaptation1 = { parsingErrors: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
@@ -445,15 +459,17 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
-    const newPeriod = { parsingErrors: [],
-                        start: 5,
-                        end: 15,
-                        duration: 10,
-                        adaptations: { video: [newVideoAdaptation1],
-                                       audio: [newAudioAdaptation] },
-                        getAdaptations() {
-                          return [newVideoAdaptation1, newAudioAdaptation];
-                        } };
+    const newPeriod = {
+      parsingErrors: [],
+      start: 5,
+      end: 15,
+      duration: 10,
+      adaptations: { video: [newVideoAdaptation1],
+                     audio: [newAudioAdaptation] },
+      getAdaptations() {
+        return [newVideoAdaptation1, newAudioAdaptation];
+      },
+    };
 
     const logSpy = jest.spyOn(log, "warn");
     updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
@@ -475,7 +491,7 @@ describe("Manifest - updatePeriodInPlace", () => {
   it("should do nothing with new Representations", () => {
     const oldVideoAdaptation1 = { parsingErrors: [],
                                   id: "ada-video-1",
-                                  representations: [oldVideoRepresentation1], };
+                                  representations: [oldVideoRepresentation1] };
     const oldAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
@@ -491,19 +507,21 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newVideoAdaptation1 = { parsingErrors: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
-                                                    newVideoRepresentation2], };
+                                                    newVideoRepresentation2] };
     const newAudioAdaptation = { parsingErrors: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
-    const newPeriod = { parsingErrors: [],
-                        start: 500,
-                        end: 520,
-                        duration: 20,
-                        adaptations: { video: [newVideoAdaptation1],
-                                       audio: [newAudioAdaptation] },
-                        getAdaptations() {
-                          return [newVideoAdaptation1, newAudioAdaptation];
-                        } };
+    const newPeriod = {
+      parsingErrors: [],
+      start: 500,
+      end: 520,
+      duration: 20,
+      adaptations: { video: [newVideoAdaptation1],
+                     audio: [newAudioAdaptation] },
+      getAdaptations() {
+        return [newVideoAdaptation1, newAudioAdaptation];
+      },
+    };
 
     const logSpy = jest.spyOn(log, "warn");
     updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
@@ -542,11 +560,11 @@ describe("Manifest - updatePeriodInPlace", () => {
                         end: 15,
                         duration: 10,
                         adaptations: { video: [newVideoAdaptation1],
-        audio: [newAudioAdaptation],
-      },
-      getAdaptations() {
-        return [newVideoAdaptation1, newAudioAdaptation];
-      },
+                                       audio: [newAudioAdaptation],
+                        },
+                        getAdaptations() {
+                          return [newVideoAdaptation1, newAudioAdaptation];
+                        },
     };
 
     const logSpy = jest.spyOn(log, "warn");

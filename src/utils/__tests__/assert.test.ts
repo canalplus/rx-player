@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import assert, {
   assertInterface,
 } from "../assert";
 
-/* tslint:disable no-unsafe-any */
 describe("utils - assert", () => {
   it("should throw an error if the assertion is false", () => {
     let error;
@@ -26,13 +28,13 @@ describe("utils - assert", () => {
       assert(false);
     } catch (e) {
       error = e;
-      /* tslint:disable:no-unused-expression */
+      /* eslint-disable @typescript-eslint/no-unused-expressions */
       expect(e).toBeDefined();
-      /* tslint:enable:no-unused-expression */
+      /* eslint-enable @typescript-eslint/no-unused-expressions */
     }
-    /* tslint:disable:no-unused-expression */
+    /* eslint-disable @typescript-eslint/no-unused-expressions */
     expect(error).toBeDefined();
-    /* tslint:enable:no-unused-expression */
+    /* eslint-enable @typescript-eslint/no-unused-expressions */
     expect(error.message).toBe("invalid assertion");
     expect(error.name).toBe("AssertionError");
   });
@@ -44,13 +46,13 @@ describe("utils - assert", () => {
       assert(false, myMessage);
     } catch (e) {
       error = e;
-      /* tslint:disable:no-unused-expression */
+      /* eslint-disable @typescript-eslint/no-unused-expressions */
       expect(e).toBeDefined();
-      /* tslint:enable:no-unused-expression */
+      /* eslint-enable @typescript-eslint/no-unused-expressions */
     }
-    /* tslint:disable:no-unused-expression */
+    /* eslint-disable @typescript-eslint/no-unused-expressions */
     expect(error).toBeDefined();
-    /* tslint:enable:no-unused-expression */
+    /* eslint-enable @typescript-eslint/no-unused-expressions */
     expect(error.message).toBe(myMessage);
     expect(error.name).toBe("AssertionError");
   });
@@ -76,9 +78,9 @@ describe("utils - assertInterface", () => {
     } catch (e) {
       error = e;
     }
-    /* tslint:disable:no-unused-expression */
+    /* eslint-disable @typescript-eslint/no-unused-expressions */
     expect(error).toBeDefined();
-    /* tslint:enable:no-unused-expression */
+    /* eslint-enable @typescript-eslint/no-unused-expressions */
     expect(error.message).toBe(`${nameOfMyObj} should be an object`);
     expect(error.name).toBe("AssertionError");
 
@@ -89,9 +91,9 @@ describe("utils - assertInterface", () => {
     } catch (e) {
       error = e;
     }
-    /* tslint:disable:no-unused-expression */
+    /* eslint-disable @typescript-eslint/no-unused-expressions */
     expect(error).toBeDefined();
-    /* tslint:enable:no-unused-expression */
+    /* eslint-enable @typescript-eslint/no-unused-expressions */
     expect(error.message).toBe(`${nameOfMyObj} should be an object`);
     expect(error.name).toBe("AssertionError");
   });
@@ -104,9 +106,9 @@ describe("utils - assertInterface", () => {
       b: {
         c: "toto",
       },
-      /* tslint:disable:no-empty */
+      /* eslint-disable no-empty,@typescript-eslint/no-empty-function */
       d: () => {},
-      /* tslint:enable:no-empty */
+      /* eslint-enable no-empty,@typescript-eslint/no-empty-function */
       e: true,
     };
 
@@ -123,9 +125,9 @@ describe("utils - assertInterface", () => {
     } catch (e) {
       error = e;
     }
-    /* tslint:disable:no-unused-expression */
+    /* eslint-disable @typescript-eslint/no-unused-expressions */
     expect(error).toBeDefined();
-    /* tslint:enable:no-unused-expression */
+    /* eslint-enable @typescript-eslint/no-unused-expressions */
     expect(error.message)
       .toBe(`${nameOfMyObj} should have property f as a function`);
     expect(error.name).toBe("AssertionError");
@@ -138,9 +140,9 @@ describe("utils - assertInterface", () => {
       b: {
         c: "toto",
       },
-      /* tslint:disable:no-empty */
+      /* eslint-disable no-empty,@typescript-eslint/no-empty-function */
       d: () => {},
-      /* tslint:enable:no-empty */
+      /* eslint-enable no-empty,@typescript-eslint/no-empty-function */
       e: true,
     };
 
@@ -157,9 +159,9 @@ describe("utils - assertInterface", () => {
     } catch (e) {
       error = e;
     }
-    /* tslint:disable:no-unused-expression */
+    /* eslint-disable @typescript-eslint/no-unused-expressions */
     expect(error).toBeDefined();
-    /* tslint:enable:no-unused-expression */
+    /* eslint-enable @typescript-eslint/no-unused-expressions */
     expect(error.message)
       .toBe("object should have property f as a function");
     expect(error.name).toBe("AssertionError");
@@ -172,9 +174,9 @@ describe("utils - assertInterface", () => {
       b: {
         c: "toto",
       },
-      /* tslint:disable:no-empty */
+      /* eslint-disable no-empty,@typescript-eslint/no-empty-function */
       d: () => {},
-      /* tslint:enable:no-empty */
+      /* eslint-enable no-empty,@typescript-eslint/no-empty-function */
       e: true,
     };
 
@@ -188,9 +190,9 @@ describe("utils - assertInterface", () => {
     assertInterface(myObj, objIface, nameOfMyObj);
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should not consider inherited properties as part of the interface", () => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 
     const nameOfMyObj = "toto titi";
     const myObj = {
@@ -198,9 +200,9 @@ describe("utils - assertInterface", () => {
       b: {
         c: "toto",
       },
-      /* tslint:disable:no-empty */
+      /* eslint-disable no-empty,@typescript-eslint/no-empty-function */
       d: () => {},
-      /* tslint:enable:no-empty */
+      /* eslint-enable no-empty,@typescript-eslint/no-empty-function */
       e: true,
     };
 
@@ -216,4 +218,3 @@ describe("utils - assertInterface", () => {
     assertInterface(myObj, objIface, nameOfMyObj);
   });
 });
-/* tslint:enable no-unsafe-any */

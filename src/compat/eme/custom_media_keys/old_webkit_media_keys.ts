@@ -54,10 +54,11 @@ export function isOldWebkitMediaElement(
     .webkitGenerateKeyRequest === "function";
 }
 
-class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
-                               implements ICustomMediaKeySession {
-  public readonly update: (license: Uint8Array) =>
-    Promise<void>;
+class OldWebkitMediaKeySession
+  extends EventEmitter<IMediaKeySessionEvents>
+  implements ICustomMediaKeySession
+{
+  public readonly update: (license: Uint8Array) => Promise<void>;
   public readonly closed: Promise<void>;
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
@@ -67,8 +68,7 @@ class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
   private readonly _key: string;
   private readonly _closeSession$: Subject<void>;
 
-  constructor(mediaElement: IOldWebkitHTMLMediaElement,
-              keySystem: string) {
+  constructor(mediaElement: IOldWebkitHTMLMediaElement, keySystem: string) {
     super();
     this._closeSession$ = new Subject();
     this._vid = mediaElement;
@@ -94,11 +94,12 @@ class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
             const licenseTypedArray =
               license instanceof ArrayBuffer ? new Uint8Array(license) :
                                                license;
-            /* tslint:disable no-unsafe-any */
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const json = JSON.parse(utf8ToStr(licenseTypedArray));
+            /* eslint-disable @typescript-eslint/no-unsafe-member-access */
             const key = base64ToBytes(json.keys[0].k);
             const kid = base64ToBytes(json.keys[0].kid);
-            /* tslint:enable no-unsafe-any */
+            /* eslint-enable @typescript-eslint/no-unsafe-member-access */
             resolve(this._vid.webkitAddKey(this._key, key, kid, /* sessionId */ ""));
           } else {
             resolve(this._vid.webkitAddKey(this._key, license, null, /* sessionId */ ""));
@@ -161,7 +162,14 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
   }
 }
 
-export default function getOldWebKitMediaKeysCallbacks() {
+export default function getOldWebKitMediaKeysCallbacks() : {
+  isTypeSupported: (keyType: string) => boolean;
+  createCustomMediaKeys: (keyType: string) => OldWebKitCustomMediaKeys;
+  setMediaKeys: (
+    elt: HTMLMediaElement,
+    mediaKeys: MediaKeys|ICustomMediaKeys|null
+  ) => void;
+} {
   const isTypeSupported = function (keyType: string): boolean {
     // get any <video> element from the DOM or create one
     // and try the `canPlayType` method
@@ -169,20 +177,26 @@ export default function getOldWebKitMediaKeysCallbacks() {
     if (videoElement == null) {
       videoElement = document.createElement("video");
     }
-    /* tslint:disable no-unsafe-any */
-    /* tslint:disable no-unbound-method */
+    /* eslint-disable @typescript-eslint/unbound-method */
     if (videoElement != null && typeof videoElement.canPlayType === "function") {
-      /* tslint:enable no-unbound-method */
+      /* eslint-enable @typescript-eslint/unbound-method */
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-disable @typescript-eslint/strict-boolean-expressions */
+      /* eslint-disable @typescript-eslint/no-unsafe-call */
       return !!(videoElement as any).canPlayType("video/mp4", keyType);
-      /* tslint:enable no-unsafe-any */
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-enable @typescript-eslint/strict-boolean-expressions */
+      /* eslint-enable @typescript-eslint/no-unsafe-call */
     } else {
       return false;
     }
   };
   const createCustomMediaKeys =
     (keyType: string) => new OldWebKitCustomMediaKeys(keyType);
-  const setMediaKeys = (elt: HTMLMediaElement,
-                        mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
+  const setMediaKeys = (
+    elt: HTMLMediaElement,
+    mediaKeys: MediaKeys|ICustomMediaKeys|null
+  ): void => {
     if (mediaKeys === null) {
       return;
     }

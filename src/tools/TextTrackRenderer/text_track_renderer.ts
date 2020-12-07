@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-/* tslint:disable max-line-length */
+/* eslint-disable max-len */
 import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
-/* tslint:enable max-line-length */
+/* eslint-enable max-len */
 import {
   addFeatures,
   IFeatureFunction,
@@ -78,16 +78,16 @@ export default class TextTrackRenderer {
       args.timeOffset :
       0;
     this._segmentBuffer.pushChunkSync({ inventoryInfos: null,
-                                       data: { initSegment: null,
-                                               codec: args.type,
-                                               timestampOffset,
-                                               appendWindow: [0, Infinity],
-                                               chunk : { timescale: 1,
-                                                         start: 0,
-                                                         end: Number.MAX_VALUE,
-                                                         data: args.data,
-                                                         language: args.language,
-                                                         type: args.type } } });
+                                        data: { initSegment: null,
+                                                codec: args.type,
+                                                timestampOffset,
+                                                appendWindow: [0, Infinity],
+                                                chunk : { timescale: 1,
+                                                          start: 0,
+                                                          end: Number.MAX_VALUE,
+                                                          data: args.data,
+                                                          language: args.language,
+                                                          type: args.type } } });
   }
 
   /**
@@ -102,7 +102,7 @@ export default class TextTrackRenderer {
    * /!\ The TextTrackRenderer will be unusable after this method has been
    * called.
    */
-  public dispose() {
+  public dispose() : void {
     this._segmentBuffer.dispose();
   }
 }

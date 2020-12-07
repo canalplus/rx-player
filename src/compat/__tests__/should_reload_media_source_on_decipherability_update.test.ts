@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+// eslint-disable-next-line max-len
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../should_reload_media_source_on_decipherability_update";
 
 describe("Compat - shouldReloadMediaSourceOnDecipherabilityUpdate", () => {

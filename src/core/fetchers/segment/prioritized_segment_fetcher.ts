@@ -30,14 +30,14 @@ import {
  * The request for that segment will restart (from scratch) when requests with
  * more priority are finished.
  */
-export interface ISegmentFetcherInterruptedEvent { type : "interrupted"; }
+export interface ISegmentFetcherInterruptedEvent { type : "interrupted" }
 
 /**
  * Event sent when a segment request just ended.
  * You can use this event to schedule another task you wanted to perform at best
  * immediately after that one (its priority will be checked).
  */
-export interface IEndedTaskEvent { type : "ended"; }
+export interface IEndedTaskEvent { type : "ended" }
 
 /** Event sent by a `IPrioritizedSegmentFetcher`. */
 export type IPrioritizedSegmentFetcherEvent<T> = ISegmentFetcherEvent<T> |

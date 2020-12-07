@@ -558,10 +558,10 @@ export interface ITransportOptions {
   representationFilter? : IRepresentationFilter;
   segmentLoader? : CustomSegmentLoader;
   serverSyncInfos? : IServerSyncInfos;
-  /* tslint:disable deprecation */
+  /* eslint-disable import/no-deprecated */
   supplementaryImageTracks? : ISupplementaryImageTrack[];
   supplementaryTextTracks? : ISupplementaryTextTrack[];
-  /* tslint:enable deprecation */
+  /* eslint-enable import/no-deprecated */
 
   __priv_patchLastSegmentInSidx? : boolean;
 }
@@ -579,16 +579,16 @@ export type CustomSegmentLoader = (
            manifest : Manifest; },
 
   // second argument: callbacks
-  callbacks : { resolve : (args : { data : ArrayBuffer | Uint8Array;
-                                    sendingTime? : number;
-                                    receivingTime? : number;
-                                    size? : number;
-                                    duration? : number; })
+  callbacks : { resolve : (rArgs : { data : ArrayBuffer | Uint8Array;
+                                     sendingTime? : number;
+                                     receivingTime? : number;
+                                     size? : number;
+                                     duration? : number; })
                           => void;
 
-                progress : (args : { duration : number;
-                                     size : number;
-                                     totalSize? : number; })
+                progress : (pArgs : { duration : number;
+                                      size : number;
+                                      totalSize? : number; })
                            => void;
                 reject : (err? : Error) => void;
                 fallback? : () => void; }

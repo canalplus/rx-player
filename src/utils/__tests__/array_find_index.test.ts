@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
+/* eslint-disable no-invalid-this */
+/* eslint-disable no-restricted-properties */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/ban-types */
+
 import arrayFindIndex from "../array_find_index";
 
-/* tslint:disable no-unbound-method */
+/* eslint-disable @typescript-eslint/unbound-method */
 const initialArrayFindIndex = (Array.prototype as any).findIndex;
-/* tslint:enable no-unbound-method */
+/* eslint-enable @typescript-eslint/unbound-method */
 
 describe("utils - arrayFindIndex", () => {
   beforeEach(() => {
