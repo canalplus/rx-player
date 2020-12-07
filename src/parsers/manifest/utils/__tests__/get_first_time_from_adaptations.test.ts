@@ -26,7 +26,7 @@ function generateRepresentationIndex(
     shouldRefresh() { return false; },
     getFirstPosition() : number|undefined|null { return firstPosition; },
     getLastPosition() : undefined { return ; },
-    checkDiscontinuity() { return -1; },
+    checkDiscontinuity() { return null; },
     isSegmentStillAvailable() : undefined { return ; },
     isFinished() { return false; },
     canBeOutOfSyncError() : true { return true; },

@@ -274,7 +274,7 @@ export default function RepresentationStream<T>({
     map(function getCurrentStatus(
       [ [ timing, bufferGoal, terminate ],
         fastSwitchThreshold ]
-    ) : { discontinuity : number;
+    ) : { discontinuity : number | null;
           hasLoadedEverySegments : boolean;
           terminate : ITerminationOrder | null;
           neededSegments : IQueuedSegment[];
@@ -285,7 +285,7 @@ export default function RepresentationStream<T>({
 
       const discontinuity = timing.stalled != null ?
         representation.index.checkDiscontinuity(timing.position) :
-        -1;
+        null;
 
       const shouldRefreshManifest =
         representation.index.shouldRefresh(neededRange.start,
@@ -402,7 +402,7 @@ export default function RepresentationStream<T>({
 
       const neededActions : Array<IStreamNeedsManifestRefresh |
                                   IStreamNeedsDiscontinuitySeek> = [];
-      if (status.discontinuity > 1) {
+      if (status.discontinuity !== null) {
         const nextTime = status.discontinuity + 1;
         const gap: [number, number] = [status.discontinuity, nextTime];
         neededActions.push(EVENTS.discontinuityEncountered(gap,
