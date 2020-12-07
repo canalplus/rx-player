@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * This file allows to create RepresentationStreams.
- *
- * A RepresentationStream downloads and push segment for a single
- * Representation (e.g. a single video stream of a given quality).
- * It chooses which segments should be downloaded according to the current
- * position and what is currently buffered.
- */
-
 // eslint-disable-next-line max-len
 import shouldAppendBufferAfterPadding from "../../../compat/should_append_buffer_after_padding";
 import config from "../../../config";
