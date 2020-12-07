@@ -30,7 +30,7 @@ if (browsers.length === 0) {
 
 const karmaConf = {
   basePath: ".",
-  browserNoActivityTimeout: 5 * 60 * 1000,
+  browserNoActivityTimeout: 10 * 60 * 1000,
   browsers,
   customLaunchers: {
     ChromeMemory: {
