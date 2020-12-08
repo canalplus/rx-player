@@ -33,19 +33,13 @@ export default function isSegmentStillAvailable(
   timescale : number,
   indexTimeOffset : number
 ) : boolean | undefined {
-  if (timescale !== segment.timescale) {
-    // weird case (update?)
-    // In any case, it would be over-engineering to do time scaling here.
-    return undefined;
-  }
-
   for (let i = 0; i < timeline.length; i++) {
     const tSegment = timeline[i];
-    const tSegmentTime = tSegment.start - indexTimeOffset;
+    const tSegmentTime = (tSegment.start - indexTimeOffset) / timescale;
     if (tSegmentTime > segment.time) {
       return false;
-    } else if (tSegmentTime === segment.time) { // there should be only one here
-      if (tSegment.duration !== segment.duration) {
+    } else if (tSegmentTime === segment.time) {
+      if ((tSegment.duration / timescale) !== segment.duration) {
         return false;
       }
       if (tSegment.range == null) {

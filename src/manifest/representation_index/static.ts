@@ -54,10 +54,11 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return [{ id: "0",
               isInit: false,
               number: 0,
+              mediaURLs: [this._mediaURLs],
               time: 0,
+              end: Number.MAX_VALUE,
               duration: Number.MAX_VALUE,
-              timescale: 1,
-              mediaURLs: [this._mediaURLs] }];
+              timescale: 1 }];
   }
 
   /**
@@ -118,10 +119,6 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    */
   isInitialized() : true {
     return true;
-  }
-
-  _addSegments() : void {
-    log.warn("Tried add Segments to a static RepresentationIndex");
   }
 
   _replace() : void {

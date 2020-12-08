@@ -73,13 +73,8 @@ export function imageParser(
   if (data === null || features.imageParser === null) {
     return observableOf({ type: "parsed-segment",
                           value: { chunkData: null,
-                                   chunkInfos: segment.timescale > 0 ?
-                                     { duration: segment.isInit ? 0 :
-                                                                  segment.duration,
-                                       time: segment.isInit ? -1 :
-                                                              segment.time,
-                                       timescale: segment.timescale } :
-                                     null,
+                                   chunkInfos: { duration: segment.duration,
+                                                 time: segment.time },
                                    chunkOffset,
                                    appendWindow: [period.start, period.end] } });
   }

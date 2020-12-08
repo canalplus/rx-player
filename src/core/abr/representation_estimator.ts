@@ -419,11 +419,8 @@ export default function RepresentationEstimator({
 
     // calculate "maintainability score"
     const { segment } = content;
-    if (segment.duration == null) {
-      return;
-    }
     const requestDuration = duration / 1000;
-    const segmentDuration = segment.duration / segment.timescale;
+    const segmentDuration = segment.duration;
 
     const { representation } = content;
     scoreCalculator.addSample(representation, requestDuration, segmentDuration);

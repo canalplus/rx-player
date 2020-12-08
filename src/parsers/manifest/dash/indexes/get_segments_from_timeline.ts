@@ -92,12 +92,14 @@ export default function getSegmentsFromTimeline(
         null :
         mediaURLs.map(createDashUrlDetokenizer(segmentTime, segmentNumber));
 
+      const time = segmentTime - index.indexTimeOffset;
       const segment = { id: String(segmentTime),
-                        time: segmentTime - index.indexTimeOffset,
+                        time: time / timescale,
+                        end: (time + duration) / timescale,
+                        duration: duration / timescale,
                         isInit: false,
                         range,
-                        duration,
-                        timescale,
+                        timescale: 1 as const,
                         mediaURLs: detokenizedURLs,
                         number: segmentNumber,
                         timestampOffset: -(index.indexTimeOffset / timescale) };

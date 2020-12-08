@@ -109,18 +109,14 @@ export default function getNeededSegments({
       }
     }
 
-    const { duration, time, timescale } = segment;
-    if (segment.isInit || duration === undefined) {
-      return true; // never skip those
+    const { duration, time, end } = segment;
+    if (segment.isInit) {
+      return true; // never skip initialization segments
     }
 
-    if (duration / timescale < MINIMUM_SEGMENT_SIZE) {
+    if (duration < MINIMUM_SEGMENT_SIZE) {
       return false; // too small
     }
-
-    const scaledTime = time / timescale;
-    const scaledDuration = duration / timescale;
-    const scaledEnd = scaledTime + scaledDuration;
 
     // Check if the same segment from another Representation is not already
     // being pushed.
@@ -132,13 +128,10 @@ export default function getNeededSegments({
           return false;
         }
         const { segment: oldSegment } = pendingSegment;
-        const oldSegmentStart = oldSegment.time / oldSegment.timescale;
-        if ((oldSegmentStart - ROUNDING_ERROR) > scaledTime) {
+        if ((oldSegment.time - ROUNDING_ERROR) > time) {
           return false;
         }
-        const oldSegmentEnd = oldSegmentStart +
-          (oldSegment.duration / oldSegment.timescale);
-        if ((oldSegmentEnd + ROUNDING_ERROR) < scaledEnd) {
+        if ((oldSegment.end + ROUNDING_ERROR) < end) {
           return false;
         }
         return !shouldContentBeReplaced(pendingSegment,
@@ -160,13 +153,9 @@ export default function getNeededSegments({
       // it is from same period (but can be from different adaptation or
       // representation)
       if (areFromSamePeriod) {
-        const segTime = completeSeg.infos.segment.time;
-        const segDuration = completeSeg.infos.segment.duration;
-        const segTimeScale = completeSeg.infos.segment.timescale;
-        const scaledSegTime = segTime / segTimeScale;
-        const scaledSegEnd = scaledSegTime + segDuration / segTimeScale;
-        if (scaledTime - scaledSegTime > -ROUNDING_ERROR &&
-            scaledSegEnd - scaledEnd > -ROUNDING_ERROR)
+        const completeSegInfos = completeSeg.infos.segment;
+        if (time - completeSegInfos.time > -ROUNDING_ERROR &&
+            completeSegInfos.end - end > -ROUNDING_ERROR)
         {
           return false; // already downloaded
         }
@@ -176,8 +165,8 @@ export default function getNeededSegments({
     // check if there is an hole in place of the segment currently
     for (let i = 0; i < bufferedSegments.length; i++) {
       const completeSeg = bufferedSegments[i];
-      if (completeSeg.end > scaledTime) {
-        if (completeSeg.start > scaledTime + ROUNDING_ERROR) {
+      if (completeSeg.end > time) {
+        if (completeSeg.start > time + ROUNDING_ERROR) {
           return true;
         }
         let j = i + 1;
@@ -191,7 +180,7 @@ export default function getNeededSegments({
         }
         j--; // index of last contiguous segment
 
-        return bufferedSegments[j].end < scaledEnd + ROUNDING_ERROR;
+        return bufferedSegments[j].end < end + ROUNDING_ERROR;
       }
     }
     return true;
@@ -224,8 +213,8 @@ function shouldContentBeReplaced(
 
   const { segment } = oldContent;
   if (shouldAppendBufferAfterPadding &&
-      (segment.time / segment.timescale) <
-      (currentPlaybackTime + CONTENT_REPLACEMENT_PADDING)) {
+      segment.time < (currentPlaybackTime + CONTENT_REPLACEMENT_PADDING))
+  {
     return false;
   }
 
@@ -399,13 +388,7 @@ function getPlayableBufferedSegments(
         representation.isSupported)
     {
       const inventorySegment = eltInventory.infos.segment;
-      const eltInventoryStart = inventorySegment.time /
-                                inventorySegment.timescale;
-      const eltInventoryEnd = inventorySegment.duration == null ?
-        eltInventory.end :
-        eltInventoryStart + inventorySegment.duration /
-          inventorySegment.timescale;
-      if ((eltInventoryEnd > minEnd && eltInventoryStart < maxStart) ||
+      if ((inventorySegment.end > minEnd && inventorySegment.time < maxStart) ||
           (eltInventory.end > minEnd && eltInventory.start < maxStart))
       {
         overlappingChunks.unshift(eltInventory);

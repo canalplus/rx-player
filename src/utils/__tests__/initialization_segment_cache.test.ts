@@ -34,7 +34,6 @@ const representation1 = {
     isInitialized() : true { return true; },
     _replace() : never { throw new Error("Not implemented"); },
     _update() : never { throw new Error("Not implemented"); },
-    _addSegments() : never { throw new Error("Not implemented"); },
   },
   getProtectionsInitializationData() : [] { return []; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
@@ -58,7 +57,6 @@ const representation2 = {
     isInitialized() : true { return true; },
     _replace() : never { throw new Error("Not implemented"); },
     _update() : never { throw new Error("Not implemented"); },
-    _addSegments() : never { throw new Error("Not implemented"); },
   },
   getProtectionsInitializationData() : [] { return []; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
@@ -68,63 +66,70 @@ const initSegment1 = {
   id: "init1",
   isInit: true,
   time: 0,
-  timescale: 1000,
-  mediaURLs: ["http://www.example.com/some.URLinit1"],
+  end: 0,
   duration: 0,
+  timescale: 1 as const,
+  mediaURLs: ["http://www.example.com/some.URLinit1"],
 };
 
 const initSegment2 = {
   id: "init2",
   isInit: true,
   time: 0,
-  timescale: 1000,
-  mediaURLs: ["http://www.example.com/some.URLinit2"],
+  end: 0,
   duration: 0,
+  timescale: 1 as const,
+  mediaURLs: ["http://www.example.com/some.URLinit2"],
 };
 
 const initSegment3 = {
   id: "init3",
   isInit: true,
   time: 0,
-  timescale: 1000,
-  mediaURLs: ["http://www.example.com/some.URLinit3"],
+  end: 0,
   duration: 0,
+  timescale: 1 as const,
+  mediaURLs: ["http://www.example.com/some.URLinit3"],
 };
 
 const segment1 = {
   id: "seg1",
   isInit: false,
   time: 0,
-  timescale: 1000,
+  duration: 2,
+  end: 2,
+  timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URL2"],
-  duration: 2000,
 };
 
 const segment2 = {
   id: "seg2",
   isInit: false,
-  time: 2000,
-  timescale: 1000,
+  time: 2,
+  duration: 2,
+  end: 4,
+  timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URL2"],
-  duration: 2000,
 };
 
 const segment3 = {
   id: "seg3",
   isInit: false,
-  time: 4000,
-  timescale: 1000,
+  time: 4,
+  duration: 2,
+  end: 6,
+  timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URL3"],
-  duration: 2000,
 };
 
 const segment4 = {
   id: "seg4",
   isInit: false,
-  time: 6000,
-  timescale: 1000,
+  time: 6,
+  duration: 2,
+  end: 8,
+  timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URL4"],
-  duration: 2000,
 };
 
 const data1 = new Uint8Array([0]);

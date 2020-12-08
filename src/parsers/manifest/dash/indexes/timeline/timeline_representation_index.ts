@@ -500,12 +500,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._lastUpdate = newIndex._lastUpdate;
   }
 
-  _addSegments() : void {
-    if (__DEV__) {
-      log.warn("Tried to add Segments to a SegmentTimeline RepresentationIndex");
-    }
-  }
-
   /**
    * Returns `true` if this RepresentationIndex currently contains its last
    * segment.

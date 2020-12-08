@@ -20,7 +20,6 @@ import {
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   ISegment,
-  ISupplementarySegmentsInfo,
 } from "./types";
 
 export {
@@ -28,6 +27,5 @@ export {
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   ISegment,
-  ISupplementarySegmentsInfo,
   StaticRepresentationIndex,
 };

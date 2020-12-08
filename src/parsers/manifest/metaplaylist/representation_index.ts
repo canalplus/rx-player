@@ -78,14 +78,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
     if (segment === null) {
       return null;
     }
-    if (segment.privateInfos === undefined) {
-      segment.privateInfos = {};
-    }
-    segment.privateInfos.metaplaylistInfos = { transportType: this._transport,
-                                               baseContent: this._baseContentInfos,
-                                               contentStart: this._timeOffset,
-                                               contentEnd: this._contentEnd };
-    return segment;
+    return this._cloneWithPrivateInfos(segment);
   }
 
   /**
@@ -97,15 +90,10 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   public getSegments(up : number, duration : number) : ISegment[] {
     return this._wrappedIndex.getSegments(up - this._timeOffset, duration)
       .map((segment) => {
-        if (segment.privateInfos === undefined) {
-          segment.privateInfos = {};
-        }
-        segment.privateInfos.metaplaylistInfos = { transportType: this._transport,
-                                                   baseContent: this._baseContentInfos,
-                                                   contentStart: this._timeOffset,
-                                                   contentEnd: this._contentEnd };
-        segment.time += this._timeOffset * segment.timescale;
-        return segment;
+        const clonedSegment = this._cloneWithPrivateInfos(segment);
+        clonedSegment.time += this._timeOffset;
+        clonedSegment.end += this._timeOffset;
+        return clonedSegment;
       });
   }
 
@@ -149,11 +137,11 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * @returns {boolean|undefined}
    */
   public isSegmentStillAvailable(segment : ISegment) : boolean | undefined {
-    const offset = this._timeOffset * segment.timescale;
-    const updatedSegment = objectAssign({},
-                                        segment,
-                                        { time: segment.time - offset });
-    return this._wrappedIndex.isSegmentStillAvailable(updatedSegment);
+    if (segment.privateInfos?.metaplaylistInfos === undefined) {
+      return false;
+    }
+    const { originalSegment } = segment.privateInfos.metaplaylistInfos;
+    return this._wrappedIndex.isSegmentStillAvailable(originalSegment);
   }
 
   /**
@@ -162,7 +150,11 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * @returns {Boolean}
    */
   public canBeOutOfSyncError(error : ICustomError, segment : ISegment) : boolean {
-    return this._wrappedIndex.canBeOutOfSyncError(error, segment);
+    if (segment.privateInfos?.metaplaylistInfos === undefined) {
+      return false;
+    }
+    const { originalSegment } = segment.privateInfos.metaplaylistInfos;
+    return this._wrappedIndex.canBeOutOfSyncError(error, originalSegment);
   }
 
   /**
@@ -209,19 +201,26 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @param {Array.<Object>} nextSegments
-   * @param {Object} currentSegment
+   * Clone the given segment, presumably coming from its original
+   * RepresentationIndex, and add the linked metaplaylist privateInfos to it.
+   * Return that cloned and enhanced segment.
+   * @param {Object} segment
+   * @returns {Object}
    */
-  public _addSegments(
-    nextSegments : Array<{ time : number;
-                           duration : number;
-                           timescale : number;
-                           count? : number;
-                           range? : [number, number]; }>,
-    currentSegment? : { duration? : number;
-                        time : number;
-                        timescale? : number; }
-  ): void {
-    return this._wrappedIndex._addSegments(nextSegments, currentSegment);
+  private _cloneWithPrivateInfos(segment : ISegment) : ISegment {
+    const clonedSegment = objectAssign({}, segment);
+    if (clonedSegment.privateInfos === undefined) {
+      clonedSegment.privateInfos = {};
+    }
+    clonedSegment.privateInfos.metaplaylistInfos = {
+      transportType: this._transport,
+      baseContent: this._baseContentInfos,
+      contentStart: this._timeOffset,
+      contentEnd: this._contentEnd,
+      originalSegment: segment,
+    };
+    clonedSegment.time += this._timeOffset;
+    clonedSegment.end += this._timeOffset;
+    return clonedSegment;
   }
 }

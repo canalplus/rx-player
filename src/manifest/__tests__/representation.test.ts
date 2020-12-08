@@ -31,8 +31,7 @@ const minimalIndex = { getInitSegment() { return null; },
                        canBeOutOfSyncError() : true { return true; },
                        isFinished() : true { return true; },
                        _replace() { /* noop */ },
-                       _update() { /* noop */ },
-                       _addSegments() { /* noop */ } };
+                       _update() { /* noop */ } };
 
 const defaultIsCodecSupported = jest.fn(() => true);
 

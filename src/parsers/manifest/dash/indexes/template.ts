@@ -15,7 +15,6 @@
  */
 
 import config from "../../../../config";
-import log from "../../../../log";
 import {
   IRepresentationIndex,
   ISegment,
@@ -280,10 +279,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
       const args = { id: String(realNumber),
                      number: realNumber,
-                     time: realTime,
+                     time: realTime / timescale,
+                     end: (realTime + realDuration) / timescale,
+                     duration: realDuration / timescale,
+                     timescale: 1 as const,
                      isInit: false,
-                     duration: realDuration,
-                     timescale,
+                     scaledDuration: realDuration / timescale,
                      mediaURLs: detokenizedURLs,
                      timestampOffset: -(index.indexTimeOffset / timescale) };
       segments.push(args);
@@ -350,30 +351,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     if (segment.isInit) {
       return true;
     }
-    if (segment.timescale !== this._index.timescale) {
-      return undefined;
-    }
-
-    const { timescale } = segment;
-    const timeRelativeToPeriodStart = segment.time - (this._periodStart * timescale);
-
-    const firstSegmentStart = this._getFirstSegmentStart();
-    const lastSegmentStart = this._getLastSegmentStart();
-    if (firstSegmentStart === undefined || lastSegmentStart === undefined) {
-      return undefined;
-    }
-    if (firstSegmentStart === null || lastSegmentStart === null) {
+    const segmentsForTime = this.getSegments(segment.time, 0.1);
+    if (segmentsForTime.length === 0) {
       return false;
     }
-    if (timeRelativeToPeriodStart < firstSegmentStart) {
-      return false;
-    }
-    if (timeRelativeToPeriodStart > lastSegmentStart ||
-        segment.duration !== this._index.duration) {
-      return false;
-    }
-
-    return (timeRelativeToPeriodStart / this._index.duration) % 1 === 0;
+    return segmentsForTime[0].time === segment.time &&
+           segmentsForTime[0].end === segment.end &&
+           segmentsForTime[0].number === segment.number;
   }
 
   /**
@@ -416,14 +400,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   isInitialized() : true {
     return true;
-  }
-
-  /**
-   * We do not have to add new segments to SegmentList-based indexes.
-   * @returns {Array}
-   */
-  _addSegments() : void {
-    log.warn("Tried to add Segments to a template RepresentationIndex");
   }
 
   /**

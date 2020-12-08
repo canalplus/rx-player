@@ -15,7 +15,6 @@
  */
 
 import { of as observableOf } from "rxjs";
-import { ISupplementarySegmentsInfo } from "../../manifest";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
@@ -25,6 +24,7 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
+import { BaseRepresentationIndex } from "../../parsers/manifest/dash";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
@@ -88,7 +88,7 @@ export default function generateAudioVideoSegmentParser(
     // we're handling an initialization segment
     const { indexRange } = segment;
 
-    let nextSegments : ISupplementarySegmentsInfo[] | null;
+    let nextSegments;
     if (isWEBM) {
       nextSegments = getSegmentsFromCues(chunkData, 0);
     } else {
@@ -114,7 +114,10 @@ export default function generateAudioVideoSegmentParser(
       }
     }
 
-    if (nextSegments !== null && nextSegments.length > 0) {
+    if (representation.index instanceof BaseRepresentationIndex &&
+        nextSegments !== null &&
+        nextSegments.length > 0)
+    {
       representation.index._addSegments(nextSegments);
     }
 

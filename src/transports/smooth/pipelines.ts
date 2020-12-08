@@ -26,14 +26,16 @@ import features from "../../features";
 import log from "../../log";
 import Manifest, {
   Adaptation,
+  ISegment,
   Representation,
 } from "../../manifest";
 import {
   getMDAT,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
-import createSmoothManifestParser from "../../parsers/manifest/smooth";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import createSmoothManifestParser, {
+  SmoothRepresentationIndex,
+} from "../../parsers/manifest/smooth";
 import request from "../../utils/request";
 import {
   strToUtf8,
@@ -79,13 +81,20 @@ const WSX_REG = /\.wsx?(\?token=\S+)?/;
 function addNextSegments(
   adaptation : Adaptation,
   nextSegments : INextSegmentsInfos[],
-  dlSegment? : IChunkTimeInfo
+  dlSegment : ISegment
 ) : void {
   log.debug("Smooth Parser: update segments information.");
   const representations = adaptation.representations;
   for (let i = 0; i < representations.length; i++) {
     const representation = representations[i];
-    representation.index._addSegments(nextSegments, dlSegment);
+    if (representation.index instanceof SmoothRepresentationIndex &&
+        dlSegment?.privateInfos?.smoothMediaSegment !== undefined)
+    {
+      representation.index._addSegments(nextSegments,
+                                        dlSegment.privateInfos.smoothMediaSegment);
+    } else {
+      log.warn("Smooth Parser: should only encounter SmoothRepresentationIndex");
+    }
   }
 }
 
@@ -169,6 +178,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     parser({
       content,
       response,
+      initTimescale,
     } : ISegmentParserArguments< ArrayBuffer | Uint8Array | null >
     ) : IAudioVideoParserObservable {
       const { segment, representation, adaptation, manifest } = content;
@@ -200,25 +210,32 @@ export default function(options : ITransportOptions) : ITransportPipelines {
           }
         }
         const segmentProtections = representation.getProtectionsInitializationData();
+        const timescale = segment.privateInfos?.smoothInitSegment?.timescale;
         return observableOf({ type: "parsed-init-segment",
                               value: { initializationData: data,
-                                       segmentProtections,
-
                                        // smooth init segments are crafted by hand.
                                        // Their timescale is the one from the manifest.
-                                       initTimescale: segment.timescale } });
+                                       initTimescale: timescale,
+                                       segmentProtections } });
       }
 
-      const { nextSegments, chunkInfos } = extractTimingsInfos(responseBuffer,
-                                                               isChunked,
-                                                               segment,
-                                                               manifest.isLive);
-      if (chunkInfos === null) {
+      const timingInfos = initTimescale !== undefined ?
+        extractTimingsInfos(responseBuffer,
+                            isChunked,
+                            initTimescale,
+                            segment,
+                            manifest.isLive) :
+        null;
+      if (timingInfos === null ||
+          timingInfos.chunkInfos === null ||
+          timingInfos.scaledSegmentTime === undefined)
+      {
         throw new Error("Smooth Segment without time information");
       }
-      const chunkData = patchSegment(responseBuffer, chunkInfos.time);
+      const { nextSegments, chunkInfos, scaledSegmentTime } = timingInfos;
+      const chunkData = patchSegment(responseBuffer, scaledSegmentTime);
       if (nextSegments.length > 0) {
-        addNextSegments(adaptation, nextSegments, chunkInfos);
+        addNextSegments(adaptation, nextSegments, segment);
       }
       return observableOf({ type: "parsed-segment",
                             value: { chunkData,
@@ -258,10 +275,12 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     parser({
       content,
       response,
+      initTimescale,
     } : ISegmentParserArguments<string|ArrayBuffer|Uint8Array|null>
     ) : ITextParserObservable {
       const { manifest, adaptation, representation, segment } = content;
       const { language } = adaptation;
+      const isMP4 = isMP4EmbeddedTrack(representation);
       const { mimeType = "", codec = "" } = representation;
       const { data, isChunked } = response;
       if (segment.isInit) { // text init segment has no use in HSS
@@ -280,11 +299,9 @@ export default function(options : ITransportOptions) : ITransportPipelines {
 
       let nextSegments;
       let chunkInfos : IChunkTimeInfo|null = null;
-      const isMP4 = mimeType.indexOf("mp4") >= 0;
 
-      let _sdStart : number|undefined;
-      let _sdEnd : number|undefined;
-      let _sdTimescale : number = 1;
+      let segmentStart : number | undefined;
+      let segmentEnd : number | undefined;
       let _sdData : string;
       let _sdType : string|undefined;
 
@@ -296,27 +313,28 @@ export default function(options : ITransportOptions) : ITransportPipelines {
           chunkBytes = data instanceof Uint8Array ? data :
             new Uint8Array(data);
         }
-        const timings = extractTimingsInfos(chunkBytes,
-                                            isChunked,
-                                            segment,
-                                            manifest.isLive);
+        const timingInfos = initTimescale !== undefined ?
+          extractTimingsInfos(chunkBytes,
+                              isChunked,
+                              initTimescale,
+                              segment,
+                              manifest.isLive) :
+          null;
 
-        nextSegments = timings.nextSegments;
-        chunkInfos = timings.chunkInfos;
+        nextSegments = timingInfos?.nextSegments;
+        chunkInfos = timingInfos?.chunkInfos ?? null;
         if (chunkInfos === null) {
           if (isChunked) {
             log.warn("Smooth: Unavailable time data for current text track.");
           } else {
-            _sdStart = segment.time;
-            _sdEnd = _sdStart + segment.duration;
-            _sdTimescale = segment.timescale;
+            segmentStart = segment.time;
+            segmentEnd = segment.end;
           }
         } else {
-          _sdStart = chunkInfos.time;
-          _sdEnd = !isNullOrUndefined(chunkInfos.duration) ?
+          segmentStart = chunkInfos.time;
+          segmentEnd = chunkInfos.duration !== undefined ?
             chunkInfos.time + chunkInfos.duration :
-            undefined;
-          _sdTimescale = chunkInfos.timescale;
+            segment.end;
         }
 
         const lcCodec = codec.toLowerCase();
@@ -334,7 +352,10 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         const mdat = getMDAT(chunkBytes);
         _sdData = mdat === null ? "" :
                                   utf8ToStr(mdat);
-      } else {
+      } else { // not MP4
+        segmentStart = segment.time;
+        segmentEnd = segment.end;
+
         let chunkString : string;
         if (typeof data !== "string") {
           const bytesData = data instanceof Uint8Array ? data :
@@ -343,13 +364,6 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         } else {
           chunkString = data;
         }
-
-        const segmentTime = segment.time;
-
-        // vod is simple WebVTT or TTML text
-        _sdStart = segmentTime;
-        _sdEnd = segmentTime + segment.duration;
-        _sdTimescale = segment.timescale;
 
         switch (mimeType) {
           case "application/x-sami":
@@ -379,18 +393,16 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       if (chunkInfos !== null &&
           Array.isArray(nextSegments) && nextSegments.length > 0)
       {
-        addNextSegments(adaptation, nextSegments, chunkInfos);
+        addNextSegments(adaptation, nextSegments, segment);
       }
 
-      const chunkOffset = _sdStart === undefined ? 0 :
-                                                   _sdStart / _sdTimescale;
+      const chunkOffset = segmentStart ?? 0;
       return observableOf({ type: "parsed-segment",
                             value: { chunkData: { type: _sdType,
                                                   data: _sdData,
-                                                  language,
-                                                  timescale: _sdTimescale,
-                                                  start: _sdStart,
-                                                  end: _sdEnd },
+                                                  start: segmentStart,
+                                                  end: segmentEnd,
+                                                  language },
                                      chunkInfos,
                                      chunkOffset,
                                      appendWindow: [undefined, undefined] } });

@@ -315,28 +315,13 @@ export type IManifestParserObservable = Observable<IManifestParserEvent>;
 export interface IChunkTimeInfo {
   /**
    * Difference between the latest and the earliest presentation time
-   * available in that segment. The unit is in the corresponding timescale (see
-   * `timescale` property).
+   * available in that segment, in seconds.
+   *
    * Either `undefined` or set to `0` for initialization segment.
    */
-  duration? : number;
-  /**
-   * Earliest presentation time available in that segment.
-   * The unit is in the corresponding timescale (see `timescale` property).
-   * This should be set to a negative value for initialization segment.
-   */
+  duration : number | undefined;
+  /** Earliest presentation time available in that segment, in seconds. */
   time : number;
-  /**
-   * Allow to convert `duration` and `time` into seconds by dividing them to
-   * that value.
-   * e.g.:
-   *   timeInSeconds = time / timescale
-   *   durationInSeconds = duration / timescale
-   *
-   * Expressing those values relative to a "timescale" allows a greater
-   * precision for the `time` and `duration` values.
-   */
-  timescale : number; // time unit for seconds conversion.
 }
 
 /** Encryption information linked to a segment. */
@@ -408,14 +393,22 @@ export type ISegmentParserResponse<T> =
 export type IAudioVideoTrackSegmentData = Uint8Array |
                                           ArrayBuffer;
 
-// format under which text data is decodable
+/** Text track segment data, once parsed. */
 export interface ITextTrackSegmentData {
-  data : string; // text track data
-  type : string; // the type of `data` (examples: "ttml", "srt" or "vtt")
-  language? : string; // language in which the text track is, as a language code
-  start? : number; // start time from which the segment apply, timescaled
-  end? : number; // end time until which the segment apply, timescaled
-  timescale : number; // timescale to convert `start` and `end` into seconds
+  /** The text track data, in the format indicated in `type`. */
+  data : string;
+  /** The format of `data` (examples: "ttml", "srt" or "vtt") */
+  type : string;
+  /**
+   * Language in which the text track is, as a language code.
+   * This is mostly needed for "sami" subtitles, to know which cues can / should
+   * be parsed.
+   */
+  language? : string;
+  /** start time from which the segment apply, in seconds. */
+  start? : number;
+  /** end time until which the segment apply, in seconds. */
+  end? : number;
 }
 
 // format under which image data is decodable

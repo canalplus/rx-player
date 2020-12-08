@@ -111,14 +111,12 @@ export function getISOBMFFEmbeddedTextTrackData(
   }
   let startTime : number | undefined;
   let endTime : number | undefined;
-  let timescale : number = 1;
   if (chunkInfos === null) {
     if (!isChunked) {
       log.warn("Transport: Unavailable time data for current text track.");
     } else {
       startTime = segment.time;
-      endTime = startTime + segment.duration;
-      timescale = segment.timescale;
+      endTime = segment.end;
     }
   } else {
     startTime = chunkInfos.time;
@@ -127,7 +125,6 @@ export function getISOBMFFEmbeddedTextTrackData(
     } else if (!isChunked) {
       endTime = startTime + segment.duration;
     }
-    timescale = chunkInfos.timescale;
   }
 
   const type = getISOBMFFTextTrackFormat(representation);
@@ -136,8 +133,7 @@ export function getISOBMFFEmbeddedTextTrackData(
            type,
            language: adaptation.language,
            start: startTime,
-           end: endTime,
-           timescale } ;
+           end: endTime } ;
 }
 
 /**
@@ -159,22 +155,12 @@ export function getPlainTextTrackData(
   if (segment.isInit) {
     return null;
   }
-  let start : number | undefined;
-  let end : number | undefined;
-  let timescale : number = 1;
-  if (!isChunked) {
-    start = segment.time;
-    end = start + segment.duration;
-    timescale = segment.timescale;
-  } else {
+  if (isChunked) {
     log.warn("Transport: Unavailable time data for current text track.");
   }
 
   const type = getPlainTextTrackFormat(representation);
   return { data: textTrackData,
            type,
-           language: adaptation.language,
-           start,
-           end,
-           timescale };
+           language: adaptation.language };
 }

@@ -31,7 +31,6 @@ import {
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   ISegment,
-  ISupplementarySegmentsInfo,
   StaticRepresentationIndex,
 } from "./representation_index";
 import { IAdaptationType } from "./types";
@@ -56,7 +55,6 @@ export {
   ISegment,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
-  ISupplementarySegmentsInfo,
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 };

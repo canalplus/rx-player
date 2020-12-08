@@ -88,18 +88,8 @@ export default function pushMediaSegment<T>(
                    appendWindow: safeAppendWindow,
                    codec };
 
-    let estimatedStart : number;
-    let estimatedDuration : number;
-    if (chunkInfos !== null) {
-      estimatedStart = chunkInfos.time / chunkInfos.timescale;
-      estimatedDuration = chunkInfos.duration !== undefined ?
-        chunkInfos.duration / chunkInfos.timescale :
-        segment.duration / segment.timescale;
-    } else {
-      estimatedStart = segment.time / segment.timescale;
-      estimatedDuration = segment.duration / segment.timescale;
-    }
-
+    let estimatedStart = chunkInfos?.time ?? segment.time;
+    const estimatedDuration = chunkInfos?.duration ?? segment.duration;
     let estimatedEnd = estimatedStart + estimatedDuration;
     if (safeAppendWindow[0] !== undefined) {
       estimatedStart = Math.max(estimatedStart, safeAppendWindow[0]);

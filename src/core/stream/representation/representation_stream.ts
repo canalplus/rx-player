@@ -82,9 +82,7 @@ import {
   IStreamTerminatingEvent,
 } from "../types";
 import getNeededSegments from "./get_needed_segments";
-import getSegmentPriority, {
-  getPriorityForTime,
-} from "./get_segment_priority";
+import getSegmentPriority from "./get_segment_priority";
 import getWantedRange from "./get_wanted_range";
 import pushInitSegment from "./push_init_segment";
 import pushMediaSegment from "./push_media_segment";
@@ -301,7 +299,7 @@ export default function RepresentationStream<T>({
                    "initialization segment");
         } else {
           neededSegments.push({ segment: initSegment,
-                                priority: getPriorityForTime(period.start, timing) });
+                                priority: getSegmentPriority(period.start, timing) });
         }
       } else {
         neededSegments = getNeededSegments({ content,
@@ -309,7 +307,7 @@ export default function RepresentationStream<T>({
                                              fastSwitchThreshold,
                                              neededRange,
                                              segmentBuffer })
-          .map((segment) => ({ priority: getSegmentPriority(segment, timing),
+          .map((segment) => ({ priority: getSegmentPriority(segment.time, timing),
                                segment }));
 
         if (neededSegments.length > 0 &&

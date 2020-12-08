@@ -42,6 +42,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       id: `${this._representationId}_init`,
       isInit: true,
       time: 0,
+      end: 0,
       duration: 0,
       timescale: 1,
       mediaURLs: null,
@@ -77,6 +78,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
           id: `${this._representationId}_${wantedSegment.time}`,
           isInit: false,
           time: wantedSegment.time,
+          end: wantedSegment.time + wantedSegment.duration,
           duration: wantedSegment.duration,
           timescale: 1,
           timestampOffset: wantedSegment.timestampOffset,
@@ -196,11 +198,5 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       return;
     }
     return this._replace(newIndex);
-  }
-
-  _addSegments() : void {
-    if (__DEV__) {
-      log.warn("Tried to add Segments to a local Manifest RepresentationIndex");
-    }
   }
 }

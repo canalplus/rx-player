@@ -31,11 +31,12 @@ export default function getInitSegment(
   return { id: "init",
            isInit: true,
            time: 0,
+           end: 0,
            duration: 0,
+           timescale: 1,
            range: initialization != null ? initialization.range :
                                            undefined,
            indexRange: index.indexRange,
            mediaURLs: initialization?.mediaURLs ?? null,
-           timescale: index.timescale,
            timestampOffset: -(index.indexTimeOffset / index.timescale) };
 }
