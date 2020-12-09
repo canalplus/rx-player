@@ -17,6 +17,8 @@
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
+  concat as observableConcat,
+  defer as observableDefer,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -24,6 +26,7 @@ import {
   Subject,
 } from "rxjs";
 import {
+  catchError,
   exhaustMap,
   finalize,
   ignoreElements,
@@ -40,7 +43,9 @@ import {
 } from "rxjs/operators";
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
+import { ICustomError } from "../../errors";
 import log from "../../log";
+import Manifest from "../../manifest";
 import {
   ILoadedManifest,
   ITransportPipelines,
@@ -228,217 +233,273 @@ export default function InitializeOnMediaSource(
   /** Choose the right "Representation" for a given "Adaptation". */
   const abrManager = new ABRManager(adaptiveOptions);
 
-  /**
-   * Create and open a new MediaSource object on the given media element on
-   * subscription.
-   * Multiple concurrent subscriptions on this Observable will obtain the same
-   * created MediaSource.
-   * The MediaSource will be closed when subscriptions are down to 0.
-   */
-  const openMediaSource$ = openMediaSource(mediaElement).pipe(
-    shareReplay({ refCount: true })
-  );
-
-  /** Send content protection data to the `EMEManager`. */
-  const protectedSegments$ = new Subject<IContentProtection>();
-
-  /** Create `EMEManager`, an observable which will handle content DRM. */
-  const emeManager$ = createEMEManager(mediaElement,
-                                       keySystems,
-                                       protectedSegments$).pipe(
-    // Because multiple Observables here depend on this Observable as a source,
-    // we prefer deferring Subscription until those Observables are themselves
-    // all subscribed to.
-    // This is needed because `emeManager$` might send events synchronously
-    // on subscription. In that case, it might communicate those events directly
-    // after the first Subscription is done, making the next subscription miss
-    // out on those events, even if that second subscription is done
-    // synchronously after the first one.
-    // By calling `deferSubscriptions`, we ensure that subscription to
-    // `emeManager$` effectively starts after a very short delay, thus
-    // ensuring that no such race condition can occur.
-    deferSubscriptions(),
-    share());
-
-  /**
-   * Translate errors coming from the media element into RxPlayer errors
-   * through a throwing Observable.
-   */
-  const mediaError$ = throwOnMediaError(mediaElement);
-
   const initialManifestRequest$ = (initialManifest === undefined ?
     fetchManifest(url, { previousManifest: null, unsafeMode: false }) :
     manifestFetcher.parse(initialManifest, { previousManifest: null,
                                              unsafeMode: false })
   );
 
-  /**
-   * Wait for the MediaKeys to have been created before
-   * opening MediaSource, and ask EME to attach MediaKeys.
-   */
-  const prepareMediaSource$ = emeManager$.pipe(
-    mergeMap((evt) => {
-      switch (evt.type) {
-        case "eme-disabled":
-        case "attached-media-keys":
-          return observableOf(undefined);
-        case "created-media-keys":
-          return openMediaSource$.pipe(mergeMap(() => {
-            evt.value.attachMediaKeys$.next();
+  function startContentPlayback(lastManifest?: Manifest) {
+    /**
+     * Create and open a new MediaSource object on the given media element on
+     * subscription.
+     * Multiple concurrent subscriptions on this Observable will obtain the same
+     * created MediaSource.
+     * The MediaSource will be closed when subscriptions are down to 0.
+     */
+    const openMediaSource$ = openMediaSource(mediaElement).pipe(
+      shareReplay({ refCount: true })
+    );
 
-            const shouldDisableLock = evt.value.mediaKeysInfos.keySystemOptions
-              .disableMediaKeysAttachmentLock === true;
-            if (shouldDisableLock) {
-              return observableOf(undefined);
-            }
-            // wait for "attached-media-keys"
+    /** Send content protection data to the `EMEManager`. */
+    const protectedSegments$ = new Subject<IContentProtection>();
+
+    /** Create `EMEManager`, an observable which will handle content DRM. */
+    const emeManager$ = createEMEManager(mediaElement,
+                                         keySystems,
+                                         protectedSegments$).pipe(
+      // Because multiple Observables here depend on this Observable as a source,
+      // we prefer deferring Subscription until those Observables are themselves
+      // all subscribed to.
+      // This is needed because `emeManager$` might send events synchronously
+      // on subscription. In that case, it might communicate those events directly
+      // after the first Subscription is done, making the next subscription miss
+      // out on those events, even if that second subscription is done
+      // synchronously after the first one.
+      // By calling `deferSubscriptions`, we ensure that subscription to
+      // `emeManager$` effectively starts after a very short delay, thus
+      // ensuring that no such race condition can occur.
+      deferSubscriptions(),
+      share());
+
+    /**
+     * Translate errors coming from the media element into RxPlayer errors
+     * through a throwing Observable.
+     */
+    const mediaError$ = throwOnMediaError(mediaElement);
+
+    /**
+     * Wait for the MediaKeys to have been created before
+     * opening MediaSource, and ask EME to attach MediaKeys.
+     */
+    const prepareMediaSource$ = emeManager$.pipe(
+      mergeMap((evt) => {
+        switch (evt.type) {
+          case "eme-disabled":
+          case "attached-media-keys":
+            return observableOf(undefined);
+          case "created-media-keys":
+            return openMediaSource$.pipe(mergeMap(() => {
+              evt.value.attachMediaKeys$.next();
+
+              const shouldDisableLock = evt.value.mediaKeysInfos.keySystemOptions
+                .disableMediaKeysAttachmentLock === true;
+              if (shouldDisableLock) {
+                return observableOf(undefined);
+              }
+              // wait for "attached-media-keys"
+              return EMPTY;
+            }));
+          default:
             return EMPTY;
-          }));
-        default:
-          return EMPTY;
-      }
-    }),
-    take(1),
-    exhaustMap(() => openMediaSource$)
-  );
+        }
+      }),
+      take(1),
+      exhaustMap(() => openMediaSource$)
+    );
 
-  /** Load and play the content asked. */
-  const loadContent$ = observableCombineLatest([initialManifestRequest$,
-                                                prepareMediaSource$]).pipe(
-    mergeMap(([manifestEvt, initialMediaSource]) => {
-      if (manifestEvt.type === "warning") {
-        return observableOf(manifestEvt);
-      }
+    const manifestEvt$ = lastManifest ?
+      observableOf({ type: "manifest" as const,
+                     manifest: lastManifest,
+                     parsingTime: Date.now() }) :
+      initialManifestRequest$;
 
-      const { manifest } = manifestEvt;
+    /** Load and play the content asked. */
+    const loadContent$ = observableCombineLatest([manifestEvt$,
+                                                  prepareMediaSource$]).pipe(
+      mergeMap(([manifestEvt, initialMediaSource]) => {
+        if (manifestEvt.type === "warning") {
+          return observableOf(manifestEvt);
+        }
 
-      log.debug("Init: Calculating initial time");
-      const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
-      log.debug("Init: Initial time calculated:", initialTime);
+        const { manifest } = manifestEvt;
 
-      const mediaSourceLoader = createMediaSourceLoader({
-        abrManager,
-        bufferOptions: objectAssign({ textTrackOptions }, bufferOptions),
-        clock$,
-        manifest,
-        mediaElement,
-        segmentFetcherCreator,
-        speed$,
-      });
+        log.debug("Init: Calculating initial time");
+        const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
+        log.debug("Init: Initial time calculated:", initialTime);
 
-      // handle initial load and reloads
-      const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,
-                                                          initialTime,
-                                                          autoPlay);
+        const mediaSourceLoader = createMediaSourceLoader({
+          abrManager,
+          bufferOptions: objectAssign({ textTrackOptions }, bufferOptions),
+          clock$,
+          manifest,
+          mediaElement,
+          segmentFetcherCreator,
+          speed$,
+        });
 
-      // Emit when we want to manually update the manifest.
-      const scheduleRefresh$ = new Subject<IManifestRefreshSchedulerEvent>();
+        // handle initial load and reloads
+        const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,
+                                                            initialTime,
+                                                            autoPlay);
 
-      const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
-                                                        initialManifest: manifestEvt,
-                                                        manifestUpdateUrl,
-                                                        minimumManifestUpdateInterval,
-                                                        scheduleRefresh$ });
+        // Emit when we want to manually update the manifest.
+        const scheduleRefresh$ = new Subject<IManifestRefreshSchedulerEvent>();
 
-      const manifestEvents$ = observableMerge(
-        fromEvent(manifest, "manifestUpdate")
-          .pipe(mapTo(EVENTS.manifestUpdate())),
-        fromEvent(manifest, "decipherabilityUpdate")
-          .pipe(map(EVENTS.decipherabilityUpdate)));
+        const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
+                                                          initialManifest: manifestEvt,
+                                                          manifestUpdateUrl,
+                                                          minimumManifestUpdateInterval,
+                                                          scheduleRefresh$ });
 
-      const setUndecipherableRepresentations$ = emeManager$.pipe(
-        tap((evt) => {
-          if (evt.type === "blacklist-keys") {
-            log.info("Init: blacklisting Representations based on keyIDs");
-            manifest.addUndecipherableKIDs(evt.value);
-          } else if (evt.type === "blacklist-protection-data") {
-            log.info("Init: blacklisting Representations based on protection data.");
-            manifest.addUndecipherableProtectionData(evt.value.type,
-                                                     evt.value.data);
-          }
-        }),
-        ignoreElements());
+        const manifestEvents$ = observableMerge(
+          fromEvent(manifest, "manifestUpdate")
+            .pipe(mapTo(EVENTS.manifestUpdate())),
+          fromEvent(manifest, "decipherabilityUpdate")
+            .pipe(map(EVENTS.decipherabilityUpdate)));
 
-      return observableMerge(manifestEvents$,
-                             manifestUpdate$,
-                             setUndecipherableRepresentations$,
-                             recursiveLoad$)
-        .pipe(startWith(EVENTS.manifestReady(manifest)),
-              finalize(() => { scheduleRefresh$.complete(); }));
+        const setUndecipherableRepresentations$ = emeManager$.pipe(
+          tap((evt) => {
+            if (evt.type === "blacklist-keys") {
+              log.info("Init: blacklisting Representations based on keyIDs");
+              manifest.addUndecipherableKIDs(evt.value);
+            } else if (evt.type === "blacklist-protection-data") {
+              log.info("Init: blacklisting Representations based on protection data.");
+              manifest.addUndecipherableProtectionData(evt.value.type,
+                                                       evt.value.data);
+            }
+          }),
+          ignoreElements());
 
-      /**
-       * Load the content defined by the Manifest in the mediaSource given at the
-       * given position and playing status.
-       * This function recursively re-call itself when a MediaSource reload is
-       * wanted.
-       * @param {MediaSource} mediaSource
-       * @param {number} startingPos
-       * @param {boolean} shouldPlay
-       * @returns {Observable}
-       */
-      function recursivelyLoadOnMediaSource(
-        mediaSource : MediaSource,
-        startingPos : number,
-        shouldPlay : boolean
-      ) : Observable<IInitEvent> {
-        const reloadMediaSource$ = new Subject<{ position : number;
-                                                 isPaused : boolean; }>();
-        const mediaSourceLoader$ = mediaSourceLoader(mediaSource, startingPos, shouldPlay)
-          .pipe(filterMap<IMediaSourceLoaderEvent, IInitEvent, null>((evt) => {
-            switch (evt.type) {
-              case "needs-manifest-refresh":
-                scheduleRefresh$.next({ completeRefresh: false,
-                                        canUseUnsafeMode: true });
-                return null;
-              case "manifest-might-be-out-of-sync":
-                scheduleRefresh$.next({
-                  completeRefresh: true,
-                  canUseUnsafeMode: false,
-                  delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
-                });
-                return null;
-              case "needs-media-source-reload":
-                reloadMediaSource$.next(evt.value);
-                return null;
-              case "needs-decipherability-flush":
-                const keySystem = getCurrentKeySystem(mediaElement);
-                if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem)) {
+        return observableMerge(manifestEvents$,
+                               manifestUpdate$,
+                               setUndecipherableRepresentations$,
+                               recursiveLoad$)
+          .pipe(startWith(EVENTS.manifestReady(manifest)),
+                finalize(() => { scheduleRefresh$.complete(); }));
+
+        /**
+         * Load the content defined by the Manifest in the mediaSource given at the
+         * given position and playing status.
+         * This function recursively re-call itself when a MediaSource reload is
+         * wanted.
+         * @param {MediaSource} mediaSource
+         * @param {number} startingPos
+         * @param {boolean} shouldPlay
+         * @returns {Observable}
+         */
+        function recursivelyLoadOnMediaSource(
+          mediaSource : MediaSource,
+          startingPos : number,
+          shouldPlay : boolean
+        ) : Observable<IInitEvent> {
+          const reloadMediaSource$ = new Subject<{ position : number;
+                                                   isPaused : boolean; }>();
+          const mediaSourceLoader$ = mediaSourceLoader(mediaSource,
+                                                       startingPos,
+                                                       shouldPlay)
+            .pipe(filterMap<IMediaSourceLoaderEvent, IInitEvent, null>((evt) => {
+              switch (evt.type) {
+                case "needs-manifest-refresh":
+                  scheduleRefresh$.next({ completeRefresh: false,
+                                          canUseUnsafeMode: true });
+                  return null;
+                case "manifest-might-be-out-of-sync":
+                  scheduleRefresh$.next({
+                    completeRefresh: true,
+                    canUseUnsafeMode: false,
+                    delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
+                  });
+                  return null;
+                case "needs-media-source-reload":
                   reloadMediaSource$.next(evt.value);
                   return null;
-                }
+                case "needs-decipherability-flush":
+                  const keySystem = getCurrentKeySystem(mediaElement);
+                  if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem)) {
+                    reloadMediaSource$.next(evt.value);
+                    return null;
+                  }
 
-                // simple seek close to the current position
-                // to flush the buffers
-                const { position } = evt.value;
-                if (position + 0.001 < evt.value.duration) {
-                  mediaElement.currentTime += 0.001;
-                } else {
-                  mediaElement.currentTime = position;
-                }
-                return null;
-              case "protected-segment":
-                protectedSegments$.next(evt.value);
-                return null;
-            }
-            return evt;
-          }, null));
+                  // simple seek close to the current position
+                  // to flush the buffers
+                  const { position } = evt.value;
+                  if (position + 0.001 < evt.value.duration) {
+                    mediaElement.currentTime += 0.001;
+                  } else {
+                    mediaElement.currentTime = position;
+                  }
+                  return null;
+                case "protected-segment":
+                  protectedSegments$.next(evt.value);
+                  return null;
+              }
+              return evt;
+            }, null));
 
-        const currentLoad$ =
-          mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
+          const currentLoad$ =
+            mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
 
-        const handleReloads$ = reloadMediaSource$.pipe(
-          switchMap(({ position, isPaused }) => {
-            return openMediaSource(mediaElement).pipe(
-              mergeMap(newMS => recursivelyLoadOnMediaSource(newMS,
-                                                             position,
-                                                             !isPaused)),
-              startWith(EVENTS.reloadingMediaSource())
-            );
-          }));
+          const handleReloads$ = reloadMediaSource$.pipe(
+            switchMap(({ position, isPaused }) => {
+              return openMediaSource(mediaElement).pipe(
+                mergeMap(newMS => recursivelyLoadOnMediaSource(newMS,
+                                                               position,
+                                                               !isPaused)),
+                startWith(EVENTS.reloadingMediaSource())
+              );
+            }));
 
-        return observableMerge(handleReloads$, currentLoad$);
-      }
-    }));
+          return observableMerge(handleReloads$, currentLoad$);
+        }
+      }));
 
-  return observableMerge(loadContent$, mediaError$, emeManager$);
+    return observableMerge(loadContent$, mediaError$, emeManager$);
+  }
+
+  /**
+   * Start playback on content.
+   * If an error is encountered, first send back an event
+   * to API with a reload function. If the reload callback
+   * is triggered, do not throw the error but reload playback.
+   * @param {Manifest|undefined} manifest
+   * @returns {Observable}
+   */
+  function recursivelyInitializeOnMediaSource(
+    manifest?: Manifest
+  ): Observable<IInitEvent> {
+    let lastManifest: undefined | Manifest;
+    return observableDefer(() => {
+      return startContentPlayback(manifest).pipe(
+        tap((evt) => {
+          if (evt.type === "manifestReady") {
+            lastManifest = evt.value.manifest;
+          }
+        }),
+        catchError((error: ICustomError) => {
+          let wantsToReload = false;
+          const tryToReload = () => {
+            log.warn("Init: Reload on media source.");
+            wantsToReload = true;
+          };
+          return observableConcat(
+            observableOf({ type: "init-error" as const,
+                           value: { error,
+                                    tryToReload } }),
+            observableDefer(() => {
+              if (wantsToReload) {
+                return observableConcat(
+                  observableOf(EVENTS.warning(error)),
+                  recursivelyInitializeOnMediaSource(lastManifest)
+                );
+              }
+              throw error;
+            })
+          );
+        })
+      );
+    });
+  }
+
+  return recursivelyInitializeOnMediaSource();
 }

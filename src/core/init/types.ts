@@ -123,6 +123,10 @@ export interface ILoadedEvent { type : "loaded";
                                   segmentBuffersStore: SegmentBuffersStore | null;
                                 }; }
 
+export interface IInitErrorEvent { type: "init-error";
+                                     value: { error: ICustomError;
+                                              tryToReload: () => void; }; }
+
 export { IRepresentationChangeEvent };
 
 /** Events emitted by a `MediaSourceLoader`. */
@@ -156,6 +160,7 @@ export type IInitEvent = IManifestReadyEvent |
                          IDecipherabilityUpdateEvent |
                          IWarningEvent |
                          IEMEDisabledEvent |
+                         IInitErrorEvent |
 
                          // Coming from the `EMEManager`
 
