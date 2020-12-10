@@ -85,9 +85,9 @@ export function getIndexSegmentEnd(
  */
 export function toIndexTime(
   time : number,
-  indexOptions : { timescale : number; indexTimeOffset : number }
+  indexOptions : { timescale : number; indexTimeOffset? : number }
 ) : number {
-  return time * indexOptions.timescale + indexOptions.indexTimeOffset;
+  return time * indexOptions.timescale + (indexOptions.indexTimeOffset ?? 0);
 }
 
 /**
@@ -99,9 +99,9 @@ export function toIndexTime(
  */
 export function fromIndexTime(
   time : number,
-  indexOptions : { timescale : number; indexTimeOffset : number }
+  indexOptions : { timescale : number; indexTimeOffset? : number }
 ) : number {
-  return (time - indexOptions.indexTimeOffset) / indexOptions.timescale;
+  return (time - (indexOptions.indexTimeOffset ?? 0)) / indexOptions.timescale;
 }
 
 /**
@@ -119,4 +119,74 @@ export function getTimescaledRange(
 ) : [number, number] {
   return [ start * timescale,
            (start + duration) * timescale ];
+}
+
+/**
+ * Get index of the last segment in the timeline starting before/at the given
+ * timescaled time.
+ * Returns -1 if the given time is lower than the start of the first available
+ * segment.
+ * @param {Object} index
+ * @param {Number} timeTScaled
+ * @returns {Number}
+ */
+function getIndexOfLastObjectBefore(
+  timeline : IIndexSegment[],
+  timeTScaled : number
+) : number {
+  let low = 0;
+  let high = timeline.length;
+
+  while (low < high) {
+    const mid = (low + high) >>> 1; // Divide by two + floor
+    if (timeline[mid].start <= timeTScaled) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low - 1;
+}
+
+/**
+ * @param {number} timeSec
+ * @returns {number|null}
+ */
+export function checkDiscontinuity(
+  index : { timeline : IIndexSegment[];
+            timescale : number;
+            indexTimeOffset? : number; },
+  timeSec : number,
+  maxPosition? : number
+) : number | null {
+  const { timeline } = index;
+  const scaledTime = toIndexTime(timeSec, index);
+
+  if (scaledTime < 0) {
+    return null;
+  }
+
+  const segmentIndex = getIndexOfLastObjectBefore(timeline, scaledTime);
+  if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
+    return null;
+  }
+
+  const timelineItem = timeline[segmentIndex];
+  if (timelineItem.duration <= 0) {
+    return null;
+  }
+
+  const nextTimelineItem = timeline[segmentIndex + 1];
+  if (nextTimelineItem === undefined) {
+    return null;
+  }
+
+  const nextStart = nextTimelineItem.start;
+  const segmentEnd = getIndexSegmentEnd(timelineItem,
+                                        nextTimelineItem,
+                                        maxPosition);
+  return scaledTime >= segmentEnd &&
+         scaledTime < nextStart ? fromIndexTime(nextStart, index) :
+                                  null;
 }

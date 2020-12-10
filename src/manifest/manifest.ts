@@ -367,6 +367,19 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
+   * Returns the Period encountered at the given time if one, or the next Period
+   * if that time is between two Periods.
+   * Returns `undefined` if there is no Period at or after that time.
+   * @param {number} time
+   * @returns {Object|undefined}
+   */
+  public getNextPeriod(time : number) : Period | undefined {
+    return arrayFind(this.periods, (period) => {
+      return period.end === undefined || period.end > time;
+    });
+  }
+
+  /**
    * Returns the Period coming chronologically just after another given Period.
    * Returns `undefined` if not found.
    * @param {Object} period

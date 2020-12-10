@@ -55,6 +55,11 @@ describe("manifest - StaticRepresentationIndex", () => {
     expect(staticRI.checkDiscontinuity()).toBe(null);
   });
 
+  it("should always be chronologically generated", () => {
+    const staticRI = new StaticRepresentationIndex({ media: "foo" });
+    expect(staticRI.areSegmentsChronologicallyGenerated()).toBe(true);
+  });
+
   it("should never replace and warn when trying to do so", () => {
     const spy = jest.fn();
     jest.spyOn(log, "warn").mockImplementation(spy);

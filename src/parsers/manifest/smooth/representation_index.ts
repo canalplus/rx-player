@@ -24,7 +24,10 @@ import {
   ISegment,
 } from "../../../manifest";
 import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
-import { getIndexSegmentEnd } from "../utils/index_helpers";
+import {
+  checkDiscontinuity,
+  getIndexSegmentEnd,
+} from "../utils/index_helpers";
 import isSegmentStillAvailable from "../utils/is_segment_still_available";
 import updateSegmentTimeline from "../utils/update_segment_timeline";
 import addSegmentInfos from "./utils/add_segment_infos";
@@ -42,31 +45,6 @@ interface ITimelineIndex { presentationTimeOffset? : number;
                            isLive : boolean;
                            timeShiftBufferDepth? : number;
                            manifestReceivedTime? : number; }
-
-/**
- * Get index of the segment containing the given timescaled timestamp.
- * @param {Object} index
- * @param {Number} start
- * @returns {Number}
- */
-function getSegmentIndex(index : ITimelineIndex, start : number) : number {
-  const { timeline } = index;
-
-  let low = 0;
-  let high = timeline.length;
-
-  while (low < high) {
-    const mid = (low + high) >>> 1;
-    if (timeline[mid].start < start) {
-      low = mid + 1;
-    } else {
-      high = mid;
-    }
-  }
-
-  return (low > 0) ? low - 1 :
-                     low;
-}
 
 /**
  * @param {Number} start
@@ -402,47 +380,19 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Checks if the time given is in a discontinuity. That is:
-   *   - We're on the upper bound of the current range (end of the range - time
-   *     is inferior to the timescale)
-   *   - The next range starts after the end of the current range.
-   *
-   * @param {Number} timeSec
-   * @returns {Number|null}
+   * @param {number} timeSec
+   * @returns {number|null}
    */
   checkDiscontinuity(timeSec : number) : number | null {
     this._refreshTimeline();
-    const index = this._index;
-    const { timeline, timescale = 1 } = index;
-    const timeTScaled = timeSec * timescale;
+    return checkDiscontinuity(this._index, timeSec, undefined);
+  }
 
-    if (timeTScaled <= 0) {
-      return null;
-    }
-
-    const segmentIndex = getSegmentIndex(index, timeTScaled);
-    if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
-      return null;
-    }
-
-    const range = timeline[segmentIndex];
-    if (range.duration === -1) {
-      return null;
-    }
-
-    const rangeUp = range.start;
-    const rangeTo = getIndexSegmentEnd(range, null);
-    const nextRange = timeline[segmentIndex + 1];
-
-    // when we are actually inside the found range and this range has
-    // an explicit discontinuity with the next one
-    if (rangeTo < nextRange.start &&
-        timeTScaled >= rangeUp &&
-        (rangeTo - timeTScaled) < timescale) {
-      return nextRange.start / timescale;
-    }
-
-    return null;
+  /**
+   * @returns {boolean}
+   */
+  areSegmentsChronologicallyGenerated() : true {
+    return true;
   }
 
   isSegmentStillAvailable(segment : ISegment) : boolean | undefined {

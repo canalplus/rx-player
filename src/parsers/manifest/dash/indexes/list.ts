@@ -239,12 +239,20 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     return true;
   }
 
+
   /**
    * We do not check for discontinuity in SegmentList-based indexes.
    * @returns {null}
    */
   checkDiscontinuity() : null {
     return null;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  areSegmentsChronologicallyGenerated() : boolean {
+    return true;
   }
 
   /**

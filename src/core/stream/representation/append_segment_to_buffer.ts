@@ -34,9 +34,9 @@ import {
 import forceGarbageCollection from "./force_garbage_collection";
 
 /**
- * Append buffer to the given segmentBuffer.
+ * Append a segment to the given segmentBuffer.
  * If it leads to a QuotaExceededError, try to run our custom range
- * _garbage collector_.
+ * _garbage collector_ then retry.
  *
  * @param {Observable} clock$
  * @param {Object} segmentBuffer

@@ -146,6 +146,13 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * @returns {boolean}
+   */
+  areSegmentsChronologicallyGenerated() : boolean {
+    return false;
+  }
+
+  /**
    * @returns {Boolean}
    */
   isInitialized() : true {

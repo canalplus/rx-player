@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-import { IStallingItem } from "./get_stalled_events";
 import InitializeOnMediaSource, {
   IInitializeArguments,
 } from "./initialize_media_source";
 export * from "./types";
 
 export default InitializeOnMediaSource;
-export {
-  IInitializeArguments,
-  IStallingItem,
-};
+export { IInitializeArguments };

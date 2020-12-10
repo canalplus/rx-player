@@ -17,16 +17,13 @@
 import {
   combineLatest as observableCombineLatest,
   Observable,
+  of as observableOf,
 } from "rxjs";
-import {
-  filter,
-  map,
-} from "rxjs/operators";
+import { mergeMap } from "rxjs/operators";
 import log from "../../../log";
 import { Period } from "../../../manifest";
 import { IBufferType } from "../../segment_buffers";
-import EVENTS from "../events_generators";
-import { IStreamDownloadFinished } from "../types";
+import { IStreamStatusEvent } from "../types";
 
 /**
  * Create empty AdaptationStream Observable, linked to a Period.
@@ -44,15 +41,24 @@ export default function createEmptyAdaptationStream(
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,
   content : { period : Period }
-) : Observable<IStreamDownloadFinished> {
+) : Observable<IStreamStatusEvent> {
   const { period } = content;
+  let hasFinishedLoading = false;
   return observableCombineLatest([streamClock$, wantedBufferAhead$]).pipe(
-    filter(([clockTick, wantedBufferAhead]) =>
-      period.end != null && clockTick.position + wantedBufferAhead >= period.end
-    ),
-    map(() => {
-      log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
-      return EVENTS.downloadFinished(bufferType);
+    mergeMap(([clockTick, wantedBufferAhead]) => {
+      const { position } = clockTick;
+      if (period.end !== undefined && position + wantedBufferAhead >= period.end) {
+        log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
+        hasFinishedLoading = true;
+      }
+      return observableOf({ type: "stream-status" as const,
+                            value: { period,
+                                     bufferType,
+                                     position: clockTick.position,
+                                     imminentDiscontinuity: null,
+                                     hasFinishedLoading,
+                                     neededSegments: [],
+                                     shouldRefreshManifest: false } });
     })
   );
 }

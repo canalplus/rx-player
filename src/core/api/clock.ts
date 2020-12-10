@@ -87,6 +87,11 @@ export interface IStalledStatus {
            "buffering"; // Other cases
   /** `performance.now` at the time the stalling happened. */
   timestamp : number;
+  /**
+   * Position, in seconds, at which data is awaited.
+   * If `null` the player is stalled but not because it is awaiting future data.
+   */
+  position : number | null;
 }
 
 /** Information emitted on each clock tick. */
@@ -232,22 +237,34 @@ function getStalledStatus(
                     prevStalled === null &&
                     !(fullyLoaded || ended));
 
+  let stalledPosition : number | null = null;
   let shouldStall : boolean | undefined;
   let shouldUnstall : boolean | undefined;
 
+  const stallGap = lowLatencyMode ? STALL_GAP.LOW_LATENCY :
+                                    STALL_GAP.DEFAULT;
+
   if (withMediaSource) {
-    if (canStall &&
-        (bufferGap <= (lowLatencyMode ? STALL_GAP.LOW_LATENCY : STALL_GAP.DEFAULT) ||
-         bufferGap === Infinity || readyState === 1)
-    ) {
-      shouldStall = true;
-    } else if (prevStalled !== null &&
-               readyState > 1 &&
-               ((bufferGap < Infinity &&
-                 bufferGap > getResumeGap(prevStalled, lowLatencyMode)) ||
-                fullyLoaded || ended)
-    ) {
-      shouldUnstall = true;
+    if (canStall) {
+      if (bufferGap <= stallGap) {
+        shouldStall = true;
+        stalledPosition = currentTime + bufferGap;
+      } else if (bufferGap === Infinity) {
+        shouldStall = true;
+        stalledPosition = currentTime;
+      } else if (readyState === 1) {
+        shouldStall = true;
+      }
+    } else if (prevStalled !== null) {
+      const resumeGap = getResumeGap(prevStalled, lowLatencyMode);
+      if (shouldStall !== true && prevStalled !== null && readyState > 1 &&
+          (fullyLoaded || ended || (bufferGap < Infinity && bufferGap > resumeGap)))
+      {
+        shouldUnstall = true;
+      } else if (bufferGap === Infinity || bufferGap <= resumeGap) {
+        stalledPosition = bufferGap === Infinity ? currentTime :
+                                                   currentTime + bufferGap;
+      }
     }
   }
 
@@ -286,10 +303,13 @@ function getStalledStatus(
       reason = "buffering";
     }
     if (prevStalled !== null && prevStalled.reason === reason) {
-      return prevStalled;
+      return { reason: prevStalled.reason,
+               timestamp: prevStalled.timestamp,
+               position: stalledPosition };
     }
     return { reason,
-             timestamp: performance.now() };
+             timestamp: performance.now(),
+             position: stalledPosition };
   }
   return null;
 }

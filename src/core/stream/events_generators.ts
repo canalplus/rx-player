@@ -36,11 +36,8 @@ import {
   IProtectedSegmentEvent,
   IRepresentationChangeEvent,
   IResumeStreamEvent,
-  IStreamDownloadFinished,
-  IStreamDownloadingActive,
   IStreamEventAddedSegment,
   IStreamManifestMightBeOutOfSync,
-  IStreamNeedsDiscontinuitySeek,
   IStreamNeedsManifestRefresh,
   IStreamTerminatingEvent,
   IStreamWarningEvent,
@@ -89,24 +86,6 @@ const EVENTS = {
   streamComplete(bufferType: IBufferType) : ICompletedStreamEvent {
     return { type: "complete-stream",
              value: { type: bufferType } };
-  },
-
-  discontinuityEncountered(
-    gap : [number, number],
-    bufferType : IBufferType
-  ) : IStreamNeedsDiscontinuitySeek {
-    return { type : "discontinuity-encountered",
-             value : { bufferType, gap } };
-  },
-
-  downloadFinished(bufferType : IBufferType) : IStreamDownloadFinished {
-    return { type: "download-finished",
-             value: { bufferType } };
-  },
-
-  downloadingActive(bufferType: IBufferType) : IStreamDownloadingActive {
-    return { type: "downloading-segments",
-             value: { bufferType } };
   },
 
   endOfStream() : IEndOfStreamEvent {

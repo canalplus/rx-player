@@ -817,9 +817,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     /** Emit an object when the player "stalls" and null when it un-stalls */
     const stalled$ = playback$.pipe(
-      filter((evt) : evt is IStalledEvent => evt.type === "stalled"),
-      map(x => x.value)
-    );
+      filter((evt) : evt is IStalledEvent => evt.type === "stalled" ||
+                                             evt.type === "unstalled"),
+      map(x => x.value),
+      distinctUntilChanged((wasStalled, isStalled) => {
+        return wasStalled === null && isStalled === null ||
+               (wasStalled !== null && isStalled !== null &&
+                wasStalled.reason === isStalled.reason);
+      }));
 
     /** Emit when the content is considered "loaded". */
     const loaded$ = playback$.pipe(

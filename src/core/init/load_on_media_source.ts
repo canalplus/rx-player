@@ -25,10 +25,8 @@ import {
   filter,
   finalize,
   ignoreElements,
-  map,
   mergeMap,
   takeUntil,
-  tap,
 } from "rxjs/operators";
 import { MediaError } from "../../errors";
 import log from "../../log";
@@ -43,10 +41,10 @@ import { setDurationToMediaSource } from "./create_media_source";
 import createStreamClock from "./create_stream_clock";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
-import getDiscontinuities from "./get_discontinuities";
-import getStalledEvents from "./get_stalled_events";
-import handleDiscontinuity from "./handle_discontinuity";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
+import StallAvoider, {
+  IDiscontinuityEvent,
+} from "./stall_avoider";
 import streamEventsEmitter from "./stream_events_emitter";
 import {
   IInitClockTick,
@@ -107,7 +105,7 @@ export default function createMediaSourceLoader(
                                        manifest.getMaximumPosition();
     setDurationToMediaSource(mediaSource, duration);
 
-    const initialPeriod = manifest.getPeriodForTime(initialTime);
+    const initialPeriod = manifest.getNextPeriod(initialTime);
     if (initialPeriod == null) {
       throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
                            "Wanted starting time not found in the Manifest.");
@@ -135,8 +133,11 @@ export default function createMediaSourceLoader(
                                                      speed$,
                                                      startTime: initialTime });
 
-    // Will be used to cancel any endOfStream tries when the contents resume
+    /** Cancel endOfStream calls when streams become active again. */
     const cancelEndOfStream$ = new Subject<null>();
+
+    /** Emits discontinuities detected by the StreamOrchestrator. */
+    const discontinuities$ = new Subject<IDiscontinuityEvent>();
 
     // Creates Observable which will manage every Stream for the given Content.
     const streams$ = StreamOrchestrator({ manifest, initialPeriod },
@@ -157,11 +158,12 @@ export default function createMediaSourceLoader(
             log.debug("Init: resume-stream order received.");
             cancelEndOfStream$.next(null);
             return EMPTY;
-          case "discontinuity-encountered":
-            const { bufferType, gap } = evt.value;
-            if (SegmentBuffersStore.isNative(bufferType)) {
-              handleDiscontinuity(gap[1], mediaElement);
-            }
+          case "stream-status":
+            const { period, bufferType, imminentDiscontinuity, position } = evt.value;
+            discontinuities$.next({ period,
+                                    bufferType,
+                                    discontinuity: imminentDiscontinuity,
+                                    position });
             return EMPTY;
           default:
             return observableOf(evt);
@@ -169,24 +171,20 @@ export default function createMediaSourceLoader(
       })
     );
 
-    // update the speed set by the user on the media element while pausing a
-    // little longer while the buffer is empty.
+    /**
+     * On subscription, keep the playback speed synchronized to the speed set by
+     * the user on the media element and force a speed of `0` when the buffer is
+     * empty, so it can build back buffer.
+     */
     const playbackRate$ =
       updatePlaybackRate(mediaElement, speed$, clock$, { pauseWhenStalled: true })
         .pipe(ignoreElements());
 
-    // Create Stalling Manager, an observable which will try to get out of
-    // various infinite stalling issues
-    const stalled$ = getStalledEvents(clock$)
-      .pipe(map(EVENTS.stalled));
-
-    const handledDiscontinuities$ = getDiscontinuities(clock$, manifest).pipe(
-      tap((gap) => {
-        const seekTo = gap[1];
-        handleDiscontinuity(seekTo, mediaElement);
-      }),
-      ignoreElements()
-    );
+    /**
+     * Observable trying to avoid various stalling situations, emitting "stalled"
+     * events when it cannot, as well as "unstalled" events when it get out of one.
+     */
+    const stallAvoider$ = StallAvoider(clock$, mediaElement, manifest, discontinuities$);
 
     const loadedEvent$ = load$
       .pipe(mergeMap((evt) => {
@@ -206,14 +204,13 @@ export default function createMediaSourceLoader(
         return observableOf(EVENTS.loaded(segmentBuffersStore));
       }));
 
-    return observableMerge(handledDiscontinuities$,
-                           loadedEvent$,
+    return observableMerge(loadedEvent$,
                            playbackRate$,
-                           stalled$,
+                           stallAvoider$,
                            streams$,
                            streamEvents$
     ).pipe(finalize(() => {
-        // clean-up every created SegmentBuffers
+      // clean-up every created SegmentBuffers
       segmentBuffersStore.disposeAll();
     }));
   };

@@ -269,19 +269,42 @@ export interface IRepresentationIndex {
   canBeOutOfSyncError(error : ICustomError, segment : ISegment) : boolean;
 
   /**
-   * Checks if the given time - in seconds - is in a discontinuity. That is:
-   *
-   *   - We're on the upper bound of the current range (end of the range - time
-   *     is inferior to the timescale)
-   *
-   *   - The next range starts after the end of the current range.
-   *
-   * @param {Number} _time
-   * @returns {Number|null} - If a discontinuity is present, this is the
-   * starting time for the next range.
-   * If not this is equal to `null`.
+   * Checks if the given time - in seconds - is in a discontinuity.
+   * That is a "hole" in the stream with no segment defined.
+   * If that's the case, return the next available position where a segment
+   * should be available.
+   * If that's not the case, return `null`.
    */
   checkDiscontinuity(time : number) : number | null;
+
+  /**
+   * Most RepresentationIndex are linked to segments which are generated in
+   * chronological order: from an initial position (obtainable with
+   * `getFirstPosition`) to the last position of the corresponding Period
+   * (obtainable with `getLastPosition`).
+   *
+   * However, some RepresentationIndex could announce segments in a more random
+   * order.
+   * Examples of such RepresentationIndex are ones for contents which are being
+   * downloaded locally. Here a seek close to the end could schedule the
+   * download of the last segments immediately, which might thus be anounced
+   * in this index before segments in the middle are.
+   *
+   * Knowing this value serves for example to check if a discontinuity
+   * encountered in the content can be skipped over, or if it's possible that
+   * this discontinuity is due to a segment not yet being generated.
+   *
+   * You should return `true` only if there is a chance that segments are not
+   * chronologically generated (even if they all have since been generated, this
+   * function is only to know if it's possible, not if it's the case now).
+   *
+   * In other most likely cases, you should return `false`.
+   *
+   * TODO find a better way with the "local" RepresentationIndex, like
+   * explicitely declaring which segments have not been downloaded yet.
+   * @returns {boolean}
+   */
+  areSegmentsChronologicallyGenerated() : boolean;
 
   /**
    * Returns `true` if the last segments in this index have already been
