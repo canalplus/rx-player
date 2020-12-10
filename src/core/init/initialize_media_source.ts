@@ -239,7 +239,20 @@ export default function InitializeOnMediaSource(
                                              unsafeMode: false })
   );
 
-  function startContentPlayback(lastManifest?: Manifest) {
+  /**
+   * Open the media source and initiate :
+   * - content's Manifest downloading
+   * - EME management
+   * - Adaptation choice handling
+   * - Segments fetching management
+   * @param {Object} playbackInitOptions
+   * @returns {Observable}
+   */
+  function startContentPlayback(
+    playbackInitOptions: { currentManifest?: Manifest;
+                           startPlaybackAt?: IInitialTimeOptions; }
+  ): Observable<IInitEvent> {
+    const { currentManifest, startPlaybackAt } = playbackInitOptions;
     /**
      * Create and open a new MediaSource object on the given media element on
      * subscription.
@@ -308,9 +321,9 @@ export default function InitializeOnMediaSource(
       exhaustMap(() => openMediaSource$)
     );
 
-    const manifestEvt$ = lastManifest ?
+    const manifestEvt$ = currentManifest ?
       observableOf({ type: "manifest" as const,
-                     manifest: lastManifest,
+                     manifest: currentManifest,
                      parsingTime: Date.now() }) :
       initialManifestRequest$;
 
@@ -325,7 +338,7 @@ export default function InitializeOnMediaSource(
         const { manifest } = manifestEvt;
 
         log.debug("Init: Calculating initial time");
-        const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
+        const initialTime = getInitialTime(manifest, lowLatencyMode, startPlaybackAt);
         log.debug("Init: Initial time calculated:", initialTime);
 
         const mediaSourceLoader = createMediaSourceLoader({
@@ -465,32 +478,39 @@ export default function InitializeOnMediaSource(
    * @param {Manifest|undefined} manifest
    * @returns {Observable}
    */
-  function recursivelyInitializeOnMediaSource(
-    manifest?: Manifest
-  ): Observable<IInitEvent> {
-    let lastManifest: undefined | Manifest;
+  function recursivelyStartContentPlayback(contentPlaybackOptions: {
+    currentManifest?: Manifest;
+    startPlaybackAt?: IInitialTimeOptions;
+  }): Observable<IInitEvent> {
+    const { currentManifest, startPlaybackAt } = contentPlaybackOptions;
+    let newManifest: undefined | Manifest = currentManifest;
     return observableDefer(() => {
-      return startContentPlayback(manifest).pipe(
+      return startContentPlayback({ currentManifest, startPlaybackAt }).pipe(
         tap((evt) => {
           if (evt.type === "manifestReady") {
-            lastManifest = evt.value.manifest;
+            newManifest = evt.value.manifest;
           }
         }),
         catchError((error: ICustomError) => {
-          let wantsToReload = false;
-          const tryToReload = () => {
+          let restartAt : undefined | IInitialTimeOptions;
+          const tryToReload = (newPlaybackStartAt?: IInitialTimeOptions) => {
             log.warn("Init: Reload on media source.");
-            wantsToReload = true;
+            if (newPlaybackStartAt !== undefined) {
+              restartAt = newPlaybackStartAt;
+            } else {
+              restartAt = { position: mediaElement.currentTime };
+            }
           };
           return observableConcat(
             observableOf({ type: "init-error" as const,
                            value: { error,
                                     tryToReload } }),
             observableDefer(() => {
-              if (wantsToReload) {
+              if (restartAt !== undefined) {
                 return observableConcat(
                   observableOf(EVENTS.warning(error)),
-                  recursivelyInitializeOnMediaSource(lastManifest)
+                  recursivelyStartContentPlayback({ currentManifest: newManifest,
+                                                    startPlaybackAt: restartAt })
                 );
               }
               throw error;
@@ -501,5 +521,5 @@ export default function InitializeOnMediaSource(
     });
   }
 
-  return recursivelyInitializeOnMediaSource();
+  return recursivelyStartContentPlayback({ startPlaybackAt: startAt });
 }

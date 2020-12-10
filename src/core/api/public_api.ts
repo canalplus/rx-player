@@ -205,8 +205,9 @@ interface IPublicAPIEvent {
   seeked : null;
   streamEvent : IStreamEvent;
   streamEventSkip : IStreamEvent;
-  safeguardError : { error: ICustomError;
-                     tryToReload: () => void; };
+  beforeError : { error: ICustomError;
+                  tryToReload: (startAt?: { position?: number;
+                                            relative?: number; }) => void; };
 }
 
 /**
@@ -2046,7 +2047,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
       case "init-error":
-        this.trigger("safeguardError", event.value);
+        this.trigger("beforeError", event.value);
         break;
       case "stream-event":
         this.trigger("streamEvent", event.value);
