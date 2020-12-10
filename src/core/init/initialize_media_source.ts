@@ -485,7 +485,16 @@ export default function InitializeOnMediaSource(
     const { currentManifest, startPlaybackAt } = contentPlaybackOptions;
     let newManifest: undefined | Manifest = currentManifest;
     return observableDefer(() => {
-      return startContentPlayback({ currentManifest, startPlaybackAt }).pipe(
+      let lastPosition: number | undefined;
+      return observableMerge(
+        clock$.pipe(
+          tap(({ position }) => {
+            lastPosition = position;
+          }),
+          ignoreElements()
+        ),
+        startContentPlayback({ currentManifest, startPlaybackAt })
+      ).pipe(
         tap((evt) => {
           if (evt.type === "manifestReady") {
             newManifest = evt.value.manifest;
@@ -498,7 +507,7 @@ export default function InitializeOnMediaSource(
             if (newPlaybackStartAt !== undefined) {
               restartAt = newPlaybackStartAt;
             } else {
-              restartAt = { position: mediaElement.currentTime };
+              restartAt = { position: lastPosition ?? 0 };
             }
           };
           return observableConcat(
