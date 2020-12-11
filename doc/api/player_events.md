@@ -6,6 +6,7 @@
 - [Overview](#overview)
 - [Basic events](#events-basic)
     - [playerStateChange](#events-playerStateChange)
+    - [beforeError](#events-before-error)
     - [error](#events-error)
     - [warning](#events-warning)
     - [positionUpdate](#events-positionUpdate)
@@ -75,13 +76,55 @@ paused, is rebuffering, is ended or is stopped.
 As it is a central part of our API and can be difficult concept to understand,
 we have a special [page of documentation on player states](./states.md).
 
+<a name="events-before-error"></a>
+### beforeError ################################################################
+
+_payload type_: ``Òbject``
+
+Triggered when a fatal error happened, just before it may be thrown.
+
+A fatal error is an error that led the player to stop playing the current
+content.
+
+Depending on the context, and the error itself, a user may decide to reload the
+content, and at the same time avoid the player to throw the error.
+
+The payload is an object that carries :
+- The ``error`` (type: ``Error``). See [the Player Error documentation]
+(./errors.md) for more information.
+- A ``tryToReload`` callback (type: ``function``). The callback must be called
+at the moment the event is received. The user may need to reload at a specific
+time. The callback takes as an argument the wanted reload position.
+
+#### Example
+```js
+
+player.addEventListener("beforeError", (payload) => {
+  const { error, tryToReload } = payload;
+  if (error.type === "QUOTA_EXCEEDED_ERROR") {
+    // Try to reload by default at the last media position
+    tryToReload();
+  } else if (error.type === "BUFFER_APPEND_ERROR") {
+    // Try to reload 4 secondes after the last media position
+    tryToReload({ relative: +4 });
+  } else if (error.type === "KEY_LOAD_TIMEOUT") {
+    // Try to reload at a given position
+    tryToReload({ position: 0 });
+  }
+  // The error will be thrown, as the user doesn't want to try to reload
+  return;
+});
+```
+
+Note that, if the user tries to reload, the error will be sent back with the
+[warning event](#events-warning)
 
 <a name="events-error"></a>
 ### error ######################################################################
 
 _payload type_: ``Error``
 
-Triggered when a fatal error happened.
+Triggered when a fatal error is thrown.
 
 A fatal error is an error that led the player to stop playing the current
 content.
