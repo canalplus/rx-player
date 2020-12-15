@@ -79,13 +79,14 @@ const generateSegmentLoader = (
 ) : Observable< ISegmentLoaderEvent<Uint8Array|ArrayBuffer|null> > => {
   if (segment.isInit) {
     if (segment.privateInfos === undefined ||
-        segment.privateInfos.smoothInit === undefined)
+        segment.privateInfos.smoothInitSegment === undefined)
     {
       throw new Error("Smooth: Invalid segment format");
     }
-    const smoothInitPrivateInfos = segment.privateInfos.smoothInit;
+    const smoothInitPrivateInfos = segment.privateInfos.smoothInitSegment;
     let responseData : Uint8Array;
     const { codecPrivateData,
+            timescale,
             protection = { keyId: undefined,
                            keySystems: undefined } } = smoothInitPrivateInfos;
 
@@ -95,7 +96,7 @@ const generateSegmentLoader = (
     switch (adaptation.type) {
       case "video": {
         const { width = 0, height = 0 } = representation;
-        responseData = createVideoInitSegment(segment.timescale,
+        responseData = createVideoInitSegment(timescale,
                                               width,
                                               height,
                                               72, 72, 4, // vRes, hRes, nal
@@ -109,7 +110,7 @@ const generateSegmentLoader = (
                 bitsPerSample = 0,
                 packetSize = 0,
                 samplingRate = 0 } = smoothInitPrivateInfos;
-        responseData = createAudioInitSegment(segment.timescale,
+        responseData = createAudioInitSegment(timescale,
                                               channels,
                                               bitsPerSample,
                                               packetSize,
@@ -128,8 +129,7 @@ const generateSegmentLoader = (
 
     return observableOf({ type: "data-created" as const,
                           value: { responseData } });
-  }
-  else if (url === null) {
+  } else if (url === null) {
     return observableOf({ type: "data-created" as const,
                           value: { responseData: null } });
   } else {

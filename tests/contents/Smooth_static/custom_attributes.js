@@ -34,8 +34,8 @@ const manifestInfos = {
                   segments: [
                     {
                       time: 0,
-                      timescale: 10000000,
-                      duration: 20053333,
+                      duration: 20053333 / 10000000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "QualityLevels96000/Fragmentsaudio_und=0"],
                     },
                   ],
@@ -61,8 +61,8 @@ const manifestInfos = {
                   segments: [
                     {
                       time: 0,
-                      timescale: 10000000,
-                      duration: 20000000,
+                      duration: 20000000 / 10000000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "QualityLevels300000,hardwareProfile=1000/Fragmentsvideo=0"],
                     },
                     // ...
@@ -80,8 +80,8 @@ const manifestInfos = {
                   segments: [
                     {
                       time: 0,
-                      timescale: 10000000,
-                      duration: 20000000,
+                      duration: 20000000 / 10000000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "QualityLevels750000,hardwareProfile=2000/Fragmentsvideo=0"],
                     },
                     // ...
@@ -99,8 +99,8 @@ const manifestInfos = {
                   segments: [
                     {
                       time: 0,
-                      timescale: 10000000,
-                      duration: 20000000,
+                      duration: 20000000 / 10000000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "QualityLevels1100000,hardwareProfile=3000/Fragmentsvideo=0"],
                     },
                     // ...
@@ -118,8 +118,8 @@ const manifestInfos = {
                   segments: [
                     {
                       time: 0,
-                      timescale: 10000000,
-                      duration: 20000000,
+                      duration: 20000000 / 10000000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "QualityLevels1500000,hardwareProfile=4000/Fragmentsvideo=0"],
                     },
                     // ...
@@ -137,8 +137,8 @@ const manifestInfos = {
                   segments: [
                     {
                       time: 0,
-                      timescale: 10000000,
-                      duration: 20000000,
+                      duration: 20000000 / 10000000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "QualityLevels2100000,hardwareProfile=5000/Fragmentsvideo=0"],
                     },
                     // ...
@@ -156,8 +156,8 @@ const manifestInfos = {
                   segments: [
                     {
                       time: 0,
-                      timescale: 10000000,
-                      duration: 20000000,
+                      duration: 20000000 / 10000000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "QualityLevels3400000,hardwareProfile=6000/Fragmentsvideo=0"],
                     },
                     // ...
@@ -175,8 +175,8 @@ const manifestInfos = {
                   segments: [
                     {
                       time: 0,
-                      timescale: 10000000,
-                      duration: 20000000,
+                      duration: 20000000 / 10000000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "QualityLevels4000000,hardwareProfile=7000/Fragmentsvideo=0"],
                     },
                     // ...
@@ -194,8 +194,8 @@ const manifestInfos = {
                   segments: [
                     {
                       time: 0,
-                      timescale: 10000000,
-                      duration: 20000000,
+                      duration: 20000000 / 10000000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "QualityLevels5000000,hardwareProfile=8000/Fragmentsvideo=0"],
                     },
                     // ...

@@ -55,11 +55,9 @@ export interface IHTMLTextTrackData {
   data : string;
   /** The format the text track is in (e.g. "ttml" or "vtt") */
   type : string;
-  /** Timescale for the start and end attributes */
-  timescale : number;
-  /** Exact beginning time to which the track applies. */
+  /** Exact beginning time to which the track applies, in seconds. */
   start? : number;
-  /** Exact end time to which the track applies. */
+  /** Exact end time to which the track applies, in seconds. */
   end? : number;
   /**
    * Language the texttrack is in. This is sometimes needed to properly parse
@@ -298,20 +296,14 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer<IHTMLTextTrackD
       return;
     }
 
-    const { timescale,
-            start: timescaledStart,
-            end: timescaledEnd,
+    const { start: startTime,
+            end: endTime,
             data: dataString,
             type,
             language } = chunk;
 
     const appendWindowStart = appendWindow[0] ?? 0;
     const appendWindowEnd = appendWindow[1] ?? Infinity;
-
-    const startTime = timescaledStart !== undefined ? timescaledStart / timescale :
-                                                      undefined;
-    const endTime = timescaledEnd !== undefined ? timescaledEnd / timescale :
-                                                  undefined;
 
     const cues = parseTextTrackToElements(type,
                                           dataString,

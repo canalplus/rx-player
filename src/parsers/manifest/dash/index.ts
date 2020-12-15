@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+import {
+  BaseRepresentationIndex,
+  ListRepresentationIndex,
+  TemplateRepresentationIndex,
+  TimelineRepresentationIndex,
+} from "./indexes";
 import parseFromDocument, {
   IMPDParserResponse,
 } from "./parse_from_document";
@@ -21,4 +27,9 @@ import parseFromDocument, {
 export default parseFromDocument;
 export {
   IMPDParserResponse,
+
+  BaseRepresentationIndex,
+  ListRepresentationIndex,
+  TemplateRepresentationIndex,
+  TimelineRepresentationIndex,
 };

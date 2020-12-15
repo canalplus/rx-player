@@ -19,6 +19,7 @@ import {
   getMDHDTimescale,
   getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
+import { BaseRepresentationIndex } from "../../parsers/manifest/dash";
 import {
   strToUtf8,
   utf8ToStr,
@@ -79,7 +80,10 @@ function parseISOBMFFEmbeddedTextTrack(
     }
 
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    if (sidxSegments !== null && sidxSegments.length > 0) {
+    if (representation.index instanceof BaseRepresentationIndex &&
+        sidxSegments !== null &&
+        sidxSegments.length > 0)
+    {
       representation.index._addSegments(sidxSegments);
     }
     return observableOf({ type: "parsed-init-segment",

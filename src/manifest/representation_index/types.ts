@@ -30,18 +30,44 @@ import {
  * Supplementary information specific to Smooth Initialization segments.
  * Contains every information needed to generate an initialization segment.
  */
-export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
-                                                  bitsPerSample? : number;
-                                                  channels? : number;
-                                                  packetSize? : number;
-                                                  samplingRate? : number;
-                                                  protection? : {
-                                                    keyId : Uint8Array;
-                                                    keySystems : Array<{
-                                                      systemId : string;
-                                                      privateData : Uint8Array;
-                                                    }>;
-                                                  }; }
+export interface ISmoothInitSegmentPrivateInfos {
+  /**
+   * Timescale the segments are in, in the Manifest.
+   * Needed because Smooth segment are created in JS based on timing information
+   * as found in the Manifest.
+   */
+  timescale : number;
+  codecPrivateData? : string;
+  bitsPerSample? : number;
+  channels? : number;
+  packetSize? : number;
+  samplingRate? : number;
+  protection? : {
+    keyId : Uint8Array;
+    keySystems : Array<{
+      systemId : string;
+      privateData : Uint8Array;
+    }>;
+  };
+}
+
+/**
+ * Supplementary information specific to Smooth media segments (that is, every
+ * segments but the initialization segment).
+ * Contains every information needed to generate a media segment.
+ */
+export interface ISmoothSegmentPrivateInfos {
+  /**
+   * Start time of the segment as anounced in the Manifest, in the same
+   * timescale than the one indicated through `ISmoothInitSegmentPrivateInfos`.
+   */
+  time : number;
+  /**
+   * Duration of the segment as anounced in the Manifest, in the same timescale
+   * than the one indicated through `ISmoothInitSegmentPrivateInfos`.
+   */
+  duration : number;
+}
 
 /** Describes a given "real" Manifest for MetaPlaylist's segments. */
 export interface IBaseContentInfos { manifest: Manifest;
@@ -50,10 +76,16 @@ export interface IBaseContentInfos { manifest: Manifest;
                                      representation: Representation; }
 
 /** Supplementary information needed for segments in the "metaplaylist" transport. */
-export interface IMetaPlaylistPrivateInfos { transportType : string;
-                                             baseContent : IBaseContentInfos;
-                                             contentStart : number;
-                                             contentEnd? : number; }
+export interface IMetaPlaylistPrivateInfos {
+  /** The original transport protocol (e.g. "dash", "smooth" etc.) */
+  transportType : string;
+  /** The context this segment is in. */
+  baseContent : IBaseContentInfos;
+  /** The segment originally created by this transport's RepresentationIndex. */
+  originalSegment : ISegment;
+  contentStart : number;
+  contentEnd? : number;
+}
 
 /**
  * Supplementary information needed for initialization segments of the "local"
@@ -86,7 +118,8 @@ export interface ILocalManifestSegmentPrivateInfos {
  * exploited by the corresponding transport logic.
  */
 export interface IPrivateInfos {
-  smoothInit? : ISmoothInitSegmentPrivateInfos;
+  smoothInitSegment? : ISmoothInitSegmentPrivateInfos;
+  smoothMediaSegment? : ISmoothSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
   localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
   localManifestSegment? : ILocalManifestSegmentPrivateInfos;
@@ -94,18 +127,12 @@ export interface IPrivateInfos {
 
 /** Represent a single Segment from a Representation. */
 export interface ISegment {
-  /** Estimated duration of the segment, in timescale. */
-  duration : number;
   /** ID of the Segment. Should be unique for this Representation. */
   id : string;
   /** If true, this Segment contains initialization data. */
   isInit : boolean;
   /** URLs where this segment is available. From the most to least prioritary. */
   mediaURLs : string[]|null;
-  /** Estimated start time for the segment, in timescale. */
-  time : number;
-  /** Timescale to convert `time` and `duration` into seconds. */
-  timescale : number;
   /**
    * If set, the corresponding byte-range in the downloaded segment will
    * contain an index describing other Segments
@@ -129,22 +156,41 @@ export interface ISegment {
    * offseted when decoded.
    */
   timestampOffset? : number;
-}
-
-/**
- * Information about supplementary segment which might not yet be known to a
- * `IRepresentationIndex`.
- */
-export interface ISupplementarySegmentsInfo {
-  /** Estimated start time for the segment, in timescale. */
+  /**
+   * Estimated start time for the segment, in seconds.
+   * Note that some rounding errors and some differences between what the
+   * Manifest says and what the content really is might make that time not
+   * exact.
+   *
+   * `0` for initialization segments without media data.
+   */
   time : number;
-  /** Timescale to convert `time` and `duration` into seconds. */
-  timescale : number;
-  /** Estimated duration of the segment, in timescale. */
+  /**
+   * Estimated end time for the segment, in seconds.
+   * Note that some rounding errors and some differences between what the
+   * Manifest says and what the content really is might make that time not
+   * exact.
+   *
+   * `0` for initialization segments without media data.
+   */
+  end : number;
+  /**
+   * Estimated duration for the segment, in seconds.
+   * Note that some rounding errors and some differences between what the
+   * Manifest says and what the content really is might make that time not
+   * exact.
+   *
+   * `0` for initialization segments without media data.
+   */
   duration : number;
-  count? : number;
-  /** Optional byte range to retrieve the Segment from its URL(s) */
-  range? : [number, number];
+  /**
+   * Always set to 1 for API compatibility with v3.X.X.
+   * This was intended for conversion of the `time` and `duration` properties
+   * into seconds.
+   *
+   * As both are always in seconds now, this property became unneeded.
+   */
+  timescale : 1;
 }
 
 /** Interface that should be implemented by any Representation's `index` value. */
@@ -257,8 +303,8 @@ export interface IRepresentationIndex {
    * as such, this method should return `true` directly.
    * However in some index, the segment lists might only be known after the
    * initialization has been loaded. In those case, it should return `false`
-   * until the corresponding segment list is known (generally through the
-   * `_addSegments` method), at which point it can return `true`.
+   * until the corresponding segment list is known, at which point it can return
+   * `true`.
    * @returns {boolean}
    */
   isInitialized() : boolean;
@@ -274,17 +320,4 @@ export interface IRepresentationIndex {
    * @param {Object} newIndex
    */
   _update(newIndex : IRepresentationIndex) : void;
-
-  /**
-   * Add new segments to the index, obtained through various other different
-   * ways.
-   * @param {Array.<Object>} nextSegments
-   * @param {Object} currentSegment
-   */
-  _addSegments(
-    nextSegments : ISupplementarySegmentsInfo[],
-    currentSegment? : { duration? : number;
-                        time : number;
-                        timescale? : number; }
-  ) : void;
 }

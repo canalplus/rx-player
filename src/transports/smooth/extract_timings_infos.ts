@@ -20,7 +20,6 @@ import {
   getDurationFromTrun,
   getTRAF,
 } from "../../parsers/containers/isobmff";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { IChunkTimeInfo } from "../types";
 import {
   IISOBMFFBasicSegment,
@@ -51,7 +50,7 @@ export interface INextSegmentsInfos {
    * Expressing those values relative to a "timescale" allows a greater
    * precision for the `time` and `duration` values.
    */
-  timescale : number; // time unit for seconds conversion.
+  timescale : number;
 }
 
 /**
@@ -65,10 +64,21 @@ export interface INextSegmentsInfos {
 export default function extractTimingsInfos(
   data : Uint8Array,
   isChunked : boolean,
+  initTimescale : number,
   segment : ISegment,
   isLive : boolean
-) : { nextSegments : INextSegmentsInfos[];
-      chunkInfos : IChunkTimeInfo | null; }
+) : {
+    /** Possible information on segments after this one. */
+    nextSegments : INextSegmentsInfos[];
+    /** Time information on this segment */
+    chunkInfos : IChunkTimeInfo | null;
+    /**
+     * Start time of this segment in the same timescale than the
+     * initialization segment (so this segment can be patched with this
+     * precize information).
+     */
+    scaledSegmentTime : number | undefined;
+  }
 {
   const nextSegments : INextSegmentsInfos[] = [];
   let chunkInfos : IChunkTimeInfo;
@@ -89,38 +99,44 @@ export default function extractTimingsInfos(
     for (let i = 0; i < tfrfSegments.length; i++) {
       nextSegments.push({ time: tfrfSegments[i].time,
                           duration: tfrfSegments[i].duration,
-                          timescale: segment.timescale });
+                          timescale: initTimescale });
     }
   }
 
   if (tfxdSegment !== undefined) {
-    chunkInfos = { time: tfxdSegment.time,
-                   duration: tfxdSegment.duration,
-                   timescale: segment.timescale };
-    return { nextSegments, chunkInfos };
+    chunkInfos = { time: tfxdSegment.time / initTimescale,
+                   duration: tfxdSegment.duration / initTimescale };
+    return { nextSegments,
+             chunkInfos,
+             scaledSegmentTime: tfxdSegment.time };
   }
 
   if (isChunked) {
-    return { nextSegments, chunkInfos: null };
+    return { nextSegments,
+             chunkInfos: null,
+             scaledSegmentTime: undefined };
   }
+
+  const segmentDuration = segment.duration * initTimescale;
 
   // we could always make a mistake when reading a container.
   // If the estimate is too far from what the segment seems to imply, take
   // the segment infos instead.
-  const maxDecodeTimeDelta = Math.min(segment.timescale * 0.9,
-                                      segment.duration / 4);
+  const maxDecodeTimeDelta = Math.min(initTimescale * 0.9,
+                                      segmentDuration / 4);
 
   const trunDuration = getDurationFromTrun(data);
-  if (trunDuration !== undefined && (isNullOrUndefined(segment.duration) ||
-      Math.abs(trunDuration - segment.duration) <= maxDecodeTimeDelta)
-  ) {
+  const scaledSegmentTime = segment.privateInfos?.smoothMediaSegment !== undefined ?
+    segment.privateInfos.smoothMediaSegment.time :
+    Math.round(segment.time * initTimescale);
+  if (trunDuration !== undefined &&
+      Math.abs(trunDuration - segmentDuration) <= maxDecodeTimeDelta)
+  {
     chunkInfos = { time: segment.time,
-                   duration: trunDuration,
-                   timescale: segment.timescale };
+                   duration: trunDuration / initTimescale };
   } else {
     chunkInfos = { time: segment.time,
-                   duration: segment.duration,
-                   timescale: segment.timescale };
+                   duration: segment.duration };
   }
-  return { nextSegments, chunkInfos };
+  return { nextSegments, chunkInfos, scaledSegmentTime };
 }

@@ -231,8 +231,8 @@ export default {
                     {
                       mediaURLs: [BASE_URL + "s-en.webvtt"],
                       time: 0,
-                      timescale: 1,
                       duration: 60.022,
+                      timescale: 1,
                     },
                   ],
                 },
@@ -256,8 +256,8 @@ export default {
                     {
                       mediaURLs: [BASE_URL + "s-el.webvtt"],
                       time: 0,
-                      timescale: 1,
                       duration: 60.022,
+                      timescale: 1,
                     },
                   ],
                 },
@@ -281,8 +281,8 @@ export default {
                     {
                       mediaURLs: [BASE_URL + "s-fr.webvtt"],
                       time: 0,
-                      timescale: 1,
                       duration: 60.022,
+                      timescale: 1,
                     },
                   ],
                 },
@@ -306,8 +306,8 @@ export default {
                     {
                       mediaURLs: [BASE_URL + "s-pt-BR.webvtt"],
                       time: 0,
-                      timescale: 1,
                       duration: 60.022,
+                      timescale: 1,
                     },
                   ],
                 },

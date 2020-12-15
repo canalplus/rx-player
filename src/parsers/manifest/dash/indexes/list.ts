@@ -171,22 +171,24 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   getSegments(fromTime : number, dur : number) : ISegment[] {
     const index = this._index;
     const { duration, list, timescale } = index;
+    const durationInSeconds = duration / timescale;
     const fromTimeInPeriod = fromTime - this._periodStart;
     const [ up, to ] = getTimescaledRange(fromTimeInPeriod, dur, timescale);
 
-    const scaledStart = this._periodStart * timescale;
     const length = Math.min(list.length - 1, Math.floor(to / duration));
     const segments : ISegment[] = [];
     let i = Math.floor(up / duration);
     while (i <= length) {
       const range = list[i].mediaRange;
       const mediaURLs = list[i].mediaURLs;
+      const time = i * durationInSeconds + this._periodStart;
       const args = { id: String(i),
-                     time: i * duration + scaledStart,
+                     time,
                      isInit: false,
                      range,
-                     duration,
-                     timescale,
+                     duration: durationInSeconds,
+                     timescale: 1 as const,
+                     end: time + durationInSeconds,
                      mediaURLs,
                      timestampOffset: -(index.indexTimeOffset / timescale) };
       segments.push(args);
@@ -233,19 +235,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * @param {Object} segment
    * @returns {Boolean}
    */
-  isSegmentStillAvailable(segment : ISegment) : boolean {
-    if (segment.isInit) {
-      return true;
-    }
-    const index = this._index;
-    const scaledStart = this._periodStart * index.timescale;
-    const scaledSegmentStartInPeriod = segment.timescale !== index.timescale ?
-      ((segment.time * index.timescale) / segment.timescale) + scaledStart :
-      segment.time - scaledStart;
-
-    const { duration } = index;
-    const segmentNb = scaledSegmentStartInPeriod / duration;
-    return segmentNb > 0 && segmentNb % 1 === 0;
+  isSegmentStillAvailable() : true {
+    return true;
   }
 
   /**
@@ -290,12 +281,5 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    */
   _update() : void {
     log.error("List RepresentationIndex: Cannot update a SegmentList");
-  }
-
-  _addSegments() : void {
-    if (__DEV__) {
-      log.warn("List RepresentationIndex: Tried to add Segments to a list " +
-               "RepresentationIndex");
-    }
   }
 }

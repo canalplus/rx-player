@@ -33,7 +33,6 @@ function generateRepresentationIndex(
     isInitialized() : true { return true; },
     _replace() { /* noop */ },
     _update() { /* noop */ },
-    _addSegments() { /* noop */ },
   };
 }
 

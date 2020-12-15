@@ -139,15 +139,13 @@ export default function createSegmentFetcher<T>(
 
             // format it for ABR Handling
             const segment : ISegment|undefined = value.segment;
-            if (segment == null || segment.duration == null) {
+            if (segment === undefined) {
               return;
             }
             requestBeginSent = true;
-            const duration = segment.duration / segment.timescale;
-            const time = segment.time / segment.timescale;
             requests$.next({ type: "requestBegin",
-                             value: { duration,
-                                      time,
+                             value: { duration: segment.duration,
+                                      time: segment.time,
                                       requestTimestamp: performance.now(),
                                       id } });
             break;

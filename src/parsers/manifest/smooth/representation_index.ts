@@ -84,14 +84,6 @@ function getSegmentNumber(
                     0;
 }
 
-// interface ISmoothIndex {
-//   presentationTimeOffset? : number;
-//   timescale : number;
-//   media? : string;
-//   timeline : IIndexSegment[];
-//   startNumber? : number;
-// }
-
 /**
  * Convert second-based start time and duration to the timescale of the
  * manifest's index.
@@ -175,6 +167,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
                                 channels? : number;
                                 packetSize? : number;
                                 samplingRate? : number;
+                                timescale : number;
                                 protection? : { keyId : Uint8Array;
                                                 keySystems: Array<{
                                                   systemId : string;
@@ -220,6 +213,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
                                codecPrivateData: segmentPrivateInfos.codecPrivateData,
                                packetSize: segmentPrivateInfos.packetSize,
                                samplingRate: segmentPrivateInfos.samplingRate,
+                               timescale: index.timescale,
                                protection: segmentPrivateInfos.protection };
 
     this._isAggressiveMode = aggressiveMode;
@@ -244,11 +238,12 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   getInitSegment() : ISegment {
     return { id: "init",
              isInit: true,
+             privateInfos: { smoothInitSegment: this._initSegmentInfos },
+             mediaURLs: null,
              time: 0,
+             end: 0,
              duration: 0,
-             timescale: this._index.timescale,
-             privateInfos: { smoothInit: this._initSegmentInfos },
-             mediaURLs: null };
+             timescale: 1 };
   }
 
   /**
@@ -291,12 +286,15 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
           currentNumber + segmentNumberInCurrentRange :
           undefined;
         const segment = { id: String(segmentTime),
-                          time,
                           isInit: false,
-                          duration,
-                          timescale,
+                          time: time / timescale,
+                          end: (time + duration) / timescale,
+                          duration: duration / timescale,
+                          timescale: 1 as const,
                           number,
-                          mediaURLs: [replaceSegmentSmoothTokens(media, time)] };
+                          mediaURLs: [replaceSegmentSmoothTokens(media, time)],
+                          privateInfos: { smoothMediaSegment: { time,
+                                                                duration } } };
         segments.push(segment);
 
         // update segment number and segment time for the next segment
@@ -562,8 +560,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
                            time : number;
                            timescale : number; }>,
     currentSegment : { duration : number;
-                       time : number;
-                       timescale : number; }
+                       time : number; }
   ) : void {
     this._refreshTimeline();
     for (let i = 0; i < nextSegments.length; i++) {

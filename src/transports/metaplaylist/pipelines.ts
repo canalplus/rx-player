@@ -60,18 +60,16 @@ import {
 import generateManifestLoader from "./manifest_loader";
 
 /**
+ * Get base - real - content from an offseted metaplaylist content.
  * @param {Object} segment
  * @param {number} offset
  * @returns {Object}
  */
-function getContent(
-  segment : ISegment,
-  offset : number
-) : { manifest : Manifest;
-      period : Period;
-      adaptation : Adaptation;
-      representation : Representation;
-      segment : ISegment; }
+function getOriginalContent(segment : ISegment) : { manifest : Manifest;
+                                                    period : Period;
+                                                    adaptation : Adaptation;
+                                                    representation : Representation;
+                                                    segment : ISegment; }
 {
   if (segment.privateInfos?.metaplaylistInfos === undefined) {
     throw new Error("MetaPlaylist: missing private infos");
@@ -80,14 +78,12 @@ function getContent(
           period,
           adaptation,
           representation } = segment.privateInfos.metaplaylistInfos.baseContent;
-  const newTime = segment.time < 0 ? segment.time :
-                                     segment.time - (offset * segment.timescale);
-  const offsetedSegment = objectAssign({}, segment, { time: newTime });
+  const { originalSegment } = segment.privateInfos.metaplaylistInfos;
   return  { manifest,
             period,
             adaptation,
             representation,
-            segment: offsetedSegment };
+            segment: originalSegment };
 }
 
 /**
@@ -98,10 +94,9 @@ function getContent(
  */
 function getLoaderArguments(
   segment : ISegment,
-  url : string | null,
-  offset : number
+  url : string | null
 ) : ISegmentLoaderArguments {
-  const content = getContent(segment, offset);
+  const content = getOriginalContent(segment);
   return objectAssign({ url }, content);
 }
 
@@ -114,12 +109,11 @@ function getLoaderArguments(
  */
 function getParserArguments<T>(
   { initTimescale, response } : ISegmentParserArguments<T>,
-  segment : ISegment,
-  offset : number
+  segment : ISegment
 ) : ISegmentParserArguments<T> {
   return { initTimescale,
            response,
-           content: getContent(segment, offset) };
+           content: getOriginalContent(segment) };
 }
 
 /**
@@ -268,7 +262,6 @@ export default function(options : ITransportOptions): ITransportPipelines {
    */
   function offsetTimeInfos(
     contentOffset : number,
-    scaledContentOffset : number,
     contentEnd : number | undefined,
     segmentResponse : ISegmentParserParsedSegment<unknown>
   ) : { chunkInfos : IChunkTimeInfo | null;
@@ -285,8 +278,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
     const { chunkInfos, appendWindow } = segmentResponse;
     const offsetedChunkInfos = chunkInfos === null ? null :
                                                      objectAssign({}, chunkInfos);
-    if (offsetedChunkInfos !== null && offsetedChunkInfos.time > -1) {
-      offsetedChunkInfos.time += scaledContentOffset;
+    if (offsetedChunkInfos !== null) {
+      offsetedChunkInfos.time += contentOffset;
     }
 
     const offsetedWindowStart = appendWindow[0] !== undefined ?
@@ -307,29 +300,25 @@ export default function(options : ITransportOptions): ITransportPipelines {
   }
 
   const audioPipeline = {
-    loader({ segment, period, url } : ISegmentLoaderArguments) {
+    loader({ segment, url } : ISegmentLoaderArguments) {
       const { audio } = getTransportPipelinesFromSegment(segment);
-      return audio.loader(getLoaderArguments(segment, url, period.start));
+      return audio.loader(getLoaderArguments(segment, url));
     },
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : IAudioVideoParserObservable {
-      const { initTimescale, content } = args;
+      const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { audio } = getTransportPipelinesFromSegment(segment);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return audio.parser(getParserArguments(args, segment, contentStart))
+      return audio.parser(getParserArguments(args, segment))
         .pipe(map(res => {
           if (res.type === "parsed-init-segment") {
             return res;
           }
-          const timeInfos = offsetTimeInfos(contentStart,
-                                            scaledOffset,
-                                            contentEnd,
-                                            res.value);
+          const timeInfos = offsetTimeInfos(contentStart, contentEnd, res.value);
          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           return objectAssign({ type: "parsed-segment",
                                 value: objectAssign({}, res.value, timeInfos) });
@@ -338,29 +327,25 @@ export default function(options : ITransportOptions): ITransportPipelines {
   };
 
   const videoPipeline = {
-    loader({ segment, period, url } : ISegmentLoaderArguments) {
+    loader({ segment, url } : ISegmentLoaderArguments) {
       const { video } = getTransportPipelinesFromSegment(segment);
-      return video.loader(getLoaderArguments(segment, url, period.start));
+      return video.loader(getLoaderArguments(segment, url));
     },
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : IAudioVideoParserObservable {
-      const { initTimescale, content } = args;
+      const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { video } = getTransportPipelinesFromSegment(segment);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return video.parser(getParserArguments(args, segment, contentStart))
+      return video.parser(getParserArguments(args, segment))
         .pipe(map(res => {
           if (res.type === "parsed-init-segment") {
             return res;
           }
-          const timeInfos = offsetTimeInfos(contentStart,
-                                            scaledOffset,
-                                            contentEnd,
-                                            res.value);
+          const timeInfos = offsetTimeInfos(contentStart, contentEnd, res.value);
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           return objectAssign({ type: "parsed-segment",
                                 value: objectAssign({}, res.value, timeInfos) });
@@ -369,29 +354,25 @@ export default function(options : ITransportOptions): ITransportPipelines {
   };
 
   const textTrackPipeline = {
-    loader({ segment, period, url } : ISegmentLoaderArguments) {
+    loader({ segment, url } : ISegmentLoaderArguments) {
       const { text } = getTransportPipelinesFromSegment(segment);
-      return text.loader(getLoaderArguments(segment, url, period.start));
+      return text.loader(getLoaderArguments(segment, url));
     },
 
     parser: (
       args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>
     ) : ITextParserObservable => {
-      const { initTimescale, content } = args;
+      const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { text } = getTransportPipelinesFromSegment(segment);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return text.parser(getParserArguments(args, segment, contentStart))
+      return text.parser(getParserArguments(args, segment))
         .pipe(map(res => {
           if (res.type === "parsed-init-segment") {
             return res;
           }
-          const timeInfos = offsetTimeInfos(contentStart,
-                                            scaledOffset,
-                                            contentEnd,
-                                            res.value);
+          const timeInfos = offsetTimeInfos(contentStart, contentEnd, res.value);
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           return objectAssign({ type: "parsed-segment",
                                 value: objectAssign({}, res.value, timeInfos) });
@@ -400,29 +381,25 @@ export default function(options : ITransportOptions): ITransportPipelines {
   };
 
   const imageTrackPipeline = {
-    loader({ segment, period, url } : ISegmentLoaderArguments) {
+    loader({ segment, url } : ISegmentLoaderArguments) {
       const { image } = getTransportPipelinesFromSegment(segment);
-      return image.loader(getLoaderArguments(segment, url, period.start));
+      return image.loader(getLoaderArguments(segment, url));
     },
 
     parser(
       args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
     ) : IImageParserObservable {
-      const { initTimescale, content } = args;
+      const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { image } = getTransportPipelinesFromSegment(segment);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return image.parser(getParserArguments(args, segment, contentStart))
+      return image.parser(getParserArguments(args, segment))
         .pipe(map(res => {
           if (res.type === "parsed-init-segment") {
             return res;
           }
-          const timeInfos = offsetTimeInfos(contentStart,
-                                            scaledOffset,
-                                            contentEnd,
-                                            res.value);
+          const timeInfos = offsetTimeInfos(contentStart, contentEnd, res.value);
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           return objectAssign({ type: "parsed-segment",
                                 value: objectAssign({}, res.value, timeInfos) });

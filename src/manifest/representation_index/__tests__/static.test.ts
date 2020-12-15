@@ -30,6 +30,7 @@ describe("manifest - StaticRepresentationIndex", () => {
                                               number: 0,
                                               time: 0,
                                               duration: Number.MAX_VALUE,
+                                              end: Number.MAX_VALUE,
                                               timescale: 1,
                                               mediaURLs: ["foo"] }]);
   });
@@ -52,17 +53,6 @@ describe("manifest - StaticRepresentationIndex", () => {
   it("should never have a discontinuity", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
     expect(staticRI.checkDiscontinuity()).toBe(null);
-  });
-
-  it("should never add segments and warn when trying to do so", () => {
-    const spy = jest.fn();
-    jest.spyOn(log, "warn").mockImplementation(spy);
-    const staticRI = new StaticRepresentationIndex({ media: "foo" });
-
-    staticRI._addSegments();
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(staticRI.getSegments().length).toBe(1);
   });
 
   it("should never replace and warn when trying to do so", () => {
