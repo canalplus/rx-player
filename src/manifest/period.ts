@@ -103,9 +103,9 @@ export default class Period {
             return newAdaptation;
           })
           .filter((adaptation) : adaptation is Adaptation =>
-            adaptation != null && adaptation.representations.length > 0
+            adaptation !== null && adaptation.representations.length > 0
           );
-        if (filteredAdaptations.length === 0 &&
+        if (filteredAdaptations.every(adaptation => !adaptation.isSupported) &&
             adaptationsForType.length > 0 &&
             (type === "video" || type === "audio")
         ) {
