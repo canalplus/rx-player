@@ -61,8 +61,14 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const fooAda1 = { type: "foo", id: "54", representations: [{}] };
-    const fooAda2 = { type: "foo", id: "55", representations: [{}] };
+    const fooAda1 = { type: "foo",
+                      id: "54",
+                      isSupported: true,
+                      representations: [{}] };
+    const fooAda2 = { type: "foo",
+                      id: "55",
+                      isSupported: true,
+                      representations: [{}] };
     const foo = [fooAda1, fooAda2];
     const args = { id: "12", adaptations: { foo }, start: 0 };
     let period = null;
@@ -122,13 +128,78 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [{}] };
-    const videoAda2 = { type: "video", id: "55", representations: [{}] };
-    const videoAda3 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "56",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda3 = { type: "video",
+                        id: "57",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1, videoAda2, videoAda3];
 
-    const audioAda1 = { type: "audio", id: "56", representations: [] };
-    const audio = [audioAda1];
+    const audioAda1 = { type: "audio",
+                        id: "58",
+                        isSupported: true,
+                        representations: [] };
+    const audioAda2 = { type: "audio",
+                        id: "59",
+                        isSupported: true,
+                        representations: [] };
+    const audio = [audioAda1, audioAda2];
+    const args = { id: "12", adaptations: { video, audio }, start: 0 };
+    let period = null;
+    let errorReceived = null;
+    try {
+      period = new Period(args as any);
+    } catch (e) {
+      errorReceived = e;
+    }
+
+    expect(period).toBe(null);
+    expect(errorReceived).not.toBe(null);
+    expect(errorReceived).toBeInstanceOf(Error);
+    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
+    expect(errorReceived.type).toBe("MEDIA_ERROR");
+    expect(errorReceived.message).toContain("No supported audio adaptations");
+  });
+
+  it("should throw if no audio Adaptation is supported", () => {
+    const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
+    jest.mock("../adaptation", () => ({
+      __esModule: true as const,
+      default: adaptationSpy,
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+    }));
+
+    const Period = require("../period").default;
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda3 = { type: "video",
+                        id: "56",
+                        isSupported: true,
+                        representations: [{}] };
+    const video = [videoAda1, videoAda2, videoAda3];
+
+    const audioAda1 = { type: "audio",
+                        id: "57",
+                        isSupported: false,
+                        representations: [{}] };
+    const audioAda2 = { type: "audio",
+                        id: "58",
+                        isSupported: false,
+                        representations: [{}] };
+    const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
     let errorReceived = null;
@@ -155,13 +226,78 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [] };
-    const videoAda2 = { type: "video", id: "55", representations: [] };
-    const videoAda3 = { type: "video", id: "55", representations: [] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [] };
+    const videoAda3 = { type: "video",
+                        id: "56",
+                        isSupported: true,
+                        representations: [] };
     const video = [videoAda1, videoAda2, videoAda3];
 
-    const audioAda1 = { type: "audio", id: "56", representations: [{}] };
-    const audio = [audioAda1];
+    const audioAda1 = { type: "audio",
+                        id: "58",
+                        isSupported: true,
+                        representations: [{}] };
+    const audioAda2 = { type: "audio",
+                        id: "59",
+                        isSupported: true,
+                        representations: [{}] };
+    const audio = [audioAda1, audioAda2];
+    const args = { id: "12", adaptations: { video, audio }, start: 0 };
+    let period = null;
+    let errorReceived = null;
+    try {
+      period = new Period(args as any);
+    } catch (e) {
+      errorReceived = e;
+    }
+
+    expect(period).toBe(null);
+    expect(errorReceived).not.toBe(null);
+    expect(errorReceived).toBeInstanceOf(Error);
+    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
+    expect(errorReceived.type).toBe("MEDIA_ERROR");
+    expect(errorReceived.message).toContain("No supported video adaptation");
+  });
+
+  it("should throw if no video adaptation is supported", () => {
+    const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
+    jest.mock("../adaptation", () => ({
+      __esModule: true as const,
+      default: adaptationSpy,
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+    }));
+
+    const Period = require("../period").default;
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: false,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: false,
+                        representations: [{}] };
+    const videoAda3 = { type: "video",
+                        id: "56",
+                        isSupported: false,
+                        representations: [{}] };
+    const video = [videoAda1, videoAda2, videoAda3];
+
+    const audioAda1 = { type: "audio",
+                        id: "58",
+                        isSupported: true,
+                        representations: [{}] };
+    const audioAda2 = { type: "audio",
+                        id: "59",
+                        isSupported: true,
+                        representations: [{}] };
+    const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
     let errorReceived = null;
@@ -196,9 +332,15 @@ describe("Manifest - Period", () => {
 
     const Period = require("../period").default;
 
-    const videoAda1 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1];
-    const barAda1 = { type: "bar", id: "55", representations: [{}] };
+    const barAda1 = { type: "bar",
+                      id: "55",
+                      isSupported: true,
+                      representations: [{}] };
     const bar = [barAda1];
     const args = { id: "12", adaptations: { bar, video }, start: 0 };
     const period = new Period(args as any);
@@ -236,9 +378,15 @@ describe("Manifest - Period", () => {
 
     const Period = require("../period").default;
 
-    const videoAda1 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1];
-    const barAda1 = { type: "bar", id: "55", representations: [{}] };
+    const barAda1 = { type: "bar",
+                      id: "55",
+                      isSupported: true,
+                      representations: [{}] };
     const bar = [barAda1];
     const args = { id: "12", adaptations: { bar, video }, start: 0 };
     let period = null;
@@ -267,7 +415,10 @@ describe("Manifest - Period", () => {
 
     const Period = require("../period").default;
 
-    const videoAda1 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1];
     const bar = undefined;
     const args = { id: "12", adaptations: { bar, video }, start: 0 };
@@ -291,8 +442,14 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [{}] };
-    const videoAda2 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0 };
     const period = new Period(args as any, representationFilter);
@@ -315,9 +472,18 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [{}] };
-    const videoAda2 = { type: "video", id: "55", representations: [{}] };
-    const fooAda1 = { type: "foo", id: "12", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
+    const fooAda1 = { type: "foo",
+                      id: "12",
+                      isSupported: true,
+                      representations: [{}] };
     const video = [videoAda1, videoAda2];
     const foo = [fooAda1];
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
@@ -337,8 +503,14 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [{}] };
-    const videoAda2 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 72 };
     const period = new Period(args as any);
@@ -356,8 +528,14 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [{}] };
-    const videoAda2 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0, duration: 12 };
     const period = new Period(args as any);
@@ -375,8 +553,14 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [{}] };
-    const videoAda2 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 50, duration: 12 };
     const period = new Period(args as any);
@@ -394,11 +578,20 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [{}] };
-    const videoAda2 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1, videoAda2];
 
-    const audioAda1 = { type: "audio", id: "56", representations: [{}] };
+    const audioAda1 = { type: "audio",
+                        id: "56",
+                        isSupported: true,
+                        representations: [{}] };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
@@ -421,11 +614,20 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [{}] };
-    const videoAda2 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1, videoAda2];
 
-    const audioAda1 = { type: "audio", id: "56", representations: [{}] };
+    const audioAda1 = { type: "audio",
+                        id: "56",
+                        isSupported: true,
+                        representations: [{}] };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
@@ -455,12 +657,24 @@ describe("Manifest - Period", () => {
     }));
 
     const Period = require("../period").default;
-    const videoAda1 = { type: "video", id: "54", representations: [{}] };
-    const videoAda2 = { type: "video", id: "55", representations: [{}] };
-    const videoAda3 = { type: "video", id: "55", representations: [{}] };
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
+    const videoAda3 = { type: "video",
+                        id: "55",
+                        isSupported: true,
+                        representations: [{}] };
     const video = [videoAda1, videoAda2, videoAda3];
 
-    const audioAda1 = { type: "audio", id: "56", representations: [{}] };
+    const audioAda1 = { type: "audio",
+                        id: "56",
+                        isSupported: true,
+                        representations: [{}] };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
