@@ -136,11 +136,11 @@ class OldWebkitMediaKeySession
 }
 
 class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
-  private readonly ks_: string;
+  private readonly _keySystem: string;
   private _videoElement?: IOldWebkitHTMLMediaElement;
 
   constructor(keySystem: string) {
-    this.ks_ = keySystem;
+    this._keySystem = keySystem;
   }
 
   _setVideo(videoElement: IOldWebkitHTMLMediaElement|HTMLMediaElement): void {
@@ -154,7 +154,7 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
     if (this._videoElement == null) {
       throw new Error("Video not attached to the MediaKeys");
     }
-    return new OldWebkitMediaKeySession(this._videoElement, this.ks_);
+    return new OldWebkitMediaKeySession(this._videoElement, this._keySystem);
   }
 
   setServerCertificate(): Promise<void> {
