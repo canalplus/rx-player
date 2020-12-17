@@ -75,7 +75,7 @@ export abstract class SegmentBuffer<T> {
    * Depending on the implementation, segments with a different codecs could be
    * incompatible.
    *
-   * `undefined` either if unknown or if the codec does not matter for this
+   * `undefined` if unknown and if this property does not matter for this
    * SegmentBuffer implementation.
    */
   public codec : string | undefined;
