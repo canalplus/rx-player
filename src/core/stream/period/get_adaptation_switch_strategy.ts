@@ -74,8 +74,9 @@ export default function getAdaptationSwitchStrategy(
   playbackInfo : { currentTime : number; readyState : number },
   options : IAdaptationSwitchOptions
 ) : IAdaptationSwitchStrategy {
-  if (options.onCodecSwitch === "reload" &&
-      !hasCompatibleCodec(adaptation, segmentBuffer))
+  if (segmentBuffer.codec !== undefined &&
+      options.onCodecSwitch === "reload" &&
+      !hasCompatibleCodec(adaptation, segmentBuffer.codec))
   {
     return { type: "needs-reload", value: undefined };
   }
@@ -133,12 +134,14 @@ export default function getAdaptationSwitchStrategy(
   }
 
   if (adaptation.type === "audio" &&
+      segmentBuffer.codec !== undefined &&
       // We have been explicitly asked to reload
       options.audioTrackSwitchingMode === "direct" &&
       // We're playing the current Period
       isTimeInRange({ start, end }, currentTime) &&
       // There is data for the current position or the codecs are differents
-      (playbackInfo.readyState > 1 || !hasCompatibleCodec(adaptation, segmentBuffer)) &&
+      (playbackInfo.readyState > 1 || !hasCompatibleCodec(adaptation,
+                                                          segmentBuffer.codec)) &&
       // We're not playing the current wanted audio Adaptation yet
       !isTimeInRanges(adaptationInBuffer, currentTime))
   {
@@ -201,17 +204,17 @@ export default function getAdaptationSwitchStrategy(
 
 /**
  * Returns `true` if at least one codec of the Representations in the given
- * Adaptation has a codec compatible with the given SegmentBuffer.
+ * Adaptation has a codec compatible with the given SegmentBuffer's codec.
  * @param {Object} adaptation
- * @param {Object} segmentBuffer
+ * @param {string} segmentBufferCodec
  * @returns {boolean}
  */
 function hasCompatibleCodec(
   adaptation : Adaptation,
-  segmentBuffer : SegmentBuffer<unknown>
+  segmentBufferCodec : string
 ) : boolean {
   return adaptation.getPlayableRepresentations().some(rep =>
-    areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""));
+    areCodecsCompatible(rep.getMimeTypeString(), segmentBufferCodec));
 }
 
 /**
