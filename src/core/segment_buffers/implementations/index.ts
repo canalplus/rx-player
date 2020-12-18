@@ -15,6 +15,10 @@
  */
 
 import AudioVideoSegmentBuffer from "./audio_video";
+import TemporarySegmentBuffer from "./temporary_segment_buffer";
 export * from "./types";
 
-export { AudioVideoSegmentBuffer };
+export {
+  AudioVideoSegmentBuffer,
+  TemporarySegmentBuffer,
+};

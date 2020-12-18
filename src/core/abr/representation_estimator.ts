@@ -69,7 +69,7 @@ export interface IABREstimate {
    * If `true`, the `representation` chosen in the current estimate object is
    * linked to a choice chosen manually by the user.
    *
-   * If `false`, this estimate is just due to the adaptative logic.
+   * If `false`, this estimate is due to the adaptative logic.
    */
   manual: boolean;
   /**
@@ -89,7 +89,7 @@ export interface IABREstimate {
    */
   urgent : boolean;
   /**
-   * Last bitrate which was known to be "maintainable".
+   * Last Representation's bitrate which was known to be "maintainable".
    *
    * The estimates provided though `IABREstimate` objects sometimes indicate
    * that you should switch to a Representation with a much higher bitrate than
@@ -98,7 +98,7 @@ export interface IABREstimate {
    * playback speed, we cannot maintain this Representation without buffering
    * after some time.
    *
-   * `knownStableBitrate` communicates the bitrate of the last Representation
+   * `maintainableBitrate` communicates the bitrate of the last Representation
    * that was known to be maintaninable: it could reliably be played continually
    * without interruption.
    *
@@ -109,7 +109,19 @@ export interface IABREstimate {
    * have, you will most likely only want to do it when the Representation is
    * known to be maintaninable.
    */
-  knownStableBitrate?: number;
+  maintainableBitrate? : number;
+
+  /**
+   * If `true`, the given estimate is considered "stable", which means that the
+   * Representation it chose is known to be the most adapted under the current
+   * conditions.
+   *
+   * If `false`, the `RepresentationEstimator` is still making guesses and the
+   * Representation choosen might not be the most adapted one.
+   * Example of cases where we are not sure is for example when not enough
+   * network samples have been taken yet to be confident enough on that choice.
+   */
+  isStable : boolean;
 }
 
 /** Properties the `RepresentationEstimator` will need at each "clock tick". */
@@ -462,7 +474,8 @@ export default function RepresentationEstimator({
                             representation: representations[0],
                             manual: false,
                             urgent: true,
-                            knownStableBitrate: undefined });
+                            maintainableBitrate: undefined,
+                            isStable: true });
     }
 
     return manualBitrate$.pipe(switchMap(manualBitrate => {
@@ -479,9 +492,10 @@ export default function RepresentationEstimator({
         return observableOf({
           representation: manualRepresentation,
           bitrate: undefined, // Bitrate estimation is deactivated here
-          knownStableBitrate: undefined,
+          maintainableBitrate: undefined,
           manual: true,
           urgent: true, // a manual bitrate switch should happen immediately
+          isStable: true,
         });
       }
 
@@ -520,6 +534,7 @@ export default function RepresentationEstimator({
           const _representations = getFilteredRepresentations(representations,
                                                               filters);
           const requests = requestsStore.getRequests();
+          const isStable = bandwidthEstimator.getConfidenceLevel() === 2;
           const { bandwidthEstimate, bitrateChosen } = networkAnalyzer
             .getBandwidthEstimate(clock,
                                   bandwidthEstimator,
@@ -530,7 +545,7 @@ export default function RepresentationEstimator({
           lastEstimatedBitrate = bandwidthEstimate;
 
           const stableRepresentation = scoreCalculator.getLastStableRepresentation();
-          const knownStableBitrate = stableRepresentation == null ?
+          const maintainableBitrate = stableRepresentation == null ?
             undefined :
             stableRepresentation.bitrate / (clock.speed > 0 ? clock.speed : 1);
 
@@ -565,7 +580,8 @@ export default function RepresentationEstimator({
                                                       requests,
                                                       clock),
                      manual: false,
-                     knownStableBitrate };
+                     maintainableBitrate,
+                     isStable };
           }
           if (bufferBasedBitrate == null ||
               chosenRepFromBandwidth.bitrate >= bufferBasedBitrate)
@@ -579,7 +595,8 @@ export default function RepresentationEstimator({
                                                       requests,
                                                       clock),
                      manual: false,
-                     knownStableBitrate };
+                     maintainableBitrate,
+                     isStable };
           }
           const limitedBitrate = Math.min(bufferBasedBitrate, maxAutoBitrate);
           const chosenRepresentation = (() => {
@@ -603,7 +620,8 @@ export default function RepresentationEstimator({
                                                     requests,
                                                     clock),
                    manual: false,
-                   knownStableBitrate };
+                   maintainableBitrate,
+                   isStable };
         })
       );
     }));

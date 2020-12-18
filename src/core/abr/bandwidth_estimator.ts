@@ -91,6 +91,28 @@ export default class BandwidthEstimator {
   }
 
   /**
+   * Returns a number indicating the "level of confidence" we have on our
+   * current estimate:
+   *   - a level of `0` indicates that we have no data yet and as such, we have
+   *     no idea of the current estimate.
+   *   - a level of `1` indicates that we have some data, but not enough to give
+   *     an estimate with enough confidence.
+   *   - a level of `2` indicates that the estimate given is based on enough
+   *     data.
+   *
+   * XXX TODO I thought that while `_bytesSampled` was inferior to
+   * `ABR_MINIMUM_TOTAL_BYTES`, we didn't give an estimate (see `getEstimate`).
+   * To double-check.
+   * XXX TODO merge with `getEstimate`?
+   * @returns {number}
+   */
+  public getConfidenceLevel() : 0 | 1 | 2 {
+    return this._bytesSampled >= ABR_MINIMUM_TOTAL_BYTES ? 2 :
+           this._bytesSampled > 0                        ? 1 :
+                                                           0;
+  }
+
+  /**
    * Reset the bandwidth estimation.
    */
   public reset() : void {

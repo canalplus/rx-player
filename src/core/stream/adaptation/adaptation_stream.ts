@@ -30,6 +30,7 @@ import {
   defer as observableDefer,
   EMPTY,
   merge as observableMerge,
+  NEVER,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -38,10 +39,14 @@ import {
   distinctUntilChanged,
   exhaustMap,
   filter,
+  ignoreElements,
   map,
   mergeMap,
   share,
+  skipWhile,
+  switchMap,
   take,
+  takeWhile,
   tap,
 } from "rxjs/operators";
 import { formatError } from "../../../errors";
@@ -51,12 +56,17 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import assertUnreachable from "../../../utils/assert_unreachable";
 import deferSubscriptions from "../../../utils/defer_subscriptions";
 import ABRManager, {
   IABREstimate,
 } from "../../abr";
 import { SegmentFetcherCreator } from "../../fetchers";
-import { SegmentBuffer } from "../../segment_buffers";
+import {
+  SegmentBuffer,
+  SegmentBufferOperation,
+  TemporarySegmentBuffer,
+} from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import RepresentationStream, {
   IRepresentationStreamClockTick,
@@ -233,13 +243,56 @@ export default function AdaptationStream<T>({
     })
   );
 
-  /** Recursively create `RepresentationStream`s according to the last estimate. */
-  const representationStreams$ = abrEstimate$
-    .pipe(exhaustMap((estimate, i) : Observable<IAdaptationStreamEvent<T>> => {
-      return recursivelyCreateRepresentationStreams(estimate, i === 0);
-    }));
+  return observableMerge(startRepresentationStreams(), bitrateEstimate$);
 
-  return observableMerge(representationStreams$, bitrateEstimate$);
+  function startRepresentationStreams() {
+    let lastSegmentBuffer : { representation : Representation;
+                              segmentBuffer : SegmentBuffer<T>; } |
+                            null = null;
+    return observableMerge(
+      abrEstimate$.pipe(
+        takeWhile((estimate) => !estimate.isStable),
+        distinctUntilChanged((prev, next) =>
+          prev.representation.id === next.representation.id
+        ),
+        switchMap((estimate) => {
+          const { representation } = estimate;
+          const fastSwitchThreshold$ = observableOf(0); // disabled
+          const bufferGoal$ = wantedBufferAhead$.pipe(
+            map((wba) => Math.min(wba, 15 /** XXX TODO */)));
+          if (lastSegmentBuffer !== null) {
+            lastSegmentBuffer.segmentBuffer.dispose();
+          }
+          const tmpSegmentBuffer = new TemporarySegmentBuffer<T>(adaptation.type);
+          lastSegmentBuffer = { segmentBuffer: tmpSegmentBuffer, representation };
+
+          return RepresentationStream({ clock$,
+                                        content: { representation,
+                                                   adaptation,
+                                                   period,
+                                                   manifest },
+                                        segmentBuffer: tmpSegmentBuffer,
+                                        segmentFetcher,
+                                        terminate$: NEVER,
+                                        bufferGoal$,
+                                        fastSwitchThreshold$ })
+            .pipe(ignoreElements());
+        })),
+      abrEstimate$.pipe(
+        skipWhile((estimate) => !estimate.isStable),
+        exhaustMap((estimate, i) : Observable<IAdaptationStreamEvent<T>> => {
+          if (lastSegmentBuffer !== null &&
+              lastSegmentBuffer.representation.id === estimate.representation.id)
+          {
+            const toCommit = lastSegmentBuffer.segmentBuffer;
+            lastSegmentBuffer = null;
+            return observableMerge(
+              commitSegmentBufferOperations(toCommit, segmentBuffer),
+              recursivelyCreateRepresentationStreams(estimate, i === 0));
+          }
+          return recursivelyCreateRepresentationStreams(estimate, i === 0);
+        })));
+  }
 
   /**
    * Create `RepresentationStream`s starting with the Representation indicated in
@@ -306,7 +359,7 @@ export default function AdaptationStream<T>({
       observableOf(0) : // Do not fast-switch anything
       lastEstimate$.pipe(
         map((estimate) => estimate === null ? undefined :
-                                              estimate.knownStableBitrate),
+                                              estimate.maintainableBitrate),
         distinctUntilChanged());
 
     const representationChange$ =
@@ -391,6 +444,34 @@ export default function AdaptationStream<T>({
         }));
     });
   }
+}
+
+/**
+ * Get pending operations from a first, temporary SegmentBuffer to replicate the
+ * same operations on another SegmentBuffer.
+ * @param {Object} tmpSegmentBuffer
+ * @param {Object} segmentBuffer
+ * @returns {Observable}
+ */
+function commitSegmentBufferOperations<T>(
+  tmpSegmentBuffer : SegmentBuffer<T>,
+  segmentBuffer : SegmentBuffer<T>
+) : Observable<never> {
+  const pendingOperations = tmpSegmentBuffer.getPendingOperations();
+  const operationsToCommit = pendingOperations.map((operation) => {
+    switch (operation.type) {
+      case SegmentBufferOperation.Push:
+        return segmentBuffer.pushChunk(operation.value);
+      case SegmentBufferOperation.Remove:
+        return segmentBuffer.removeBuffer(operation.value.start,
+                                          operation.value.end);
+      case SegmentBufferOperation.EndOfSegment:
+        return segmentBuffer.endOfSegment(operation.value);
+      default:
+        assertUnreachable(operation);
+    }
+  });
+  return observableMerge(...operationsToCommit).pipe(ignoreElements());
 }
 
 // Re-export RepresentationStream events used by the AdaptationStream

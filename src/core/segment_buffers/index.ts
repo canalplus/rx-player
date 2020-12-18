@@ -26,6 +26,7 @@ import {
   ISBOperation,
   SegmentBuffer,
   SegmentBufferOperation,
+  TemporarySegmentBuffer,
 } from "./implementations";
 import SegmentBuffersStore, {
   ISegmentBufferOptions,
@@ -41,6 +42,7 @@ export {
   ITextTrackSegmentBufferOptions,
 
   SegmentBuffer,
+  TemporarySegmentBuffer,
 
   IBufferType,
   IBufferedChunk,
