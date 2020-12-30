@@ -38,7 +38,7 @@ const { CONTENT_REPLACEMENT_PADDING,
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
         MINIMUM_SEGMENT_SIZE } = config;
 
-export interface ISegmentFilterArgument {
+export interface IGetNeededSegmentsArguments {
   content: { adaptation : Adaptation;
              manifest : Manifest;
              period : Period;
@@ -66,7 +66,7 @@ export default function getNeededSegments({
   fastSwitchThreshold,
   neededRange,
   segmentBuffer,
-} : ISegmentFilterArgument) : ISegment[] {
+} : IGetNeededSegmentsArguments) : ISegment[] {
   const segmentInventory = segmentBuffer.getInventory();
   /**
    * Every segment awaiting an "EndOfSegment" operation, which indicates that a
