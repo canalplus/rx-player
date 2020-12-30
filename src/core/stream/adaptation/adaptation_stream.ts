@@ -83,6 +83,9 @@ import {
 } from "../types";
 import createRepresentationEstimator from "./create_representation_estimator";
 
+// XXX TODO
+const MAX_PRELOADING_BUFFER = 10;
+
 /** `Clock tick` information needed by the AdaptationStream. */
 export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTick {
   /**
@@ -259,7 +262,7 @@ export default function AdaptationStream<T>({
           const { representation } = estimate;
           const fastSwitchThreshold$ = observableOf(0); // disabled
           const bufferGoal$ = wantedBufferAhead$.pipe(
-            map((wba) => Math.min(wba, 15 /** XXX TODO */)));
+            map((wba) => Math.min(wba, MAX_PRELOADING_BUFFER)));
           if (lastSegmentBuffer !== null) {
             lastSegmentBuffer.segmentBuffer.dispose();
           }

@@ -72,7 +72,7 @@ describe("Memory tests", () => {
       console.warn("API not available. Skipping test.");
       return;
     }
-    this.timeout(10 * 60 * 1000);
+    this.timeout(20 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
                             initialaudiobitrate: Infinity,
                             preferredtexttracks: [{ language: "fra",
