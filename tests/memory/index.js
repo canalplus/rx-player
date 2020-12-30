@@ -63,7 +63,7 @@ describe("Memory tests", () => {
     expect(heapDifference).to.be.below(1e7);
   });
 
-  it("should not have a sensible memory leak after 1000 LOADED states and adaptive streaming", async function() {
+  it.only("should not have a sensible memory leak after 1000 LOADED states and adaptive streaming", async function() {
     if (window.performance == null ||
         window.performance.memory == null ||
         window.gc == null)
@@ -72,7 +72,7 @@ describe("Memory tests", () => {
       console.warn("API not available. Skipping test.");
       return;
     }
-    this.timeout(5 * 60 * 1000);
+    this.timeout(10 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
                             initialaudiobitrate: Infinity,
                             preferredtexttracks: [{ language: "fra",
