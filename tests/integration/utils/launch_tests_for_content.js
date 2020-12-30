@@ -171,7 +171,7 @@ export default function launchTestsForContent(manifestInfos) {
                              transport,
                              transportOptions: { initialManifest } });
 
-          await sleep(5);
+          await sleep(100);
           expect(xhrMock.getLockedXHR().length).to.be.at.least(1);
           expect(xhrMock.getLockedXHR()[0].url).not.to.equal(manifestInfos.url);
         });
