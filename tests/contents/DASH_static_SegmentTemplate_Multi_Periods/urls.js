@@ -62,6 +62,16 @@ module.exports = [
     path: path.join(__dirname, "./media/mp4-live-periods-mpd.mpd"),
     contentType: "application/dash+xml",
   },
+  {
+    url: baseURL + "discontinuities_between_periods.mpd",
+    path: path.join(__dirname, "./media/discontinuities_between_periods.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: baseURL + "different_types_discontinuity.mpd",
+    path: path.join(__dirname, "./media/different_types_discontinuity.mpd"),
+    contentType: "application/dash+xml",
+  },
   ...audioSegments, // remaining audio segments
   ...videoQualities, // every video segments
 ];
