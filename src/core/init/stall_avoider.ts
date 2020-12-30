@@ -151,15 +151,16 @@ export default function StallAvoider(
                                                                  manifest,
                                                                  stalledPosition);
         if (skippableDiscontinuity !== null) {
-          if (skippableDiscontinuity <= mediaElement.currentTime) {
+          const realSeekTime = skippableDiscontinuity + 0.001;
+          if (realSeekTime <= mediaElement.currentTime) {
             log.info("Init: position to seek already reached, no seeking",
-                     mediaElement.currentTime, skippableDiscontinuity);
+                     mediaElement.currentTime, realSeekTime);
           } else {
             log.warn("SA: skippable discontinuity found in the stream",
-                     position, skippableDiscontinuity);
-            mediaElement.currentTime = skippableDiscontinuity;
+                     position, realSeekTime);
+            mediaElement.currentTime = realSeekTime;
             return EVENTS.warning(generateDiscontinuityError(stalledPosition,
-                                                             skippableDiscontinuity));
+                                                             realSeekTime));
           }
         }
       }
