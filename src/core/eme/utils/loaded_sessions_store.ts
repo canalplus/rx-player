@@ -34,17 +34,13 @@ import {
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import { IInitializationDataInfo } from "../types";
 import InitDataStore from "./init_data_store";
 
 /** Stored MediaKeySession data assiociated to an initialization data. */
 interface IStoredSessionEntry {
   /** The initialization data linked to the MediaKeySession. */
-  initData : Uint8Array;
-  /**
-   * The type of the initialization data, bringing more information about the
-   * initialization data's format.
-   */
-  initDataType: string | undefined;
+  initializationData : IInitializationDataInfo;
   /** The MediaKeySession created. */
   mediaKeySession : MediaKeySession |
                     ICustomMediaKeySession;
@@ -94,11 +90,8 @@ export default class LoadedSessionsStore {
    * @param {string|undefined} initDataType
    * @returns {Object|null}
    */
-  public get(
-    initData : Uint8Array,
-    initDataType: string|undefined
-  ) : IStoredSessionData | null {
-    const entry = this._storage.get(initData, initDataType);
+  public get(initializationData : IInitializationDataInfo) : IStoredSessionData | null {
+    const entry = this._storage.get(initializationData);
     return entry === undefined ? null :
                                  { mediaKeySession: entry.mediaKeySession,
                                    sessionType: entry.sessionType };
@@ -117,10 +110,9 @@ export default class LoadedSessionsStore {
    * @returns {Object|null}
    */
   public getAndReuse(
-    initData : Uint8Array,
-    initDataType: string|undefined
+    initializationData : IInitializationDataInfo
   ) : IStoredSessionData | null {
-    const entry = this._storage.getAndReuse(initData, initDataType);
+    const entry = this._storage.getAndReuse(initializationData);
     return entry === undefined ? null :
                                  { mediaKeySession: entry.mediaKeySession,
                                    sessionType: entry.sessionType };
@@ -135,28 +127,24 @@ export default class LoadedSessionsStore {
    * @returns {MediaKeySession}
    */
   public createSession(
-    initData : Uint8Array,
-    initDataType : string|undefined,
+    initializationData : IInitializationDataInfo,
     sessionType : MediaKeySessionType
   ) : MediaKeySession|ICustomMediaKeySession {
-    if (this._storage.get(initData, initDataType) !== undefined) {
+    if (this._storage.get(initializationData) !== undefined) {
       throw new EncryptedMediaError("MULTIPLE_SESSIONS_SAME_INIT_DATA",
                                     "This initialization data was already stored.");
     }
 
     const mediaKeySession = this._mediaKeys.createSession(sessionType);
-    const entry = { mediaKeySession,
-                    sessionType,
-                    initData,
-                    initDataType };
+    const entry = { mediaKeySession, sessionType, initializationData };
     if (!isNullOrUndefined(mediaKeySession.closed)) {
       mediaKeySession.closed
         .then(() => {
-          const currentEntry = this._storage.get(initData, initDataType);
+          const currentEntry = this._storage.get(initializationData);
           if (currentEntry !== undefined &&
               currentEntry.mediaKeySession === mediaKeySession)
           {
-            this._storage.remove(initData, initDataType);
+            this._storage.remove(initializationData);
           }
         })
         .catch((e : unknown) => {
@@ -166,7 +154,7 @@ export default class LoadedSessionsStore {
     }
 
     log.debug("EME-LSS: Add MediaKeySession", entry);
-    this._storage.store(initData, initDataType, entry);
+    this._storage.store(initializationData, entry);
     return mediaKeySession;
   }
 
@@ -179,11 +167,10 @@ export default class LoadedSessionsStore {
    * @returns {Observable}
    */
   public closeSession(
-    initData : Uint8Array,
-    initDataType : string | undefined
+    initializationData : IInitializationDataInfo
   ) : Observable<unknown> {
     return observableDefer(() => {
-      const entry = this._storage.remove(initData, initDataType);
+      const entry = this._storage.remove(initializationData);
       if (entry === undefined) {
         log.warn("EME-LSS: No MediaKeySession found with " +
                  "the given initData and initDataType");

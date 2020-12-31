@@ -16,6 +16,7 @@
 
 import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
 import hashBuffer from "../../../utils/hash_buffer";
+import { IInitializationDataInfo } from "../types";
 
 /**
  * Store a unique value associated to an initData and initDataType.
@@ -61,12 +62,9 @@ export default class InitDataStore<T> {
    * @param {string|undefined} initDataType
    * @returns {*}
    */
-  public get(
-    initData : Uint8Array,
-    initDataType : string|undefined
-  ) : T|undefined {
-    const initDataHash = hashBuffer(initData);
-    const index = this._findIndex(initData, initDataType, initDataHash);
+  public get(initializationData : IInitializationDataInfo) : T | undefined {
+    const initDataHash = hashBuffer(initializationData.data);
+    const index = this._findIndex(initializationData, initDataHash);
     return index >= 0 ? this._storage[index].value :
                         undefined;
   }
@@ -83,11 +81,10 @@ export default class InitDataStore<T> {
    * @returns {*}
    */
   public getAndReuse(
-    initData : Uint8Array,
-    initDataType : string | undefined
+    initializationData : IInitializationDataInfo
   ) : T | undefined {
-    const initDataHash = hashBuffer(initData);
-    const index = this._findIndex(initData, initDataType, initDataHash);
+    const initDataHash = hashBuffer(initializationData.data);
+    const index = this._findIndex(initializationData, initDataHash);
     if (index === -1) {
       return undefined;
     }
@@ -105,19 +102,21 @@ export default class InitDataStore<T> {
    * @returns {boolean}
    */
   public store(
-    initData : Uint8Array,
-    initDataType : string | undefined,
+    initializationData : IInitializationDataInfo,
     value : T
   ) : void {
-    const initDataHash = hashBuffer(initData);
-    const indexOf = this._findIndex(initData, initDataType, initDataHash);
+    const initDataHash = hashBuffer(initializationData.data);
+    const indexOf = this._findIndex(initializationData, initDataHash);
     if (indexOf >= 0) {
       // this._storage contains the stored value in the same order they have
       // been put. So here we want to remove the previous element and re-push
       // it to the end.
       this._storage.splice(indexOf, 1);
     }
-    this._storage.push({ initData, initDataType, initDataHash, value });
+    this._storage.push({ initData: initializationData.data,
+                         initDataType: initializationData.type,
+                         initDataHash,
+                         value });
   }
 
   /**
@@ -136,16 +135,18 @@ export default class InitDataStore<T> {
    * @returns {boolean}
    */
   public storeIfNone(
-    initData : Uint8Array,
-    initDataType : string | undefined,
+    initializationData : IInitializationDataInfo,
     value : T
   ) : boolean {
-    const initDataHash = hashBuffer(initData);
-    const indexOf = this._findIndex(initData, initDataType, initDataHash);
+    const initDataHash = hashBuffer(initializationData.data);
+    const indexOf = this._findIndex(initializationData, initDataHash);
     if (indexOf >= 0) {
       return false;
     }
-    this._storage.push({ initData, initDataType, initDataHash, value });
+    this._storage.push({ initData: initializationData.data,
+                         initDataType: initializationData.type,
+                         initDataHash,
+                         value });
     return true;
   }
 
@@ -156,12 +157,9 @@ export default class InitDataStore<T> {
    * @param {string|undefined} initDataType
    * @returns {*}
    */
-  public remove(
-    initData : Uint8Array,
-    initDataType : string | undefined
-  ) : T | undefined {
-    const initDataHash = hashBuffer(initData);
-    const indexOf = this._findIndex(initData, initDataType, initDataHash);
+  public remove(initializationData : IInitializationDataInfo) : T | undefined {
+    const initDataHash = hashBuffer(initializationData.data);
+    const indexOf = this._findIndex(initializationData, initDataHash);
     if (indexOf === -1) {
       return undefined;
     }
@@ -177,10 +175,10 @@ export default class InitDataStore<T> {
    * @returns {boolean}
    */
   private _findIndex(
-    initData : Uint8Array,
-    initDataType : string|undefined,
+    initializationData : IInitializationDataInfo,
     initDataHash : number
   ) : number {
+    const { type: initDataType, data: initData } = initializationData;
     // Begin by the last element as we usually re-encounter the last stored
     // initData sooner than the first one.
     for (let i = this._storage.length - 1; i >= 0; i--) {

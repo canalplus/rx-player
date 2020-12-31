@@ -286,7 +286,7 @@ export default function InitializeOnMediaSource(
           return openMediaSource$.pipe(mergeMap(() => {
             evt.value.attachMediaKeys$.next();
 
-            const shouldDisableLock = evt.value.mediaKeysInfos.keySystemOptions
+            const shouldDisableLock = evt.value.options
               .disableMediaKeysAttachmentLock === true;
             if (shouldDisableLock) {
               return observableOf(undefined);
@@ -353,8 +353,10 @@ export default function InitializeOnMediaSource(
             manifest.addUndecipherableKIDs(evt.value);
           } else if (evt.type === "blacklist-protection-data") {
             log.info("Init: blacklisting Representations based on protection data.");
-            manifest.addUndecipherableProtectionData(evt.value.type,
-                                                     evt.value.data);
+            if (evt.value.type !== undefined) {
+              manifest.addUndecipherableProtectionData(evt.value.type,
+                                                       evt.value.data);
+            }
           }
         }),
         ignoreElements());

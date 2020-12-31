@@ -33,37 +33,30 @@ import cleanOldLoadedSessions, {
 } from "./clean_old_loaded_sessions";
 import createSession from "./create_session";
 import {
-  IMediaKeySessionInfo,
-  IMediaKeysInfos,
+  IInitializationDataInfo,
+  IMediaKeySessionContext,
+  IMediaKeySessionStores,
 } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
 
 const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS } = config;
 
-/** Information about the encryption initialization data. */
-export interface IInitializationDataInfo {
-  /** The initialization data type. */
-  type : string | undefined;
-  /** Initialization data itself. */
-  data : Uint8Array;
-}
-
 /** Event emitted when a new MediaKeySession has been created. */
 export interface ICreatedSession {
   type : "created-session";
-  value : IMediaKeySessionInfo;
+  value : IMediaKeySessionContext;
 }
 
 /** Event emitted when an already-loaded MediaKeySession is used. */
 export interface ILoadedOpenSession {
   type : "loaded-open-session";
-  value : IMediaKeySessionInfo;
+  value : IMediaKeySessionContext;
 }
 
 /** Event emitted when a persistent MediaKeySession has been loaded. */
 export interface ILoadedPersistentSessionEvent {
   type : "loaded-persistent-session";
-  value : IMediaKeySessionInfo;
+  value : IMediaKeySessionContext;
 }
 
 /** Every possible events sent by `getSession`. */
@@ -89,12 +82,11 @@ export type IGetSessionEvent = ICreatedSession |
  * @returns {Observable}
  */
 export default function getSession(
-  initializationDataInfo : IInitializationDataInfo,
-  mediaKeysInfos : IMediaKeysInfos
+  initializationData : IInitializationDataInfo,
+  stores : IMediaKeySessionStores,
+  wantedSessionType : MediaKeySessionType
 ) : Observable<IGetSessionEvent> {
   return observableDefer(() : Observable<IGetSessionEvent> => {
-    const { type: initDataType, data: initData } = initializationDataInfo;
-
     /**
      * Store previously-loaded MediaKeySession with the same initialization data, if one.
      */
@@ -102,8 +94,8 @@ export default function getSession(
                                 ICustomMediaKeySession |
                                 null = null;
 
-    const { loadedSessionsStore } = mediaKeysInfos;
-    const entry = loadedSessionsStore.getAndReuse(initData, initDataType);
+    const { loadedSessionsStore, persistentSessionsStore } = stores;
+    const entry = loadedSessionsStore.getAndReuse(initializationData);
     if (entry !== null) {
       previousLoadedSession = entry.mediaKeySession;
       if (isSessionUsable(previousLoadedSession)) {
@@ -111,30 +103,27 @@ export default function getSession(
         return observableOf({ type: "loaded-open-session" as const,
                               value: { mediaKeySession: previousLoadedSession,
                                        sessionType: entry.sessionType,
-                                       initData,
-                                       initDataType } });
-      } else if (mediaKeysInfos.persistentSessionsStore != null) {
+                                       initializationData } });
+      } else if (persistentSessionsStore !== null) {
         // If the session is not usable anymore, we can also remove it from the
         // PersistentSessionsStore.
         // TODO Are we sure this is always what we want?
-        mediaKeysInfos.persistentSessionsStore
-          .delete(new Uint8Array(initData), initDataType);
+        persistentSessionsStore.delete(initializationData);
       }
     }
 
     return (previousLoadedSession != null ?
-      loadedSessionsStore.closeSession(initData, initDataType) :
+      loadedSessionsStore.closeSession(initializationData) :
       observableOf(null)
     ).pipe(mergeMap(() => {
       return observableConcat(
         cleanOldLoadedSessions(loadedSessionsStore,
                                EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS - 1),
-        createSession(initData, initDataType, mediaKeysInfos)
+        createSession(stores, initializationData, wantedSessionType)
           .pipe(map((evt) => ({ type: evt.type,
                                 value: { mediaKeySession: evt.value.mediaKeySession,
                                          sessionType: evt.value.sessionType,
-                                         initData,
-                                         initDataType } })))
+                                         initializationData } })))
       );
     }));
   });

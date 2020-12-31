@@ -26,6 +26,7 @@ import hashBuffer from "../../../utils/hash_buffer";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import {
+  IInitializationDataInfo,
   IPersistentSessionInfo,
   IPersistentSessionStorage,
 } from "../types";
@@ -131,11 +132,8 @@ export default class PersistentSessionsStore {
    * @param {string|undefined} initDataType
    * @returns {Object|null}
    */
-  public get(
-    initData : Uint8Array,
-    initDataType : string|undefined
-  ) : IPersistentSessionInfo | null {
-    const index = this._getIndex(initData, initDataType);
+  public get(initData : IInitializationDataInfo) : IPersistentSessionInfo | null {
+    const index = this._getIndex(initData);
     return index === -1 ? null :
                           this._entries[index];
   }
@@ -151,11 +149,8 @@ export default class PersistentSessionsStore {
    * @param {string|undefined} initDataType
    * @returns {*}
    */
-  public getAndReuse(
-    initData : Uint8Array,
-    initDataType : string | undefined
-  ) : IPersistentSessionInfo | null {
-    const index = this._getIndex(initData, initDataType);
+  public getAndReuse(initData : IInitializationDataInfo) : IPersistentSessionInfo | null {
+    const index = this._getIndex(initData);
     if (index === -1) {
       return null;
     }
@@ -171,8 +166,7 @@ export default class PersistentSessionsStore {
    * @param {MediaKeySession} session
    */
   public add(
-    initData : Uint8Array,
-    initDataType : string|undefined,
+    initData : IInitializationDataInfo,
     session : MediaKeySession|ICustomMediaKeySession
   ) : void {
     if (isNullOrUndefined(session) || !isNonEmptyString(session.sessionId)) {
@@ -180,21 +174,21 @@ export default class PersistentSessionsStore {
       return;
     }
     const { sessionId } = session;
-    const currentEntry = this.get(initData, initDataType);
+    const currentEntry = this.get(initData);
     if (currentEntry !== null && currentEntry.sessionId === sessionId) {
       return;
     } else if (currentEntry !== null) { // currentEntry has a different sessionId
-      this.delete(initData, initDataType);
+      this.delete(initData);
     }
 
-    const hash = hashBuffer(initData);
+    const hash = hashBuffer(initData.data);
     log.info("EME-PSS: Add new session", sessionId, session);
 
     this._entries.push({ version: 2,
                          sessionId,
-                         initData: new InitDataContainer(initData),
+                         initData: new InitDataContainer(initData.data),
                          initDataHash: hash,
-                         initDataType });
+                         initDataType: initData.type });
     this._save();
   }
 
@@ -204,11 +198,8 @@ export default class PersistentSessionsStore {
    * @param {Uint8Array}  initData
    * @param {string|undefined} initDataType
    */
-  delete(
-    initData : Uint8Array,
-    initDataType : string|undefined
-  ) : void {
-    const index = this._getIndex(initData, initDataType);
+  delete(initData : IInitializationDataInfo) : void {
+    const index = this._getIndex(initData);
     if (index === -1) {
       log.warn("EME-PSS: initData to delete not found.");
       return;
@@ -250,21 +241,18 @@ export default class PersistentSessionsStore {
    * @param {string|undefined} initDataType
    * @returns {number}
    */
-  private _getIndex(
-    initData : Uint8Array,
-    initDataType : string|undefined
-  ) : number {
-    const hash = hashBuffer(initData);
+  private _getIndex(initData : IInitializationDataInfo) : number {
+    const hash = hashBuffer(initData.data);
     for (let i = 0; i < this._entries.length; i++) {
       const entry = this._entries[i];
-      if (entry.initDataType === initDataType) {
+      if (entry.initDataType === initData.type) {
         if (entry.version === 2) {
           if (entry.initDataHash === hash) {
             try {
               const decodedInitData : Uint8Array = typeof entry.initData === "string" ?
                 InitDataContainer.decode(entry.initData) :
                 entry.initData.initData;
-              if (areArraysOfNumbersEqual(decodedInitData, initData)) {
+              if (areArraysOfNumbersEqual(decodedInitData, initData.data)) {
                 return i;
               }
             } catch (e) {
@@ -279,7 +267,7 @@ export default class PersistentSessionsStore {
               // ugly unreadable logic for a very very minor possibility.
               // Just consider that it is a match based on the hash.
               return i;
-            } else if (areArraysOfNumbersEqual(entry.initData, initData)) {
+            } else if (areArraysOfNumbersEqual(entry.initData, initData.data)) {
               return i;
             }
           }

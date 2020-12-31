@@ -45,9 +45,7 @@ import filterMap from "../../utils/filter_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
 import cleanOldStoredPersistentInfo from "./clean_old_stored_persistent_info";
-import getSession, {
-  IInitializationDataInfo,
-} from "./get_session";
+import getSession from "./get_session";
 import initMediaKeys from "./init_media_keys";
 import SessionEventsListener, {
   BlacklistedSessionError,
@@ -57,6 +55,7 @@ import {
   IAttachedMediaKeysEvent,
   IContentProtection,
   IEMEManagerEvent,
+  IInitializationDataInfo,
   IKeySystemOption,
 } from "./types";
 import InitDataStore from "./utils/init_data_store";
@@ -141,12 +140,11 @@ export default function EMEManager(
     /* Attach server certificate and create/reuse MediaKeySession */
     mergeMap(([encryptedEvent, mediaKeysEvent], i) => {
       const mediaKeysInfos = mediaKeysEvent.value;
-      const { keySystemOptions, mediaKeys } = mediaKeysInfos;
-      const { serverCertificate } = keySystemOptions;
+      const { instances, stores, options } = mediaKeysInfos;
+      const { serverCertificate } = options;
 
       const { type: initDataType, data: initData } = encryptedEvent;
-
-      const blacklistError = blacklistedInitData.get(initData, initDataType);
+      const blacklistError = blacklistedInitData.get(encryptedEvent);
       if (blacklistError !== undefined) {
         if (initDataType === undefined) {
           log.error("EME: The current session has already been blacklisted " +
@@ -162,23 +160,29 @@ export default function EMEManager(
                                        data: initData } });
       }
 
-      if (!handledInitData.storeIfNone(initData, initDataType, true)) {
+      if (!handledInitData.storeIfNone(encryptedEvent, true)) {
         log.debug("EME: Init data already received. Skipping it.");
         return observableOf({ type: "init-data-ignored" as const,
-                              value: { type: initDataType, data: initData } });
+                              value: { initializationData: encryptedEvent } });
       }
 
-      const session$ = getSession(encryptedEvent, mediaKeysInfos)
+      const wantedSessionType = options.persistentLicense === true ?
+        "persistent-license" :
+        "temporary";
+      const session$ = getSession(encryptedEvent, stores, wantedSessionType)
         .pipe(map((evt) => {
           if (evt.type === "cleaning-old-session") {
-            handledInitData.remove(evt.value.initData, evt.value.initDataType);
+            handledInitData.remove(encryptedEvent);
           }
           return {
             type: evt.type,
             value: objectAssign({
-              keySystemOptions: mediaKeysInfos.keySystemOptions,
-              persistentSessionsStore: mediaKeysInfos.persistentSessionsStore,
-              keySystem: mediaKeysInfos.mediaKeySystemAccess.keySystem,
+              initializationData: encryptedEvent,
+              keySystemOptions: options,
+              stores,
+              keySystem: instances.mediaKeySystemAccess.keySystem,
+              mediaKeySystemAccess: instances.mediaKeySystemAccess,
+              mediaKeys : instances.mediaKeys,
             }, evt.value),
           };
         }));
@@ -186,7 +190,8 @@ export default function EMEManager(
       // set server certificate when it is defined, at first received encrypted
       // event
       if (i === 0 && !isNullOrUndefined(serverCertificate)) {
-        return observableConcat(setServerCertificate(mediaKeys, serverCertificate),
+        return observableConcat(setServerCertificate(instances.mediaKeys,
+                                                     serverCertificate),
                                 session$);
       }
       return session$;
@@ -213,25 +218,25 @@ export default function EMEManager(
         default: // Use TypeScript to check if all possibilities have been checked
           assertUnreachable(sessionInfosEvt);
       }
-      const { initData,
-              initDataType,
+      const { initializationData,
               mediaKeySession,
               sessionType,
               keySystemOptions,
-              persistentSessionsStore,
+              stores,
               keySystem } = sessionInfosEvt.value;
 
       const generateRequest$ = sessionInfosEvt.type !== "created-session" ?
           EMPTY :
-          generateKeyRequest(mediaKeySession, initData, initDataType).pipe(
+          generateKeyRequest(mediaKeySession, initializationData).pipe(
             tap(() => {
+              const { persistentSessionsStore } = stores;
               if (sessionType === "persistent-license" &&
                   persistentSessionsStore !== null)
               {
                 cleanOldStoredPersistentInfo(
                   persistentSessionsStore,
                   EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
-                persistentSessionsStore.add(initData, initDataType, mediaKeySession);
+                persistentSessionsStore.add(initializationData, mediaKeySession);
               }
             }),
             catchError((error: unknown) => {
@@ -244,17 +249,17 @@ export default function EMEManager(
       return observableMerge(SessionEventsListener(mediaKeySession,
                                                    keySystemOptions,
                                                    keySystem,
-                                                   { initData, initDataType }),
+                                                   initializationData),
                              generateRequest$)
         .pipe(catchError(err => {
           if (!(err instanceof BlacklistedSessionError)) {
             throw err;
           }
 
-          blacklistedInitData.store(initData, initDataType, err);
+          blacklistedInitData.store(initializationData, err);
 
           const { sessionError } = err;
-          if (initDataType === undefined) {
+          if (initializationData.type === undefined) {
             log.error("EME: Current session blacklisted and content not known. " +
                       "Throwing.");
             sessionError.fatal = true;
@@ -265,8 +270,7 @@ export default function EMEManager(
           return observableOf({ type: "warning" as const,
                                 value: sessionError },
                               { type: "blacklist-protection-data" as const,
-                                value: { type: initDataType,
-                                         data: initData } });
+                                value: initializationData });
         }));
     }));
 

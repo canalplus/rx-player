@@ -108,7 +108,7 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenCalledWith("temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenCalledWith(mediaKeySession, initData, "cenc");
+                .toHaveBeenCalledWith(mediaKeySession, { data: initData, type: "cenc" });
               done();
             }, 10);
             break;
@@ -162,7 +162,8 @@ describe("core - eme - global tests - init data", () => {
                 expect(createSessionSpy).toHaveBeenCalledWith("temporary");
                 expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
                 expect(generateKeyRequestSpy)
-                  .toHaveBeenCalledWith(mediaKeySession, initData, "cenc");
+                  .toHaveBeenCalledWith(mediaKeySession, { data: initData,
+                                                           type: "cenc" });
                 done();
               }, 10);
             }
@@ -233,9 +234,11 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenNthCalledWith(2, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(1, mediaKeySession1, initData1, "cenc");
+                .toHaveBeenNthCalledWith(1, mediaKeySession1, { data: initData1,
+                                                                type: "cenc" });
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(2, mediaKeySession2, initData2, "cenc");
+                .toHaveBeenNthCalledWith(2, mediaKeySession2, { data: initData2,
+                                                                type: "cenc" });
               done();
             }, 10);
             break;
@@ -306,13 +309,17 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenNthCalledWith(4, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(4);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(1, mediaKeySessions[0], initData1, "cenc");
+                .toHaveBeenNthCalledWith(1, mediaKeySessions[0], { data: initData1,
+                                                                   type: "cenc" });
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(2, mediaKeySessions[1], initData1, "cenc2");
+                .toHaveBeenNthCalledWith(2, mediaKeySessions[1], { data: initData1,
+                                                                   type: "cenc2" });
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(3, mediaKeySessions[2], initData2, "cenc");
+                .toHaveBeenNthCalledWith(3, mediaKeySessions[2], { data: initData2,
+                                                                   type: "cenc" });
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], initData2, "cenc2");
+                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], { data: initData2,
+                                                                   type: "cenc2" });
               done();
             }, 10);
             break;
@@ -369,7 +376,8 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenCalledWith("temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenCalledWith(mediaKeySession, initData, "cenc");
+                .toHaveBeenCalledWith(mediaKeySession, { data: initData,
+                                                         type: "cenc" });
               done();
             }, 10);
             break;
@@ -432,7 +440,8 @@ describe("core - eme - global tests - init data", () => {
                 expect(createSessionSpy).toHaveBeenCalledWith("temporary");
                 expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
                 expect(generateKeyRequestSpy)
-                  .toHaveBeenCalledWith(mediaKeySession, initData, "cenc");
+                  .toHaveBeenCalledWith(mediaKeySession, { data: initData,
+                                                           type: "cenc" });
                 done();
               }, 10);
             }
@@ -516,9 +525,11 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenNthCalledWith(2, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(1, mediaKeySession1, initData1, "cenc");
+                .toHaveBeenNthCalledWith(1, mediaKeySession1, { data: initData1,
+                                                                type: "cenc" });
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(2, mediaKeySession2, initData2, "cenc");
+                .toHaveBeenNthCalledWith(2, mediaKeySession2, { data: initData2,
+                                                                type: "cenc" });
               done();
             }, 10);
             break;
@@ -603,13 +614,17 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenNthCalledWith(4, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(4);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(1, mediaKeySessions[0], initData1, "cenc");
+                .toHaveBeenNthCalledWith(1, mediaKeySessions[0], { data: initData1,
+                                                                   type: "cenc" });
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(2, mediaKeySessions[1], initData1, "cenc2");
+                .toHaveBeenNthCalledWith(2, mediaKeySessions[1], { data: initData1,
+                                                                   type: "cenc2" });
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(3, mediaKeySessions[2], initData2, "cenc");
+                .toHaveBeenNthCalledWith(3, mediaKeySessions[2], { data: initData2,
+                                                                   type: "cenc" });
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], initData2, "cenc2");
+                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], { data: initData2,
+                                                                   type: "cenc2" });
               done();
             }, 10);
             break;
@@ -685,7 +700,8 @@ describe("core - eme - global tests - init data", () => {
             expect(createSessionSpy).toHaveBeenNthCalledWith(1, "temporary");
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
             expect(generateKeyRequestSpy)
-              .toHaveBeenNthCalledWith(1, mediaKeySessions[0], initData1, "cenc");
+              .toHaveBeenNthCalledWith(1, mediaKeySessions[0], { data: initData1,
+                                                                 type: "cenc" });
             break;
           case 5:
             expectInitDataIgnored(evt, initData1, "cenc");
@@ -699,7 +715,8 @@ describe("core - eme - global tests - init data", () => {
             expect(createSessionSpy).toHaveBeenNthCalledWith(2, "temporary");
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
             expect(generateKeyRequestSpy)
-              .toHaveBeenNthCalledWith(2, mediaKeySessions[1], initData1, "cenc2");
+              .toHaveBeenNthCalledWith(2, mediaKeySessions[1], { data: initData1,
+                                                                 type: "cenc2" });
             break;
           case 7:
             checkEncryptedEventReceived(evt, initDataEvent2, initData1, 2);
@@ -731,7 +748,8 @@ describe("core - eme - global tests - init data", () => {
             expect(createSessionSpy).toHaveBeenNthCalledWith(3, "temporary");
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(3);
             expect(generateKeyRequestSpy)
-              .toHaveBeenNthCalledWith(3, mediaKeySessions[2], initData2, "cenc");
+              .toHaveBeenNthCalledWith(3, mediaKeySessions[2], { data: initData2,
+                                                                 type: "cenc" });
             break;
           case 12:
             expectInitDataIgnored(evt, initData2, "cenc");
@@ -752,7 +770,8 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenNthCalledWith(4, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(4);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], initData2, "cenc2");
+                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], { data: initData2,
+                                                                   type: "cenc2" });
               kill$.next();
               done();
             }, 5);

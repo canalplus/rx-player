@@ -47,12 +47,12 @@ export default function initMediaKeys(
   keySystemsConfigs: IKeySystemOption[]
 ): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
   return getMediaKeysInfos(mediaElement, keySystemsConfigs)
-    .pipe(mergeMap((mediaKeysInfos) => {
+    .pipe(mergeMap(({ instances, stores, options }) => {
       const attachMediaKeys$ = new ReplaySubject<void>(1);
       const shouldDisableOldMediaKeys =
         mediaElement.mediaKeys !== null &&
         mediaElement.mediaKeys !== undefined &&
-        mediaKeysInfos.mediaKeys !== mediaElement.mediaKeys;
+        instances.mediaKeys !== mediaElement.mediaKeys;
 
       const disableOldMediaKeys$ = shouldDisableOldMediaKeys ?
         disableMediaKeys(mediaElement) :
@@ -63,12 +63,17 @@ export default function initMediaKeys(
         mergeMap(() => {
           log.debug("EME: Disabled old MediaKeys. Waiting to attach new MediaKeys");
           return attachMediaKeys$.pipe(
-            mergeMap(() => attachMediaKeys(mediaKeysInfos, mediaElement)),
+            mergeMap(() => attachMediaKeys(stores.loadedSessionsStore,
+                                           instances,
+                                           mediaElement,
+                                           options)),
             take(1),
             mapTo({ type: "attached-media-keys" as const,
-                    value: mediaKeysInfos }),
+                    value: { instances, stores, options } }),
             startWith({ type: "created-media-keys" as const,
-                        value: { mediaKeysInfos,
+                        value: { instances,
+                                 stores,
+                                 options,
                                  attachMediaKeys$ } })
           );
         })

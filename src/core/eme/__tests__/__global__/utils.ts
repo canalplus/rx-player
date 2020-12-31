@@ -269,11 +269,12 @@ export function mockCompat(exportedFunctions = {}) {
   const setMediaKeysSpy = jest.fn(() => observableOf(null));
   const generateKeyRequestSpy = jest.fn((
     mks : MediaKeySessionImpl,
-    initData : BufferSource,
-    initDataType : string
+    initializationData: { data : BufferSource;
+                          type : string; }
   ) => {
     return observableDefer(() => {
-      return castToObservable(mks.generateRequest(initDataType, initData));
+      return castToObservable(mks.generateRequest(initializationData.type,
+                                                  initializationData.data));
     });
   });
 
@@ -348,8 +349,8 @@ export function expectLicenseRequestMessage(
 ) : void {
   expect(evt.type).toEqual("session-message");
   expect(evt.value.messageType).toEqual("license-request");
-  expect(evt.value.initData).toEqual(initData);
-  expect(evt.value.initDataType).toEqual(initDataType);
+  expect(evt.value.initializationData.data).toEqual(initData);
+  expect(evt.value.initializationData.type).toEqual(initDataType);
 }
 
 /**
@@ -363,8 +364,8 @@ export function expectInitDataIgnored(
   initDataType : string | undefined
 ) : void {
   expect(evt.type).toEqual("init-data-ignored");
-  expect(evt.value.data).toEqual(initData);
-  expect(evt.value.type).toEqual(initDataType);
+  expect(evt.value.initializationData.data).toEqual(initData);
+  expect(evt.value.initializationData.type).toEqual(initDataType);
 }
 
 /**
@@ -378,8 +379,8 @@ export function expectEncryptedEventReceived(
   initDataType : string | undefined
 ) : void {
   expect(evt.type).toEqual("encrypted-event-received");
-  expect(evt.value.type).toEqual(initDataType);
   expect(evt.value.data).toEqual(initData);
+  expect(evt.value.type).toEqual(initDataType);
 }
 
 /**

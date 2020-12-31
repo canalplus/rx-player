@@ -23,7 +23,7 @@ import {
   mapTo,
   startWith,
 } from "rxjs/operators";
-import { IMediaKeySessionInfo } from "./types";
+import { IMediaKeySessionContext } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 
 /**
@@ -32,7 +32,7 @@ import LoadedSessionsStore from "./utils/loaded_sessions_store";
  */
 export interface ICleanedOldSessionEvent {
   type : "cleaned-old-session";
-  value : IMediaKeySessionInfo;
+  value : IMediaKeySessionContext;
 }
 
 /**
@@ -41,7 +41,7 @@ export interface ICleanedOldSessionEvent {
  */
 export interface ICleaningOldSessionEvent {
   type : "cleaning-old-session";
-  value : IMediaKeySessionInfo;
+  value : IMediaKeySessionContext;
 }
 
 /**
@@ -70,7 +70,7 @@ export default function cleanOldLoadedSessions(
   for (let i = 0; i < toDelete; i++) {
     const entry = entries[i];
     const cleaning$ = loadedSessionsStore
-      .closeSession(entry.initData, entry.initDataType)
+      .closeSession(entry.initializationData)
       .pipe(mapTo({ type: "cleaned-old-session" as const,
                     value: entry }),
             startWith({ type: "cleaning-old-session" as const,

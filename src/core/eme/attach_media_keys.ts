@@ -23,7 +23,11 @@ import { mergeMap, tap } from "rxjs/operators";
 import { setMediaKeys } from "../../compat";
 import log from "../../log";
 import MediaKeysInfosStore from "./media_keys_infos_store";
-import { IMediaKeysInfos } from "./types";
+import {
+  IKeySystemOption,
+  IMediaKeysContext,
+} from "./types";
+import LoadedSessionsStore from "./utils/loaded_sessions_store";
 
 /**
  * Dispose the media keys on media element.
@@ -49,14 +53,13 @@ export function disableMediaKeys(
  * @returns {Observable}
  */
 export default function attachMediaKeys(
-  mediaKeysInfos: IMediaKeysInfos,
-  mediaElement : HTMLMediaElement
+  loadedSessionsStore : LoadedSessionsStore,
+  instances : IMediaKeysContext,
+  mediaElement : HTMLMediaElement,
+  keySystemOptions : IKeySystemOption
 ) : Observable<unknown> {
   return observableDefer(() => {
-    const { keySystemOptions,
-            mediaKeySystemAccess,
-            mediaKeys,
-            loadedSessionsStore } = mediaKeysInfos;
+    const { mediaKeySystemAccess, mediaKeys } = instances;
 
     const previousState = MediaKeysInfosStore.getState(mediaElement);
     const closeAllSessions$ = previousState !== null &&
