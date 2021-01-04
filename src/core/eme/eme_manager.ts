@@ -39,12 +39,16 @@ import {
   ICustomMediaKeySystemAccess,
 } from "../../compat/";
 import config from "../../config";
-import { EncryptedMediaError } from "../../errors";
+import { EncryptedMediaError, isKnownError } from "../../errors";
 import log from "../../log";
 import arrayIncludes from "../../utils/array_includes";
 import assertUnreachable from "../../utils/assert_unreachable";
 import filterMap from "../../utils/filter_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import {
+  ICleanedOldSessionEvent,
+  ICleaningOldSessionEvent,
+} from "./clean_old_loaded_sessions";
 import cleanOldStoredPersistentInfo from "./clean_old_stored_persistent_info";
 import getSession from "./get_session";
 import initMediaKeys from "./init_media_keys";
@@ -54,10 +58,16 @@ import SessionEventsListener, {
 import setServerCertificate from "./set_server_certificate";
 import {
   IAttachedMediaKeysEvent,
+  IBlacklistKeysEvent,
   IContentProtection,
   IEMEManagerEvent,
+  IEMEWarningEvent,
   IInitializationDataInfo,
   IKeySystemOption,
+  IMediaKeySessionStores,
+  INoUpdateEvent,
+  ISessionMessageEvent,
+  ISessionUpdatedEvent,
 } from "./types";
 import InitDataStore from "./utils/init_data_store";
 
@@ -173,14 +183,15 @@ export default function EMEManager(
       } else {
         wantedSessionType = "persistent-license";
       }
-
       return observableConcat(serverCertificate$,
-                              getSession(initializationData, stores, wantedSessionType))
-        .pipe(mergeMap((sessionEvt) =>  {
+                              handleEMESession(wantedSessionType,
+                                               initializationData,
+                                               stores,
+                                               mediaKeySystemAccess.keySystem,
+                                               options)).pipe(
+        /* Trigger license request and manage MediaKeySession events */
+        mergeMap((sessionEvt) =>  {
           switch (sessionEvt.type) {
-            case "warning":
-              return observableOf(sessionEvt);
-
             case "cleaning-old-session":
               handledInitData.remove(initializationData);
               return EMPTY;
@@ -188,75 +199,125 @@ export default function EMEManager(
             case "cleaned-old-session":
               return EMPTY;
 
-            case "created-session":
-            case "loaded-open-session":
-            case "loaded-persistent-session":
-              // Do nothing, just to check every possibility is taken
-              break;
+            default:
+              return observableOf(sessionEvt);
+          }
+        }),
 
-            default: // Use TypeScript to check if all possibilities have been checked
-              assertUnreachable(sessionEvt);
+        catchError(err => {
+          if (!(err instanceof BlacklistedSessionError)) {
+            throw err;
+          }
+          blacklistedInitData.store(initializationData, err);
+          const { sessionError } = err;
+          if (initializationData.type === undefined) {
+            log.error("EME: Current session blacklisted and content not known. " +
+                      "Throwing.");
+            sessionError.fatal = true;
+            throw sessionError;
           }
 
-          const { mediaKeySession,
-                  sessionType } = sessionEvt.value;
-
-          const generateRequest$ = sessionEvt.type !== "created-session" ?
-              EMPTY :
-              generateKeyRequest(mediaKeySession, initializationData).pipe(
-                tap(() => {
-                  const { persistentSessionsStore } = stores;
-                  if (sessionType === "persistent-license" &&
-                      persistentSessionsStore !== null)
-                  {
-                    cleanOldStoredPersistentInfo(
-                      persistentSessionsStore,
-                      EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
-                    persistentSessionsStore.add(initializationData, mediaKeySession);
-                  }
-                }),
-                catchError((error: unknown) => {
-                  throw new EncryptedMediaError(
-                    "KEY_GENERATE_REQUEST_ERROR",
-                     error instanceof Error ? error.toString() :
-                                              "Unknown error");
-                }),
-                ignoreElements());
-
-          return observableMerge(SessionEventsListener(mediaKeySession,
-                                                       options,
-                                                       mediaKeySystemAccess.keySystem,
-                                                       initializationData),
-                                 generateRequest$)
-            .pipe(catchError(err => {
-              if (!(err instanceof BlacklistedSessionError)) {
-                throw err;
-              }
-
-              blacklistedInitData.store(initializationData, err);
-
-              const { sessionError } = err;
-              if (initializationData.type === undefined) {
-                log.error("EME: Current session blacklisted and content not known. " +
-                          "Throwing.");
-                sessionError.fatal = true;
-                throw sessionError;
-              }
-
-              log.warn("EME: Current session blacklisted. Blacklisting content.");
-              return observableOf({ type: "warning" as const,
-                                    value: sessionError },
-                                  { type: "blacklist-protection-data" as const,
-                                    value: initializationData });
-            }));
+          log.warn("EME: Current session blacklisted. Blacklisting content.");
+          return observableOf({ type: "warning" as const,
+                                value: sessionError },
+                              { type: "blacklist-protection-data" as const,
+                                value: initializationData });
         }));
     }));
 
   return observableMerge(mediaKeysInit$,
-                         mediaEncryptedEvents$
-                           .pipe(map(evt => ({ type: "encrypted-event-received" as const,
-                                               value: evt }))),
+                         mediaEncryptedEvents$.pipe(
+                           map(evt => ({ type: "encrypted-event-received" as const,
+                                         value: evt }))),
                          bindSession$);
+}
+
+/**
+ * Create or load an already existing MediaKeySession linked to the given
+ * initialization data, generate a license request if necessary, and bind
+ * its events to the right callbacks.
+ * @param {Object} initializationData
+ * @param {string} keySystem
+ * @param {Object} keySystemOptions
+ * @param {string} wantedSessionType
+ * @returns {Observable}
+ */
+function handleEMESession(
+  wantedSessionType : MediaKeySessionType,
+  initializationData : IInitializationDataInfo,
+  stores : IMediaKeySessionStores,
+  keySystem : string,
+  keySystemOptions : IKeySystemOption
+) : Observable<IEMEWarningEvent |
+               ICleaningOldSessionEvent |
+               ICleanedOldSessionEvent |
+               INoUpdateEvent |
+               ISessionMessageEvent |
+               ISessionUpdatedEvent |
+               IBlacklistKeysEvent>
+{
+  return getSession(initializationData, stores, wantedSessionType).pipe(
+    /* Trigger license request and manage MediaKeySession events */
+    mergeMap((sessionEvt) =>  {
+      switch (sessionEvt.type) {
+        case "cleaned-old-session":
+        case "cleaning-old-session":
+          return observableOf(sessionEvt);
+
+        case "created-session":
+        case "loaded-open-session":
+        case "loaded-persistent-session":
+          break; // just to explicitly check every case
+
+        default: // Use TypeScript to check if all possibilities have been checked
+          assertUnreachable(sessionEvt);
+      }
+      const { mediaKeySession } = sessionEvt.value;
+
+      const generateRequest$ = sessionEvt.type !== "created-session" ?
+          EMPTY :
+          generateKeyRequest(mediaKeySession, initializationData).pipe(
+            /** Add to PersistentSessionsStore if persistent */
+            tap(() => {
+              const { persistentSessionsStore } = stores;
+              if (wantedSessionType === "persistent-license" &&
+                  persistentSessionsStore !== null)
+              {
+                cleanOldStoredPersistentInfo(
+                  persistentSessionsStore,
+                  EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
+                persistentSessionsStore.add(initializationData, mediaKeySession);
+              }
+            }),
+            catchError((error: unknown) => {
+              throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR",
+                                            error instanceof Error ? error.toString() :
+                                                                     "Unknown error");
+            }),
+            ignoreElements());
+
+      return observableMerge(SessionEventsListener(mediaKeySession,
+                                                   keySystemOptions,
+                                                   keySystem,
+                                                   initializationData),
+                             generateRequest$)
+        .pipe(catchError(err => {
+          if (!isKnownError(err) ||
+              err.code !== "KEY_UPDATE_ERROR" ||
+              wantedSessionType !== "persistent-license")
+          {
+            throw err;
+          }
+          // Retry, now creating a "temporary" MediaKeySession
+          const warning = { type: "warning" as const, value: err };
+          return observableConcat(observableOf(warning),
+                                  handleEMESession("temporary",
+                                                   initializationData,
+                                                   stores,
+                                                   keySystem,
+                                                   keySystemOptions));
+        }));
+    }));
 }
 
 /**
