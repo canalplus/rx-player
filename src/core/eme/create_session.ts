@@ -37,9 +37,6 @@ import isSessionUsable from "./utils/is_session_usable";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
 
-// XXX TODO Check MediaKeySystemAccess compatibility with persistent-license
-// MediaKeySession somewhere
-
 export interface INewSessionCreatedEvent {
   type : "created-session";
   value : { mediaKeySession : MediaKeySession |

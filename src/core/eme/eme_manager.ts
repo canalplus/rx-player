@@ -40,6 +40,7 @@ import {
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
+import arrayIncludes from "../../utils/array_includes";
 import assertUnreachable from "../../utils/assert_unreachable";
 import filterMap from "../../utils/filter_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -166,9 +167,17 @@ export default function EMEManager(
                               value: { initializationData: encryptedEvent } });
       }
 
-      const wantedSessionType = options.persistentLicense === true ?
-        "persistent-license" :
-        "temporary";
+      let wantedSessionType : MediaKeySessionType;
+      const { sessionTypes } = instances.mediaKeySystemAccess.getConfiguration();
+      if (sessionTypes === undefined ||
+          !arrayIncludes(sessionTypes, "persistent-license"))
+      {
+        log.warn("EME: Cannot create \"persistent-license\" session: not supported");
+        wantedSessionType = "temporary";
+      } else {
+        wantedSessionType = "persistent-license";
+      }
+
       const session$ = getSession(encryptedEvent, stores, wantedSessionType)
         .pipe(map((evt) => {
           if (evt.type === "cleaning-old-session") {
