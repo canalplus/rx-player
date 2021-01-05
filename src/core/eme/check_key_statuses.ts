@@ -17,14 +17,34 @@
 import { ICustomMediaKeySession } from "../../compat";
 import getUUIDKidFromKeyStatusKID from "../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../errors";
-import {
-  IEMEWarningEvent,
-  IKeySystemOption,
-} from "./types";
+import { IEMEWarningEvent } from "./types";
 
 const KEY_STATUSES = { EXPIRED: "expired",
                        INTERNAL_ERROR: "internal-error",
                        OUTPUT_RESTRICTED: "output-restricted" };
+
+export interface IKeyStatusesCheckingOptions {
+  /**
+   * If explicitely set to `false`, we won't throw on error when a used license
+   * is expired.
+   */
+  throwOnLicenseExpiration? : boolean;
+  /** Avoid throwing when invalid key statuses are encountered. */
+  fallbackOn? : {
+    /**
+     * If set to `true`, we won't throw when an "internal-error" key status is
+     * encountered but just add a warning and the corresponding key id to the list
+     * of blacklisted key ids.
+     */
+    keyInternalError? : boolean;
+    /**
+     * If set to `true`, we won't throw when an "output-restricted" key status is
+     * encountered but just add a warning and the corresponding key id to the list
+     * of blacklisted key ids.
+     */
+    keyOutputRestricted? : boolean;
+  };
+}
 
 /**
  * Look at the current key statuses in the sessions and construct the
@@ -33,19 +53,18 @@ const KEY_STATUSES = { EXPIRED: "expired",
  * Throws if one of the keyID is on an error.
  * @param {MediaKeySession} session - The MediaKeySession from which the keys
  * will be checked.
- * @param {Object} keySystemOptions - Options. Used to known on which situations
- * we can fallback.
+ * @param {Object} options
  * @param {String} keySystem - The configuration keySystem used for deciphering
  * @returns {Array} - Warnings to send and blacklisted key ids.
  */
 export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
-  keySystemOptions: IKeySystemOption,
+  options: IKeyStatusesCheckingOptions,
   keySystem: string
 ) : [IEMEWarningEvent[], ArrayBuffer[]] {
   const warnings : IEMEWarningEvent[] = [];
   const blacklistedKeyIDs : ArrayBuffer[] = [];
-  const { fallbackOn = {}, throwOnLicenseExpiration } = keySystemOptions;
+  const { fallbackOn = {}, throwOnLicenseExpiration } = options;
 
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   /* eslint-disable @typescript-eslint/no-unsafe-call */

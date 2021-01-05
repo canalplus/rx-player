@@ -51,7 +51,9 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import retryObsWithBackoff, {
   IBackoffOptions,
 } from "../../utils/rx-retry_with_backoff";
-import checkKeyStatuses from "./check_key_statuses";
+import checkKeyStatuses, {
+  IKeyStatusesCheckingOptions,
+} from "./check_key_statuses";
 import {
   IBlacklistKeysEvent,
   IInitializationDataInfo,
@@ -207,18 +209,18 @@ export default function SessionEventsListener(
  *    - emit warning events for recoverable errors
  *    - emit blacklist-keys events for key IDs that are not decipherable
  * @param {MediaKeySession} session - The MediaKeySession concerned.
- * @param {Object} keySystemOptions - The key system options.
- * @param {String} keySystem - The configuration keySystem used for deciphering
+ * @param {Object} options - Options related to key statuses checks.
+ * @param {String} keySystem - The name of the key system used for deciphering
  * @returns {Observable}
  */
 function getKeyStatusesEvents(
   session : MediaKeySession | ICustomMediaKeySession,
-  keySystemOptions : IKeySystemOption,
+  options : IKeyStatusesCheckingOptions,
   keySystem : string
 ) : Observable<IEMEWarningEvent | IBlacklistKeysEvent> {
   return observableDefer(() => {
     const [warnings, blacklistedKeyIDs] =
-      checkKeyStatuses(session, keySystemOptions, keySystem);
+      checkKeyStatuses(session, options, keySystem);
 
     const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
       EMPTY;
