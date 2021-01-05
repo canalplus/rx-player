@@ -100,11 +100,11 @@ export default function EMEManager(
   const blacklistedInitData = new InitDataStore<BlacklistedSessionError>();
 
   /** Emit the MediaKeys instance and its related information when ready. */
-  const mediaKeysInfos$ = initMediaKeys(mediaElement, keySystemsConfigs)
+  const mediaKeysInit$ = initMediaKeys(mediaElement, keySystemsConfigs)
     .pipe(shareReplay()); // Share side-effects and cache success
 
   /** Emit when the MediaKeys instance has been attached the HTMLMediaElement. */
-  const attachedMediaKeys$ = mediaKeysInfos$.pipe(
+  const attachedMediaKeys$ = mediaKeysInit$.pipe(
     filter((evt) : evt is IAttachedMediaKeysEvent => {
       return evt.type === "attached-media-keys";
     }),
@@ -130,24 +130,21 @@ export default function EMEManager(
     tap((evt) => { log.debug("EME: Encrypted event received from Player", evt); }));
 
   /** Emit events signaling that an encryption initialization data is encountered. */
-  const encryptedEvents$ = observableMerge(externalEvents$, mediaEncryptedEvents$);
+  const initializationData$ = observableMerge(externalEvents$, mediaEncryptedEvents$);
 
   /** Create MediaKeySessions and handle the corresponding events. */
-  const bindSession$ = encryptedEvents$.pipe(
+  const bindSession$ = initializationData$.pipe(
     // Add attached MediaKeys info once available
-    mergeMap((encryptedEvt) => attachedMediaKeys$.pipe(
+    mergeMap((initializationData) => attachedMediaKeys$.pipe(
       map((mediaKeysEvt) : [IInitializationDataInfo, IAttachedMediaKeysEvent] =>
-        [ encryptedEvt, mediaKeysEvt ]))),
+        [ initializationData, mediaKeysEvt ]))),
     /* Attach server certificate and create/reuse MediaKeySession */
-    mergeMap(([encryptedEvent, mediaKeysEvent], i) => {
-      const mediaKeysInfos = mediaKeysEvent.value;
-      const { instances, stores, options } = mediaKeysInfos;
-      const { serverCertificate } = options;
+    mergeMap(([initializationData, mediaKeysEvent], i) => {
+      const { instances, stores, options } = mediaKeysEvent.value;
 
-      const { type: initDataType, data: initData } = encryptedEvent;
-      const blacklistError = blacklistedInitData.get(encryptedEvent);
+      const blacklistError = blacklistedInitData.get(initializationData);
       if (blacklistError !== undefined) {
-        if (initDataType === undefined) {
+        if (initializationData.type === undefined) {
           log.error("EME: The current session has already been blacklisted " +
                     "but the current content is not known. Throwing.");
           const { sessionError } = blacklistError;
@@ -157,16 +154,16 @@ export default function EMEManager(
         log.warn("EME: The current session has already been blacklisted. " +
                  "Blacklisting content.");
         return observableOf({ type: "blacklist-protection-data" as const,
-                              value: { type: initDataType,
-                                       data: initData } });
+                              value: initializationData });
       }
 
-      if (!handledInitData.storeIfNone(encryptedEvent, true)) {
+      if (!handledInitData.storeIfNone(initializationData, true)) {
         log.debug("EME: Init data already received. Skipping it.");
         return observableOf({ type: "init-data-ignored" as const,
-                              value: { initializationData: encryptedEvent } });
+                              value: { initializationData } });
       }
 
+      const { serverCertificate } = options;
       const serverCertificate$ = i === 0 && !isNullOrUndefined(serverCertificate) ?
         setServerCertificate(instances.mediaKeys, serverCertificate) :
         EMPTY;
@@ -180,14 +177,14 @@ export default function EMEManager(
       }
 
       return observableConcat(serverCertificate$,
-                              getSession(encryptedEvent, stores, wantedSessionType))
+                              getSession(initializationData, stores, wantedSessionType))
         .pipe(mergeMap((sessionEvt) =>  {
           switch (sessionEvt.type) {
             case "warning":
               return observableOf(sessionEvt);
 
             case "cleaning-old-session":
-              handledInitData.remove(encryptedEvent);
+              handledInitData.remove(initializationData);
               return EMPTY;
 
             case "cleaned-old-session":
@@ -203,8 +200,7 @@ export default function EMEManager(
               assertUnreachable(sessionEvt);
           }
 
-          const { initializationData,
-                  mediaKeySession,
+          const { mediaKeySession,
                   sessionType } = sessionEvt.value;
 
           const generateRequest$ = sessionEvt.type !== "created-session" ?
@@ -259,7 +255,7 @@ export default function EMEManager(
         }));
     }));
 
-  return observableMerge(mediaKeysInfos$,
+  return observableMerge(mediaKeysInit$,
                          mediaEncryptedEvents$
                            .pipe(map(evt => ({ type: "encrypted-event-received" as const,
                                                value: evt }))),
