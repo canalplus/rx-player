@@ -32,17 +32,6 @@ export interface IInitializationDataInfo {
   data : Uint8Array;
 }
 
-/** Information concerning a MediaKeySession. */
-export interface IMediaKeySessionContext {
-  /** The MediaKeySession itself. */
-  mediaKeySession : MediaKeySession |
-                    ICustomMediaKeySession;
-  /** The type of MediaKeySession (e.g. "temporary"). */
-  sessionType : MediaKeySessionType;
-  /** Initialization data assiociated to this MediaKeySession. */
-  initializationData : IInitializationDataInfo;
-}
-
 /** Event emitted when a minor - recoverable - error happened. */
 export interface IEMEWarningEvent { type : "warning";
                                     value : ICustomError; }

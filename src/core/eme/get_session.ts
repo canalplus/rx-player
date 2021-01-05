@@ -34,12 +34,22 @@ import cleanOldLoadedSessions, {
 import createSession from "./create_session";
 import {
   IInitializationDataInfo,
-  IMediaKeySessionContext,
   IMediaKeySessionStores,
 } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
 
 const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS } = config;
+
+/** Information concerning a MediaKeySession. */
+export interface IMediaKeySessionContext {
+  /** The MediaKeySession itself. */
+  mediaKeySession : MediaKeySession |
+                    ICustomMediaKeySession;
+  /** The type of MediaKeySession (e.g. "temporary"). */
+  sessionType : MediaKeySessionType;
+  /** Initialization data assiociated to this MediaKeySession. */
+  initializationData : IInitializationDataInfo;
+}
 
 /** Event emitted when a new MediaKeySession has been created. */
 export interface ICreatedSession {

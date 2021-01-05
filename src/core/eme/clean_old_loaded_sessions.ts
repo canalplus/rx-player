@@ -23,7 +23,8 @@ import {
   mapTo,
   startWith,
 } from "rxjs/operators";
-import { IMediaKeySessionContext } from "./types";
+import { ICustomMediaKeySession } from "../../compat";
+import { IInitializationDataInfo } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 
 /**
@@ -32,7 +33,15 @@ import LoadedSessionsStore from "./utils/loaded_sessions_store";
  */
 export interface ICleanedOldSessionEvent {
   type : "cleaned-old-session";
-  value : IMediaKeySessionContext;
+  value : {
+    /** The MediaKeySession cleaned. */
+    mediaKeySession : MediaKeySession |
+                      ICustomMediaKeySession;
+    /** The type of MediaKeySession (e.g. "temporary"). */
+    sessionType : MediaKeySessionType;
+    /** Initialization data assiociated to this MediaKeySession. */
+    initializationData : IInitializationDataInfo;
+  };
 }
 
 /**
@@ -41,7 +50,15 @@ export interface ICleanedOldSessionEvent {
  */
 export interface ICleaningOldSessionEvent {
   type : "cleaning-old-session";
-  value : IMediaKeySessionContext;
+  value : {
+    /** The MediaKeySession that we are currently cleaning. */
+    mediaKeySession : MediaKeySession |
+                      ICustomMediaKeySession;
+    /** The type of MediaKeySession (e.g. "temporary"). */
+    sessionType : MediaKeySessionType;
+    /** Initialization data assiociated to this MediaKeySession. */
+    initializationData : IInitializationDataInfo;
+  };
 }
 
 /**
