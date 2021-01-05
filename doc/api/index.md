@@ -7,6 +7,7 @@
 - [Instantiation](#instantiation)
 - [Basic methods](#meth-group-basic)
     - [loadVideo](#meth-loadVideo)
+    - [reload](#meth-reload)
     - [getPlayerState](#meth-getPlayerState)
     - [addEventListener](#meth-addEventListener)
     - [removeEventListener](#meth-removeEventListener)
@@ -166,6 +167,47 @@ player.loadVideo({
   url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
   transport: "dash",
   autoPlay: true,
+});
+```
+
+<a name="meth-reload"></a>
+### reload #####################################################################
+
+_arguments_:
+  - _startAt_ (``Object``)
+
+After having called the loadVideo API, a user may call the reload function to 
+reload the video content using the last loaded manifest, and options that were
+given to the loadVideo call. The aim is to avoid to load again the manifest,
+which can reduce loading time by removing the fetching and parsing steps.
+
+At each new loadVideo call, the player fetches the manifest, and stores it as
+the new last content manifest.
+
+The startAt argument is an object containing the same attributes than the
+startAt argument of the [loadVideo function](#meth-loadVideo).
+
+/!\ Calling the dispose API will erase the last content memory, so the reload
+function will not work after that call.
+Calling the reload API just after having called the loadVideo API may not work,
+because the manifest has not been loaded yet.
+
+#### Example
+
+```js
+let lastPlaybackPosition = 0;
+
+const positionGetterInterval = setInterval(() => {
+  lastPlaybackPosition = player.getPosition();
+}, 500);
+
+player.addEventListener("error", (error) => {
+  clearInterval(positionGetterInterval);
+  if (error.message === "BUFFER_APPEND_ERROR") {
+    player.reload({ position: lastPlaybackPosition + 5 });
+  } else {
+    player.reload();
+  }
 });
 ```
 
