@@ -105,12 +105,15 @@ import createClock, {
 } from "./clock";
 import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
+  IPlayerStates,
   PLAYER_STATES,
 } from "./get_player_state";
 import MediaElementTrackChoiceManager from "./media_element_track_choice_manager";
 import {
   IConstructorOptions,
   ILoadVideoOptions,
+  IParsedLoadVideoOptions,
+  IParsedStartAtOption,
   parseConstructorOptions,
   parseLoadVideoOptions,
 } from "./option_parsers";
@@ -229,7 +232,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Current state of the RxPlayer.
    * Please use `getPlayerState()` instead.
    */
-  public state : string;
+  public state : IPlayerStates;
 
   /**
    * Emit when the the RxPlayer is not needed anymore and thus all resources
@@ -412,6 +415,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** Determines whether or not the player should stop at the end of video playback. */
   private readonly _priv_stopAtEnd : boolean;
 
+  /** Information about last content being played. */
+  private _priv_lastContentPlaybackInfos : { options?: IParsedLoadVideoOptions;
+                                             manifest?: Manifest; };
+
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
@@ -556,6 +563,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_preferredAudioTracks = preferredAudioTracks;
     this._priv_preferredTextTracks = preferredTextTracks;
     this._priv_preferredVideoTracks = preferredVideoTracks;
+
+    this._priv_lastContentPlaybackInfos = {};
   }
 
   /**
@@ -600,6 +609,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_bitrateInfos.maxAutoBitrates.video.complete();
     this._priv_bitrateInfos.maxAutoBitrates.audio.complete();
 
+    this._priv_lastContentPlaybackInfos = {};
+
     // un-attach video element
     this.videoElement = null;
   }
@@ -608,10 +619,37 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Load a new video.
    * @param {Object} opts
    */
-  loadVideo(opts : ILoadVideoOptions) : void {
+  loadVideo(opts: ILoadVideoOptions): void {
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options);
+    this._priv_lastContentPlaybackInfos = { options };
+    this.initializeContentPlayback(options);
+  }
 
+  /**
+   * Reload last content. Init media playback without fetching again
+   * the manifest.
+   * @param {Object} startAt
+   */
+  reload(startAt?: IParsedStartAtOption): void {
+    const { options, manifest } = this._priv_lastContentPlaybackInfos;
+    if (options === undefined ||
+        manifest === undefined) {
+      throw new Error("API: Can't reload without having previsouly loaded a content.");
+    }
+    const newOptions = { ...options,
+                         initialManifest: manifest };
+    if (startAt !== undefined) {
+      newOptions.startAt = startAt;
+    }
+    this.initializeContentPlayback(newOptions);
+  }
+
+  /**
+   * From given options, initialize content playback.
+   * @param {Object} options
+   */
+  private initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
     const { autoPlay,
             audioTrackSwitchingMode,
             defaultAudioTrack,
@@ -2173,6 +2211,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     this._priv_contentInfos.manifest = manifest;
+    this._priv_lastContentPlaybackInfos.manifest = manifest;
 
     const { initialAudioTrack, initialTextTrack } = this._priv_contentInfos;
     this._priv_trackChoiceManager = new TrackChoiceManager();
@@ -2528,7 +2567,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {string} newState
    */
-  private _priv_setPlayerState(newState : string) : void {
+  private _priv_setPlayerState(newState : IPlayerStates) : void {
     if (this.state !== newState) {
       this.state = newState;
       log.info("API: playerStateChange event", newState);

@@ -41,6 +41,7 @@ import {
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
 import log from "../../log";
+import Manifest from "../../manifest";
 import {
   ILoadedManifest,
   ITransportPipelines,
@@ -61,6 +62,7 @@ import {
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
+  IManifestFetcherWarningEvent,
   ManifestFetcher,
   SegmentFetcherCreator,
 } from "../fetchers";
@@ -266,11 +268,20 @@ export default function InitializeOnMediaSource(
    */
   const mediaError$ = throwOnMediaError(mediaElement);
 
-  const initialManifestRequest$ = (initialManifest === undefined ?
-    fetchManifest(url, { previousManifest: null, unsafeMode: false }) :
-    manifestFetcher.parse(initialManifest, { previousManifest: null,
-                                             unsafeMode: false })
-  );
+  let initialManifestRequest$: Observable<IManifestFetcherParsedResult |
+                                          IManifestFetcherWarningEvent>;
+  if (initialManifest instanceof Manifest) {
+    initialManifestRequest$ = observableOf({ type: "parsed",
+                                             manifest: initialManifest,
+                                             parsingTime: 0 });
+  } else if (initialManifest !== undefined) {
+    initialManifestRequest$ =
+      manifestFetcher.parse(initialManifest, { previousManifest: null,
+                                               unsafeMode: false });
+  } else {
+    initialManifestRequest$ =
+      fetchManifest(url, { previousManifest: null, unsafeMode: false });
+  }
 
   /**
    * Wait for the MediaKeys to have been created before
