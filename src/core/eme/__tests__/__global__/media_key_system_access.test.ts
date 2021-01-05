@@ -405,7 +405,7 @@ describe("core - eme - global tests - media key system access", () => {
   /* eslint-disable max-len */
   it("should successfully create a MediaKeySystemAccess if given the right configuration", async () => {
   /* eslint-enable max-len */
-    return new Promise((res, rej) => {
+    return new Promise<void>((res, rej) => {
       const requestMediaKeySystemAccessSpy = jest.fn((keyType, conf) => {
         return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
       });
@@ -434,7 +434,7 @@ describe("core - eme - global tests - media key system access", () => {
   /* eslint-disable max-len */
   it("should successfully create a MediaKeySystemAccess if given multiple configurations where one works", async () => {
   /* eslint-enable max-len */
-    return new Promise((res, rej) => {
+    return new Promise<void>((res, rej) => {
       let callNb = 0;
       const requestMediaKeySystemAccessSpy = jest.fn((keyType, conf) => {
         if (++callNb === 2) {
@@ -469,7 +469,7 @@ describe("core - eme - global tests - media key system access", () => {
   });
 
   xit("should not continue to check if the observable is unsubscribed from", () => {
-    return new Promise((res, rej) => {
+    return new Promise<void>((res, rej) => {
       const killSubject$ = new Subject();
       let rmksHasBeenCalled = false;
       const requestMediaKeySystemAccessSpy = jest.fn(() => {

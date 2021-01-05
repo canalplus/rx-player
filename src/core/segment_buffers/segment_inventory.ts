@@ -159,17 +159,17 @@ export default class SegmentInventory {
    * This array contains objects, each being related to a single downloaded
    * chunk or segment which is at least partially added in the media buffer.
    */
-  private inventory : IBufferedChunk[];
+  private _inventory : IBufferedChunk[];
 
   constructor() {
-    this.inventory = [];
+    this._inventory = [];
   }
 
   /**
    * Reset the whole inventory.
    */
   public reset() : void {
-    this.inventory.length = 0;
+    this._inventory.length = 0;
   }
 
   /**
@@ -185,7 +185,7 @@ export default class SegmentInventory {
    * @param {TimeRanges}
    */
   public synchronizeBuffered(buffered : TimeRanges) : void {
-    const { inventory } = this;
+    const inventory = this._inventory;
     let inventoryIndex = 0; // Current index considered.
     let thisSegment = inventory[0]; // Current segmentInfos considered
 
@@ -315,7 +315,7 @@ export default class SegmentInventory {
     }
     if (bufferType !== undefined && log.getLevel() === "DEBUG") {
       log.debug(`SI: current ${bufferType} inventory timeline:\n` +
-                prettyPrintInventory(this.inventory));
+                prettyPrintInventory(this._inventory));
     }
   }
 
@@ -345,7 +345,7 @@ export default class SegmentInventory {
       return;
     }
 
-    const { inventory } = this;
+    const inventory = this._inventory;
     const newSegment = { partiallyPushed: true,
                          estimatedStart: start,
                          start,
@@ -375,7 +375,7 @@ export default class SegmentInventory {
           //   ===>         : |------| |======|
           log.debug("SI: Pushing segment strictly after previous one.",
                     bufferType, start, segmentI.end);
-          this.inventory.splice(i + 1, 0, newSegment);
+          this._inventory.splice(i + 1, 0, newSegment);
 
           i += 2; // Go to segment immediately after newSegment
           while (i < inventory.length && inventory[i].start < newSegment.end) {
@@ -431,7 +431,7 @@ export default class SegmentInventory {
               //  ===>         : |==========|
               log.debug("SI: Segment pushed replace another one",
                         bufferType, start, end, segmentI.end);
-              this.inventory.splice(i, 1, newSegment);
+              this._inventory.splice(i, 1, newSegment);
               i += 1; // Go to segment immediately after newSegment
               while (i < inventory.length && inventory[i].start < newSegment.end) {
                 if (inventory[i].end > newSegment.end) {
@@ -502,7 +502,7 @@ export default class SegmentInventory {
               //  ===>         : |--|====|
               log.debug("SI: Segment pushed updates end of previous one",
                         bufferType, start, end, segmentI.start, segmentI.end);
-              this.inventory.splice(i + 1, 0, newSegment);
+              this._inventory.splice(i + 1, 0, newSegment);
               segmentI.end = newSegment.start;
               segmentI.bufferedEnd = undefined;
               segmentI.precizeEnd = segmentI.precizeEnd &&
@@ -578,10 +578,10 @@ export default class SegmentInventory {
 
     // if we got here, we are at the first segment
     // check bounds of the previous first segment
-    const firstSegment = this.inventory[0];
+    const firstSegment = this._inventory[0];
     if (firstSegment === undefined) { // we do not have any segment yet
       log.debug("SI: first segment pushed", bufferType, start, end);
-      this.inventory.push(newSegment);
+      this._inventory.push(newSegment);
       return;
     }
 
@@ -599,7 +599,7 @@ export default class SegmentInventory {
       //  ===>         : |====| |----|
       log.debug("SI: Segment pushed comes before all previous ones",
                 bufferType, start, end, firstSegment.start);
-      this.inventory.splice(0, 0, newSegment);
+      this._inventory.splice(0, 0, newSegment);
     } else if (firstSegment.end <= end) {
       // Our segment is bigger, replace the first
       //
@@ -615,7 +615,7 @@ export default class SegmentInventory {
       log.debug("SI: Segment pushed starts before and completely " +
                 "recovers the previous first one",
                 bufferType, start, end , firstSegment.start, firstSegment.end);
-      this.inventory.splice(0, 1, newSegment);
+      this._inventory.splice(0, 1, newSegment);
       while (inventory.length > 1 && inventory[1].start < newSegment.end) {
         if (inventory[1].end > newSegment.end) {
           // The next segment ends after newSegment.
@@ -662,7 +662,7 @@ export default class SegmentInventory {
       firstSegment.start = end;
       firstSegment.bufferedStart = undefined;
       firstSegment.precizeStart = newSegment.precizeEnd;
-      this.inventory.splice(0, 0, newSegment);
+      this._inventory.splice(0, 0, newSegment);
       return;
     }
   }
@@ -682,7 +682,7 @@ export default class SegmentInventory {
     if (content.segment.isInit) {
       return;
     }
-    const { inventory } = this;
+    const inventory = this._inventory;
 
     let foundIt = false;
     for (let i = 0; i < inventory.length; i++) {
@@ -705,12 +705,12 @@ export default class SegmentInventory {
         const lastEnd = inventory[lastI].end;
         const lastBufferedEnd = inventory[lastI].bufferedEnd;
         if (length > 0) {
-          this.inventory.splice(firstI + 1, length);
+          this._inventory.splice(firstI + 1, length);
           i -= length;
         }
-        this.inventory[firstI].partiallyPushed = false;
-        this.inventory[firstI].end = lastEnd;
-        this.inventory[firstI].bufferedEnd = lastBufferedEnd;
+        this._inventory[firstI].partiallyPushed = false;
+        this._inventory[firstI].end = lastEnd;
+        this._inventory[firstI].bufferedEnd = lastBufferedEnd;
       }
     }
 
@@ -727,7 +727,7 @@ export default class SegmentInventory {
    * @returns {Array.<Object>}
    */
   public getInventory() : IBufferedChunk[] {
-    return this.inventory;
+    return this._inventory;
   }
 }
 

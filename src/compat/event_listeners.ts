@@ -259,11 +259,13 @@ function onPictureInPictureEvent$(
         startWith({ isEnabled: isWebKitPIPEnabled, pipWindow: null }));
     }
 
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     const isPIPEnabled = (
       (document as any).pictureInPictureElement &&
       (document as any).pictureInPictureElement === mediaElement
     );
     const initialState = { isEnabled: isPIPEnabled, pipWindow: null };
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     return observableMerge(
       observableFromEvent(mediaElement, "enterpictureinpicture")
         .pipe(map((evt: any) => ({
