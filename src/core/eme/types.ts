@@ -67,10 +67,18 @@ export interface IEncryptedEvent { type: "encrypted-event-received";
  */
 export interface ICreatedMediaKeysEvent {
   type: "created-media-keys";
-  value: { instances : IMediaKeysContext;
-           stores : IMediaKeySessionStores;
-           options : IKeySystemOption;
-           attachMediaKeys$: Subject<void>; }; }
+  value: {
+    /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
+    mediaKeySystemAccess: MediaKeySystemAccess |
+                          ICustomMediaKeySystemAccess;
+    /** The MediaKeys instance. */
+    mediaKeys : MediaKeys |
+                ICustomMediaKeys;
+    stores : IMediaKeySessionStores;
+    options : IKeySystemOption;
+    attachMediaKeys$: Subject<void>;
+  };
+}
 
 /**
  * Sent when the created (or already created) MediaKeys is attached to the
@@ -82,9 +90,17 @@ export interface ICreatedMediaKeysEvent {
  */
 export interface IAttachedMediaKeysEvent {
   type: "attached-media-keys";
-  value: { instances : IMediaKeysContext;
-           stores : IMediaKeySessionStores;
-           options : IKeySystemOption; }; }
+  value: {
+    /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
+    mediaKeySystemAccess: MediaKeySystemAccess |
+                          ICustomMediaKeySystemAccess;
+    /** The MediaKeys instance. */
+    mediaKeys : MediaKeys |
+                ICustomMediaKeys;
+    stores : IMediaKeySessionStores;
+    options : IKeySystemOption;
+  };
+}
 
 /**
  * Emitted when the initialization data received through an encrypted event or
@@ -195,16 +211,6 @@ export interface IKeySystemAccessInfos {
   keySystemAccess: MediaKeySystemAccess |
                    ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption;
-}
-
-/** Context behind a created MediaKeys instance. */
-export interface IMediaKeysContext {
-  /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
-  mediaKeySystemAccess: MediaKeySystemAccess |
-                        ICustomMediaKeySystemAccess;
-  /** The MediaKeys instance. */
-  mediaKeys : MediaKeys |
-              ICustomMediaKeys;
 }
 
 /** Stores helping to create and retrieve MediaKeySessions. */

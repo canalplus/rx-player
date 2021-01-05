@@ -117,10 +117,8 @@ export default function EMEManager(
     }),
     filterMap<MediaEncryptedEvent, IInitializationDataInfo, null>((evt) => {
       const { initData, initDataType } = getInitData(evt);
-      if (initData === null) {
-        return null;
-      }
-      return { type: initDataType, data: initData };
+      return initData === null ? null :
+                                 { type: initDataType, data: initData };
     }, null),
     shareReplay({ refCount: true })); // multiple Observables listen to that one
                                       // as soon as the EMEManager is subscribed
@@ -140,7 +138,7 @@ export default function EMEManager(
         [ initializationData, mediaKeysEvt ]))),
     /* Attach server certificate and create/reuse MediaKeySession */
     mergeMap(([initializationData, mediaKeysEvent], i) => {
-      const { instances, stores, options } = mediaKeysEvent.value;
+      const { mediaKeys, mediaKeySystemAccess, stores, options } = mediaKeysEvent.value;
 
       const blacklistError = blacklistedInitData.get(initializationData);
       if (blacklistError !== undefined) {
@@ -165,11 +163,11 @@ export default function EMEManager(
 
       const { serverCertificate } = options;
       const serverCertificate$ = i === 0 && !isNullOrUndefined(serverCertificate) ?
-        setServerCertificate(instances.mediaKeys, serverCertificate) :
+        setServerCertificate(mediaKeys, serverCertificate) :
         EMPTY;
 
       let wantedSessionType : MediaKeySessionType;
-      if (!canCreatePersistentSession(instances.mediaKeySystemAccess)) {
+      if (!canCreatePersistentSession(mediaKeySystemAccess)) {
         log.warn("EME: Cannot create \"persistent-license\" session: not supported");
         wantedSessionType = "temporary";
       } else {
@@ -225,10 +223,9 @@ export default function EMEManager(
                 }),
                 ignoreElements());
 
-          const { keySystem } = instances.mediaKeySystemAccess;
           return observableMerge(SessionEventsListener(mediaKeySession,
                                                        options,
-                                                       keySystem,
+                                                       mediaKeySystemAccess.keySystem,
                                                        initializationData),
                                  generateRequest$)
             .pipe(catchError(err => {
