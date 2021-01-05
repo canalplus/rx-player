@@ -331,6 +331,64 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
+    describe("reload", () => {
+      it("should reload at given absolute position", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        const firstPosition = manifestInfos.minimumPosition;
+        expect(player.getPosition()).to.be.closeTo(firstPosition, 0.1);
+        player.reload({ position: firstPosition + 10 });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition()).to.be.closeTo(firstPosition + 10, 0.1);
+      });
+      it("should reload from first position", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        const firstPosition = manifestInfos.minimumPosition;
+        expect(player.getPosition()).to.be.closeTo(firstPosition, 0.1);
+        player.reload({ fromFirstPosition: 10 });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition()).to.be.closeTo(firstPosition + 10, 0.1);
+      });
+      it("should reload from last position", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        const firstPosition = manifestInfos.minimumPosition;
+        const lastPosition = manifestInfos.maximumPosition;
+        expect(player.getPosition()).to.be.closeTo(firstPosition, 0.1);
+        player.reload({ fromLastPosition: -10 });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition()).to.be.closeTo(lastPosition - 10, 0.1);
+      });
+      it("should reuse startAt when no given time for reload API", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          startAt: { position: manifestInfos.minimumPosition + 5 },
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
+        player.reload();
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
+      });
+    });
+
     describe("getCurrentAdaptations", () => {
       it("should return the currently played adaptations", async function () {
         player.setVideoBitrate(0);
