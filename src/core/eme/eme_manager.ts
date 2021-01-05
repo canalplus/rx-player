@@ -36,6 +36,7 @@ import {
   events,
   generateKeyRequest,
   getInitData,
+  ICustomMediaKeySystemAccess,
 } from "../../compat/";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
@@ -171,10 +172,7 @@ export default function EMEManager(
         EMPTY;
 
       let wantedSessionType : MediaKeySessionType;
-      const { sessionTypes } = instances.mediaKeySystemAccess.getConfiguration();
-      if (sessionTypes === undefined ||
-          !arrayIncludes(sessionTypes, "persistent-license"))
-      {
+      if (!canCreatePersistentSession(instances.mediaKeySystemAccess)) {
         log.warn("EME: Cannot create \"persistent-license\" session: not supported");
         wantedSessionType = "temporary";
       } else {
@@ -266,4 +264,18 @@ export default function EMEManager(
                            .pipe(map(evt => ({ type: "encrypted-event-received" as const,
                                                value: evt }))),
                          bindSession$);
+}
+
+/**
+ * Returns `true` if the given MediaKeySystemAccess can create
+ * "persistent-license" MediaKeySessions.
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess
+ * @returns {Boolean}
+ */
+function canCreatePersistentSession(
+  mediaKeySystemAccess : MediaKeySystemAccess | ICustomMediaKeySystemAccess
+) : boolean {
+  const { sessionTypes } = mediaKeySystemAccess.getConfiguration();
+  return sessionTypes !== undefined &&
+         arrayIncludes(sessionTypes, "persistent-license");
 }
