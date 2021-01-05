@@ -268,22 +268,29 @@ export default function StreamOrchestrator(
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
     const restartStreamsWhenOutOfBounds$ = clock$.pipe(
-      filter(({ position, wantedTimeOffset }) => {
-        return enableOutOfBoundsCheck &&
-               manifest.getNextPeriod(wantedTimeOffset + position) !== undefined &&
-               isOutOfPeriodList(wantedTimeOffset + position);
-      }),
-      tap(({ position, wantedTimeOffset }) => {
+      filterMap<
+        IStreamOrchestratorClockTick,
+        Period,
+        null
+      >(({ position, wantedTimeOffset }) => {
+        const time = wantedTimeOffset + position;
+        if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
+          return null;
+        }
+        const nextPeriod = manifest.getPeriodForTime(time) ??
+                           manifest.getNextPeriod(time);
+        if (nextPeriod === undefined) {
+          return null;
+        }
         log.info("SO: Current position out of the bounds of the active periods," +
                  "re-creating Streams.",
                  bufferType,
                  position + wantedTimeOffset);
         enableOutOfBoundsCheck = false;
         destroyStreams$.next();
-      }),
-      mergeMap(({ position, wantedTimeOffset }) => {
-        const newInitialPeriod = manifest
-          .getNextPeriod(position + wantedTimeOffset);
+        return nextPeriod;
+      }, null),
+      mergeMap((newInitialPeriod) => {
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND",
                                "The wanted position is not found in the Manifest.");

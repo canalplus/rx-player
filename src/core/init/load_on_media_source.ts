@@ -105,8 +105,9 @@ export default function createMediaSourceLoader(
                                        manifest.getMaximumPosition();
     setDurationToMediaSource(mediaSource, duration);
 
-    const initialPeriod = manifest.getNextPeriod(initialTime);
-    if (initialPeriod == null) {
+    const initialPeriod = manifest.getPeriodForTime(initialTime) ??
+                          manifest.getNextPeriod(initialTime);
+    if (initialPeriod === undefined) {
       throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
                            "Wanted starting time not found in the Manifest.");
     }
