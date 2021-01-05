@@ -109,7 +109,22 @@ export default {
   DELTA_POSITION_AFTER_RELOAD: {
     /** Relative position when switching the bitrate */
     bitrateSwitch: -0.1,
-    /** Relative position when switching the track */
+    /**
+     * Relative position when switching the track.
+     *
+     * From tests, I noticed that seeking back was only really "pleasant" when
+     * switching the audio track.
+     *
+     * E.g. switching the video track often means changing the camera angle or
+     * even totally changing what is being seen and rely much less on temporal
+     * context than when an audio track is switched.
+     * As such, I decided to only set a sensible seek-back behavior when
+     * switching the audio track, and only a minimal one (to still ensure
+     * nothing was missed) for video.
+     *
+     * "Other" mainly concern text track, where seeking back could even be
+     * annoying, so that behavior has been disabled in that case.
+     */
     trackSwitch: { audio: -0.7,
                    video: -0.1,
                    other: 0 },
