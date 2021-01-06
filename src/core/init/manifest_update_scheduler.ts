@@ -50,7 +50,7 @@ export interface IManifestUpdateSchedulerArguments {
   initialManifest : { manifest : Manifest;
                       sendingTime? : number;
                       receivedTime? : number;
-                      parsingTime : number; };
+                      parsingTime? : number; };
   /** URL at which a shorter version of the Manifest can be found. */
   manifestUpdateUrl : string | undefined;
   /** Minimum interval to keep between Manifest updates */
@@ -109,7 +109,7 @@ export default function manifestUpdateScheduler({
     manifestInfos: { manifest: Manifest;
                      sendingTime?: number;
                      receivedTime? : number;
-                     parsingTime : number;
+                     parsingTime? : number;
                      updatingTime? : number; }): Observable<IWarningEvent> {
     const { sendingTime,
             parsingTime,
@@ -119,13 +119,17 @@ export default function manifestUpdateScheduler({
      * Total time taken to fully update the last Manifest.
      * Note: this time also includes possible requests done by the parsers.
      */
-    const totalUpdateTime = parsingTime + (updatingTime ?? 0);
+    const totalUpdateTime = parsingTime !== undefined ?
+      parsingTime + (updatingTime ?? 0) :
+      undefined;
 
     // Only perform parsing in `unsafeMode` when the last full parsing took a
     // lot of time and do not go higher than the maximum consecutive time.
     const unsafeModeEnabled = consecutiveUnsafeMode > 0 ?
       consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE :
-      totalUpdateTime >= MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE;
+      totalUpdateTime !== undefined ?
+        (totalUpdateTime >= MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE) :
+        false;
 
     const internalRefresh$ = scheduleRefresh$
       .pipe(mergeMap(({ completeRefresh, delay, canUseUnsafeMode }) => {
@@ -145,20 +149,23 @@ export default function manifestUpdateScheduler({
       autoRefresh$ = EMPTY;
     } else {
       let autoRefreshInterval = manifest.lifetime * 1000 - timeSinceRequest;
-      if (manifest.lifetime < 3 && totalUpdateTime >= 100) {
-        const defaultDelay = (3 - manifest.lifetime) * 1000 + autoRefreshInterval;
-        const newInterval = Math.max(defaultDelay,
-                                     Math.max(autoRefreshInterval, 0) + totalUpdateTime);
-        log.info("MUS: Manifest update rythm is too frequent. Postponing next request.",
-                 autoRefreshInterval,
-                 newInterval);
-        autoRefreshInterval = newInterval;
-      } else if (totalUpdateTime >= (manifest.lifetime * 1000) / 10) {
-        const newInterval = Math.max(autoRefreshInterval, 0) + totalUpdateTime;
-        log.info("MUS: Manifest took too long to parse. Postponing next request",
-                 autoRefreshInterval,
-                 newInterval);
-        autoRefreshInterval = newInterval;
+      if (totalUpdateTime !== undefined) {
+        if (manifest.lifetime < 3 && totalUpdateTime >= 100) {
+          const defaultDelay = (3 - manifest.lifetime) * 1000 + autoRefreshInterval;
+          const newInterval =
+            Math.max(defaultDelay,
+                     Math.max(autoRefreshInterval, 0) + totalUpdateTime);
+          log.info("MUS: Manifest update rythm is too frequent. Postponing next request.",
+                   autoRefreshInterval,
+                   newInterval);
+          autoRefreshInterval = newInterval;
+        } else if (totalUpdateTime >= (manifest.lifetime * 1000) / 10) {
+          const newInterval = Math.max(autoRefreshInterval, 0) + totalUpdateTime;
+          log.info("MUS: Manifest took too long to parse. Postponing next request",
+                   autoRefreshInterval,
+                   newInterval);
+          autoRefreshInterval = newInterval;
+        }
       }
       autoRefresh$ = observableTimer(Math.max(autoRefreshInterval, minInterval))
         .pipe(mapTo({ completeRefresh: false, unsafeMode: unsafeModeEnabled }));

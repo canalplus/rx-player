@@ -272,8 +272,7 @@ export default function InitializeOnMediaSource(
                                           IManifestFetcherWarningEvent>;
   if (initialManifest instanceof Manifest) {
     initialManifestRequest$ = observableOf({ type: "parsed",
-                                             manifest: initialManifest,
-                                             parsingTime: 0 });
+                                             manifest: initialManifest });
   } else if (initialManifest !== undefined) {
     initialManifestRequest$ =
       manifestFetcher.parse(initialManifest, { previousManifest: null,
