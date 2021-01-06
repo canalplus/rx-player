@@ -174,23 +174,30 @@ player.loadVideo({
 ### reload #####################################################################
 
 _arguments_:
-  - _startAt_ (``Object``)
+  - _options_ (``Object``)
 
-After having called the loadVideo API, a user may call the reload function to 
-reload the video content using the last loaded manifest, and options that were
-given to the loadVideo call. The aim is to avoid to load again the manifest,
-which can reduce loading time by removing the fetching and parsing steps.
+Re-load the last loaded content, with its original loadVideo options, as fast as
+possible, using the last loaded manifest. The aim is to reduce loading time by
+removing the fetching and parsing steps.
 
 At each new loadVideo call, the player fetches the manifest, and stores it as
 the new last content manifest.
 
-The startAt argument is an object containing the same attributes than the
-startAt argument of the [loadVideo function](#meth-loadVideo).
+This API can be called at any time after a content has been loaded (the LOADED
+state has been reached), even if the player has been stopped since and even if
+it was due to a fatal error.
+
+The user may need to call this API in several cases. For example, it may be used
+in case of an error that will not reproduce or inversely when the error is
+consistent at a certain playback time (e.g. due to a specific chunk).
+
+The options argument is an object containing :
+- _startAt_ (``Object | undefined``): same as the loadVideo startAt argument 
+[loadVideo function](#meth-loadVideo). If it is not defined, the startAt from
+the last loaded content will be used.
 
 /!\ Calling the dispose API will erase the last content memory, so the reload
 function will not work after that call.
-Calling the reload API just after having called the loadVideo API may not work,
-because the manifest has not been loaded yet.
 
 #### Example
 
@@ -203,7 +210,7 @@ const positionGetterInterval = setInterval(() => {
 
 player.addEventListener("error", (error) => {
   clearInterval(positionGetterInterval);
-  if (error.message === "BUFFER_APPEND_ERROR") {
+  if (error.code === "BUFFER_APPEND_ERROR") {
     player.reload({ position: lastPlaybackPosition + 5 });
   } else {
     player.reload();
