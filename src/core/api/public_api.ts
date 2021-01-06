@@ -623,7 +623,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options);
     this._priv_lastContentPlaybackInfos = { options };
-    this.initializeContentPlayback(options);
+    this._priv_initializeContentPlayback(options);
   }
 
   /**
@@ -642,14 +642,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (startAt !== undefined) {
       newOptions.startAt = startAt;
     }
-    this.initializeContentPlayback(newOptions);
+    this._priv_initializeContentPlayback(newOptions);
   }
 
   /**
    * From given options, initialize content playback.
    * @param {Object} options
    */
-  private initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
+  private _priv_initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
     const { autoPlay,
             audioTrackSwitchingMode,
             defaultAudioTrack,
