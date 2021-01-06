@@ -635,7 +635,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const { options, manifest } = this._priv_lastContentPlaybackInfos;
     if (options === undefined ||
         manifest === undefined) {
-      throw new Error("API: Can't reload without having previsouly loaded a content.");
+      throw new Error("API: Can't reload without having previously loaded a content.");
     }
     const newOptions = { ...options,
                          initialManifest: manifest };
