@@ -174,14 +174,11 @@ player.loadVideo({
 ### reload #####################################################################
 
 _arguments_:
-  - _options_ (``Object``)
+  - _options_ (``Object | undefined``)
 
 Re-load the last loaded content, with its original loadVideo options, as fast as
 possible, using the last loaded manifest. The aim is to reduce loading time by
 removing the fetching and parsing steps.
-
-At each new loadVideo call, the player fetches the manifest, and stores it as
-the new last content manifest.
 
 This API can be called at any time after a content has been loaded (the LOADED
 state has been reached), even if the player has been stopped since and even if
@@ -189,15 +186,14 @@ it was due to a fatal error.
 
 The user may need to call this API in several cases. For example, it may be used
 in case of an error that will not reproduce or inversely when the error is
-consistent at a certain playback time (e.g. due to a specific chunk).
+consistent at a certain playback time (e.g. due to a specific chunk defect).
 
 The options argument is an object containing :
 - _startAt_ (``Object | undefined``): same as the loadVideo startAt argument 
-[loadVideo function](#meth-loadVideo). If it is not defined, the startAt from
-the last loaded content will be used.
+[loadVideo function](#meth-loadVideo). Will override the startAt from the last
+loadVideo options.
 
-/!\ Calling the dispose API will erase the last content memory, so the reload
-function will not work after that call.
+If no options are set, the last content attributes will not be overriden.
 
 #### Example
 
@@ -211,8 +207,11 @@ const positionGetterInterval = setInterval(() => {
 player.addEventListener("error", (error) => {
   clearInterval(positionGetterInterval);
   if (error.code === "BUFFER_APPEND_ERROR") {
-    player.reload({ position: lastPlaybackPosition + 5 });
+    // Try to reload after the last playback position, in case of defectuous
+    // media content at current time.
+    player.reload({ startAt: { position: lastPlaybackPosition + 5 }});
   } else {
+    // Try to reload using every exact options from last loadVideo.
     player.reload();
   }
 });
