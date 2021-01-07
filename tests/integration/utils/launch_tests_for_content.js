@@ -341,7 +341,7 @@ export default function launchTestsForContent(manifestInfos) {
         await waitForLoadedStateAfterLoadVideo(player);
         const firstPosition = manifestInfos.minimumPosition;
         expect(player.getPosition()).to.be.closeTo(firstPosition, 0.1);
-        player.reload({ position: firstPosition + 10 });
+        player.reload({ startAt: { position: firstPosition + 10 }});
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition()).to.be.closeTo(firstPosition + 10, 0.1);
       });
@@ -354,7 +354,7 @@ export default function launchTestsForContent(manifestInfos) {
         await waitForLoadedStateAfterLoadVideo(player);
         const firstPosition = manifestInfos.minimumPosition;
         expect(player.getPosition()).to.be.closeTo(firstPosition, 0.1);
-        player.reload({ fromFirstPosition: 10 });
+        player.reload({ startAt: { fromFirstPosition: 10 }});
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition()).to.be.closeTo(firstPosition + 10, 0.1);
       });
@@ -368,11 +368,33 @@ export default function launchTestsForContent(manifestInfos) {
         const firstPosition = manifestInfos.minimumPosition;
         const lastPosition = manifestInfos.maximumPosition;
         expect(player.getPosition()).to.be.closeTo(firstPosition, 0.1);
-        player.reload({ fromLastPosition: -10 });
+        player.reload({ startAt: { fromLastPosition: -10 }});
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition()).to.be.closeTo(lastPosition - 10, 0.1);
       });
-      it("should reuse startAt when no given time for reload API", async function () {
+      it("should not reuse startAt given undefined startAt for reload API",
+         async function () {
+           player.setVideoBitrate(0);
+           player.loadVideo({
+             url: manifestInfos.url,
+             transport,
+             startAt: { position: manifestInfos.minimumPosition + 5 },
+           });
+           await waitForLoadedStateAfterLoadVideo(player);
+           expect(player.getPosition())
+             .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
+           player.reload({});
+           await waitForLoadedStateAfterLoadVideo(player);
+           if (!manifestInfos.isLive) {
+             expect(player.getPosition())
+               .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
+           } else {
+             expect(player.getPosition())
+               .to.be.closeTo(manifestInfos.maximumPosition - 10, 5);
+           }
+         }
+      );
+      it("should reuse startAt when no given options for reload API", async function () {
         player.setVideoBitrate(0);
         player.loadVideo({
           url: manifestInfos.url,

@@ -629,9 +629,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Reload last content. Init media playback without fetching again
    * the manifest.
-   * @param {Object} startAt
+   * @param {Object} reloadOpts
    */
-  reload(startAt?: IParsedStartAtOption): void {
+  reload(reloadOpts?: { startAt?: IParsedStartAtOption }): void {
     const { options, manifest } = this._priv_lastContentPlaybackInfos;
     if (options === undefined ||
         manifest === undefined) {
@@ -639,8 +639,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const newOptions = { ...options,
                          initialManifest: manifest };
-    if (startAt !== undefined) {
-      newOptions.startAt = startAt;
+    if (reloadOpts !== undefined) {
+      newOptions.startAt = reloadOpts.startAt;
     }
     this._priv_initializeContentPlayback(newOptions);
   }
