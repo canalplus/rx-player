@@ -105,7 +105,7 @@ import createClock, {
 } from "./clock";
 import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
-  IPlayerStates,
+  IPlayerState,
   PLAYER_STATES,
 } from "./get_player_state";
 import MediaElementTrackChoiceManager from "./media_element_track_choice_manager";
@@ -232,7 +232,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Current state of the RxPlayer.
    * Please use `getPlayerState()` instead.
    */
-  public state : IPlayerStates;
+  public state : IPlayerState;
 
   /**
    * Emit when the the RxPlayer is not needed anymore and thus all resources
@@ -2567,7 +2567,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {string} newState
    */
-  private _priv_setPlayerState(newState : IPlayerStates) : void {
+  private _priv_setPlayerState(newState : IPlayerState) : void {
     if (this.state !== newState) {
       this.state = newState;
       log.info("API: playerStateChange event", newState);
