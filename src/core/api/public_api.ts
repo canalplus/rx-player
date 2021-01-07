@@ -51,6 +51,9 @@ import {
   isFullscreen,
   requestFullscreen,
 } from "../../compat";
+/* eslint-disable max-len */
+import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
+/* eslint-enable max-len */
 import config from "../../config";
 import {
   ErrorCodes,
@@ -678,36 +681,56 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       const transportPipelines = transportFn(transportOptions);
 
+      const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
+      const throttlers = { throttle: {},
+                           throttleBitrate: {},
+                           limitWidth: {} };
+
+      if (this._priv_throttleWhenHidden) {
+        if (!relyOnVideoVisibilityAndSize) {
+          log.warn("API: Can't apply throttleWhenHidden because " +
+                   "browser can't be trusted for visibility.");
+        } else {
+          throttlers.throttle = {
+            video: isActive().pipe(
+              map(active => active ? Infinity :
+                                       0),
+              takeUntil(this._priv_stopCurrentContent$)),
+          };
+        }
+      }
+      if (this._priv_throttleVideoBitrateWhenHidden) {
+        if (!relyOnVideoVisibilityAndSize) {
+          log.warn("API: Can't apply throttleVideoBitrateWhenHidden because " +
+                   "browser can't be trusted for visibility.");
+        } else {
+          throttlers.throttleBitrate = {
+            video: isVideoVisible(this._priv_pictureInPictureEvent$).pipe(
+              map(active => active ? Infinity :
+                                     0),
+              takeUntil(this._priv_stopCurrentContent$)),
+          };
+        }
+      }
+      if (this._priv_limitVideoWidth) {
+        if (!relyOnVideoVisibilityAndSize) {
+          log.warn("API: Can't apply limitVideoWidth because browser can't be " +
+                   "trusted for video size.");
+        } else {
+          throttlers.limitWidth = {
+            video: videoWidth$(videoElement, this._priv_pictureInPictureEvent$)
+              .pipe(takeUntil(this._priv_stopCurrentContent$)),
+          };
+        }
+      }
+
       /** Options used by the ABR Manager. */
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         lowLatencyMode,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
-        throttlers: {
-          throttle: this._priv_throttleWhenHidden ?
-            {
-              video: isActive().pipe(
-                map(active => active ? Infinity :
-                                         0),
-                takeUntil(this._priv_stopCurrentContent$)),
-            } :
-            {},
-          throttleBitrate: this._priv_throttleVideoBitrateWhenHidden ?
-            {
-              video: isVideoVisible(this._priv_pictureInPictureEvent$).pipe(
-                map(active => active ? Infinity :
-                                       0),
-                takeUntil(this._priv_stopCurrentContent$)),
-            } :
-            {},
-          limitWidth: this._priv_limitVideoWidth ?
-            {
-              video: videoWidth$(videoElement, this._priv_pictureInPictureEvent$)
-                .pipe(takeUntil(this._priv_stopCurrentContent$)),
-            } :
-            {},
-        },
+        throttlers,
       };
 
       /** Options used by the TextTrack SegmentBuffer. */
