@@ -95,6 +95,9 @@ import initializeMediaSourcePlayback, {
   IReloadingMediaSourceEvent,
   IStalledEvent,
 } from "../init";
+/* eslint-disable max-len */
+import currentTimeIsTheLastPlaybackPosition from "../init/current_time_is_the_last_playback_position";
+/* eslint-enable max-len */
 import { IStreamEventData } from "../init/stream_events_emitter";
 import SegmentBuffersStore, {
   IBufferedChunk,
@@ -113,7 +116,6 @@ import {
   IConstructorOptions,
   ILoadVideoOptions,
   IParsedLoadVideoOptions,
-  IParsedStartAtOption,
   parseConstructorOptions,
   parseLoadVideoOptions,
 } from "./option_parsers";
@@ -417,7 +419,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /** Information about last content being played. */
   private _priv_lastContentPlaybackInfos : { options?: IParsedLoadVideoOptions;
-                                             manifest?: Manifest; };
+                                             manifest?: Manifest;
+                                             lastPlaybackPosition?: number; };
 
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
@@ -631,17 +634,42 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * the manifest.
    * @param {Object} reloadOpts
    */
-  reload(reloadOpts?: { startAt?: IParsedStartAtOption }): void {
-    const { options, manifest } = this._priv_lastContentPlaybackInfos;
+  reload(reloadOpts?: { startAt?: { position?: number; relative?: number } }): void {
+    const { options,
+            manifest,
+            lastPlaybackPosition } = this._priv_lastContentPlaybackInfos;
     if (options === undefined ||
-        manifest === undefined) {
+        manifest === undefined ||
+        lastPlaybackPosition === undefined) {
       throw new Error("API: Can't reload without having previously loaded a content.");
+    }
+    let startAtPositon: number;
+    if (reloadOpts !== undefined &&
+        reloadOpts.startAt !== undefined &&
+        reloadOpts.startAt.position !== undefined) {
+      startAtPositon = reloadOpts.startAt.position;
+    } else {
+      let playbackPosition: number;
+      if (currentTimeIsTheLastPlaybackPosition(this.state)) {
+        if (this.videoElement === null) {
+          throw new Error("API: Can't reload when video element does not exist.");
+        }
+        playbackPosition = this.videoElement.currentTime;
+      } else {
+        playbackPosition = lastPlaybackPosition;
+      }
+      if (reloadOpts !== undefined &&
+          reloadOpts.startAt !== undefined &&
+          reloadOpts.startAt.relative !== undefined) {
+        startAtPositon = reloadOpts.startAt.relative + playbackPosition;
+      } else {
+        startAtPositon = playbackPosition;
+      }
     }
     const newOptions = { ...options,
                          initialManifest: manifest };
-    if (reloadOpts !== undefined) {
-      newOptions.startAt = reloadOpts.startAt;
-    }
+    debugger;
+    newOptions.startAt = { position: startAtPositon };
     this._priv_initializeContentPlayback(newOptions);
   }
 
@@ -2081,6 +2109,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
+      case "playback-position":
+        if (this._priv_lastContentPlaybackInfos !== undefined) {
+          this._priv_lastContentPlaybackInfos.lastPlaybackPosition = event.value;
+        }
+        break;
       case "stream-event":
         this.trigger("streamEvent", event.value);
         break;

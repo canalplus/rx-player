@@ -123,6 +123,9 @@ export interface ILoadedEvent { type : "loaded";
                                   segmentBuffersStore: SegmentBuffersStore | null;
                                 }; }
 
+export interface IPlaybackPositionEvent { type: "playback-position";
+                                          value: number; }
+
 export { IRepresentationChangeEvent };
 
 /** Events emitted by a `MediaSourceLoader`. */
@@ -156,6 +159,7 @@ export type IInitEvent = IManifestReadyEvent |
                          IDecipherabilityUpdateEvent |
                          IWarningEvent |
                          IEMEDisabledEvent |
+                         IPlaybackPositionEvent |
 
                          // Coming from the `EMEManager`
 
