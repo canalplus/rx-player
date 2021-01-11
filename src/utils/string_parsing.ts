@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../log";
 import assert from "./assert";
 
 /**
@@ -56,6 +57,17 @@ function strToBeUtf16(str: string): Uint8Array {
  * @returns {string}
  */
 function utf16LEToStr(bytes : Uint8Array) : string {
+  if (typeof window.TextDecoder === "function") {
+    try {
+      // instanciation throws if the encoding is unsupported
+      const decoder = new TextDecoder("utf-16le");
+      return decoder.decode(bytes);
+    } catch (e) {
+      log.warn("Utils: could not use TextDecoder to parse UTF-16LE, " +
+               "fallbacking to another implementation", e);
+    }
+  }
+
   let str = "";
   for (let i = 0; i < bytes.length; i += 2) {
     str += String.fromCharCode((bytes[i + 1] << 8) + bytes[i]);
@@ -69,6 +81,17 @@ function utf16LEToStr(bytes : Uint8Array) : string {
  * @returns {string}
  */
 function beUtf16ToStr(bytes : Uint8Array) : string {
+  if (typeof window.TextDecoder === "function") {
+    try {
+      // instanciation throws if the encoding is unsupported
+      const decoder = new TextDecoder("utf-16be");
+      return decoder.decode(bytes);
+    } catch (e) {
+      log.warn("Utils: could not use TextDecoder to parse UTF-16BE, " +
+               "fallbacking to another implementation", e);
+    }
+  }
+
   let str = "";
   for (let i = 0; i < bytes.length; i += 2) {
     str += String.fromCharCode((bytes[i] << 8) + bytes[i + 1]);
@@ -83,6 +106,16 @@ function beUtf16ToStr(bytes : Uint8Array) : string {
  * @returns {Uint8Array}
  */
 function strToUtf8(str : string) : Uint8Array {
+  if (typeof window.TextEncoder === "function") {
+    try {
+      const encoder = new TextEncoder();
+      return encoder.encode(str);
+    } catch (e) {
+      log.warn("Utils: could not use TextEncoder to encode string into UTF-8, " +
+               "fallbacking to another implementation", e);
+    }
+  }
+
   // http://stackoverflow.com/a/13691499 provides an ugly but functional solution.
   // (Note you have to dig deeper to understand it but I have more faith in
   // stackoverflow not going down in the future so I leave that link.)
@@ -209,6 +242,17 @@ function intToHex(num : number, size : number) : string {
  * @returns {string}
  */
 function utf8ToStr(data : Uint8Array) : string {
+  if (typeof window.TextDecoder === "function") {
+    try {
+      // TextDecoder use UTF-8 by default
+      const decoder = new TextDecoder();
+      return decoder.decode(data);
+    } catch (e) {
+      log.warn("Utils: could not use TextDecoder to parse UTF-8, " +
+               "fallbacking to another implementation", e);
+    }
+  }
+
   let uint8 = data;
 
   // If present, strip off the UTF-8 BOM.
