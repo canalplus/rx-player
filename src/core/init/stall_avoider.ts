@@ -200,11 +200,10 @@ export default function StallAvoider(
 
       // Are we in a discontinuity between periods ? -> Seek at the beginning of the
       //                                                next period
-      for (let i = 0; i < manifest.periods.length; i++) {
+      for (let i = manifest.periods.length - 2; i >= 0; i--) {
         const period = manifest.periods[i];
         if (period.end !== undefined && period.end <= freezePosition) {
-          if (i + 1 < manifest.periods.length &&
-              manifest.periods[i + 1].start > freezePosition &&
+          if (manifest.periods[i + 1].start > freezePosition &&
               manifest.periods[i + 1].start > mediaElement.currentTime)
           {
             const nextPeriod = manifest.periods[i + 1];
