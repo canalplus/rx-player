@@ -17,11 +17,38 @@
 import { REGXP_LENGTH } from "../regexps";
 
 /**
- * Apply a default style to TTML cue if no style has been already
- * declared and no conflict is detected with current cue style.
+ * Return true if no style has been already declared and no conflict is
+ * detected with current cue style.
  *
- * No position, orientation and dimension style should have been
- * set to avoid any conflict.
+ * No position, orientation and dimension style should have been set to
+ * avoid any conflict.
+ * @param {object} paragraphStyle
+ * @returns {boolean}
+ */
+export function shouldApplyDefaultTTMLStyle(
+  paragraphStyle: Partial<Record<string, string>>
+): boolean {
+  let shouldApplyRelativeFontSize = false;
+  const trimmedFontSize = paragraphStyle.fontSize?.trim();
+  const splittedFontSize = trimmedFontSize?.split(" ");
+  if (splittedFontSize?.length === 2) {
+    const firstFontSize = REGXP_LENGTH.exec(splittedFontSize[0]);
+    if (firstFontSize !== null &&
+        firstFontSize[2] === "c") {
+      shouldApplyRelativeFontSize = true;
+    }
+  }
+
+  return paragraphStyle.extent === undefined &&
+         paragraphStyle.origin === undefined &&
+         paragraphStyle.displayAlign === undefined &&
+         paragraphStyle.display === undefined &&
+         paragraphStyle.textAlign === undefined &&
+         shouldApplyRelativeFontSize;
+}
+
+/**
+ * Apply a default style to TTML cue.
  *
  * The default style propose to set the cue at the bottom, centered
  * and lightly spaced apart from the edges :
@@ -42,30 +69,12 @@ import { REGXP_LENGTH } from "../regexps";
  * possible styles that can enter in conflict.
  * A better solution should be found in the future
  */
-export default function applyDefaultTTMLParagrapStyle(
+export function applyDefaultTTMLStyle(
   paragraphStyle: Partial<Record<string, string>>
 ): void {
-  let shouldApplyRelativeFontSize = false;
-  const trimmedFontSize = paragraphStyle.fontSize?.trim();
-  const splittedFontSize = trimmedFontSize?.split(" ");
-  if (splittedFontSize?.length === 2) {
-    const firstFontSize = REGXP_LENGTH.exec(splittedFontSize[0]);
-    if (firstFontSize !== null &&
-        firstFontSize[2] === "c") {
-      shouldApplyRelativeFontSize = true;
-    }
-  }
-
-  if (paragraphStyle.extent === undefined &&
-      paragraphStyle.origin === undefined &&
-      paragraphStyle.displayAlign === undefined &&
-      paragraphStyle.display === undefined &&
-      paragraphStyle.textAlign === undefined &&
-      shouldApplyRelativeFontSize) {
-    paragraphStyle.extent = "70% 20%";
-    paragraphStyle.fontSize = "1c";
-    paragraphStyle.origin = "15% 80%";
-    paragraphStyle.displayAlign = "before";
-    paragraphStyle.textAlign = "center";
-  }
+  paragraphStyle.extent = "70% 20%";
+  paragraphStyle.fontSize = "1c";
+  paragraphStyle.origin = "15% 80%";
+  paragraphStyle.displayAlign = "before";
+  paragraphStyle.textAlign = "center";
 }

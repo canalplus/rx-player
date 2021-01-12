@@ -15,7 +15,10 @@
  */
 
 import parseTtml from "../parse_ttml";
-import applyDefaultTTMLParagrapStyle from "./apply_default_ttml_paragraph_style";
+import {
+  applyDefaultTTMLStyle,
+  shouldApplyDefaultTTMLStyle,
+} from "./apply_default_ttml_paragraph_style";
 import parseCue, { ITTMLHTMLCue } from "./parse_cue";
 
 /**
@@ -42,7 +45,10 @@ export default function parseTTMLToDiv(
   const parsedCues = parseTtml(str, timeOffset);
   const cues: ITTMLHTMLCue[] = [];
   for (let i = 0; i < parsedCues.length; i++) {
-    applyDefaultTTMLParagrapStyle(parsedCues[i].paragraphStyle);
+    const { paragraphStyle } = parsedCues[i];
+    if (shouldApplyDefaultTTMLStyle(paragraphStyle)) {
+      applyDefaultTTMLStyle(paragraphStyle);
+    }
     const cue = parseCue(parsedCues[i]);
     if (cue !== null) {
       cues.push(cue);
