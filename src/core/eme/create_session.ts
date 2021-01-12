@@ -94,8 +94,7 @@ export default function createSession(
  * Create a new temporary MediaKeySession linked to the given initData and
  * initDataType.
  * @param {Object} loadedSessionsStore
- * @param {Uint8Array} initData
- * @param {string|undefined} initDataType
+ * @param {Object} initData
  * @returns {Observable}
  */
 function createTemporarySession(
@@ -116,8 +115,7 @@ function createTemporarySession(
  * MediaKeySession linked to the same initData and initDataType.
  * @param {Object} loadedSessionsStore
  * @param {Object} persistentSessionsStore
- * @param {Uint8Array} initData
- * @param {string|undefined} initDataType
+ * @param {Object} initData
  * @returns {Observable}
  */
 function createAndTryToRetrievePersistentSession(
