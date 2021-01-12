@@ -95,9 +95,6 @@ import initializeMediaSourcePlayback, {
   IReloadingMediaSourceEvent,
   IStalledEvent,
 } from "../init";
-/* eslint-disable max-len */
-import currentTimeIsTheLastPlaybackPosition from "../init/current_time_is_the_last_playback_position";
-/* eslint-enable max-len */
 import { IStreamEventData } from "../init/stream_events_emitter";
 import SegmentBuffersStore, {
   IBufferedChunk,
@@ -622,7 +619,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Load a new video.
    * @param {Object} opts
    */
-  loadVideo(opts: ILoadVideoOptions): void {
+  loadVideo(opts : ILoadVideoOptions) : void {
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options);
     this._priv_lastContentPlaybackInfos = { options };

@@ -189,11 +189,13 @@ consistent at a certain playback time (e.g. due to a specific chunk defect).
 The options argument is an object containing :
 - _startAt_ (``Object | undefined``): The object contain directives about
 the starting playback position :
-  - relative (``string | undefined``) : start relatively from the last
+  - _relative_ (``string | undefined``) : start relatively from the last
   playback position (last played position before entering into STOPPED or ENDED
   state).
-  - position (`string`|`undefined`) : absolutve position at which we should
+  - _position_ (`string`|`undefined`) : absolutve position at which we should
   start playback
+
+If no start position is defined, start playback at the last playback position.
 
 #### Example
 
@@ -204,7 +206,7 @@ player.addEventListener("error", (error) => {
     // media content at current time.
     player.reload({ startAt: { relative: +5 }});
   } else {
-    // Try to reload at last playback position
+    // Try to reload at the last playback position
     player.reload();
   }
 });

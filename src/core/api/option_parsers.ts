@@ -183,11 +183,11 @@ export type IStartAtOption = { position : number } |
                              { fromFirstPosition : number };
 
 /** Value once parsed for the `startAt` option of the `loadVideo` method. */
-export type IParsedStartAtOption = { position : number } |
-                                   { wallClockTime : number } |
-                                   { percentage : number } |
-                                   { fromLastPosition : number } |
-                                   { fromFirstPosition : number };
+type IParsedStartAtOption = { position : number } |
+                            { wallClockTime : number } |
+                            { percentage : number } |
+                            { fromLastPosition : number } |
+                            { fromFirstPosition : number };
 
 /** Every options that can be given to the RxPlayer's constructor. */
 export interface IConstructorOptions { maxBufferAhead? : number;
