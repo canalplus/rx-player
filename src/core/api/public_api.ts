@@ -650,13 +650,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       startAtPositon = reloadOpts.startAt.position;
     } else {
       let playbackPosition: number;
-      if (currentTimeIsTheLastPlaybackPosition(this.state)) {
+      if (this.state === "STOPPED" || this.state === "ENDED") {
+        playbackPosition = lastPlaybackPosition;
+      } else {
         if (this.videoElement === null) {
           throw new Error("API: Can't reload when video element does not exist.");
         }
         playbackPosition = this.videoElement.currentTime;
-      } else {
-        playbackPosition = lastPlaybackPosition;
       }
       if (reloadOpts !== undefined &&
           reloadOpts.startAt !== undefined &&
@@ -668,7 +668,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const newOptions = { ...options,
                          initialManifest: manifest };
-    debugger;
     newOptions.startAt = { position: startAtPositon };
     this._priv_initializeContentPlayback(newOptions);
   }
