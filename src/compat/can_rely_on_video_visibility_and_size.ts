@@ -28,12 +28,12 @@ import { getFirefoxVersion } from "./browser_version";
  * Thus, when the video element is displayed in picture-in-picture, the element
  * clientWidth still tells the width of the original video element, and no PIP
  * Window API exists to determine its presence or width. There are no way to
- * determine the real width of the video element, as we can't know when the PIP
+ * determine the real width of the video window, as we can't know when the PIP
  * is enabled, and we can't have access to its size information.
  *
  * Moreover, when the document is considered as hidden (e.g. in case of hidden
- * tab), as there i s no way to know if the PIP is enabled, we can't know if
- * the video element is visible or not.
+ * tab), as there is no way to know if the PIP is enabled, we can't know if
+ * the video window is visible or not.
  * @returns {boolean}
  */
 export default function canRelyOnVideoVisibilityAndSize(): boolean {
@@ -42,10 +42,9 @@ export default function canRelyOnVideoVisibilityAndSize(): boolean {
     return true;
   }
   const firefoxVersion = getFirefoxVersion();
-  if (firefoxVersion === null || firefoxVersion === -1) {
+  if (firefoxVersion === null || firefoxVersion < 71) {
     return true;
   }
-  return firefoxVersion < 71 ||
-         (HTMLVideoElement as any)?.prototype?.requirePictureInPicture !== undefined;
+  return (HTMLVideoElement as any)?.prototype?.requirePictureInPicture !== undefined;
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }
