@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { REGXP_LENGTH } from "../regexps";
-
 /**
  * Return true if no style has been already declared and no conflict is
  * detected with current cue style.
@@ -28,23 +26,12 @@ import { REGXP_LENGTH } from "../regexps";
 export function shouldApplyDefaultTTMLStyle(
   paragraphStyle: Partial<Record<string, string>>
 ): boolean {
-  let shouldApplyRelativeFontSize = false;
-  const trimmedFontSize = paragraphStyle.fontSize?.trim();
-  const splittedFontSize = trimmedFontSize?.split(" ");
-  if (splittedFontSize?.length === 2) {
-    const firstFontSize = REGXP_LENGTH.exec(splittedFontSize[0]);
-    if (firstFontSize !== null &&
-        firstFontSize[2] === "c") {
-      shouldApplyRelativeFontSize = true;
-    }
-  }
-
   return paragraphStyle.extent === undefined &&
          paragraphStyle.origin === undefined &&
          paragraphStyle.displayAlign === undefined &&
          paragraphStyle.display === undefined &&
          paragraphStyle.textAlign === undefined &&
-         shouldApplyRelativeFontSize;
+         paragraphStyle.fontSize === undefined;
 }
 
 /**
