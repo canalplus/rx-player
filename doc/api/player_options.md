@@ -586,8 +586,11 @@ fullscreen, specific environments), you might not want to activate this limit.
 
 --
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: This option will have no effect for contents loaded :
+- In _DirectFile_ mode (see [loadVideo options]
+(./loadVideo_options.md#prop-transport)).
+- On Firefox browsers (version > 71) because of the lack of trust concerning
+the current video element size.
 
 
 <a name="prop-throttleVideoBitrateWhenHidden"></a>
@@ -611,9 +614,11 @@ const player = Player({
 
 --
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
+:warning: This option will have no effect for contents loaded :
+- In _DirectFile_ mode (see [loadVideo options]
+(./loadVideo_options.md#prop-transport)).
+- On Firefox browsers (version > 71) because of the lack of trust concerning
+the current video element hiddenness.
 
 <a name="prop-stopAtEnd"></a>
 ### stopAtEnd ##################################################################
@@ -669,5 +674,8 @@ const player = Player({
 
 --
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: This option will have no effect for contents loaded :
+- In _DirectFile_ mode (see [loadVideo options]
+(./loadVideo_options.md#prop-transport)).
+- On Firefox browsers (version > 71) because of the lack of trust concerning
+the current video element hiddenness.
