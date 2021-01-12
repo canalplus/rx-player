@@ -176,9 +176,7 @@ player.loadVideo({
 _arguments_:
   - _options_ (``Object | undefined``)
 
-Re-load the last loaded content, with its original loadVideo options, as fast as
-possible, using the last loaded manifest. The aim is to reduce loading time by
-removing the fetching and parsing steps.
+Re-load the last loaded content as fast as possible.
 
 This API can be called at any time after a content has been loaded (the LOADED
 state has been reached), even if the player has been stopped since and even if
@@ -189,29 +187,24 @@ in case of an error that will not reproduce or inversely when the error is
 consistent at a certain playback time (e.g. due to a specific chunk defect).
 
 The options argument is an object containing :
-- _startAt_ (``Object | undefined``): same as the loadVideo startAt argument 
-[loadVideo function](#meth-loadVideo). Will override the startAt from the last
-loadVideo options.
-
-If no options are set, the last content attributes will not be overriden.
+- _startAt_ (``Object | undefined``): The object contain directives about
+the starting playback position :
+  - relative (``string | undefined``) : start relatively from the last
+  playback position (last played position before entering into STOPPED or ENDED
+  state).
+  - position (`string`|`undefined`) : absolutve position at which we should
+  start playback
 
 #### Example
 
 ```js
-let lastPlaybackPosition = 0;
-
-const positionGetterInterval = setInterval(() => {
-  lastPlaybackPosition = player.getPosition();
-}, 500);
-
 player.addEventListener("error", (error) => {
-  clearInterval(positionGetterInterval);
   if (error.code === "BUFFER_APPEND_ERROR") {
     // Try to reload after the last playback position, in case of defectuous
     // media content at current time.
-    player.reload({ startAt: { position: lastPlaybackPosition + 5 }});
+    player.reload({ startAt: { relative: +5 }});
   } else {
-    // Try to reload using every exact options from last loadVideo.
+    // Try to reload at last playback position
     player.reload();
   }
 });
