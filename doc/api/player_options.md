@@ -589,8 +589,10 @@ fullscreen, specific environments), you might not want to activate this limit.
 :warning: This option will have no effect for contents loaded :
 - In _DirectFile_ mode (see [loadVideo options]
 (./loadVideo_options.md#prop-transport)).
-- On Firefox browsers (version > 71) because of the lack of trust concerning
-the current video element size.
+- On Firefox browsers (version > 71) : We can't know if the Picture-In-Picture
+mode is enabled and we can't know PIP window size. Thus we can't rely on video
+element size attributes, that may not reflect the real video size when PIP is
+enabled.
 
 
 <a name="prop-throttleVideoBitrateWhenHidden"></a>
@@ -617,8 +619,9 @@ const player = Player({
 :warning: This option will have no effect for contents loaded :
 - In _DirectFile_ mode (see [loadVideo options]
 (./loadVideo_options.md#prop-transport)).
-- On Firefox browsers (version > 71) because of the lack of trust concerning
-the current video element hiddenness.
+- On Firefox browsers (version > 71) : We can't know if the Picture-In-Picture
+mode is enabled. Thus we can't rely on document hiddenness attributes, as the
+video may be visible, through the PIP window.
 
 <a name="prop-stopAtEnd"></a>
 ### stopAtEnd ##################################################################
@@ -677,5 +680,6 @@ const player = Player({
 :warning: This option will have no effect for contents loaded :
 - In _DirectFile_ mode (see [loadVideo options]
 (./loadVideo_options.md#prop-transport)).
-- On Firefox browsers (version > 71) because of the lack of trust concerning
-the current video element hiddenness.
+- On Firefox browsers (version > 71) : We can't know if the Picture-In-Picture
+mode is enabled. Thus we can't rely on document hiddenness attributes, as the
+video may be visible, through the PIP window.
