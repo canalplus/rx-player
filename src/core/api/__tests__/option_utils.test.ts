@@ -316,10 +316,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a maxVideoBitrate", () => {
-    expect(parseConstructorOptions({ maxVideoBitrate: -1 })).toEqual({
-      ...defaultConstructorOptions,
-      maxVideoBitrate: -1,
-    });
     expect(parseConstructorOptions({ maxVideoBitrate: 0 })).toEqual({
       ...defaultConstructorOptions,
       maxVideoBitrate: 0,
@@ -334,11 +330,24 @@ describe("API - parseConstructorOptions", () => {
     });
   });
 
+  it("should throw when setting a maxVideoBitrate inferior to minVideoBitrate", () => {
+    expect(() => parseConstructorOptions({ maxVideoBitrate: -1 }))
+      .toThrow(new Error("Invalid maxVideoBitrate parameter. " +
+                         "Its value, \"-1\", is inferior to the set " +
+                         "minVideoBitrate, \"0\""));
+    expect(() => parseConstructorOptions({ minVideoBitrate: 100,
+                                           maxVideoBitrate: 0 }))
+      .toThrow(new Error("Invalid maxVideoBitrate parameter. " +
+                         "Its value, \"0\", is inferior to the set " +
+                         "minVideoBitrate, \"100\""));
+    expect(() => parseConstructorOptions({ minVideoBitrate: 10000,
+                                           maxVideoBitrate: 9999 }))
+      .toThrow(new Error("Invalid maxVideoBitrate parameter. " +
+                         "Its value, \"9999\", is inferior to the set " +
+                         "minVideoBitrate, \"10000\""));
+  });
+
   it("should authorize setting a maxAudioBitrate", () => {
-    expect(parseConstructorOptions({ maxAudioBitrate: -1 })).toEqual({
-      ...defaultConstructorOptions,
-      maxAudioBitrate: -1,
-    });
     expect(parseConstructorOptions({ maxAudioBitrate: 0 })).toEqual({
       ...defaultConstructorOptions,
       maxAudioBitrate: 0,
@@ -351,6 +360,23 @@ describe("API - parseConstructorOptions", () => {
       ...defaultConstructorOptions,
       maxAudioBitrate: Infinity,
     });
+  });
+
+  it("should throw when setting a maxAudioBitrate inferior to minAudioBitrate", () => {
+    expect(() => parseConstructorOptions({ maxAudioBitrate: -1 }))
+      .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
+                         "Its value, \"-1\", is inferior to the set " +
+                         "minAudioBitrate, \"0\""));
+    expect(() => parseConstructorOptions({ minAudioBitrate: 100,
+                                           maxAudioBitrate: 0 }))
+      .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
+                         "Its value, \"0\", is inferior to the set " +
+                         "minAudioBitrate, \"100\""));
+    expect(() => parseConstructorOptions({ minAudioBitrate: 10000,
+                                           maxAudioBitrate: 9999 }))
+      .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
+                         "Its value, \"9999\", is inferior to the set " +
+                         "minAudioBitrate, \"10000\""));
   });
 
   it("should authorize setting a stopAtEnd option", () => {
