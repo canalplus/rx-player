@@ -8,7 +8,7 @@ import RxPlayer from "../../../src";
  * is broken.
  */
 
-describe.only("initial idle state", () => {
+describe("initial idle state", () => {
   describe("constructor", () => {
     it("should create a video element if no videoElement option is given", () => {
       const player = new RxPlayer();
@@ -42,7 +42,7 @@ describe.only("initial idle state", () => {
     });
   });
 
-  describe.only("initial state", () => {
+  describe("initial state", () => {
     const player = new RxPlayer();
 
     after(() => player.dispose());
@@ -343,7 +343,7 @@ describe.only("initial idle state", () => {
       });
     });
 
-    describe.only("setMinAudioBitrate/getMinAudioBitrate", () => {
+    describe("setMinAudioBitrate/getMinAudioBitrate", () => {
       const defaultMin = player.getMinAudioBitrate();
       const defaultMax = player.getMaxAudioBitrate();
 
@@ -403,7 +403,7 @@ describe.only("initial idle state", () => {
       });
     });
 
-    describe.only("setMinVideoBitrate/getMinVideoBitrate", () => {
+    describe("setMinVideoBitrate/getMinVideoBitrate", () => {
       const defaultMin = player.getMinVideoBitrate();
       const defaultMax = player.getMaxVideoBitrate();
       beforeEach(() => {
@@ -461,7 +461,7 @@ describe.only("initial idle state", () => {
       });
     });
 
-    describe.only("setMaxAudioBitrate/getMaxAudioBitrate", () => {
+    describe("setMaxAudioBitrate/getMaxAudioBitrate", () => {
       const defaultMin = player.getMinAudioBitrate();
       const defaultMax = player.getMaxAudioBitrate();
       beforeEach(() => {
@@ -528,7 +528,7 @@ describe.only("initial idle state", () => {
       });
     });
 
-    describe.only("setMaxVideoBitrate/getMaxVideoBitrate", () => {
+    describe("setMaxVideoBitrate/getMaxVideoBitrate", () => {
       const defaultMin = player.getMinVideoBitrate();
       const defaultMax = player.getMaxVideoBitrate();
       beforeEach(() => {
