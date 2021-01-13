@@ -187,7 +187,7 @@ in case of an error that will not reproduce or inversely when the error is
 consistent at a certain playback time (e.g. due to a specific chunk defect).
 
 The options argument is an object containing :
-- _startAt_ (``Object | undefined``): The object contain directives about
+- _reloadAt_ (``Object | undefined``): The object contain directives about
 the starting playback position :
   - _relative_ (``string | undefined``) : start relatively from the last
   playback position (last played position before entering into STOPPED or ENDED
@@ -204,7 +204,7 @@ player.addEventListener("error", (error) => {
   if (error.code === "BUFFER_APPEND_ERROR") {
     // Try to reload after the last playback position, in case of defectuous
     // media content at current time.
-    player.reload({ startAt: { relative: +5 }});
+    player.reload({ reloadAt: { relative: +5 }});
   } else {
     // Try to reload at the last playback position
     player.reload();

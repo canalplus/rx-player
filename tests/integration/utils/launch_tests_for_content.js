@@ -341,7 +341,7 @@ export default function launchTestsForContent(manifestInfos) {
         await waitForLoadedStateAfterLoadVideo(player);
         const firstPosition = manifestInfos.minimumPosition;
         expect(player.getPosition()).to.be.closeTo(firstPosition, 0.1);
-        player.reload({ startAt: { position: firstPosition + 10 }});
+        player.reload({ reloadAt: { position: firstPosition + 10 }});
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition()).to.be.closeTo(firstPosition + 10, 0.1);
       });
@@ -360,7 +360,7 @@ export default function launchTestsForContent(manifestInfos) {
             .to.be.closeTo(manifestInfos.maximumPosition - 10, 5);
         }
         player.reload({
-          startAt: { position: manifestInfos.minimumPosition + 5 }
+          reloadAt: { position: manifestInfos.minimumPosition + 5 }
         });
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition())
@@ -376,7 +376,7 @@ export default function launchTestsForContent(manifestInfos) {
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition())
           .to.be.closeTo(manifestInfos.minimumPosition + 2, 0.1);
-        player.reload({ startAt: { relative: 5 }});
+        player.reload({ reloadAt: { relative: 5 }});
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition())
           .to.be.closeTo(manifestInfos.minimumPosition + 7, 0.1);
@@ -392,7 +392,7 @@ export default function launchTestsForContent(manifestInfos) {
         expect(player.getPosition())
           .to.be.closeTo(manifestInfos.minimumPosition + 2, 0.1);
         player.stop();
-        player.reload({ startAt: { relative: 5 }});
+        player.reload({ reloadAt: { relative: 5 }});
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition())
           .to.be.closeTo(manifestInfos.minimumPosition + 7, 0.1);

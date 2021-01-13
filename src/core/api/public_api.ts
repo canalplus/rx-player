@@ -631,7 +631,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * the manifest.
    * @param {Object} reloadOpts
    */
-  reload(reloadOpts?: { startAt?: { position?: number; relative?: number } }): void {
+  reload(reloadOpts?: { reloatAt?: { position?: number; relative?: number } }): void {
     const { options,
             manifest,
             lastPlaybackPosition } = this._priv_lastContentPlaybackInfos;
@@ -642,9 +642,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     let startAtPositon: number;
     if (reloadOpts !== undefined &&
-        reloadOpts.startAt !== undefined &&
-        reloadOpts.startAt.position !== undefined) {
-      startAtPositon = reloadOpts.startAt.position;
+        reloadOpts.reloatAt !== undefined &&
+        reloadOpts.reloatAt.position !== undefined) {
+      startAtPositon = reloadOpts.reloatAt.position;
     } else {
       let playbackPosition: number;
       if (this.state === "STOPPED" || this.state === "ENDED") {
@@ -656,9 +656,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         playbackPosition = this.videoElement.currentTime;
       }
       if (reloadOpts !== undefined &&
-          reloadOpts.startAt !== undefined &&
-          reloadOpts.startAt.relative !== undefined) {
-        startAtPositon = reloadOpts.startAt.relative + playbackPosition;
+          reloadOpts.reloatAt !== undefined &&
+          reloadOpts.reloatAt.relative !== undefined) {
+        startAtPositon = reloadOpts.reloatAt.relative + playbackPosition;
       } else {
         startAtPositon = playbackPosition;
       }
