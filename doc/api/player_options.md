@@ -141,7 +141,7 @@ _defaults_: ``0``
 
 Minimum video bitrate reachable through adaptive streaming.
 
-When the bitrate is choosen through adaptive streaming (i.e., not enforced
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setVideoBitrate`), the player will never switch
 to a video quality with a bitrate lower than that value.
 
@@ -183,7 +183,7 @@ _defaults_: ``0``
 
 Minimum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is choosen through adaptive streaming (i.e., not enforced
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setAudioBitrate`), the player will never switch
 to an audio quality with a bitrate higher than that value.
 
@@ -225,7 +225,7 @@ _defaults_: ``Infinity``
 
 Maximum video bitrate reachable through adaptive streaming.
 
-When the bitrate is choosen through adaptive streaming (i.e., not enforced
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setVideoBitrate`), the player will never switch
 to a video quality with a bitrate higher than that value.
 
@@ -267,7 +267,7 @@ _defaults_: ``Infinity``
 
 Maximum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is choosen through adaptive streaming (i.e., not enforced
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setAudioBitrate`), the player will never switch
 to an audio quality with a bitrate higher than that value.
 

@@ -25,10 +25,10 @@ import arrayFindIndex from "../../utils/array_find_index";
  * sorted in bitrate ascending order.
  * @param {Number} optimalBitrate - The optimal bitrate the Representation
  * should have under the current condition.
- * @param {Number} minBitrate - The minimum bitrate the choosen Representation
+ * @param {Number} minBitrate - The minimum bitrate the chosen Representation
  * should have. We will take the Representation with the maximum bitrate if none
  * is found.
- * @param {Number} maxBitrate - The maximum bitrate the choosen Representation
+ * @param {Number} maxBitrate - The maximum bitrate the chosen Representation
  * should have. We will take the Representation with the minimum bitrate if none
  * is found.
  * @returns {Representation|undefined}
