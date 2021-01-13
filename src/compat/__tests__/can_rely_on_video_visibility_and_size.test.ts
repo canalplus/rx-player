@@ -48,7 +48,7 @@ describe("Compat - canRelyOnVideoVisibilityAndSize", () => {
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(true);
   });
 
-  it("should return true on Firefox < 71>", () => {
+  it("should return true on Firefox < 67>", () => {
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
                isFirefox: true };
@@ -62,7 +62,7 @@ describe("Compat - canRelyOnVideoVisibilityAndSize", () => {
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(true);
   });
 
-  it("should return false on Firefox >= 71", () => {
+  it("should return false on Firefox >= 67", () => {
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
                isFirefox: true };

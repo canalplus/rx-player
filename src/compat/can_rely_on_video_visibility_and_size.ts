@@ -21,19 +21,21 @@ import { getFirefoxVersion } from "./browser_version";
  * This functions tells if the RxPlayer can trust on any browser data
  * about video element visibility and size.
  *
- * On Firefox (version > 71) :
+ * On Firefox (version >= 67) :
+ * - The PIP feature exists but can be disabled by default according
+ * to the OS and the channel used for updating / getting Firefox binaries.
  * - There is no API to know if the Picture-in-picture (PIP) is enabled
  * - There is no API to get the width of the PIP window
  *
- * Thus, when the video element is displayed in picture-in-picture, the element
- * clientWidth still tells the width of the original video element, and no PIP
- * Window API exists to determine its presence or width. There are no way to
- * determine the real width of the video window, as we can't know when the PIP
- * is enabled, and we can't have access to its size information.
+ * The element clientWidth tells the width of the original video element, and
+ * no PIP window API exists to determine its presence or width. Thus, there are
+ * no way to determine the real width of the video window, as we can't know when
+ * the PIP feature or window is enabled, and we can't have access to the windo
+ * size information.
  *
  * Moreover, when the document is considered as hidden (e.g. in case of hidden
- * tab), as there is no way to know if the PIP is enabled, we can't know if
- * the video window is visible or not.
+ * tab), as there is no way to know if the PIP feature or window is enabled,
+ * we can't know if the video window is visible or not.
  * @returns {boolean}
  */
 export default function canRelyOnVideoVisibilityAndSize(): boolean {
@@ -42,7 +44,7 @@ export default function canRelyOnVideoVisibilityAndSize(): boolean {
     return true;
   }
   const firefoxVersion = getFirefoxVersion();
-  if (firefoxVersion === null || firefoxVersion < 71) {
+  if (firefoxVersion === null || firefoxVersion < 67) {
     return true;
   }
   return (HTMLVideoElement as any)?.prototype?.requirePictureInPicture !== undefined;
