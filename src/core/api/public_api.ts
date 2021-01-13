@@ -110,12 +110,13 @@ import getPlayerState, {
 } from "./get_player_state";
 import MediaElementTrackChoiceManager from "./media_element_track_choice_manager";
 import {
+  checkReloadOptions,
   IConstructorOptions,
   ILoadVideoOptions,
   IParsedLoadVideoOptions,
   parseConstructorOptions,
   parseLoadVideoOptions,
-} from "./option_parsers";
+} from "./option_utils";
 import TrackChoiceManager, {
   IAudioTrackPreference,
   ITextTrackPreference,
@@ -631,7 +632,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * the manifest.
    * @param {Object} reloadOpts
    */
-  reload(reloadOpts?: { reloatAt?: { position?: number; relative?: number } }): void {
+  reload(reloadOpts?: { reloadAt?: { position?: number; relative?: number } }): void {
     const { options,
             manifest,
             lastPlaybackPosition } = this._priv_lastContentPlaybackInfos;
@@ -640,25 +641,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         lastPlaybackPosition === undefined) {
       throw new Error("API: Can't reload without having previously loaded a content.");
     }
+    checkReloadOptions(reloadOpts);
     let startAtPositon: number;
     if (reloadOpts !== undefined &&
-        reloadOpts.reloatAt !== undefined &&
-        reloadOpts.reloatAt.position !== undefined) {
-      startAtPositon = reloadOpts.reloatAt.position;
+        reloadOpts.reloadAt !== undefined &&
+        reloadOpts.reloadAt.position !== undefined) {
+      startAtPositon = reloadOpts.reloadAt.position;
     } else {
       let playbackPosition: number;
       if (this.state === "STOPPED" || this.state === "ENDED") {
         playbackPosition = lastPlaybackPosition;
       } else {
         if (this.videoElement === null) {
-          throw new Error("API: Can't reload when video element does not exist.");
+          throw new Error("API: reload - Can't reload when video element does not exist.");
         }
         playbackPosition = this.videoElement.currentTime;
       }
       if (reloadOpts !== undefined &&
-          reloadOpts.reloatAt !== undefined &&
-          reloadOpts.reloatAt.relative !== undefined) {
-        startAtPositon = reloadOpts.reloatAt.relative + playbackPosition;
+          reloadOpts.reloadAt !== undefined &&
+          reloadOpts.reloadAt.relative !== undefined) {
+        startAtPositon = reloadOpts.reloadAt.relative + playbackPosition;
       } else {
         startAtPositon = playbackPosition;
       }
