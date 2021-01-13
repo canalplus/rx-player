@@ -1911,7 +1911,7 @@ When the bitrate is choosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setVideoBitrate`), the player will never switch
 to a video quality with a bitrate lower than that value.
 
-The exception being when no quality has a lower bitrate, in which case the
+The exception being when no quality has a higher bitrate, in which case the
 maximum quality will always be chosen instead.
 
 For example, if you want that video qualities chosen automatically never have
@@ -1949,7 +1949,7 @@ When the bitrate is choosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setAudioBitrate`), the player will never switch
 to an audio quality with a bitrate lower than that value.
 
-The exception being when no quality has a lower bitrate, in which case the
+The exception being when no quality has a higher bitrate, in which case the
 maximum quality will always be chosen instead.
 
 For example, if you want that audio qualities chosen automatically never have
@@ -2023,7 +2023,7 @@ When the bitrate is choosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setVideoBitrate`), the player will never switch
 to a video quality with a bitrate higher than that value.
 
-The exception being when no quality has a higher bitrate, in which case the
+The exception being when no quality has a lower bitrate, in which case the
 minimum quality will always be chosen instead.
 
 For example, if you want that video qualities chosen automatically never have
@@ -2061,7 +2061,7 @@ When the bitrate is choosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setAudioBitrate`), the player will never switch
 to an audio quality with a bitrate higher than that value.
 
-The exception being when no quality has a higher bitrate, in which case the
+The exception being when no quality has a lower bitrate, in which case the
 minimum quality will always be chosen instead.
 
 For example, if you want that audio qualities chosen automatically never have
