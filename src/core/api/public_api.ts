@@ -287,6 +287,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                      text? : number;
                      image? : number; };
 
+    /** Store last wanted minAutoBitrates for the next ABRManager instanciation. */
+    minAutoBitrates : { audio : BehaviorSubject<number>;
+                        video : BehaviorSubject<number>; };
+
     /** Store last wanted maxAutoBitrates for the next ABRManager instanciation. */
     maxAutoBitrates : { audio : BehaviorSubject<number>;
                         video : BehaviorSubject<number>; };
@@ -459,6 +463,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const { initialAudioBitrate,
             initialVideoBitrate,
             limitVideoWidth,
+            minAudioBitrate,
+            minVideoBitrate,
             maxAudioBitrate,
             maxBufferAhead,
             maxBufferBehind,
@@ -541,6 +547,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_bitrateInfos = {
       lastBitrates: { audio: initialAudioBitrate,
                       video: initialVideoBitrate },
+      minAutoBitrates: { audio: new BehaviorSubject(minAudioBitrate),
+                         video: new BehaviorSubject(minVideoBitrate) },
       maxAutoBitrates: { audio: new BehaviorSubject(maxAudioBitrate),
                          video: new BehaviorSubject(maxVideoBitrate) },
       manualBitrates: { audio: new BehaviorSubject(-1),
@@ -609,6 +617,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_pictureInPictureEvent$.complete();
     this._priv_bitrateInfos.manualBitrates.video.complete();
     this._priv_bitrateInfos.manualBitrates.audio.complete();
+    this._priv_bitrateInfos.minAutoBitrates.video.complete();
+    this._priv_bitrateInfos.minAutoBitrates.audio.complete();
     this._priv_bitrateInfos.maxAutoBitrates.video.complete();
     this._priv_bitrateInfos.maxAutoBitrates.audio.complete();
 
@@ -793,6 +803,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         lowLatencyMode,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
+        minAutoBitrates: this._priv_bitrateInfos.minAutoBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
         throttlers,
       };
@@ -1372,6 +1383,22 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns max wanted video bitrate currently set.
    * @returns {Number}
    */
+  getMinVideoBitrate() : number {
+    return this._priv_bitrateInfos.minAutoBitrates.video.getValue();
+  }
+
+  /**
+   * Returns max wanted audio bitrate currently set.
+   * @returns {Number}
+   */
+  getMinAudioBitrate() : number {
+    return this._priv_bitrateInfos.minAutoBitrates.audio.getValue();
+  }
+
+  /**
+   * Returns max wanted video bitrate currently set.
+   * @returns {Number}
+   */
   getMaxVideoBitrate() : number {
     return this._priv_bitrateInfos.maxAutoBitrates.video.getValue();
   }
@@ -1587,6 +1614,22 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   setAudioBitrate(btr : number) : void {
     this._priv_bitrateInfos.manualBitrates.audio.next(btr);
+  }
+
+  /**
+   * Update the maximum video bitrate the user can switch to.
+   * @param {Number} btr
+   */
+  setMinVideoBitrate(btr : number) : void {
+    this._priv_bitrateInfos.minAutoBitrates.video.next(btr);
+  }
+
+  /**
+   * Update the maximum audio bitrate the user can switch to.
+   * @param {Number} btr
+   */
+  setMinAudioBitrate(btr : number) : void {
+    this._priv_bitrateInfos.minAutoBitrates.audio.next(btr);
   }
 
   /**

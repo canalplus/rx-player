@@ -8,7 +8,7 @@ import RxPlayer from "../../../src";
  * is broken.
  */
 
-describe("initial idle state", () => {
+describe.only("initial idle state", () => {
   describe("constructor", () => {
     it("should create a video element if no videoElement option is given", () => {
       const player = new RxPlayer();
@@ -42,7 +42,7 @@ describe("initial idle state", () => {
     });
   });
 
-  describe("initial state", () => {
+  describe.only("initial state", () => {
     const player = new RxPlayer();
 
     after(() => player.dispose());
@@ -340,6 +340,94 @@ describe("initial idle state", () => {
         expect(player.isMute()).to.equal(false);
 
         player.setVolume(oldVolume);
+      });
+    });
+
+    describe.only("setMinAudioBitrate/getMinAudioBitrate", () => {
+      it("should have a 0 minimum audio bitrate by default", () => {
+        expect(player.getMinAudioBitrate()).to.equal(0);
+      });
+
+      it("should update minimum audio bitrate when calling setMinAudioBitrate", () => {
+        const oldMin = player.getMinAudioBitrate();
+
+        player.setMinAudioBitrate(84);
+        expect(player.getMinAudioBitrate()).to.equal(84);
+
+        player.setMinAudioBitrate(-1);
+        expect(player.getMinAudioBitrate()).to.equal(-1);
+
+        player.setMinAudioBitrate(0);
+        expect(player.getMinAudioBitrate()).to.equal(0);
+
+        player.setMinAudioBitrate(oldMin);
+        expect(player.getMinAudioBitrate()).to.equal(oldMin);
+      });
+    });
+
+    describe.only("setMinVideoBitrate/getMinVideoBitrate", () => {
+      it("should have a 0 minimum video bitrate by default", () => {
+        expect(player.getMinVideoBitrate()).to.equal(0);
+      });
+
+      it("should update minimum video bitrate when calling setMinVideoBitrate", () => {
+        const oldMin = player.getMinVideoBitrate();
+
+        player.setMinVideoBitrate(84);
+        expect(player.getMinVideoBitrate()).to.equal(84);
+
+        player.setMinVideoBitrate(-1);
+        expect(player.getMinVideoBitrate()).to.equal(-1);
+
+        player.setMinVideoBitrate(0);
+        expect(player.getMinVideoBitrate()).to.equal(0);
+
+        player.setMinVideoBitrate(oldMin);
+        expect(player.getMinVideoBitrate()).to.equal(oldMin);
+      });
+    });
+
+    describe.only("setMaxAudioBitrate/getMaxAudioBitrate", () => {
+      it("should have a Infinity maximum audio bitrate by default", () => {
+        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
+      });
+
+      it("should update maximum audio bitrate when calling setMaxAudioBitrate", () => {
+        const oldMax = player.getMaxAudioBitrate();
+
+        player.setMaxAudioBitrate(84);
+        expect(player.getMaxAudioBitrate()).to.equal(84);
+
+        player.setMaxAudioBitrate(-1);
+        expect(player.getMaxAudioBitrate()).to.equal(-1);
+
+        player.setMaxAudioBitrate(0);
+        expect(player.getMaxAudioBitrate()).to.equal(0);
+
+        player.setMaxAudioBitrate(oldMax);
+        expect(player.getMaxAudioBitrate()).to.equal(oldMax);
+      });
+    });
+
+    describe.only("setMaxVideoBitrate/getMaxVideoBitrate", () => {
+      it("should have a Infinity maximum video bitrate by default", () => {
+        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
+      });
+
+      it("should update maximum video bitrate when calling setMaxVideoBitrate", () => {
+        const oldMax = player.getMaxVideoBitrate();
+
+        player.setMaxVideoBitrate(84);
+        expect(player.getMaxVideoBitrate()).to.equal(84);
+
+        player.setMaxVideoBitrate(-1);
+        expect(player.getMaxVideoBitrate()).to.equal(-1);
+
+        player.setMaxVideoBitrate(0);
+        expect(player.getMaxVideoBitrate()).to.equal(0);
+
+        player.setMaxVideoBitrate(oldMax);
+        expect(player.getMaxVideoBitrate()).to.equal(oldMax);
       });
     });
 
