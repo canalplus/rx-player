@@ -42,10 +42,10 @@ import BufferBasedChooser from "./buffer_based_chooser";
 import generateCachedSegmentDetector from "./cached_segment_detector";
 import filterByBitrate from "./filter_by_bitrate";
 import filterByWidth from "./filter_by_width";
-import fromBitrateCeil from "./from_bitrate_ceil";
 import NetworkAnalyzer from "./network_analyzer";
 import PendingRequestsStore from "./pending_requests_store";
 import RepresentationScoreCalculator from "./representation_score_calculator";
+import selectOptimalRepresentation from "./select_optimal_representation";
 
 /**
  * Adaptive BitRate estimate object.
@@ -332,7 +332,22 @@ export interface IRepresentationEstimatorArguments {
    */
   manualBitrate$ : Observable<number>;
   /**
-   * Set a bitrate ceil (the maximum reachable bitrate).
+   * Set a bitrate floor (the minimum reachable bitrate) for adaptative
+   * streaming.
+   *
+   * When the `RepresentationEstimator` is choosing a `Representation` in
+   * adaptative mode (e.g. no Representation has been manually chosen through
+   * the `manualBitrate$` Observable), it will never choose a Representation
+   * having a bitrate inferior to that value, with a notable exception:
+   * If no Representation has a bitrate superior or equal to that value, the
+   * Representation with the lowest bitrate will be chosen instead.
+   *
+   * You can set it to `0` to disable any effect of that option.
+   */
+  minAutoBitrate$ : Observable<number>;
+  /**
+   * Set a bitrate ceil (the maximum reachable bitrate) for adaptative
+   * streaming.
    *
    * When the `RepresentationEstimator` is choosing a `Representation` in
    * adaptative mode (e.g. no Representation has been manually chosen through
@@ -341,7 +356,7 @@ export interface IRepresentationEstimatorArguments {
    * If no Representation has a bitrate lower or equal to that value, the
    * Representation with the lowest bitrate will be chosen instead.
    *
-   * You can set it to `Infinity` to disable any ceil.
+   * You can set it to `Infinity` to disable any effect of that option.
    */
   maxAutoBitrate$ : Observable<number>;
   /** The list of Representations the `RepresentationEstimator` can choose from. */
@@ -390,6 +405,7 @@ export default function RepresentationEstimator({
   initialBitrate,
   lowLatencyMode,
   manualBitrate$,
+  minAutoBitrate$,
   maxAutoBitrate$,
   representations,
   streamEvents$,
@@ -468,14 +484,10 @@ export default function RepresentationEstimator({
     return manualBitrate$.pipe(switchMap(manualBitrate => {
       if (manualBitrate >= 0) {
         // -- MANUAL mode --
-        const manualRepresentation = (() => {
-          const fromBitrate = fromBitrateCeil(representations,
-                                              manualBitrate);
-          if (fromBitrate !== undefined) {
-            return fromBitrate;
-          }
-          return representations[0];
-        })();
+        const manualRepresentation = selectOptimalRepresentation(representations,
+                                                                 manualBitrate,
+                                                                 0,
+                                                                 Infinity);
         return observableOf({
           representation: manualRepresentation,
           bitrate: undefined, // Bitrate estimation is deactivated here
@@ -509,12 +521,13 @@ export default function RepresentationEstimator({
         .pipe(startWith(undefined));
 
       return observableCombineLatest([ clock$,
+                                       minAutoBitrate$,
                                        maxAutoBitrate$,
                                        filters$,
                                        bufferBasedEstimation$ ]
       ).pipe(
         withLatestFrom(currentRepresentation$),
-        map(([ [ clock, maxAutoBitrate, filters, bufferBasedBitrate ],
+        map(([ [ clock, minAutoBitrate, maxAutoBitrate, filters, bufferBasedBitrate ],
                currentRepresentation ]
         ) : IABREstimate => {
           const _representations = getFilteredRepresentations(representations,
@@ -543,18 +556,10 @@ export default function RepresentationEstimator({
             forceBandwidthMode = false;
           }
 
-          const chosenRepFromBandwidth = (() => {
-            const fromBitrate = fromBitrateCeil(_representations,
-                                                Math.min(bitrateChosen,
-                                                         maxAutoBitrate));
-            if (fromBitrate !== undefined) {
-              return fromBitrate;
-            }
-            if (_representations.length > 0) {
-              return  _representations[0];
-            }
-            return representations[0];
-          })();
+          const chosenRepFromBandwidth = selectOptimalRepresentation(_representations,
+                                                                     bitrateChosen,
+                                                                     minAutoBitrate,
+                                                                     maxAutoBitrate);
           if (forceBandwidthMode) {
             log.debug("ABR: Choosing representation with bandwidth estimation.",
                       chosenRepFromBandwidth);
@@ -581,17 +586,10 @@ export default function RepresentationEstimator({
                      manual: false,
                      knownStableBitrate };
           }
-          const limitedBitrate = Math.min(bufferBasedBitrate, maxAutoBitrate);
-          const chosenRepresentation = (() => {
-            const fromBitrate = fromBitrateCeil(_representations, limitedBitrate);
-            if (fromBitrate !== undefined) {
-              return fromBitrate;
-            }
-            if (_representations.length > 0) {
-              return  _representations[0];
-            }
-            return representations[0];
-          })();
+          const chosenRepresentation = selectOptimalRepresentation(_representations,
+                                                                   bufferBasedBitrate,
+                                                                   minAutoBitrate,
+                                                                   maxAutoBitrate);
           if (bufferBasedBitrate <= maxAutoBitrate) {
             log.debug("ABR: Choosing representation with buffer based bitrate ceiling.",
                       chosenRepresentation);
