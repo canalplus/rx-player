@@ -487,6 +487,10 @@ function parseConstructorOptions(
     maxVideoBitrate = Number(options.maxVideoBitrate);
     if (isNaN(maxVideoBitrate)) {
       throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
+    } else if (minVideoBitrate > maxVideoBitrate) {
+      throw new Error("Invalid maxVideoBitrate parameter. Its value, \"" +
+                      `${maxVideoBitrate}", is inferior to the set minVideoBitrate, "` +
+                      `${minVideoBitrate}"`);
     }
   }
 
@@ -496,6 +500,10 @@ function parseConstructorOptions(
     maxAudioBitrate = Number(options.maxAudioBitrate);
     if (isNaN(maxAudioBitrate)) {
       throw new Error("Invalid maxAudioBitrate parameter. Should be a number.");
+    } else if (minAudioBitrate > maxAudioBitrate) {
+      throw new Error("Invalid maxAudioBitrate parameter. Its value, \"" +
+                      `${maxAudioBitrate}", is inferior to the set minAudioBitrate, "` +
+                      `${minAudioBitrate}"`);
     }
   }
 
