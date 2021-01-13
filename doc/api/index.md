@@ -1907,7 +1907,7 @@ _arguments_: ``Number``
 
 Set a minimum video bitrate reachable through adaptive streaming.
 
-When the bitrate is choosen through adaptive streaming (i.e., not enforced
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setVideoBitrate`), the player will never switch
 to a video quality with a bitrate lower than that value.
 
@@ -1945,7 +1945,7 @@ _arguments_: ``Number``
 
 Set a minimum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is choosen through adaptive streaming (i.e., not enforced
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setAudioBitrate`), the player will never switch
 to an audio quality with a bitrate lower than that value.
 
@@ -2019,7 +2019,7 @@ _arguments_: ``Number``
 
 Set a maximum video bitrate reachable through adaptive streaming.
 
-When the bitrate is choosen through adaptive streaming (i.e., not enforced
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setVideoBitrate`), the player will never switch
 to a video quality with a bitrate higher than that value.
 
@@ -2057,7 +2057,7 @@ _arguments_: ``Number``
 
 Set a maximum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is choosen through adaptive streaming (i.e., not enforced
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
 manually through APIs such as `setAudioBitrate`), the player will never switch
 to an audio quality with a bitrate higher than that value.
 
