@@ -51,9 +51,8 @@ import {
   isFullscreen,
   requestFullscreen,
 } from "../../compat";
-/* eslint-disable max-len */
+/* eslint-disable-next-line max-len */
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
-/* eslint-enable max-len */
 import config from "../../config";
 import {
   ErrorCodes,
