@@ -339,19 +339,6 @@ export default function launchTestsForContent(manifestInfos) {
           transport,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        const firstPosition = manifestInfos.minimumPosition;
-        expect(player.getPosition()).to.be.closeTo(firstPosition, 0.1);
-        player.reload({ reloadAt: { position: firstPosition + 10 }});
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.be.closeTo(firstPosition + 10, 0.1);
-      });
-      it("should reload at given absolute position", async function () {
-        player.setVideoBitrate(0);
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
         if (!manifestInfos.isLive) {
           expect(player.getPosition())
             .to.be.closeTo(manifestInfos.minimumPosition, 0.1);

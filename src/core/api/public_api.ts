@@ -2623,9 +2623,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
 
-    if (this._priv_lastContentPlaybackInfos !== undefined) {
-      this._priv_lastContentPlaybackInfos.lastPlaybackPosition = clockTick.position;
-    }
+    this._priv_lastContentPlaybackInfos.lastPlaybackPosition = clockTick.position;
 
     const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :
                                                 undefined;
