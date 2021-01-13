@@ -2107,11 +2107,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
-      case "playback-position":
-        if (this._priv_lastContentPlaybackInfos !== undefined) {
-          this._priv_lastContentPlaybackInfos.lastPlaybackPosition = event.value;
-        }
-        break;
       case "stream-event":
         this.trigger("streamEvent", event.value);
         break;
@@ -2626,6 +2621,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if ((!isDirectFile && manifest === null) || isNullOrUndefined(clockTick)) {
       return;
+    }
+
+    if (this._priv_lastContentPlaybackInfos !== undefined) {
+      this._priv_lastContentPlaybackInfos.lastPlaybackPosition = clockTick.position;
     }
 
     const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :

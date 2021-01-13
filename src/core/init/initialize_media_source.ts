@@ -450,7 +450,5 @@ export default function InitializeOnMediaSource(
       }
     }));
 
-  const playbackPosition$ =
-    clock$.pipe(map(({ position }) => EVENTS.playbackPosition(position)));
-  return observableMerge(loadContent$, mediaError$, emeManager$, playbackPosition$);
+  return observableMerge(loadContent$, mediaError$, emeManager$);
 }

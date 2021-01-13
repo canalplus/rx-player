@@ -30,7 +30,6 @@ import {
   ILoadedEvent,
   IManifestReadyEvent,
   IManifestUpdateEvent,
-  IPlaybackPositionEvent,
   IReloadingMediaSourceEvent,
   IStalledEvent,
   IWarningEvent,
@@ -119,20 +118,11 @@ function reloadingMediaSource() : IReloadingMediaSourceEvent {
   return { type: "reloading-media-source", value: undefined };
 }
 
-/**
- * @param {number} position
- * @returns {object}
- */
-function playbackPosition(position: number): IPlaybackPositionEvent {
-  return { type: "playback-position", value: position };
-}
-
 const INIT_EVENTS = { loaded,
                       decipherabilityUpdate,
                       manifestReady,
                       manifestUpdate,
                       nullRepresentation,
-                      playbackPosition,
                       reloadingMediaSource,
                       stalled,
                       warning };
