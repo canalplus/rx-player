@@ -18,6 +18,7 @@ import {
   defer as observableDefer,
   Observable,
 } from "rxjs";
+import { catchError } from "rxjs/operators";
 import log from "../../log";
 import { getNextBoxOffsets } from "../../parsers/containers/isobmff";
 import {
@@ -158,6 +159,21 @@ export default function generateKeyRequest(
       patchedInit = initializationData.data;
     }
     const initDataType = initializationData.type ?? "";
-    return castToObservable(session.generateRequest(initDataType, patchedInit));
+    return castToObservable(session.generateRequest(initDataType, patchedInit))
+      .pipe(catchError(error => {
+        if (initDataType !== "" || !(error instanceof TypeError)) {
+          throw error;
+        }
+
+        // On newer EME versions of the specification, the initialization data
+        // type given to generateRequest cannot be an empty string (it returns
+        // a rejected promise with a TypeError in that case).
+        // Retry with a default "cenc" value for initialization data type if
+        // we're in that condition.
+        log.warn("Compat: error while calling `generateRequest` with an empty " +
+                 "initialization data type. Retrying with a default \"cenc\" value.",
+                 error);
+        return castToObservable(session.generateRequest("cenc", patchedInit));
+      }));
   });
 }
