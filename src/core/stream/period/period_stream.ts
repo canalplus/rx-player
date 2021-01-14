@@ -110,7 +110,7 @@ export type IPeriodStreamOptions =
     audioTrackSwitchingMode : "seamless" | "direct";
 
     /** Behavior when a new video and/or audio codec is encountered. */
-    onCodecSwitch : "do-nothing" | "reload";
+    onCodecSwitch : "continue" | "reload";
 
     /** Options specific to the text SegmentBuffer. */
     textTrackOptions? : ITextTrackSegmentBufferOptions;
