@@ -249,7 +249,7 @@ export interface ILoadVideoOptions {
   manualBitrateSwitchingMode? : "seamless"|"direct";
   enableFastSwitching? : boolean;
   audioTrackSwitchingMode? : "seamless"|"direct";
-  onCodecSwitch? : "do-nothing"|"reload";
+  onCodecSwitch? : "continue"|"reload";
 
   /* eslint-disable import/no-deprecated */
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
@@ -280,7 +280,7 @@ interface IParsedLoadVideoOptionsBase {
   manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
   audioTrackSwitchingMode : "seamless"|"direct";
-  onCodecSwitch : "do-nothing"|"reload";
+  onCodecSwitch : "continue"|"reload";
 }
 
 /**
@@ -612,11 +612,13 @@ function parseLoadVideoOptions(
   let onCodecSwitch = isNullOrUndefined(options.onCodecSwitch)
                         ? DEFAULT_CODEC_SWITCHING_BEHAVIOR
                         : options.onCodecSwitch;
-  if (!arrayIncludes(["do-nothing", "reload"], onCodecSwitch)) {
-    log.warn("The `onCodecSwitch` loadVideo option must match one of the following string:\n" +
-             "- `do-nothing`\n" +
+  if (!arrayIncludes(["continue", "reload"], onCodecSwitch)) {
+    log.warn("The `onCodecSwitch` loadVideo option must match one of " +
+             "the following string:\n" +
+             "- `continue`\n" +
              "- `reload`\n" +
-             "If badly set, " + DEFAULT_CODEC_SWITCHING_BEHAVIOR + " will be used as default");
+             "If badly set, " + DEFAULT_CODEC_SWITCHING_BEHAVIOR +
+             " will be used as default");
     onCodecSwitch = DEFAULT_CODEC_SWITCHING_BEHAVIOR;
   }
 
