@@ -539,7 +539,7 @@ _type_: ``Object|undefined``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -841,7 +841,7 @@ _defaults_: ``"native"``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -879,7 +879,7 @@ _type_: ``HTMLElement``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -904,7 +904,7 @@ _defaults_: ``"seamless"``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -942,7 +942,7 @@ _defaults_: ``"seamless"``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1005,7 +1005,7 @@ _defaults_: ``{}``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1063,7 +1063,7 @@ _defaults_: ``true``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1121,7 +1121,7 @@ _defaults_: ``false``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1160,7 +1160,7 @@ _defaults_: ``[]``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1210,7 +1210,7 @@ _defaults_: ``[]``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1305,7 +1305,7 @@ taken instead.
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option might have no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1351,7 +1351,7 @@ taken instead.
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option might have no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
