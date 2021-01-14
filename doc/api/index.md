@@ -192,7 +192,7 @@ the starting playback position :
   - _relative_ (``string | undefined``) : start playback relatively from the
   last playback position (last played position before entering into STOPPED or
   ENDED state).
-  - _position_ (`string`|`undefined`) : absolutve position at which we should
+  - _position_ (`string`|`undefined`) : absolute position at which we should
   start playback
 
 If no reload position is defined, start playback at the last playback position.
