@@ -35,7 +35,7 @@ export {
   IDefaultTextTrackOption,
   INetworkConfigOption,
   IStartAtOption,
-} from "./option_parsers";
+} from "./option_utils";
 export {
   ITMAudioTrackListItem,
   ITMTextTrackListItem,
