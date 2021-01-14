@@ -55,7 +55,7 @@ export interface IAdaptationSwitchOptions {
   audioTrackSwitchingMode : "seamless" | "direct";
 
   /** Behavior when a new video and/or audio codec is encountered. */
-  onCodecSwitch : "do-nothing" | "reload";
+  onCodecSwitch : "continue" | "reload";
 }
 
 /**
