@@ -189,13 +189,13 @@ consistent at a certain playback time (e.g. due to a specific chunk defect).
 The options argument is an object containing :
 - _reloadAt_ (``Object | undefined``): The object contain directives about
 the starting playback position :
-  - _relative_ (``string | undefined``) : start relatively from the last
-  playback position (last played position before entering into STOPPED or ENDED
-  state).
+  - _relative_ (``string | undefined``) : start playback relatively from the
+  last playback position (last played position before entering into STOPPED or
+  ENDED state).
   - _position_ (`string`|`undefined`) : absolutve position at which we should
   start playback
 
-If no start position is defined, start playback at the last playback position.
+If no reload position is defined, start playback at the last playback position.
 
 #### Example
 
