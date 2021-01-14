@@ -99,7 +99,8 @@ export interface ILoaderDataLoadedValue<T> {
 export type ILoadedManifest = Document |
                               string |
                               IMetaPlaylist |
-                              ILocalManifest;
+                              ILocalManifest |
+                              Manifest;
 
 /** Event emitted by a Manifest loader when the Manifest is fully available. */
 export interface IManifestLoaderDataLoadedEvent {
