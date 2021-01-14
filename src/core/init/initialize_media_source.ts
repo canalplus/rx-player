@@ -111,7 +111,7 @@ export interface IInitializeArguments {
     /** Strategy when switching of audio track. */
     audioTrackSwitchingMode : "seamless" | "direct";
     /** Behavior when a new video and/or audio codec is encountered. */
-    onCodecSwitch : "do-nothing" | "reload";
+    onCodecSwitch : "continue" | "reload";
   };
   /** Regularly emit current playback conditions. */
   clock$ : Observable<IInitClockTick>;
