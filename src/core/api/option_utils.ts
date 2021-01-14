@@ -492,6 +492,32 @@ function parseConstructorOptions(
 }
 
 /**
+ * Check the format of given reload options.
+ * Throw if format in invalid.
+ * @param {object | undefined} options
+ */
+function checkReloadOptions(options?: {
+  reloadAt?: { position?: number; relative?: number };
+}): void {
+  if (options === null ||
+      (typeof options !== "object" && options !== undefined)) {
+    throw new Error("API: reload - Invalid options format.");
+  }
+  if (options?.reloadAt === null ||
+      (typeof options?.reloadAt !== "object" && options?.reloadAt !== undefined)) {
+    throw new Error("API: reload - Invalid 'reloadAt' option format.");
+  }
+  if (typeof options?.reloadAt?.position !== "number" &&
+      options?.reloadAt?.position !== undefined) {
+    throw new Error("API: reload - Invalid 'reloadAt.position' option format.");
+  }
+  if (typeof options?.reloadAt?.relative !== "number" &&
+      options?.reloadAt?.relative !== undefined) {
+    throw new Error("API: reload - Invalid 'reloadAt.relative' option format.");
+  }
+}
+
+/**
  * Parse options given to loadVideo and set default options as found
  * in the config.
  *
@@ -723,6 +749,7 @@ function parseLoadVideoOptions(
 }
 
 export {
+  checkReloadOptions,
   parseConstructorOptions,
   parseLoadVideoOptions,
 };

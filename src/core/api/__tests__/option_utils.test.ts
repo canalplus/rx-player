@@ -29,9 +29,10 @@ import {
 } from "../../../utils/languages";
 import warnOnce from "../../../utils/warn_once";
 import {
+  checkReloadOptions,
   parseConstructorOptions,
   parseLoadVideoOptions,
-} from "../option_parsers";
+} from "../option_utils";
 
 jest.mock("../../../log");
 jest.mock("../../../utils/languages");
@@ -1369,5 +1370,61 @@ If badly set, seamless strategy will be used as default`);
                           supplementaryTextTracks: [] },
     });
   });
+});
 
+describe("API - checkReloadOptions", () => {
+  it("Should valid undefined options", () => {
+    const options = undefined;
+    expect(() => checkReloadOptions(options)).not.toThrow();
+  });
+  it("Should valid empty options", () => {
+    const options = {};
+    expect(() => checkReloadOptions(options)).not.toThrow();
+  });
+  it("Should valid options with defined reloadAt.position", () => {
+    const options = {
+      reloadAt: {
+        position: 4,
+      },
+    };
+    expect(() => checkReloadOptions(options)).not.toThrow();
+  });
+  it("Should valid options with defined reloadAt.relative", () => {
+    const options = {
+      reloadAt: {
+        relative: 3,
+      },
+    };
+    expect(() => checkReloadOptions(options)).not.toThrow();
+  });
+  it("Should throw when invalid options", () => {
+    const options = null;
+    expect(() => checkReloadOptions(options as any))
+      .toThrow("API: reload - Invalid options format.");
+  });
+  it("Should throw when invalid reloatAt", () => {
+    const options = {
+      reloadAt: 3,
+    };
+    expect(() => checkReloadOptions(options as any))
+      .toThrow("API: reload - Invalid 'reloadAt' option format.");
+  });
+  it("Should throw when invalid position", () => {
+    const options = {
+      reloadAt: {
+        position: "3",
+      },
+    };
+    expect(() => checkReloadOptions(options as any))
+      .toThrow("API: reload - Invalid 'reloadAt.position' option format.");
+  });
+  it("Should throw when invalid relative position", () => {
+    const options = {
+      reloadAt: {
+        relative: "3",
+      },
+    };
+    expect(() => checkReloadOptions(options as any))
+      .toThrow("API: reload - Invalid 'reloadAt.relative' option format.");
+  });
 });
