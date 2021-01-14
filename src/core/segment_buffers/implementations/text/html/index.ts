@@ -19,9 +19,6 @@
  * It always should be imported through the `features` object.
  */
 
-import HTMLTextSegmentBuffer, {
-  IHTMLTextTrackData,
-} from "./html_text_segment_buffer";
+import HTMLTextSegmentBuffer from "./html_text_segment_buffer";
 
 export default HTMLTextSegmentBuffer;
-export { IHTMLTextTrackData };

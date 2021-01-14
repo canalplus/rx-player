@@ -35,6 +35,7 @@ import {
 } from "../../../../../compat";
 import config from "../../../../../config";
 import log from "../../../../../log";
+import { ITextTrackSegmentData } from "../../../../../transports";
 import {
   IEndOfSegmentInfos,
   IPushChunkInfos,
@@ -48,23 +49,6 @@ import updateProportionalElements from "./update_proportional_elements";
 const { onEnded$,
         onSeeked$,
         onSeeking$ } = events;
-
-/** Format of the data pushed to the `HTMLTextSegmentBuffer`. */
-export interface IHTMLTextTrackData {
-  /** The text track content. Should be a string in the format indicated by `type`. */
-  data : string;
-  /** The format the text track is in (e.g. "ttml" or "vtt") */
-  type : string;
-  /** Exact beginning time to which the track applies, in seconds. */
-  start? : number;
-  /** Exact end time to which the track applies, in seconds. */
-  end? : number;
-  /**
-   * Language the texttrack is in. This is sometimes needed to properly parse
-   * the text track. For example for tracks in the "sami" format.
-   */
-  language? : string;
-}
 
 const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL,
         TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config;
@@ -127,7 +111,9 @@ function getElementResolution(
  * HTML element.
  * @class HTMLTextSegmentBuffer
  */
-export default class HTMLTextSegmentBuffer extends SegmentBuffer<IHTMLTextTrackData> {
+export default class HTMLTextSegmentBuffer
+  extends SegmentBuffer<ITextTrackSegmentData>
+{
   readonly bufferType : "text";
 
   /**
@@ -219,7 +205,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer<IHTMLTextTrackD
    * @param {Object} infos
    * @returns {Observable}
    */
-  public pushChunk(infos : IPushChunkInfos<IHTMLTextTrackData>) : Observable<void> {
+  public pushChunk(infos : IPushChunkInfos<ITextTrackSegmentData>) : Observable<void> {
     return observableDefer(() => {
       this.pushChunkSync(infos);
       return observableOf(undefined);
@@ -287,7 +273,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer<IHTMLTextTrackD
    * @param {Object} data
    * @returns {boolean}
    */
-  public pushChunkSync(infos : IPushChunkInfos<IHTMLTextTrackData>) : void {
+  public pushChunkSync(infos : IPushChunkInfos<ITextTrackSegmentData>) : void {
     log.debug("HTSB: Appending new html text tracks");
     const { timestampOffset,
             appendWindow,
