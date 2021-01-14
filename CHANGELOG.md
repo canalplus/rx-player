@@ -1,5 +1,38 @@
 # Changelog
 
+## v3.23.0 (2021/01/28)
+
+### Features
+
+  - Add the `reload` method to be able to re-load the last loaded content as fast as possible (e.g. after fatal errors) [#859, #867]
+  - Add `onCodecSwitch` loadVideo option, to select a strategy when a new incompatible codec is encountered [#856]
+  - Emit `DISCONTINUITY_ENCOUNTERED` warnings when a discontinuity has been seeked over [#862]
+  - Add minAudioBitrate and minVideoBitrate constructor options and the {set,get}Minimum{Audio,Video}Bitrate methods to define the minimum quality reachable through adaptive streaming [#876]
+
+### Bug fixes
+
+  - Fix impossibility to fallback to another Representation (with the `keySystems[].fallbackOn` `loadVideo` options) when a decryption key has been found to be non-usable [#843, #889]
+  - Fix DRM-related events being sent twice in a row instead of just once [#850]
+  - Stop and throw `MANIFEST_PARSE_ERROR` error again when either audio or video has only unsupported codecs (instead of just playing the other type) [#864]
+  - Avoid re-downloading a segment that ends a lot before its expected end [#846]
+  - In "native" `textTrackMode`, avoid requesting text segments in a loop [#878]
+  - Disable effects of `throttleVideoBitrateWhenHidden`, `limitVideoWidth` and `throttleVideoBitrate` player options on Firefox >= 67 due to how Picture in Picture mode is currently handled in them [#874]
+  - Work-around race condition in old Chromium versions where loading a persistent MediaKeySession led to no key statuses right away [#847]
+
+### Other improvements
+
+  - Skip over most audio or video discontinuities in the stream, even those not announced in the Manifest [#862]
+  - When track or bitrate switching lead to a reload, seek back a consistent number of milliseconds to give back context [#848]
+  - Don't call `setServerCertificate` API when `keySystems[].serverCertificate` option is set to `null` [#849]
+  - On the rare platforms where an undefined initialization data type can be received on encrypted events, retry `generateRequest` with a default "cenc" value if the first one fails due to it being empty [#870]
+  - Re-add debug logs logging the principal media properties at each clock tick [#844]
+  - Use TextEncoder and TextDecoder interfaces when available to speed-up string conversions [#843, #875]
+  - Throw a better error when no EME API is found
+  - Reduce default bundles size by switching to webpack 5 to generate them
+  - tests: Add conformance tests on the initial seek to help debugging related issues on new platforms [#873]
+  - lint/code: Use eslint code linter even for the TypeScript code [#842]
+
+
 ## v3.22.0 (2020/11/17)
 
 ### Features
