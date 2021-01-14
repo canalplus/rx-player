@@ -20,6 +20,7 @@ import {
   Observable,
   of as observableOf,
   Subject,
+  throwError,
 } from "rxjs";
 import {
   filter,
@@ -108,8 +109,9 @@ export default function createMediaSourceLoader(
     const initialPeriod = manifest.getPeriodForTime(initialTime) ??
                           manifest.getNextPeriod(initialTime);
     if (initialPeriod === undefined) {
-      throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
-                           "Wanted starting time not found in the Manifest.");
+      const error = new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
+                                   "Wanted starting time not found in the Manifest.");
+      return throwError(error);
     }
 
     /** Interface to create media buffers for loaded segments. */
