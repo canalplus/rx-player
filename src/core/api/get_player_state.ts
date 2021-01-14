@@ -18,16 +18,27 @@ import config from "../../config";
 
 const { FORCED_ENDED_THRESHOLD } = config;
 
+export type IPlayerState = "STOPPED" |
+                           "LOADED" |
+                           "LOADING" |
+                           "PLAYING" |
+                           "PAUSED" |
+                           "ENDED" |
+                           "BUFFERING" |
+                           "SEEKING" |
+                           "RELOADING";
+
 /** Player state dictionnary. */
-export const PLAYER_STATES = { STOPPED: "STOPPED",
-                               LOADED: "LOADED",
-                               LOADING: "LOADING",
-                               PLAYING: "PLAYING",
-                               PAUSED: "PAUSED",
-                               ENDED: "ENDED",
-                               BUFFERING: "BUFFERING",
-                               SEEKING: "SEEKING",
-                               RELOADING: "RELOADING" };
+export const PLAYER_STATES =
+  { STOPPED: "STOPPED",
+    LOADED: "LOADED",
+    LOADING: "LOADING",
+    PLAYING: "PLAYING",
+    PAUSED: "PAUSED",
+    ENDED: "ENDED",
+    BUFFERING: "BUFFERING",
+    SEEKING: "SEEKING",
+    RELOADING: "RELOADING" } as Record<IPlayerState, IPlayerState>;
 
 /**
  * Get state string for a _loaded_ content.
@@ -45,7 +56,7 @@ export default function getLoadedContentState(
                              "not-ready" |
                              "buffering"; } |
                   null
-) : string {
+) : IPlayerState {
   if (mediaElement.ended) {
     return PLAYER_STATES.ENDED;
   }

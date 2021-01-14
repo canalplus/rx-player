@@ -63,7 +63,7 @@ export interface IManifestFetcherParsedResult {
   /** The time (`performance.now()`) at which the request was fully received. */
   receivedTime? : number;
   /* The time taken to parse the Manifest through the corresponding parse function. */
-  parsingTime : number;
+  parsingTime? : number;
 }
 
 /** Emitted when a fetching or parsing minor error happened. */

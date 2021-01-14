@@ -331,6 +331,92 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
+    describe("reload", () => {
+      it("should reload at given absolute position", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        if (!manifestInfos.isLive) {
+          expect(player.getPosition())
+            .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
+        } else {
+          expect(player.getPosition())
+            .to.be.closeTo(manifestInfos.maximumPosition - 10, 5);
+        }
+        player.reload({
+          reloadAt: { position: manifestInfos.minimumPosition + 5 }
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
+      });
+      it("should reload at given relative position", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          startAt: { position: manifestInfos.minimumPosition + 2 }
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 2, 0.1);
+        player.reload({ reloadAt: { relative: 5 }});
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 7, 0.1);
+      });
+      it("should reload after stop, at given relative position", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          startAt: { position: manifestInfos.minimumPosition + 2 }
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 2, 0.1);
+        player.stop();
+        player.reload({ reloadAt: { relative: 5 }});
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 7, 0.1);
+      });
+      it("should reload when seeking at last playback position", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          startAt: { position: manifestInfos.minimumPosition }
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
+        player.seekTo({ position: manifestInfos.minimumPosition + 5 });
+        player.reload();
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
+      });
+      it("should not reload when content is not loaded", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          startAt: { position: manifestInfos.minimumPosition }
+        });
+        expect(() => player.reload())
+          .to.throw("API: Can't reload without having previously loaded a content.");
+      });
+      it("should not reload when no content", async function () {
+        player.setVideoBitrate(0);
+        expect(() => player.reload())
+          .to.throw("API: Can't reload without having previously loaded a content.");
+      });
+    });
+
     describe("getCurrentAdaptations", () => {
       it("should return the currently played adaptations", async function () {
         player.setVideoBitrate(0);

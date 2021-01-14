@@ -107,15 +107,18 @@ import createClock, {
 } from "./clock";
 import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
+  IPlayerState,
   PLAYER_STATES,
 } from "./get_player_state";
 import MediaElementTrackChoiceManager from "./media_element_track_choice_manager";
 import {
+  checkReloadOptions,
   IConstructorOptions,
   ILoadVideoOptions,
+  IParsedLoadVideoOptions,
   parseConstructorOptions,
   parseLoadVideoOptions,
-} from "./option_parsers";
+} from "./option_utils";
 import TrackChoiceManager, {
   IAudioTrackPreference,
   ITextTrackPreference,
@@ -231,7 +234,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Current state of the RxPlayer.
    * Please use `getPlayerState()` instead.
    */
-  public state : string;
+  public state : IPlayerState;
 
   /**
    * Emit when the the RxPlayer is not needed anymore and thus all resources
@@ -414,6 +417,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** Determines whether or not the player should stop at the end of video playback. */
   private readonly _priv_stopAtEnd : boolean;
 
+  /** Information about last content being played. */
+  private _priv_lastContentPlaybackInfos : { options?: IParsedLoadVideoOptions;
+                                             manifest?: Manifest;
+                                             lastPlaybackPosition?: number; };
+
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
@@ -558,6 +566,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_preferredAudioTracks = preferredAudioTracks;
     this._priv_preferredTextTracks = preferredTextTracks;
     this._priv_preferredVideoTracks = preferredVideoTracks;
+
+    this._priv_lastContentPlaybackInfos = {};
   }
 
   /**
@@ -602,6 +612,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_bitrateInfos.maxAutoBitrates.video.complete();
     this._priv_bitrateInfos.maxAutoBitrates.audio.complete();
 
+    this._priv_lastContentPlaybackInfos = {};
+
     // un-attach video element
     this.videoElement = null;
   }
@@ -613,7 +625,59 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   loadVideo(opts : ILoadVideoOptions) : void {
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options);
+    this._priv_lastContentPlaybackInfos = { options };
+    this._priv_initializeContentPlayback(options);
+  }
 
+  /**
+   * Reload last content. Init media playback without fetching again
+   * the manifest.
+   * @param {Object} reloadOpts
+   */
+  reload(reloadOpts?: { reloadAt?: { position?: number; relative?: number } }): void {
+    const { options,
+            manifest,
+            lastPlaybackPosition } = this._priv_lastContentPlaybackInfos;
+    if (options === undefined ||
+        manifest === undefined ||
+        lastPlaybackPosition === undefined) {
+      throw new Error("API: Can't reload without having previously loaded a content.");
+    }
+    checkReloadOptions(reloadOpts);
+    let startAtPositon: number;
+    if (reloadOpts !== undefined &&
+        reloadOpts.reloadAt !== undefined &&
+        reloadOpts.reloadAt.position !== undefined) {
+      startAtPositon = reloadOpts.reloadAt.position;
+    } else {
+      let playbackPosition: number;
+      if (this.state === "STOPPED" || this.state === "ENDED") {
+        playbackPosition = lastPlaybackPosition;
+      } else {
+        if (this.videoElement === null) {
+          throw new Error("API: reload - Can't reload when video element does not exist.");
+        }
+        playbackPosition = this.videoElement.currentTime;
+      }
+      if (reloadOpts !== undefined &&
+          reloadOpts.reloadAt !== undefined &&
+          reloadOpts.reloadAt.relative !== undefined) {
+        startAtPositon = reloadOpts.reloadAt.relative + playbackPosition;
+      } else {
+        startAtPositon = playbackPosition;
+      }
+    }
+    const newOptions = { ...options,
+                         initialManifest: manifest };
+    newOptions.startAt = { position: startAtPositon };
+    this._priv_initializeContentPlayback(newOptions);
+  }
+
+  /**
+   * From given options, initialize content playback.
+   * @param {Object} options
+   */
+  private _priv_initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
     const { autoPlay,
             audioTrackSwitchingMode,
             defaultAudioTrack,
@@ -2195,6 +2259,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     this._priv_contentInfos.manifest = manifest;
+    this._priv_lastContentPlaybackInfos.manifest = manifest;
 
     const { initialAudioTrack, initialTextTrack } = this._priv_contentInfos;
     this._priv_trackChoiceManager = new TrackChoiceManager();
@@ -2550,7 +2615,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {string} newState
    */
-  private _priv_setPlayerState(newState : string) : void {
+  private _priv_setPlayerState(newState : IPlayerState) : void {
     if (this.state !== newState) {
       this.state = newState;
       log.info("API: playerStateChange event", newState);
@@ -2579,6 +2644,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if ((!isDirectFile && manifest === null) || isNullOrUndefined(clockTick)) {
       return;
     }
+
+    this._priv_lastContentPlaybackInfos.lastPlaybackPosition = clockTick.position;
 
     const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :
                                                 undefined;
