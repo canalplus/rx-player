@@ -25,6 +25,7 @@ import {
 } from "../../../../../compat";
 import removeCue from "../../../../../compat/remove_cue";
 import log from "../../../../../log";
+import { ITextTrackSegmentData } from "../../../../../transports";
 import {
   IEndOfSegmentInfos,
   IPushChunkInfos,
@@ -33,33 +34,15 @@ import {
 import ManualTimeRanges from "../../utils/manual_time_ranges";
 import parseTextTrackToCues from "./parsers";
 
-
-/** Format of the data pushed to the `NativeTextSegmentBuffer`. */
-export interface INativeTextTrackData {
-  /** The text track content. Should be a string in the format indicated by `type`. */
-  data : string;
-  /** The format the text track is in (e.g. "ttml" or "vtt") */
-  type : string;
-  /** Timescale for the start and end attributes */
-  timescale : number;
-  /** Exact beginning time to which the track applies. */
-  start? : number;
-  /** Exact end time to which the track applies. */
-  end? : number;
-  /**
-   * Language the texttrack is in. This is sometimes needed to properly parse
-   * the text track. For example for tracks in the "sami" format.
-   */
-  language? : string;
-}
-
 /**
  * Implementation of an SegmentBuffer for "native" text tracks.
  * "Native" text tracks rely on a `<track>` HTMLElement and its associated
  * expected behavior to display subtitles synchronized to the video.
  * @class NativeTextSegmentBuffer
  */
-export default class NativeTextSegmentBuffer extends SegmentBuffer<INativeTextTrackData> {
+export default class NativeTextSegmentBuffer
+  extends SegmentBuffer<ITextTrackSegmentData>
+{
   public readonly bufferType : "text";
 
   private readonly _videoElement : HTMLMediaElement;
@@ -94,7 +77,7 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer<INativeTextTr
    * @param {Object} infos
    * @returns {Observable}
    */
-  public pushChunk(infos : IPushChunkInfos<INativeTextTrackData>) : Observable<void> {
+  public pushChunk(infos : IPushChunkInfos<ITextTrackSegmentData>) : Observable<void> {
     return observableDefer(() => {
       log.debug("NTSB: Appending new native text tracks");
       if (infos.data.chunk === null) {
@@ -103,19 +86,13 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer<INativeTextTr
       const { timestampOffset,
               appendWindow,
               chunk } = infos.data;
-      const { timescale,
-              start: timescaledStart,
-              end: timescaledEnd,
+      const { start: startTime,
+              end: endTime,
               data: dataString,
               type,
               language } = chunk;
       const appendWindowStart = appendWindow[0] ?? 0;
       const appendWindowEnd = appendWindow[1] ?? Infinity;
-
-      const startTime = timescaledStart !== undefined ? timescaledStart / timescale :
-                                                        undefined;
-      const endTime = timescaledEnd !== undefined ? timescaledEnd / timescale :
-                                                    undefined;
 
       const cues = parseTextTrackToCues(type, dataString, timestampOffset, language);
 

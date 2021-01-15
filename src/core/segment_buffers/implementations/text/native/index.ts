@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-import NativeTextSegmentBuffer, {
-  INativeTextTrackData,
-} from "./native_text_segment_buffer";
+import NativeTextSegmentBuffer from "./native_text_segment_buffer";
 
 export default NativeTextSegmentBuffer;
-export { INativeTextTrackData };
