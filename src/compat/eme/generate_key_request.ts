@@ -18,6 +18,7 @@ import {
   defer as observableDefer,
   Observable,
 } from "rxjs";
+import { catchError } from "rxjs/operators";
 import log from "../../log";
 import { getNextBoxOffsets } from "../../parsers/containers/isobmff";
 import {
@@ -27,6 +28,14 @@ import {
 import castToObservable from "../../utils/cast_to_observable";
 import { PSSH_TO_INTEGER } from "./constants";
 import { ICustomMediaKeySession } from "./custom_media_keys";
+
+/** Information about the encryption initialization data. */
+export interface IInitializationDataInfo {
+  /** The initialization data type. */
+  type : string | undefined;
+  /** Initialization data itself. */
+  data : Uint8Array;
+}
 
 /**
  * Modify "initialization data" sent to a `generateKeyRequest` EME call to
@@ -139,19 +148,32 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
  */
 export default function generateKeyRequest(
   session: MediaKeySession|ICustomMediaKeySession,
-  initData: Uint8Array,
-  initDataType: string|undefined
+  initializationData : IInitializationDataInfo
 ) : Observable<unknown> {
   return observableDefer(() => {
     log.debug("Compat: Calling generateRequest on the MediaKeySession");
     let patchedInit : Uint8Array;
     try {
-      patchedInit = patchInitData(initData);
+      patchedInit = patchInitData(initializationData.data);
     } catch (_e) {
-      patchedInit = initData;
+      patchedInit = initializationData.data;
     }
-    return castToObservable(session.generateRequest(initDataType == null ? "" :
-                                                                           initDataType,
-                                                    patchedInit));
+    const initDataType = initializationData.type ?? "";
+    return castToObservable(session.generateRequest(initDataType, patchedInit))
+      .pipe(catchError(error => {
+        if (initDataType !== "" || !(error instanceof TypeError)) {
+          throw error;
+        }
+
+        // On newer EME versions of the specification, the initialization data
+        // type given to generateRequest cannot be an empty string (it returns
+        // a rejected promise with a TypeError in that case).
+        // Retry with a default "cenc" value for initialization data type if
+        // we're in that condition.
+        log.warn("Compat: error while calling `generateRequest` with an empty " +
+                 "initialization data type. Retrying with a default \"cenc\" value.",
+                 error);
+        return castToObservable(session.generateRequest("cenc", patchedInit));
+      }));
   });
 }

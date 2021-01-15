@@ -20,10 +20,17 @@ import {
   of as observableOf,
 } from "rxjs";
 import { mergeMap, tap } from "rxjs/operators";
-import { setMediaKeys } from "../../compat";
+import {
+  ICustomMediaKeys,
+  ICustomMediaKeySystemAccess,
+  setMediaKeys,
+} from "../../compat";
 import log from "../../log";
 import MediaKeysInfosStore from "./media_keys_infos_store";
-import { IMediaKeysInfos } from "./types";
+import {
+  IKeySystemOption,
+} from "./types";
+import LoadedSessionsStore from "./utils/loaded_sessions_store";
 
 /**
  * Dispose the media keys on media element.
@@ -39,9 +46,22 @@ export function disableMediaKeys(
   });
 }
 
+/** MediaKeys and associated state attached to a media element. */
+export interface IMediaKeysState {
+  /** Options set when the MediaKeys has been attached. */
+  keySystemOptions : IKeySystemOption;
+  /** LoadedSessionsStore associated to the MediaKeys instance. */
+  loadedSessionsStore : LoadedSessionsStore;
+  /** The MediaKeySystemAccess allowing to create MediaKeys instances. */
+  mediaKeySystemAccess: MediaKeySystemAccess |
+                        ICustomMediaKeySystemAccess;
+  /** The MediaKeys instance to attach to the media element. */
+  mediaKeys : MediaKeys |
+              ICustomMediaKeys;
+}
+
 /**
- * Set the MediaKeys object on the HTMLMediaElement if it is not already on the
- * element.
+ * Attach MediaKeys and its associated state to an HTMLMediaElement.
  *
  * /!\ Mutates heavily MediaKeysInfosStore
  * @param {Object} mediaKeysInfos
@@ -49,15 +69,13 @@ export function disableMediaKeys(
  * @returns {Observable}
  */
 export default function attachMediaKeys(
-  mediaKeysInfos: IMediaKeysInfos,
-  mediaElement : HTMLMediaElement
+  mediaElement : HTMLMediaElement,
+  { keySystemOptions,
+    loadedSessionsStore,
+    mediaKeySystemAccess,
+    mediaKeys } : IMediaKeysState
 ) : Observable<unknown> {
   return observableDefer(() => {
-    const { keySystemOptions,
-            mediaKeySystemAccess,
-            mediaKeys,
-            loadedSessionsStore } = mediaKeysInfos;
-
     const previousState = MediaKeysInfosStore.getState(mediaElement);
     const closeAllSessions$ = previousState !== null &&
                               previousState.loadedSessionsStore !== loadedSessionsStore ?

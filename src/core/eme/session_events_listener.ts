@@ -51,9 +51,12 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import retryObsWithBackoff, {
   IBackoffOptions,
 } from "../../utils/rx-retry_with_backoff";
-import checkKeyStatuses from "./check_key_statuses";
+import checkKeyStatuses, {
+  IKeyStatusesCheckingOptions,
+} from "./check_key_statuses";
 import {
   IBlacklistKeysEvent,
+  IInitializationDataInfo,
   IEMEWarningEvent,
   IKeyMessageHandledEvent,
   IKeyStatusChangeHandledEvent,
@@ -90,7 +93,7 @@ export class BlacklistedSessionError extends Error {
  * @param {MediaKeySession} session - The MediaKeySession concerned.
  * @param {Object} keySystemOptions - The key system options.
  * @param {String} keySystem - The configuration keySystem used for deciphering
- * @param {Object} initDataInfo - The initialization data linked to that
+ * @param {Object} initializationData - The initialization data linked to that
  * session.
  * @returns {Observable}
  */
@@ -98,7 +101,7 @@ export default function SessionEventsListener(
   session: MediaKeySession | ICustomMediaKeySession,
   keySystemOptions: IKeySystemOption,
   keySystem: string,
-  { initData, initDataType } : { initData : Uint8Array; initDataType? : string }
+  initializationData : IInitializationDataInfo
 ) : Observable<IEMEWarningEvent |
                ISessionMessageEvent |
                INoUpdateEvent |
@@ -161,7 +164,7 @@ export default function SessionEventsListener(
           throw formattedError;
         }),
         startWith({ type: "session-message" as const,
-                    value: { messageType, initData, initDataType } })
+                    value: { messageType, initializationData } })
       );
     }));
 
@@ -182,8 +185,7 @@ export default function SessionEventsListener(
         case "key-status-change-handled":
           return updateSessionWithMessage(session,
                                           evt.value.license,
-                                          initData,
-                                          initDataType);
+                                          initializationData);
         default:
           return observableOf(evt);
       }
@@ -207,18 +209,18 @@ export default function SessionEventsListener(
  *    - emit warning events for recoverable errors
  *    - emit blacklist-keys events for key IDs that are not decipherable
  * @param {MediaKeySession} session - The MediaKeySession concerned.
- * @param {Object} keySystemOptions - The key system options.
- * @param {String} keySystem - The configuration keySystem used for deciphering
+ * @param {Object} options - Options related to key statuses checks.
+ * @param {String} keySystem - The name of the key system used for deciphering
  * @returns {Observable}
  */
 function getKeyStatusesEvents(
   session : MediaKeySession | ICustomMediaKeySession,
-  keySystemOptions : IKeySystemOption,
+  options : IKeyStatusesCheckingOptions,
   keySystem : string
 ) : Observable<IEMEWarningEvent | IBlacklistKeysEvent> {
   return observableDefer(() => {
     const [warnings, blacklistedKeyIDs] =
-      checkKeyStatuses(session, keySystemOptions, keySystem);
+      checkKeyStatuses(session, options, keySystem);
 
     const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
       EMPTY;
@@ -259,20 +261,18 @@ function formatGetLicenseError(error: unknown) : ICustomError {
  * Returns the right event depending on the action taken.
  * @param {MediaKeySession} session
  * @param {ArrayBuffer|TypedArray|null} message
- * @param {Uint8Array} initData
- * @param {string|undefined} initDataType
+ * @param {Object} initializationData
  * @returns {Observable}
  */
 function updateSessionWithMessage(
   session : MediaKeySession | ICustomMediaKeySession,
   message : BufferSource | null,
-  initData : Uint8Array,
-  initDataType : string | undefined
+  initializationData : IInitializationDataInfo
 ) : Observable<INoUpdateEvent | ISessionUpdatedEvent> {
   if (isNullOrUndefined(message)) {
     log.info("EME: No message given, skipping session.update");
     return observableOf({ type: "no-update" as const,
-                          value: { initData, initDataType } });
+                          value: { initializationData } });
   }
 
   log.info("EME: Updating MediaKeySession with message");
@@ -284,7 +284,7 @@ function updateSessionWithMessage(
     }),
     tap(() => { log.info("EME: MediaKeySession update succeeded."); }),
     mapTo({ type: "session-updated" as const,
-            value: { session, license: message, initData, initDataType } })
+            value: { session, license: message, initializationData } })
   );
 }
 

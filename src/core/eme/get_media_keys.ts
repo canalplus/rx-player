@@ -37,7 +37,7 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
 import ServerCertificateStore from "./server_certificate_store";
 import {
   IKeySystemOption,
-  IMediaKeysInfos,
+  IMediaKeySessionStores,
 } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
@@ -62,6 +62,20 @@ function createPersistentSessionsStorage(
 
   log.debug("EME: Set the given license storage");
   return new PersistentSessionsStore(licenseStorage);
+}
+
+/** Object returned by `getMediaKeysInfos`. */
+export interface IMediaKeysInfos {
+  /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
+  mediaKeySystemAccess: MediaKeySystemAccess |
+                        ICustomMediaKeySystemAccess;
+  /** The MediaKeys instance. */
+  mediaKeys : MediaKeys |
+              ICustomMediaKeys;
+  /** Stores allowing to create and retrieve MediaKeySessions. */
+  stores : IMediaKeySessionStores;
+  /** IKeySystemOption compatible to the created MediaKeys instance. */
+  options : IKeySystemOption;
 }
 
 /**
@@ -90,21 +104,20 @@ export default function getMediaKeysInfos(
              ServerCertificateStore.has(mediaKeys, options.serverCertificate)))
         {
           return observableOf({ mediaKeys,
-                                loadedSessionsStore,
                                 mediaKeySystemAccess,
-                                keySystemOptions: options,
-                                persistentSessionsStore });
+                                stores: { loadedSessionsStore, persistentSessionsStore },
+                                options });
 
         }
       }
 
       return createMediaKeys(mediaKeySystemAccess).pipe(map((mediaKeys) => {
         log.info("EME: MediaKeys created with success", mediaKeys);
+        const loadedSessionsStore = new LoadedSessionsStore(mediaKeys);
         return { mediaKeys,
-                 loadedSessionsStore: new LoadedSessionsStore(mediaKeys),
                  mediaKeySystemAccess,
-                 keySystemOptions: options,
-                 persistentSessionsStore };
+                 stores: { loadedSessionsStore, persistentSessionsStore },
+                 options };
       }));
     }));
 }

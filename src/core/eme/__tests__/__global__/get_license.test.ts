@@ -360,16 +360,16 @@ function checkGetLicense(
         if (!licenseReceived) {
           if (ignoreLicenseRequests) {
             expect(evt.type).toEqual("no-update");
-            expect(evt.value.initData).toEqual(initData);
-            expect(evt.value.initDataType).toEqual("cenc");
+            expect(evt.value.initializationData.data).toEqual(initData);
+            expect(evt.value.initializationData.type).toEqual("cenc");
             expect(updateSpy).toHaveBeenCalledTimes(0);
           } else {
             const license = concat(challenge, challenge);
             expect(evt.type).toEqual("session-updated");
             expect(evt.value.session).toEqual(mediaKeySession);
             expect(evt.value.license).toEqual(license);
-            expect(evt.value.initData).toEqual(initData);
-            expect(evt.value.initDataType).toEqual("cenc");
+            expect(evt.value.initializationData.data).toEqual(initData);
+            expect(evt.value.initializationData.type).toEqual("cenc");
             expect(updateSpy).toHaveBeenCalledTimes(1);
             expect(updateSpy).toHaveBeenCalledWith(license);
           }

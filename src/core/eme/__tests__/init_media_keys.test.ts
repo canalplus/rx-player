@@ -34,9 +34,13 @@ describe("core - eme - initMediaKeys", () => {
   });
 
   it("should emit `created-media-keys` event once MediaKeys has been created", done => {
-    const falseMediaKeys = { key: "test" };
+    const fakeResult = { mediaKeySystemAccess: { a: 5 },
+                         mediaKeys: { b: 4 },
+                         stores: { loadedSessionsStore: { c: 3 },
+                                   persistentSessionsStore: { d: 2 } },
+                         options: { e: 1 } };
     const spyGetMediaKeysInfos = jest.fn(() => {
-      return observableOf(falseMediaKeys);
+      return observableOf(fakeResult);
     });
     jest.mock("../get_media_keys", () => ({
       __esModule: true as const,
@@ -61,7 +65,11 @@ describe("core - eme - initMediaKeys", () => {
       .pipe(take(1))
       .subscribe((result : any) => {
         expect(result.type).toEqual("created-media-keys");
-        expect(result.value.mediaKeysInfos).toEqual(falseMediaKeys);
+        expect(result.value.mediaKeys).toEqual(fakeResult.mediaKeys);
+        expect(result.value.mediaKeySystemAccess)
+          .toEqual(fakeResult.mediaKeySystemAccess);
+        expect(result.value.stores).toEqual(fakeResult.stores);
+        expect(result.value.options).toEqual(fakeResult.options);
         expect(isObservable(result.value.attachMediaKeys$) &&
                typeof result.value.attachMediaKeys$.next === "function").toBeTruthy();
 
@@ -74,10 +82,14 @@ describe("core - eme - initMediaKeys", () => {
       });
   });
 
-  it("should return mediaKeysInfos after media keys has been attached", (done) => {
-    const falseMediaKeys = { key: "test" };
+  it("should return MediaKeys information after media keys has been attached", (done) => {
+    const fakeResult = { mediaKeySystemAccess: { a: 5 },
+                         mediaKeys: { b: 4 },
+                         stores: { loadedSessionsStore: { c: 3 },
+                                   persistentSessionsStore: { d: 2 } },
+                         options: { e: 1 } };
     const spyGetMediaKeysInfos = jest.fn(() => {
-      return observableOf(falseMediaKeys);
+      return observableOf(fakeResult);
     });
     jest.mock("../get_media_keys", () => ({
       __esModule: true as const,
@@ -110,7 +122,7 @@ describe("core - eme - initMediaKeys", () => {
       .subscribe((result : unknown) => {
         expect(result).toEqual({
           type: "attached-media-keys",
-          value: falseMediaKeys,
+          value: fakeResult,
         });
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
@@ -119,8 +131,12 @@ describe("core - eme - initMediaKeys", () => {
 
         expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
         expect(spyAttachMediaKeys)
-          .toHaveBeenCalledWith(falseMediaKeys, mediaElement);
-
+          .toHaveBeenCalledWith(
+            mediaElement,
+            { mediaKeySystemAccess: fakeResult.mediaKeySystemAccess,
+              mediaKeys: fakeResult.mediaKeys,
+              loadedSessionsStore: fakeResult.stores.loadedSessionsStore,
+              keySystemOptions: fakeResult.options });
         done();
       });
   });
@@ -161,9 +177,13 @@ describe("core - eme - initMediaKeys", () => {
   });
 
   it("Should throw if attachMediaKeys throws", (done) => {
-    const falseMediaKeys = { key: "test" };
+    const fakeResult = { mediaKeySystemAccess: { a: 5 },
+                         mediaKeys: { b: 4 },
+                         stores: { loadedSessionsStore: { c: 3 },
+                                   persistentSessionsStore: { d: 2 } },
+                         options: { e: 1 } };
     const spyGetMediaKeysInfos = jest.fn(() => {
-      return observableOf(falseMediaKeys);
+      return observableOf(fakeResult);
     });
     jest.mock("../get_media_keys", () => ({
       __esModule: true as const,
@@ -188,7 +208,10 @@ describe("core - eme - initMediaKeys", () => {
     initMediaKeys(mediaElement, keySystemsConfigs)
       .subscribe((evt : any) => {
         expect(evt.type).toEqual("created-media-keys");
-        expect(evt.value.mediaKeysInfos).toEqual(falseMediaKeys);
+        expect(evt.value.mediaKeys).toEqual(fakeResult.mediaKeys);
+        expect(evt.value.mediaKeySystemAccess).toEqual(fakeResult.mediaKeySystemAccess);
+        expect(evt.value.stores).toEqual(fakeResult.stores);
+        expect(evt.value.options).toEqual(fakeResult.options);
         expect(isObservable(evt.value.attachMediaKeys$) &&
                typeof evt.value.attachMediaKeys$.next === "function").toBeTruthy();
         evt.value.attachMediaKeys$.next();
@@ -197,14 +220,18 @@ describe("core - eme - initMediaKeys", () => {
         expect(eventReceived).toEqual(true);
         expect(e).toBe(err);
 
-        expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
+        expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
           .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
 
-        expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
+        expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
         expect(spyAttachMediaKeys)
-          .toHaveBeenCalledWith(falseMediaKeys, mediaElement);
-
+          .toHaveBeenCalledWith(
+            mediaElement,
+            { mediaKeySystemAccess: fakeResult.mediaKeySystemAccess,
+              mediaKeys: fakeResult.mediaKeys,
+              loadedSessionsStore: fakeResult.stores.loadedSessionsStore,
+              keySystemOptions: fakeResult.options });
         done();
       });
   });

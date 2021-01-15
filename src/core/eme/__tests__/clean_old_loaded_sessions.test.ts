@@ -26,14 +26,20 @@ import cleanOldLoadedSessions from "../clean_old_loaded_sessions";
 import LoadedSessionsStore from "../utils/loaded_sessions_store";
 
 
-const entry1 = [ { initData: new Uint8Array([1, 6, 9]),
-                   initDataType: "test" } ];
+const entry1 = { initializationData: { data: new Uint8Array([1, 6, 9]),
+                                       type: "test" },
+                 mediaKeySession: {},
+                 sessionType: "" };
 
-const entry2 = [ { initData: new Uint8Array([4, 8]),
-                   initDataType: "foo" } ];
+const entry2 = { initializationData: { data: new Uint8Array([4, 8]),
+                                       type: "foo" },
+                 mediaKeySession: {},
+                 sessionType: "" };
 
-const entry3 = [ { initData: new Uint8Array([7, 3, 121, 87]),
-                   initDataType: "bar" } ];
+const entry3 = { initializationData: { data: new Uint8Array([7, 3, 121, 87]),
+                                       type: "bar" },
+                 mediaKeySession: {},
+                 sessionType: "" };
 
 function createLoadedSessionsStore() : LoadedSessionsStore {
   return {
@@ -134,9 +140,7 @@ function checkEntriesCleaned(
   expect(closeSessionSpy).toHaveBeenCalledTimes(entries.length);
   for (let i = 0; i < entries.length; i++) {
     expect(closeSessionSpy)
-      .toHaveBeenNthCalledWith(i + 1,
-                               entries[i].initData,
-                               entries[i].initDataType);
+      .toHaveBeenNthCalledWith(i + 1, entries[i].initializationData);
   }
   closeSessionSpy.mockRestore();
 }
