@@ -150,7 +150,9 @@ function getIndexOfLastObjectBefore(
 }
 
 /**
+ * @param {Object} index
  * @param {number} timeSec
+ * @param {number} [maxPosition]
  * @returns {number|null}
  */
 export function checkDiscontinuity(
