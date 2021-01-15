@@ -25,7 +25,7 @@
 </p>
 
 The RxPlayer is a library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP)
-and [Microsoft Smooth Streaming](https://www.iis.net/downloads/microsoft/smooth-streaming)
+and [Microsoft Smooth Streaming](https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming#Microsoft_Smooth_Streaming)
 video player directly on the browser, without plugins.
 It relies on HTML5 [Media Source Extensions](https://en.wikipedia.org/wiki/Media_Source_Extensions)
 and [Encrypted Media extensions](https://en.wikipedia.org/wiki/Encrypted_Media_Extensions)
