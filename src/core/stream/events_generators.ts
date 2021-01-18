@@ -139,19 +139,17 @@ const EVENTS = {
   ) : INeedsMediaSourceReload {
     return { type: "needs-media-source-reload",
              value: { position : reloadAt,
-                      isPaused : reloadOnPause,
+                      autoPlay : reloadOnPause,
                       period } };
   },
 
   needsDecipherabilityFlush(
-    { position,
-      isPaused,
-      duration } : { position : number;
-                     isPaused : boolean;
-                     duration : number; }
+    position : number,
+    autoPlay : boolean,
+    duration : number
   ) : INeedsDecipherabilityFlush {
     return { type: "needs-decipherability-flush",
-             value: { position, isPaused, duration } };
+             value: { position, autoPlay, duration } };
   },
 
   periodStreamReady(

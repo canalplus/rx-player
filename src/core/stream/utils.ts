@@ -85,13 +85,13 @@ export default function reloadAfterSwitch(
                                   period.end ?? Infinity);
         return observableOf(EVENTS.needsMediaSourceReload(period,
                                                           reloadAt,
-                                                          initialTick.isPaused));
+                                                          !initialTick.isPaused));
       }
 
       // If the Period was not playing, just ask to reload to the exact same position
       return clock$.pipe(
         map(tick => EVENTS.needsMediaSourceReload(period,
                                                   tick.getCurrentTime(),
-                                                  tick.isPaused)));
+                                                  !tick.isPaused)));
     }));
 }

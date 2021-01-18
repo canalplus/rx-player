@@ -309,7 +309,9 @@ export default function StreamOrchestrator(
             segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),
           clock$.pipe(take(1), mergeMap((lastTick) => {
             return observableConcat(
-              observableOf(EVENTS.needsDecipherabilityFlush(lastTick)),
+              observableOf(EVENTS.needsDecipherabilityFlush(lastTick.position,
+                                                            !lastTick.isPaused,
+                                                            lastTick.duration)),
               observableDefer(() => {
                 const lastPosition = lastTick.position + lastTick.wantedTimeOffset;
                 const newInitialPeriod = manifest.getPeriodForTime(lastPosition);

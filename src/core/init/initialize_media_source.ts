@@ -380,7 +380,7 @@ export default function InitializeOnMediaSource(
         shouldPlay : boolean
       ) : Observable<IInitEvent> {
         const reloadMediaSource$ = new Subject<{ position : number;
-                                                 isPaused : boolean; }>();
+                                                 autoPlay : boolean; }>();
         const mediaSourceLoader$ = mediaSourceLoader(mediaSource, startingPos, shouldPlay)
           .pipe(filterMap<IMediaSourceLoaderEvent, IInitEvent, null>((evt) => {
             switch (evt.type) {
@@ -428,11 +428,11 @@ export default function InitializeOnMediaSource(
           mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
 
         const handleReloads$ = reloadMediaSource$.pipe(
-          switchMap(({ position, isPaused }) => {
+          switchMap((reloadOrder) => {
             return openMediaSource(mediaElement).pipe(
               mergeMap(newMS => recursivelyLoadOnMediaSource(newMS,
-                                                             position,
-                                                             !isPaused)),
+                                                             reloadOrder.position,
+                                                             reloadOrder.autoPlay)),
               startWith(EVENTS.reloadingMediaSource())
             );
           }));
