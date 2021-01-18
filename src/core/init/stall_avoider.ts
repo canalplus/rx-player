@@ -111,7 +111,7 @@ interface IDiscontinuityStoredInfo {
  * @param {HTMLMediaElement} mediaElement - The HTMLMediaElement on which the
  * media is played.
  * @param {Object} manifest - The Manifest of the currently-played content.
- * @param {Observable} discontinuities$ - Observable emitting encountered
+ * @param {Observable} discontinuityUpdate$ - Observable emitting encountered
  * discontinuities for loaded Period and buffer types.
  * @returns {Observable}
  */
@@ -119,7 +119,7 @@ export default function StallAvoider(
   clock$: Observable<IInitClockTick>,
   mediaElement : HTMLMediaElement,
   manifest: Manifest,
-  discontinuities$: Observable<IDiscontinuityEvent>
+  discontinuityUpdate$: Observable<IDiscontinuityEvent>
 ) : Observable<IStalledEvent | IUnstalledEvent | IWarningEvent> {
   const initialDiscontinuitiesStore : IDiscontinuityStoredInfo[] = [];
 
@@ -127,7 +127,7 @@ export default function StallAvoider(
    * Emit every known audio and video buffer discontinuities in chronological
    * order (first ordered by Period's start, then by bufferType in any order.
    */
-  const discontinuitiesStore$ = discontinuities$.pipe(
+  const discontinuitiesStore$ = discontinuityUpdate$.pipe(
     withLatestFrom(clock$), // listen to clock to clean-up old discontinuities
     scan(
       (discontinuitiesStore, [evt, tick]) =>

@@ -138,7 +138,7 @@ export default function createMediaSourceLoader(
     const cancelEndOfStream$ = new Subject<null>();
 
     /** Emits discontinuities detected by the StreamOrchestrator. */
-    const discontinuities$ = new Subject<IDiscontinuityEvent>();
+    const discontinuityUpdate$ = new Subject<IDiscontinuityEvent>();
 
     // Creates Observable which will manage every Stream for the given Content.
     const streams$ = StreamOrchestrator({ manifest, initialPeriod },
@@ -161,10 +161,10 @@ export default function createMediaSourceLoader(
             return EMPTY;
           case "stream-status":
             const { period, bufferType, imminentDiscontinuity, position } = evt.value;
-            discontinuities$.next({ period,
-                                    bufferType,
-                                    discontinuity: imminentDiscontinuity,
-                                    position });
+            discontinuityUpdate$.next({ period,
+                                        bufferType,
+                                        discontinuity: imminentDiscontinuity,
+                                        position });
             return EMPTY;
           default:
             return observableOf(evt);
@@ -185,7 +185,10 @@ export default function createMediaSourceLoader(
      * Observable trying to avoid various stalling situations, emitting "stalled"
      * events when it cannot, as well as "unstalled" events when it get out of one.
      */
-    const stallAvoider$ = StallAvoider(clock$, mediaElement, manifest, discontinuities$);
+    const stallAvoider$ = StallAvoider(clock$,
+                                       mediaElement,
+                                       manifest,
+                                       discontinuityUpdate$);
 
     const loadedEvent$ = load$
       .pipe(mergeMap((evt) => {
