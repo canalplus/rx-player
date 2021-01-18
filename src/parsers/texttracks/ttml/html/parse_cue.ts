@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import { ITTParameters } from "../get_parameters";
-import {
-  IStyleList,
-  IStyleObject,
-} from "../get_styling";
 import getTimeDelimiters from "../get_time_delimiters";
+import { IParsedTTMLCue } from "../parse_ttml";
 import createElement from "./create_element";
 
 export interface ITTMLHTMLCue { start : number;
@@ -27,26 +23,23 @@ export interface ITTMLHTMLCue { start : number;
                                 element : HTMLElement; }
 
 /**
- * @param {Element} paragraph
- * @param {Number} timeOffset
- * @param {Array.<Object>} idStyles
- * @param {Array.<Object>} regionStyles
- * @param {Element} body
- * @param {Object} paragraphStyle
- * @param {Object} ttParams
- * @param {Boolean} shouldTrimWhiteSpaceOnParagraph
+ * @param {Object} parsedCue
  * @returns {Object|null}
  */
 export default function parseCue(
-  paragraph : Element,
-  timeOffset : number,
-  idStyles : IStyleObject[],
-  regionStyles : IStyleObject[],
-  body : Element|null,
-  paragraphStyle : IStyleList,
-  ttParams : ITTParameters,
-  shouldTrimWhiteSpace : boolean
+  parsedCue: IParsedTTMLCue
 ) : ITTMLHTMLCue|null {
+  const {
+    paragraph,
+    ttParams,
+    body,
+    regionStyles,
+    idStyles,
+    paragraphStyle,
+    timeOffset,
+    shouldTrimWhiteSpace,
+  } = parsedCue;
+
   // Disregard empty elements:
   // TTML allows for empty elements like <div></div>.
   // If paragraph has neither time attributes, nor
