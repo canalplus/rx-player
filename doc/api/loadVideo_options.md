@@ -15,6 +15,7 @@
     - [textTrackElement](#prop-textTrackElement)
     - [audioTrackSwitchingMode](#prop-audioTrackSwitchingMode)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
+    - [onCodecSwitch](#prop-onCodecSwitch)
     - [lowLatencyMode](#prop-lowLatencyMode)
     - [networkConfig](#prop-networkConfig)
     - [enableFastSwitching](#prop-enableFastSwitching)
@@ -974,6 +975,50 @@ There is two possible values:
 
     [1] More information about the ``"RELOADING"`` state can be found in [the
     player states documentation](./states).
+
+
+<a name="prop-onCodecSwitch"></a>
+### onCodecSwitch ##############################################################
+
+_type_: ``string``
+
+_defaults_: ``"continue"``
+
+---
+
+:warning: This option has no effect in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Behavior taken by the player when switching to either an audio or video track
+which has a codec "incompatible" with the previous one (for example going from
+avc, a.k.a h264 to hevc, a.k.a. h265).
+
+This switch can either after the user switches from one track to another or
+after encountering a new Period in some transport technologies (concept existing
+for DASH, "local" and MetaPlaylist contents).
+
+Can be set to one of those two values:
+
+  - ``"continue"``: try to have a seamless transition between both codecs.
+    This behavior works on most modern browsers but might lead to problems like
+    infinite buffering and decoding errors on older browsers and peculiar
+    platforms.
+    This is the default behavior.
+
+  - ``"reload"``: When switching from one codec to another - incompatible - one,
+    the RxPlayer will "reload" the content: the player will go into the
+    `"RELOADING"` state for a small amount of time, during which the video will
+    disappear and many APIs will become unavailable, before playing the track
+    with the new codec.
+    That behavior has the advantage of working on any platform but disadvantage
+    of having a visible transition when those type of codec switches happen.
+
+    Use it if you have issues with codec switching on some platforms.
+
+    _More information about the ``"RELOADING"`` state can be found in [the
+    player states documentation](./states)._
 
 
 <a name="prop-lowLatencyMode"></a>
