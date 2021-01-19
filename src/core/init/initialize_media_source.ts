@@ -110,6 +110,8 @@ export interface IInitializeArguments {
     enableFastSwitching : boolean;
     /** Strategy when switching of audio track. */
     audioTrackSwitchingMode : "seamless" | "direct";
+    /** Behavior when a new video and/or audio codec is encountered. */
+    onCodecSwitch : "continue" | "reload";
   };
   /** Regularly emit current playback conditions. */
   clock$ : Observable<IInitClockTick>;
