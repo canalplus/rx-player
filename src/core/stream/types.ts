@@ -337,18 +337,11 @@ export interface INeedsMediaSourceReload {
      */
     position : number;
     /**
-     * If `true`, the HTMLMediaElement was paused when this event was sent.
-     * Otherwise, it is set to `false`.
-     *
-     * This should be considered when reloading the MediaSource:
-     *
-     *   - if set to `true` the element should be immediately paused once the
-     *     MediaSource has been reloaded.
-     *
-     *   - if set to `false` it should play as soon as possible after the
-     *     MediaSource has been reloaded.
+     * If `true`, we want the HTMLMediaElement to play right after the reload is
+     * done.
+     * If `false`, we want to stay in a paused state at that point.
      */
-    isPaused : boolean;
+    autoPlay : boolean;
 
     /**
      * A `INeedsMediaSourceReload` is an event sent by a Stream (e.g. a
@@ -385,11 +378,11 @@ export interface INeedsDecipherabilityFlush {
      */
     position : number;
     /**
-     * If `true` the HTMLMediaElement is currently paused.
-     * This is indicated in the case where the MediaSource has to be reloaded,
-     * in which case the paused status has to be restored once reloaded.
+     * If `true`, we want the HTMLMediaElement to play right after the flush is
+     * done.
+     * If `false`, we want to stay in a paused state at that point.
      */
-    isPaused : boolean;
+    autoPlay : boolean;
     /**
      * The duration (maximum seekable position) of the content.
      * This is indicated in the case where a seek has to be performed, to avoid

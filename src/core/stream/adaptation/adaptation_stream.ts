@@ -44,6 +44,7 @@ import {
   take,
   tap,
 } from "rxjs/operators";
+import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
@@ -67,7 +68,10 @@ import {
   IRepresentationStreamEvent,
   IStreamEventAddedSegment,
 } from "../types";
+import reloadAfterSwitch from "../utils";
 import createRepresentationEstimator from "./create_representation_estimator";
+
+const { DELTA_POSITION_AFTER_RELOAD } = config;
 
 /** `Clock tick` information needed by the AdaptationStream. */
 export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTick {
@@ -78,6 +82,8 @@ export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTi
   bufferGap : number;
   /** `duration` property of the HTMLMediaElement on which the content plays. */
   duration : number;
+  /** Allows to fetch the current position at any time. */
+  getCurrentTime : () => number;
   /** If true, the player has been put on pause. */
   isPaused: boolean;
   /** Last "playback rate" asked by the user. */
@@ -261,7 +267,7 @@ export default function AdaptationStream<T>({
         fromEstimate.manual &&
         !isFirstEstimate)
     {
-      return clock$.pipe(map(t => EVENTS.needsMediaSourceReload(period, t)));
+      return reloadAfterSwitch(period, clock$, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
     }
 
     /**
