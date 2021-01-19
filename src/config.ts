@@ -131,6 +131,23 @@ export default {
   },
 
   /**
+   * Behavior of the RxPlayer when encountering a whole other codec on a already
+   * existing audio or video SourceBuffer.
+   *
+   * Can be either:
+   *
+   *    - "continue": Segments linked to the new codec will continue to be
+   *      pushed to that same SourceBuffer. The RxPlayer will still try to call
+   *      the `changeType` API on the SourceBuffer before pushing those
+   *      segments but continue even if this call failed.
+   *
+   *    - "reload": Every time a new incompatible codec is encountered on a
+   *      given SourceBuffer, we will reload the MediaSource.
+   */
+  DEFAULT_CODEC_SWITCHING_BEHAVIOR: "continue" as "continue" |
+                                                  "reload",
+
+  /**
    * If set to true, video through loadVideo will auto play by default
    * @type {Boolean}
    */
