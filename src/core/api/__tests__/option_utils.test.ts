@@ -925,7 +925,7 @@ If badly set, seamless strategy will be used as default`);
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     expect(logWarnMock)
       .toHaveBeenCalledWith("The `onCodecSwitch` loadVideo option must match one " +
-                            `of the following string: \
+                            `of the following string:
 - \`continue\`
 - \`reload\`
 If badly set, continue will be used as default`);
