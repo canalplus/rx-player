@@ -20,11 +20,11 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import { IStalledStatus } from "../api";
 import SegmentBuffersStore, {
   IBufferType,
 } from "../segment_buffers";
 import { IRepresentationChangeEvent } from "../stream";
-import { IStallingItem } from "./get_stalled_events";
 import {
   IDecipherabilityUpdateEvent,
   ILoadedEvent,
@@ -32,6 +32,7 @@ import {
   IManifestUpdateEvent,
   IReloadingMediaSourceEvent,
   IStalledEvent,
+  IUnstalledEvent,
   IWarningEvent,
 } from "./types";
 
@@ -48,8 +49,17 @@ function loaded(segmentBuffersStore : SegmentBuffersStore | null) : ILoadedEvent
  * @param {Object|null} stalling
  * @returns {Object}
  */
-function stalled(stalling : IStallingItem|null) : IStalledEvent {
+function stalled(stalling : IStalledStatus) : IStalledEvent {
   return { type: "stalled", value: stalling };
+}
+
+/**
+ * Construct a "stalled" event.
+ * @param {Object|null} stalling
+ * @returns {Object}
+ */
+function unstalled() : IUnstalledEvent {
+  return { type: "unstalled", value: null };
 }
 
 /**
@@ -125,6 +135,7 @@ const INIT_EVENTS = { loaded,
                       nullRepresentation,
                       reloadingMediaSource,
                       stalled,
+                      unstalled,
                       warning };
 
 export default INIT_EVENTS;

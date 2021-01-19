@@ -54,7 +54,8 @@ export type IMediaErrorCode = "BUFFER_APPEND_ERROR" |
                               "MEDIA_TIME_BEFORE_MANIFEST" |
                               "MEDIA_TIME_AFTER_MANIFEST" |
                               "MEDIA_TIME_NOT_FOUND" |
-                              "NO_PLAYABLE_REPRESENTATION";
+                              "NO_PLAYABLE_REPRESENTATION" |
+                              "DISCONTINUITY_ENCOUNTERED";
 
 export type INetworkErrorCode = "PIPELINE_LOAD_ERROR";
 
@@ -135,6 +136,8 @@ const ErrorCodes : Record<IErrorCode, IErrorCode>  = {
 
   MEDIA_SOURCE_NOT_SUPPORTED: "MEDIA_SOURCE_NOT_SUPPORTED",
   MEDIA_KEYS_NOT_SUPPORTED: "MEDIA_KEYS_NOT_SUPPORTED",
+
+  DISCONTINUITY_ENCOUNTERED: "DISCONTINUITY_ENCOUNTERED",
 
   NONE: "NONE",
 };

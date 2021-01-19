@@ -65,11 +65,7 @@ import RepresentationStream, {
 import {
   IAdaptationStreamEvent,
   IRepresentationStreamEvent,
-  IStreamDownloadFinished,
-  IStreamDownloadingActive,
   IStreamEventAddedSegment,
-  IStreamNeedsDiscontinuitySeek,
-  IStreamNeedsManifestRefresh,
 } from "../types";
 import createRepresentationEstimator from "./create_representation_estimator";
 
@@ -394,10 +390,4 @@ export default function AdaptationStream<T>({
 }
 
 // Re-export RepresentationStream events used by the AdaptationStream
-export {
-  IStreamEventAddedSegment,
-  IStreamNeedsDiscontinuitySeek,
-  IStreamNeedsManifestRefresh,
-  IStreamDownloadingActive,
-  IStreamDownloadFinished,
-};
+export { IStreamEventAddedSegment };

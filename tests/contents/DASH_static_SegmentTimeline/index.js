@@ -1,4 +1,5 @@
 import manifestInfos from "./infos.js";
+import discontinuityInfos from "./discontinuity.js";
 import multiAdaptationSetsInfos from "./multi-AdaptationSets.js";
 import notStartingAt0ManifestInfos from "./not_starting_at_0.js";
 import streamEventsInfos from "./event-stream";
@@ -7,6 +8,7 @@ import segmentTemplateInheritancePeriodAS from "./segment_template_inheritance_p
 
 export {
   manifestInfos,
+  discontinuityInfos,
   multiAdaptationSetsInfos,
   notStartingAt0ManifestInfos,
   segmentTemplateInheritanceASRep,

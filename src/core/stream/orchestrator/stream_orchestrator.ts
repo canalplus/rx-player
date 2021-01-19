@@ -94,9 +94,6 @@ export type IStreamOrchestratorOptions =
  *
  *   - Emit various events to notify of its health and issues
  *
- * Here multiple Streams can be created at the same time to allow smooth
- * transitions between periods.
- * To do this, we dynamically create or destroy Streams as they are needed.
  * @param {Object} content
  * @param {Observable} clock$ - Emit position information
  * @param {Object} abrManager - Emit bitrate estimates and best Representation
@@ -271,22 +268,29 @@ export default function StreamOrchestrator(
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
     const restartStreamsWhenOutOfBounds$ = clock$.pipe(
-      filter(({ position, wantedTimeOffset }) => {
-        return enableOutOfBoundsCheck &&
-               manifest.getPeriodForTime(wantedTimeOffset + position) !== undefined &&
-               isOutOfPeriodList(wantedTimeOffset + position);
-      }),
-      tap(({ position, wantedTimeOffset }) => {
+      filterMap<
+        IStreamOrchestratorClockTick,
+        Period,
+        null
+      >(({ position, wantedTimeOffset }) => {
+        const time = wantedTimeOffset + position;
+        if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
+          return null;
+        }
+        const nextPeriod = manifest.getPeriodForTime(time) ??
+                           manifest.getNextPeriod(time);
+        if (nextPeriod === undefined) {
+          return null;
+        }
         log.info("SO: Current position out of the bounds of the active periods," +
                  "re-creating Streams.",
                  bufferType,
                  position + wantedTimeOffset);
         enableOutOfBoundsCheck = false;
         destroyStreams$.next();
-      }),
-      mergeMap(({ position, wantedTimeOffset }) => {
-        const newInitialPeriod = manifest
-          .getPeriodForTime(position + wantedTimeOffset);
+        return nextPeriod;
+      }, null),
+      mergeMap((newInitialPeriod) => {
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND",
                                "The wanted position is not found in the Manifest.");
@@ -414,18 +418,20 @@ export default function StreamOrchestrator(
                                          wantedBufferAhead$ }
     ).pipe(
       mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
-        if (evt.type === "download-finished") {
-          const nextPeriod = manifest.getPeriodAfter(basePeriod);
-          if (nextPeriod === null) {
-            return observableOf(EVENTS.streamComplete(bufferType));
-          }
+        if (evt.type === "stream-status") {
+          if (evt.value.hasFinishedLoading) {
+            const nextPeriod = manifest.getPeriodAfter(basePeriod);
+            if (nextPeriod === null) {
+              return observableConcat(observableOf(evt),
+                                      observableOf(EVENTS.streamComplete(bufferType)));
+            }
 
-          // current Stream is full, create the next one if not
-          createNextPeriodStream$.next(nextPeriod);
-          return EMPTY;
-        } else if (evt.type === "downloading-segments") {
-          // current Stream is active, destroy next Stream if created
-          destroyNextStreams$.next();
+            // current Stream is full, create the next one if not
+            createNextPeriodStream$.next(nextPeriod);
+          } else {
+            // current Stream is active, destroy next Stream if created
+            destroyNextStreams$.next();
+          }
         }
         return observableOf(evt);
       }),

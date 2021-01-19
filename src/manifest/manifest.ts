@@ -367,6 +367,18 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
+   * Returns the first Period starting strictly after the given time.
+   * Returns `undefined` if there is no Period starting after that time.
+   * @param {number} time
+   * @returns {Object|undefined}
+   */
+  public getNextPeriod(time : number) : Period | undefined {
+    return arrayFind(this.periods, (period) => {
+      return period.start > time;
+    });
+  }
+
+  /**
    * Returns the Period coming chronologically just after another given Period.
    * Returns `undefined` if not found.
    * @param {Object} period

@@ -160,10 +160,17 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   /**
    *
    * @param {Number} time
-   * @returns {Number}
+   * @returns {Number | null}
    */
   public checkDiscontinuity(time: number): number | null {
     return this._wrappedIndex.checkDiscontinuity(time - this._timeOffset);
+  }
+
+  /**
+   * @returns {Boolean}
+   */
+  public areSegmentsChronologicallyGenerated(): boolean {
+    return this._wrappedIndex.areSegmentsChronologicallyGenerated();
   }
 
   /**

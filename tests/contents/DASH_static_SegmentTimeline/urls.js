@@ -101,7 +101,11 @@ module.exports = [
     path: path.join(__dirname, "media/segment_template_inheritance_as_rep.mpd"),
     contentType: "application/dash+xml",
   },
-
+  {
+    url: BASE_URL + "discontinuity.mpd",
+    path: path.join(__dirname, "media/discontinuity.mpd"),
+    contentType: "application/dash+xml",
+  },
   // Audio initialization segment
   {
     url: BASE_URL + "dash/ateam-audio=128000.dash",

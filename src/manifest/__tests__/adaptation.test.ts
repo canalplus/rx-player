@@ -26,18 +26,20 @@ import {
 } from "../adaptation";
 import Representation from "../representation";
 
-
-const minimalRepresentationIndex = { getInitSegment() { return null; },
-                                     getSegments() { return []; },
-                                     shouldRefresh() { return false; },
-                                     getFirstPosition() : undefined { return ; },
-                                     getLastPosition() : undefined { return ; },
-                                     checkDiscontinuity() { return null; },
-                                     isSegmentStillAvailable() : undefined { return ; },
-                                     canBeOutOfSyncError() : true { return true; },
-                                     isFinished() : true { return true; },
-                                     _replace() { /* noop */ },
-                                     _update() { /* noop */ } };
+const minimalRepresentationIndex = {
+  getInitSegment() { return null; },
+  getSegments() { return []; },
+  shouldRefresh() { return false; },
+  getFirstPosition() : undefined { return ; },
+  getLastPosition() : undefined { return ; },
+  checkDiscontinuity() { return null; },
+  isSegmentStillAvailable() : undefined { return ; },
+  canBeOutOfSyncError() : true { return true; },
+  isFinished() : true { return true; },
+  areSegmentsChronologicallyGenerated() { return true; },
+  _replace() { /* noop */ },
+  _update() { /* noop */ },
+};
 const defaultRepresentationSpy = jest.fn(arg => {
   return { bitrate: arg.bitrate,
            id: arg.id,

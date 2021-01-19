@@ -24,6 +24,87 @@ import {
 } from "../../manifest";
 import { IBufferType } from "../segment_buffers";
 
+/** Information about a Segment waiting to be loaded by the Stream. */
+export interface IQueuedSegment {
+  /** Priority of the segment request (lower number = higher priority). */
+  priority : number;
+  /** Segment wanted. */
+  segment : ISegment;
+}
+
+/** Describe an encountered hole in the buffer, called a "discontinuity". */
+export interface IBufferDiscontinuity {
+  /**
+   * Start time, in seconds, at which the discontinuity starts.
+   *
+   * if set to `undefined`, its true start time is unknown but the current
+   * position is part of it.  It is thus a discontinuity that is currently
+   * encountered.
+   */
+  start : number | undefined;
+  /**
+   * End time, in seconds at which the discontinuity ends (and thus where
+   * new segments are encountered).
+   *
+   * If `null`, no new media segment is available for that Period and
+   * buffer type until the end of the Period.
+   */
+  end : number | null;
+}
+
+/**
+ * Event sent by a `RepresentationStream` to announce the current status
+ * regarding the buffer for its associated Period and type (e.g. "audio",
+ * "video", "text" etc.).
+ *
+ * Each new `IStreamStatusEvent` event replace the precedent one for the
+ * same Period and type.
+ */
+export interface IStreamStatusEvent {
+  type : "stream-status";
+  value : {
+    /** Period concerned. */
+    period : Period;
+    /** Buffer type concerned. */
+    bufferType : IBufferType;
+    /**
+     * Present or future "hole" in the SegmentBuffer's buffer that will not be
+     * filled by a segment, despite being part of the time period indicated by
+     * the associated Period.
+     *
+     * This value is set to the most imminent of such "discontinuity", which
+     * can be either:
+     *
+     *   - current (no segment available at `position` but future segments are
+     *     available), in which case this discontinuity's true beginning might
+     *     be unknown.
+     *
+     *   - a future hole between two segments in that Period.
+     *
+     *   - missing media data at the end of the time period associated to that
+     *     Period.
+     *
+     * The presence or absence of a discontinuity can evolve during playback
+     * (because new tracks or qualities might not have the same ones).
+     * As such, it is advised to only consider the last discontinuity sent
+     * through a `"stream-status"` event.
+     */
+    imminentDiscontinuity : IBufferDiscontinuity | null;
+    /**
+     * If `true`, no segment are left to be loaded to be able to play until the
+     * end of the Period.
+     */
+    hasFinishedLoading : boolean;
+    /**
+     * Segments that will be scheduled for download to fill the buffer until
+     * the buffer goal (first element of that list might already be ).
+     */
+    neededSegments : IQueuedSegment[];
+    /** Position in the content in seconds from which this status was done.  */
+    position : number;
+  };
+}
+
 /** Event sent when a minor error happened, which doesn't stop playback. */
 export interface IStreamWarningEvent {
   type : "warning";
@@ -68,44 +149,6 @@ export interface IStreamNeedsManifestRefresh {
 export interface IStreamManifestMightBeOutOfSync {
   type : "manifest-might-be-out-of-sync";
   value : undefined;
-}
-
-/** Emit when a discontinuity is encountered and the user is "stuck" on it. */
-export interface IStreamNeedsDiscontinuitySeek {
-  type : "discontinuity-encountered";
-  value : {
-    /** The type of the Representation concerned by the discontinuity. */
-    bufferType : IBufferType;
-    /** The time we should seek to TODO this is ugly. */
-    gap : [number, number];
-  };
-}
-
-/**
- * Event emitted when a `RepresentationStream` is scheduling new segments to be
- * loaded.
- */
-export interface IStreamDownloadingActive {
-  type : "downloading-segments";
-  value : {
-    /** The type of the Representation concerned. */
-    bufferType : IBufferType;
-  };
-}
-
-/**
- * Event emitted when a `RepresentationStream` has finished downloading every
- * segments it needs to download to the end of the corresponding Period.
- * You will know if it needs to re-download segments in the future (e.g.
- * because of a seek or of garbage collection) thanks to the
- * `IStreamDownloadingActive` event being sent.
- */
-export interface IStreamDownloadFinished {
-  type : "download-finished";
-  value : {
-   /** The type of the Representation concerned. */
-    bufferType : IBufferType;
-  };
 }
 
 /** Parsed DRM information detected in an initialization segment. */
@@ -357,14 +400,12 @@ export interface INeedsDecipherabilityFlush {
 }
 
 /** Event sent by a `RepresentationStream`. */
-export type IRepresentationStreamEvent<T> = IStreamEventAddedSegment<T> |
+export type IRepresentationStreamEvent<T> = IStreamStatusEvent |
+                                            IStreamEventAddedSegment<T> |
                                             IProtectedSegmentEvent |
-                                            IStreamDownloadFinished |
-                                            IStreamDownloadingActive |
                                             IStreamManifestMightBeOutOfSync |
-                                            IStreamNeedsDiscontinuitySeek |
-                                            IStreamNeedsManifestRefresh |
                                             IStreamTerminatingEvent |
+                                            IStreamNeedsManifestRefresh |
                                             IStreamWarningEvent;
 
 /** Event sent by an `AdaptationStream`. */
@@ -375,12 +416,10 @@ export type IAdaptationStreamEvent<T> = IBitrateEstimationChangeEvent |
 
                                         // From a RepresentationStream
 
+                                        IStreamStatusEvent |
                                         IStreamEventAddedSegment<T> |
                                         IProtectedSegmentEvent |
-                                        IStreamDownloadFinished |
-                                        IStreamDownloadingActive |
                                         IStreamManifestMightBeOutOfSync |
-                                        IStreamNeedsDiscontinuitySeek |
                                         IStreamNeedsManifestRefresh |
                                         IStreamWarningEvent;
 
@@ -398,12 +437,10 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
 
                                  // From a RepresentationStream
 
+                                 IStreamStatusEvent |
                                  IStreamEventAddedSegment<unknown> |
                                  IProtectedSegmentEvent |
-                                 IStreamDownloadFinished |
-                                 IStreamDownloadingActive |
                                  IStreamManifestMightBeOutOfSync |
-                                 IStreamNeedsDiscontinuitySeek |
                                  IStreamNeedsManifestRefresh |
                                  IStreamWarningEvent;
 
@@ -426,11 +463,10 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
 
                                           // From a RepresentationStream
 
+                                          IStreamStatusEvent |
                                           IStreamEventAddedSegment<unknown> |
                                           IProtectedSegmentEvent |
-                                          IStreamDownloadingActive |
                                           IStreamManifestMightBeOutOfSync |
-                                          IStreamNeedsDiscontinuitySeek |
                                           IStreamNeedsManifestRefresh |
                                           IStreamWarningEvent;
 
@@ -445,7 +481,6 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
                                        // From a PeriodStream
 
                                        IPeriodStreamReadyEvent |
-                                       INeedsMediaSourceReload |
                                        IAdaptationChangeEvent |
 
                                        // From an AdaptationStream
@@ -457,10 +492,9 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
 
                                        // From a RepresentationStream
 
+                                       IStreamStatusEvent |
                                        IStreamEventAddedSegment<unknown> |
                                        IProtectedSegmentEvent |
-                                       IStreamDownloadingActive |
                                        IStreamManifestMightBeOutOfSync |
-                                       IStreamNeedsDiscontinuitySeek |
                                        IStreamNeedsManifestRefresh |
                                        IStreamWarningEvent;

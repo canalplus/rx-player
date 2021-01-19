@@ -251,10 +251,11 @@ export default {
 
   /**
    * Maximum time, in seconds, the player should automatically skip when stalled
-   * because of a discontinuity in the downloaded range.
+   * because of a current hole in the buffer.
+   * Bear in mind that this might seek over not-yet-downloaded/pushed segments.
    * @type {Number}
    */
-  BUFFER_DISCONTINUITY_THRESHOLD: 1,
+  BUFFER_DISCONTINUITY_THRESHOLD: 0.2,
 
   /**
    * Ratio used to know if an already loaded segment should be re-buffered.

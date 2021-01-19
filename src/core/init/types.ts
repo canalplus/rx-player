@@ -44,13 +44,11 @@ import {
   IPeriodStreamReadyEvent,
   IProtectedSegmentEvent,
   IRepresentationChangeEvent,
-  IStreamDownloadingActive,
   IStreamEventAddedSegment,
   IStreamManifestMightBeOutOfSync,
   IStreamNeedsManifestRefresh,
 } from "../stream";
 import { IEMEDisabledEvent } from "./create_eme_manager";
-import { IStallingItem } from "./get_stalled_events";
 import {
   IStreamEventEvent,
   IStreamEventSkipEvent,
@@ -112,7 +110,11 @@ export interface IReloadingMediaSourceEvent { type: "reloading-media-source";
 
 /** Event sent after the player stalled, leading to buffering. */
 export interface IStalledEvent { type : "stalled";
-                                 value : IStallingItem|null; }
+                                 value : IStalledStatus; }
+
+/** Event sent when the player goes out of a stalling situation. */
+export interface IUnstalledEvent { type : "unstalled";
+                                   value : null; }
 
 /**
  * Event sent just as the content is considered as "loaded".
@@ -127,6 +129,7 @@ export { IRepresentationChangeEvent };
 
 /** Events emitted by a `MediaSourceLoader`. */
 export type IMediaSourceLoaderEvent = IStalledEvent |
+                                      IUnstalledEvent |
                                       ILoadedEvent |
                                       IWarningEvent |
                                       IStreamEventEvent |
@@ -145,7 +148,6 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
                                       IRepresentationChangeEvent |
                                       IStreamEventAddedSegment<unknown> |
                                       IProtectedSegmentEvent |
-                                      IStreamDownloadingActive |
                                       IStreamManifestMightBeOutOfSync |
                                       IStreamNeedsManifestRefresh;
 
@@ -172,6 +174,7 @@ export type IInitEvent = IManifestReadyEvent |
                          // Coming from the `MediaSourceLoader`
 
                          IStalledEvent |
+                         IUnstalledEvent |
                          ILoadedEvent |
                          IStreamEventEvent |
                          IStreamEventSkipEvent |
@@ -185,11 +188,11 @@ export type IInitEvent = IManifestReadyEvent |
                          IAdaptationChangeEvent |
                          IBitrateEstimationChangeEvent |
                          IRepresentationChangeEvent |
-                         IStreamEventAddedSegment<unknown> |
-                         IStreamDownloadingActive;
+                         IStreamEventAddedSegment<unknown>;
 
 /** Events emitted by the `Init` module for directfile contents. */
 export type IDirectfileEvent = IStalledEvent |
+                               IUnstalledEvent |
                                ILoadedEvent |
                                IWarningEvent |
                                IEMEDisabledEvent |

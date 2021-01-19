@@ -287,6 +287,13 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * @returns {boolean}
+   */
+  areSegmentsChronologicallyGenerated() : true {
+    return true;
+  }
+
+  /**
    * @param {Array.<Object>} nextSegments
    * @returns {Array.<Object>}
    */

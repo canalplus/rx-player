@@ -26,28 +26,52 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
-import {
-  IBufferedChunk,
-  IEndOfSegmentOperation,
-  SegmentBuffer,
-  SegmentBufferOperation,
-} from "../../segment_buffers";
+import { IBufferedChunk } from "../../segment_buffers";
 
 const { CONTENT_REPLACEMENT_PADDING,
         BITRATE_REBUFFERING_RATIO,
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
         MINIMUM_SEGMENT_SIZE } = config;
 
+/** Arguments for `getNeededSegments`. */
 export interface IGetNeededSegmentsArguments {
+  /** The content we want to load segments for */
   content: { adaptation : Adaptation;
              manifest : Manifest;
              period : Period;
              representation : Representation; };
+  /**
+   * The current playing position.
+   * Important to avoid asking for segments on the same exact position, which
+   * can be problematic in some browsers.
+   */
   currentPlaybackTime: number;
+  /**
+   * This threshold defines a bitrate from which "fast-switching" is disabled.
+   * For example with a fastSwitchThreshold set to `100`, segments with a
+   * bitrate of `90` can be replaced. But segments with a bitrate of `100`
+   * onward won't be replaced by higher quality segments.
+   * Set to `undefined` to indicate that there's no threshold (anything can be
+   * replaced by higher-quality segments).
+   */
   fastSwitchThreshold : number | undefined;
-  neededRange : { start: number;
-                  end: number; };
-  segmentBuffer : SegmentBuffer<unknown>;
+  /** The range we want to fill with segments. */
+  neededRange : { start: number; end: number };
+  /** The list of segments that are already in the process of being pushed. */
+  segmentsBeingPushed : Array<{ adaptation : Adaptation;
+                                period : Period;
+                                representation : Representation;
+                                segment : ISegment; }>;
+  /**
+   * Information on the segments already in the buffer, in chronological order.
+   *
+   * The data for the whole buffer is not necessary, as only data around the
+   * current range will be looked at.
+   * It is important to include segments close to - though not in - that range
+   * (let's say around 5 seconds) however to avoid some segments being
+   * re-requested.
+   */
+  bufferedSegments : IBufferedChunk[];
 }
 
 /**
@@ -57,7 +81,13 @@ export interface IGetNeededSegmentsArguments {
 const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
 
 /**
- * @param {Object} segmentFilterArgument
+ * Return the list of segments that can currently be downloaded to fill holes
+ * in the buffer in the given range, including already-pushed segments currently
+ * incomplete in the buffer.
+ * This list might also include already-loaded segments in a higher bitrate,
+ * according to the given configuration.
+ * Excludes segment that are already being pushed.
+ * @param {Object} args
  * @returns {Array.<Object>}
  */
 export default function getNeededSegments({
@@ -65,39 +95,32 @@ export default function getNeededSegments({
   currentPlaybackTime,
   fastSwitchThreshold,
   neededRange,
-  segmentBuffer,
+  segmentsBeingPushed,
+  bufferedSegments,
 } : IGetNeededSegmentsArguments) : ISegment[] {
-  const segmentInventory = segmentBuffer.getInventory();
-  /**
-   * Every segment awaiting an "EndOfSegment" operation, which indicates that a
-   * completely-loaded segment is still being pushed to the SegmentBuffer.
-   */
-  const segmentsBeingPushed = segmentBuffer.getPendingOperations()
-    .filter((operation) : operation is IEndOfSegmentOperation =>
-      operation.type === SegmentBufferOperation.EndOfSegment
-    ).map(operation => operation.value);
+  const { representation } = content;
 
-  // 1 - construct lists of segments possible and actually pushed
-  const segmentsForRange = content.representation.index
+  const availableSegmentsForRange = representation.index
     .getSegments(neededRange.start, neededRange.end - neededRange.start);
 
-  let bufferedSegments = getPlayableBufferedSegments({
-    start: Math.max(neededRange.start - 0.5, 0),
-    end: neededRange.end + 0.5,
-  }, segmentInventory);
+  // Remove from `bufferedSegments` any segments we would prefer to replace:
+  //   - segments in the wrong track / bad quality
+  //   - garbage-collected segments
+  const segmentsToKeep = bufferedSegments
+    .filter((bufferedSegment) => !shouldContentBeReplaced(bufferedSegment.infos,
+                                                          content,
+                                                          currentPlaybackTime,
+                                                          fastSwitchThreshold))
+    .filter((currentSeg, i, consideredSegments) => {
+      const prevSeg = i === 0 ? null :
+                                consideredSegments[i - 1];
+      const nextSeg = i >= consideredSegments.length - 1 ? null :
+                                                           consideredSegments[i + 1];
+      return !isStartGarbageCollected(currentSeg, prevSeg, neededRange.start) &&
+             !isEndGarbageCollected(currentSeg, nextSeg, neededRange.end);
+    });
 
-  // 2 - remove from pushed list of current segments the contents we want to replace
-  bufferedSegments = bufferedSegments.filter((bufferedSegment) =>
-    !shouldContentBeReplaced(bufferedSegment.infos,
-                             content,
-                             currentPlaybackTime,
-                             fastSwitchThreshold));
-
-  // 3 - remove from that list the segments who appeared to have been GCed
-  bufferedSegments = filterGarbageCollectedSegments(bufferedSegments, neededRange);
-
-  // 4 - now filter the list of segments we can download
-  return segmentsForRange.filter(segment => {
+  const segmentsToDownload = availableSegmentsForRange.filter(segment => {
     const contentObject = objectAssign({ segment }, content);
 
     // First, check that the segment is not already being pushed
@@ -115,7 +138,7 @@ export default function getNeededSegments({
     }
 
     if (duration < MINIMUM_SEGMENT_SIZE) {
-      return false; // too small
+      return false; // too small, don't download
     }
 
     // Check if the same segment from another Representation is not already
@@ -145,8 +168,8 @@ export default function getNeededSegments({
     }
 
     // check if the segment is already downloaded
-    for (let i = 0; i < bufferedSegments.length; i++) {
-      const completeSeg = bufferedSegments[i];
+    for (let i = 0; i < segmentsToKeep.length; i++) {
+      const completeSeg = segmentsToKeep[i];
       const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
       // Check if content are from same period, as there can't be overlapping
       // periods, we should consider a segment as already downloaded if
@@ -163,28 +186,43 @@ export default function getNeededSegments({
     }
 
     // check if there is an hole in place of the segment currently
-    for (let i = 0; i < bufferedSegments.length; i++) {
-      const completeSeg = bufferedSegments[i];
+    for (let i = 0; i < segmentsToKeep.length; i++) {
+      const completeSeg = segmentsToKeep[i];
       if (completeSeg.end > time) {
-        if (completeSeg.start > time + ROUNDING_ERROR) {
-          return true;
-        }
-        let j = i + 1;
-
-        // go through all contiguous segments and take the last one
-        while (j < bufferedSegments.length - 1 &&
-               (bufferedSegments[j - 1].end + ROUNDING_ERROR) >
-                bufferedSegments[j].start)
-        {
-          j++;
-        }
-        j--; // index of last contiguous segment
-
-        return bufferedSegments[j].end < end + ROUNDING_ERROR;
+        // `true` if `completeSeg` starts too far after `time`
+        return completeSeg.start > time + ROUNDING_ERROR ||
+          // `true` if `completeSeg` ends too soon before `end`
+          getLastContiguousSegment(segmentsToKeep, i).end < end - ROUNDING_ERROR;
       }
     }
     return true;
   });
+
+  return segmentsToDownload;
+}
+
+/**
+ * From the given array of buffered chunks (`bufferedSegments`) returns the last
+ * buffered chunk contiguous with the one at the `startIndex` index given.
+ * @param {Array.<Object>}
+ * @param {number} startIndex
+ * @returns {Object}
+ */
+function getLastContiguousSegment(
+  bufferedSegments : IBufferedChunk[],
+  startIndex : number
+) : IBufferedChunk {
+  let j = startIndex + 1;
+
+  // go through all contiguous segments and take the last one
+  while (j < bufferedSegments.length - 1 &&
+         (bufferedSegments[j - 1].end + ROUNDING_ERROR) >
+          bufferedSegments[j].start)
+  {
+    j++;
+  }
+  j--; // index of last contiguous segment
+  return bufferedSegments[j];
 }
 
 /**
@@ -250,33 +288,6 @@ function canFastSwitch(
   }
   return oldContentBitrate < fastSwitchThreshold &&
          newSegmentRepresentation.bitrate > oldContentBitrate;
-}
-
-/**
- * Returns an Array which removed the segments from `consideredSegments` which
- * appeared to have been garbage collected.
- * @param {Array.<Object>} consideredSegments
- * @param {Object} neededRange
- * @returns {Array.<Object>}
- */
-function filterGarbageCollectedSegments(
-  consideredSegments : IBufferedChunk[],
-  neededRange : { start : number; end : number }
-) : IBufferedChunk[] {
-  const completeSegments : IBufferedChunk[] = [];
-  for (let i = 0; i < consideredSegments.length; i++) {
-    const currentSeg = consideredSegments[i];
-    const prevSeg = i === 0 ? null :
-                              consideredSegments[i - 1];
-    const nextSeg = i >= consideredSegments.length - 1 ? null :
-                                                         consideredSegments[i + 1];
-    if (!isStartGarbageCollected(currentSeg, prevSeg, neededRange.start) &&
-        !isEndGarbageCollected(currentSeg, nextSeg, neededRange.end))
-    {
-      completeSegments.push(currentSeg);
-    }
-  }
-  return completeSegments;
 }
 
 /**
@@ -360,40 +371,4 @@ function isEndGarbageCollected(
   }
 
   return false;
-}
-
-/**
- * From the given SegmentInventory, filters the "playable" (in a supported codec
- * and not known to be undecipherable) buffered Segment Objects which overlap
- * with the given range.
- * @param {Object} neededRange
- * @param {Array.<Object>} segmentInventory
- * @returns {Array.<Object>}
- */
-function getPlayableBufferedSegments(
-  neededRange : { start : number; end : number },
-  segmentInventory : IBufferedChunk[]
-) : IBufferedChunk[] {
-  const segmentRoundingError = Math.max(1 / 60, MINIMUM_SEGMENT_SIZE);
-  const minEnd = neededRange.start + segmentRoundingError;
-  const maxStart = neededRange.end - segmentRoundingError;
-
-  const overlappingChunks : IBufferedChunk[] = [];
-  for (let i = segmentInventory.length - 1; i >= 0; i--) {
-    const eltInventory = segmentInventory[i];
-
-    const { representation } = eltInventory.infos;
-    if (!eltInventory.partiallyPushed &&
-        representation.decipherable !== false &&
-        representation.isSupported)
-    {
-      const inventorySegment = eltInventory.infos.segment;
-      if ((inventorySegment.end > minEnd && inventorySegment.time < maxStart) ||
-          (eltInventory.end > minEnd && eltInventory.start < maxStart))
-      {
-        overlappingChunks.unshift(eltInventory);
-      }
-    }
-  }
-  return overlappingChunks;
 }
