@@ -489,7 +489,7 @@ describe("API - Public API", () => {
       /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
-        const oldMax = player.getManualVideoBitrate();
+        const oldMax = player.getMaxVideoBitrate();
 
         player.setMaxVideoBitrate(Infinity);
         expect(player.getMaxVideoBitrate()).toBe(Infinity);
@@ -500,13 +500,126 @@ describe("API - Public API", () => {
         player.setMaxVideoBitrate(3);
         expect(player.getMaxVideoBitrate()).toBe(3);
 
+        player.setMaxVideoBitrate(0);
+        expect(player.getMaxVideoBitrate()).toBe(0);
+
         player.setMaxVideoBitrate(Infinity);
         player.getMaxVideoBitrate();
 
         player.setMaxVideoBitrate(oldMax);
         expect(player.getMaxVideoBitrate()).toBe(oldMax);
       });
+
+      it("should throw when setting a negative maximum video bitrate", () => {
+        const PublicAPI = require("../public_api").default;
+        const player = new PublicAPI();
+        const oldMax = player.getMaxVideoBitrate();
+
+        expect(() => player.setMaxVideoBitrate(-1))
+          .toThrow(new Error("Invalid maximum video bitrate given. " +
+                             "Its value, \"-1\" is inferior the current " +
+                              "minimum video birate, \"0\"."));
+        expect(player.getMaxVideoBitrate()).toBe(oldMax);
+
+        expect(() => player.setMaxVideoBitrate(-Infinity))
+          .toThrow(new Error("Invalid maximum video bitrate given. " +
+                             "Its value, \"-Infinity\" is inferior the current " +
+                              "minimum video birate, \"0\"."));
+        expect(player.getMaxVideoBitrate()).toBe(oldMax);
+
+        expect(() => player.setMaxVideoBitrate(-100))
+          .toThrow(new Error("Invalid maximum video bitrate given. " +
+                             "Its value, \"-100\" is inferior the current " +
+                              "minimum video birate, \"0\"."));
+        expect(player.getMaxVideoBitrate()).toBe(oldMax);
+      });
+
+      // eslint-disable-next-line max-len
+      it("should throw when setting a maximum video bitrate inferior to the minimum", () => {
+        const PublicAPI = require("../public_api").default;
+        const player = new PublicAPI();
+        const oldMin = player.getMinVideoBitrate();
+        const oldMax = player.getMaxVideoBitrate();
+
+        player.setMinVideoBitrate(50);
+        expect(() => player.setMaxVideoBitrate(49))
+          .toThrow(new Error("Invalid maximum video bitrate given. " +
+                             "Its value, \"49\" is inferior the current " +
+                              "minimum video birate, \"50\"."));
+        expect(player.getMaxVideoBitrate()).toBe(oldMax);
+        player.setMinVideoBitrate(oldMin);
+      });
+
+      // eslint-disable-next-line max-len
+      it("should not throw when setting a maximum video bitrate equal to the minimum", () => {
+        const PublicAPI = require("../public_api").default;
+        const player = new PublicAPI();
+        const oldMin = player.getMinVideoBitrate();
+        const oldMax = player.getMaxVideoBitrate();
+
+        player.setMinVideoBitrate(50);
+        player.setMaxVideoBitrate(50);
+        expect(player.getMaxVideoBitrate()).toBe(50);
+        player.setMinVideoBitrate(oldMin);
+        player.setMaxVideoBitrate(oldMax);
+      });
     });
+
+    describe("setMinAudioBitrate/getMinAudioBitrate", () => {
+      /* eslint-disable max-len */
+      it("should update the minimum audio bitrate when calling setMinAudioBitrate by default", () => {
+      /* eslint-enable max-len */
+        const PublicAPI = require("../public_api").default;
+        const player = new PublicAPI();
+        const oldMin = player.getMinAudioBitrate();
+
+        player.setMinAudioBitrate(0);
+        expect(player.getMinAudioBitrate()).toBe(0);
+
+        player.setMinAudioBitrate(500);
+        expect(player.getMinAudioBitrate()).toBe(500);
+
+        player.setMinAudioBitrate(3);
+        expect(player.getMinAudioBitrate()).toBe(3);
+
+        player.setMinAudioBitrate(0);
+        expect(player.getMinAudioBitrate()).toBe(0);
+
+        player.setMinAudioBitrate(oldMin);
+        expect(player.getMinAudioBitrate()).toBe(oldMin);
+      });
+
+      // eslint-disable-next-line max-len
+      it("should throw when setting a minimum audio bitrate superior to the maximum", () => {
+        const PublicAPI = require("../public_api").default;
+        const player = new PublicAPI();
+        const oldMax = player.getMaxAudioBitrate();
+        const oldMin = player.getMinAudioBitrate();
+
+        player.setMaxAudioBitrate(49);
+        expect(() => player.setMinAudioBitrate(50))
+          .toThrow(new Error("Invalid minimum audio bitrate given. " +
+                             "Its value, \"50\" is superior the current " +
+                              "maximum audio birate, \"49\"."));
+        expect(player.getMinAudioBitrate()).toBe(oldMin);
+        player.setMaxAudioBitrate(oldMax);
+      });
+
+      // eslint-disable-next-line max-len
+      it("should not throw when setting a minimum audio bitrate equal to the maximum", () => {
+        const PublicAPI = require("../public_api").default;
+        const player = new PublicAPI();
+        const oldMax = player.getMaxAudioBitrate();
+        const oldMin = player.getMinAudioBitrate();
+
+        player.setMaxAudioBitrate(50);
+        player.setMinAudioBitrate(50);
+        expect(player.getMinAudioBitrate()).toBe(50);
+        player.setMaxAudioBitrate(oldMax);
+        player.setMinAudioBitrate(oldMin);
+      });
+    });
+
 
     describe("setMaxAudioBitrate/getMaxAudioBitrate", () => {
       /* eslint-disable max-len */
@@ -514,7 +627,7 @@ describe("API - Public API", () => {
       /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
-        const oldMax = player.getManualAudioBitrate();
+        const oldMax = player.getMaxAudioBitrate();
 
         player.setMaxAudioBitrate(Infinity);
         expect(player.getMaxAudioBitrate()).toBe(Infinity);
@@ -525,11 +638,68 @@ describe("API - Public API", () => {
         player.setMaxAudioBitrate(3);
         expect(player.getMaxAudioBitrate()).toBe(3);
 
+        player.setMaxAudioBitrate(0);
+        expect(player.getMaxAudioBitrate()).toBe(0);
+
         player.setMaxAudioBitrate(Infinity);
-        expect(player.getMaxAudioBitrate()).toBe(Infinity);
+        player.getMaxAudioBitrate();
 
         player.setMaxAudioBitrate(oldMax);
         expect(player.getMaxAudioBitrate()).toBe(oldMax);
+      });
+
+      it("should throw when setting a negative maximum audio bitrate", () => {
+        const PublicAPI = require("../public_api").default;
+        const player = new PublicAPI();
+        const oldMax = player.getMaxAudioBitrate();
+
+        expect(() => player.setMaxAudioBitrate(-1))
+          .toThrow(new Error("Invalid maximum audio bitrate given. " +
+                             "Its value, \"-1\" is inferior the current " +
+                              "minimum audio birate, \"0\"."));
+        expect(player.getMaxAudioBitrate()).toBe(oldMax);
+
+        expect(() => player.setMaxAudioBitrate(-Infinity))
+          .toThrow(new Error("Invalid maximum audio bitrate given. " +
+                             "Its value, \"-Infinity\" is inferior the current " +
+                              "minimum audio birate, \"0\"."));
+        expect(player.getMaxAudioBitrate()).toBe(oldMax);
+
+        expect(() => player.setMaxAudioBitrate(-100))
+          .toThrow(new Error("Invalid maximum audio bitrate given. " +
+                             "Its value, \"-100\" is inferior the current " +
+                              "minimum audio birate, \"0\"."));
+        expect(player.getMaxAudioBitrate()).toBe(oldMax);
+      });
+
+      // eslint-disable-next-line max-len
+      it("should throw when setting a maximum audio bitrate inferior to the minimum", () => {
+        const PublicAPI = require("../public_api").default;
+        const player = new PublicAPI();
+        const oldMin = player.getMinAudioBitrate();
+        const oldMax = player.getMaxAudioBitrate();
+
+        player.setMinAudioBitrate(50);
+        expect(() => player.setMaxAudioBitrate(49))
+          .toThrow(new Error("Invalid maximum audio bitrate given. " +
+                             "Its value, \"49\" is inferior the current " +
+                              "minimum audio birate, \"50\"."));
+        expect(player.getMaxAudioBitrate()).toBe(oldMax);
+        player.setMinAudioBitrate(oldMin);
+      });
+
+      // eslint-disable-next-line max-len
+      it("should not throw when setting a maximum audio bitrate equal to the minimum", () => {
+        const PublicAPI = require("../public_api").default;
+        const player = new PublicAPI();
+        const oldMin = player.getMinAudioBitrate();
+        const oldMax = player.getMaxAudioBitrate();
+
+        player.setMinAudioBitrate(50);
+        player.setMaxAudioBitrate(50);
+        expect(player.getMaxAudioBitrate()).toBe(50);
+        player.setMinAudioBitrate(oldMin);
+        player.setMaxAudioBitrate(oldMax);
       });
     });
 
