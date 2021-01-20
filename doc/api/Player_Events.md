@@ -644,21 +644,6 @@ This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
 
-### fullscreenChange
-
-<div class="warning">
-This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
-
-_payload type_: `Boolean`
-
-Triggered each time the video player goes/exits fullscreen mode.
-
-The payload is `true` if the player entered fullscreen, `false` if it exited
-it.
-
 ### nativeTextTracksChange
 
 <div class="warning">
