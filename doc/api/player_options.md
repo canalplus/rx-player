@@ -7,6 +7,8 @@
     - [videoElement](#prop-videoElement)
     - [initialVideoBitrate](#prop-initialVideoBitrate)
     - [initialAudioBitrate](#prop-initialAudioBitrate)
+    - [minVideoBitrate](#prop-minVideoBitrate)
+    - [minAudioBitrate](#prop-minAudioBitrate)
     - [maxVideoBitrate](#prop-maxVideoBitrate)
     - [maxAudioBitrate](#prop-maxAudioBitrate)
     - [wantedBufferAhead](#prop-wantedBufferAhead)
@@ -130,6 +132,90 @@ const player = new Player({
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 
 
+<a name="prop-minVideoBitrate"></a>
+### minVideoBitrate ############################################################
+
+_type_: ``Number|undefined``
+
+_defaults_: ``0``
+
+Minimum video bitrate reachable through adaptive streaming.
+
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `setVideoBitrate`), the player will never switch
+to a video quality with a bitrate lower than that value.
+
+The exception being when no quality has a higher bitrate, in which case the
+maximum quality will always be chosen instead.
+
+For example, if you want that video qualities chosen automatically never have
+a bitrate lower than 100 kilobits per second you can call:
+```js
+const player = new Player({
+  minVideoBitrate: 100000
+});
+```
+
+Any limit can be removed just by setting that value to ``0``:
+```js
+// remove video bitrate lower limit
+player.setMinVideoBitrate(0);
+```
+
+You can update this limit at any moment with the ``setMinVideoBitrate`` API
+call.
+
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setVideoBitrate``) bypass this limit completely.
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="prop-minAudioBitrate"></a>
+### minAudioBitrate ############################################################
+
+_type_: ``Number|undefined``
+
+_defaults_: ``0``
+
+Minimum audio bitrate reachable through adaptive streaming.
+
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `setAudioBitrate`), the player will never switch
+to an audio quality with a bitrate higher than that value.
+
+The exception being when no quality has a higher bitrate, in which case the
+minimum quality will always be chosen instead.
+
+For example, if you want that audio qualities chosen automatically never have
+a bitrate higher than 100 kilobits per second you can call:
+```js
+const player = new Player({
+  minAudioBitrate: 100000
+});
+```
+
+Any limit can be removed just by setting that value to ``0``:
+```js
+// remove audio bitrate lower limit
+player.setMinAudioBitrate(0);
+```
+
+You can update this limit at any moment with the ``setMinAudioBitrate`` API
+call.
+
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setAudioBitrate``) bypass this limit completely.
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
 <a name="prop-maxVideoBitrate"></a>
 ### maxVideoBitrate ############################################################
 
@@ -137,22 +223,34 @@ _type_: ``Number|undefined``
 
 _defaults_: ``Infinity``
 
-The maximum video bitrate reachable through adaptive streaming. The player will
-never automatically switch to a video
-[Representation](../terms.md#representation) with a higher bitrate.
+Maximum video bitrate reachable through adaptive streaming.
 
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `setVideoBitrate`), the player will never switch
+to a video quality with a bitrate higher than that value.
+
+The exception being when no quality has a lower bitrate, in which case the
+minimum quality will always be chosen instead.
+
+For example, if you want that video qualities chosen automatically never have
+a bitrate higher than 1 Megabits per second you can call:
 ```js
-// limit automatic adaptive streaming for the video track to up to 1 Mb/s
 const player = new Player({
   maxVideoBitrate: 1e6
 });
 ```
 
+Any limit can be removed just by setting that value to ``Infinity``:
+```js
+// remove video bitrate higher limit
+player.setMaxVideoBitrate(Infinity);
+```
+
 You can update this limit at any moment with the ``setMaxVideoBitrate`` API
 call.
 
-This limit can be removed by setting it to ``Infinity`` (which is the default
-value).
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setVideoBitrate``) bypass this limit completely.
 
 --
 
@@ -167,22 +265,34 @@ _type_: ``Number|undefined``
 
 _defaults_: ``Infinity``
 
-The maximum audio bitrate reachable through adaptive streaming. The player will
-never automatically switch to an audio
-[Representation](../terms.md#representation) with a higher bitrate.
+Maximum audio bitrate reachable through adaptive streaming.
 
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `setAudioBitrate`), the player will never switch
+to an audio quality with a bitrate higher than that value.
+
+The exception being when no quality has a lower bitrate, in which case the
+minimum quality will always be chosen instead.
+
+For example, if you want that audio qualities chosen automatically never have
+a bitrate higher than 1 Megabits per second you can call:
 ```js
-// limit automatic adaptive streaming for the audio track to up to 100 kb/s
 const player = new Player({
-  maxAudioBitrate: 1e5
+  maxAudioBitrate: 1e6
 });
+```
+
+Any limit can be removed just by setting that value to ``Infinity``:
+```js
+// remove audio bitrate higher limit
+player.setMaxAudioBitrate(Infinity);
 ```
 
 You can update this limit at any moment with the ``setMaxAudioBitrate`` API
 call.
 
-This limit can be removed by setting it to ``Infinity`` (which is the default
-value).
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setAudioBitrate``) bypass this limit completely.
 
 --
 
