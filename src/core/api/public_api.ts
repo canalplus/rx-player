@@ -45,10 +45,7 @@ import {
 } from "rxjs";
 import {
   events,
-  exitFullscreen,
   getStartDate,
-  isFullscreen,
-  requestFullscreen,
 } from "../../compat";
 /* eslint-disable-next-line max-len */
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
@@ -158,7 +155,6 @@ const { getPageActivityRef,
         getPictureOnPictureStateRef,
         getVideoVisibilityRef,
         getVideoWidthRef,
-        onFullscreenChange$,
         onTextTrackChanges$ } = events;
 
 /**
@@ -474,14 +470,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_pictureInPictureRef = getPictureOnPictureStateRef(videoElement,
                                                                  destroyCanceller.signal);
 
-    /** @deprecated */
-    onFullscreenChange$(videoElement)
-      .pipe(takeUntil(this._priv_destroy$))
-      /* eslint-disable import/no-deprecated */
-      .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
-      /* eslint-enable import/no-deprecated */
-
-    /** @deprecated */
     onTextTrackChanges$(videoElement.textTracks)
       .pipe(
         takeUntil(this._priv_destroy$),
@@ -1702,46 +1690,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     this.videoElement.currentTime = positionWanted;
     return positionWanted;
-  }
-
-  /**
-   * Returns true if the media element is full screen.
-   * @deprecated
-   * @returns {Boolean}
-   */
-  isFullscreen() : boolean {
-    warnOnce("isFullscreen is deprecated." +
-             " Fullscreen management should now be managed by the application");
-    return isFullscreen();
-  }
-
-  /**
-   * Set/exit fullScreen.
-   * @deprecated
-   * @param {Boolean} [goFull=true] - if false, exit full screen.
-   */
-  setFullscreen(goFull : boolean = true) : void {
-    warnOnce("setFullscreen is deprecated." +
-             " Fullscreen management should now be managed by the application");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-
-    if (goFull) {
-      requestFullscreen(this.videoElement);
-    } else {
-      exitFullscreen();
-    }
-  }
-
-  /**
-   * Exit from full screen mode.
-   * @deprecated
-   */
-  exitFullscreen() : void {
-    warnOnce("exitFullscreen is deprecated." +
-             " Fullscreen management should now be managed by the application");
-    exitFullscreen();
   }
 
   /**
@@ -3012,7 +2960,6 @@ interface IPublicAPIEvent {
   audioBitrateChange : number;
   videoBitrateChange : number;
   imageTrackUpdate : { data: IBifThumbnail[] };
-  fullscreenChange : boolean;
   bitrateEstimationChange : IBitrateEstimate;
   volumeChange : number;
   error : IPlayerError | Error;
