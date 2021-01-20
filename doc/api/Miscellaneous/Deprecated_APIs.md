@@ -8,28 +8,6 @@ we switch to a v4.x.x version.
 You will find here which APIs are deprecated, why, and depending on the
 concerned API, how to replace it.
 
-## Fullscreen APIs
-
-All fullscreen APIs have been deprecated, namely:
-
-- the `isFullscreen` method
-- the `setFullscreen` method
-- the `exitFullscreen` method
-- the `fullscreenChange` event
-
-This is because of several things:
-
-- fullscreen management has now become a lot more complex with features such
-  as advanced subtitles management, were the text track HTMLElement is
-  controlled by the application.
-
-- most application developpers also wants to put their own controls into
-  fullscreen mode. Those APIs only put the media element into fullscreen mode
-  and not any other element. This can be misleading.
-
-The fullscreen logic should now be entirely on the application-side. Replacement
-code is provided for each of those APIs below.
-
 ## Image (BIF) APIs
 
 The following properties methods and events have been deprecated:
@@ -130,92 +108,6 @@ As we considered that `getNativeTextTrack` API was more confusing than it was
 helpful in our current API, we decided to deprecate it. Do not hesitate to open
 an issue if you use this API.
 
-### isFullscreen
-
-`isFullscreen` has been deprecated as it is part of our Fullscreen APIs, see
-[the related chapter](#fullscreen-apis) for more information.
-
-`isFullscreen` just checked that ANY element was fullscreen. As such, it can
-easily be replace for the majority of browsers with the following code:
-
-```js
-function isFullscreen() {
-  return !!(
-    document.fullscreenElement ||
-    document.mozFullScreenElement ||
-    document.webkitFullscreenElement ||
-    document.msFullscreenElement
-  );
-}
-```
-
-### setFullscreen
-
-`setFullscreen` has been deprecated as it is part of our Fullscreen APIs, see
-[the related chapter](#fullscreen-apis) for more information.
-
-`setFullscreen` allowed to set the media element in fullscreen mode (or exit
-fullscreen mode, if `false` was given as argument).
-
-If you want to just put the media element on fullscreen mode, you can use the
-following code:
-
-```js
-function setFullscreen(goFull) {
-  if (goFull === "false") {
-    exitFullscreen();
-    return;
-  }
-  if (isFullscreen()) {
-    // see code above
-    return;
-  }
-
-  const mediaElement = player.getVideoElement();
-  if (!mediaElement) {
-    throw new Error("No media element");
-  }
-  if (mediaElement.requestFullscreen) {
-    mediaElement.requestFullscreen();
-  } else if (mediaElement.msRequestFullscreen) {
-    mediaElement.msRequestFullscreen();
-  } else if (mediaElement.mozRequestFullScreen) {
-    mediaElement.mozRequestFullScreen();
-  } else if (mediaElement.webkitRequestFullscreen) {
-    mediaElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-  }
-}
-```
-
-Please consider however that this function will only put the media element in
-full screen mode, without the eventual controls and HTML text tracks you might
-also want to set in fullscreen. The code is easily adaptable however to put
-your own element into fullscreen mode instead.
-
-### exitFullscreen
-
-`exitFullscreen` has been deprecated as it is part of our Fullscreen APIs, see
-[the related chapter](#fullscreen-apis) for more information.
-
-`exitFullscreen` just `exited` any element put in fullscreen mode. As such,
-its code can easily be replaced by:
-
-```js
-function exitFullscreen() {
-  if (isFullscreen()) {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    }
-  }
-}
-```
-
 ### getImageTrackData
 
 `getImageTrackData` has been deprecated like most API related to BIF thumbnail
@@ -237,31 +129,6 @@ won't be sent in a `v4.x.x` version.
 The reasons are basically the same than for the `getNativeTextTracks` method.
 It should not be needed anymore as most advanced needs should be better answered
 by an `html` text track mode.
-
-### fullscreenChange
-
-`fullscreenChange` events have been deprecated as it is part of our Fullscreen
-APIs, see [the related chapter](#fullscreen-apis) for more information.
-
-The `fullscreenChange` event was sent when the media element got in or out of
-fullscreen mode, with agg boolean as a payload:
-
-- if `true`, the element entered fullscreen mode
-- if `false`, the element exited fullscreen mode
-
-This behavior can easily be recreated through the following code:
-
-```js
-const mediaElement = player.getVideoElement();
-mediaElement.addEventListener("fullscreenChange", () => {
-  if (isFullscreen()) {
-    // see isFullscreen implementation above
-    // do things
-  } else {
-    // do other things
-  }
-});
-```
 
 ### imageTrackUpdate
 

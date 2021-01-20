@@ -462,16 +462,6 @@ properties, methods, events and so on.
   - [`getCurrentRepresentations`](../api/Deprecated/getCurrentRepresentations.md):
     [Deprecated] Information on the current Representations.
 
-  - [`setFullscreen`](../api/Deprecated/setFullscreen.md):
-    [Deprecated] Switch media element into fullscreen mode.
-
-  - [`isFullscreen`](../api/Deprecated/isFullscreen.md):
-    [Deprecated] Returns `true` if the current media element is in fullscreen
-    mode.
-
-  - [`exitFullscreen`](../api/Deprecated/exitFullscreen.md):
-    [Deprecated] Exit fullscreen mode.
-
   - [`getImageTrackData`](../api/Deprecated/getImageTrackData.md):
     [Deprecated] Returns the data of the current image track.
 
@@ -563,9 +553,6 @@ properties, methods, events and so on.
 
   - [`imageTrackUpdate`](../api/Player_Events.md#imagetrackupdate):
     [Deprecated] The current image track changed.
-
-  - [`fullscreenChange`](../api/Player_Events.md#fullscreenchange):
-    [Deprecated] The player went into or exited fullscreen mode.
 
   - [`nativeTextTracksChange`](../api/Player_Events.md#nativetexttrackschange):
     [Deprecated] A `<track>` element is added or removed to the media element.
