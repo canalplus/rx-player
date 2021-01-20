@@ -13,18 +13,6 @@
       "displayName": "getCurrentRepresentations"
     },
     {
-      "path": "./setFullscreen.md",
-      "displayName": "setFullscreen"
-    },
-    {
-      "path": "./isFullscreen.md",
-      "displayName": "isFullscreen"
-    },
-    {
-      "path": "./exitFullscreen.md",
-      "displayName": "exitFullscreen"
-    },
-    {
       "path": "./getCurrentKeySystem.md",
       "displayName": "getCurrentKeySystem"
     },
