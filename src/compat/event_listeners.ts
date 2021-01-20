@@ -429,17 +429,7 @@ const onLoadedMetadata = createCompatibleEventListener(["loadedmetadata"]);
 const onTimeUpdate = createCompatibleEventListener(["timeupdate"]);
 
 /**
- * @param {HTMLElement} element
- */
-const onFullscreenChange = createCompatibleEventListener(
-  ["fullscreenchange", "FullscreenChange"],
-
-  // On IE11, fullscreen change events is called MSFullscreenChange
-  BROWSER_PREFIXES.concat("MS")
-);
-
-/**
- * @param {TextTrackList} textTrackList
+ * @param {TextTrackList} mediaElement
  */
 const onTextTrackAdded = createCompatibleEventListener(["addtrack"]);
 
@@ -555,7 +545,6 @@ export {
   getVideoWidthRef,
   onEncrypted,
   onEnded,
-  onFullscreenChange,
   onKeyAdded,
   onKeyError,
   onKeyMessage,

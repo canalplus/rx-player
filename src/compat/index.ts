@@ -41,11 +41,6 @@ import {
 } from "./eme";
 import enableAudioTrack from "./enable_audio_track";
 import * as events from "./event_listeners";
-import {
-  exitFullscreen,
-  isFullscreen,
-  requestFullscreen,
-} from "./fullscreen";
 import getStartDate from "./get_start_date";
 import hasEMEAPIs from "./has_eme_apis";
 import isCodecSupported from "./is_codec_supported";
@@ -77,7 +72,6 @@ export {
   CustomMediaKeySystemAccess,
   enableAudioTrack,
   events,
-  exitFullscreen,
   generateKeyRequest,
   getInitData,
   getStartDate,
@@ -89,7 +83,6 @@ export {
   ICustomMediaKeys,
   ICompatSourceBuffer,
   isCodecSupported,
-  isFullscreen,
   isNode,
   isOffline,
   isVTTCue,
@@ -97,7 +90,6 @@ export {
   makeVTTCue,
   MediaSource_,
   onHeightWidthChange,
-  requestFullscreen,
   requestMediaKeySystemAccess,
   setMediaKeys,
   shouldReloadMediaSourceOnDecipherabilityUpdate,
