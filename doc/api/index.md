@@ -95,9 +95,6 @@
     - [getCurrentAdaptations (deprecated)](#meth-getCurrentAdaptations)
     - [getCurrentRepresentations (deprecated)](#meth-getCurrentRepresentations)
     - [getImageTrackData (deprecated)](#meth-getImageTrackData)
-    - [setFullscreen (deprecated)](#meth-setFullscreen)
-    - [exitFullscreen (deprecated)](#meth-exitFullscreen)
-    - [isFullscreen (deprecated)](#meth-isFullscreen)
     - [getNativeTextTrack (deprecated)](#meth-getNativeTextTrack)
 - [Static properties](#static)
     - [version](#static-version)
@@ -3245,67 +3242,6 @@ The returned array follows the usual image playlist structure, defined
 
 ``null`` in _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)).
-
-
-<a name="meth-setFullscreen"></a>
-### setFullscreen ##############################################################
-
---
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
---
-
-_arguments_: ``Boolean``
-
-Switch or exit the ``<video>`` element to fullscreen mode. The argument is an
-optional boolean:
-  - if set:
-    - ``true``: enters fullscreen
-    - ``false``: exit fullscreen
-
-  - if not set: enter fullscreen
-
-Note that __only the video element will be set to fullscreen mode__. You might
-prefer to implement your own method to include your controls in the final UI.
-
-
-<a name="meth-exitFullscreen"></a>
-### exitFullscreen #############################################################
-
---
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
---
-
-Exit fullscreen mode. Same than ``setFullscreen(false)``.
-
-
-<a name="meth-isFullscreen"></a>
-### isFullscreen ###############################################################
-
---
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
---
-
-_return value_: ``Boolean``
-
-Returns ``true`` if the video element is in fullscreen mode, ``false``
-otherwise.
-
-#### Example
-
-```js
-if (player.isFullscreen()) {
-  console.log("The player is in fullscreen mode");
-}
-```
 
 
 <a name="meth-getNativeTextTrack"></a>

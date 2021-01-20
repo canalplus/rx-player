@@ -32,7 +32,6 @@
     - [streamEventSkip](events-streamEventSkip)
  - [Deprecated](#events-deprecated)
     - [imageTrackUpdate (deprecated)](#events-imageTrackUpdate)
-    - [fullscreenChange (deprecated)](#events-fullscreenChange)
     - [nativeTextTracksChange (deprecated)](#events-nativeTextTracksChange)
 
 
@@ -737,24 +736,6 @@ Has the following property in its payload:
 
   Each image has a structure as defined in the [Images structure
   page](./images.md#api-structure).
-
-
-<a name="events-fullscreenChange"></a>
-### fullscreenChange ###########################################################
-
----
-
-:warning: This event is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_payload type_: ``Boolean``
-
-Triggered each time the video player goes/exits fullscreen mode.
-
-The payload is ``true`` if the player entered fullscreen, ``false`` if it exited
-it.
 
 
 <a name="events-nativeTextTracksChange"></a>
