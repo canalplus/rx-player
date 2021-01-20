@@ -181,14 +181,6 @@ describe("API - Public API", () => {
       });
     });
 
-    // describe("isFullscreen", () => {
-    //   it("should return false in isFullscreen by default", () => {
-    // eslint-disable import/no-deprecated
-    //     expect(player.isFullscreen()).toBe(false);
-    // eslint-enable import/no-deprecated
-    //   });
-    // });
-
     describe("getAvailableVideoBitrates", () => {
       it("should return [] in getAvailableVideoBitrates by default", () => {
         const PublicAPI = require("../public_api").default;
@@ -296,27 +288,6 @@ describe("API - Public API", () => {
         expect(() => player.seekTo({ wallClockTime: 5 })).toThrow();
       });
     });
-
-    // describe("exitFullscreen", () => {
-    //   it("should allow exitFullscreen by default", () => {
-    // eslint-disable import/no-deprecated
-    //     player.exitFullscreen();
-    // eslint-enable import/no-deprecated
-    //   });
-    // });
-
-    // describe("setFullscreen", () => {
-    //   it("should allow setFullscreen by default", () => {
-    // eslint-disable import/no-deprecated
-    //     player.setFullscreen();
-    // eslint-enable import/no-deprecated
-
-    //     // TODO remove for v3.0.0
-    // eslint-disable import/no-deprecated
-    //     player.setFullscreen(false);
-    // eslint-enable import/no-deprecated
-    //   });
-    // });
 
     describe("getVolume/setVolume", () => {
       it("should throw in setVolume by default if no volume has been given", () => {
