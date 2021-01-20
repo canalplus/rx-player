@@ -243,6 +243,26 @@ export default {
 
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
   /**
+   * Default bitrate floor initially set to dictate the minimum bitrate the
+   * ABR manager can automatically switch to.
+   *
+   * If no track is found with a quality superior or equal to the
+   * bitrate there, the lowest bitrate will be taken instead.
+   *
+   * Set to Infinity to discard any limit in the ABR strategy.
+   * @type {Object}
+   */
+  DEFAULT_MIN_BITRATES: {
+    audio: 0, // only "audio" segments
+    video: 0, // only "video" segments
+    other: 0, // tracks which are not audio/video
+                     // Though those are generally at a single bitrate, so no
+                     // adaptive mechanism is triggered for them.
+  } as Record<"audio"|"video"|"other", number>,
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
+
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
+  /**
    * Default bitrate ceil initially set to dictate the maximum bitrate the
    * ABR manager can automatically switch to.
    *

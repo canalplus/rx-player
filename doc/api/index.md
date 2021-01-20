@@ -55,6 +55,10 @@
     - [getAvailableAudioBitrates](#meth-getAvailableAudioBitrates)
     - [getVideoBitrate](#meth-getVideoBitrate)
     - [getAudioBitrate](#meth-getAudioBitrate)
+    - [setMinVideoBitrate](#meth-setMinVideoBitrate)
+    - [setMinAudioBitrate](#meth-setMinAudioBitrate)
+    - [getMinVideoBitrate](#meth-getMinVideoBitrate)
+    - [getMinAudioBitrate](#meth-getMinAudioBitrate)
     - [setMaxVideoBitrate](#meth-setMaxVideoBitrate)
     - [setMaxAudioBitrate](#meth-setMaxAudioBitrate)
     - [getMaxVideoBitrate](#meth-getMaxVideoBitrate)
@@ -1896,25 +1900,149 @@ In _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)), returns ``undefined``.
 
 
+<a name="meth-setMinVideoBitrate"></a>
+### setMinVideoBitrate #########################################################
+
+_arguments_: ``Number``
+
+Set a minimum video bitrate reachable through adaptive streaming.
+
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `setVideoBitrate`), the player will never switch
+to a video quality with a bitrate lower than that value.
+
+The exception being when no quality has a higher bitrate, in which case the
+maximum quality will always be chosen instead.
+
+For example, if you want that video qualities chosen automatically never have
+a bitrate below 100 kilobits per second you can call:
+```js
+player.setMinVideoBitrate(100000);
+```
+
+Any limit can be removed just by setting that value to ``0``:
+```js
+// remove video bitrate lower limit
+player.setMinVideoBitrate(0);
+```
+
+The effect of this method is persisted from content to content. As such, it can
+even be called when no content is currently loaded.
+
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setVideoBitrate``) bypass this limit completely.
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="meth-setMinAudioBitrate"></a>
+### setMinAudioBitrate #########################################################
+
+_arguments_: ``Number``
+
+Set a minimum audio bitrate reachable through adaptive streaming.
+
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `setAudioBitrate`), the player will never switch
+to an audio quality with a bitrate lower than that value.
+
+The exception being when no quality has a higher bitrate, in which case the
+maximum quality will always be chosen instead.
+
+For example, if you want that audio qualities chosen automatically never have
+a bitrate below 100 kilobits per second you can call:
+```js
+player.setMinAudioBitrate(100000);
+```
+
+Any limit can be removed just by setting that value to ``0``:
+```js
+// remove audio bitrate lower limit
+player.setMinAudioBitrate(0);
+```
+
+The effect of this method is persisted from content to content. As such, it can
+even be called when no content is currently loaded.
+
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setAudioBitrate``) bypass this limit completely.
+
+--
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+
+<a name="meth-getMinVideoBitrate"></a>
+### getMinVideoBitrate #########################################################
+
+_return value_: ``Number``
+
+Returns the minimum video bitrate reachable through adaptive streaming, in bits
+per second.
+
+This minimum limit has usually been set either through the `setMinVideoBitrate`
+method or through the `minVideoBitrate` constructor option.
+
+This limit can be further updated by calling the
+[setMinVideoBitrate](#meth-setMinVideoBitrate) method.
+
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setVideoBitrate``) bypass this limit completely.
+
+
+<a name="meth-getMinAudioBitrate"></a>
+### getMinAudioBitrate #########################################################
+
+_return value_: ``Number``
+
+Returns the minimum audio bitrate reachable through adaptive streaming, in bits
+per second.
+
+This minimum limit has usually been set either through the `setMinAudioBitrate`
+method or through the `minAudioBitrate` constructor option.
+
+This limit can be further updated by calling the
+[setMinAudioBitrate](#meth-setMinAudioBitrate) method.
+
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setAudioBitrate``) bypass this limit completely.
+
+
 <a name="meth-setMaxVideoBitrate"></a>
 ### setMaxVideoBitrate #########################################################
 
 _arguments_: ``Number``
 
-Set the maximum video bitrate reachable through adaptive streaming. The player
-will never automatically switch to a video quality with a higher bitrate.
+Set a maximum video bitrate reachable through adaptive streaming.
 
-This limit can be removed by setting it to ``Infinity``:
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `setVideoBitrate`), the player will never switch
+to a video quality with a bitrate higher than that value.
+
+The exception being when no quality has a lower bitrate, in which case the
+minimum quality will always be chosen instead.
+
+For example, if you want that video qualities chosen automatically never have
+a bitrate higher than 1 Megabits per second you can call:
 ```js
-// remove video bitrate limit
+player.setMaxVideoBitrate(1e6);
+```
+
+Any limit can be removed just by setting that value to ``Infinity``:
+```js
+// remove video bitrate higher limit
 player.setMaxVideoBitrate(Infinity);
 ```
 
 The effect of this method is persisted from content to content. As such, it can
 even be called when no content is currently loaded.
 
-Note that this only affects adaptive strategies (you can bypass this limit by
-calling ``setVideoBitrate``).
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setVideoBitrate``) bypass this limit completely.
 
 --
 
@@ -1927,21 +2055,32 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 
 _arguments_: ``Number``
 
-Set the maximum audio bitrate reachable through adaptive streaming. The player
-will never automatically switch to a audio
-[Representation](../terms.md#representation) with a higher bitrate.
+Set a maximum audio bitrate reachable through adaptive streaming.
 
-This limit can be removed by setting it to ``Infinity``:
+When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `setAudioBitrate`), the player will never switch
+to an audio quality with a bitrate higher than that value.
+
+The exception being when no quality has a lower bitrate, in which case the
+minimum quality will always be chosen instead.
+
+For example, if you want that audio qualities chosen automatically never have
+a bitrate higher than 1 Megabits per second you can call:
 ```js
-// remove audio bitrate limit
+player.setMaxAudioBitrate(1e6);
+```
+
+Any limit can be removed just by setting that value to ``Infinity``:
+```js
+// remove audio bitrate higher limit
 player.setMaxAudioBitrate(Infinity);
 ```
 
 The effect of this method is persisted from content to content. As such, it can
 even be called when no content is currently loaded.
 
-Note that this only affects adaptive strategies (you can bypass this limit by
-calling ``setAudioBitrate``).
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setAudioBitrate``) bypass this limit completely.
 
 --
 
@@ -1955,14 +2094,16 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 _return value_: ``Number``
 
 Returns the maximum video bitrate reachable through adaptive streaming, in bits
-per seconds.
+per second.
 
-This limit can be updated by calling the
+This maximum limit has usually been set either through the `setMaxVideoBitrate`
+method or through the `maxVideoBitrate` constructor option.
+
+This limit can be further updated by calling the
 [setMaxVideoBitrate](#meth-setMaxVideoBitrate) method.
 
-This limit only affects adaptive strategies (you can bypass this limit by
-calling ``setVideoBitrate``), and is set to ``Infinity`` when no limit has been
-set.
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setVideoBitrate``) bypass this limit completely.
 
 
 <a name="meth-getMaxAudioBitrate"></a>
@@ -1971,14 +2112,16 @@ set.
 _return value_: ``Number``
 
 Returns the maximum audio bitrate reachable through adaptive streaming, in bits
-per seconds.
+per second.
 
-This limit can be updated by calling the
+This maximum limit has usually been set either through the `setMaxAudioBitrate`
+method or through the `maxAudioBitrate` constructor option.
+
+This limit can be further updated by calling the
 [setMaxAudioBitrate](#meth-setMaxAudioBitrate) method.
 
-This limit only affects adaptive strategies (you can bypass this limit by
-calling ``setAudioBitrate``), and is set to ``Infinity`` when no limit has been
-set.
+Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling ``setAudioBitrate``) bypass this limit completely.
 
 
 <a name="meth-setVideoBitrate"></a>
@@ -1988,7 +2131,7 @@ _arguments_: ``Number``
 
 Force the current video track to be of a certain bitrate.
 
-If an video quality in the current track is found with the exact same bitrate,
+If a video quality in the current track is found with the exact same bitrate,
 this quality will be set.
 
 If no video quality is found with the exact same bitrate, either:

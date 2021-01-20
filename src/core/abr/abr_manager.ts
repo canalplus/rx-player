@@ -48,6 +48,9 @@ export interface IABRManagerArguments {
   lowLatencyMode: boolean; // Some settings can depend on wether you're playing a
                            // low-latency content. Set it to `true` if you're playing
                            // such content.
+  minAutoBitrates: Partial<Record<IBufferType,          // Minimum bitrate chosen
+                                  Observable<number>>>; // when in auto mode, per
+                                                        // type (0 by default)
   maxAutoBitrates: Partial<Record<IBufferType,          // Maximum bitrate chosen
                                   Observable<number>>>; // when in auto mode, per
                                                         // type (Infinity by default)
@@ -68,6 +71,7 @@ export default class ABRManager {
   private _bandwidthEstimators : Partial<Record<IBufferType, BandwidthEstimator>>;
   private _initialBitrates : Partial<Record<IBufferType, number>>;
   private _manualBitrates : Partial<Record<IBufferType, Observable<number>>>;
+  private _minAutoBitrates : Partial<Record<IBufferType, Observable<number>>>;
   private _maxAutoBitrates : Partial<Record<IBufferType, Observable<number>>>;
   private _throttlers : IRepresentationEstimatorsThrottlers;
   private _lowLatencyMode : boolean;
@@ -77,6 +81,7 @@ export default class ABRManager {
    */
   constructor(options : IABRManagerArguments) {
     this._manualBitrates = options.manualBitrates;
+    this._minAutoBitrates = options.minAutoBitrates;
     this._maxAutoBitrates = options.maxAutoBitrates;
     this._initialBitrates = options.initialBitrates;
     this._throttlers = options.throttlers;
@@ -103,6 +108,9 @@ export default class ABRManager {
     const bandwidthEstimator = this._getBandwidthEstimator(type);
     const manualBitrate$ =
       takeFirstSet<Observable<number>>(this._manualBitrates[type], observableOf(-1));
+    const minAutoBitrate$ =
+      takeFirstSet<Observable<number>>(this._minAutoBitrates[type],
+                                       observableOf(0));
     const maxAutoBitrate$ =
       takeFirstSet<Observable<number>>(this._maxAutoBitrates[type],
                                        observableOf(Infinity));
@@ -116,6 +124,7 @@ export default class ABRManager {
                                      filters$,
                                      initialBitrate,
                                      manualBitrate$,
+                                     minAutoBitrate$,
                                      maxAutoBitrate$,
                                      representations,
                                      lowLatencyMode: this._lowLatencyMode });
