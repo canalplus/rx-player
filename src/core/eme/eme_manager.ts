@@ -167,7 +167,9 @@ export default function EMEManager(
         EMPTY;
 
       let wantedSessionType : MediaKeySessionType;
-      if (!canCreatePersistentSession(mediaKeySystemAccess)) {
+      if (options.persistentLicense !== true) {
+        wantedSessionType = "temporary";
+      } else if (!canCreatePersistentSession(mediaKeySystemAccess)) {
         log.warn("EME: Cannot create \"persistent-license\" session: not supported");
         wantedSessionType = "temporary";
       } else {
