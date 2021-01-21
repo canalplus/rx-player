@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { isNode } from "../compat";
 import log from "../log";
 import assert from "./assert";
 
@@ -57,14 +58,14 @@ function strToBeUtf16(str: string): Uint8Array {
  * @returns {string}
  */
 function utf16LEToStr(bytes : Uint8Array) : string {
-  if (typeof window.TextDecoder === "function") {
+  if (!isNode && typeof window.TextDecoder === "function") {
     try {
       // instanciation throws if the encoding is unsupported
       const decoder = new TextDecoder("utf-16le");
       return decoder.decode(bytes);
     } catch (e) {
       log.warn("Utils: could not use TextDecoder to parse UTF-16LE, " +
-               "fallbacking to another implementation", e);
+        "fallbacking to another implementation", e);
     }
   }
 
@@ -81,14 +82,14 @@ function utf16LEToStr(bytes : Uint8Array) : string {
  * @returns {string}
  */
 function beUtf16ToStr(bytes : Uint8Array) : string {
-  if (typeof window.TextDecoder === "function") {
+  if (!isNode && typeof window.TextDecoder === "function") {
     try {
       // instanciation throws if the encoding is unsupported
       const decoder = new TextDecoder("utf-16be");
       return decoder.decode(bytes);
     } catch (e) {
       log.warn("Utils: could not use TextDecoder to parse UTF-16BE, " +
-               "fallbacking to another implementation", e);
+        "fallbacking to another implementation", e);
     }
   }
 
@@ -106,13 +107,13 @@ function beUtf16ToStr(bytes : Uint8Array) : string {
  * @returns {Uint8Array}
  */
 function strToUtf8(str : string) : Uint8Array {
-  if (typeof window.TextEncoder === "function") {
+  if (!isNode && typeof window.TextEncoder === "function") {
     try {
       const encoder = new TextEncoder();
       return encoder.encode(str);
     } catch (e) {
       log.warn("Utils: could not use TextEncoder to encode string into UTF-8, " +
-               "fallbacking to another implementation", e);
+        "fallbacking to another implementation", e);
     }
   }
 
@@ -162,19 +163,19 @@ function strToUtf8(str : string) : Uint8Array {
       let wasPercentEncoded = false;
       if (pcStr[i] === "%") {
         if (i <= pcStrLen - 6 &&
-            pcStr[i + 1] === "u" &&
-            isHexChar.test(pcStr[i + 2]) &&
-            isHexChar.test(pcStr[i + 3]) &&
-            isHexChar.test(pcStr[i + 4]) &&
-            isHexChar.test(pcStr[i + 5]))
+          pcStr[i + 1] === "u" &&
+          isHexChar.test(pcStr[i + 2]) &&
+          isHexChar.test(pcStr[i + 3]) &&
+          isHexChar.test(pcStr[i + 4]) &&
+          isHexChar.test(pcStr[i + 5]))
         {
           const charCode = parseInt(pcStr.substring(i + 1, i + 6), 16);
           utf8Str += String.fromCharCode(charCode);
           wasPercentEncoded = true;
           i += 5; // Skip the next 5 chars
         } else if (i <= pcStrLen - 3 &&
-            isHexChar.test(pcStr[i + 1]) &&
-            isHexChar.test(pcStr[i + 2]))
+          isHexChar.test(pcStr[i + 1]) &&
+          isHexChar.test(pcStr[i + 2]))
         {
           const charCode = parseInt(pcStr.substring(i + 1, i + 3), 16);
           utf8Str += String.fromCharCode(charCode);
@@ -233,7 +234,7 @@ function stringFromCharCodes(args : Uint8Array) : string {
 function intToHex(num : number, size : number) : string {
   const toStr = num.toString(16);
   return toStr.length >= size ? toStr :
-                                new Array(size - toStr.length + 1).join("0") + toStr;
+    new Array(size - toStr.length + 1).join("0") + toStr;
 }
 
 /**
@@ -242,7 +243,7 @@ function intToHex(num : number, size : number) : string {
  * @returns {string}
  */
 function utf8ToStr(data : Uint8Array) : string {
-  if (typeof window.TextDecoder === "function") {
+  if (!isNode && typeof window.TextDecoder === "function") {
     try {
       // TextDecoder use UTF-8 by default
       const decoder = new TextDecoder();

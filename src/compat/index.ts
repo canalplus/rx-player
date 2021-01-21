@@ -47,6 +47,7 @@ import {
 } from "./fullscreen";
 import hasEMEAPIs from "./has_eme_apis";
 import isCodecSupported from "./is_codec_supported";
+import isNode from "./is_node";
 import isOffline from "./is_offline";
 import isPlaybackStuck from "./is_playback_stuck";
 import isVTTCue from "./is_vtt_cue";
@@ -89,6 +90,7 @@ export {
   ICompatSourceBuffer,
   isCodecSupported,
   isFullscreen,
+  isNode,
   isOffline,
   isPlaybackStuck,
   isVTTCue,
