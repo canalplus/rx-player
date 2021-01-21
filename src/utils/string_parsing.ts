@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-import { isNode } from "../compat";
 import log from "../log";
 import assert from "./assert";
+
+const hasTextDecoder = typeof window === "object" &&
+                       typeof window.TextDecoder === "function";
+
+const hasTextEncoder = typeof window === "object" &&
+                       typeof window.TextEncoder === "function";
 
 /**
  * Convert a string to an Uint8Array containing the corresponding UTF-16 code
@@ -58,7 +63,7 @@ function strToBeUtf16(str: string): Uint8Array {
  * @returns {string}
  */
 function utf16LEToStr(bytes : Uint8Array) : string {
-  if (!isNode && typeof window.TextDecoder === "function") {
+  if (hasTextDecoder) {
     try {
       // instanciation throws if the encoding is unsupported
       const decoder = new TextDecoder("utf-16le");
@@ -82,7 +87,7 @@ function utf16LEToStr(bytes : Uint8Array) : string {
  * @returns {string}
  */
 function beUtf16ToStr(bytes : Uint8Array) : string {
-  if (!isNode && typeof window.TextDecoder === "function") {
+  if (hasTextDecoder) {
     try {
       // instanciation throws if the encoding is unsupported
       const decoder = new TextDecoder("utf-16be");
@@ -107,7 +112,7 @@ function beUtf16ToStr(bytes : Uint8Array) : string {
  * @returns {Uint8Array}
  */
 function strToUtf8(str : string) : Uint8Array {
-  if (!isNode && typeof window.TextEncoder === "function") {
+  if (hasTextEncoder) {
     try {
       const encoder = new TextEncoder();
       return encoder.encode(str);
@@ -243,7 +248,7 @@ function intToHex(num : number, size : number) : string {
  * @returns {string}
  */
 function utf8ToStr(data : Uint8Array) : string {
-  if (!isNode && typeof window.TextDecoder === "function") {
+  if (hasTextDecoder) {
     try {
       // TextDecoder use UTF-8 by default
       const decoder = new TextDecoder();
