@@ -2928,7 +2928,7 @@ if (player.isLive()) {
 
 __syntax__: `const url = player.getUrl()`
 
-__return value__: ``Boolean``
+__return value__: ``string``
 
 --
 
