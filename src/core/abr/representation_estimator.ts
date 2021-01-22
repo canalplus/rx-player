@@ -537,9 +537,7 @@ export default function RepresentationEstimator({
           const { bufferGap } = clock;
           if (!forceBandwidthMode && bufferGap <= 5) {
             forceBandwidthMode = true;
-          } else if (forceBandwidthMode &&
-                     Number.isFinite(bufferGap) && bufferGap > 10)
-          {
+          } else if (forceBandwidthMode && isFinite(bufferGap) && bufferGap > 10) {
             forceBandwidthMode = false;
           }
 
