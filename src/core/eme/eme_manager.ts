@@ -184,7 +184,7 @@ export default function EMEManager(
               return observableOf(sessionEvt);
 
             case "cleaning-old-session":
-              handledInitData.remove(initializationData);
+              handledInitData.remove(sessionEvt.value.initializationData);
               return EMPTY;
 
             case "cleaned-old-session":
