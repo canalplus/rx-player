@@ -40,8 +40,9 @@ function uniqFromSet<T>(arr: T[]) : T[] {
  */
 export default  typeof window !== "undefined" &&
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                typeof (window as any).Set === "function" ? uniqFromSet :
-                                                            uniqFromFilter;
+                typeof (window as any).Set === "function" &&
+                typeof Array.from === "function" ? uniqFromSet :
+                                                   uniqFromFilter;
 export {
   uniqFromFilter,
   uniqFromSet,
