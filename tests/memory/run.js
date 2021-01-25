@@ -29,7 +29,7 @@ if (browsers.length === 0) {
 }
 
 const karmaConf = {
-  basePath: ".",
+  basePath: "",
   browserNoActivityTimeout: 10 * 60 * 1000,
   browsers,
   customLaunchers: {
@@ -51,12 +51,19 @@ const karmaConf = {
     },
   },
   singleRun,
-  reporters: ["mocha"],
-  frameworks: ["mocha"],
+  reporters: ["progress"],
+  frameworks: ["webpack", "mocha"],
+  plugins: [
+    "karma-chrome-launcher",
+    "karma-coverage-istanbul-reporter",
+    "karma-firefox-launcher",
+    "karma-mocha",
+    "karma-webpack"
+  ],
   webpack: webpackConfig,
   webpackMiddleware: { stats: { colors: true, chunks: false } },
   preprocessors: {
-    [path.resolve(__dirname, "./index.js")]: "webpack",
+    [path.resolve(__dirname, "./index.js")]: ["webpack"],
   },
   files: [ path.resolve(__dirname, "./index.js") ],
   client: {

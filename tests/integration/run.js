@@ -61,14 +61,24 @@ const karmaConf = {
   },
   singleRun,
   reporters: ["dots"],
-  frameworks: ["mocha"],
+  frameworks: ["webpack", "mocha"],
+  plugins: [
+    "karma-chrome-launcher",
+    "karma-coverage-istanbul-reporter",
+    "karma-firefox-launcher",
+    "karma-mocha",
+    "karma-webpack"
+  ],
   webpack: webpackConfig,
   webpackMiddleware: { stats: { colors: true, chunks: false } },
   preprocessors: {
-    [path.resolve(__dirname, "./index.js")]: "webpack",
+    [path.resolve(__dirname, "./scenarios/**/*.js")]: ["webpack"],
   },
   files: [
-    path.resolve(__dirname, "./index.js"),
+    {
+      pattern: path.resolve(__dirname, "./scenarios/**/*.js"),
+      watched: false,
+    }
   ],
   client: {
     captureConsole: true,
