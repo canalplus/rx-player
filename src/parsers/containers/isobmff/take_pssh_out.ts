@@ -15,6 +15,7 @@
  */
 
 import log from "../../../log";
+import sliceUint8Array from "../../../utils/slice_uint8array";
 import { bytesToHex } from "../../../utils/string_parsing";
 import {
   getBoxContent,
@@ -57,7 +58,7 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
     if (psshOffsets == null) {
       return psshBoxes;
     }
-    const pssh = moov.slice(psshOffsets[0], psshOffsets[2]);
+    const pssh = sliceUint8Array(moov, psshOffsets[0], psshOffsets[2]);
     const systemID = getSystemID(pssh, psshOffsets[1] - psshOffsets[0]);
     if (systemID !== null) {
       psshBoxes.push({ systemID, data: pssh });
@@ -93,6 +94,6 @@ function getSystemID(
   if (offset + 16 > buff.length) {
     return null;
   }
-  const systemIDBytes = buff.slice(offset, offset + 16);
+  const systemIDBytes = sliceUint8Array(buff, offset + 16);
   return bytesToHex(systemIDBytes);
 }
