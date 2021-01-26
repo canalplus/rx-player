@@ -445,7 +445,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       // /!\ The scaled max position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      const maximumBound = this._manifestBoundsCalculator.getMaximumBound();
+      const maximumBound = this._manifestBoundsCalculator.estimateMaximumBound();
       if (maximumBound !== undefined && maximumBound < this._periodStart) {
         // Maximum position is before this period.
         // No segment is yet available here
@@ -454,7 +454,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
 
     const { duration, timescale } = this._index;
-    const firstPosition = this._manifestBoundsCalculator.getMinimumBound();
+    const firstPosition = this._manifestBoundsCalculator.estimateMinimumBound();
     if (firstPosition === undefined) {
       return undefined;
     }
@@ -476,7 +476,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { duration, timescale } = this._index;
 
     if (this._isDynamic) {
-      const lastPos = this._manifestBoundsCalculator.getMaximumBound();
+      const lastPos = this._manifestBoundsCalculator.estimateMaximumBound();
       if (lastPos === undefined) {
         return undefined;
       }

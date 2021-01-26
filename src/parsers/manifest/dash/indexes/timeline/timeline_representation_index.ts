@@ -460,11 +460,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (!this._isDynamic) {
       return true;
     }
+
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
     const { timeline } = this._index;
-    if (this._scaledPeriodEnd == null || timeline.length === 0) {
+    if (this._scaledPeriodEnd === undefined || timeline.length === 0) {
       return false;
     }
     const lastTimelineElement = timeline[timeline.length - 1];
@@ -492,7 +493,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-    const firstPosition = this._manifestBoundsCalculator.getMinimumBound();
+    const firstPosition = this._manifestBoundsCalculator.estimateMinimumBound();
     if (firstPosition == null) {
       return; // we don't know yet
     }

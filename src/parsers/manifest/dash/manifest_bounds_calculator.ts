@@ -32,29 +32,6 @@
  * an instance of it to each parsed elements which might depend on it, we
  * ensure that we can provide it once it is known to every one of those
  * elements without needing to parse a second time the MPD.
- *
- * @example
- * ```js
- * const manifestBoundsCalculator = new ManifestBoundsCalculator();
- *
- * // let's imagine a property `index` on a Representation which need to obtain
- * // the last position at any time
- * someRepresentation.index = new TemplateRepresentationIndex({
- *   // ...
- *   manifestBoundsCalculator // for now, `getLastPosition` will return `undefined`
- * });
- *
- * // ...
- * // Let's imagine a function which try to guess the last position based on a
- * // given parsed period
- * const lastPosition = getMaximumBound(somePeriod);
- * if (lastPosition != null) {
- *   const positionTime = performance.now() / 1000;
- *   manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
- *   // `getLastPosition` will now be correctly communicate the last position
- *   // (it returned `undefined` until then).
- * }
- * ```
  * @class ManifestBoundsCalculator
  */
 export default class ManifestBoundsCalculator {
@@ -114,14 +91,16 @@ export default class ManifestBoundsCalculator {
   }
 
   /**
-   * Get minimum bound of content.
+   * Estimate a minimum bound for the content from the last set segment time
+   * and buffer depth.
+   * Consider that it is only an estimation, not the real value.
    * @return {number|undefined}
    */
-  getMinimumBound(): number | undefined {
+  estimateMinimumBound(): number | undefined {
     if (!this._isDynamic || this._timeShiftBufferDepth === null) {
       return 0;
     }
-    const maximumBound = this.getMaximumBound();
+    const maximumBound = this.estimateMaximumBound();
     if (maximumBound === undefined) {
       return undefined;
     }
@@ -130,12 +109,11 @@ export default class ManifestBoundsCalculator {
   }
 
   /**
-   * Calculate the current maximum bound by using both the calculated
-   * last position and the timeshift buffer depth.
-   * `undefined` if the last position has never been communicated.
+   * Estimate a maximum bound for the content from the last set segment time.
+   * Consider that it is only an estimation, not the real value.
    * @return {number|undefined}
    */
-  getMaximumBound() : number | undefined {
+  estimateMaximumBound() : number | undefined {
     if (this._isDynamic &&
         this._positionTime != null &&
         this._lastPosition != null)
