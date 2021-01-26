@@ -5,13 +5,21 @@ const coverageIsWanted = !!process.env.RXP_COVERAGE;
 
 const config = {
   mode: "development",
-  entry: "./tests/integration/index.js",
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
-  },
-  output: {
-    library: "RxPlayer",
-    libraryTarget: "umd",
+    fallback: {
+      "assert": false,
+      "util": false,
+      "fs": false,
+      "tls": false,
+      "net": false,
+      "path": false,
+      "zlib": false,
+      "http": false,
+      "https": false,
+      "stream": false,
+      "crypto": false,
+    }
   },
   module: {
     rules: [
@@ -23,11 +31,11 @@ const config = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      "__TEST_CONTENT_SERVER__": {
+      __TEST_CONTENT_SERVER__: {
         URL: "\"127.0.0.1\"",
         PORT: "\"3000\"",
       },
-      "__FEATURES__": {
+      __FEATURES__: {
         BIF_PARSER: true,
         DASH: true,
         DIRECTFILE: true,
