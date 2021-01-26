@@ -480,8 +480,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (lastPosition === undefined) {
       return (lastTime + roundError) >= this._scaledPeriodEnd;
     }
-    // If the last position is defined, and a small gap exists between last index position
-    // and scaled period end, then consider that timeline index may be finished.
+    // If the last position is defined and after period end, and a small gap
+    // exists between last index position and scaled period end, then consider
+    // that timeline index may be finished.
     const lastTimeGapTolerance = 0.1 /* 100ms */ * (this._index.timescale ?? 1);
     return (lastTime + roundError + lastTimeGapTolerance) >= this._scaledPeriodEnd &&
            (lastPosition * (this._index.timescale ?? 1) > this._scaledPeriodEnd);
