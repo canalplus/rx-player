@@ -134,6 +134,7 @@ export default function checkForDiscontinuity(
     }
     if (currSegment.bufferedStart - prevSegment.bufferedEnd > 0) {
       nextHoleIdx = bufIdx;
+      break;
     }
   }
 
