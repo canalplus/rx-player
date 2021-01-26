@@ -68,7 +68,10 @@ export default function checkForDiscontinuity(
   let nextBufferedInRangeIdx;
   for (let bufIdx = 0; bufIdx < bufferedSegments.length; bufIdx++) {
     const bufSeg = bufferedSegments[bufIdx];
-    if (bufSeg.bufferedEnd === undefined) {
+    if (bufSeg.bufferedStart === undefined ||
+        bufSeg.bufferedEnd === undefined ||
+        bufSeg.bufferedStart >= checkedRange.end)
+    {
       break;
     }
     if (bufSeg.bufferedEnd > checkedRange.start) {
@@ -80,7 +83,7 @@ export default function checkForDiscontinuity(
   if (nextBufferedInRangeIdx === undefined) {
     // There's no segment currently buffered for the current range.
 
-    if (nextSegmentStart === null) { // No segment to load in it
+    if (nextSegmentStart === null) { // No segment to load in that range
       // Check if we are in a discontinuity at the end of the current Period
       if (hasFinishedLoading &&
           period.end !== undefined &&
@@ -97,104 +100,105 @@ export default function checkForDiscontinuity(
                  end: discontinuityEnd };
       }
     }
-  } else {
-    const nextBufferedSegment = bufferedSegments[nextBufferedInRangeIdx];
+    return null;
+  }
 
-    // Check if there is a hole that won't be filled before `nextSegmentStart`
-    if (nextBufferedSegment.bufferedStart !== undefined &&
-        nextBufferedSegment.bufferedStart > checkedRange.start &&
-        (nextSegmentStart === null ||
-         nextBufferedSegment.infos.segment.end <= nextSegmentStart))
+  const nextBufferedSegment = bufferedSegments[nextBufferedInRangeIdx];
+
+  // Check if there is a hole that won't be filled before `nextSegmentStart`
+  if (nextBufferedSegment.bufferedStart !== undefined &&
+      nextBufferedSegment.bufferedStart > checkedRange.start &&
+      (nextSegmentStart === null ||
+       nextBufferedSegment.infos.segment.end <= nextSegmentStart))
+  {
+    log.error("RS: current discontinuity encountered",
+              adaptation.type, nextBufferedSegment.bufferedStart);
+    return { start: undefined,
+             end: nextBufferedSegment.bufferedStart };
+  }
+
+  // Check if there's a discontinuity BETWEEN segments of the curent range
+  let nextHoleIdx;
+  for (
+    let bufIdx = nextBufferedInRangeIdx + 1;
+    bufIdx < bufferedSegments.length;
+    bufIdx++)
+  {
+    const currSegment = bufferedSegments[bufIdx];
+    const prevSegment = bufferedSegments[bufIdx - 1];
+    if (currSegment.bufferedStart === undefined ||
+        prevSegment.bufferedEnd === undefined ||
+        currSegment.bufferedStart >= checkedRange.end)
     {
-      log.error("RS: current discontinuity encountered",
-                adaptation.type, nextBufferedSegment.bufferedStart);
-      return { start: undefined,
-               end: nextBufferedSegment.bufferedStart };
+      break;
     }
-
-    // Check if there's a discontinuity BETWEEN segments of the curent range
-    let nextHoleIdx;
-    for (
-      let bufIdx = nextBufferedInRangeIdx + 1;
-      bufIdx < bufferedSegments.length;
-      bufIdx++)
-    {
-      const currSegment = bufferedSegments[bufIdx];
-      const prevSegment = bufferedSegments[bufIdx - 1];
-      if (currSegment.bufferedStart === undefined ||
-          prevSegment.bufferedEnd === undefined ||
-          currSegment.bufferedStart >= checkedRange.end)
-      {
-        break;
-      }
-      if (currSegment.bufferedStart - prevSegment.bufferedEnd > 0) {
-        nextHoleIdx = bufIdx;
-      }
+    if (currSegment.bufferedStart - prevSegment.bufferedEnd > 0) {
+      nextHoleIdx = bufIdx;
     }
+  }
 
-    if (nextHoleIdx !== undefined &&
-        (nextSegmentStart === null ||
-         bufferedSegments[nextHoleIdx].infos.segment.end <= nextSegmentStart))
-    {
-      const start = bufferedSegments[nextHoleIdx - 1].bufferedEnd as number;
-      const end = bufferedSegments[nextHoleIdx].bufferedStart as number;
-      log.error("RS: future discontinuity encountered", adaptation.type, start, end);
-      return { start, end };
-    } else if (nextSegmentStart === null) {
-      if (hasFinishedLoading && period.end !== undefined) {
-        if (checkedRange.end < period.end) {
-          return null;
-        }
-
-        // Check if the last buffered segment ends before this Period's end
-        // In which case there is a discontinuity between those
-        let lastBufferedInPeriodIdx;
-        for (let bufIdx = bufferedSegments.length - 1; bufIdx >= 0; bufIdx--) {
-          const bufSeg = bufferedSegments[bufIdx];
-          if (bufSeg.bufferedStart === undefined) {
-            break;
-          }
-          if (bufSeg.bufferedStart < period.end) {
-            lastBufferedInPeriodIdx = bufIdx;
-            break;
-          }
-        }
-        if (lastBufferedInPeriodIdx !== undefined) {
-          const lastSegment = bufferedSegments[lastBufferedInPeriodIdx];
-          if (lastSegment.bufferedEnd !== undefined &&
-              lastSegment.bufferedEnd < period.end)
-          {
-            log.error("RS: discontinuity encountered at the end of the current period",
-                      adaptation.type, lastSegment.bufferedEnd, period.end);
-            return { start: lastSegment.bufferedEnd,
-                     end: null };
-          }
-        }
+  if (nextHoleIdx !== undefined &&
+      (nextSegmentStart === null ||
+       bufferedSegments[nextHoleIdx].infos.segment.end <= nextSegmentStart))
+  {
+    const start = bufferedSegments[nextHoleIdx - 1].bufferedEnd as number;
+    const end = bufferedSegments[nextHoleIdx].bufferedStart as number;
+    log.error("RS: future discontinuity encountered", adaptation.type, start, end);
+    return { start, end };
+  } else if (nextSegmentStart === null) {
+    if (hasFinishedLoading && period.end !== undefined) {
+      if (checkedRange.end < period.end) {
+        return null;
       }
 
-      // consider last buffered segment in checkedRange
-      let lastBufferedInRangeIdx;
+      // Check if the last buffered segment ends before this Period's end
+      // In which case there is a discontinuity between those
+      let lastBufferedInPeriodIdx;
       for (let bufIdx = bufferedSegments.length - 1; bufIdx >= 0; bufIdx--) {
         const bufSeg = bufferedSegments[bufIdx];
         if (bufSeg.bufferedStart === undefined) {
           break;
         }
-        if (bufSeg.bufferedStart < checkedRange.end) {
-          lastBufferedInRangeIdx = bufIdx;
+        if (bufSeg.bufferedStart < period.end) {
+          lastBufferedInPeriodIdx = bufIdx;
           break;
         }
       }
-      if (lastBufferedInRangeIdx !== undefined) {
-        const lastSegmentInRange = bufferedSegments[lastBufferedInRangeIdx];
-        if (lastSegmentInRange.bufferedEnd !== undefined &&
-            lastSegmentInRange.bufferedEnd < checkedRange.end)
+      if (lastBufferedInPeriodIdx !== undefined) {
+        const lastSegment = bufferedSegments[lastBufferedInPeriodIdx];
+        if (lastSegment.bufferedEnd !== undefined &&
+            lastSegment.bufferedEnd < period.end)
         {
-          const discontinuityEnd = representation.index
-            .checkDiscontinuity(checkedRange.end);
-          if (discontinuityEnd !== null) {
-            return { start: lastSegmentInRange.bufferedEnd,
-                     end: discontinuityEnd };
-          }
+          log.error("RS: discontinuity encountered at the end of the current period",
+                    adaptation.type, lastSegment.bufferedEnd, period.end);
+          return { start: lastSegment.bufferedEnd,
+                   end: null };
+        }
+      }
+    }
+
+    // consider last buffered segment in checkedRange
+    let lastBufferedInRangeIdx;
+    for (let bufIdx = bufferedSegments.length - 1; bufIdx >= 0; bufIdx--) {
+      const bufSeg = bufferedSegments[bufIdx];
+      if (bufSeg.bufferedStart === undefined) {
+        break;
+      }
+      if (bufSeg.bufferedStart < checkedRange.end) {
+        lastBufferedInRangeIdx = bufIdx;
+        break;
+      }
+    }
+    if (lastBufferedInRangeIdx !== undefined) {
+      const lastSegmentInRange = bufferedSegments[lastBufferedInRangeIdx];
+      if (lastSegmentInRange.bufferedEnd !== undefined &&
+          lastSegmentInRange.bufferedEnd < checkedRange.end)
+      {
+        const discontinuityEnd = representation.index
+          .checkDiscontinuity(checkedRange.end);
+        if (discontinuityEnd !== null) {
+          return { start: lastSegmentInRange.bufferedEnd,
+                   end: discontinuityEnd };
         }
       }
     }
