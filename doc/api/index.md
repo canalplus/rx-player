@@ -153,8 +153,14 @@ playing a content through the RxPlayer.
 <a name="meth-loadVideo"></a>
 ### loadVideo ##################################################################
 
-_arguments_:
-  - _options_ (``Object``)
+--
+
+__syntax__: `player.loadVideo(options)`
+
+__arguments__:
+  - _options_ (``Object``): Content you want to load and associated options.
+
+--
 
 Loads the content described in the argument.
 
@@ -177,8 +183,15 @@ player.loadVideo({
 <a name="meth-reload"></a>
 ### reload #####################################################################
 
-_arguments_:
-  - _options_ (``Object | undefined``)
+--
+
+__syntax__: `player.reload()` / `player.reload(options)`
+
+__arguments__:
+  - _options_ (``Object | undefined``): Optional requirements, e.g. at which
+    position the player should reload.
+
+--
 
 Re-load the last loaded content as fast as possible.
 
@@ -201,6 +214,10 @@ the starting playback position :
 
 If no reload position is defined, start playback at the last playback position.
 
+Note that despite this method's name, the player will not go through the
+`RELOADING` state while reloading the content but through the regular `LOADING`
+state - as if `loadVideo` was called on that same content again.
+
 #### Example
 
 ```js
@@ -220,9 +237,15 @@ player.addEventListener("error", (error) => {
 <a name="meth-getPlayerState"></a>
 ### getPlayerState #############################################################
 
-_return value_: ``string``
+--
 
-The "state" the player is currently in.
+__syntax__: `const state = player.getPlayerState()`
+
+__return value__: ``string``
+
+--
+
+Returns the "state" the player is currently in.
 Can be either one of those strings:
 
   - ``"STOPPED"``: The player is idle. No content is loading nor is loaded.
@@ -298,13 +321,18 @@ switch (player.getPlayerState()) {
 <a name="meth-addEventListener"></a>
 ### addEventListener ###########################################################
 
-_arguments_:
+--
+
+__syntax__: `player.addEventListener(event, callback)`
+
+__arguments__:
 
   - _event_ (``string``): The event name.
 
   - _callback_ (``Function``): The callback for the event.
     The same callback may be used again when calling ``removeEventListener``.
 
+--
 
 Add an event listener to trigger a callback as it happens. The callback will
 have the event payload as a single argument.
@@ -319,7 +347,7 @@ page](./player_events.md).
 #### Example
 
 ```js
-player.addEventListener("Error", function(err) {
+player.addEventListener("error", function(err) {
   console.log(`The player crashed: ${err.message}`);
 });
 ```
@@ -328,10 +356,19 @@ player.addEventListener("Error", function(err) {
 <a name="meth-removeEventListener"></a>
 ### removeEventListener ########################################################
 
-_arguments_:
+--
+
+__syntax__: `player.removeEventListener(event)` /
+`player.removeEventListener(event, callback)`
+
+__arguments__:
+
   - _event_ (``string``): The event name.
+
   - _callback_ (optional) (``Function``): The callback given when calling the
     corresponding ``addEventListener`` API.
+
+--
 
 Remove an event listener.
 That is, remove a callback previously registered with ``addEventListener`` from
@@ -351,9 +388,16 @@ player.removeEventListener("playerStateChange", listenerCallback);
 <a name="meth-play"></a>
 ### play #######################################################################
 
-_return value_: ``Promise.<void>``
+--
 
-Play/resume the current video. Equivalent to a video element's play method.
+__syntax__: `player.play()`
+
+__return value__: ``Promise.<void>``
+
+--
+
+Play/resume the current loaded video. Equivalent to a video element's play
+method.
 
 You might want to call that method either to start playing (when the content is
 in the `"LOADED"` state and auto-play has not been enabled in the last
@@ -377,6 +421,9 @@ Explorer 11), a JavaScript implementation is provided instead. This
 implementation has the exact same implementation than [ES2015
 Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
+You might want for a content to be loaded before being able to play (the
+current state has to be different than `LOADING`, `RELOADING` or `STOPPED`).
+
 #### Example
 
 ```js
@@ -389,10 +436,19 @@ const resumeContent = () => {
 <a name="meth-pause"></a>
 ### pause ######################################################################
 
-Pause the current video. Equivalent to a video element's pause method.
+--
+
+__syntax__: `player.pause()`
+
+--
+
+Pause the current loaded video. Equivalent to a video element's pause method.
 
 Note that a content can be paused even if its current state is ``BUFFERING`` or
 ``SEEKING``.
+
+You might want for a content to be loaded before being able to pause (the
+current state has to be different than `LOADING`, `RELOADING` or `STOPPED`).
 
 #### Example
 
@@ -406,10 +462,17 @@ const pauseContent = () => {
 <a name="meth-stop"></a>
 ### stop #######################################################################
 
+--
+
+__syntax__: `player.stop()`
+
+--
+
 Stop playback of the current content if one.
 
-This will totaly un-load the current content. To re-start playing the same
-content, you will need to call `loadVideo` again.
+This will totaly un-load the current content.
+To re-start playing the same content, you can either call the `reload` method
+or just call `loadVideo` again.
 
 #### Example
 
@@ -423,7 +486,13 @@ const stopVideo = () => {
 <a name="meth-getPosition"></a>
 ### getPosition ################################################################
 
-_return value_: ``Number``
+--
+
+__syntax__: `const position = player.getPosition()`
+
+__return value__: ``Number``
+
+--
 
 Returns the current media element's playing position, in seconds.
 
@@ -436,10 +505,11 @@ following rule:
 
   - if you want to use that current position to use it with the other APIs
     (like `seekTo`, `getMinimumPosition`, `getMaximumPosition`
-    etc.) use `getPosition`.
+    etc.) use `getPosition` - as this is the real position in the media.
 
   - if you want to display the current position to the viewer/listener, use
-    `getWallClockTime` instead.
+    `getWallClockTime` instead - as it will be set in the proper scale for
+    live contents to display the right live time.
 
 #### Example
 
@@ -452,7 +522,13 @@ console.log(`The video element's current position is: ${pos} second(s)`);
 <a name="meth-getWallClockTime"></a>
 ### getWallClockTime ###########################################################
 
-_return value_: ``Number``
+--
+
+__syntax__: `const wallClockTime = player.getWallClockTime()`
+
+__return value__: ``Number``
+
+--
 
 Returns the current "wall-clock" playing position in seconds.
 
@@ -485,7 +561,14 @@ if (delta < 5) { // (5 seconds of margin)
 <a name="meth-seekTo"></a>
 ### seekTo #####################################################################
 
-_arguments_: ``Object|Number``
+--
+
+__syntax__: `player.seekTo(position)`
+
+__arguments__:
+  - _position_ (``Object|Number``): The position you want to seek to.
+
+__
 
 Seek in the current content (i.e. change the current position).
 
@@ -501,6 +584,17 @@ The argument can be an object with a single ``Number`` property, either:
 
 The argument can also just be a ``Number`` property, which will have the same
 effect than the ``position`` property (absolute position).
+
+Seeking should only be done when a content is loaded (i.e. the player isn't
+in the `STOPPED`, `LOADING` or `RELOADING` state).
+
+The seek operation will start as soon as possible, in almost every cases
+directly after this method is called.
+
+You will know when the seek is being performed and has been performed
+respectively by listening to the `seeking` and `seeked` player events (see the
+[player events page](./player_events.md)). While seeking, the RxPlayer might
+also switch to the `SEEKING` state.
 
 #### Examples
 
@@ -525,20 +619,37 @@ player.seekTo({ wallClockTime: Date.now() / 1000 });
 <a name="meth-getMinimumPosition"></a>
 ### getMinimumPosition #########################################################
 
-_return value_: ``Number|null``
+--
 
-The minimum seekable player position. ``null`` if no content is loaded.
+__syntax__: `const minimumPosition = player.getMinimumPosition()`
 
-This is useful for live contents, where server-side buffer size are often not
-infinite. This method allows thus to seek at the earliest possible time.
+__return value__: ``Number|null``
+
+--
+
+Returns the minimum seekable player position.
+Returns ``null`` if no content is loaded.
+
+This is useful for live contents, where the earliest time at which it is
+possible to seek usually evolves over time.
+This method allows to know the earliest possible time a seek can be performed
+at any point in time.
 
 As the given position is the absolute minimum position, you might add a security
 margin (like a few seconds) when seeking to this position in a live content.
 Not doing so could led to the player being behind the minimum position after
-some time, and thus unable to continue playing.
+some time (e.g. because of buffering or decoding issues), and thus unable to
+continue playing.
 
-For VoD contents, as the minimum position normally don't change, seeking at the
-minimum position should not cause any issue.
+You will be alerted if the player's position fell behind the minimum possible
+position by receiving a `warning` event (see the [player events
+page](./player_events.md)) with an error having a `MEDIA_TIME_BEFORE_MANIFEST`
+`code` property (see the [player errors page](./errors.md)).
+Note that you can also have those warnings without any seek operation, e.g. due
+to buffering for too long.
+
+For VoD contents, as the minimum position normally doesn't change, seeking at
+the minimum position should not cause any issue.
 
 #### Example
 
@@ -551,11 +662,19 @@ player.seekTo({ position: player.getMinimumPosition() + 5 });
 <a name="meth-getMaximumPosition"></a>
 ### getMaximumPosition #########################################################
 
-_return value_: ``Number|null``
+--
 
-The maximum seekable player position. ``null`` if no content is loaded.
+__syntax__: `const maximumPosition = player.getMaximumPosition()`
 
-This is useful for live contents, where the buffer end updates continously.
+__return value__: ``Number|null``
+
+--
+
+Returns the maximum seekable player position.
+Returns ``null`` if no content is loaded.
+
+This is useful for live contents, where this position might be updated
+continously as new content is generated.
 This method allows thus to seek directly at the live edge of the content.
 
 Please bear in mind that seeking exactly at the maximum position is rarely a
@@ -579,9 +698,15 @@ player.seekTo({
 <a name="meth-getVideoDuration"></a>
 ### getVideoDuration ###########################################################
 
-_return value_: ``Number``
+--
 
-Returns the duration of the current video as taken from the video element.
+__syntax__: `const duration = player.getVideoDuration()`
+
+__return value__: ``Number``
+
+--
+
+Returns the duration of the current content as taken from the media element.
 
 :warning: This duration is in fact the maximum position possible for the
 content. As such, for contents not starting at `0`, this value will not be equal
@@ -603,10 +728,15 @@ console.log(`current position: ${pos} / ${dur}`);
 <a name="meth-getError"></a>
 ### getError ###################################################################
 
-_return value_: ``Error|null``
+--
+
+__syntax__: `const currentError = player.getError()`
+
+__return value__: ``Error|null``
+
+--
 
 Returns the current "fatal error" if one happenned for the last loaded content.
-
 Returns `null` otherwise.
 
 A "fatal error" is an error which led the current loading/loaded content to
@@ -633,7 +763,13 @@ if (!error) {
 <a name="meth-getVideoElement"></a>
 ### getVideoElement ############################################################
 
-_return value_: ``HTMLMediaElement``
+--
+
+__syntax__: `const elt = player.getVideoElement()`
+
+__return value__: ``HTMLMediaElement``
+
+--
 
 Returns the media element used by the RxPlayer.
 
@@ -654,6 +790,12 @@ videoElement.className = "my-video-element";
 <a name="meth-dispose"></a>
 ### dispose ####################################################################
 
+--
+
+__syntax__: `player.dispose()`
+
+--
+
 Free the ressources used by the player.
 
 You can call this method if you know you won't need the RxPlayer anymore.
@@ -672,19 +814,33 @@ called the "playback rate").
 <a name="meth-setPlaybackRate"></a>
 ### setPlaybackRate ############################################################
 
-_arguments_: ``Number``
+--
 
-Updates the current playback rate.
+__syntax__: `player.setPlaybackRate(speed)`
 
-Setting that value to `1` reset the playback rate to its "normal" rythm.
+__arguments__:
+  - _speed_ (``Number``): The speed / playback rate you want to set.
 
-Setting it to `2` allows to play at a speed multiplied by 2 relatively to
-regular playback.
+--
 
-Setting it to `0.5` allows to play at half the speed relatively to regular
-playback.
+Updates the current playback rate, i.e. the speed at which contents are played.
 
-etc.
+As its name hints at, the value indicates the rate at which contents play:
+
+  - Setting it to `2` allows to play at a speed multiplied by 2 relatively to
+    regular playback.
+
+  - Setting that value to `1` reset the playback rate to its "normal" rythm.
+
+  - Setting it to `0.5` allows to play at half the speed relatively to regular
+    playback.
+
+  - etc.
+
+This method can be called at any time, even when no content is loaded and is
+persisted from content to content.
+
+You can set it to `1` to reset its value to the "regular" default.
 
 #### Example
 
@@ -697,9 +853,15 @@ player.setPlaybackRate(3);
 <a name="meth-getPlaybackRate"></a>
 ### getPlaybackRate ############################################################
 
-_return value_: ``Number``
+--
 
-Returns the current video playback rate. ``1`` for normal playback, ``2`` when
+__syntax__: `const rate = player.getPlaybackRate()`
+
+__return value__: ``Number``
+
+--
+
+Returns the current playback rate. ``1`` for normal playback, ``2`` when
 playing at double the speed, etc.
 
 #### Example
@@ -721,7 +883,14 @@ contents.
 <a name="meth-setVolume"></a>
 ### setVolume ##################################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setVolume(volume)`
+
+__arguments__:
+  - _volume_ (``Number``): Volume from 0 to 1.
+
+--
 
 Set the current volume, from 0 (no sound) to 1 (the maximum sound level).
 
@@ -739,7 +908,13 @@ player.setVolume(1);
 <a name="meth-getVolume"></a>
 ### getVolume ##################################################################
 
-_return value_: ``Number``
+--
+
+__syntax__: `const volume = player.getVolume()`
+
+__return value__: ``Number``
+
+--
 
 Current volume of the player, from 0 (no sound) to 1 (maximum sound).
 0 if muted through the `mute` API.
@@ -767,7 +942,14 @@ if (volume === 1) {
 <a name="meth-mute"></a>
 ### mute #######################################################################
 
+--
+
+__syntax__: `player.mute()`
+
+--
+
 Mute the volume.
+
 Basically set the volume to 0 while keeping in memory the previous volume to
 reset it at the next `unMute` call.
 
@@ -784,6 +966,12 @@ player.mute();
 
 <a name="meth-unMute"></a>
 ### unMute #####################################################################
+
+--
+
+__syntax__: `player.unMute()`
+
+--
 
 When muted, restore the volume to the one previous to the last ``mute`` call.
 
@@ -806,7 +994,13 @@ player.unMute();
 <a name="meth-isMute"></a>
 ### isMute #####################################################################
 
-_returns_: ``Boolean``
+--
+
+__syntax__: `const isMute = player.isMute()`
+
+__return value__: ``Boolean``
+
+--
 
 Returns true if the volume is set to `0`.
 
@@ -830,7 +1024,13 @@ to obtain information about the currently playing tracks.
 <a name="meth-getAudioTrack"></a>
 ### getAudioTrack ##############################################################
 
-_returns_: ``Object|null|undefined``
+--
+
+__syntax__: `const audioTrack = player.getAudioTrack()`
+
+__return value__: ``Object|null|undefined``
+
+--
 
 Get information about the audio track currently set.
 ``null`` if no audio track is enabled right now.
@@ -897,7 +1097,13 @@ no audio tracks API in the browser, this method will return ``undefined``.
 <a name="meth-getTextTrack"></a>
 ### getTextTrack ###############################################################
 
-_returns_: ``Object|null|undefined``
+--
+
+__syntax__: `const textTrack = player.getTextTrack()`
+
+__return value__: ``Object|null|undefined``
+
+--
 
 Get information about the text track currently set.
 ``null`` if no audio track is enabled right now.
@@ -944,7 +1150,13 @@ no text tracks API in the browser, this method will return ``undefined``.
 <a name="meth-getVideoTrack"></a>
 ### getVideoTrack ##############################################################
 
-_returns_: ``Object|null|undefined``
+--
+
+__syntax__: `const videoTrack = player.getVideoTrack()`
+
+__return value__: ``Object|null|undefined``
+
+--
 
 Get information about the video track currently set.
 ``null`` if no video track is enabled right now.
@@ -1005,7 +1217,13 @@ no video tracks API in the browser, this method will return ``undefined``.
 <a name="meth-getAvailableAudioTracks"></a>
 ### getAvailableAudioTracks ####################################################
 
-_returns_: ``Array.<Object>``
+--
+
+__syntax__: `const audioTracks = player.getAvailableAudioTracks()`
+
+__return value__: ``Array.<Object>``
+
+--
 
 Returns the list of available audio tracks for the current content.
 
@@ -1067,7 +1285,13 @@ Array.
 <a name="meth-getAvailableTextTracks"></a>
 ### getAvailableTextTracks #####################################################
 
-_returns_: ``Array.<Object>``
+--
+
+__syntax__: `const textTracks = player.getAvailableTextTracks()`
+
+__return value__: ``Array.<Object>``
+
+--
 
 Returns the list of available text tracks (subtitles) for the current content.
 
@@ -1110,7 +1334,13 @@ Array.
 <a name="meth-getAvailableVideoTracks"></a>
 ### getAvailableVideoTracks ####################################################
 
-_returns_: ``Array.<Object>``
+--
+
+__syntax__: `const videoTracks = player.getAvailableVideoTracks()`
+
+__return value__: ``Array.<Object>``
+
+--
 
 Returns the list of available video tracks for the current content.
 
@@ -1164,7 +1394,14 @@ Array.
 <a name="meth-setAudioTrack"></a>
 ### setAudioTrack ##############################################################
 
-_arguments_: ``string|Number``
+--
+
+__syntax__: `player.setAudioTrack(audioTrackId)`
+
+__arguments__:
+  - _audioTrackId_ (``string|Number``): The `id` of the track you want to set
+
+--
 
 Change the current audio track.
 
@@ -1203,7 +1440,14 @@ events that the tracks have changed.
 <a name="meth-setTextTrack"></a>
 ### setTextTrack ###############################################################
 
-_arguments_: ``string``
+--
+
+__syntax__: `player.setTextTrack(textTrackId)`
+
+__arguments__:
+  - _textTrackId_ (``string|Number``): The `id` of the track you want to set
+
+--
 
 Change the current text (subtitles) track.
 
@@ -1242,6 +1486,12 @@ events that the tracks have changed.
 <a name="meth-disableTextTrack"></a>
 ### disableTextTrack ###########################################################
 
+--
+
+__syntax__: `player.disableTextTrack()`
+
+--
+
 Disable the current text track, if one.
 
 After calling that method, no subtitles track will be displayed until
@@ -1266,7 +1516,14 @@ More information can be found on that API's documentation.
 <a name="meth-setVideoTrack"></a>
 ### setVideoTrack ##############################################################
 
-_arguments_: ``string|Number``
+--
+
+__syntax__: `player.setVideoTrack(videoTrackId)`
+
+__arguments__:
+  - _videoTrackId_ (``string|Number``): The `id` of the track you want to set
+
+--
 
 Change the current video track.
 
@@ -1319,7 +1576,11 @@ either:
 <a name="meth-disableVideoTrack"></a>
 ### disableVideoTrack ##########################################################
 
-_return value_: ``void``
+--
+
+__syntax__: `player.disableVideoTrack()`
+
+--
 
 Disable the current video track, if one.
 
@@ -1362,11 +1623,26 @@ payload) while the video track is still actually active.
 <a name="meth-setPreferredAudioTracks"></a>
 ### setPreferredAudioTracks ####################################################
 
-_argument 1_: ``Array.<Object>``
-_argument 2_: ``Boolean | undefined``
+--
+
+__syntax__: `player.setPreferredAudioTracks(preferences)` /
+`player.setPreferredAudioTracks(preferences, shouldApply)`
+
+__arguments__:
+
+  - _preferences_ (`Array.<Object>`): wanted audio track configurations by
+    order of preference.
+
+  - _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
+    content being played.
+
+--
 
 Allows the RxPlayer to choose an initial audio track, based on language
 preferences, codec preferences or both.
+
+This method can be called at any time - even when no content is loaded, and will
+apply to every future loaded content in the current RxPlayer instance.
 
 --
 
@@ -1504,7 +1780,13 @@ player.setPreferredAudioTracks([
 <a name="meth-getPreferredAudioTracks"></a>
 ### getPreferredAudioTracks ####################################################
 
-_return value_: ``Array.<Object>``
+--
+
+__syntax__: `const preferences = player.getPreferredAudioTracks()`
+
+__return value__: ``Array.<Object>``
+
+--
 
 Returns the current list of preferred audio tracks - by order of preference.
 
@@ -1518,11 +1800,26 @@ It will return an empty Array if none of those two APIs were used until now.
 <a name="meth-setPreferredTextTracks"></a>
 ### setPreferredTextTracks #####################################################
 
-_argument 1_: ``Array.<Object|null>``
-_argument 2_: ``Boolean | undefined``
+--
+
+__syntax__: `player.setPreferredTextTracks(preferences)` /
+`player.setPreferredTextTracks(preferences, shouldApply)`
+
+__arguments__:
+
+  - _preferences_ (`Array.<Object>`): wanted text track configurations by
+    order of preference.
+
+  - _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
+    content being played.
+
+--
 
 Allows the RxPlayer to choose an initial text track, based on language
 and accessibility preferences.
+
+This method can be called at any time - even when no content is loaded, and will
+apply to every future loaded content in the current RxPlayer instance.
 
 --
 
@@ -1619,7 +1916,13 @@ player.setPreferredTextTracks([
 <a name="meth-getPreferredTextTracks"></a>
 ### getPreferredTextTracks #####################################################
 
-_return value_: ``Array.<Object|null>``
+--
+
+__syntax__: `const preferences = player.getPreferredTextTracks()`
+
+__return value__: ``Array.<Object|null>``
+
+--
 
 Returns the current list of preferred text tracks - by order of preference.
 
@@ -1640,11 +1943,26 @@ it was called:
 <a name="meth-setPreferredVideoTracks"></a>
 ### setPreferredVideoTracks ####################################################
 
-_argument 1_: ``Array.<Object>``
-_argument 2_: ``Boolean | undefined``
+--
+
+__syntax__: `player.setPreferredVideoTracks(preferences)` /
+`player.setPreferredVideoTracks(preferences, shouldApply)`
+
+__arguments__:
+
+  - _preferences_ (`Array.<Object>`): wanted video track configurations by
+    order of preference.
+
+  - _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
+    content being played.
+
+--
 
 Allows the RxPlayer to choose an initial video track, based on codec
 preferences, accessibility preferences or both.
+
+This method can be called at any time - even when no content is loaded, and will
+apply to every future loaded content in the current RxPlayer instance.
 
 --
 
@@ -1770,7 +2088,13 @@ player.setPreferredVideoTracks([null], true);
 <a name="meth-getPreferredVideoTracks"></a>
 ### getPreferredVideoTracks ####################################################
 
-_return value_: ``Array.<Object>``
+--
+
+__syntax__: `const preferences = player.getPreferredVideoTracks()`
+
+__return value__: ``Array.<Object|null>``
+
+--
 
 Returns the current list of preferred video tracks - by order of preference.
 
@@ -1793,7 +2117,13 @@ it.
 <a name="meth-getAvailableVideoBitrates"></a>
 ### getAvailableVideoBitrates ##################################################
 
-_return value_: ``Array.<Number>``
+--
+
+__syntax__: `const bitrates = player.getAvailableVideoBitrates()`
+
+__return value__: ``Array.<Number>``
+
+--
 
 The different bitrates available for the current video track in bits per
 seconds.
@@ -1826,7 +2156,13 @@ if (videoBitrates.length) {
 <a name="meth-getAvailableAudioBitrates"></a>
 ### getAvailableAudioBitrates ##################################################
 
-_return value_: ``Array.<Number>``
+--
+
+__syntax__: `const bitrates = player.getAvailableAudioBitrates()`
+
+__return value__: ``Array.<Number>``
+
+--
 
 The different bitrates available for the current audio track in bits per
 seconds.
@@ -1859,9 +2195,15 @@ if (audioBitrates.length) {
 <a name="meth-getVideoBitrate"></a>
 ### getVideoBitrate ############################################################
 
-_return value_: ``Number|undefined``
+--
 
-Returns the bitrate of the video quality currently set, in bits per second.
+__syntax__: `const bitrate = player.getVideoBitrate()`
+
+__return value__: ``Number|undefined``
+
+--
+
+Returns the bitrate of the video quality currently chosen, in bits per second.
 
 Returns ``undefined`` if no content is loaded.
 
@@ -1881,9 +2223,15 @@ options](./loadVideo_options.md#prop-transport)), returns ``undefined``.
 <a name="meth-getAudioBitrate"></a>
 ### getAudioBitrate ############################################################
 
-_return value_: ``Number|undefined``
+--
 
-Returns the bitrate of the audio quality currently set, in bits per second.
+__syntax__: `const bitrate = player.getAudioBitrate()`
+
+__return value__: ``Number|undefined``
+
+--
+
+Returns the bitrate of the audio quality currently chosen, in bits per second.
 
 Returns ``undefined`` if no content is loaded.
 
@@ -1903,7 +2251,15 @@ options](./loadVideo_options.md#prop-transport)), returns ``undefined``.
 <a name="meth-setMinVideoBitrate"></a>
 ### setMinVideoBitrate #########################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setMinVideoBitrate(minBitrate)`
+
+__arguments__:
+  - _minBitrate_ (``Number``): Lower video bitrate limit when adaptive streaming
+    is enabled.
+
+--
 
 Set a minimum video bitrate reachable through adaptive streaming.
 
@@ -1941,7 +2297,15 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="meth-setMinAudioBitrate"></a>
 ### setMinAudioBitrate #########################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setMinAudioBitrate(minBitrate)`
+
+__arguments__:
+  - _minBitrate_ (``Number``): Lower audio bitrate limit when adaptive streaming
+    is enabled.
+
+--
 
 Set a minimum audio bitrate reachable through adaptive streaming.
 
@@ -1979,7 +2343,13 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="meth-getMinVideoBitrate"></a>
 ### getMinVideoBitrate #########################################################
 
-_return value_: ``Number``
+--
+
+__syntax__: `const minBitrate = player.getMinVideoBitrate()`
+
+__return value__: ``Number``
+
+--
 
 Returns the minimum video bitrate reachable through adaptive streaming, in bits
 per second.
@@ -1997,7 +2367,13 @@ Note that this only affects adaptive strategies. Forcing the bitrate manually
 <a name="meth-getMinAudioBitrate"></a>
 ### getMinAudioBitrate #########################################################
 
-_return value_: ``Number``
+--
+
+__syntax__: `const minBitrate = player.getMinAudioBitrate()`
+
+__return value__: ``Number``
+
+--
 
 Returns the minimum audio bitrate reachable through adaptive streaming, in bits
 per second.
@@ -2015,7 +2391,15 @@ Note that this only affects adaptive strategies. Forcing the bitrate manually
 <a name="meth-setMaxVideoBitrate"></a>
 ### setMaxVideoBitrate #########################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setMaxVideoBitrate(maxBitrate)`
+
+__arguments__:
+  - _maxBitrate_ (``Number``): Upper video bitrate limit when adaptive streaming
+    is enabled.
+
+--
 
 Set a maximum video bitrate reachable through adaptive streaming.
 
@@ -2053,7 +2437,15 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="meth-setMaxAudioBitrate"></a>
 ### setMaxAudioBitrate #########################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setMaxAudioBitrate(maxBitrate)`
+
+__arguments__:
+  - _maxBitrate_ (``Number``): Upper audio bitrate limit when adaptive streaming
+    is enabled.
+
+--
 
 Set a maximum audio bitrate reachable through adaptive streaming.
 
@@ -2091,7 +2483,13 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="meth-getMaxVideoBitrate"></a>
 ### getMaxVideoBitrate #########################################################
 
-_return value_: ``Number``
+--
+
+__syntax__: `const maxBitrate = player.getMaxVideoBitrate()`
+
+__return value__: ``Number``
+
+--
 
 Returns the maximum video bitrate reachable through adaptive streaming, in bits
 per second.
@@ -2109,7 +2507,13 @@ Note that this only affects adaptive strategies. Forcing the bitrate manually
 <a name="meth-getMaxAudioBitrate"></a>
 ### getMaxAudioBitrate #########################################################
 
-_return value_: ``Number``
+--
+
+__syntax__: `const maxBitrate = player.getMaxAudioBitrate()`
+
+__return value__: ``Number``
+
+--
 
 Returns the maximum audio bitrate reachable through adaptive streaming, in bits
 per second.
@@ -2127,7 +2531,15 @@ Note that this only affects adaptive strategies. Forcing the bitrate manually
 <a name="meth-setVideoBitrate"></a>
 ### setVideoBitrate ############################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setVideoBitrate(bitrate)`
+
+__arguments__:
+  - _bitrate_ (``Number``): Optimal video bitrate (the quality with the maximum
+    bitrate inferior to this value will be chosen if it exists).
+
+--
 
 Force the current video track to be of a certain bitrate.
 
@@ -2162,7 +2574,15 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="meth-setAudioBitrate"></a>
 ### setAudioBitrate ############################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setAudioBitrate(bitrate)`
+
+__arguments__:
+  - _bitrate_ (``Number``): Optimal audio bitrate (the quality with the maximum
+    bitrate inferior to this value will be chosen if it exists).
+
+--
 
 Force the current audio track to be of a certain bitrate.
 
@@ -2197,7 +2617,13 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="meth-getManualVideoBitrate"></a>
 ### getManualVideoBitrate ######################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `const currentManualVideoBitrate = player.getManualVideoBitrate()`
+
+__return value__: `Number`
+
+--
 
 Get the last video bitrate manually set. Either via ``setVideoBitrate`` or via
 the ``initialVideoBitrate`` constructor option.
@@ -2212,7 +2638,13 @@ This value can be different than the one returned by ``getVideoBitrate``:
 <a name="meth-getManualAudioBitrate"></a>
 ### getManualAudioBitrate ######################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `const currentManualAudioBitrate = player.getManualAudioBitrate()`
+
+__return value__: `Number`
+
+--
 
 Get the last audio bitrate manually set. Either via ``setAudioBitrate`` or via
 the ``initialAudioBitrate`` constructor option.
@@ -2235,12 +2667,22 @@ buffer can grow.
 <a name="meth-setWantedBufferAhead"></a>
 ### setWantedBufferAhead #######################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setWantedBufferAhead(bufferGoal)`
+
+__arguments__:
+  - _bufferGoal_ (``Number``): Ideal amount of buffer that should be pre-loaded,
+    in seconds.
+
+--
 
 Set the buffering goal, as a duration ahead of the current position, in seconds.
 
 Once this size of buffer reached, the player won't try to download new segments
 anymore.
+
+By default, this value is set to `30`.
 
 --
 
@@ -2251,17 +2693,32 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="meth-getWantedBufferAhead"></a>
 ### getWantedBufferAhead #######################################################
 
-_return value_: ``Number``
-_defaults_: ``30``
+--
+
+__syntax__: `const bufferGoal = player.getWantedBufferAhead()`
+
+__return value__: ``Number``
+
+--
 
 returns the buffering goal, as a duration ahead of the current position, in
 seconds.
+
+By default, this value is set to `30`.
 
 
 <a name="meth-setMaxBufferBehind"></a>
 ### setMaxBufferBehind #########################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setMaxBufferBehind(bufferSize)`
+
+__arguments__:
+  - _bufferSize_ (``Number``): Maximum amount of buffer behind the current
+    position, in seconds.
+
+--
 
 Set the maximum kept buffer before the current position, in seconds.
 
@@ -2286,8 +2743,13 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="meth-getMaxBufferBehind"></a>
 ### getMaxBufferBehind #########################################################
 
-_return value_: ``Number``
-_defaults_: ``Infinity``
+--
+
+__syntax__: `const bufferSize = player.getMaxBufferBehind()`
+
+__return value__: ``Number``
+
+--
 
 Returns the maximum kept buffer before the current position, in seconds.
 
@@ -2299,7 +2761,15 @@ This setting can be updated either by:
 <a name="meth-setMaxBufferAhead"></a>
 ### setMaxBufferAhead ##########################################################
 
-_arguments_: ``Number``
+--
+
+__syntax__: `player.setMaxBufferAhead(bufferSize)`
+
+__arguments__:
+  - _bufferSize_ (``Number``): Maximum amount of buffer ahead of the current
+    position, in seconds.
+
+--
 
 Set the maximum kept buffer ahead of the current position, in seconds.
 
@@ -2330,8 +2800,13 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="meth-getMaxBufferAhead"></a>
 ### getMaxBufferAhead ##########################################################
 
-_return value_: ``Number``
-_defaults_: ``Infinity``
+--
+
+__syntax__: `const bufferSize = player.getMaxBufferAhead()`
+
+__return value__: ``Number``
+
+--
 
 Returns the maximum kept buffer ahead of the current position, in seconds.
 
@@ -2351,32 +2826,71 @@ currently buffered.
 <a name="meth-getVideoLoadedTime"></a>
 ### getVideoLoadedTime #########################################################
 
-_return value_: ``Number``
+--
+
+__syntax__: `const loadedTime = player.getVideoLoadedTime()`
+
+__return value__: ``Number``
+
+--
 
 Returns in seconds the difference between:
   - the start of the current contiguous loaded range.
   - the end of it.
 
+In other words, this is the duration of the current contiguous range of media
+data the player is currently playing:
+If we're currently playing at the position at `51` seconds, and there is media
+data from the second `40` to the second `60`, then `getVideoLoadedTime()` will
+return `20` (`60 - 40`).
+
+`0` if there's no data loaded for the current position.
+
 
 <a name="meth-getVideoPlayedTime"></a>
 ### getVideoPlayedTime #########################################################
 
-_return value_: ``Number``
+--
+
+__syntax__: `const playedTime = player.getVideoPlayedTime()`
+
+__return value__: ``Number``
+
+--
 
 Returns in seconds the difference between:
   - the start of the current contiguous loaded range.
   - the current time.
 
+In other words, this is the amount of time in the current contiguous range of
+media data the player has already played.
+If we're currently playing at the position at `51` seconds, and there is media
+data from the second `40` to the second `60`, then `getVideoPlayedTime()` will
+return `11` (`51 - 40`).
+
+`0` if there's no data loaded for the current position.
 
 <a name="meth-getVideoBufferGap"></a>
 ### getVideoBufferGap ##########################################################
 
-_return value_: ``Number``
+
+--
+
+__syntax__: `const bufferGap = player.getVideoBufferGap()`
+
+__return value__: ``Number``
+
+--
 
 Returns in seconds the difference between:
   - the current time.
   - the end of the current contiguous loaded range.
 
+In other words, this is the amount of seconds left in the buffer before the end
+of the current contiguous range of media data.
+If we're currently playing at the position at `51` seconds, and there is media
+data from the second `40` to the second `60`, then `getVideoPlayedTime()` will
+return `9` (`60 - 51`).
 
 
 <a name="meth-group-content-info"></a>
@@ -2389,7 +2903,13 @@ about the current loaded content.
 <a name="meth-isLive"></a>
 ### isLive #####################################################################
 
-_return value_: ``Boolean``
+--
+
+__syntax__: `const isLive = player.isLive()`
+
+__return value__: ``Boolean``
+
+--
 
 Returns ``true`` if the content is a "live" content (e.g. a live TV Channel).
 ``false`` otherwise.
@@ -2408,7 +2928,13 @@ if (player.isLive()) {
 <a name="meth-getUrl"></a>
 ### getUrl #####################################################################
 
-_return value_: ``string|undefined``
+--
+
+__syntax__: `const url = player.getUrl()`
+
+__return value__: ``string``
+
+--
 
 Returns the URL of the downloaded [Manifest](../terms.md#manifest).
 
@@ -2431,7 +2957,13 @@ if (url) {
 <a name="meth-getCurrentKeySystem"></a>
 ### getCurrentKeySystem ########################################################
 
-_return value_: ``string|undefined``
+--
+
+__syntax__: `const keySystemName = player.getCurrentKeySystem()`
+
+__return value__: ``string|undefined``
+
+--
 
 Returns the type of keySystem used for DRM-protected contents.
 
@@ -2454,7 +2986,13 @@ release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
 --
 
-_return value_: ``Manifest|null``
+--
+
+__syntax__: `const manifest = player.getManifest()`
+
+__return value__: ``Manifest|null``
+
+--
 
 Returns the current loaded [Manifest](../terms.md#manifest) if one.
 The Manifest object structure is relatively complex and is described in the
@@ -2478,7 +3016,13 @@ release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
 --
 
-_return value_: ``Object|null``
+--
+
+__syntax__: `const adaptations = player.getCurrentAdaptations()`
+
+__return value__: ``Object|null``
+
+--
 
 Returns the [Adaptations](../terms.md#adaptation) being loaded per type if a
 [Manifest](../terms.md#manifest) is loaded. The returned object will have at
@@ -2504,7 +3048,13 @@ release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
 --
 
-_return value_: ``Object|null``
+--
+
+__syntax__: `const representations = player.getCurrentRepresentations()`
+
+__return value__: ``Object|null``
+
+--
 
 Returns the [Representations](../terms.md#representation) being loaded per type
 if a [Manifest](../terms.md#manifest) is loaded. The returned object will have
@@ -2531,7 +3081,13 @@ release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
 --
 
-_return value_: ``Array.<Object>|null``
+--
+
+__syntax__: `const data = player.getImageTrackData()`
+
+__return value__: ``Array.<Object>|null``
+
+--
 
 The current image track's data, null if no content is loaded / no image track
 data is available.
@@ -2614,7 +3170,13 @@ release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
 
 --
 
-_return value_: ``TextTrack|null``
+--
+
+__syntax__: `const textTrack = player.getNativeTextTrack()`
+
+__return value__: ``TextTrack|null``
+
+--
 
 Returns the first text track of the video's element, null if none.
 
