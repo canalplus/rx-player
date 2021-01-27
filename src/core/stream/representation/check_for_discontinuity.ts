@@ -92,7 +92,7 @@ export default function checkForDiscontinuity(
         return { start: undefined, end: null }; // discontinuity to Period's end
       }
 
-      // Check that there is a discontinuity anounced in the Manifest there
+      // Check that there is a discontinuity announced in the Manifest there
       const discontinuityEnd = representation.index
         .checkDiscontinuity(checkedRange.start);
       if (discontinuityEnd !== null) {
@@ -193,7 +193,7 @@ export default function checkForDiscontinuity(
     }
 
     // At last, check if we don't have a discontinuity at the end of the current
-    // Period, anounced in the Manifest, that is too big to be detected through
+    // Period, announced in the Manifest, that is too big to be detected through
     // the previous checks (when the Period's end goes further than `checkedRange`).
 
     if (period.end !== undefined && checkedRange.end >= period.end) {
