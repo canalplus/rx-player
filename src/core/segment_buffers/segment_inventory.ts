@@ -733,7 +733,7 @@ export default class SegmentInventory {
 
 /**
  * Returns `true` if the buffered start of the given chunk looks coherent enough
- * relatively to what is anounced in the Manifest.
+ * relatively to what is announced in the Manifest.
  * @param {Object} thisSegment
  * @returns {Boolean}
  */
@@ -758,7 +758,7 @@ function bufferedStartLooksCoherent(
 
 /**
  * Returns `true` if the buffered end of the given chunk looks coherent enough
- * relatively to what is anounced in the Manifest.
+ * relatively to what is announced in the Manifest.
  * @param {Object} thisSegment
  * @returns {Boolean}
  */

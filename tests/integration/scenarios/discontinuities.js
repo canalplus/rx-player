@@ -170,7 +170,7 @@ describe("discontinuities handling", () => {
     });
   });
 
-  describe("discontinuities in Period anounced in Manifest", () => {
+  describe("discontinuities in Period announced in Manifest", () => {
     const { url, transport } = discontinuityInfos;
     it("should seek over discontinuities in a Period", async function () {
       this.timeout(7000);

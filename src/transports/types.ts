@@ -356,7 +356,7 @@ export interface ISegmentParserParsedSegment<T> {
                         // "real" wanted effective time.
                         //
                         // For example:
-                        //   If `chunkData` anounce that the segment begins at
+                        //   If `chunkData` announce that the segment begins at
                         //   32 seconds, and `chunkOffset` equals to `4`, then
                         //   the segment should really begin at 36 seconds
                         //   (32 + 4).

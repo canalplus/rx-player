@@ -348,7 +348,7 @@ export default function StreamOrchestrator(
    * coming after it (from the last chronological one to the first).
    *
    * To clean-up PeriodStreams, each one of them are also automatically
-   * destroyed once the clock anounce a time superior or equal to the end of
+   * destroyed once the clock announces a time superior or equal to the end of
    * the concerned Period.
    *
    * A "periodStreamReady" event is sent each times a new PeriodStream is

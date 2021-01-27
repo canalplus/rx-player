@@ -70,7 +70,7 @@ time could lead to several issues:
     still waiting for the `00:00:00.000` ones (in that case, we would just have
     an infinite buffering state).
 
-  - even if it does, the client timeline will anounce a wrong time, offseted 5
+  - even if it does, the client timeline will announce a wrong time, offseted 5
     minutes and 24 seconds too late.
 
 
@@ -99,7 +99,7 @@ To understand this equation, we will need to define some variables:
 | Variable | Definition |
 |----------|------------|
 | PTO | The "presentationTimeOffset" attribute of the MPD |
-| mediaTime | The start time anounced in the segment |
+| mediaTime | The start time announced in the segment |
 | TS | Timescale used by PTO and segmentTime, to transform them into seconds |
 | periodStart | Start time of the given period, in seconds |
 | presentationTime | The time at which the segment will be shown, in seconds |
@@ -183,7 +183,7 @@ The RxPlayer has A LOT of time-related values defined for a given segment:
 
   - the time possibly set in the request (requestSegmentTime)
 
-  - the time as anounced in the corresponding attribute of the manifest
+  - the time as announced in the corresponding attribute of the manifest
     (manifestTime)
 
   - the time used in the corresponding Segment Object in the RxPlayer

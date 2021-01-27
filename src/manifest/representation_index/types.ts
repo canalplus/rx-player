@@ -58,12 +58,12 @@ export interface ISmoothInitSegmentPrivateInfos {
  */
 export interface ISmoothSegmentPrivateInfos {
   /**
-   * Start time of the segment as anounced in the Manifest, in the same
+   * Start time of the segment as announced in the Manifest, in the same
    * timescale than the one indicated through `ISmoothInitSegmentPrivateInfos`.
    */
   time : number;
   /**
-   * Duration of the segment as anounced in the Manifest, in the same timescale
+   * Duration of the segment as announced in the Manifest, in the same timescale
    * than the one indicated through `ISmoothInitSegmentPrivateInfos`.
    */
   duration : number;
@@ -287,7 +287,7 @@ export interface IRepresentationIndex {
    * order.
    * Examples of such RepresentationIndex are ones for contents which are being
    * downloaded locally. Here a seek close to the end could schedule the
-   * download of the last segments immediately, which might thus be anounced
+   * download of the last segments immediately, which might thus be announced
    * in this index before segments in the middle are.
    *
    * Knowing this value serves for example to check if a discontinuity

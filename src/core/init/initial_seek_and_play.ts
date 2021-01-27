@@ -44,7 +44,7 @@ export type ILoadEvents =
   "loaded"; // loaded without autoplay enabled
 
 /**
- * Emit once a "can-play" message as soon as the clock$ anounce that the content
+ * Emit once a "can-play" message as soon as the clock$ announce that the content
  * can begin to be played.
  *
  * Warn you if the metadata is not yet loaded metadata by emitting a

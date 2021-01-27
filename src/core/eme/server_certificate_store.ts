@@ -44,7 +44,7 @@ export default {
    * currently in EME APIs:
    * Because right now, it is impossible to tell if a MediaKeys instance has an
    * attached ServerCertificate or not when the corresponding API fails or if it
-   * never answers, we prefer to anounce through this function that the current
+   * never answers, we prefer to announce through this function that the current
    * server certificate attached to this MediaKeys is for now invalid.
    * @param {MediaKeys | Object} mediaKeys
    */

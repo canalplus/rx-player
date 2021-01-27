@@ -592,7 +592,7 @@ describe("API - parseLoadVideoOptions", () => {
     });
   });
 
-  it("should normalize a defaultAudioTrack given but anounce its deprecation", () => {
+  it("should normalize a defaultAudioTrack given but announce its deprecation", () => {
     const track = { normalized: "fra", audioDescription: true, language: "fr" };
     warnOnceMock.mockReturnValue(undefined);
     normalizeAudioTrackMock.mockReturnValue(track);
@@ -619,7 +619,7 @@ describe("API - parseLoadVideoOptions", () => {
       "`setPreferredAudioTracks` method instead");
   });
 
-  it("should normalize a defaultTextTrack given but anounce its deprecation", () => {
+  it("should normalize a defaultTextTrack given but announce its deprecation", () => {
     const track = { normalized: "fra", closedCaption: true, language: "fr" };
     warnOnceMock.mockReturnValue(undefined);
     normalizeAudioTrackMock.mockReturnValue(undefined);

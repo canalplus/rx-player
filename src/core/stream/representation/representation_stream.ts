@@ -169,19 +169,19 @@ export interface IRepresentationStreamArguments<T> {
   fastSwitchThreshold$: Observable< undefined | number>;
 }
 
-/** Internal event used to anounce that the initialization segment has been parsed. */
+/** Internal event used to notify that the initialization segment has been parsed. */
 type IParsedInitSegmentEvent<T> = ISegmentParserInitSegment<T> &
                                   { segment : ISegment };
 
-/** Internal event used to anounce that a media segment has been parsed. */
+/** Internal event used to notify that a media segment has been parsed. */
 type IParsedSegmentEvent<T> = ISegmentParserSegment<T> &
                               { segment : ISegment };
 
-/** Internal event used to anounce that a segment has been fully-loaded. */
+/** Internal event used to notify that a segment has been fully-loaded. */
 interface IEndOfSegmentEvent { type : "end-of-segment";
                                value: { segment : ISegment }; }
 
-/** Internal event used to anounce that a segment request is retried. */
+/** Internal event used to notify that a segment request is retried. */
 interface ILoaderRetryEvent { type : "retry";
                               value : { segment : ISegment;
                                         error : ICustomError; };

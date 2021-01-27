@@ -23,7 +23,7 @@ converted as different RxPlayer's Period so that no feature from the original
 content is lost.
 
 Each of those Period is then concatenated one after the other thanks to the time
-information anounced in the MetaPlaylist file.
+information announced in the MetaPlaylist file.
 
 
 

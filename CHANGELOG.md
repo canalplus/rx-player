@@ -145,7 +145,7 @@
 
 ### Features
 
-  - dash: handle multiple URL per segment anounced through multiple BaseURL elements in the MPD
+  - dash: handle multiple URL per segment announced through multiple BaseURL elements in the MPD
   - dash/smooth/metaplaylist: add `manifestUpdateUrl` to loadVideo's `transportOptions` to provide a shorter version of the Manifest, used for more resource-efficient Manifest updates
   - tools/createMetaplaylist: add the experimental `createMetaplaylist` tool, which allows to generate Metaplaylist contents from given Manifests
   - tools/TextTrackRenderer: add the optional `language` property to the `setTextTrack` method of the experimental `TextTrackRenderer` tool as it could be needed when parsing SAMI subtitles
@@ -175,7 +175,7 @@
   - directfile: support most audio tracks API when playing a directfile content
   - directfile: support most text tracks API when playing a directfile content
   - directfile: support most video tracks API when playing a directfile content
-  - api: add `seeking` and `seeked` events which anounce the beginning and end of a seek, even when seeking to an already buffered part
+  - api: add `seeking` and `seeked` events which announce the beginning and end of a seek, even when seeking to an already buffered part
   - subtitles/ttml: handle styles inheriting other styles in TTML subtitles
   - local-manifest: add experimental `local` transport to allow the playback of downloaded contents (even when offline)
   - tools: add the experimental `TextTrackRenderer` tool to be able to add a custom text track to any content
@@ -274,7 +274,7 @@
   - dash/smooth: Avoid requesting multiple time the last segment when the duration given in the Manifest are inexact
   - smooth: Skip without throwing Manifest's StreamIndex with an unrecognized type
   - dash: Improve prediction of when to update a dynamic MPD with xlinks
-  - dash: Be more tolerant of differences between a segment's time anounced by the Manifest and the reality to avoid multiple cases of segment re-downloading
+  - dash: Be more tolerant of differences between a segment's time announced by the Manifest and the reality to avoid multiple cases of segment re-downloading
   - dash: Guess initialization range for segments defined in a SegmentBase without an Initialization element
   - dash: Throw better error when a sidx with a reference_type `1` is encountered
   - api: Throw a better error when setting a `preferredAudioTracks` or `preferredTextTracks` value in the wrong format
@@ -804,7 +804,7 @@
   - net: use redirected URL as a base for further requests when the manifest request led to a HTTP redirect.
   - vtt/srt: ignore silently (do not throw) when an unknown block has been detected in a vtt or srt file
   - vtt/srt: support styling spans (like b, i and u XML tags) spanning multiple lines
-  - api: ``getAvailableTextTracks`` and ``getAvailableAudioTracks`` now always return an array (and never null) as anounced in the API documentation
+  - api: ``getAvailableTextTracks`` and ``getAvailableAudioTracks`` now always return an array (and never null) as announced in the API documentation
   - api: set default log level to ``"NONE"`` instead of ``"INFO"``
   - misc: remove development-only code from the non-minified code
 

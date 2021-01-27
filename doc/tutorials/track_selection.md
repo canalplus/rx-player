@@ -517,7 +517,7 @@ Here, the RxPlayer will enable a french audio track if it finds one, but if it
 does not, it will enable the english one instead.
 
 If none of your preferences is found for a given content, the RxPlayer will
-choose the content's default (or first, if no default is anounced in the
+choose the content's default (or first, if no default is announced in the
 content) track itself.
 
 Those options allow much more powerful configurations. You can refer to the API

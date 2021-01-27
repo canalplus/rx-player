@@ -147,7 +147,7 @@ export default class HTMLTextSegmentBuffer
     /** The HTMLElement containing the cues, appended to `_textTrackElement`. */
     element : HTMLElement;
     /**
-     * Anounced resolution for this element.
+     * Announced resolution for this element.
      * Necessary to properly render proportional sizes.
      */
     resolution : { columns : number;
