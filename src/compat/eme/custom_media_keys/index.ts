@@ -92,6 +92,8 @@ let _setMediaKeys :
  * Therefore, we prefer not to use requestMediaKeySystemAccess on Safari when webkit API
  * is available.
  */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 if (isNode ||
     (navigator.requestMediaKeySystemAccess != null && !shouldFavourCustomSafariEME())
 ) {
@@ -100,13 +102,8 @@ if (isNode ||
     b : MediaKeySystemConfiguration[]
   ) : Observable<MediaKeySystemAccess> =>
     castToObservable(navigator.requestMediaKeySystemAccess(a, b));
-} else {
-  /* eslint-disable @typescript-eslint/no-unsafe-call */
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+} else if (MediaKeys_.isTypeSupported !== undefined) {
   let isTypeSupported = (keyType: string): boolean => {
-    if ((MediaKeys_ as any).isTypeSupported === undefined) {
-      throw new Error("No isTypeSupported on MediaKeys.");
-    }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return (MediaKeys_ as any).isTypeSupported(keyType);
   };
@@ -178,6 +175,16 @@ if (isNode ||
     }
 
     return observableThrow(undefined);
+  };
+} else {
+  requestMediaKeySystemAccess = (
+    _a : string,
+    _b : MediaKeySystemConfiguration[]
+  ) : Observable<MediaKeySystemAccess> => {
+    const message = "This browser seems to be unable to play encrypted contents " +
+                    "currently. Note: Some browsers do not allow decryption " +
+                    "in some situations, like when not using HTTPS.";
+    return observableThrow(new Error(message));
   };
 }
 
