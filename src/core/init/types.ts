@@ -57,6 +57,7 @@ import {
 /** Object awaited by the `Init` on each clock tick. */
 export interface IInitClockTick { position : number;
                                   getCurrentTime : () => number;
+                                  setCurrentTime: (time: number) => void; 
                                   buffered : TimeRanges;
                                   duration : number;
                                   bufferGap : number;

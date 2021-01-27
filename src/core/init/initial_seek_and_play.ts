@@ -138,10 +138,12 @@ export default function seekAndLoadOnMediaEvents(
 ) : { seek$ : Observable<unknown>; load$ : Observable<ILoadEvents> } {
   const seek$ = whenLoadedMetadata$(mediaElement).pipe(
     take(1),
-    tap(() => {
-      log.info("Init: Set initial time", startTime);
-      mediaElement.currentTime = typeof startTime === "function" ? startTime() :
-                                                                   startTime;
+    mergeMap(() => {
+      return clock$.pipe(
+        take(1),
+        tap((clockTick) => {
+         clockTick.setCurrentTime(typeof startTime === "function" ? startTime() : startTime)
+      }))
     }),
     shareReplay({ refCount: true })
   );
