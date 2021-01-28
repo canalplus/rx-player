@@ -152,7 +152,7 @@ export interface ISessionUpdatedEvent {
 // blacklisted.
 // Emit the corresponding keyIDs as payload.
 export interface IBlacklistKeysEvent { type : "blacklist-keys";
-                                       value: ArrayBuffer[]; }
+                                       value: Uint8Array[]; }
 
 /**
  * Event Emitted when specific "protection data" cannot be deciphered and is thus

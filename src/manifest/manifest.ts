@@ -18,7 +18,6 @@ import { ICustomError } from "../errors";
 import { IParsedManifest } from "../parsers/manifest";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../utils/array_find";
-import { isABEqualBytes } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
 import warnOnce from "../utils/warn_once";
@@ -472,7 +471,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * performed.
    * @param {Array.<ArrayBuffer>} keyIDs
    */
-  public addUndecipherableKIDs(keyIDs : ArrayBuffer[]) : void {
+  public addUndecipherableKIDs(keyIDs : Uint8Array[]) : void {
     const updates = updateDeciperability(this, (representation) => {
       if (representation.decipherable === false ||
           representation.contentProtections === undefined)
@@ -483,7 +482,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       for (let i = 0; i < contentKIDs.length; i++) {
         const elt = contentKIDs[i];
         for (let j = 0; j < keyIDs.length; j++) {
-          if (isABEqualBytes(keyIDs[j], elt.keyId)) {
+          if (areArraysOfNumbersEqual(keyIDs[j], elt.keyId)) {
             return false;
           }
         }
