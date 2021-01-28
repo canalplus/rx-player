@@ -46,7 +46,7 @@
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Deprecated%20APIs"></a></p>
 <h1>Deprecated APIs</h1>
 <p>This documentation lists APIs deprecated in the v3.x.x.</p>
-<p>As we guarantee API compatibility in the v3.x.x, those API won&#x2019;t disappear until
+<p>As we guarantee API compatibility in the v3.x.x, those API won’t disappear until
 we switch to a v4.x.x version.</p>
 <p>You will find here which APIs are deprecated, why, and depending on the
 concerned API, how to replace it.</p>
@@ -94,10 +94,10 @@ multiple reasons:</p>
 <ol>
 <li>How it should be specified for live contents of for multi-Period DASH
 contents is not clear enough.</li>
-<li>Integrating it in the RxPlayer&#x2019;s API means that it had to take multiple
+<li>Integrating it in the RxPlayer’s API means that it had to take multiple
 choices that we prefer to let to the application: whether to retry the
 request if the it fails or if it is unavailable, whether to do the request
-at all for users with a low bitrate&#x2026;</li>
+at all for users with a low bitrate…</li>
 <li>The task of displaying those thumbnails is ultimately on the UI-side (the
 part that know where the user wants to seek)</li>
 <li>The biggest part of the code related to it was a simple BIF parser, that
@@ -108,7 +108,7 @@ can easily be re-implemented by any application.</li>
 <p>The following RxPlayer methods are deprecated.</p>
 <p><a name="subchapter-getManifest"></a></p>
 <h3>getManifest</h3>
-<p><code>getManifest</code> returns our internal representation we have of a given &#x201C;manifest&#x201D;
+<p><code>getManifest</code> returns our internal representation we have of a given “manifest”
 document.</p>
 <p>Though it was first exposed to allow users to have access to more precize
 information on the current content, this method also limited us on the possible
@@ -117,7 +117,7 @@ breaking the API.</p>
 <p>We also realized that that method was not used for now by the implementation we
 know of.</p>
 <p>For now, we decided we will simply remove that API in the next major version. If
-that&#x2019;s a problem for you, please open an issue.</p>
+that’s a problem for you, please open an issue.</p>
 <p><a name="subchapter-getCurrentAdaptations"></a></p>
 <h3>getCurrentAdaptations</h3>
 <p><code>getCurrentAdaptations</code> returns an object describing each tracks available for
@@ -126,25 +126,25 @@ the current Period in the current content.</p>
 the possible evolutions we can do on the RxPlayer.</p>
 <p>Again like <code>getManifest</code>, we plan to remove that API completely without
 replacing it.
-If that&#x2019;s a problem for you, please open an issue.</p>
+If that’s a problem for you, please open an issue.</p>
 <p><a name="subchapter-getCurrentRepresentations"></a></p>
 <h3>getCurrentRepresentations</h3>
-<p><code>getCurrentRepresentations</code> returns an object describing each &#x201C;qualities&#x201D;
+<p><code>getCurrentRepresentations</code> returns an object describing each “qualities”
 available in the current chosen tracks.</p>
 <p>Exactly like <code>getCurrentAdaptations</code> and <code>getManifest</code>, we found that this API:</p>
 <ul>
 <li>was not used as far as we know</li>
-<li>limited the evolutions we could do on the RxPlayer&#x2019;s code without breaking
+<li>limited the evolutions we could do on the RxPlayer’s code without breaking
 the API.</li>
 </ul>
 <p>We thus plan to remove that API completely without replacing it.
-If that&#x2019;s a problem for you, please open an issue.</p>
+If that’s a problem for you, please open an issue.</p>
 <p><a name="subchapter-getNativeTextTrack"></a></p>
 <h3>getNativeTextTrack</h3>
 <p><code>getNativeTextTrack</code> returned the first <code>TextTrack</code> element attached to the
 media element or <code>null </code> if it did not exist.</p>
 <p>This API was originally created to allow users to manipulate the <code>TextTrack</code>
-element themselves. For example, to &#x201C;catch&#x201D; cues as they appear and display them
+element themselves. For example, to “catch” cues as they appear and display them
 differently.</p>
 <p>What changed is that we now have two text track modes:</p>
 <ul>
@@ -183,7 +183,7 @@ fullscreen mode, if <code>false</code> was given as argument).</p>
 <p>If you want to just put the media element on fullscreen mode, you can use the
 following code:</p>
 <pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">setFullscreen</span>(<span class="hljs-params">goFull</span>) </span>{
-  <span class="hljs-keyword">if</span> (goFull === <span class="hljs-string">&quot;false&quot;</span>) {
+  <span class="hljs-keyword">if</span> (goFull === <span class="hljs-string">"false"</span>) {
     exitFullscreen();
     <span class="hljs-keyword">return</span>;
   }
@@ -193,7 +193,7 @@ following code:</p>
 
   <span class="hljs-keyword">const</span> mediaElement = player.getVideoElement();
   <span class="hljs-keyword">if</span> (!mediaElement) {
-    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;No media element&quot;</span>);
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">"No media element"</span>);
   }
   <span class="hljs-keyword">if</span> (mediaElement.requestFullscreen) {
     mediaElement.requestFullscreen();
@@ -243,7 +243,7 @@ You can read <a href="#bif-apis">the related chapter</a> for more information.</
 <p><a name="subchapter-nativeTextTracksChange"></a></p>
 <h3>nativeTextTracksChange</h3>
 <p><code>nativeTextTracksChange</code> events are deprecated. Which means they probably
-won&#x2019;t be sent in a <code>v4.x.x</code> version.</p>
+won’t be sent in a <code>v4.x.x</code> version.</p>
 <p>The reasons are basically the same than for the <code>getNativeTextTracks</code> method.
 It should not be needed anymore as most advanced needs should be better answered
 by an <code>html</code> text track mode.</p>
@@ -259,7 +259,7 @@ fullscreen mode, with agg boolean as a payload:</p>
 </ul>
 <p>This behavior can easily be recreated through the following code:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> mediaElement = player.getVideoElement();
-mediaElement.addEventListener(<span class="hljs-string">&quot;fullscreenChange&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+mediaElement.addEventListener(<span class="hljs-string">"fullscreenChange"</span>, <span class="hljs-function">() =&gt;</span> {
   <span class="hljs-keyword">if</span> (isFullscreen()) { <span class="hljs-comment">// see isFullscreen implementation above</span>
     <span class="hljs-comment">// do things</span>
   } <span class="hljs-keyword">else</span> {
@@ -293,18 +293,18 @@ previously did:</p>
   <span class="hljs-attr">url</span>: myURL,
   <span class="hljs-attr">transport</span>: myTransport,
 
-  <span class="hljs-attr">defaultAudioTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
-  <span class="hljs-comment">// or just `defaultAudioTrack: &quot;fra&quot;`, both are equivalent</span>
+  <span class="hljs-attr">defaultAudioTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-comment">// or just `defaultAudioTrack: "fra"`, both are equivalent</span>
 })
 </code></pre>
 <p>Now you will have to set it through an array either when creating a new
 RxPlayer:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({
-  <span class="hljs-attr">preferredAudioTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }],
+  <span class="hljs-attr">preferredAudioTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }],
 })
 </code></pre>
 <p>Or at any time, through the <code>setPreferredAudioTracks</code> method:</p>
-<pre><code class="language-js">player.setPreferredAudioTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }]);
+<pre><code class="language-js">player.setPreferredAudioTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }]);
 </code></pre>
 <p><a name="subchapter-defaultTextTrack"></a></p>
 <h3>defaultTextTrack</h3>
@@ -319,18 +319,18 @@ probably previously did:</p>
   <span class="hljs-attr">url</span>: myURL,
   <span class="hljs-attr">transport</span>: myTransport,
 
-  <span class="hljs-attr">defaultTextTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;swe&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
-  <span class="hljs-comment">// or just `defaultTextTrack: &quot;swe&quot;`, both are equivalent</span>
+  <span class="hljs-attr">defaultTextTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">"swe"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-comment">// or just `defaultTextTrack: "swe"`, both are equivalent</span>
 })
 </code></pre>
 <p>Now you will have to set it through an array either when creating a new
 RxPlayer:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({
-  <span class="hljs-attr">preferredTextTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;swe&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }],
+  <span class="hljs-attr">preferredTextTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">"swe"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }],
 })
 </code></pre>
 <p>Or at any time, through the <code>setPreferredTextTracks</code> method:</p>
-<pre><code class="language-js">player.setPreferredTextTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }]);
+<pre><code class="language-js">player.setPreferredTextTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }]);
 </code></pre>
 <p><a name="subchapter-supplementaryTextTracks"></a></p>
 <h3>supplementaryTextTracks</h3>
@@ -363,16 +363,16 @@ file if manual garbage collecting was enabled.</p>
 <li>
 <p>All usages of that API that we know of were for Smooth or DASH VoD contents
 which sadly just omitted those subtitles tracks in their Manifest. The true
-&#x201C;clean&#x201D; way to fix the problem in that case is to do it at the source: the
+“clean” way to fix the problem in that case is to do it at the source: the
 content.
 In this case, fixing it on the player-side should only be a temporary
-work-around (don&#x2019;t be scared, we still have an API replacement).</p>
+work-around (don’t be scared, we still have an API replacement).</p>
 </li>
 </ol>
 <p>The new <code>TextTrackRenderer</code> tool which replace it is much more straightforward.
 As an external tool which just reads and renders already-downloaded text
 subtitles, its API and the extent of what it does should be much more simple.</p>
-<p>It&#x2019;s also compatible with any type of contents, even when playing through an
+<p>It’s also compatible with any type of contents, even when playing through an
 other player.</p>
 <h4>How to replace that option</h4>
 <p>Every <code>supplementaryTextTracks</code> feature can be replaced by the
@@ -389,10 +389,10 @@ You can read <a href="#bif-apis">the related chapter</a> for more information.</
 <a href="parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
 <p><a name="subchapter-hideNativeSubtitle"></a></p>
 <h3>hideNativeSubtitle</h3>
-<p>The <code>hideNativeSubtitle</code> option is deprecated and won&#x2019;t be replaced.</p>
+<p>The <code>hideNativeSubtitle</code> option is deprecated and won’t be replaced.</p>
 <p>This is because it was added at a time when our text track API was much less
 advanced. Some applications wanted to handle subtitles themselves and thus hid
-the true &#x201C;native&#x201D; subtitles to display them themselves in a better way.</p>
+the true “native” subtitles to display them themselves in a better way.</p>
 <p>However, this API seems to not be used anymore. Please open an issue if you need
 it.</p>
 <p><a name="chapter-RxPlayer%20constructor%20options"></a></p>
@@ -408,7 +408,7 @@ if the <code>hidden</code> attribute of <code>document</code> is set to <code>tr
 <pre><code class="language-js"><span class="hljs-keyword">const</span> rxPlayer = <span class="hljs-keyword">new</span> RxPlayer({
   <span class="hljs-comment">// ... RxPlayer options</span>
   <span class="hljs-comment">// throttleWhenHidden: true [deprecated]</span>
-  throttleVideoBitrateWhenHidden: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">throttleVideoBitrateWhenHidden</span>: <span class="hljs-literal">true</span>,
 });
 </code></pre>
 <p><a name="chapter-Other%20properties"></a></p>
@@ -420,7 +420,7 @@ You will find them here.</p>
 <p>The <code>adaptations</code> property returned by the <code>Manifest</code> object you can obtain
 through the <code>getManifest</code> call is deprecated.</p>
 <p>This corresponds to the <code>adaptations</code> property of the first element in the
-<code>periods</code> object from the same <code>Manifest</code> object, so it&#x2019;s very easy to
+<code>periods</code> object from the same <code>Manifest</code> object, so it’s very easy to
 replace:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> manifest = player.getManifest();
 
@@ -431,7 +431,7 @@ replace:</p>
 <p><a name="subchapter-Smooth"></a></p>
 <h3>Smooth</h3>
 <p>Setting a <code>*.wsx</code>, a <code>*.ism</code> or a <code>*.isml</code> URL as an <code>url</code> property in
-<code>loadVideo</code> is now deprecated when we&#x2019;re talking about a Smooth Streaming
+<code>loadVideo</code> is now deprecated when we’re talking about a Smooth Streaming
 content.</p>
 <p>We recommend to only set a Manifest URL in that property when the transport is
 equal to <code>smooth</code>.</p>

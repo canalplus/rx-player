@@ -106,13 +106,13 @@ is catched, taking the task of registering the right event on the callback
 given.</p>
 <p>Every functions needed in the rest of the code are exported in
 <code>compat/index.js</code>, making it easier to import (e.g. by just doing
-<code>import { whatINeed } from &quot;../compat&quot;;</code>)</p>
+<code>import { whatINeed } from "../compat";</code>)</p>
 <p><a name="src-core"></a>
 <a name="subchapter-src/core/:%20The%20core%20files"></a></p>
 <h3>src/core/: The core files</h3>
 <p>Defines the logic and behavior of the player, regardless of the browser and of
 the streaming technology used.</p>
-<p>That&#x2019;s where:</p>
+<p>That’s where:</p>
 <ul>
 <li>the api is defined</li>
 <li>the MSE and EME APIs are called and managed</li>
@@ -142,7 +142,7 @@ to initialize and update them.</p>
 <a name="subchapter-src/manifest/:%20The%20Manifest%20class"></a></p>
 <h3>src/manifest/: The Manifest class</h3>
 <p>Defines a common <code>Manifest</code> class, regardless of the streaming technology (DASH,
-HSS&#x2026;). This class is then used by the rest of the RxPlayer, to allow
+HSS…). This class is then used by the rest of the RxPlayer, to allow
 interaction with it without considering the underlying technology used.</p>
 <p><a name="src-transports"></a>
 <a name="subchapter-src/transports/:%20The%20transport%20protocols"></a></p>
@@ -164,7 +164,7 @@ the code is exported in the index.js file at the root of this directory.</p>
 <p>Functions to parse various formats into the same interface.</p>
 <p>The parsed data being either:</p>
 <ul>
-<li>Manifest documents: DASH&#x2019;s MPD, HSS&#x2019;s Manifest&#x2026;</li>
+<li>Manifest documents: DASH’s MPD, HSS’s Manifest…</li>
 <li>containers: ISOBMFF (CMAF, fMP4, MP4), Matroska (MKV, WEBM)</li>
 <li>text tracks: TTML, SAMI, SRT, WebVTT</li>
 <li>image containers: BIF</li>
@@ -182,7 +182,7 @@ rx-player code.</p>
 <p><a name="core"></a>
 <a name="chapter-The%20src/core/%20directory"></a></p>
 <h2>The src/core/ directory</h2>
-<p>As written in the previous chapter, this is the &#x201C;core&#x201D; of the player, where the
+<p>As written in the previous chapter, this is the “core” of the player, where the
 logic is defined.</p>
 <p>As this directory is versatile and complicated, it also deserves its own chapter.</p>
 <p><a name="core-abr"></a>
@@ -250,13 +250,13 @@ the tested file).</p>
 contained in the tested directory.
 Those can be quicker to write and easier to maintain at the expense of being
 less thorough.</p>
-<p>Those type of &#x201C;global&#x201D; unit tests are put in a special <code>__global__</code> directory,
+<p>Those type of “global” unit tests are put in a special <code>__global__</code> directory,
 itself directly at the root of the corresponding <code>__tests__</code> directory.
-Their filename don&#x2019;t follow the same convention than single-source unit tests
+Their filename don’t follow the same convention than single-source unit tests
 but should still be suffixed by <code>.test.ts</code>.</p>
 <p><a name="tests"></a>
-<a name="chapter-The%20tests/%20directory:%20the%20player&apos;s%20tests"></a></p>
-<h2>The tests/ directory: the player&#x2019;s tests</h2>
+<a name="chapter-The%20tests/%20directory:%20the%20player's%20tests"></a></p>
+<h2>The tests/ directory: the player’s tests</h2>
 <p>This directory contains most testing code for the RxPlayer.</p>
 <p>The rx-player contains multiple type of tests:</p>
 <ul>

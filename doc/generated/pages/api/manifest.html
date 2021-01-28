@@ -40,7 +40,7 @@
 <h2>Overview</h2>
 <p>A Manifest Object and its sub-parts are data structures returned by multiple
 APIs of the player.</p>
-<p>Its data represents the corresponding streaming protocol&#x2019;s
+<p>Its data represents the corresponding streaming protocol’s
 <a href="../terms.html#manifest">Manifest</a> equivalent (MPD for DASH, Manifest for
 Microsoft Smooth Streaming etc.).</p>
 <p>Basically, the structure of a Manifest file has the following hierarchy:</p>
@@ -59,9 +59,9 @@ Microsoft Smooth Streaming etc.).</p>
 </code></pre>
 <p>Due to this highly hierachical structure, each level will be described in its
 own chapter here.</p>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> Like in the rest of this documentation, any variable or method not
+<p><span class="emoji emoji_warning">⚠️</span> Like in the rest of this documentation, any variable or method not
 defined here can change without notice.</p>
-<p>Only use the documented variables and open an issue if you think it&#x2019;s not
+<p>Only use the documented variables and open an issue if you think it’s not
 enough.</p>
 <p><a name="manifest"></a>
 <a name="chapter-Structure%20of%20a%20Manifest%20Object"></a></p>
@@ -76,16 +76,16 @@ content loaded.</p>
 <p><em>type</em>: <code>Array.&lt;Period&gt;</code></p>
 <p>A single Manifest instance can contain multiple <a href="../terms.html#period">Periods</a>,
 which are periods of time for which the list of available type of contents
-(audio tracks, subtitles, video tracks&#x2026;) can be different.</p>
+(audio tracks, subtitles, video tracks…) can be different.</p>
 <p>Such example of Periods could be multiple Programs of a live contents, which can
 be each in different languages, for example.</p>
 <p>The player will switch smoothly across subsequent Periods within playback.</p>
-<p>Most Streaming technologies (e.g. HLS and Smooth) do not have a &#x201C;Period&#x201D;
+<p>Most Streaming technologies (e.g. HLS and Smooth) do not have a “Period”
 concept. For those, the Manifest will only have one Period for the whole
 content.</p>
 <h4>adaptations</h4>
 <hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This property is deprecated, it will disappear in the next major
+<p><span class="emoji emoji_warning">⚠️</span> This property is deprecated, it will disappear in the next major
 release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
 <hr>
 <p><em>type</em>: <code>Object</code></p>
@@ -97,7 +97,7 @@ release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).
 <p>See <a href="#period-props">the Period chapter</a> for more information on Adaptations.</p>
 <h4>isLive</h4>
 <p><em>type</em>: <code>Boolean</code></p>
-<p><code>true</code> if the content is a &#x201C;live&#x201D; content (e.g. a live TV Channel).
+<p><code>true</code> if the content is a “live” content (e.g. a live TV Channel).
 <code>false</code> otherwise.</p>
 <h4>uris</h4>
 <p><em>type</em>: <code>Array.&lt;string&gt;</code></p>
@@ -135,7 +135,7 @@ it is the current last content of the current Manifest.</p>
 <p><em>type</em>: <code>Object</code></p>
 <p>The <a href="../terms.html#adaptation">Adaptations</a> (tracks if you want) for the current
 content, per-type (audio/video/text/image).</p>
-<p>See <a href="#adaptation">the Adaptation chapter</a> for more info about an Adaptation&#x2019;s
+<p>See <a href="#adaptation">the Adaptation chapter</a> for more info about an Adaptation’s
 structure.</p>
 <p>The Adaptation object <em>can</em> contain any of the following keys:</p>
 <ul>
@@ -148,7 +148,7 @@ structure.</p>
 <a name="chapter-Structure%20of%20an%20Adaptation%20Object"></a></p>
 <h2>Structure of an Adaptation Object</h2>
 <p>An <a href="../terms.html#adaptation">Adaptation</a> is a set of streams representing the
-exact same contents in multiple forms (different sizes, different bitrates&#x2026;).
+exact same contents in multiple forms (different sizes, different bitrates…).
 Concretely, a frequent usecase is to have a single video Adaptation and multiple
 audio ones, one for each language available.</p>
 <p>As such, it is also often called in the API a <code>track</code>.</p>
@@ -163,10 +163,10 @@ identifications purpose, when updating the Manifest for example.</p>
 <p><em>type</em>: <code>string</code></p>
 <p>The type of the Adaptation. The possible types are:</p>
 <ul>
-<li><code>&quot;video&quot;</code></li>
-<li><code>&quot;audio&quot;</code></li>
-<li><code>&quot;text&quot;</code></li>
-<li><code>&quot;image&quot;</code></li>
+<li><code>"video"</code></li>
+<li><code>"audio"</code></li>
+<li><code>"text"</code></li>
+<li><code>"image"</code></li>
 </ul>
 <h4>language</h4>
 <p><em>type</em>: <code>string|undefined</code></p>
@@ -191,7 +191,7 @@ it means that the text track has added hints for the hard of hearing.</p>
 <p><em>type</em>: <code>Array.&lt;Representation&gt;</code></p>
 <p>The <a href="../terms.html#representation">Represesentations</a> for this Adaptation.</p>
 <p>See <a href="#representation">the Representation chapter</a> for more info about a
-Representation&#x2019;s structure.</p>
+Representation’s structure.</p>
 <p><a name="adaptation-meth"></a>
 <a name="subchapter-methods"></a></p>
 <h3>methods</h3>
@@ -220,7 +220,7 @@ stated before, open an issue if you would like to access other properties).</p>
 <h4>decipherable</h4>
 <p><em>type</em>: <code>boolean|undefined</code></p>
 <p>Whether we are able to decrypt this Representation / unable to decrypt it or
-if we don&#x2019;t know yet:</p>
+if we don’t know yet:</p>
 <ul>
 <li>if <code>true</code>, it means that we know we were able to decrypt this
 Representation in the current content.</li>
@@ -240,7 +240,7 @@ It defines the width of the video, in pixels.</p>
 <p><em>type</em>: <code>RepresentationIndex</code></p>
 <p>The represesentation index for this Representation.</p>
 <p>See <a href="#representation-index">the RepresentationIndex chapter</a> for more info about
-a RepresentationIndex&#x2019;s structure.</p>
+a RepresentationIndex’s structure.</p>
 <h4>frameRate</h4>
 <p><em>type</em>: <code>string|undefined</code></p>
 <p>The represesentation frame rate for this Representation. It defines either the
@@ -250,7 +250,7 @@ number of frames per second as an integer (24), or as a ratio (24000 / 1000).</p
 <h2>Structure of a RepresentationIndex Object</h2>
 <p>A RepresentationIndex is an uniform way of declaring the segment index in any
 <a href="../terms.html#manifest">Manifest</a>.</p>
-<p>That&#x2019;s the part that calculates which segments will be needed. Because the index
+<p>That’s the part that calculates which segments will be needed. Because the index
 can be different depending on the type of contents/transport most interactions
 here are done through few methods which hide the complexity underneath.</p>
 <p><a name="representation-index-meth"></a>
@@ -270,7 +270,7 @@ segment.</p>
 <p><em>return value</em>: <code>Array.&lt;Segment&gt;</code></p>
 <p>Returns the needed segments as defined by the current Manifest during an asked
 timeframe.</p>
-<p>See <a href="#segment">the Segment chapter</a> for more info about a Segment&#x2019;s structure.</p>
+<p>See <a href="#segment">the Segment chapter</a> for more info about a Segment’s structure.</p>
 <p><a name="segment"></a>
 <a name="chapter-Structure%20of%20a%20Segment%20Object"></a></p>
 <h2>Structure of a Segment Object</h2>

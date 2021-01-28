@@ -11,37 +11,37 @@ Its principle and usage is defined <a href="../../api/metaplaylist.html">here</a
 <p><a name="chapter-How%20the%20original%20Manifest%20files%20are%20considered"></a></p>
 <h2>How the original Manifest files are considered</h2>
 <p>To play a MetaPlaylist content, each manifest it depends on has to be
-downloaded and parsed through their original logic (a <code>MPD</code> through DASH&#x2019;s
-logic and a Smooth Manifest through Smooth&#x2019;s logic).</p>
+downloaded and parsed through their original logic (a <code>MPD</code> through DASH’s
+logic and a Smooth Manifest through Smooth’s logic).</p>
 <p>We then merge each of these Manifest, to construct an internal
 <a href="../../api/manifest.html">Manifest object</a> with the same structure and properties
 than we would have with a DASH or Smooth manifest.</p>
 <p>The trick is to consider each of those original Manifest as different Periods
-(like DASH Periods). The trick works here because the RxPlayer&#x2019;s definition of a
+(like DASH Periods). The trick works here because the RxPlayer’s definition of a
 transport (and of the underlying properties) is much more flexible than in DASH.
 If an original MPD already has multiple Periods, each of them are also
-converted as different RxPlayer&#x2019;s Period so that no feature from the original
+converted as different RxPlayer’s Period so that no feature from the original
 content is lost.</p>
 <p>Each of those Period is then concatenated one after the other thanks to the time
-information anounced in the MetaPlaylist file.</p>
+information announced in the MetaPlaylist file.</p>
 <p><a name="chapter-How%20about%20the%20segments"></a></p>
 <h2>How about the segments</h2>
 <p>The exploitation of segment metadata is even trickier.</p>
 <p>In <code>DASH</code> or <code>Smooth</code>, the URL of each segment could be constructed from the
 starting time of each of those segments.</p>
 <p>The problem here is that a <code>MetaPlaylist</code> player has to mutate those to place
-them at the position indicated in the MetaPlaylist&#x2019;s JSON instead.</p>
+them at the position indicated in the MetaPlaylist’s JSON instead.</p>
 <p>To simplify everything, we choose to rely on a simple but effective wrapper on
 top of the original transport protocol.</p>
 <p>When the core logic of the player wants to load a segment from the network, that
-wrapper translate back the data as if we&#x2019;re just playing the original content at
+wrapper translate back the data as if we’re just playing the original content at
 its original position.
 How it works: the wrapper removes a specific time offset from the wanted
-segment&#x2019;s metadata, before contacting the transport&#x2019;s logic.</p>
+segment’s metadata, before contacting the transport’s logic.</p>
 <p>When giving back the segment to the core logic of the player, the wrapper first
 update those loaded segment with the wanted position data.
 How it works: the wrapper adds back the time offset it previously substracted
-from the wanted segment&#x2019;s metadata before giving it back to the core logic.</p>
+from the wanted segment’s metadata before giving it back to the core logic.</p>
 <p>To illustrate, it kind of goes like this:</p>
 <pre><code>+----------------+ 1. Ask for segments infos from t to t+n  +--------------+
 |                | ---------------------------------------&gt; |              |
@@ -77,7 +77,7 @@ from the wanted segment&#x2019;s metadata before giving it back to the core logi
    | +-------+  | ------------------------------------------------------+
    +------------+
 </code></pre>
-<p>To make sure the segment is pushed at the right moment and doesn&#x2019;t overlap other
+<p>To make sure the segment is pushed at the right moment and doesn’t overlap other
 contents, we make heavy use of some specific <code>SourceBuffer</code> properties:</p>
 <ul>
 <li>the <code>timestampOffset</code> property allows to set a specific offset</li>

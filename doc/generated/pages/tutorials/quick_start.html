@@ -19,9 +19,9 @@ documentation</a>.</p>
 and is able to play a single content at once.</p>
 <p>To instanciate it with a linked video element you can just do something along
 the lines of:</p>
-<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player"</span>;
 
-<span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;video&quot;</span>);
+<span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">"video"</span>);
 <span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({ videoElement });
 </code></pre>
 <p><code>videoElement</code> is an RxPlayer option and will be the HTMLElement the RxPlayer
@@ -39,8 +39,8 @@ possible options</a>, but to simplify we will start
 with just three:</p>
 <ul>
 <li>
-<p><code>transport</code>: String describing the transport protocol (can be <code>&quot;dash&quot;</code>,
-<code>&quot;smooth&quot;</code> or <code>&quot;directfile&quot;</code> for now).</p>
+<p><code>transport</code>: String describing the transport protocol (can be <code>"dash"</code>,
+<code>"smooth"</code> or <code>"directfile"</code> for now).</p>
 </li>
 <li>
 <p><code>url</code>: URL to the content (to the Manifest for Smooth contents, to the MPD
@@ -54,8 +54,8 @@ will not begin to play on its own).</p>
 </ul>
 <p>Here is a quick example which will load and play a DASH content:</p>
 <pre><code class="language-js">player.loadVideo({
-  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd&quot;</span>,
-  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">url</span>: <span class="hljs-string">"http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd"</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
   <span class="hljs-attr">autoPlay</span>: <span class="hljs-literal">true</span>,
 });
 </code></pre>
@@ -74,15 +74,15 @@ method</a>.</p>
 HTML elements.</p>
 <p>For example, to know if a fatal error happened (this is an error which
 interrupted the playback of the current content), you will just have to do:</p>
-<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content stopped with the following error&quot;</span>, err);
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">"error"</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the content stopped with the following error"</span>, err);
 });
 </code></pre>
 <p>And to know if the player successfully loaded a content and if you can now
 interact with it, you can just do:</p>
-<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
-  <span class="hljs-keyword">if</span> (state === <span class="hljs-string">&quot;LOADED&quot;</span>) {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is loaded&quot;</span>);
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">"playerStateChange"</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (state === <span class="hljs-string">"LOADED"</span>) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the content is loaded"</span>);
     <span class="hljs-comment">// interact with the content...</span>
   }
 });
@@ -93,7 +93,7 @@ interact with it, you can just do:</p>
 <a href="../api/states.html">the player states documentation</a>.</p>
 <p><a name="chapter-Interacting%20with%20the%20player"></a></p>
 <h2>Interacting with the player</h2>
-<p>We&#x2019;re now ready to interact with the current content.</p>
+<p>We’re now ready to interact with the current content.</p>
 <p>There is <a href="../api/index.html">a huge list of APIs</a> you can use.
 Some are useful only when a content is currently loaded (like <code>play</code>,
 <code>pause</code>, <code>seekTo</code> or <code>setAudioTrack</code>) and others can be used in any case
@@ -105,24 +105,24 @@ Some are useful only when a content is currently loaded (like <code>play</code>,
 <li>toggle between play and pause once the content is loaded and the user click
 on the video element.</li>
 </ol>
-<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player"</span>;
 
 <span class="hljs-comment">// take the first video element on the page</span>
-<span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;video&quot;</span>);
+<span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">"video"</span>);
 
 <span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({ videoElement });
 
-player.addEventListener(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content stopped with the following error&quot;</span>, err);
+player.addEventListener(<span class="hljs-string">"error"</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the content stopped with the following error"</span>, err);
 });
 
-player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
-  <span class="hljs-keyword">if</span> (state === <span class="hljs-string">&quot;LOADED&quot;</span>) {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is loaded&quot;</span>);
+player.addEventListener(<span class="hljs-string">"playerStateChange"</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (state === <span class="hljs-string">"LOADED"</span>) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the content is loaded"</span>);
 
     <span class="hljs-comment">// toggle between play and pause when the user clicks on the video</span>
     videoElement.onclick = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
-      <span class="hljs-keyword">if</span> (player.getPlayerState() === <span class="hljs-string">&quot;PLAYING&quot;</span>) {
+      <span class="hljs-keyword">if</span> (player.getPlayerState() === <span class="hljs-string">"PLAYING"</span>) {
         player.pause();
       } <span class="hljs-keyword">else</span> {
         player.play();
@@ -132,8 +132,8 @@ player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;<
 });
 
 player.loadVideo({
-  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd&quot;</span>,
-  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">url</span>: <span class="hljs-string">"http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd"</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
   <span class="hljs-attr">autoPlay</span>: <span class="hljs-literal">true</span>,
 });
 </code></pre>

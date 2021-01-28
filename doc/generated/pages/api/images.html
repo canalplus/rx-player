@@ -17,7 +17,7 @@
 <h2>Overview</h2>
 <p>The RxPlayer defines its own image playlist format, the <code>bif</code> format.</p>
 <p>This format allows to transmit playlist of thumbnails for linear (live) and
-non-linear (VOD) contents. The usecase is mostly to allow an improved &#x201C;seeking&#x201D;
+non-linear (VOD) contents. The usecase is mostly to allow an improved “seeking”
 experience.</p>
 <p>It is understood and parsed by the player, which offers API to easily integrate
 those features in an application.</p>
@@ -57,7 +57,7 @@ display the corresponding image on your page thanks to the browser
 <code>window.URL.createObjectURL</code> API.</p>
 </li>
 <li>
-<p><code>ts</code> (<code>Number</code>): the position (relatively to the player&#x2019;s
+<p><code>ts</code> (<code>Number</code>): the position (relatively to the player’s
 <code>getPosition</code> API) the image should be displayed at, in milliseconds.</p>
 </li>
 <li>
@@ -78,9 +78,9 @@ considering a player instance <code>player</code> and an image element with the 
 <span class="hljs-keyword">const</span> currentImage = imagePlaylist.find(<span class="hljs-function"><span class="hljs-params">p</span> =&gt;</span> (p.ts / <span class="hljs-number">1000</span>) &gt; position);
 
 <span class="hljs-keyword">if</span> (currentImage) {
-  <span class="hljs-keyword">const</span> blob = <span class="hljs-keyword">new</span> Blob([currentImage], {<span class="hljs-attr">type</span>: <span class="hljs-string">&quot;image/jpeg&quot;</span>});
+  <span class="hljs-keyword">const</span> blob = <span class="hljs-keyword">new</span> Blob([currentImage], {<span class="hljs-attr">type</span>: <span class="hljs-string">"image/jpeg"</span>});
   <span class="hljs-keyword">const</span> url = URL.createObjectURL(blob);
-  <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">&quot;current-image&quot;</span>).src = url;
+  <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"current-image"</span>).src = url;
 }
 </code></pre>
 </body></html></div></div></div></body>

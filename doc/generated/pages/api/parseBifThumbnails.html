@@ -13,43 +13,43 @@ will seek to when hovering a progress bar.</p>
 <p><a name="chapter-About%20BIF%20files"></a></p>
 <h2>About BIF files</h2>
 <p>The BIF format is straightforward. It contains several metadata and then all the
-images for the whole content, in their original format (e.g. &#x201C;jpeg&#x201D;),
+images for the whole content, in their original format (e.g. “jpeg”),
 concatenated.</p>
 <p><a name="chapter-How%20to%20import%20it"></a></p>
 <h2>How to import it</h2>
-<p><code>parseBifThumbnails</code> is for now considered an &#x201C;experimental&#x201D; tool. This means
-that its API could change at any new version of the RxPlayer (don&#x2019;t worry, we
+<p><code>parseBifThumbnails</code> is for now considered an “experimental” tool. This means
+that its API could change at any new version of the RxPlayer (don’t worry, we
 would still document all changes made to it in the corresponding release note).</p>
 <p>As an experimental tool, it is imported as such:</p>
-<pre><code class="language-ts"><span class="hljs-keyword">import</span> { parseBifThumbnails } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools&quot;</span>;
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> { parseBifThumbnails } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
 </code></pre>
 <p>You can then begin to use it right away.</p>
 <p><a name="chapter-How%20to%20use%20it"></a></p>
 <h2>How to use it</h2>
 <p>As a simple parser, <code>parseBifThumbnails</code> takes the downloaded BIF file in an
 ArrayBuffer form and returns its content under an object format, like this:</p>
-<pre><code class="language-js"><span class="hljs-keyword">import</span> { parseBifThumbnails } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools&quot;</span>;
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { parseBifThumbnails } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
 
 <span class="hljs-comment">// optionally, fetch the BIF resource through the usual APIs</span>
-fetch(<span class="hljs-string">&quot;http://www.example.com/thumbnails.bif&quot;</span>).then(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">response</span>) </span>{
+fetch(<span class="hljs-string">"http://www.example.com/thumbnails.bif"</span>).then(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">response</span>) </span>{
   <span class="hljs-keyword">return</span> response.arrayBuffer(); <span class="hljs-comment">// obtain an ArrayBuffer response</span>
 }).then(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">buffer</span>) </span>{
   <span class="hljs-keyword">const</span> parsedBif = parseBifThumbnails(buffer);
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;parsed BIF:&quot;</span>, parsedBif);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"parsed BIF:"</span>, parsedBif);
 };
 </code></pre>
 <p>Here is an example of the returned data:</p>
 <pre><code class="language-js">{
-  <span class="hljs-attr">version</span>: <span class="hljs-string">&quot;0.0.0.0&quot;</span>, <span class="hljs-comment">// BIF version. For the moment, only &quot;0.0.0.0&quot; is</span>
+  <span class="hljs-attr">version</span>: <span class="hljs-string">"0.0.0.0"</span>, <span class="hljs-comment">// BIF version. For the moment, only "0.0.0.0" is</span>
                       <span class="hljs-comment">// specified.</span>
-  images: [    <span class="hljs-comment">// Array of thumbnails for this content</span>
+  <span class="hljs-attr">images</span>: [    <span class="hljs-comment">// Array of thumbnails for this content</span>
     {
       <span class="hljs-attr">startTime</span>: <span class="hljs-number">0</span>, <span class="hljs-comment">// Start position at which the thumbnail should be applied</span>
                     <span class="hljs-comment">// to, in milliseconds.</span>
                     <span class="hljs-comment">// For example, a time of `5000`, indicates that this</span>
                     <span class="hljs-comment">// thumbnail should be shown from the 5 second mark in the</span>
                     <span class="hljs-comment">// content (until the next image is displayed instead)</span>
-      image: <span class="hljs-built_in">ArrayBuffer</span>() <span class="hljs-comment">// The thumbnail itself, in an ArrayBuffer form.</span>
+      <span class="hljs-attr">image</span>: <span class="hljs-built_in">ArrayBuffer</span>() <span class="hljs-comment">// The thumbnail itself, in an ArrayBuffer form.</span>
     },
     {
       <span class="hljs-attr">startTime</span>: <span class="hljs-number">10000</span>,

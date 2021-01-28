@@ -60,8 +60,8 @@ which are then exploited by the RxPlayer.</p>
 <li>ISO 639-3 (3 letters)</li>
 </ul>
 <p>More complex combined formats are also understood, as long as it begins by one
-of the understood standards, followed by a dash (&#x201C;-&#x201D;).</p>
-<p>For example &#x201C;en-US&#x201D; is translated into just &#x201C;en&#x201D;, and then inferred to be
+of the understood standards, followed by a dash (“-”).</p>
+<p>For example “en-US” is translated into just “en”, and then inferred to be
 english.</p>
 <hr>
 <p>The <code>mimeType</code> attribute is used to know in which format the track is in.</p>
@@ -82,16 +82,16 @@ exploited to know the exact format.</p>
 <li>the <code>mimeType</code> is equal to <code>text/plain</code></li>
 </ul>
 <p>For the first case, both WebVTT and TTML can be embedded in an MP4 file. To know
-which one we&#x2019;re dealing with, the <code>codecs</code> attribute should be equal to:</p>
+which one we’re dealing with, the <code>codecs</code> attribute should be equal to:</p>
 <ul>
 <li><code>stpp</code> for TTML</li>
 <li><code>wvtt</code> for WebVTT</li>
 </ul>
-<p>For the second case (<code>&quot;text/plain&quot;</code>), this is specifically to support plain
+<p>For the second case (<code>"text/plain"</code>), this is specifically to support plain
 SubRip (SRT) subtitles. To use them you need to set <code>codecs</code> simply to
 <code>srt</code>.</p>
 <hr>
-<p>To know if we&#x2019;re dealing with a closed caption text track, the RxPlayer uses the
+<p>To know if we’re dealing with a closed caption text track, the RxPlayer uses the
 <a href="https://www.dvb.org/resources/public/standards/a168_dvb-dash.pdf">DVB-DASH specification</a>.</p>
 <p>That is, an <code>AdaptationSet</code> is inferred to be a closed caption for the hard of
 hearing, if it contains an <code>Accessibility</code> descriptor with the following
@@ -120,9 +120,9 @@ same than for DASH:</p>
 <li>ISO 639-2 (3 letters)</li>
 <li>ISO 639-3 (3 letters)
 More complex combined formats are also understood, as long as it begins by one
-of the understood standards, followed by a dash (&#x201C;-&#x201D;).</li>
+of the understood standards, followed by a dash (“-”).</li>
 </ul>
-<p>For example &#x201C;en-US&#x201D; is translated into just &#x201C;en&#x201D;, and then inferred to be
+<p>For example “en-US” is translated into just “en”, and then inferred to be
 english.</p>
 <hr>
 <p>The <code>Subtype</code> attribute is used to know if the language is a closed caption or
@@ -141,11 +141,11 @@ value is <code>DESC</code>.</p>
 <p>There is two ways the text track can be displayed:</p>
 <ul>
 <li>
-<p><code>&quot;native&quot;</code>: The text track is displayed in <code>&lt;track&gt;</code> elements, which are
+<p><code>"native"</code>: The text track is displayed in <code>&lt;track&gt;</code> elements, which are
 directly in the linked <code>videoElement</code>.</p>
 </li>
 <li>
-<p><code>&quot;html&quot;</code>: The text track is displayed in a separate <code>&lt;div&gt;</code> element.</p>
+<p><code>"html"</code>: The text track is displayed in a separate <code>&lt;div&gt;</code> element.</p>
 </li>
 </ul>
 <p>The second ones allows for a better track stylisation. The distinction between

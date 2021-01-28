@@ -21,13 +21,13 @@ starting playback position.</p>
 it to define the initial position.</p>
 </li>
 <li>
-<p>no <code>startAt</code> option has been set and we&#x2019;re playing a VoD content.</p>
+<p>no <code>startAt</code> option has been set and we’re playing a VoD content.</p>
 </li>
 <li>
-<p>no <code>startAt</code> option has been set and we&#x2019;re playing a live content.</p>
+<p>no <code>startAt</code> option has been set and we’re playing a live content.</p>
 </li>
 <li>
-<p>no <code>startAt</code> option has been set and we&#x2019;re playing a directfile content.</p>
+<p>no <code>startAt</code> option has been set and we’re playing a directfile content.</p>
 </li>
 </ul>
 <p><a name="chapter-About%20the%20minimum%20and%20maximum%20position"></a></p>
@@ -37,13 +37,13 @@ content might be calculated and used when defining that starting position.</p>
 <p>Those positions are inferred directly from the Manifest (when not playing a
 directfile content).
 Most Manifests declare every segments currently available. In that case, we can
-simply use the start of the first anounced segment as a minimum position and the
+simply use the start of the first announced segment as a minimum position and the
 end of the last one as a maximum.</p>
-<p>In some other Manifest files, segment availability is not clearly anounced.
+<p>In some other Manifest files, segment availability is not clearly announced.
 In those cases, the minimum and maximum positions use other properties declared
 in the Manifest, often by making usage of a synchronized clock between the
 client and the server.</p>
-<p>For &#x201C;directfile&#x201D; contents, we directly interrogate the browser to obtain the
+<p>For “directfile” contents, we directly interrogate the browser to obtain the
 duration of the content. The minimum position here is always inferred to be <code>0</code>
 (for the moment at least).</p>
 <p><a name="chapter-When%20a%20startAt%20option%20has%20been%20set"></a></p>
@@ -52,20 +52,20 @@ duration of the content. The minimum position here is always inferred to be <cod
 configurable thanks to the startAt option, documented
 <a href="../api/loadVideo_options.html#prop-startAt">here in the API documentation</a>.</p>
 <p>Please note however that there is a catch: every of the possible values you
-will set will be &#x201C;bounded&#x201D; to the maximum and minimum position actually detected
+will set will be “bounded” to the maximum and minimum position actually detected
 for the content.</p>
 <p>This means that if your startAt indicate that we should start at a position of
 <code>10</code> seconds but the content starts at <code>15</code> seconds, we will actually start
 at <code>15</code> seconds instead.</p>
-<p>You can check at which position we actually loaded when the player&#x2019;s state
+<p>You can check at which position we actually loaded when the player’s state
 (accessible either through the <code>getPlayerState</code> method or through the
-<code>playerStateChanged</code> event) changed to <code>&quot;LOADED&quot;</code>.</p>
-<p><a name="chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we&apos;re%20playing%20a%20VoD%20content"></a></p>
-<h2>When no startAt option has been set and we&#x2019;re playing a VoD content</h2>
+<code>playerStateChanged</code> event) changed to <code>"LOADED"</code>.</p>
+<p><a name="chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we're%20playing%20a%20VoD%20content"></a></p>
+<h2>When no startAt option has been set and we’re playing a VoD content</h2>
 <p>For VoD contents, we will just start to play at the minimum detected position in
 the Manifest.</p>
-<p><a name="chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we&apos;re%20playing%20a%20live%20content"></a></p>
-<h2>When no startAt option has been set and we&#x2019;re playing a live content</h2>
+<p><a name="chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we're%20playing%20a%20live%20content"></a></p>
+<h2>When no startAt option has been set and we’re playing a live content</h2>
 <p>For live contents, we have here three cases:</p>
 <ul>
 <li>
@@ -93,15 +93,15 @@ contents).</li>
 option <a href="../api/loadVideo_options.html#prop-transportOptions">see loadVideo
 documentation</a>.</li>
 </ul>
-<p>[2] I wrote &#x201C;close to&#x201D; in every cases as we might substract some seconds from
+<p>[2] I wrote “close to” in every cases as we might substract some seconds from
 that value. How much we might do, depends on:</p>
 <ul>
 <li>if the manifest suggest us a delay relative to the live, in which case we
 apply it</li>
 <li>if not, we set it to the default: <code>10</code> seconds</li>
 </ul>
-<p><a name="chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we&apos;re%20playing%20a%20directfile%20content"></a></p>
-<h2>When no startAt option has been set and we&#x2019;re playing a directfile content</h2>
+<p><a name="chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we're%20playing%20a%20directfile%20content"></a></p>
+<h2>When no startAt option has been set and we’re playing a directfile content</h2>
 <p>For directfile contents, we for now just start at <code>0</code> if no <code>startAt</code> is
 defined.</p>
 </body></html></div></div></div></body>

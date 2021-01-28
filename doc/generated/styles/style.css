@@ -57,7 +57,7 @@ h1, h2, h3, h4, h5, h6 {
   color: inherit;
 }
 h1, h2, h3 {
-  margin-top: 35px;
+  margin-top: 76px;
   margin-bottom: 10px;
 }
 h1 {
@@ -92,12 +92,11 @@ pre {
   border-radius: 4px;
 }
 a:hover {
-  color: #071269;
+  color: #0023ce;
   text-decoration: underline;
 }
 a {
-  color: #071269;
-  text-decoration: none;
+  color: #001090;
 }
 code {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
@@ -160,6 +159,7 @@ pre code {
 }
 .sidebar a {
   color: #364149;
+  text-decoration: none;
 }
 .sidebar a:hover {
   text-decoration: none;
@@ -247,6 +247,7 @@ table tr td {
   .header-content a {
     margin: 10px;
     color: #364149;
+    text-decoration: none;
   }
   .header-content a:hover {
     text-decoration: none;

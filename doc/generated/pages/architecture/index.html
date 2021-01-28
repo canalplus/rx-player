@@ -9,11 +9,11 @@
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
 <p>The files in this directory and subdirectories establish a documentation about
-the RxPlayer&#x2019;s architecture.</p>
+the RxPlayer’s architecture.</p>
 <p>They are here to help you understand the way the player works, by describing
 the different bricks and algorithms that come into play.</p>
 <p><em>Note: As some terms used here might be too foreign or slightly different than
-the one you&#x2019;re used to, we also wrote a list of terms and definitions used by
+the one you’re used to, we also wrote a list of terms and definitions used by
 the RxPlayer <a href="../terms.html">here</a>.</em></p>
 <p><a name="chapter-Organization%20of%20the%20documentation"></a></p>
 <h2>Organization of the documentation</h2>
@@ -58,7 +58,7 @@ right time.</p>
 <p>Those buffers can depend on browser implementations (for example for audio
 and video contents, we rely on <code>SourceBuffer</code> JS objects) or may be
 completely defined in the code (for example, text track buffers in the
-<code>&quot;html&quot;</code> <code>textTrackMode</code> are entirely defined in the RxPlayer).</p>
+<code>"html"</code> <code>textTrackMode</code> are entirely defined in the RxPlayer).</p>
 <p>Those <code>SegmentBuffers</code> have added niceties over just being simple data
 buffers. For example, they include an inventory which allows to retrieve the
 metadata about every segments that is still contained within it.</p>
@@ -76,7 +76,7 @@ modifying / deleting a transport protocol</p>
 <p><strong>the <a href="fetchers/index.html">fetchers</a></strong></p>
 <p>Link the <code>transports</code> module with the rest of the code, to download
 segments, download/refresh the manifest and collect data (such as the
-user&#x2019;s bandwidth) for the other modules.</p>
+user’s bandwidth) for the other modules.</p>
 </li>
 </ul>
 <p>The RxPlayer also has a multitude of isolated helpers (for manifest management,
@@ -86,7 +86,7 @@ which are used by these different modules.</p>
 <a href="files.html">here</a>.</p>
 <p><a name="chapter-Global%20architecture"></a></p>
 <h2>Global architecture</h2>
-<p>To better understand the player&#x2019;s architecture, you can find below a
+<p>To better understand the player’s architecture, you can find below a
 (simplified!) schema of it:</p>
 <pre><code>               +---------------------------------------------+              ,,,,,,,
                |                                             |             (  CDN  )

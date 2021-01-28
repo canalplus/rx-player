@@ -26,7 +26,7 @@ It will be the only layer used by applications integrating the RxPlayer library.
 <h2>Why is it so big?</h2>
 <p><code>core/api/public_api.ts</code> is at the time of writing the longest file in all the
 RxPlayer, with more than 2000 lines!</p>
-<p>So why is that, isn&#x2019;t that a signal that we should split up its role into
+<p>So why is that, isn’t that a signal that we should split up its role into
 multiple files?</p>
 <p>Well, yes and no.
 The reason why it ends up so big is mainly because of the following reasons:</p>
@@ -37,8 +37,8 @@ The reason why it ends up so big is mainly because of the following reasons:</p>
 <li>
 <p>The API needs to have a considerable state because most of the other modules
 rely on Observables.</p>
-<p>I&#x2019;ll explain:
-The API can&#x2019;t just interogate at any time the concerned module as if it was
+<p>I’ll explain:
+The API can’t just interogate at any time the concerned module as if it was
 a class with methods. Here most modules are functions which send events.</p>
 <p>The problem is that a library user might want to have an information at any
 given moment (for example, the current bitrate), which internally is only
@@ -56,7 +56,7 @@ how it all works.</p>
 <p>Still, we did some efforts to reduce the size of that file. For example, some
 long argument-parsing code has been moved out of this file, into
 <code>core/api/option_parsers</code>. We might find other ways to reduce that size in the
-future, but that&#x2019;s not a main concern for now.</p>
+future, but that’s not a main concern for now.</p>
 <p><a name="chapter-Subparts"></a></p>
 <h2>Subparts</h2>
 <p>To facilitate those actions, the API relies on multiple building blocks:</p>
