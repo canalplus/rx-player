@@ -61,9 +61,9 @@ export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
   options: IKeyStatusesCheckingOptions,
   keySystem: string
-) : [IEMEWarningEvent[], ArrayBuffer[]] {
+) : [IEMEWarningEvent[], Uint8Array[]] {
   const warnings : IEMEWarningEvent[] = [];
-  const blacklistedKeyIDs : ArrayBuffer[] = [];
+  const blacklistedKeyIDs : Uint8Array[] = [];
   const { fallbackOn = {}, throwOnLicenseExpiration } = options;
 
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
