@@ -1,0 +1,64 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Differences between DASH' AdaptationSets and the rx-player "Adaptation" - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Differences%20between%20DASH'%20AdaptationSets%20and%20the%20rx-player%20%22Adaptation%22">Differences between DASH’ AdaptationSets and the rx-player “Adaptation”</a></p>
+<ul>
+<li><a href="#chapter-Merging%20of%20multiple%20AdaptationSets%20into%20a%20single%20Adaptation">Merging of multiple AdaptationSets into a single Adaptation</a>
+<ul>
+<li><a href="#subchapter-Why%20do%20we%20do%20that">Why do we do that</a></li>
+<li><a href="#subchapter-What%20do%20we%20do">What do we do</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Differences%20between%20DASH'%20AdaptationSets%20and%20the%20rx-player%20%22Adaptation%22"></a></p>
+<h1>Differences between DASH’ AdaptationSets and the rx-player “Adaptation”</h1>
+<p>The RxPlayer defines an <code>Adaptation</code> object (also sometimes called <code>Track</code>)
+which follow as close as possible the concept of the <code>AdaptationSet</code> in
+the DASH protocol.</p>
+<p>However, to answer practically to some of the features allowed by DASH while
+still respecting the <a href="https://dashif.org/guidelines/">DASH-IF “IOP”</a>, we had to
+take some (minor) freedom with our interpretation of it.</p>
+<p><a name="chapter-Merging%20of%20multiple%20AdaptationSets%20into%20a%20single%20Adaptation"></a></p>
+<h2>Merging of multiple AdaptationSets into a single Adaptation</h2>
+<p>The main difference is that all similar <code>AdaptationSet</code> which are marked as
+“seamlessly switchable” between one another are merged into a single
+<code>Adaptation</code> in the player.</p>
+<p><a name="subchapter-Why%20do%20we%20do%20that"></a></p>
+<h3>Why do we do that</h3>
+<p>This “switchable” concept is for example used in cases were multiple encryption
+keys are present for different <code>Representation</code> (e.g. due to limitations coming
+from right holders).</p>
+<p>The problem is that the DASH-IF tells us that all <code>Representation</code> in a given
+<code>AdaptationSet</code> have to use the same license.
+This means that in the aforementioned case, the concerned <code>Representation</code>
+have to be divided into multiple <code>AdaptationSet</code>. In a player, different
+<code>AdaptationSet</code> means different “tracks” and thus a player won’t try to
+automatically switch between them.</p>
+<p>This means that our adaptive algorithm won’t be able to set the right quality
+and that the library user would have to manually manage that instead.</p>
+<p>Fortunately, the DASH-IF IOP planned a work-around for that kind of situation:
+To allow a player to seamlessly switch between multiple <code>AdaptationSets</code>, the
+DASH-IF allows a specific node, called <code>SupplementalProperty</code> to be added as
+children of the concerned <code>AdaptationSet</code>s (with a specific value).</p>
+<p>However, this brings another set of issues in the rx-player, where this
+separation would lead to an excessively complicated API.</p>
+<p><a name="subchapter-What%20do%20we%20do"></a></p>
+<h3>What do we do</h3>
+<p>We thus decided to “merge” the <code>AdaptationSet</code>s into a single <code>Adaptation</code> if
+all those conditions are filled:</p>
+<ul>
+<li>
+<p>they both support seamless-switching between one-another (i.e. they both
+contain a <code>SupplementalProperty</code> node with the right values)</p>
+</li>
+<li>
+<p>they represent the same type of content (“audio”, “video” or “text”)</p>
+</li>
+<li>
+<p>they are of the same language, if one (letter-for-letter in the manifest)</p>
+</li>
+<li>
+<p>they have the same accessibility information (e.g. both are closed
+captions or audio description for the visually impaired).</p>
+</li>
+</ul>
+<p>If any of these conditions is not filled, the concerned <code>AdaptationSet</code>s stay
+separated and the player will not try to switch between them.</p>
+</body></html></div></div></div></body>

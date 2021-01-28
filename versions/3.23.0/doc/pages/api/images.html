@@ -1,0 +1,86 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Images - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Images">Images</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Format%20specification">Format specification</a></li>
+<li><a href="#chapter-Using%20bif%20for%20DASH%20and%20smooth%20contents">Using bif for DASH and smooth contents</a></li>
+<li><a href="#chapter-APIs">APIs</a>
+<ul>
+<li><a href="#subchapter-Structure">Structure</a></li>
+<li><a href="#subchapter-Example">Example</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Images"></a></p>
+<h1>Images</h1>
+<p><a name="overview"></a>
+<a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The RxPlayer defines its own image playlist format, the <code>bif</code> format.</p>
+<p>This format allows to transmit playlist of thumbnails for linear (live) and
+non-linear (VOD) contents. The usecase is mostly to allow an improved “seeking”
+experience.</p>
+<p>It is understood and parsed by the player, which offers API to easily integrate
+those features in an application.</p>
+<p><a name="specification"></a>
+<a name="chapter-Format%20specification"></a></p>
+<h2>Format specification</h2>
+<p>This documentation is not yet finished. It will be very soon.</p>
+<p><a name="usage"></a>
+<a name="chapter-Using%20bif%20for%20DASH%20and%20smooth%20contents"></a></p>
+<h2>Using bif for DASH and smooth contents</h2>
+<p>This documentation is not yet finished. It will be very soon.</p>
+<p><a name="api"></a>
+<a name="chapter-APIs"></a></p>
+<h2>APIs</h2>
+<p>Images can be retreived through two APIs for now:</p>
+<ul>
+<li>
+<p><code>getImageTrackData</code>, which returns directly an array of objects describing
+the images in the playlist.</p>
+</li>
+<li>
+<p>the <code>imageTrackUpdate</code> event, which emits each time the image playlist is
+updated with the complete playlist as an array of objects in its <code>data</code>
+property.</p>
+</li>
+</ul>
+<p><a name="api-structure"></a>
+<a name="subchapter-Structure"></a></p>
+<h3>Structure</h3>
+<p>In both of those cases you receive an array of Objects, each defining a single
+image.</p>
+<p>An image object has the following property:</p>
+<ul>
+<li>
+<p><code>data</code> (<code>Uint8Array</code>): the raw data for the image object. You can
+display the corresponding image on your page thanks to the browser
+<code>window.URL.createObjectURL</code> API.</p>
+</li>
+<li>
+<p><code>ts</code> (<code>Number</code>): the position (relatively to the player’s
+<code>getPosition</code> API) the image should be displayed at, in milliseconds.</p>
+</li>
+<li>
+<p><code>duration</code> (<code>Number</code>): the duration, in s, until a new image can be
+considered.</p>
+</li>
+</ul>
+<p>This array should be ordered by <code>position</code>.</p>
+<p><a name="api-example"></a>
+<a name="subchapter-Example"></a></p>
+<h3>Example</h3>
+<p>Here is an example of setting the image corresponding to the current position,
+considering a player instance <code>player</code> and an image element with the id
+<code>current-image</code>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> position = player.getPosition();
+<span class="hljs-keyword">const</span> imagePlaylist = player.getImageTrackData();
+
+<span class="hljs-keyword">const</span> currentImage = imagePlaylist.find(<span class="hljs-function"><span class="hljs-params">p</span> =&gt;</span> (p.ts / <span class="hljs-number">1000</span>) &gt; position);
+
+<span class="hljs-keyword">if</span> (currentImage) {
+  <span class="hljs-keyword">const</span> blob = <span class="hljs-keyword">new</span> Blob([currentImage], {<span class="hljs-attr">type</span>: <span class="hljs-string">"image/jpeg"</span>});
+  <span class="hljs-keyword">const</span> url = URL.createObjectURL(blob);
+  <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"current-image"</span>).src = url;
+}
+</code></pre>
+</body></html></div></div></div></body>
