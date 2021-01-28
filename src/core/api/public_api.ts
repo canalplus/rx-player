@@ -107,15 +107,18 @@ import createClock, {
 } from "./clock";
 import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
+  IPlayerState,
   PLAYER_STATES,
 } from "./get_player_state";
 import MediaElementTrackChoiceManager from "./media_element_track_choice_manager";
 import {
+  checkReloadOptions,
   IConstructorOptions,
   ILoadVideoOptions,
+  IParsedLoadVideoOptions,
   parseConstructorOptions,
   parseLoadVideoOptions,
-} from "./option_parsers";
+} from "./option_utils";
 import TrackChoiceManager, {
   IAudioTrackPreference,
   ITextTrackPreference,
@@ -231,7 +234,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Current state of the RxPlayer.
    * Please use `getPlayerState()` instead.
    */
-  public state : string;
+  public state : IPlayerState;
 
   /**
    * Emit when the the RxPlayer is not needed anymore and thus all resources
@@ -283,6 +286,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                      video? : number;
                      text? : number;
                      image? : number; };
+
+    /** Store last wanted minAutoBitrates for the next ABRManager instanciation. */
+    minAutoBitrates : { audio : BehaviorSubject<number>;
+                        video : BehaviorSubject<number>; };
 
     /** Store last wanted maxAutoBitrates for the next ABRManager instanciation. */
     maxAutoBitrates : { audio : BehaviorSubject<number>;
@@ -414,6 +421,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** Determines whether or not the player should stop at the end of video playback. */
   private readonly _priv_stopAtEnd : boolean;
 
+  /** Information about last content being played. */
+  private _priv_lastContentPlaybackInfos : { options?: IParsedLoadVideoOptions;
+                                             manifest?: Manifest;
+                                             lastPlaybackPosition?: number; };
+
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
@@ -451,6 +463,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const { initialAudioBitrate,
             initialVideoBitrate,
             limitVideoWidth,
+            minAudioBitrate,
+            minVideoBitrate,
             maxAudioBitrate,
             maxBufferAhead,
             maxBufferBehind,
@@ -468,7 +482,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */"3.22.0";
+    this.version = /* PLAYER_VERSION */"3.23.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -533,6 +547,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_bitrateInfos = {
       lastBitrates: { audio: initialAudioBitrate,
                       video: initialVideoBitrate },
+      minAutoBitrates: { audio: new BehaviorSubject(minAudioBitrate),
+                         video: new BehaviorSubject(minVideoBitrate) },
       maxAutoBitrates: { audio: new BehaviorSubject(maxAudioBitrate),
                          video: new BehaviorSubject(maxVideoBitrate) },
       manualBitrates: { audio: new BehaviorSubject(-1),
@@ -558,6 +574,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_preferredAudioTracks = preferredAudioTracks;
     this._priv_preferredTextTracks = preferredTextTracks;
     this._priv_preferredVideoTracks = preferredVideoTracks;
+
+    this._priv_lastContentPlaybackInfos = {};
   }
 
   /**
@@ -599,8 +617,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_pictureInPictureEvent$.complete();
     this._priv_bitrateInfos.manualBitrates.video.complete();
     this._priv_bitrateInfos.manualBitrates.audio.complete();
+    this._priv_bitrateInfos.minAutoBitrates.video.complete();
+    this._priv_bitrateInfos.minAutoBitrates.audio.complete();
     this._priv_bitrateInfos.maxAutoBitrates.video.complete();
     this._priv_bitrateInfos.maxAutoBitrates.audio.complete();
+
+    this._priv_lastContentPlaybackInfos = {};
 
     // un-attach video element
     this.videoElement = null;
@@ -613,7 +635,59 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   loadVideo(opts : ILoadVideoOptions) : void {
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options);
+    this._priv_lastContentPlaybackInfos = { options };
+    this._priv_initializeContentPlayback(options);
+  }
 
+  /**
+   * Reload last content. Init media playback without fetching again
+   * the manifest.
+   * @param {Object} reloadOpts
+   */
+  reload(reloadOpts?: { reloadAt?: { position?: number; relative?: number } }): void {
+    const { options,
+            manifest,
+            lastPlaybackPosition } = this._priv_lastContentPlaybackInfos;
+    if (options === undefined ||
+        manifest === undefined ||
+        lastPlaybackPosition === undefined) {
+      throw new Error("API: Can't reload without having previously loaded a content.");
+    }
+    checkReloadOptions(reloadOpts);
+    let startAtPositon: number;
+    if (reloadOpts !== undefined &&
+        reloadOpts.reloadAt !== undefined &&
+        reloadOpts.reloadAt.position !== undefined) {
+      startAtPositon = reloadOpts.reloadAt.position;
+    } else {
+      let playbackPosition: number;
+      if (this.state === "STOPPED" || this.state === "ENDED") {
+        playbackPosition = lastPlaybackPosition;
+      } else {
+        if (this.videoElement === null) {
+          throw new Error("API: reload - Can't reload when video element does not exist.");
+        }
+        playbackPosition = this.videoElement.currentTime;
+      }
+      if (reloadOpts !== undefined &&
+          reloadOpts.reloadAt !== undefined &&
+          reloadOpts.reloadAt.relative !== undefined) {
+        startAtPositon = reloadOpts.reloadAt.relative + playbackPosition;
+      } else {
+        startAtPositon = playbackPosition;
+      }
+    }
+    const newOptions = { ...options,
+                         initialManifest: manifest };
+    newOptions.startAt = { position: startAtPositon };
+    this._priv_initializeContentPlayback(newOptions);
+  }
+
+  /**
+   * From given options, initialize content playback.
+   * @param {Object} options
+   */
+  private _priv_initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
     const { autoPlay,
             audioTrackSwitchingMode,
             defaultAudioTrack,
@@ -626,6 +700,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             manifestUpdateUrl,
             minimumManifestUpdateInterval,
             networkConfig,
+            onCodecSwitch,
             startAt,
             transport,
             transportOptions,
@@ -728,6 +803,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         lowLatencyMode,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
+        minAutoBitrates: this._priv_bitrateInfos.minAutoBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
         throttlers,
       };
@@ -739,9 +815,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         { textTrackMode: "html" as const,
           textTrackElement: options.textTrackElement };
 
-      const bufferOptions = objectAssign({ enableFastSwitching,
+      const bufferOptions = objectAssign({ audioTrackSwitchingMode,
+                                           enableFastSwitching,
                                            manualBitrateSwitchingMode,
-                                           audioTrackSwitchingMode },
+                                           onCodecSwitch },
                                          this._priv_bufferOptions);
 
       // We've every options set up. Start everything now
@@ -1303,7 +1380,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns max wanted video bitrate currently set.
+   * Returns minimum wanted video bitrate currently set.
+   * @returns {Number}
+   */
+  getMinVideoBitrate() : number {
+    return this._priv_bitrateInfos.minAutoBitrates.video.getValue();
+  }
+
+  /**
+   * Returns minimum wanted audio bitrate currently set.
+   * @returns {Number}
+   */
+  getMinAudioBitrate() : number {
+    return this._priv_bitrateInfos.minAutoBitrates.audio.getValue();
+  }
+
+  /**
+   * Returns maximum wanted video bitrate currently set.
    * @returns {Number}
    */
   getMaxVideoBitrate() : number {
@@ -1311,7 +1404,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns max wanted audio bitrate currently set.
+   * Returns maximum wanted audio bitrate currently set.
    * @returns {Number}
    */
   getMaxAudioBitrate() : number {
@@ -1524,10 +1617,44 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Update the minimum video bitrate the user can switch to.
+   * @param {Number} btr
+   */
+  setMinVideoBitrate(btr : number) : void {
+    const maxVideoBitrate = this._priv_bitrateInfos.maxAutoBitrates.video.getValue();
+    if (btr > maxVideoBitrate) {
+      throw new Error("Invalid minimum video bitrate given. " +
+                      `Its value, "${btr}" is superior the current maximum ` +
+                      `video birate, "${maxVideoBitrate}".`);
+    }
+    this._priv_bitrateInfos.minAutoBitrates.video.next(btr);
+  }
+
+  /**
+   * Update the minimum audio bitrate the user can switch to.
+   * @param {Number} btr
+   */
+  setMinAudioBitrate(btr : number) : void {
+    const maxAudioBitrate = this._priv_bitrateInfos.maxAutoBitrates.audio.getValue();
+    if (btr > maxAudioBitrate) {
+      throw new Error("Invalid minimum audio bitrate given. " +
+                      `Its value, "${btr}" is superior the current maximum ` +
+                      `audio birate, "${maxAudioBitrate}".`);
+    }
+    this._priv_bitrateInfos.minAutoBitrates.audio.next(btr);
+  }
+
+  /**
    * Update the maximum video bitrate the user can switch to.
    * @param {Number} btr
    */
   setMaxVideoBitrate(btr : number) : void {
+    const minVideoBitrate = this._priv_bitrateInfos.minAutoBitrates.video.getValue();
+    if (btr < minVideoBitrate) {
+      throw new Error("Invalid maximum video bitrate given. " +
+                      `Its value, "${btr}" is inferior the current minimum ` +
+                      `video birate, "${minVideoBitrate}".`);
+    }
     this._priv_bitrateInfos.maxAutoBitrates.video.next(btr);
   }
 
@@ -1536,6 +1663,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} btr
    */
   setMaxAudioBitrate(btr : number) : void {
+    const minAudioBitrate = this._priv_bitrateInfos.minAutoBitrates.audio.getValue();
+    if (btr < minAudioBitrate) {
+      throw new Error("Invalid maximum audio bitrate given. " +
+                      `Its value, "${btr}" is inferior the current minimum ` +
+                      `audio birate, "${minAudioBitrate}".`);
+    }
     this._priv_bitrateInfos.maxAutoBitrates.audio.next(btr);
   }
 
@@ -2200,6 +2333,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     this._priv_contentInfos.manifest = manifest;
+    this._priv_lastContentPlaybackInfos.manifest = manifest;
 
     const { initialAudioTrack, initialTextTrack } = this._priv_contentInfos;
     this._priv_trackChoiceManager = new TrackChoiceManager();
@@ -2555,7 +2689,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {string} newState
    */
-  private _priv_setPlayerState(newState : string) : void {
+  private _priv_setPlayerState(newState : IPlayerState) : void {
     if (this.state !== newState) {
       this.state = newState;
       log.info("API: playerStateChange event", newState);
@@ -2584,6 +2718,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if ((!isDirectFile && manifest === null) || isNullOrUndefined(clockTick)) {
       return;
     }
+
+    this._priv_lastContentPlaybackInfos.lastPlaybackPosition = clockTick.position;
 
     const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :
                                                 undefined;
@@ -2659,7 +2795,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return activeRepresentations[currentPeriod.id];
   }
 }
-Player.version = /* PLAYER_VERSION */"3.22.0";
+Player.version = /* PLAYER_VERSION */"3.23.0";
 
 export default Player;
 export { IStreamEventData };

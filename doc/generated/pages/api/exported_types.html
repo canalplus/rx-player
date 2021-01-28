@@ -21,7 +21,7 @@
 its source code that can be helpful if you develop an application in TypeScript
 yourself.</p>
 <p><a name="chapter-%22Using%22%20types"></a></p>
-<h2>&#x201C;Using&#x201D; types</h2>
+<h2>“Using” types</h2>
 <p>Because we follow the usual way of adding definition files (as <code>d.ts</code> file
 alongside our sources), those typings should be auto-exported when importing our
 library in your favorite editor (as long as it is linked to a TSServer of some
@@ -32,7 +32,7 @@ sort).</p>
 import some of our internal type definitions into your code.</p>
 <p>To simplify this process, we export some type definitions which can be imported
 through the following line in your file:</p>
-<pre><code class="language-ts"><span class="hljs-keyword">import</span> { SOME_TYPE } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> { SOME_TYPE } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>
 </code></pre>
 <p>Here are the list of exported types, per category.</p>
 <p><a name="subchapter-RxPlayer%20Constructor"></a></p>
@@ -40,11 +40,11 @@ through the following line in your file:</p>
 <p>The type <code>IConstructorOptions</code> corresponds to the interface that the
 RxPlayer constructor accepts as an argument.</p>
 <p>Example:</p>
-<pre><code class="language-ts"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
-<span class="hljs-keyword">import</span> { IConstructorOptions } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player"</span>;
+<span class="hljs-keyword">import</span> { IConstructorOptions } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">generateConstructorOptions</span>(<span class="hljs-params"></span>) : <span class="hljs-title">IConstructorOptions</span> </span>{
-  <span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;video&quot;</span>);
+  <span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">"video"</span>);
   <span class="hljs-keyword">return</span> {
     <span class="hljs-attr">stopAtEnd</span>: <span class="hljs-literal">false</span>,
     videoElement,
@@ -70,21 +70,21 @@ RxPlayer constructor accepts as an argument.</p>
 <p><a name="subchapter-loadVideo"></a></p>
 <h3>loadVideo</h3>
 <p>The <code>ILoadVideoOptions</code> type corresponds to the argument to give to the
-RxPlayer&#x2019;s method <code>loadVideo</code>.</p>
+RxPlayer’s method <code>loadVideo</code>.</p>
 <p>Example:</p>
 <pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
-<span class="hljs-keyword">import</span> { ILoadVideoOptions } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+<span class="hljs-keyword">import</span> { ILoadVideoOptions } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
-<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./player&quot;</span>;
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
-<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">generateLoadVideoOptions</span>(<span class="hljs-params">url : <span class="hljs-built_in">string</span></span>) : <span class="hljs-title">ILoadVideoOptions</span> </span>{
   <span class="hljs-keyword">return</span> {
     url,
-    <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+    <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
     <span class="hljs-attr">autoPlay</span>: <span class="hljs-literal">true</span>,
   };
 }
@@ -138,13 +138,13 @@ optionally given to <code>loadVideo</code>.</p>
 Each of this objects corresponds to the <code>IAvailableAudioTrack</code> interface.</p>
 <p>Example:</p>
 <pre><code class="language-js"><span class="hljs-comment">// the type(s) wanted</span>
-<span class="hljs-keyword">import</span> { IAvailableAudioTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+<span class="hljs-keyword">import</span> { IAvailableAudioTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
-<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./player&quot;</span>;
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
-<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getAvailableAudioTracks</span>(<span class="hljs-params"></span>) : <span class="hljs-title">IAvailableAudioTrack</span>[] </span>{
   <span class="hljs-keyword">return</span> rxPlayer.getAvailableAudioTracks();
@@ -156,13 +156,13 @@ Each of this objects corresponds to the <code>IAvailableAudioTrack</code> interf
 Each of this objects corresponds to the <code>IAvailableTextTrack</code> interface.</p>
 <p>Example:</p>
 <pre><code class="language-js"><span class="hljs-comment">// the type(s) wanted</span>
-<span class="hljs-keyword">import</span> { IAvailableTextTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+<span class="hljs-keyword">import</span> { IAvailableTextTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
-<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./player&quot;</span>;
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
-<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getAvailableTextTracks</span>(<span class="hljs-params"></span>) : <span class="hljs-title">IAvailableTextTrack</span>[] </span>{
   <span class="hljs-keyword">return</span> rxPlayer.getAvailableTextTracks();
@@ -174,13 +174,13 @@ Each of this objects corresponds to the <code>IAvailableTextTrack</code> interfa
 Each of this objects corresponds to the <code>IAvailableVideoTrack</code> interface.</p>
 <p>Example:</p>
 <pre><code class="language-js"><span class="hljs-comment">// the type(s) wanted</span>
-<span class="hljs-keyword">import</span> { IAvailableVideoTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+<span class="hljs-keyword">import</span> { IAvailableVideoTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
-<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./player&quot;</span>;
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
-<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getAvailableVideoTracks</span>(<span class="hljs-params"></span>) : <span class="hljs-title">IAvailableVideoTrack</span>[] </span>{
   <span class="hljs-keyword">return</span> rxPlayer.getAvailableVideoTracks();
@@ -192,16 +192,16 @@ Each of this objects corresponds to the <code>IAvailableVideoTrack</code> interf
 method and emitted as the payload of the <code>audioTrackChange</code> event.</p>
 <p>Example:</p>
 <pre><code class="language-js"><span class="hljs-comment">// the type(s) wanted</span>
-<span class="hljs-keyword">import</span> { IAudioTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+<span class="hljs-keyword">import</span> { IAudioTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
-<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./player&quot;</span>;
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
-<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track : IAudioTrack</span>) =&gt;</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;current track:&quot;</span>, track);
+rxPlayer.addEventListener(<span class="hljs-string">"audioTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track : IAudioTrack</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"current track:"</span>, track);
 });
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getCurrentlyDownloadedAudioTrack</span>(<span class="hljs-params"></span>) : <span class="hljs-title">IAudioTrack</span> </span>{
@@ -214,16 +214,16 @@ rxPlayer.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;
 method and emitted as the payload of the <code>textTrackChange</code> event.</p>
 <p>Example:</p>
 <pre><code class="language-js"><span class="hljs-comment">// the type(s) wanted</span>
-<span class="hljs-keyword">import</span> { ITextTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+<span class="hljs-keyword">import</span> { ITextTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
-<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./player&quot;</span>;
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
-<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track : ITextTrack</span>) =&gt;</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;current track:&quot;</span>, track);
+rxPlayer.addEventListener(<span class="hljs-string">"textTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track : ITextTrack</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"current track:"</span>, track);
 });
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getCurrentlyDownloadedTextTrack</span>(<span class="hljs-params"></span>) : <span class="hljs-title">ITextTrack</span> </span>{
@@ -236,16 +236,16 @@ rxPlayer.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;<
 method and emitted as the payload of the <code>videoTrackChange</code> event.</p>
 <p>Example:</p>
 <pre><code class="language-js"><span class="hljs-comment">// the type(s) wanted</span>
-<span class="hljs-keyword">import</span> { IVideoTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+<span class="hljs-keyword">import</span> { IVideoTrack } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
-<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./player&quot;</span>;
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting a configuration object</span>
-<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./config&quot;</span>; <span class="hljs-comment">// define a global config</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;videoTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track : IVideoTrack</span>) =&gt;</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;current track:&quot;</span>, track);
+rxPlayer.addEventListener(<span class="hljs-string">"videoTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track : IVideoTrack</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"current track:"</span>, track);
 });
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getCurrentlyDownloadedVideoTrack</span>(<span class="hljs-params"></span>) : <span class="hljs-title">IVideoTrack</span> </span>{
@@ -259,18 +259,18 @@ a <code>streamEventSkip</code> event.</p>
 <p>The type <code>IStreamEventData</code> is the type of its <code>data</code> property.</p>
 <p>Example:</p>
 <pre><code class="language-js"><span class="hljs-comment">// the type(s) wanted</span>
-<span class="hljs-keyword">import</span> { IStreamEvent, IStreamEventData } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/types&quot;</span>;
+<span class="hljs-keyword">import</span> { IStreamEvent, IStreamEventData } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
 
 <span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
-<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./player&quot;</span>;
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processEventData</span>(<span class="hljs-params">eventData : IStreamEventData</span>) </span>{
-  <span class="hljs-keyword">if</span> (eventData.type === <span class="hljs-string">&quot;dash-event-stream&quot;</span>) {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;DASH EventStream&apos;s event received!&quot;</span>);
+  <span class="hljs-keyword">if</span> (eventData.type === <span class="hljs-string">"dash-event-stream"</span>) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"DASH EventStream's event received!"</span>);
   }
 }
 
-rxPlayer.addEventListener(<span class="hljs-string">&quot;streamEvent&quot;</span>, (evt : IStreamEvent) {
+rxPlayer.addEventListener(<span class="hljs-string">"streamEvent"</span>, (evt : IStreamEvent) {
   processEventData(evt.data);
 });
 </code></pre>

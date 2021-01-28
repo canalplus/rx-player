@@ -16,10 +16,10 @@
 <h2>Overview</h2>
 <p>The RxPlayer can play DASH contents specifically crafted to be played with a
 low latency (read close to the live edge) through a technology called something
-along the lines of &#x201C;Chunked-encoded CMAF and Chunked transfer encoding&#x201D;.</p>
+along the lines of “Chunked-encoded CMAF and Chunked transfer encoding”.</p>
 <p>Such contents are backward-compatible DASH contents (meaning they can be played
 in a regular non-low-latency way) which serves CMAF segment with an HTTP 1.1
-transfer mechanism called &#x201C;Chunked transfer encoding&#x201D;.</p>
+transfer mechanism called “Chunked transfer encoding”.</p>
 <p>To vulgarize, such segments are divided into multiple chunks which can be
 requested while the whole segment is still being encoded - through Chunked
 transfer encoding HTTP requests.</p>
@@ -33,8 +33,8 @@ search engine!</p>
 <p>To play a low-latency DASH content with - well - a low latency, you will need
 to set the <code>lowLatencyMode</code> <code>loadVideo</code> option.</p>
 <pre><code class="language-js">rxPlayer.loadVideo({
-  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://www.example.com/low-latency-content.mpd&quot;</span>,
-  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">url</span>: <span class="hljs-string">"https://www.example.com/low-latency-content.mpd"</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
   <span class="hljs-attr">lowLatencyMode</span>: <span class="hljs-literal">true</span>,
 })
 </code></pre>
@@ -73,8 +73,8 @@ and delay to the live edge.</p>
 <p>However, you can still provide a lower distance through the <code>startAt</code>
 <code>loadVideo</code> option (documented <a href="loadVideo_options.html#prop-startAt">here</a>):</p>
 <pre><code class="language-js">rxPlayer.loadVideo({
-  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://www.example.com/content.mpd&quot;</span>,
-  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">url</span>: <span class="hljs-string">"https://www.example.com/content.mpd"</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
   <span class="hljs-attr">lowLatencyMode</span>: <span class="hljs-literal">true</span>,
   <span class="hljs-attr">startAt</span>: { <span class="hljs-attr">fromLastPosition</span>: <span class="hljs-number">2</span> }, <span class="hljs-comment">// Play 2 seconds from the live edge instead</span>
                                     <span class="hljs-comment">// (beware of much more frequent rebuffering</span>
@@ -96,13 +96,13 @@ documentation</a> for a quick
 explanation of what to put in it.</p>
 <hr>
 <p>Here how it works:</p>
-<p>Imagine you have an URL allowing you to know the UTC time on the server&#x2019;s side.
-Let&#x2019;s call it <code>serverTimeURL</code>.</p>
-<p>Now you can have the server&#x2019;s time at a particular point in time (!). The
+<p>Imagine you have an URL allowing you to know the UTC time on the server’s side.
+Let’s call it <code>serverTimeURL</code>.</p>
+<p>Now you can have the server’s time at a particular point in time (!). The
 problem is that time continously changes: a time synchronization mechanism will
 have to be aware of how much time passed since the last request to obtain that
 time.</p>
-<p>We could asks for the client&#x2019;s timestamp - obtained thanks to the <code>Date.now()</code>
+<p>We could asks for the client’s timestamp - obtained thanks to the <code>Date.now()</code>
 API - at the time of the request.
 This would allow us to know how much time have passed since that event by
 calling <code>Date.now()</code> again in the future and calculating the difference.
@@ -110,7 +110,7 @@ The problem however is that <code>Date.now()</code> will instantly change if the
 updates its system clock. If that happens, we will lose the ability to know how
 much time has elapsed since the request.</p>
 <p>To workaround this issue, we can use instead <code>performance.now()</code>, which does not
-rely on the system&#x2019;s clock.
+rely on the system’s clock.
 However, we are still left with two other issues:</p>
 <ol>
 <li>
@@ -120,13 +120,13 @@ So we have to make sure each <code>performance.now()</code> call is done in the 
 worker.</p>
 </li>
 <li>
-<p><code>performance.now()</code> doesn&#x2019;t integrate the notion of leap seconds whereas
-unix time (the server&#x2019;s time) does. This could mean small time
+<p><code>performance.now()</code> doesn’t integrate the notion of leap seconds whereas
+unix time (the server’s time) does. This could mean small time
 de-synchronization when leap seconds are added or substracted.</p>
 </li>
 </ol>
 <p>We however consider those last two problems minor when compared to
-<code>Date.now()</code>&apos;s problem (which is the fact that it &#x201C;breaks&#x201D; if the system clock
+<code>Date.now()</code>'s problem (which is the fact that it “breaks” if the system clock
 is updated). If you would prefer to provide <code>Date.now()</code> anyway, you can open
 an issue and we will think about a possible implementation.</p>
 <p>So we now have two values:</p>

@@ -95,9 +95,9 @@ correctly used now</li>
 <li>Replace events listed in <em>Removed events</em></li>
 <li>Check events you use listed in <em>Changed events</em></li>
 </ol>
-<p>If you were only using documented APIs and you follow this, you&#x2019;ll be ready to
+<p>If you were only using documented APIs and you follow this, you’ll be ready to
 completely switch to a <code>3.x.x</code> release !</p>
-<p>If you don&#x2019;t know if you were using documented APIs, you can still check if the
+<p>If you don’t know if you were using documented APIs, you can still check if the
 options, methods and events you use now are documented in the <a href="api/index.html">new
 API</a>. Now, most non-documented (private) APIs begin by the
 string <code>_priv_</code>, to simplify this process.</p>
@@ -112,16 +112,16 @@ string <code>_priv_</code>, to simplify this process.</p>
 <p>Those features are:</p>
 <ol>
 <li>The automatic limitation of the video track to filter those with a width
-superior to the current video element&#x2019;s width.</li>
+superior to the current video element’s width.</li>
 <li>The automatic throttle on the audio and video bitrates set when the page is
 hidden for more than one minute.</li>
 </ol>
 <p>If you want to activate the feature 1, you have to set the <code>limitVideoWidth</code>
-boolean to <code>true</code> in the constructor&#x2019;s option. For the feature 2, it is the
-<code>throttleWhenHidden</code> constructor&#x2019;s option you will have to set to <code>true</code>.</p>
+boolean to <code>true</code> in the constructor’s option. For the feature 2, it is the
+<code>throttleWhenHidden</code> constructor’s option you will have to set to <code>true</code>.</p>
 <p>If you had set them to <code>false</code> to disable them before, you can now safely
 remove those options from the constructor argument.</p>
-<p>If you don&#x2019;t know what to do with them, you might want to disable both features
+<p>If you don’t know what to do with them, you might want to disable both features
 (by not setting them on the constructor). They only are optimizations for
 specific usecases.</p>
 <h4>Examples</h4>
@@ -159,7 +159,7 @@ to be translated into an ISO 639-2 language code.</p>
 <li><code>getCurrentAdaptations</code></li>
 </ul>
 <p>To not reflect exactly the language as set in the manifest (just one of the ISO
-639-2 translation of it). For example, <code>&quot;fra&quot;</code> was translated to <code>&quot;fre&quot;</code>
+639-2 translation of it). For example, <code>"fra"</code> was translated to <code>"fre"</code>
 (even though both are valid ISO 639-2 language codes for the same language).</p>
 <p>Because this behavior hide the true language value and ISO 639-2 language codes
 have synonyms, we decided to:</p>
@@ -195,57 +195,57 @@ follow the same rule.</p>
 <h4>Difference between the previous and new language codes used</h4>
 <p>In most cases, if you were manually checking language codes in your codebase you
 could just replace here the key <code>language</code> with its normalized counterpart
-(either <code>normalized</code> or <code>normalizedLanguage</code> depending on the API you&#x2019;re
+(either <code>normalized</code> or <code>normalizedLanguage</code> depending on the API you’re
 using, see previous chapter).</p>
 <p>However, while switching from ISO 639-2 to ISO 639-3, some language codes have
 changed (all were synonyms in ISO 639-2):</p>
 <ul>
-<li><code>&quot;alb&quot;</code> became <code>&quot;sqi&quot;</code> (for Albanian)</li>
-<li><code>&quot;arm&quot;</code> became <code>&quot;hye&quot;</code> (for Armenian)</li>
-<li><code>&quot;baq&quot;</code> became <code>&quot;eus&quot;</code> (for Basque)</li>
-<li><code>&quot;bur&quot;</code> became <code>&quot;mya&quot;</code> (for Burmese)</li>
-<li><code>&quot;chi&quot;</code> became <code>&quot;zho&quot;</code> (for Chinese)</li>
-<li><code>&quot;dut&quot;</code> became <code>&quot;nld&quot;</code> (for Dutch, Flemish)</li>
-<li><code>&quot;fre&quot;</code> became <code>&quot;fra&quot;</code> (for French)</li>
-<li><code>&quot;geo&quot;</code> became <code>&quot;kat&quot;</code> (for Georgian)</li>
-<li><code>&quot;ice&quot;</code> became <code>&quot;isl&quot;</code> (for Icelandic)</li>
-<li><code>&quot;mac&quot;</code> became <code>&quot;mkd&quot;</code> (for Macedonian)</li>
-<li><code>&quot;mao&quot;</code> became <code>&quot;mri&quot;</code> (for Maori)</li>
-<li><code>&quot;may&quot;</code> became <code>&quot;msa&quot;</code> (for Malay)</li>
+<li><code>"alb"</code> became <code>"sqi"</code> (for Albanian)</li>
+<li><code>"arm"</code> became <code>"hye"</code> (for Armenian)</li>
+<li><code>"baq"</code> became <code>"eus"</code> (for Basque)</li>
+<li><code>"bur"</code> became <code>"mya"</code> (for Burmese)</li>
+<li><code>"chi"</code> became <code>"zho"</code> (for Chinese)</li>
+<li><code>"dut"</code> became <code>"nld"</code> (for Dutch, Flemish)</li>
+<li><code>"fre"</code> became <code>"fra"</code> (for French)</li>
+<li><code>"geo"</code> became <code>"kat"</code> (for Georgian)</li>
+<li><code>"ice"</code> became <code>"isl"</code> (for Icelandic)</li>
+<li><code>"mac"</code> became <code>"mkd"</code> (for Macedonian)</li>
+<li><code>"mao"</code> became <code>"mri"</code> (for Maori)</li>
+<li><code>"may"</code> became <code>"msa"</code> (for Malay)</li>
 </ul>
 <h4>Example</h4>
 <pre><code class="language-js"><span class="hljs-built_in">console</span>.log(player.getAvailableAudioTrack());
 
-<span class="hljs-comment">// For a manifest with two audiotracks: &quot;fr&quot; and &quot;en&quot; without audio description</span>
+<span class="hljs-comment">// For a manifest with two audiotracks: "fr" and "en" without audio description</span>
 
 <span class="hljs-comment">// -- in the old version --:</span>
 <span class="hljs-keyword">const</span> oldVersionResult = [
   {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fre&quot;</span>, <span class="hljs-comment">// translated from &quot;fr&quot;</span>
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"fre"</span>, <span class="hljs-comment">// translated from "fr"</span>
     <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
-    <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_1&quot;</span>
+    <span class="hljs-attr">id</span>: <span class="hljs-string">"audio_1"</span>
   },
   {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// translated from &quot;en&quot;</span>
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>, <span class="hljs-comment">// translated from "en"</span>
     <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
-    <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_2&quot;</span>
+    <span class="hljs-attr">id</span>: <span class="hljs-string">"audio_2"</span>
   }
 ];
 
 <span class="hljs-comment">// -- became --:</span>
 <span class="hljs-keyword">const</span> result = [
   {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fr&quot;</span>, <span class="hljs-comment">// stays the same than in the manifest</span>
-    <span class="hljs-attr">normalized</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// translated from &quot;fr&quot;</span>
-                       <span class="hljs-comment">// (notice that it&apos;s not &quot;fre&quot; like before)</span>
-    audioDescription: <span class="hljs-literal">false</span>,
-    <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_1&quot;</span>
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"fr"</span>, <span class="hljs-comment">// stays the same than in the manifest</span>
+    <span class="hljs-attr">normalized</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-comment">// translated from "fr"</span>
+                       <span class="hljs-comment">// (notice that it's not "fre" like before)</span>
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">id</span>: <span class="hljs-string">"audio_1"</span>
   },
   {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>, <span class="hljs-comment">// stays the same than in the manifest</span>
-    <span class="hljs-attr">normalized</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// translated from &quot;en&quot;</span>
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"en"</span>, <span class="hljs-comment">// stays the same than in the manifest</span>
+    <span class="hljs-attr">normalized</span>: <span class="hljs-string">"eng"</span>, <span class="hljs-comment">// translated from "en"</span>
     <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
-    <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_2&quot;</span>
+    <span class="hljs-attr">id</span>: <span class="hljs-string">"audio_2"</span>
   }
 ];
 </code></pre>
@@ -263,14 +263,14 @@ have to set the wanted transport per-<code>loadVideo</code> calls via its
 <p>Without audio description:</p>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 player = <span class="hljs-keyword">new</span> RxPlayer({
-  <span class="hljs-attr">defaultLanguage</span>: <span class="hljs-string">&quot;en&quot;</span>
+  <span class="hljs-attr">defaultLanguage</span>: <span class="hljs-string">"en"</span>
 });
 
 <span class="hljs-comment">// becomes</span>
 player = <span class="hljs-keyword">new</span> RxPlayer();
 player.loadVideo({
   <span class="hljs-attr">defaultAudioTrack</span>: {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"en"</span>
   },
   <span class="hljs-comment">// ...</span>
 });
@@ -279,7 +279,7 @@ player.loadVideo({
 <pre><code class="language-js">player = <span class="hljs-keyword">new</span> RxPlayer();
 player.loadVideo({
   <span class="hljs-attr">defaultAudioTrack</span>: {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>,
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"en"</span>,
     <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">true</span>
   },
   <span class="hljs-comment">// ...</span>
@@ -296,14 +296,14 @@ have to set the wanted transport per-<code>loadVideo</code> calls via its
 <p>Without closed caption:</p>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 player = <span class="hljs-keyword">new</span> RxPlayer({
-  <span class="hljs-attr">defaultSubtitle</span>: <span class="hljs-string">&quot;en&quot;</span>
+  <span class="hljs-attr">defaultSubtitle</span>: <span class="hljs-string">"en"</span>
 });
 
 <span class="hljs-comment">// becomes</span>
 player = <span class="hljs-keyword">new</span> RxPlayer();
 player.loadVideo({
   <span class="hljs-attr">defaultTextTrack</span>: {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"en"</span>
   },
   <span class="hljs-comment">// ...</span>
 });
@@ -312,7 +312,7 @@ player.loadVideo({
 <pre><code class="language-js">player = <span class="hljs-keyword">new</span> RxPlayer();
 player.loadVideo({
   <span class="hljs-attr">defaultTextTrack</span>: {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>,
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"en"</span>,
     <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">true</span>
   },
   <span class="hljs-comment">// ...</span>
@@ -383,22 +383,22 @@ its own chapter.</p>
 <h4>Replacement examples</h4>
 <p>If you want to know when the player is on error, you will have to listen to the
 <code>error</code> events:</p>
-<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">error</span>) =&gt;</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;content on error&quot;</span>);
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">"error"</span>, <span class="hljs-function">(<span class="hljs-params">error</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"content on error"</span>);
 });
 </code></pre>
 <p>If you want to know when the content is loaded, you will have to listen to when
 the <code>playerStateChange</code> events:</p>
-<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">"playerStateChange"</span>, <span class="hljs-function">(<span class="hljs-params">state</span>) =&gt;</span> {
   <span class="hljs-keyword">switch</span> (state) {
-    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;LOADING&quot;</span>:
-      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is loading&quot;</span>);
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"LOADING"</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the content is loading"</span>);
       <span class="hljs-keyword">break</span>;
-    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;LOADED&quot;</span>:
-      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content has loaded&quot;</span>);
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"LOADED"</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the content has loaded"</span>);
       <span class="hljs-keyword">break</span>;
-    <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;PLAYING&quot;</span>:
-      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is now playing&quot;</span>);
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"PLAYING"</span>:
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the content is now playing"</span>);
       <span class="hljs-keyword">break</span>;
   }
 });
@@ -416,14 +416,14 @@ supports audio description.</p>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
-  <span class="hljs-attr">defaultLanguage</span>: <span class="hljs-string">&quot;en&quot;</span>
+  <span class="hljs-attr">defaultLanguage</span>: <span class="hljs-string">"en"</span>
 });
 
 <span class="hljs-comment">// becomes</span>
 player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
   <span class="hljs-attr">defaultAudioTrack</span>: {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"en"</span>
   }
 });
 </code></pre>
@@ -431,7 +431,7 @@ player.loadVideo({
 <pre><code class="language-js">player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
   <span class="hljs-attr">defaultAudioTrack</span>: {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>,
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"en"</span>,
     <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">true</span>
   }
 });
@@ -447,14 +447,14 @@ supports closed caption.</p>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
-  <span class="hljs-attr">defaultSubtitle</span>: <span class="hljs-string">&quot;en&quot;</span>
+  <span class="hljs-attr">defaultSubtitle</span>: <span class="hljs-string">"en"</span>
 });
 
 <span class="hljs-comment">// becomes</span>
 player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
   <span class="hljs-attr">defaultTextTrack</span>: {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"en"</span>
   }
 });
 </code></pre>
@@ -462,7 +462,7 @@ player.loadVideo({
 <pre><code class="language-js">player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
   <span class="hljs-attr">defaultTextTrack</span>: {
-    <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>,
+    <span class="hljs-attr">language</span>: <span class="hljs-string">"en"</span>,
     <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">true</span>
   }
 });
@@ -477,8 +477,8 @@ player.loadVideo({
 player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
   <span class="hljs-attr">images</span>: {
-    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/bif&quot;</span>,
-    <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;&quot;</span>,
+    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">"application/bif"</span>,
+    <span class="hljs-attr">url</span>: <span class="hljs-string">""</span>,
   },
 });
 
@@ -486,8 +486,8 @@ player.loadVideo({
 player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
   <span class="hljs-attr">supplementaryImageTracks</span>: {
-    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/bif&quot;</span>,
-    <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;&quot;</span>,
+    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">"application/bif"</span>,
+    <span class="hljs-attr">url</span>: <span class="hljs-string">""</span>,
   },
 });
 </code></pre>
@@ -508,8 +508,8 @@ however that <code>supplementaryTextTracks</code> is a deprecated feature.</li>
 player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
   <span class="hljs-attr">subtitles</span>: {
-    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/x-sami&quot;</span>,
-    <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;&quot;</span>,
+    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">"application/x-sami"</span>,
+    <span class="hljs-attr">url</span>: <span class="hljs-string">""</span>,
   },
 });
 
@@ -517,8 +517,8 @@ player.loadVideo({
 player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
   <span class="hljs-attr">supplementaryTextTracks</span>: {
-    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/x-sami&quot;</span>,
-    <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;&quot;</span>,
+    <span class="hljs-attr">mimeType</span>: <span class="hljs-string">"application/x-sami"</span>,
+    <span class="hljs-attr">url</span>: <span class="hljs-string">""</span>,
   },
 });
 </code></pre>
@@ -652,7 +652,7 @@ A per-type would be heavy both for the rx-player and for the application
 using it</p>
 </li>
 <li>
-<p>It&#x2019;s easier to explain through the documentation, for people that do not
+<p>It’s easier to explain through the documentation, for people that do not
 want to understand the nitty-gritty of a player</p>
 </li>
 <li>
@@ -715,9 +715,9 @@ documentation</a> for more infos.</p>
 audioTracks = player.getAvailableLanguages();
 
 <span class="hljs-keyword">if</span> (audioTracks &amp;&amp; audioTracks.length) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;audio languages:&quot;</span>, ...audioTracks);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"audio languages:"</span>, ...audioTracks);
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no audio language&quot;</span>);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"no audio language"</span>);
 }
 
 <span class="hljs-comment">// -------------------------------</span>
@@ -726,9 +726,9 @@ audioTracks = player.getAvailableLanguages();
 audioTracks = player.getAvailableAudioTracks();
 
 <span class="hljs-keyword">if</span> (audioTracks &amp;&amp; audioTracks.length) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;audio languages:&quot;</span>, ...audioTracks.map(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.language));
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"audio languages:"</span>, ...audioTracks.map(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.language));
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no audio language&quot;</span>);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"no audio language"</span>);
 }
 </code></pre>
 <p><a name="rem-getAvailableSubtitles"></a>
@@ -743,9 +743,9 @@ more infos.</p>
 subtitleTracks = player.getAvailableSubtitles();
 
 <span class="hljs-keyword">if</span> (subtitleTracks &amp;&amp; subtitleTracks.length) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;subtitle languages:&quot;</span>, ...subtitleTracks);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"subtitle languages:"</span>, ...subtitleTracks);
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no subtitle language&quot;</span>);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"no subtitle language"</span>);
 }
 
 <span class="hljs-comment">// -------------------------------</span>
@@ -754,10 +754,10 @@ subtitleTracks = player.getAvailableSubtitles();
 subtitleTracks = player.getAvailableTextTracks();
 
 <span class="hljs-keyword">if</span> (subtitleTracks &amp;&amp; subtitleTracks.length) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;subtitle languages:&quot;</span>,
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"subtitle languages:"</span>,
     ...subtitleTracks.map(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.language));
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no subtitle language&quot;</span>);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"no subtitle language"</span>);
 }
 </code></pre>
 <p><a name="rem-getAverageBitrates"></a>
@@ -789,7 +789,7 @@ being that for live contents, a timestamp will be returned (in seconds), not
 a Date object</p>
 </li>
 <li>
-<p>getPosition: returns the video element&#x2019;s current position, in seconds. The
+<p>getPosition: returns the video element’s current position, in seconds. The
 difference with getWallClockTime is that for live contents the position is
 not re-calculated to match a live timestamp.</p>
 </li>
@@ -798,7 +798,7 @@ not re-calculated to match a live timestamp.</p>
 <ul>
 <li>If what you want is to display the current time to the user, you will most
 probably want to use getWallClockTime.</li>
-<li>If what you want is to interact with the player&#x2019;s API or perform other
+<li>If what you want is to interact with the player’s API or perform other
 actions with the real player data, use getPosition.</li>
 </ul>
 <h4>Replacement example</h4>
@@ -818,7 +818,7 @@ currentTime = player.getWallClockTime();
 <a name="subchapter-getDebug%20/%20showDebug%20/%20hideDebug%20/%20toggleDebug"></a></p>
 <h3>getDebug / showDebug / hideDebug / toggleDebug</h3>
 <h4>What Changed</h4>
-<p>Those will be removed from the API and won&#x2019;t be replaced.</p>
+<p>Those will be removed from the API and won’t be replaced.</p>
 <p>Those methods were used internally, but were exposed like regular APIs.
 They have not much usage either as other APIs should be sufficient.</p>
 <p><a name="rem-getEndTime"></a>
@@ -883,7 +883,7 @@ player.getImageTrack().subscribe(<span class="hljs-function"><span class="hljs-p
 });
 
 <span class="hljs-comment">// becomes</span>
-player.addEventListener(<span class="hljs-string">&quot;imageTrackUpdate&quot;</span>, <span class="hljs-function">(<span class="hljs-params">{ data }</span>) =&gt;</span> {
+player.addEventListener(<span class="hljs-string">"imageTrackUpdate"</span>, <span class="hljs-function">(<span class="hljs-params">{ data }</span>) =&gt;</span> {
   displaySomeImages(data);
 });
 </code></pre>
@@ -898,9 +898,9 @@ description support.</p>
 track = player.getLanguage();
 
 <span class="hljs-keyword">if</span> (track) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;audio language:&quot;</span>, track);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"audio language:"</span>, track);
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no audio language&quot;</span>);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"no audio language"</span>);
 }
 
 <span class="hljs-comment">// ------------------------</span>
@@ -909,9 +909,9 @@ track = player.getLanguage();
 track = player.getAudioTrack();
 
 <span class="hljs-keyword">if</span> (track) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;audio language:&quot;</span>, track.language);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"audio language:"</span>, track.language);
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no audio language&quot;</span>);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"no audio language"</span>);
 }
 </code></pre>
 <p><a name="rem-getMetrics"></a>
@@ -946,9 +946,9 @@ support.</p>
 track = player.getSubtitle();
 
 <span class="hljs-keyword">if</span> (track) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;text language:&quot;</span>, track);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"text language:"</span>, track);
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no text language&quot;</span>);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"no text language"</span>);
 }
 
 <span class="hljs-comment">// ------------------------</span>
@@ -957,9 +957,9 @@ track = player.getSubtitle();
 track = player.getTextTrack();
 
 <span class="hljs-keyword">if</span> (track) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;text language:&quot;</span>, track.language);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"text language:"</span>, track.language);
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no text language&quot;</span>);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"no text language"</span>);
 }
 </code></pre>
 <p><a name="rem-goToStart"></a>
@@ -985,19 +985,19 @@ player.seekTo(player.getMinimumPosition());
 <h4>Replacement examples</h4>
 <h5>isLanguageAvailable</h5>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
-<span class="hljs-built_in">console</span>.log(player.isLanguageAvailable(<span class="hljs-string">&quot;fr&quot;</span>));
+<span class="hljs-built_in">console</span>.log(player.isLanguageAvailable(<span class="hljs-string">"fr"</span>));
 
 <span class="hljs-comment">// becomes</span>
 <span class="hljs-keyword">const</span> tracks = player.getAvailableAudioTracks();
-<span class="hljs-built_in">console</span>.log(!!tracks &amp;&amp; tracks.some(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>));
+<span class="hljs-built_in">console</span>.log(!!tracks &amp;&amp; tracks.some(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">"fr"</span>));
 </code></pre>
 <h5>isSubtitleAvailable</h5>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
-<span class="hljs-built_in">console</span>.log(player.isSubtitleAvailable(<span class="hljs-string">&quot;fr&quot;</span>));
+<span class="hljs-built_in">console</span>.log(player.isSubtitleAvailable(<span class="hljs-string">"fr"</span>));
 
 <span class="hljs-comment">// becomes</span>
 <span class="hljs-keyword">const</span> tracks = player.getAvailableTextTracks();
-<span class="hljs-built_in">console</span>.log(!!tracks &amp;&amp; tracks.some(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>));
+<span class="hljs-built_in">console</span>.log(!!tracks &amp;&amp; tracks.some(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">"fr"</span>));
 </code></pre>
 <p><a name="rem-normalizeLanguageCode"></a>
 <a name="subchapter-normalizeLanguageCode"></a></p>
@@ -1014,21 +1014,21 @@ description support.</p>
 <h4>Replacement example</h4>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 <span class="hljs-keyword">try</span> {
-  player.setLanguage(<span class="hljs-string">&quot;fr&quot;</span>);
-} <span class="hljs-function"><span class="hljs-title">catch</span>(<span class="hljs-params">e</span>)</span> {
-  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
+  player.setLanguage(<span class="hljs-string">"fr"</span>);
+} <span class="hljs-keyword">catch</span>(e) {
+  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">"no track found with this language"</span>);
 }
 
 <span class="hljs-comment">// -------------------------</span>
 
 <span class="hljs-comment">// becomes</span>
 track = player.getAvailableAudioTracks();
-<span class="hljs-keyword">const</span> indexOf = tracks &amp;&amp; tracks.indexOf(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>);
+<span class="hljs-keyword">const</span> indexOf = tracks &amp;&amp; tracks.indexOf(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">"fr"</span>);
 
 <span class="hljs-keyword">if</span> (tracks &amp;&amp; indexOf !== -<span class="hljs-number">1</span>) {
   player.setAudioTrack(tracks[indexOf].id);
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
+  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">"no track found with this language"</span>);
 }
 </code></pre>
 <p><a name="rem-setSubtitle"></a>
@@ -1040,21 +1040,21 @@ support.</p>
 <h4>Replacement example</h4>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 <span class="hljs-keyword">try</span> {
-  player.setSubtitle(<span class="hljs-string">&quot;fr&quot;</span>);
-} <span class="hljs-function"><span class="hljs-title">catch</span>(<span class="hljs-params">e</span>)</span> {
-  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
+  player.setSubtitle(<span class="hljs-string">"fr"</span>);
+} <span class="hljs-keyword">catch</span>(e) {
+  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">"no track found with this language"</span>);
 }
 
 <span class="hljs-comment">// -------------------------</span>
 
 <span class="hljs-comment">// becomes</span>
 track = player.getAvailableTextTracks();
-<span class="hljs-keyword">const</span> indexOf = tracks &amp;&amp; tracks.indexOf(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">&quot;fr&quot;</span>);
+<span class="hljs-keyword">const</span> indexOf = tracks &amp;&amp; tracks.indexOf(<span class="hljs-function">(<span class="hljs-params">{ language }</span>) =&gt;</span> language === <span class="hljs-string">"fr"</span>);
 
 <span class="hljs-keyword">if</span> (tracks &amp;&amp; indexOf !== -<span class="hljs-number">1</span>) {
   player.setTextTrack(tracks[indexOf].id);
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">&quot;no track found with this language&quot;</span>);
+  <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">"no track found with this language"</span>);
 }
 </code></pre>
 <p><a name="chan"></a>
@@ -1173,14 +1173,14 @@ much of our internal logic.</p>
 audio description.</p>
 <h4>Replacement example</h4>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
-player.addEventListener(<span class="hljs-string">&quot;languageChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">lang</span>) =&gt;</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;language changed to&quot;</span>, lang);
+player.addEventListener(<span class="hljs-string">"languageChange"</span>, <span class="hljs-function">(<span class="hljs-params">lang</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"language changed to"</span>, lang);
 });
 
 <span class="hljs-comment">// becomes</span>
-player.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
+player.addEventListener(<span class="hljs-string">"audioTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
   <span class="hljs-keyword">const</span> { language, id, audioDescription } = track;
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;language changed to&quot;</span>, language);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"language changed to"</span>, language);
 });
 </code></pre>
 <p><a name="remev-subtitleChange"></a>
@@ -1191,14 +1191,14 @@ player.addEventListener(<span class="hljs-string">&quot;audioTrackChange&quot;</
 closed caption.</p>
 <h4>Replacement example</h4>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
-player.addEventListener(<span class="hljs-string">&quot;subtitleChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">lang</span>) =&gt;</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;subtitle changed to&quot;</span>, lang);
+player.addEventListener(<span class="hljs-string">"subtitleChange"</span>, <span class="hljs-function">(<span class="hljs-params">lang</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"subtitle changed to"</span>, lang);
 });
 
 <span class="hljs-comment">// becomes</span>
-player.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
+player.addEventListener(<span class="hljs-string">"textTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
   <span class="hljs-keyword">const</span> { language, id, closedCaption } = track;
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;language changed to&quot;</span>, language);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"language changed to"</span>, language);
 });
 </code></pre>
 <p><a name="remev-nativeTextTrackChange"></a>
@@ -1206,7 +1206,7 @@ player.addEventListener(<span class="hljs-string">&quot;textTrackChange&quot;</s
 <h3>nativeTextTrackChange</h3>
 <h4>What Changed</h4>
 <p><code>nativeTextTrackChange</code> is replace by the <code>nativeTextTracksChange</code> (notice
-the supplementary &#x201C;s&#x201D;) event.</p>
+the supplementary “s”) event.</p>
 <p>Three things have changed comparatively:</p>
 <ul>
 <li>
@@ -1228,18 +1228,18 @@ information. Also, this allows to signal when a <code>TextTrack</code> has been 
 from the DOM to help you free up ressources on your side.</p>
 <h4>Replacement example</h4>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
-player.addEventListener(<span class="hljs-string">&quot;nativeTextTrackChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the track changed:&quot;</span>, track);
+player.addEventListener(<span class="hljs-string">"nativeTextTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the track changed:"</span>, track);
 });
 
 <span class="hljs-comment">// becomes</span>
-player.addEventListener(<span class="hljs-string">&quot;nativeTextTracksChange&quot;</span>, <span class="hljs-function">(<span class="hljs-params">tracks</span>) =&gt;</span> {
+player.addEventListener(<span class="hljs-string">"nativeTextTracksChange"</span>, <span class="hljs-function">(<span class="hljs-params">tracks</span>) =&gt;</span> {
   <span class="hljs-keyword">if</span> (tracks.length === <span class="hljs-number">0</span>) {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;no active track!&quot;</span>);
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"no active track!"</span>);
   } <span class="hljs-keyword">else</span> {
     <span class="hljs-comment">// in most usecases you can just check the first element.</span>
     <span class="hljs-comment">// (this will have the exact same effect than the previous event)</span>
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the track changed:&quot;</span>, tracks[<span class="hljs-number">0</span>]);
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the track changed:"</span>, tracks[<span class="hljs-number">0</span>]);
   }
 });
 </code></pre>

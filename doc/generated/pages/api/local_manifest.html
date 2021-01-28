@@ -49,7 +49,7 @@ API is under way.</p>
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
 <p>To play contents stored locally, the RxPlayer uses its own Manifest format - the
-&#x201C;local manifest&#x201D; which is close in semantics to DASH&#x2019;s own Manifest file, the
+“local manifest” which is close in semantics to DASH’s own Manifest file, the
 MPD.</p>
 <p>This new Manifest format will be the only element you will need to generate on
 your side to play stored contents. As such, this what most of this documentation
@@ -59,16 +59,16 @@ creating this local manifest. Playback can even begin while the content is
 still downloading.</p>
 <p>You will just need to:</p>
 <ol>
-<li>indicate that this is a &#x201C;local&#x201D; content by setting the <code>transport</code> option
-in <code>loadVideo</code> to <code>&quot;local&quot;</code></li>
-<li>As the generated Manifest object most likely won&#x2019;t be available through an
+<li>indicate that this is a “local” content by setting the <code>transport</code> option
+in <code>loadVideo</code> to <code>"local"</code></li>
+<li>As the generated Manifest object most likely won’t be available through an
 URL but directly as a JavaScript object, you will need to communicate it
 through the <code>manifestLoader</code> property in the <code>transportOptions</code> <code>loadVideo</code>
 option.</li>
 </ol>
 <p>Here is an example:</p>
 <pre><code class="language-js">rxPlayer.loadVideo({
-  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;local&quot;</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"local"</span>,
   <span class="hljs-attr">transportOptions</span>: {
     <span class="hljs-comment">// Note: `_url` here will be `undefined`</span>
     <span class="hljs-function"><span class="hljs-title">manifestLoader</span>(<span class="hljs-params">_url, callbacks</span>)</span> {
@@ -83,21 +83,21 @@ option.</li>
 <a href="plugins.html#manifestLoader">here</a>.</p>
 <p><a name="chapter-How%20to%20import%20this%20feature"></a></p>
 <h2>How to import this feature</h2>
-<p>The <code>&quot;LOCAL_MANIFEST&quot;</code> feature is not included in the default RxPlayer build.</p>
-<p>There&#x2019;s two way you can import it, depending on if you&#x2019;re relying on the minimal
+<p>The <code>"LOCAL_MANIFEST"</code> feature is not included in the default RxPlayer build.</p>
+<p>There’s two way you can import it, depending on if you’re relying on the minimal
 version or if you prefer to make use of environment variables and build the
 player manually.</p>
 <h4>Through the minimal version of the RxPlayer</h4>
-<p>If you&#x2019;re using the &#x201C;minimal&#x201D; version of the RxPlayer (through the
-<code>&quot;rx-player/minimal&quot;</code> import), you will need to import the <code>LOCAL_MANIFEST</code>
+<p>If you’re using the “minimal” version of the RxPlayer (through the
+<code>"rx-player/minimal"</code> import), you will need to import the <code>LOCAL_MANIFEST</code>
 experimental feature:</p>
-<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/minimal&quot;</span>;
-<span class="hljs-keyword">import</span> { LOCAL_MANIFEST } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/features&quot;</span>;
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> { LOCAL_MANIFEST } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/features"</span>;
 
 RxPlayer.addFeatures([LOCAL_MANIFEST]);
 </code></pre>
 <h4>Through environment variables</h4>
-<p>If you don&#x2019;t want to go the minimal version&#x2019;s route and you have no problem with
+<p>If you don’t want to go the minimal version’s route and you have no problem with
 building yourself a new version of the RxPlayer, you can make use of environment
 variables to activate it.</p>
 <p>This can be done through the <code>RXP_LOCAL_MANIFEST</code> environment variable, which
@@ -109,7 +109,7 @@ documentation</a>.</p>
 <p><a name="chapter-The%20Manifest%20format"></a></p>
 <h2>The Manifest format</h2>
 <p>As explained in the overview, offline playback by the RxPlayer mainly rely on a
-specific sort of manifest, called the &#x201C;local manifest&#x201D;.</p>
+specific sort of manifest, called the “local manifest”.</p>
 <p>It is not the task of the RxPlayer to download and store the content here (a
 tool to do just that is on its way), this page only explains how to play a
 stored content once it has been stored.</p>
@@ -133,23 +133,23 @@ object) to the lower ones (the representation Object).</p>
 <ul>
 <li>its duration</li>
 <li>whether it is still downloading or if its completely available</li>
-<li>the different &#x201C;parts&#x201D; (or &#x201C;periods&#x201D;) the content is divided in</li>
+<li>the different “parts” (or “periods”) the content is divided in</li>
 </ul>
-<p>First, let&#x2019;s go into an example, before describing what each property is for:</p>
+<p>First, let’s go into an example, before describing what each property is for:</p>
 <pre><code class="language-js">{
-  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;local&quot;</span>, <span class="hljs-comment">// always set to &quot;local&quot;</span>
-  <span class="hljs-attr">version</span>: <span class="hljs-string">&quot;0.2&quot;</span>, <span class="hljs-comment">// version number, in a MAJOR.MINOR form</span>
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"local"</span>, <span class="hljs-comment">// always set to "local"</span>
+  <span class="hljs-attr">version</span>: <span class="hljs-string">"0.2"</span>, <span class="hljs-comment">// version number, in a MAJOR.MINOR form</span>
   <span class="hljs-attr">minimumPosition</span>: <span class="hljs-number">0</span>, <span class="hljs-comment">// Minimum possible reachable position in the content,</span>
                       <span class="hljs-comment">// in seconds</span>
-  maximumPosition: <span class="hljs-number">120</span>, <span class="hljs-comment">// Maximum possible reachable position in the content,</span>
+  <span class="hljs-attr">maximumPosition</span>: <span class="hljs-number">120</span>, <span class="hljs-comment">// Maximum possible reachable position in the content,</span>
                         <span class="hljs-comment">// in seconds</span>
-  isFinished: <span class="hljs-literal">true</span>, <span class="hljs-comment">// if `false`, the content is still downloading</span>
-  <span class="hljs-attr">periods</span>: [ <span class="hljs-comment">// different &quot;periods&quot; in the content - see below</span>
+  <span class="hljs-attr">isFinished</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// if `false`, the content is still downloading</span>
+  <span class="hljs-attr">periods</span>: [ <span class="hljs-comment">// different "periods" in the content - see below</span>
     <span class="hljs-comment">// ...</span>
   ],
 }
 </code></pre>
-<p>As you can see, it is a simple JavaScript object with few properties we&#x2019;re going
+<p>As you can see, it is a simple JavaScript object with few properties we’re going
 to dive into just now.</p>
 <p><a name="subchapter-properties"></a></p>
 <h3>properties</h3>
@@ -157,16 +157,16 @@ to dive into just now.</p>
 object:</p>
 <ul>
 <li>
-<p>type (<code>string</code>): Must be set to <code>&quot;local&quot;</code>. This property indicates to the
+<p>type (<code>string</code>): Must be set to <code>"local"</code>. This property indicates to the
 RxPlayer that the current content is a local manifest.</p>
 </li>
 <li>
 <p>version (<code>string</code>): Version number, in a MAJOR.MINOR form.
-The present documentation is for the <code>&quot;0.2&quot;</code> version.</p>
+The present documentation is for the <code>"0.2"</code> version.</p>
 <p>A parser for a version with the a given MAJOR version should be able to
 parse and play contents for any of the corresponding MINOR versions.</p>
 <p>The exception is the <code>0</code> MAJOR version (i.e. experimental versions).
-A parser for a version with that major (let&#x2019;s say <code>0.1</code>) might be unable to
+A parser for a version with that major (let’s say <code>0.1</code>) might be unable to
 parse local Manifests of another version (e.g. <code>0.2</code>).</p>
 </li>
 <li>
@@ -186,8 +186,8 @@ that the whole content is not available yet and that the RxPlayer may have
 to refresh the local manifest while playing (to get the new data).</p>
 </li>
 <li>
-<p>periods (<code>Array.&lt;Object&gt;</code>): The different &#x201C;periods&#x201D; available in the
-content. We will explain what a &#x201C;period&#x201D; is in the following chapter.</p>
+<p>periods (<code>Array.&lt;Object&gt;</code>): The different “periods” available in the
+content. We will explain what a “period” is in the following chapter.</p>
 </li>
 <li>
 <p>expired (<code>Promise.&lt;undefined&gt;|undefined</code>): Optional Promise which should
@@ -210,9 +210,9 @@ property. The concept of period comes from DASH and allow to separate a content
 into multiple sub-parts, each with their own configurations.</p>
 <p>For example, you could have in the same content a TV Show in german followed by
 an american film, each with its own language choices and qualities.</p>
-<p>If you don&#x2019;t need that kind of granularity, you can just create a single period
+<p>If you don’t need that kind of granularity, you can just create a single period
 for your local manifest.</p>
-<p>Here&#x2019;s an example of a period object:</p>
+<p>Here’s an example of a period object:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">start</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// starting position in the whole content, in seconds</span>
   <span class="hljs-attr">end</span>: <span class="hljs-number">20</span>, <span class="hljs-comment">// ending position, in seconds</span>
@@ -224,8 +224,8 @@ for your local manifest.</p>
 <p>In the context of a local manifest with multiple periods, here is how it can
 look like:</p>
 <pre><code class="language-js">{
-  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;local&quot;</span>,
-  <span class="hljs-attr">version</span>: <span class="hljs-string">&quot;0.2&quot;</span>,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"local"</span>,
+  <span class="hljs-attr">version</span>: <span class="hljs-string">"0.2"</span>,
   <span class="hljs-attr">minimumPosition</span>: <span class="hljs-number">0</span>,
   <span class="hljs-attr">maximumPosition</span>: <span class="hljs-number">60</span>,
   <span class="hljs-attr">isFinished</span>: <span class="hljs-literal">true</span>,
@@ -265,40 +265,40 @@ for more information.</p>
 </ul>
 <p><a name="chapter-the%20adaptation%20object"></a></p>
 <h2>the adaptation object</h2>
-<p>An adaptation is roughly a &#x201C;track&#x201D; of the content. It can for the moment be one
+<p>An adaptation is roughly a “track” of the content. It can for the moment be one
 of those three types:</p>
 <ul>
-<li>&#x201C;audio&#x201D;</li>
-<li>&#x201C;video&#x201D;</li>
-<li>&#x201C;text&#x201D; (subtitles)</li>
+<li>“audio”</li>
+<li>“video”</li>
+<li>“text” (subtitles)</li>
 </ul>
-<p>The form of the adaptation object depends on the type of track. Let&#x2019;s just start
+<p>The form of the adaptation object depends on the type of track. Let’s just start
 with a simple video track example:</p>
 <pre><code class="language-js">{
-  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;video&quot;</span>,
-  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// optional language code</span>
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"video"</span>,
+  <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>, <span class="hljs-comment">// optional language code</span>
   <span class="hljs-attr">representations</span>: [ <span class="hljs-comment">// describes the different available qualities</span>
     <span class="hljs-comment">// ...</span>
   ]
 }
 </code></pre>
-<p>Let&#x2019;s continue with an audio track example:</p>
+<p>Let’s continue with an audio track example:</p>
 <pre><code class="language-js">{
-  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;audio&quot;</span>,
-  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// language code for this audio track</span>
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"audio"</span>,
+  <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-comment">// language code for this audio track</span>
   <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>, <span class="hljs-comment">// if `true`, that audio track is a track adapted for</span>
                            <span class="hljs-comment">// the visually impaired</span>
-  representations: [ <span class="hljs-comment">/* ... */</span> ]
+  <span class="hljs-attr">representations</span>: [ <span class="hljs-comment">/* ... */</span> ]
 }
 </code></pre>
-<p>We&#x2019;ll finish with a text track example:</p>
+<p>We’ll finish with a text track example:</p>
 <pre><code class="language-js">{
-  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;text&quot;</span>,
-  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// language code for this audio track</span>
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"text"</span>,
+  <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-comment">// language code for this audio track</span>
   <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span>, <span class="hljs-comment">// if `true`, that text track contains supplementary</span>
                         <span class="hljs-comment">// cues about the audio content (generally used for the</span>
                         <span class="hljs-comment">// hard of hearing)</span>
-  representations: [ <span class="hljs-comment">/* ... */</span> ]
+  <span class="hljs-attr">representations</span>: [ <span class="hljs-comment">/* ... */</span> ]
 }
 </code></pre>
 <p>Here how it looks when adaptations are integrated in a given period:</p>
@@ -307,49 +307,49 @@ with a simple video track example:</p>
   <span class="hljs-attr">end</span>: <span class="hljs-number">10</span>,
   <span class="hljs-attr">adaptations</span>: [
     {
-      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;video&quot;</span>,
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"video"</span>,
       <span class="hljs-attr">representations</span>: [ <span class="hljs-comment">/* ... */</span> ],
     },
     {
-      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;audio&quot;</span>,
-      <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>,
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"audio"</span>,
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>,
       <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
       <span class="hljs-attr">representations</span>: [ <span class="hljs-comment">/* ... */</span> ]
     },
     {
-      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;audio&quot;</span>,
-      <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>,
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"audio"</span>,
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>,
       <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
       <span class="hljs-attr">representations</span>: [ <span class="hljs-comment">/* ... */</span> ]
     },
     {
-      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;audio&quot;</span>,
-      <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>,
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"audio"</span>,
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>,
       <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">true</span>,
       <span class="hljs-attr">representations</span>: [ <span class="hljs-comment">/* ... */</span> ]
     },
     {
-      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;text&quot;</span>,
-      <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>,
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"text"</span>,
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>,
       <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span>,
       <span class="hljs-attr">representations</span>: [ <span class="hljs-comment">/* ... */</span> ]
     },
     {
-      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;text&quot;</span>,
-      <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>,
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"text"</span>,
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>,
       <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">true</span>,
       <span class="hljs-attr">representations</span>: [ <span class="hljs-comment">/* ... */</span> ]
     }
   ]
 },
 </code></pre>
-<p>Let&#x2019;s now describes precizely every properties encountered here.</p>
+<p>Let’s now describes precizely every properties encountered here.</p>
 <p><a name="subchapter-properties-bis-bis"></a></p>
 <h3>properties</h3>
 <p>The following properties are found in an adaptation object:</p>
 <ul>
 <li>
-<p>type (<code>string</code>): The &#x201C;type&#x201D; of the current adaptation. Can be one of three
+<p>type (<code>string</code>): The “type” of the current adaptation. Can be one of three
 strings:</p>
 <ol>
 <li>audio</li>
@@ -366,7 +366,7 @@ for audio and text adaptations but can also be defined for video tracks.</p>
 </li>
 <li>
 <p>audioDescription (<code>boolean|undefined</code>): If true, the track contains audio
-indications helping to understand what&#x2019;s on the screen. Mostly useful for
+indications helping to understand what’s on the screen. Mostly useful for
 the visually impaired, this property is generally only relevant for audio
 tracks.</p>
 </li>
@@ -374,7 +374,7 @@ tracks.</p>
 <p>closedCaption (<code>boolean|undefined</code>): If <code>true</code>, that text track contains
 supplementary text cues about the audio content. Mostly useful for the hard
 of hearing, this property is generally only relevant for text tracks
-helping to understand what&#x2019;s on the screen. Mostly useful for the visually
+helping to understand what’s on the screen. Mostly useful for the visually
 impaired, this property is generally only relevant for audio tracks.</p>
 </li>
 <li>
@@ -388,16 +388,16 @@ this track. Will be described below.</p>
 track (or adaptation). It will also contains logic to fetch segments
 corresponding to that quality. The representation object is very similar to the
 <code>Representation</code> element in a DASH MPD.</p>
-<p>As usual, let&#x2019;s look into an example.</p>
+<p>As usual, let’s look into an example.</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">bitrate</span>: <span class="hljs-number">5000000</span>, <span class="hljs-comment">// bitrate of the quality, in bits per seconds</span>
-  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;video/mp4&quot;</span>,
-  <span class="hljs-attr">codecs</span>: <span class="hljs-string">&quot;avc1.64001f&quot;</span>,
+  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">"video/mp4"</span>,
+  <span class="hljs-attr">codecs</span>: <span class="hljs-string">"avc1.64001f"</span>,
   <span class="hljs-attr">width</span>: <span class="hljs-number">1280</span>, <span class="hljs-comment">// default width of the quality, in pixels.</span>
                <span class="hljs-comment">// Mostly relevant for video tracks</span>
-  height: <span class="hljs-number">720</span>, <span class="hljs-comment">// default height of the quality, in pixels.</span>
+  <span class="hljs-attr">height</span>: <span class="hljs-number">720</span>, <span class="hljs-comment">// default height of the quality, in pixels.</span>
                <span class="hljs-comment">// Mostly relevant for video tracks</span>
-  index: { <span class="hljs-comment">// declaration of all the linked segments as well as methods to</span>
+  <span class="hljs-attr">index</span>: { <span class="hljs-comment">// declaration of all the linked segments as well as methods to</span>
            <span class="hljs-comment">// retrieve them</span>
     <span class="hljs-function"><span class="hljs-title">loadInitSegment</span>(<span class="hljs-params">callbacks</span>)</span> { <span class="hljs-comment">/* ... */</span>  },
     <span class="hljs-function"><span class="hljs-title">loadSegment</span>(<span class="hljs-params">segment, callbacks</span>)</span> { <span class="hljs-comment">/* ... */</span>,
@@ -408,8 +408,8 @@ corresponding to that quality. The representation object is very similar to the
 <p>For audio tracks, it can looks like:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">bitrate</span>: <span class="hljs-number">200000</span>,
-  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;audio/mp4&quot;</span>,
-  <span class="hljs-attr">codecs</span>: <span class="hljs-string">&quot;mp4a.40.5&quot;</span>,
+  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">"audio/mp4"</span>,
+  <span class="hljs-attr">codecs</span>: <span class="hljs-string">"mp4a.40.5"</span>,
   <span class="hljs-attr">index</span>: {
     <span class="hljs-function"><span class="hljs-title">loadInitSegment</span>(<span class="hljs-params">callbacks</span>)</span> { <span class="hljs-comment">/* ... */</span>  },
     <span class="hljs-function"><span class="hljs-title">loadSegment</span>(<span class="hljs-params">segment, callbacks</span>)</span> { <span class="hljs-comment">/* ... */</span>,
@@ -420,8 +420,8 @@ corresponding to that quality. The representation object is very similar to the
 <p>At last, an example for text tracks (here ttml in an mp4 container):</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">bitrate</span>: <span class="hljs-number">3000</span>, <span class="hljs-comment">// bitrate of the quality, in bits per seconds</span>
-  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/mp4&quot;</span>,
-  <span class="hljs-attr">codecs</span>: <span class="hljs-string">&quot;stpp&quot;</span>,
+  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">"application/mp4"</span>,
+  <span class="hljs-attr">codecs</span>: <span class="hljs-string">"stpp"</span>,
   <span class="hljs-attr">index</span>: {
     <span class="hljs-function"><span class="hljs-title">loadInitSegment</span>(<span class="hljs-params">callbacks</span>)</span> { <span class="hljs-comment">/* ... */</span>  },
     <span class="hljs-function"><span class="hljs-title">loadSegment</span>(<span class="hljs-params">segment, callbacks</span>)</span> { <span class="hljs-comment">/* ... */</span>,
@@ -429,7 +429,7 @@ corresponding to that quality. The representation object is very similar to the
   }
 }
 </code></pre>
-<p>We&#x2019;ll now explain what each property is for, before going deeper into the
+<p>We’ll now explain what each property is for, before going deeper into the
 <code>index</code> attribute, which allows the RxPlayer to fetch the media segments.</p>
 <p><a name="subchapter-properties-bis-bis-bis"></a></p>
 <h3>properties</h3>
@@ -443,11 +443,11 @@ second of the content does on average a size of 5 MegaBit.</p>
 <p>mimeType (<code>string</code>): As its name suggests, this is the appropriate mime-type
 for the media. Generally, it is either:</p>
 <ul>
-<li><code>&quot;video/mp4&quot;</code> or <code>&quot;video/webm&quot;</code> for a video content (depending on the
+<li><code>"video/mp4"</code> or <code>"video/webm"</code> for a video content (depending on the
 container)</li>
-<li><code>&quot;audio/mp4&quot;</code> or <code>&quot;audio/webm&quot;</code> for an audio content (depending on the
+<li><code>"audio/mp4"</code> or <code>"audio/webm"</code> for an audio content (depending on the
 container)</li>
-<li><code>&quot;application/mp4&quot;</code> or <code>&quot;text/plain&quot;</code> for a text content (depending on
+<li><code>"application/mp4"</code> or <code>"text/plain"</code> for a text content (depending on
 the container / the absence of container)</li>
 </ul>
 </li>
@@ -488,18 +488,18 @@ if this notion is not relevant, like for subtitles.</p>
 </ul>
 <p><a name="subchapter-the%20segments%20array"></a></p>
 <h3>the segments array</h3>
-<p>Let&#x2019;s start by the first one, <code>segments</code>. <code>segments</code> is an array of objects,
+<p>Let’s start by the first one, <code>segments</code>. <code>segments</code> is an array of objects,
 each object describing a single segment of media data. Each object has the
 following properties:</p>
 <ul>
 <li>time (<code>number</code>): starting position of the segment, in seconds</li>
 <li>duration (<code>number</code>): duration of the segment, in seconds</li>
 <li>timestampOffset (<code>number|undefined</code>): optional time offset to add to the
-segment&#x2019;s internal time in seconds to convert its media time to its
+segment’s internal time in seconds to convert its media time to its
 presentation time, in seconds.
-If you don&#x2019;t know what it is, you will most likely not need it.</li>
+If you don’t know what it is, you will most likely not need it.</li>
 </ul>
-<p>Let&#x2019;s see a simple example with four segments of 2 seconds:</p>
+<p>Let’s see a simple example with four segments of 2 seconds:</p>
 <pre><code class="language-js">[
   {
     <span class="hljs-attr">time</span>: <span class="hljs-number">0</span>,
@@ -524,7 +524,7 @@ If you don&#x2019;t know what it is, you will most likely not need it.</li>
 <p>The <code>loadInitSegment</code> callback allows the RxPlayer to request the initialization
 segment of this representation.</p>
 <p>Most audio and video representation have an initialization segment which allows
-to obtain information about the representation&#x2019;s data without containing data in
+to obtain information about the representation’s data without containing data in
 itself.
 For text representations, where it is most likely not needed, this callback can
 emit <code>null</code> instead of the segment.</p>
@@ -624,32 +624,32 @@ Its documentation can be found <a href="local_manifest_v0.1.html">here</a>.</p>
 is the exhaustive list of what changed:</p>
 <ul>
 <li>
-<p>a <code>minimumPosition</code> has been added to the &#x201C;period object&#x201D;</p>
+<p>a <code>minimumPosition</code> has been added to the “period object”</p>
 </li>
 <li>
-<p>a <code>maximumPosition</code> has been added to the &#x201C;period object&#x201D;</p>
+<p>a <code>maximumPosition</code> has been added to the “period object”</p>
 </li>
 <li>
-<p>the <code>duration</code> property of the &#x201C;period object&#x201D; has been removed</p>
+<p>the <code>duration</code> property of the “period object” has been removed</p>
 </li>
 <li>
-<p>the <code>start</code> property from a &#x201C;period object&#x201D; is now expressed in seconds
+<p>the <code>start</code> property from a “period object” is now expressed in seconds
 instead of in milliseconds.</p>
 </li>
 <li>
-<p>the <code>end</code> property from a &#x201C;period object&#x201D; is now expressed in seconds
+<p>the <code>end</code> property from a “period object” is now expressed in seconds
 instead of in milliseconds.</p>
 </li>
 <li>
-<p>the <code>time</code> property from a segment in the &#x201C;segments array&#x201D; is now expressed
+<p>the <code>time</code> property from a segment in the “segments array” is now expressed
 in seconds instead of in milliseconds.</p>
 </li>
 <li>
-<p>the <code>duration</code> property from a segment in the &#x201C;segments array&#x201D; is now
+<p>the <code>duration</code> property from a segment in the “segments array” is now
 expressed in seconds instead of in milliseconds.</p>
 </li>
 <li>
-<p>the <code>timestampOffset</code> property from a segment in the &#x201C;segments array&#x201D; is now
+<p>the <code>timestampOffset</code> property from a segment in the “segments array” is now
 expressed in seconds. In the <code>0.1</code> version the unit of time was unclear.</p>
 </li>
 </ul>

@@ -26,18 +26,18 @@ those tasks.</p>
 given content</p>
 </li>
 <li>
-<p>orchestrates segment downloading and &#x201C;pushing&#x201D; to allow the content to
+<p>orchestrates segment downloading and “pushing” to allow the content to
 play in the best conditions possible.</p>
 </li>
 </ul>
 <p><a name="chapter-Multiple%20types%20handling"></a></p>
 <h2>Multiple types handling</h2>
-<p>More often than not, content are divised into multiple &#x201C;types&#x201D;: &#x201C;audio&#x201D;, &#x201C;video&#x201D;
-and &#x201C;text&#x201D; segments, for example. They are often completely distinct in a
+<p>More often than not, content are divised into multiple “types”: “audio”, “video”
+and “text” segments, for example. They are often completely distinct in a
 Manifest and as such, have to be downloaded and decoded separately.</p>
-<p>Each type has its own media buffer. For &#x201C;audio&#x201D;/&#x201C;video&#x201D; contents, we use
+<p>Each type has its own media buffer. For “audio”/“video” contents, we use
 regular browser-defined <em>MSE</em> SourceBuffers.
-For any other types, such as &#x201C;text&#x201D; and &#x201C;image&#x201D;, those buffers are entirely
+For any other types, such as “text” and “image”, those buffers are entirely
 defined in the code of the RxPlayer.</p>
 <p>We then create a different Stream for each type. Each will progressively
 download and push content of their respective type to their respective
@@ -62,7 +62,7 @@ buffer)</em></p>
 <p>Media buffers created for the audio and/or video types rely on a <em>native</em>
 (implemented by the browser) <code>SourceBuffer</code> Object implementation.</p>
 <p>Media buffers relying on native SourceBuffers have several differences with the
-other &#x201C;custom&#x201D; (entirely defined in the RxPlayer) types of media buffers:</p>
+other “custom” (entirely defined in the RxPlayer) types of media buffers:</p>
 <ul>
 <li>
 <p>They are managed by the browser where custom ones are implemented in JS.
@@ -83,7 +83,7 @@ MediaSource</p>
 </ol>
 </li>
 <li>
-<p>They are in a way more &#x201C;important&#x201D; than custom ones. If a problem happens
+<p>They are in a way more “important” than custom ones. If a problem happens
 with a SourceBuffer, we interrupt playback. For a custom media buffer, we
 can just deactivate it for the rest of the content.</p>
 <p>For example, a problem with subtitles would just disable those with a
@@ -115,7 +115,7 @@ on a fatal error</p>
 <h2>PeriodStreams</h2>
 <p>The <em>DASH</em> streaming technology has a concept called <em>Period</em>. Simply put, it
 allows to set various types of content successively in the same manifest.</p>
-<p>For example, let&#x2019;s take a manifest describing a live content with
+<p>For example, let’s take a manifest describing a live content with
 chronologically:</p>
 <ol>
 <li>an english TV Show</li>
@@ -196,11 +196,11 @@ Thus, multiple <em>PeriodStreams</em> might be active at the same time:</p>
 <h3>Multi-Period management</h3>
 <p>The creation/destruction of <em>PeriodStreams</em> is actually done in a very precize
 and optimal way, which gives a higher priority to immediate content.</p>
-<p>To better grasp how it works, let&#x2019;s imagine a regular use-case, with two periods
+<p>To better grasp how it works, let’s imagine a regular use-case, with two periods
 for a single type of buffer:</p>
 <hr>
-<p>Let&#x2019;s say that the <em>PeriodStream</em> for the first <em>Period</em> (named P1) is currently
-actively downloading segments (the &#x201C;^&#x201D; sign is the current position):</p>
+<p>Let’s say that the <em>PeriodStream</em> for the first <em>Period</em> (named P1) is currently
+actively downloading segments (the “^” sign is the current position):</p>
 <pre><code>   P1
 |====  |
    ^
@@ -293,9 +293,9 @@ influence a <em>video</em> one:</p>
 </ul>
 <p><a name="subchapter-Communication%20with%20the%20API"></a></p>
 <h3>Communication with the API</h3>
-<p>Any &#x201C;Stream&#x201D; communicates to the API about creations and destructions of
-<em>PeriodStreams</em> respectively through <code>&quot;periodStreamReady&quot;</code> and
-<code>&quot;periodStreamCleared&quot;</code> events.</p>
+<p>Any “Stream” communicates to the API about creations and destructions of
+<em>PeriodStreams</em> respectively through <code>"periodStreamReady"</code> and
+<code>"periodStreamCleared"</code> events.</p>
 <p>When the currently seen Period changes, an <code>activePeriodChanged</code> event is
 sent.</p>
 </body></html></div></div></div></body>

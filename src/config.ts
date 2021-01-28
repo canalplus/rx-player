@@ -131,6 +131,23 @@ export default {
   },
 
   /**
+   * Behavior of the RxPlayer when encountering a whole other codec on a already
+   * existing audio or video SourceBuffer.
+   *
+   * Can be either:
+   *
+   *    - "continue": Segments linked to the new codec will continue to be
+   *      pushed to that same SourceBuffer. The RxPlayer will still try to call
+   *      the `changeType` API on the SourceBuffer before pushing those
+   *      segments but continue even if this call failed.
+   *
+   *    - "reload": Every time a new incompatible codec is encountered on a
+   *      given SourceBuffer, we will reload the MediaSource.
+   */
+  DEFAULT_CODEC_SWITCHING_BEHAVIOR: "continue" as "continue" |
+                                                  "reload",
+
+  /**
    * If set to true, video through loadVideo will auto play by default
    * @type {Boolean}
    */
@@ -223,6 +240,26 @@ export default {
               // Though those are generally at a single bitrate, so no adaptive
               // mechanism is triggered for them.
   },
+
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
+  /**
+   * Default bitrate floor initially set to dictate the minimum bitrate the
+   * ABR manager can automatically switch to.
+   *
+   * If no track is found with a quality superior or equal to the
+   * bitrate there, the lowest bitrate will be taken instead.
+   *
+   * Set to Infinity to discard any limit in the ABR strategy.
+   * @type {Object}
+   */
+  DEFAULT_MIN_BITRATES: {
+    audio: 0, // only "audio" segments
+    video: 0, // only "video" segments
+    other: 0, // tracks which are not audio/video
+                     // Though those are generally at a single bitrate, so no
+                     // adaptive mechanism is triggered for them.
+  } as Record<"audio"|"video"|"other", number>,
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
   /**

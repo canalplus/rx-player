@@ -343,6 +343,259 @@ describe("initial idle state", () => {
       });
     });
 
+    describe("setMinAudioBitrate/getMinAudioBitrate", () => {
+      const defaultMin = player.getMinAudioBitrate();
+      const defaultMax = player.getMaxAudioBitrate();
+
+      beforeEach(() => {
+        player.setMinAudioBitrate(defaultMin);
+        player.setMaxAudioBitrate(defaultMax);
+      });
+
+      it("should have a 0 minimum audio bitrate by default", () => {
+        expect(player.getMinAudioBitrate()).to.equal(0);
+      });
+
+      it("should update minimum audio bitrate when calling setMinAudioBitrate", () => {
+        player.setMinAudioBitrate(84);
+        expect(player.getMinAudioBitrate()).to.equal(84);
+
+        player.setMinAudioBitrate(-1);
+        expect(player.getMinAudioBitrate()).to.equal(-1);
+
+        player.setMinAudioBitrate(0);
+        expect(player.getMinAudioBitrate()).to.equal(0);
+
+        player.setMinAudioBitrate(defaultMin);
+        expect(player.getMinAudioBitrate()).to.equal(defaultMin);
+      });
+
+      it("should throw when setting a min audio bitrate superior to the max audio bitrate", () => {
+        let err;
+
+        try {
+          player.setMaxAudioBitrate(9);
+          player.setMinAudioBitrate(1000);
+        } catch (e) {
+          err = e;
+        }
+
+        expect(player.getMinAudioBitrate()).to.equal(defaultMin);
+        expect(err).to.be.an.instanceOf(Error);
+        expect(err.message).to
+          .equal("Invalid minimum audio bitrate given. Its value, \"1000\" is superior the current maximum audio birate, \"9\".");
+      });
+
+      it("should allow setting different or equal max and min audio bitrate in that order", () => {
+        player.setMaxAudioBitrate(84);
+        player.setMinAudioBitrate(84);
+        expect(player.getMinAudioBitrate()).to.equal(84);
+
+        player.setMinAudioBitrate(-1);
+        expect(player.getMinAudioBitrate()).to.equal(-1);
+
+        player.setMinAudioBitrate(0);
+        expect(player.getMinAudioBitrate()).to.equal(0);
+
+        player.setMaxVideoBitrate(defaultMax);
+        player.setMinAudioBitrate(defaultMin);
+        expect(player.getMinAudioBitrate()).to.equal(defaultMin);
+      });
+    });
+
+    describe("setMinVideoBitrate/getMinVideoBitrate", () => {
+      const defaultMin = player.getMinVideoBitrate();
+      const defaultMax = player.getMaxVideoBitrate();
+      beforeEach(() => {
+        player.setMinVideoBitrate(defaultMin);
+        player.setMaxVideoBitrate(defaultMax);
+      });
+      it("should have a 0 minimum video bitrate by default", () => {
+        expect(player.getMinVideoBitrate()).to.equal(0);
+      });
+
+      it("should update minimum video bitrate when calling setMinVideoBitrate", () => {
+        player.setMinVideoBitrate(84);
+        expect(player.getMinVideoBitrate()).to.equal(84);
+
+        player.setMinVideoBitrate(-1);
+        expect(player.getMinVideoBitrate()).to.equal(-1);
+
+        player.setMinVideoBitrate(0);
+        expect(player.getMinVideoBitrate()).to.equal(0);
+
+        player.setMinVideoBitrate(defaultMin);
+        expect(player.getMinVideoBitrate()).to.equal(defaultMin);
+      });
+
+      it("should throw when setting a min video bitrate superior to the max video bitrate", () => {
+        let err;
+
+        try {
+          player.setMaxVideoBitrate(9);
+          player.setMinVideoBitrate(1000);
+        } catch (e) {
+          err = e;
+        }
+
+        expect(player.getMinVideoBitrate()).to.equal(defaultMin);
+        expect(err).to.be.an.instanceOf(Error);
+        expect(err.message).to
+          .equal("Invalid minimum video bitrate given. Its value, \"1000\" is superior the current maximum video birate, \"9\".");
+      });
+
+      it("should allow setting different or equal max and min video bitrate in that order", () => {
+        player.setMaxVideoBitrate(84);
+        player.setMinVideoBitrate(84);
+        expect(player.getMinVideoBitrate()).to.equal(84);
+
+        player.setMinVideoBitrate(-1);
+        expect(player.getMinVideoBitrate()).to.equal(-1);
+
+        player.setMinVideoBitrate(0);
+        expect(player.getMinVideoBitrate()).to.equal(0);
+
+        player.setMaxVideoBitrate(defaultMax);
+        player.setMinVideoBitrate(defaultMin);
+        expect(player.getMinVideoBitrate()).to.equal(defaultMin);
+      });
+    });
+
+    describe("setMaxAudioBitrate/getMaxAudioBitrate", () => {
+      const defaultMin = player.getMinAudioBitrate();
+      const defaultMax = player.getMaxAudioBitrate();
+      beforeEach(() => {
+        player.setMinAudioBitrate(defaultMin);
+        player.setMaxAudioBitrate(defaultMax);
+      });
+      it("should have a Infinity maximum audio bitrate by default", () => {
+        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
+      });
+
+      it("should update maximum audio bitrate when calling setMaxAudioBitrate", () => {
+        player.setMaxAudioBitrate(84);
+        expect(player.getMaxAudioBitrate()).to.equal(84);
+
+        player.setMaxAudioBitrate(0);
+        expect(player.getMaxAudioBitrate()).to.equal(0);
+
+        player.setMaxAudioBitrate(defaultMax);
+        expect(player.getMaxAudioBitrate()).to.equal(defaultMax);
+      });
+
+      it("should throw when setting a max audio bitrate inferior to the min audio bitrate", () => {
+        let err1;
+        let err2;
+
+        try {
+          player.setMaxAudioBitrate(-1);
+        } catch (e) {
+          err1 = e;
+        }
+
+        expect(player.getMaxAudioBitrate()).to.equal(defaultMax);
+
+        try {
+          player.setMinAudioBitrate(1000);
+          player.setMaxAudioBitrate(9);
+        } catch (e) {
+          err2 = e;
+        }
+
+        expect(player.getMaxAudioBitrate()).to.equal(defaultMax);
+        expect(err1).to.be.an.instanceOf(Error);
+        expect(err1.message).to
+          .equal("Invalid maximum audio bitrate given. Its value, \"-1\" is inferior the current minimum audio birate, \"0\".");
+        expect(err2).to.be.an.instanceOf(Error);
+        expect(err2.message).to
+          .equal("Invalid maximum audio bitrate given. Its value, \"9\" is inferior the current minimum audio birate, \"1000\".");
+      });
+
+      it("should allow setting different or equal min and max audio bitrate in that order", () => {
+        player.setMinAudioBitrate(84);
+        player.setMaxAudioBitrate(84);
+        expect(player.getMaxAudioBitrate()).to.equal(84);
+
+        player.setMaxAudioBitrate(Infinity);
+        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
+
+        player.setMaxAudioBitrate(100);
+        expect(player.getMaxAudioBitrate()).to.equal(100);
+
+        player.setMinAudioBitrate(defaultMin);
+        player.setMaxAudioBitrate(defaultMax);
+        expect(player.getMaxAudioBitrate()).to.equal(defaultMax);
+      });
+    });
+
+    describe("setMaxVideoBitrate/getMaxVideoBitrate", () => {
+      const defaultMin = player.getMinVideoBitrate();
+      const defaultMax = player.getMaxVideoBitrate();
+      beforeEach(() => {
+        player.setMinVideoBitrate(defaultMin);
+        player.setMaxVideoBitrate(defaultMax);
+      });
+      it("should have a Infinity maximum video bitrate by default", () => {
+        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
+      });
+
+      it("should update maximum video bitrate when calling setMaxVideoBitrate", () => {
+
+        player.setMaxVideoBitrate(84);
+        expect(player.getMaxVideoBitrate()).to.equal(84);
+
+        player.setMaxVideoBitrate(0);
+        expect(player.getMaxVideoBitrate()).to.equal(0);
+
+        player.setMaxVideoBitrate(defaultMax);
+        expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
+      });
+
+      it("should throw when setting a max video bitrate inferior to the min video bitrate", () => {
+        let err1;
+        let err2;
+
+        try {
+          player.setMaxVideoBitrate(-1);
+        } catch (e) {
+          err1 = e;
+        }
+
+        expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
+
+        try {
+          player.setMinVideoBitrate(1000);
+          player.setMaxVideoBitrate(9);
+        } catch (e) {
+          err2 = e;
+        }
+
+        expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
+        expect(err1).to.be.an.instanceOf(Error);
+        expect(err1.message).to
+          .equal("Invalid maximum video bitrate given. Its value, \"-1\" is inferior the current minimum video birate, \"0\".");
+        expect(err2).to.be.an.instanceOf(Error);
+        expect(err2.message).to
+          .equal("Invalid maximum video bitrate given. Its value, \"9\" is inferior the current minimum video birate, \"1000\".");
+      });
+
+      it("should allow setting different or equal min and max video bitrate in that order", () => {
+        player.setMinVideoBitrate(84);
+        player.setMaxVideoBitrate(84);
+        expect(player.getMaxVideoBitrate()).to.equal(84);
+
+        player.setMaxVideoBitrate(Infinity);
+        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
+
+        player.setMaxVideoBitrate(100);
+        expect(player.getMaxVideoBitrate()).to.equal(100);
+
+        player.setMinVideoBitrate(defaultMin);
+        player.setMaxVideoBitrate(defaultMax);
+        expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
+      });
+    });
+
     describe("setAudioBitrate/getManualAudioBitrate", () => {
       it("should have a -1 manual audio bitrate by default", () => {
         expect(player.getManualAudioBitrate()).to.equal(-1);
@@ -382,48 +635,6 @@ describe("initial idle state", () => {
 
         player.setVideoBitrate(oldManual);
         expect(player.getManualVideoBitrate()).to.equal(oldManual);
-      });
-    });
-
-    describe("setMaxVideoBitrate/getMaxVideoBitrate", () => {
-      it("should update the maximum video bitrate when calling setMaxVideoBitrate by default", () => {
-        const oldMax = player.getManualVideoBitrate();
-
-        expect(player.setMaxVideoBitrate(Infinity)).to.equal(undefined);
-        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
-
-        expect(player.setMaxVideoBitrate(500)).to.equal(undefined);
-        expect(player.getMaxVideoBitrate()).to.equal(500);
-
-        expect(player.setMaxVideoBitrate(3)).to.equal(undefined);
-        expect(player.getMaxVideoBitrate()).to.equal(3);
-
-        expect(player.setMaxVideoBitrate(Infinity)).to.equal(undefined);
-        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
-
-        expect(player.setMaxVideoBitrate(oldMax)).to.equal(undefined);
-        expect(player.getMaxVideoBitrate()).to.equal(oldMax);
-      });
-    });
-
-    describe("setMaxAudioBitrate/getMaxAudioBitrate", () => {
-      it("should update the maximum audio bitrate when calling setMaxAudioBitrate by default", () => {
-        const oldMax = player.getManualAudioBitrate();
-
-        expect(player.setMaxAudioBitrate(Infinity)).to.equal(undefined);
-        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
-
-        expect(player.setMaxAudioBitrate(500)).to.equal(undefined);
-        expect(player.getMaxAudioBitrate()).to.equal(500);
-
-        expect(player.setMaxAudioBitrate(3)).to.equal(undefined);
-        expect(player.getMaxAudioBitrate()).to.equal(3);
-
-        expect(player.setMaxAudioBitrate(Infinity)).to.equal(undefined);
-        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
-
-        expect(player.setMaxAudioBitrate(oldMax)).to.equal(undefined);
-        expect(player.getMaxAudioBitrate()).to.equal(oldMax);
       });
     });
 

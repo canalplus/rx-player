@@ -16,16 +16,16 @@
 and returns an object. This object is often referenced as the <code>transport pipelines</code> of the streaming protocol.</p>
 <p>This object then contains the following functions:</p>
 <ul>
-<li>a Manifest &#x201C;loader&#x201D;</li>
-<li>a Manifest &#x201C;parser&#x201D;</li>
-<li>multiple segment &#x201C;loaders&#x201D; (one per type of buffer, like &#x201C;audio&#x201D;, &#x201C;video&#x201D;,
-&#x201C;text&#x201D;&#x2026;).</li>
-<li>multiple segment &#x201C;parsers&#x201D;</li>
+<li>a Manifest “loader”</li>
+<li>a Manifest “parser”</li>
+<li>multiple segment “loaders” (one per type of buffer, like “audio”, “video”,
+“text”…).</li>
+<li>multiple segment “parsers”</li>
 </ul>
-<p>As you can see, there&#x2019;s two recurrent concepts here: the loader and the parser.</p>
+<p>As you can see, there’s two recurrent concepts here: the loader and the parser.</p>
 <p><a name="chapter-A%20loader"></a></p>
 <h2>A loader</h2>
-<p>A loader in the transport pipeline is a function whose role is to &#x201C;load&#x201D; the
+<p>A loader in the transport pipeline is a function whose role is to “load” the
 resource.</p>
 <p>Depending on the streaming technology, this can mean doing a request or just
 creating it from the information given.</p>
@@ -52,7 +52,7 @@ available.
 This is better explained in the related chapter below.</p>
 <p><a name="chapter-A%20parser"></a></p>
 <h2>A parser</h2>
-<p>A parser&#x2019;s role is to extract the data and other important information from a
+<p>A parser’s role is to extract the data and other important information from a
 loaded resource.
 It is connected in some ways to the response of the loader (which gives the
 loaded resource) and will be the last step before that resource is actually
@@ -77,7 +77,7 @@ receive the same error-handling perks than a loader, such as multiple retries,
 just for those requests.</p>
 <p><a name="chapter-Manifest%20loader"></a></p>
 <h2>Manifest loader</h2>
-<p>The Manifest loader is the &#x201C;loader&#x201D; downloading the Manifest (or MPD) file.</p>
+<p>The Manifest loader is the “loader” downloading the Manifest (or MPD) file.</p>
 <p>It is a function which receives as argument the URL of the manifest and then
 returns an Observable emitting a single time the corresponding Manifest when it
 finished downloading it:</p>
@@ -93,7 +93,7 @@ finished downloading it:</p>
 <p><a name="chapter-Manifest%20parser"></a></p>
 <h2>Manifest parser</h2>
 <p>The Manifest parser is a function whose role is to parse the Manifest in its
-original form to convert it to the RxPlayer&#x2019;s internal representation of it.</p>
+original form to convert it to the RxPlayer’s internal representation of it.</p>
 <p>It receives in argument the downloaded Manifest, some Manifest-related
 information (e.g. its URL) and a specific function called <code>scheduleRequest</code>,
 allowing it to ask for supplementary requests before completing (e.g. to fetch
@@ -103,7 +103,7 @@ at parse-time).</p>
 Manifest:</p>
 <pre><code> INPUT:                                       OUTPUT:
  ------                                       -------
- Manifest in a generic format +  +----------+ RxPlayer&apos;s `Manifest`
+ Manifest in a generic format +  +----------+ RxPlayer's `Manifest`
  URL + request scheduler         |          | structure
  ===============================&gt;| MANIFEST |===========================&gt;
                                  |  PARSER  |
@@ -113,9 +113,9 @@ Manifest:</p>
 <p><a name="chapter-Segment%20loader"></a></p>
 <h2>Segment loader</h2>
 <p>A Transport pipeline declares one Segment loader per type of buffer (e.g. audio,
-text, video&#x2026;)</p>
-<p>A segment loader is the &#x201C;loader&#x201D; for any segment. Its role is to retrieve a given
-segment&#x2019;s data.</p>
+text, video…)</p>
+<p>A segment loader is the “loader” for any segment. Its role is to retrieve a given
+segment’s data.</p>
 <p>It receives information linked to the segment you want to download:</p>
 <ul>
 <li>The related <code>Manifest</code> data structure</li>
@@ -135,7 +135,7 @@ segment.</p>
                         |          |
                         +----------+
 </code></pre>
-<p>The events sent in output depend on the &#x201C;mode&#x201D; chosen by the loader to download
+<p>The events sent in output depend on the “mode” chosen by the loader to download
 the segment. There are two possible modes:</p>
 <ul>
 <li>
@@ -151,8 +151,8 @@ time they are downloaded.</p>
 <ul>
 <li>low-latency streaming is enabled through the corresponding <code>loadVideo</code>
 option</li>
-<li>we&#x2019;re loading a DASH content.</li>
-<li>we&#x2019;re not loading an initialization segment.</li>
+<li>we’re loading a DASH content.</li>
+<li>we’re not loading an initialization segment.</li>
 <li>the segment is in a CMAF container</li>
 <li>the <code>Fetch</code> JS API is available</li>
 </ul>
@@ -163,42 +163,42 @@ sends.</p>
 Observable:</p>
 <ul>
 <li>
-<p><code>&quot;progress&quot;</code>: We have new metrics on the current download (e.g. the amount
-currently downloaded, the time since the beginning of the request&#x2026;)</p>
+<p><code>"progress"</code>: We have new metrics on the current download (e.g. the amount
+currently downloaded, the time since the beginning of the request…)</p>
 </li>
 <li>
-<p><code>&quot;data-created&quot;</code>: The segment is available without needing to perform a
+<p><code>"data-created"</code>: The segment is available without needing to perform a
 network request. This is usually the case when segments are generated like
-Smooth Streaming&#x2019;s initialization segments.
-The segment&#x2019;s data is also communicated via this event.</p>
-<p>The <code>&quot;data-created&quot;</code> event, when sent, is the last event sent from the
+Smooth Streaming’s initialization segments.
+The segment’s data is also communicated via this event.</p>
+<p>The <code>"data-created"</code> event, when sent, is the last event sent from the
 loader. The loader will complete just after emitting it.</p>
 </li>
 <li>
-<p><code>&quot;data-loaded&quot;</code>: The segment has been compeletely downloaded from the
-network. The segment&#x2019;s data is also communicated via this event.</p>
-<p>Like <code>&quot;data-created&quot;</code>, the <code>&quot;data-loaded&quot;</code> will be the last event sent by
+<p><code>"data-loaded"</code>: The segment has been compeletely downloaded from the
+network. The segment’s data is also communicated via this event.</p>
+<p>Like <code>"data-created"</code>, the <code>"data-loaded"</code> will be the last event sent by
 the loader.
-This means that you will either have a single <code>&quot;data-created&quot;</code> event or a
-single <code>&quot;data-loaded&quot;</code> event with the data when the segment has been loaded
+This means that you will either have a single <code>"data-created"</code> event or a
+single <code>"data-loaded"</code> event with the data when the segment has been loaded
 succesfully.</p>
 </li>
 </ul>
 <p>In the low-latency mode, the following events can be sent instead:</p>
 <ul>
 <li>
-<p><code>&quot;progress&quot;</code>: We have new metrics on the current download (e.g. the amount
-currently downloaded, the time since the beginning of the request&#x2026;)</p>
+<p><code>"progress"</code>: We have new metrics on the current download (e.g. the amount
+currently downloaded, the time since the beginning of the request…)</p>
 </li>
 <li>
-<p><code>&quot;data-chunk&quot;</code>: A sub-segment (or chunk) of the data is currently available.
+<p><code>"data-chunk"</code>: A sub-segment (or chunk) of the data is currently available.
 The corresponding sub-segment is communicated in the payload of this event.</p>
 <p>This event can be communicated multiple times until a
-<code>&quot;data-chunk-complete&quot;</code> event is received.</p>
+<code>"data-chunk-complete"</code> event is received.</p>
 </li>
 <li>
-<p><code>&quot;data-chunk-complete&quot;</code>: The segment request just finished. All
-corresponding data has been sent through <code>&quot;data-chunk&quot;</code> events.</p>
+<p><code>"data-chunk-complete"</code>: The segment request just finished. All
+corresponding data has been sent through <code>"data-chunk"</code> events.</p>
 <p>If sent, this is the last event sent by a segment loader. The loader will
 complete just after emitting it.</p>
 </li>
@@ -206,7 +206,7 @@ complete just after emitting it.</p>
 <p><a name="chapter-Segment%20parser"></a></p>
 <h2>Segment parser</h2>
 <p>A segment parser is a function whose role is to extract some information from
-the segment&#x2019;s data:</p>
+the segment’s data:</p>
 <ul>
 <li>what its precize start time and duration is</li>
 <li>whether the segment should be offseted when decoded and by what amount</li>

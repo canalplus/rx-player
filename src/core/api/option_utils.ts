@@ -43,12 +43,14 @@ import {
   IVideoTrackPreference,
 } from "./track_choice_manager";
 
-const { DEFAULT_AUTO_PLAY,
+const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
+        DEFAULT_AUTO_PLAY,
+        DEFAULT_CODEC_SWITCHING_BEHAVIOR,
         DEFAULT_ENABLE_FAST_SWITCHING,
         DEFAULT_INITIAL_BITRATES,
         DEFAULT_LIMIT_VIDEO_WIDTH,
         DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-        DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
+        DEFAULT_MIN_BITRATES,
         DEFAULT_MAX_BITRATES,
         DEFAULT_MAX_BUFFER_AHEAD,
         DEFAULT_MAX_BUFFER_BEHIND,
@@ -205,6 +207,8 @@ export interface IConstructorOptions { maxBufferAhead? : number;
                                        videoElement? : HTMLMediaElement;
                                        initialVideoBitrate? : number;
                                        initialAudioBitrate? : number;
+                                       minAudioBitrate? : number;
+                                       minVideoBitrate? : number;
                                        maxAudioBitrate? : number;
                                        maxVideoBitrate? : number;
                                        stopAtEnd? : boolean; }
@@ -226,6 +230,8 @@ export interface IParsedConstructorOptions {
   videoElement : HTMLMediaElement;
   initialVideoBitrate : number;
   initialAudioBitrate : number;
+  minAudioBitrate : number;
+  minVideoBitrate : number;
   maxAudioBitrate : number;
   maxVideoBitrate : number;
   stopAtEnd : boolean;
@@ -248,6 +254,7 @@ export interface ILoadVideoOptions {
   manualBitrateSwitchingMode? : "seamless"|"direct";
   enableFastSwitching? : boolean;
   audioTrackSwitchingMode? : "seamless"|"direct";
+  onCodecSwitch? : "continue"|"reload";
 
   /* eslint-disable import/no-deprecated */
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
@@ -278,6 +285,7 @@ interface IParsedLoadVideoOptionsBase {
   manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
   audioTrackSwitchingMode : "seamless"|"direct";
+  onCodecSwitch : "continue"|"reload";
 }
 
 /**
@@ -332,6 +340,8 @@ function parseConstructorOptions(
   let videoElement : HTMLMediaElement;
   let initialVideoBitrate : number;
   let initialAudioBitrate : number;
+  let minAudioBitrate : number;
+  let minVideoBitrate : number;
   let maxAudioBitrate : number;
   let maxVideoBitrate : number;
 
@@ -453,12 +463,34 @@ function parseConstructorOptions(
     }
   }
 
+  if (isNullOrUndefined(options.minVideoBitrate)) {
+    minVideoBitrate = DEFAULT_MIN_BITRATES.video;
+  } else {
+    minVideoBitrate = Number(options.minVideoBitrate);
+    if (isNaN(minVideoBitrate)) {
+      throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
+    }
+  }
+
+  if (isNullOrUndefined(options.minAudioBitrate)) {
+    minAudioBitrate = DEFAULT_MIN_BITRATES.audio;
+  } else {
+    minAudioBitrate = Number(options.minAudioBitrate);
+    if (isNaN(minAudioBitrate)) {
+      throw new Error("Invalid minAudioBitrate parameter. Should be a number.");
+    }
+  }
+
   if (isNullOrUndefined(options.maxVideoBitrate)) {
     maxVideoBitrate = DEFAULT_MAX_BITRATES.video;
   } else {
     maxVideoBitrate = Number(options.maxVideoBitrate);
     if (isNaN(maxVideoBitrate)) {
       throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
+    } else if (minVideoBitrate > maxVideoBitrate) {
+      throw new Error("Invalid maxVideoBitrate parameter. Its value, \"" +
+                      `${maxVideoBitrate}", is inferior to the set minVideoBitrate, "` +
+                      `${minVideoBitrate}"`);
     }
   }
 
@@ -468,6 +500,10 @@ function parseConstructorOptions(
     maxAudioBitrate = Number(options.maxAudioBitrate);
     if (isNaN(maxAudioBitrate)) {
       throw new Error("Invalid maxAudioBitrate parameter. Should be a number.");
+    } else if (minAudioBitrate > maxAudioBitrate) {
+      throw new Error("Invalid maxAudioBitrate parameter. Its value, \"" +
+                      `${maxAudioBitrate}", is inferior to the set minAudioBitrate, "` +
+                      `${minAudioBitrate}"`);
     }
   }
 
@@ -486,9 +522,37 @@ function parseConstructorOptions(
            preferredVideoTracks,
            initialAudioBitrate,
            initialVideoBitrate,
+           minAudioBitrate,
+           minVideoBitrate,
            maxAudioBitrate,
            maxVideoBitrate,
            stopAtEnd };
+}
+
+/**
+ * Check the format of given reload options.
+ * Throw if format in invalid.
+ * @param {object | undefined} options
+ */
+function checkReloadOptions(options?: {
+  reloadAt?: { position?: number; relative?: number };
+}): void {
+  if (options === null ||
+      (typeof options !== "object" && options !== undefined)) {
+    throw new Error("API: reload - Invalid options format.");
+  }
+  if (options?.reloadAt === null ||
+      (typeof options?.reloadAt !== "object" && options?.reloadAt !== undefined)) {
+    throw new Error("API: reload - Invalid 'reloadAt' option format.");
+  }
+  if (typeof options?.reloadAt?.position !== "number" &&
+      options?.reloadAt?.position !== undefined) {
+    throw new Error("API: reload - Invalid 'reloadAt.position' option format.");
+  }
+  if (typeof options?.reloadAt?.relative !== "number" &&
+      options?.reloadAt?.relative !== undefined) {
+    throw new Error("API: reload - Invalid 'reloadAt.relative' option format.");
+  }
 }
 
 /**
@@ -566,6 +630,7 @@ function parseLoadVideoOptions(
   const manifestUpdateUrl = options.transportOptions?.manifestUpdateUrl;
   const minimumManifestUpdateInterval =
     options.transportOptions?.minimumManifestUpdateInterval ?? 0;
+
   let audioTrackSwitchingMode = isNullOrUndefined(options.audioTrackSwitchingMode)
                                   ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
                                   : options.audioTrackSwitchingMode;
@@ -577,6 +642,19 @@ function parseLoadVideoOptions(
              "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
              " strategy will be used as default");
     audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
+  }
+
+  let onCodecSwitch = isNullOrUndefined(options.onCodecSwitch)
+                        ? DEFAULT_CODEC_SWITCHING_BEHAVIOR
+                        : options.onCodecSwitch;
+  if (!arrayIncludes(["continue", "reload"], onCodecSwitch)) {
+    log.warn("The `onCodecSwitch` loadVideo option must match one of " +
+             "the following string:\n" +
+             "- `continue`\n" +
+             "- `reload`\n" +
+             "If badly set, " + DEFAULT_CODEC_SWITCHING_BEHAVIOR +
+             " will be used as default");
+    onCodecSwitch = DEFAULT_CODEC_SWITCHING_BEHAVIOR;
   }
 
   const transportOptions = objectAssign({}, transportOptsArg, {
@@ -713,6 +791,7 @@ function parseLoadVideoOptions(
            manifestUpdateUrl,
            minimumManifestUpdateInterval,
            networkConfig,
+           onCodecSwitch,
            startAt,
            textTrackElement,
            textTrackMode,
@@ -723,6 +802,7 @@ function parseLoadVideoOptions(
 }
 
 export {
+  checkReloadOptions,
   parseConstructorOptions,
   parseLoadVideoOptions,
 };

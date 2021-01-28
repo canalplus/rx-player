@@ -27,7 +27,7 @@ The language has its quirks (that we, as JS developers, learned to avoid the
 hard way) but it has a flexibility that few other languages can compete with.</p>
 <p>For example, our codebase adopts concepts of both Functional Programming and
 Object Oriented Programming and it still looks idiomatic to the JS language
-(even more since we&#x2019;re using ES6+ and RxJS).</p>
+(even more since we’re using ES6+ and RxJS).</p>
 <p>In recent years, we were spectators of a huge trend to write desktop
 applications (thanks to Electron), mobile applications (e.g. with react-native)
 and servers (thanks to Node.js) in what is basically JavaScript. Because it is
@@ -40,7 +40,7 @@ exciting with a JavaScript project.</p>
 <ul>
 <li>
 <p>it was becoming fairly large, and the old team in charge of the project
-left. We lost a lot of the code&#x2019;s knowledge in that process.</p>
+left. We lost a lot of the code’s knowledge in that process.</p>
 </li>
 <li>
 <p>to renew the codebase and bring new features, some refactoring were
@@ -53,19 +53,19 @@ representation of the data structure we had at a certain point in the code.</p>
 </li>
 <li>
 <p>There also were multiple coding styles in different parts of the player,
-depending on the &#x201C;era&#x201D; in which the file was written in.
-This harms the &#x201C;welcomeness&#x201D; of the codebase, which, as an open-source
+depending on the “era” in which the file was written in.
+This harms the “welcomeness” of the codebase, which, as an open-source
 library, is an important factor.</p>
 </li>
 </ul>
 <p>We liked to present the rx-player as a really maintanable project, but by
 keeping things like they were, we had a substantial risk of going toward the
 exact opposite.</p>
-<p>With that in mind, we observed that none of us were developping in &#x201C;browser&#x2019;s
-JavaScript&#x201D; anymore, as most projects we worked on made usage of Babel for
+<p>With that in mind, we observed that none of us were developping in “browser’s
+JavaScript” anymore, as most projects we worked on made usage of Babel for
 years now.
 The code we write in looks very different than what is transpiled to run on
-browsers (we&#x2019;re treating the &#x201C;real&#x201D; JavaScript today as a - easily
+browsers (we’re treating the “real” JavaScript today as a - easily
 readable - bytecode).</p>
 <p>As such, we knew we needed to do something about the code, and we were not
 hesitant to do substantial changes, while not wanting to depart too much from
@@ -77,11 +77,11 @@ a lot around a better type system. As functional-programming fans, we were
 seeing some wonderful type systems in other programming languages (Haskell,
 Scala, Rust) that we thought could partially answer to a lot of our problems.
 One of us worked with Scala in its previous professional experience, this also
-amplified the need to &#x201C;improve&#x201D; our JavaScript.</p>
-<p>In the browser&#x2019;s world, there were two possibilities:</p>
+amplified the need to “improve” our JavaScript.</p>
+<p>In the browser’s world, there were two possibilities:</p>
 <ul>
 <li>using another language transpiled to JavaScript (elm, PureScript, Scala.js)</li>
-<li>using a &#x201C;superset&#x201D; of JavaScript, which gives us typings without changing
+<li>using a “superset” of JavaScript, which gives us typings without changing
 the base language</li>
 </ul>
 <p>The first solution was not wanted, as we would lost a lot of possible
@@ -96,7 +96,7 @@ was finally chosen because:</p>
 <li>
 <p>It has a lot more traction than flow today, with a lot more tools and a lot
 more codebases written in/for TypeScript. This gives us more guarantees
-about the language&#x2019;s future.</p>
+about the language’s future.</p>
 </li>
 <li>
 <p>RxJS, VisualStudioCode, BabylonJS and AngularJS are all well-regarded
@@ -113,21 +113,21 @@ language</a>.</p>
 <p><a name="chapter-What%20we%20have%20done"></a></p>
 <h2>What we have done</h2>
 <p>When we began to really consider switching the source to TypeScript, we set one
-goal before the release: The whole RxPlayer should work under TypeScript&#x2019;s
-&#x201C;strict&#x201D; mode, and the code should look enough like idiomatic TypeScript to be
+goal before the release: The whole RxPlayer should work under TypeScript’s
+“strict” mode, and the code should look enough like idiomatic TypeScript to be
 presented as a <em>TypeScript project</em> (and not as a <em>ported JavaScript</em> one).</p>
 <p>As such, we worked on every files in the <em>src</em> directory, even doing important
 refactorings, to ensure our code was elegant enough to be maintenable and
 presentable.
 Today, we have the confidence that the base we have can be approached naturally
 in a TypeScript way.</p>
-<p>We &#x201C;switched&#x201D; every rx-player source and unit tests files.</p>
+<p>We “switched” every rx-player source and unit tests files.</p>
 <p><a name="chapter-What%20we%20still%20need%20to%20do"></a></p>
 <h2>What we still need to do</h2>
 <p>Some parts of the code still need work to look like perfect <em>idiomatic</em>
 TypeScript.</p>
 <p>For example, the part gluing our networking logic to the streaming logic (what
-we call the &#x201C;pipeline&#x201D;) relies too much on <strong>any</strong> types and casting.
+we call the “pipeline”) relies too much on <strong>any</strong> types and casting.
 This is the main part that needs work today. Specifically, the
 manifest-refreshing logic shares too much logic with the segment-downloading
 one, leading to types impossible to set.</p>
