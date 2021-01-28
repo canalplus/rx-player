@@ -102,7 +102,7 @@ export default function checkForDiscontinuity(
     (nextSegmentStart === null ||
      nextBufferedSegment.infos.segment.end <= nextSegmentStart)
   ) {
-    log.error("RS: current discontinuity encountered",
+    log.debug("RS: current discontinuity encountered",
               adaptation.type, nextBufferedSegment.bufferedStart);
     return { start: undefined,
              end: nextBufferedSegment.bufferedStart };
@@ -122,7 +122,7 @@ export default function checkForDiscontinuity(
   {
     const start = bufferedSegments[nextHoleIdx - 1].bufferedEnd as number;
     const end = bufferedSegments[nextHoleIdx].bufferedStart as number;
-    log.error("RS: future discontinuity encountered", adaptation.type, start, end);
+    log.debug("RS: future discontinuity encountered", adaptation.type, start, end);
     return { start, end };
 
   } else if (nextSegmentStart === null) {
@@ -143,7 +143,7 @@ export default function checkForDiscontinuity(
         if (lastSegment.bufferedEnd !== undefined &&
             lastSegment.bufferedEnd < period.end)
         {
-          log.error("RS: discontinuity encountered at the end of the current period",
+          log.debug("RS: discontinuity encountered at the end of the current period",
                     adaptation.type, lastSegment.bufferedEnd, period.end);
           return { start: lastSegment.bufferedEnd,
                    end: null };
