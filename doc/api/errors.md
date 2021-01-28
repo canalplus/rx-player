@@ -210,6 +210,12 @@ A MediaError can have the following codes (``code`` property):
     This can lead to stalling indefinitely as the player won't be able to
     download new segments arround the current time.
 
+  - ``"DISCONTINUITY_ENCOUNTERED"``: A discontinuity (i.e. a hole in the media
+    buffer) has been encontered and seeked over.
+
+    This is rarely a problem and may be encountered at a very start of a content
+    when the initial segment's start is much later than expected.
+
   - ``"NO_PLAYABLE_REPRESENTATION"``: The currently chosen Adaptation does not
     contain any playable Representation. This usually happen when every
     Representation has been blacklisted due to encryption limitations.
