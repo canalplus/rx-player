@@ -1,1 +1,1 @@
-./versions/3.22.0/demo/bundle.js
+./versions/3.23.0/demo/bundle.js
