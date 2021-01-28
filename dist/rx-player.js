@@ -18699,7 +18699,7 @@ function checkForDiscontinuity(content, checkedRange, nextSegmentStart, hasFinis
   if ( // Next buffered segment starts after the start of the current range
   nextBufferedSegment.bufferedStart !== undefined && nextBufferedSegment.bufferedStart > checkedRange.start && ( // and no segment will fill in that hole
   nextSegmentStart === null || nextBufferedSegment.infos.segment.end <= nextSegmentStart)) {
-    log/* default.error */.Z.error("RS: current discontinuity encountered", adaptation.type, nextBufferedSegment.bufferedStart);
+    log/* default.debug */.Z.debug("RS: current discontinuity encountered", adaptation.type, nextBufferedSegment.bufferedStart);
     return {
       start: undefined,
       end: nextBufferedSegment.bufferedStart
@@ -18713,7 +18713,7 @@ function checkForDiscontinuity(content, checkedRange, nextSegmentStart, hasFinis
   if (nextHoleIdx !== null && (nextSegmentStart === null || bufferedSegments[nextHoleIdx].infos.segment.end <= nextSegmentStart)) {
     var start = bufferedSegments[nextHoleIdx - 1].bufferedEnd;
     var end = bufferedSegments[nextHoleIdx].bufferedStart;
-    log/* default.error */.Z.error("RS: future discontinuity encountered", adaptation.type, start, end);
+    log/* default.debug */.Z.debug("RS: future discontinuity encountered", adaptation.type, start, end);
     return {
       start: start,
       end: end
@@ -18736,7 +18736,7 @@ function checkForDiscontinuity(content, checkedRange, nextSegmentStart, hasFinis
         var lastSegment = bufferedSegments[lastBufferedInPeriodIdx];
 
         if (lastSegment.bufferedEnd !== undefined && lastSegment.bufferedEnd < period.end) {
-          log/* default.error */.Z.error("RS: discontinuity encountered at the end of the current period", adaptation.type, lastSegment.bufferedEnd, period.end);
+          log/* default.debug */.Z.debug("RS: discontinuity encountered at the end of the current period", adaptation.type, lastSegment.bufferedEnd, period.end);
           return {
             start: lastSegment.bufferedEnd,
             end: null
