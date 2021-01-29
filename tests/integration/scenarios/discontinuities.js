@@ -232,7 +232,7 @@ describe("discontinuities handling", () => {
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       player.seekTo(25);
-      await sleep(1000);
+      await sleep(2000);
       expect(player.getPosition()).to.be.at.least(28);
       expect(player.getPlayerState()).to.equal("PLAYING");
       expect(discontinuitiesWarningReceived).to.be.at.least(1);

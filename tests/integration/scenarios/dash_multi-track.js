@@ -21,7 +21,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   async function goToSecondPeriod() {
     player.seekTo(120);
-    await sleep(300);
+    await sleep(500);
     if (player.getPlayerState() !== "PAUSED") {
       await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
     }
@@ -30,7 +30,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   async function goToFirstPeriod() {
     player.seekTo(5);
-    await sleep(300);
+    await sleep(500);
     if (player.getPlayerState() !== "PAUSED") {
       await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
     }
@@ -156,6 +156,9 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
     await sleep(10);
 
+    if (xhrMock.getLockedXHR().length > 1) {
+      console.log("!!!!!!!!!", JSON.stringify(xhrMock.getLockedXHR()));
+    }
     expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
     await xhrMock.flush();
     await sleep(10);
