@@ -642,7 +642,7 @@ describe("SegmentFetchers Prioritizer", () => {
       .subscribe(
         (evt) => {
           switch (emitted) {
-            case 0:
+            case 0: // interrupting pObs1 now that pObs3 is created
               expect(evt.type).toEqual("interrupted");
               expect(obs1Started).toEqual(1);
               expect(obs2Started).toEqual(1);
@@ -651,14 +651,14 @@ describe("SegmentFetchers Prioritizer", () => {
 
               prioritizer.updatePriority(pObs2, 20 + 12);
               break;
-            case 1:
+            case 1: // interrupting pObs2 now that it has been updated
               expect(evt.type).toEqual("interrupted");
               expect(obs1Started).toEqual(1);
               expect(obs2Started).toEqual(1);
-              expect(obs3Started).toEqual(0);
+              expect(obs3Started).toEqual(1);
               expect(obs4Started).toEqual(0);
               break;
-            case 2:
+            case 2: // pObs3 emits
               assert(evt.type === "data",
                      `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(3);
@@ -667,10 +667,10 @@ describe("SegmentFetchers Prioritizer", () => {
               expect(obs3Started).toEqual(1);
               expect(obs4Started).toEqual(0);
               break;
-            case 3:
+            case 3: // pObs3 ends
               expect(evt.type).toEqual("ended");
               break;
-            case 4:
+            case 4: // pObs1 emits
               assert(evt.type === "data",
                      `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(1);
@@ -679,10 +679,10 @@ describe("SegmentFetchers Prioritizer", () => {
               expect(obs3Started).toEqual(1);
               expect(obs4Started).toEqual(0);
               break;
-            case 5:
+            case 5: // pObs1 ends
               expect(evt.type).toEqual("ended");
               break;
-            case 6:
+            case 6: // pObs4 emits
               assert(evt.type === "data",
                      `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(4);
@@ -691,10 +691,10 @@ describe("SegmentFetchers Prioritizer", () => {
               expect(obs3Started).toEqual(1);
               expect(obs4Started).toEqual(1);
               break;
-            case 7:
+            case 7: // pObs4 ends
               expect(evt.type).toEqual("ended");
               break;
-            case 8:
+            case 8: // pObs2 emits
               assert(evt.type === "data",
                      `evt.type should be equal to "data" but was equal to "${evt.type}"`);
               expect(evt.value).toEqual(2);
@@ -703,7 +703,7 @@ describe("SegmentFetchers Prioritizer", () => {
               expect(obs3Started).toEqual(1);
               expect(obs4Started).toEqual(1);
               break;
-            case 9:
+            case 9: // pObs2 ends
               expect(evt.type).toEqual("ended");
               break;
             default:
