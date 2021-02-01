@@ -15775,7 +15775,6 @@ function applyPrioritizerToSegmentFetcher(prioritizer, fetcher) {
 
 
 
-
 /**
  * Create Observables which can be priorized between one another.
  *
@@ -15893,64 +15892,139 @@ var ObservablePrioritizer = /*#__PURE__*/function () {
   _proto.create = function create(obs, priority) {
     var _this = this;
 
-    var pObs$ = (0,defer/* defer */.P)(function () {
-      var trigger = new Subject/* Subject */.xQ();
-      var newTask = {
-        observable: pObs$,
-        priority: priority,
-        trigger: trigger
-      };
+    var pObs$ = new Observable/* Observable */.y(function (subscriber) {
+      var isStillSubscribed = true; // eslint-disable-next-line prefer-const
+
+      var newTask;
       /**
-       * Function executed each time the `trigger` Subject emits.
+       * Function allowing to start / interrupt the underlying Observable.
        * @param {Boolean} shouldRun - If `true`, the observable can run. If
-       * `false` it means that it has just been interrupted.
-       * @returns {Observable} - Returns events corresponding to the lifecycle
-       * of the observable.
+       * `false` it means that it just needs to be interrupted if already
+       * starte.
        */
 
-      var onTrigger = function onTrigger(shouldRun) {
-        if (!shouldRun) {
-          return (0,of.of)({
-            type: "interrupted"
-          });
+      var trigger = function trigger(shouldRun) {
+        if (newTask.subscription !== null) {
+          newTask.subscription.unsubscribe();
+          newTask.subscription = null;
+
+          if (isStillSubscribed) {
+            subscriber.next({
+              type: "interrupted"
+            });
+          }
         }
 
-        _this._onTaskBegin(newTask);
+        if (!shouldRun) {
+          return;
+        }
 
-        return (0,concat/* concat */.z)(obs.pipe((0,map/* map */.U)(function (data) {
-          return {
+        _this._minPendingPriority = _this._minPendingPriority === null ? newTask.priority : Math.min(_this._minPendingPriority, newTask.priority);
+
+        _this._pendingTasks.push(newTask);
+
+        newTask.subscription = obs.subscribe(function (evt) {
+          return subscriber.next({
             type: "data",
-            value: data
-          };
-        })), (0,of.of)({
-          type: "ended"
-        })).pipe(finalize(function () {
+            value: evt
+          });
+        }, function (error) {
+          subscriber.error(error);
+          newTask.subscription = null;
+          newTask.finished = true;
+
           _this._onTaskEnd(newTask);
-        }));
+        }, function () {
+          subscriber.next({
+            type: "ended"
+          });
+
+          if (isStillSubscribed) {
+            subscriber.complete();
+          }
+
+          newTask.subscription = null;
+          newTask.finished = true;
+
+          _this._onTaskEnd(newTask);
+        });
+      };
+
+      newTask = {
+        observable: pObs$,
+        priority: priority,
+        trigger: trigger,
+        subscription: null,
+        finished: false
       };
 
       if (!_this._canBeStartedNow(newTask)) {
-        // This task doesn't have priority yet. Start it on trigger
         _this._waitingQueue.push(newTask);
+      } else {
+        newTask.trigger(true);
 
-        return trigger.pipe((0,switchMap/* switchMap */.w)(onTrigger));
-      } // Start it right away
+        if (_this._isRunningHighPriorityTasks()) {
+          // Note: we want to begin interrupting low-priority tasks just
+          // after starting the current one because the interrupting
+          // logic can call external code.
+          // This would mean re-entrancy, itself meaning that some weird
+          // half-state could be reached unless we're very careful.
+          // To be sure no harm is done, we put that code at the last
+          // possible position (the previous Observable sould be
+          // performing all its initialization synchronously).
+          _this._interruptCancellableTasks();
+        }
+      }
+      /** Callback called when this Observable is unsubscribed to. */
 
 
-      var startTask$ = trigger.pipe((0,startWith/* startWith */.O)(true), (0,switchMap/* switchMap */.w)(onTrigger));
-      return !_this._isHighPriority(newTask) ? startTask$ : (0,merge/* merge */.T)(startTask$, // Note: we want to begin interrupting low-priority tasks just
-      // after starting the current one because the interrupting
-      // logic can call external code.
-      // This would mean re-entrancy, itself meaning that some weird
-      // half-state could be reached unless we're very careful.
-      // To be sure no harm is done, we put that code at the last
-      // possible position (the previous Observable sould be
-      // performing all its initialization synchronously).
-      (0,defer/* defer */.P)(function () {
-        _this._interruptCancellableTasks();
+      return function () {
+        isStillSubscribed = false;
 
-        return empty/* EMPTY */.E;
-      }));
+        if (newTask.subscription !== null) {
+          newTask.subscription.unsubscribe();
+          newTask.subscription = null;
+        }
+
+        if (newTask.finished) {
+          // Task already finished, we're good
+          return;
+        } // remove it from waiting queue if in it
+
+
+        var waitingQueueIndex = (0,array_find_index/* default */.Z)(_this._waitingQueue, function (elt) {
+          return elt.observable === pObs$;
+        });
+
+        if (waitingQueueIndex >= 0) {
+          // If it was still waiting for its turn
+          _this._waitingQueue.splice(waitingQueueIndex, 1);
+        } else {
+          // remove it from pending queue if in it
+          var pendingTasksIndex = (0,array_find_index/* default */.Z)(_this._pendingTasks, function (elt) {
+            return elt.observable === pObs$;
+          });
+
+          if (pendingTasksIndex < 0) {
+            log/* default.warn */.Z.warn("FP: unsubscribing non-existent task");
+            return;
+          }
+
+          var pendingTask = _this._pendingTasks.splice(pendingTasksIndex, 1)[0];
+
+          if (_this._pendingTasks.length === 0) {
+            _this._minPendingPriority = null;
+
+            _this._loopThroughWaitingQueue();
+          } else if (_this._minPendingPriority === pendingTask.priority) {
+            _this._minPendingPriority = Math.min.apply(Math, _this._pendingTasks.map(function (t) {
+              return t.priority;
+            }));
+
+            _this._loopThroughWaitingQueue();
+          }
+        }
+      };
     });
     return pObs$;
   }
@@ -15980,26 +16054,26 @@ var ObservablePrioritizer = /*#__PURE__*/function () {
         return;
       }
 
-      this._startTask(waitingQueueIndex);
+      this._startWaitingQueueTask(waitingQueueIndex);
 
-      if (this._isHighPriority(waitingQueueElt)) {
-        // This task has high priority.
-        // We should cancel every "cancellable" pending task
+      if (this._isRunningHighPriorityTasks()) {
+        // Re-check to cancel every "cancellable" pending task
         //
         // Note: We start the task before interrupting cancellable tasks on
         // purpose.
-        // Because both `_startTask` and `_interruptCancellableTasks` can emit
-        // events and thus call external code, we could retrieve ourselves in a
-        // very weird state at this point (for example, the different Observable
-        // priorities could all be shuffled up, new Observables could have been
-        // started in the meantime, etc.).
+        // Because both `_startWaitingQueueTask` and
+        // `_interruptCancellableTasks` can emit events and thus call external
+        // code, we could retrieve ourselves in a very weird state at this point
+        // (for example, the different Observable priorities could all be
+        // shuffled up, new Observables could have been started in the
+        // meantime, etc.).
         //
         // By starting the task first, we ensure that this is manageable:
         // `_minPendingPriority` has already been updated to the right value at
         // the time we reached external code, the priority of the current
-        // Observable has just been re-checked by `_isHighPriority`, and
-        // `_interruptCancellableTasks` will ensure that we're basing ourselves
-        // on the last `priority` value each time.
+        // Observable has just been updated, and `_interruptCancellableTasks`
+        // will ensure that we're basing ourselves on the last `priority` value
+        // each time.
         // Doing it in the reverse order is an order of magnitude more difficult
         // to write and to reason about.
         this._interruptCancellableTasks();
@@ -16023,20 +16097,63 @@ var ObservablePrioritizer = /*#__PURE__*/function () {
       return;
     }
 
-    var oldPriority = task.priority;
+    var prevPriority = task.priority;
     task.priority = priority;
 
-    if (priority < oldPriority) {
-      if (this._isHighPriority(task)) {
-        this._interruptCancellableTasks();
+    if (this._minPendingPriority === null || priority < this._minPendingPriority) {
+      this._minPendingPriority = priority;
+    } else if (this._minPendingPriority === prevPriority) {
+      // was highest priority
+      if (this._pendingTasks.length === 1) {
+        this._minPendingPriority = priority;
+      } else {
+        this._minPendingPriority = Math.min.apply(Math, this._pendingTasks.map(function (t) {
+          return t.priority;
+        }));
       }
 
+      this._loopThroughWaitingQueue();
+    } else {
+      // We updated a task which already had a priority value higher than the
+      // minimum to a value still superior to the minimum. Nothing can happen.
       return;
     }
 
-    if (this._minPendingPriority !== null && this._minPendingPriority <= this._prioritySteps.high) {
-      // We could need to interrupt this task
-      this._interruptPendingTask(task);
+    if (this._isRunningHighPriorityTasks()) {
+      // Always interrupt cancellable tasks after all other side-effects, to
+      // avoid re-entrancy issues
+      this._interruptCancellableTasks();
+    }
+  }
+  /**
+   * Browse the current waiting queue and start all task in it that needs to be
+   * started: start the ones with the lowest priority value below
+   * `_minPendingPriority`.
+   *
+   * Private properties, such as `_minPendingPriority` are updated accordingly
+   * while this method is called.
+   */
+  ;
+
+  _proto._loopThroughWaitingQueue = function _loopThroughWaitingQueue() {
+    var minWaitingPriority = this._waitingQueue.reduce(function (acc, elt) {
+      return acc === null || acc > elt.priority ? elt.priority : acc;
+    }, null);
+
+    if (minWaitingPriority === null || this._minPendingPriority !== null && this._minPendingPriority < minWaitingPriority) {
+      return;
+    }
+
+    for (var i = 0; i < this._waitingQueue.length; i++) {
+      var priorityToCheck = this._minPendingPriority === null ? minWaitingPriority : Math.min(this._minPendingPriority, minWaitingPriority);
+      var elt = this._waitingQueue[i];
+
+      if (elt.priority <= priorityToCheck) {
+        this._startWaitingQueueTask(i);
+
+        i--; // previous operation should have removed that element from the
+        // the waiting queue
+      }
     }
   }
   /**
@@ -16067,10 +16184,10 @@ var ObservablePrioritizer = /*#__PURE__*/function () {
    */
   ;
 
-  _proto._startTask = function _startTask(index) {
+  _proto._startWaitingQueueTask = function _startWaitingQueueTask(index) {
     var task = this._waitingQueue.splice(index, 1)[0];
 
-    task.trigger.next(true);
+    task.trigger(true);
   }
   /**
    * Move back pending task to the waiting queue and interrupt it.
@@ -16101,21 +16218,10 @@ var ObservablePrioritizer = /*#__PURE__*/function () {
       }));
     }
 
-    task.trigger.next(false);
+    task.trigger(false); // Interrupt at last step because it calls external code
   }
   /**
-   * Logic ran when a task begin.
-   * @param {Object} task
-   */
-  ;
-
-  _proto._onTaskBegin = function _onTaskBegin(task) {
-    this._minPendingPriority = this._minPendingPriority === null ? task.priority : Math.min(this._minPendingPriority, task.priority);
-
-    this._pendingTasks.push(task);
-  }
-  /**
-   * Logic ran when a task has ended.
+   * Logic ran when a task has ended (either errored or completed).
    * @param {Object} task
    */
   ;
@@ -16129,35 +16235,21 @@ var ObservablePrioritizer = /*#__PURE__*/function () {
       return; // Happen for example when the task has been interrupted
     }
 
-    task.trigger.complete();
-
     this._pendingTasks.splice(pendingTasksIndex, 1);
 
     if (this._pendingTasks.length > 0) {
+      if (this._minPendingPriority === task.priority) {
+        this._minPendingPriority = Math.min.apply(Math, this._pendingTasks.map(function (t) {
+          return t.priority;
+        }));
+      }
+
       return; // still waiting for Observables to finish
     }
 
     this._minPendingPriority = null;
 
-    if (this._waitingQueue.length === 0) {
-      return; // no more task to do
-    } // Calculate minimum waiting priority
-
-
-    this._minPendingPriority = this._waitingQueue.reduce(function (acc, elt) {
-      return acc === null || acc > elt.priority ? elt.priority : acc;
-    }, null); // Start all tasks with that minimum priority
-
-    for (var i = 0; i < this._waitingQueue.length; i++) {
-      var elt = this._waitingQueue[i];
-
-      if (elt.priority === this._minPendingPriority) {
-        this._startTask(i);
-
-        i--; // previous operation should have removed that element from the
-        // the waiting queue
-      }
-    }
+    this._loopThroughWaitingQueue();
   }
   /**
    * Return `true` if the given task can be started immediately based on its
@@ -16171,15 +16263,15 @@ var ObservablePrioritizer = /*#__PURE__*/function () {
     return this._minPendingPriority === null || task.priority <= this._minPendingPriority;
   }
   /**
-   * Returns `true` if the given task can be considered "high priority".
-   * returns false otherwise.
+   * Returns `true` if any running task is considered "high priority".
+   * returns `false` otherwise.
    * @param {Object} task
    * @returns {boolean}
    */
   ;
 
-  _proto._isHighPriority = function _isHighPriority(task) {
-    return task.priority <= this._prioritySteps.high;
+  _proto._isRunningHighPriorityTasks = function _isRunningHighPriorityTasks() {
+    return this._minPendingPriority !== null && this._minPendingPriority <= this._prioritySteps.high;
   };
 
   return ObservablePrioritizer;
@@ -25790,7 +25882,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         playbackPosition = lastPlaybackPosition;
       } else {
         if (this.videoElement === null) {
-          throw new Error("API: reload - Can't reload when video element does not exist.");
+          throw new Error("Can't reload when video element does not exist.");
         }
 
         playbackPosition = this.videoElement.currentTime;
