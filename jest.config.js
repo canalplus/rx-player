@@ -18,7 +18,7 @@ module.exports = {
   globals: {
     __DEV__: true,
     "ts-jest": {
-      tsConfig: {
+      tsconfig: {
         target: "es2017",
         lib: ["es2017", "dom"],
         forceConsistentCasingInFileNames: true,

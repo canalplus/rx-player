@@ -226,8 +226,6 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
       contentEnd: this._contentEnd,
       originalSegment: segment,
     };
-    clonedSegment.time += this._timeOffset;
-    clonedSegment.end += this._timeOffset;
     return clonedSegment;
   }
 }

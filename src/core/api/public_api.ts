@@ -665,7 +665,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         playbackPosition = lastPlaybackPosition;
       } else {
         if (this.videoElement === null) {
-          throw new Error("API: reload - Can't reload when video element does not exist.");
+          throw new Error("Can't reload when video element does not exist.");
         }
         playbackPosition = this.videoElement.currentTime;
       }
