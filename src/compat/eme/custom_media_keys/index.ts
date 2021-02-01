@@ -20,8 +20,8 @@ import {
   of as observableOf,
   throwError as observableThrow,
 } from "rxjs";
+import { MediaError } from "../../../errors";
 import castToObservable from "../../../utils/cast_to_observable";
-import { MediaKeys_ } from "../../browser_compatibility_types";
 import { isIE11 } from "../../browser_detection";
 import isNode from "../../is_node";
 import shouldFavourCustomSafariEME from "../../should_favour_custom_safari_EME";
@@ -29,6 +29,9 @@ import CustomMediaKeySystemAccess from "./../custom_key_system_access";
 import getIE11MediaKeysCallbacks, {
   MSMediaKeysConstructor,
 } from "./ie11_media_keys";
+import getMozMediaKeysCallbacks, {
+  MozMediaKeysConstructor,
+} from "./moz_media_keys_constructor";
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./old_webkit_media_keys";
@@ -92,8 +95,6 @@ let _setMediaKeys :
  * Therefore, we prefer not to use requestMediaKeySystemAccess on Safari when webkit API
  * is available.
  */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 if (isNode ||
     (navigator.requestMediaKeySystemAccess != null && !shouldFavourCustomSafariEME())
 ) {
@@ -102,17 +103,9 @@ if (isNode ||
     b : MediaKeySystemConfiguration[]
   ) : Observable<MediaKeySystemAccess> =>
     castToObservable(navigator.requestMediaKeySystemAccess(a, b));
-} else if (MediaKeys_.isTypeSupported !== undefined) {
-  let isTypeSupported = (keyType: string): boolean => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return (MediaKeys_ as any).isTypeSupported(keyType);
-  };
-  let createCustomMediaKeys = (keyType: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return new (MediaKeys_ as any)(keyType);
-  };
-  /* eslint-enable @typescript-eslint/no-unsafe-call */
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+} else {
+  let isTypeSupported: (keyType: string) => boolean;
+  let createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
 
   // This is for Chrome with unprefixed EME api
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
@@ -131,6 +124,42 @@ if (isNode ||
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
     _setMediaKeys = callbacks.setMediaKeys;
+  } else if (MozMediaKeysConstructor !== undefined) {
+    const callbacks = getMozMediaKeysCallbacks();
+    isTypeSupported = callbacks.isTypeSupported;
+    createCustomMediaKeys = callbacks.createCustomMediaKeys;
+    _setMediaKeys = callbacks.setMediaKeys;
+  } else {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-disable @typescript-eslint/no-unsafe-return */
+    const { MediaKeys } = window as any;
+    const checkForStandardMediaKeys = () => {
+      if (MediaKeys === undefined) {
+        throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
+                             "No `MediaKeys` implementation found " +
+                             "in the current browser.");
+      }
+      if (MediaKeys.isTypeSupported === undefined) {
+        const message = "This browser seems to be unable to play encrypted contents " +
+                        "currently. Note: Some browsers do not allow decryption " +
+                        "in some situations, like when not using HTTPS.";
+        throw new Error(message);
+      }
+    };
+    isTypeSupported = (keyType: string): boolean => {
+      checkForStandardMediaKeys();
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-call */
+      return MediaKeys.isTypeSupported(keyType);
+    };
+    createCustomMediaKeys = (keyType: string) => {
+      checkForStandardMediaKeys();
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-call */
+      return new MediaKeys(keyType);
+    };
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable @typescript-eslint/no-unsafe-return */
   }
 
   requestMediaKeySystemAccess = function(
@@ -175,16 +204,6 @@ if (isNode ||
     }
 
     return observableThrow(undefined);
-  };
-} else {
-  requestMediaKeySystemAccess = (
-    _a : string,
-    _b : MediaKeySystemConfiguration[]
-  ) : Observable<MediaKeySystemAccess> => {
-    const message = "This browser seems to be unable to play encrypted contents " +
-                    "currently. Note: Some browsers do not allow decryption " +
-                    "in some situations, like when not using HTTPS.";
-    return observableThrow(new Error(message));
   };
 }
 
