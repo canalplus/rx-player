@@ -1,0 +1,583 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Tutorial: Selecting a track - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Tutorial:%20Selecting%20a%20track">Tutorial: Selecting a track</a></p>
+<ul>
+<li><a href="#chapter-The%20goal%20of%20this%20tutorial">The goal of this tutorial</a></li>
+<li><a href="#chapter-What%20is%20a%20%22track%22?">What is a “track”?</a></li>
+<li><a href="#chapter-Listing%20the%20available%20tracks">Listing the available tracks</a>
+<ul>
+<li><a href="#subchapter-Preamble">Preamble</a></li>
+<li><a href="#subchapter-Using%20methods">Using methods</a></li>
+<li><a href="#subchapter-Using%20events">Using events</a></li>
+<li><a href="#subchapter-Should%20you%20use%20the%20methods%20or%20events?">Should you use the methods or events?</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Knowing%20the%20current%20track">Knowing the current track</a>
+<ul>
+<li><a href="#subchapter-Through%20methods">Through methods</a></li>
+<li><a href="#subchapter-Through%20events">Through events</a></li>
+<li><a href="#subchapter-Through%20the%20list%20of%20available%20tracks">Through the list of available tracks</a></li>
+<li><a href="#subchapter-Which%20one%20to%20use?">Which one to use?</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Selecting%20a%20track">Selecting a track</a></li>
+<li><a href="#chapter-Disabling%20a%20track">Disabling a track</a></li>
+<li><a href="#chapter-Track%20preferences%20APIs">Track preferences APIs</a>
+<ul>
+<li><a href="#subchapter-Setting%20a%20track%20preference%20on%20instanciation">Setting a track preference on instanciation</a></li>
+<li><a href="#subchapter-track%20preferences%20methods">track preferences methods</a></li>
+<li><a href="#subchapter-Obtaining%20the%20last%20set%20preferences">Obtaining the last set preferences</a></li>
+</ul>
+</li>
+<li><a href="#chapter-What%20set%20of%20APIs%20should%20you%20use">What set of APIs should you use</a></li>
+<li><a href="#chapter-Notes%20about%20the%20%22textTrackMode%22%20option">Notes about the “textTrackMode” option</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Tutorial:%20Selecting%20a%20track"></a></p>
+<h1>Tutorial: Selecting a track</h1>
+<p><a name="chapter-The%20goal%20of%20this%20tutorial"></a></p>
+<h2>The goal of this tutorial</h2>
+<p>The RxPlayer has an advanced API when it comes to track selection:</p>
+<ul>
+<li>
+<p>You can list the available audio, video and/or text tracks and chose one of
+them</p>
+</li>
+<li>
+<p>You can disable the current video and / or text track</p>
+</li>
+<li>
+<p>You can also give to the RxPlayer a set of preferences so it can make the
+best choice by itself without manually having to choose the right track
+for every contents.</p>
+<p>Those preferences can even be applied retro-actively (for example, to the
+content currently being played), depending on your need.</p>
+</li>
+</ul>
+<p>Because the RxPlayer declares multiple APIs to allow those different use cases,
+the track selection API can seem intimidating and confusing at first.</p>
+<p>This tutorial will help you understand what your options are, why you would use
+an API instead of another one and how to use them.</p>
+<p><a name="chapter-What%20is%20a%20%22track%22?"></a></p>
+<h2>What is a “track”?</h2>
+<p>We should first agree on what is a track, as a concept.</p>
+<p>Let’s take for example an italian film presented to an english-speaking
+audience.</p>
+<p>For that film, let’s imagine those multiple “audio tracks”:</p>
+<ul>
+<li>one being the original audio track, in italian</li>
+<li>one being a dub in the english language</li>
+<li>another in english with accessibility features such as an audio description
+of what visually happens in the film (for example, to give cues of what is
+happening to the visually-impaired).</li>
+</ul>
+<p>There also could be multiple “text tracks”:</p>
+<ul>
+<li>subtitles in english</li>
+<li>closed-captions in english (for example, for the hearing impaired)</li>
+</ul>
+<p>And we could even imagine multiple video tracks:</p>
+<ul>
+<li>one displaying the “regular” film</li>
+<li>another displaying either the same film from a different camera angle (seems
+far-fetched here but let’s just pretend we’re talking about some kind of
+experimental film!)</li>
+</ul>
+<p>All those will provide to the user a different way to offer the same film. They
+even can technically be switched one independently of the other (though
+restrictions on possible combinations can exist) to give a large number of
+different experience for what is effectively the same content.</p>
+<p><a name="chapter-Listing%20the%20available%20tracks"></a></p>
+<h2>Listing the available tracks</h2>
+<p><a name="subchapter-Preamble"></a></p>
+<h3>Preamble</h3>
+<p>The RxPlayer does not “guess” the tracks available for a given content.
+It usually finds every information about them in a specific file, called the
+Manifest.</p>
+<p>Thus, the list of available tracks will only be available once the RxPlayer has
+loaded and parsed that Manifest.
+Moreover, a Manifest can have several lists of available tracks depending on the
+player’s position (for example, a live channel with multiple programs might have
+different audio languages available for different programs).</p>
+<p>This means both that the available tracks won’t generally be known just after a
+<code>loadVideo</code> call and that it can then change at any time.</p>
+<p>Thankfully, most of this complexity is abstracted by the RxPlayer API.</p>
+<p><a name="subchapter-Using%20methods"></a></p>
+<h3>Using methods</h3>
+<p>Once the RxPlayer has loaded the content (meaning the RxPlayer is not in the
+<code>STOPPED</code>, <code>LOADING</code> or <code>RELOADING</code> <a href="../api/states.html">player state</a>) you can
+begin to ask it what is the current list of available tracks.</p>
+<p>This can be done through three RxPlayer methods:</p>
+<ul>
+<li><a href="../api/index.html#meth-getAvailableAudioTracks"><code>getAvailableAudioTracks()</code></a>
+to list audio tracks</li>
+<li><a href="../api/index.html#meth-getAvailableVideoTracks"><code>getAvailableVideoTracks()</code></a>
+to list video tracks</li>
+<li><a href="../api/index.html#meth-getAvailableTextTracks"><code>getAvailableTextTracks()</code></a>
+to list text tracks</li>
+</ul>
+<p>Those methods will all return arrays of objects, each object containing
+information about a single track.</p>
+<p>It should be noted that the information for an audio track won’t be the same
+than for a video or a text track.
+For example, you might be interested by the height and width available in a
+video track. Those notions make absolutely no sense for an audio track.</p>
+<p>For more information about the structure of the data returned by those methods,
+you can refer to their API documentation (a shortcut is available by clicking
+on the method name).</p>
+<p>Note that you can still ask for the current tracks when the RxPlayer does not
+have loaded any content (is in the <code>STOPPED</code>, <code>LOADING</code> or <code>RELOADING</code> player
+state), but you will most likely only get an empty array in those cases.</p>
+<h4>Examples</h4>
+<p>Those methods are straightforward, here are some examples of how they can be
+used:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Array of all available audio languages</span>
+<span class="hljs-keyword">const</span> availableLanguages = rxPlayer.getAvailableAudioTracks()
+  .map(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.language);
+
+<span class="hljs-comment">// List of audio tracks containing an audio description of what is visually</span>
+<span class="hljs-comment">// happening</span>
+<span class="hljs-keyword">const</span> audioDescriptionTracks = rxPlayer.getAvailableAudioTracks()
+  .filter(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.audioDescription);
+
+<span class="hljs-comment">// List of video tracks for which a profile with a 1080p resolution is available</span>
+<span class="hljs-keyword">const</span> highResVideoTracks = rxPlayer.getAvailableVideoTracks()
+  .filter(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> {
+    <span class="hljs-keyword">return</span> track.representations
+      .some(<span class="hljs-function"><span class="hljs-params">representation</span> =&gt;</span> representation.height !== <span class="hljs-literal">undefined</span> &amp;&amp;
+                              representation.height &gt;= <span class="hljs-number">1080</span>);
+  });
+
+<span class="hljs-comment">// List of text tracks available in french</span>
+<span class="hljs-keyword">const</span> frenchTextTracks = rxPlayer.getAvailableTextTracks()
+  .filter(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.normalized === <span class="hljs-string">"fra"</span>);
+</code></pre>
+<p><a name="subchapter-Using%20events"></a></p>
+<h3>Using events</h3>
+<p>If you want to have the list of available tracks as soon as possible, it might
+be a good idea to rely on the related events.</p>
+<p>Here are the three events you will need to know:</p>
+<ul>
+<li>
+<p><a href="../api/player_events.html#events-availableAudioTracksChange"><code>"availableAudioTracksChange"</code></a>:
+the list of available audio tracks was just updated</p>
+</li>
+<li>
+<p><a href="../api/player_events.html#events-availableVideoTracksChange"><code>"availableVideoTracksChange"</code></a>:
+idem for video tracks</p>
+</li>
+<li>
+<p><a href="../api/player_events.html#events-availableTextTracksChange"><code>"availableTextTracksChange"</code></a>:
+idem for video tracks</p>
+</li>
+</ul>
+<p>All of those events will have the corresponding available tracks as a payload,
+which will be the exact same data that what you would get when calling the
+corresponding <code>getAvailable...Tracks</code> method at this point.</p>
+<p>Note that no <code>available...TracksChange</code> event will be sent when the RxPlayer
+stops the content or temporarly goes through the <code>RELOADING</code> player state,
+despite the fact that in those cases there is no available tracks to choose
+from.</p>
+<p>Still, calling the <code>getAvailable...Tracks</code> methods in those cases will return
+an empty array (as it should). This has to be considered.</p>
+<h4>Examples</h4>
+<p>Like any RxPlayer event, you will need to add an event listener for those:</p>
+<pre><code class="language-js"><span class="hljs-keyword">let</span> currentAudioTracks = [];
+<span class="hljs-keyword">let</span> currentVideoTracks = [];
+<span class="hljs-keyword">let</span> currentTextTracks = [];
+
+rxPlayer.addEventListener(<span class="hljs-string">"availableAudioTracksChange"</span>, <span class="hljs-function"><span class="hljs-params">audioTracks</span> =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"New audio tracks:"</span>, audioTracks);
+  currentAudioTracks = audioTracks;
+})
+
+rxPlayer.addEventListener(<span class="hljs-string">"availableVideoTracksChange"</span>, <span class="hljs-function"><span class="hljs-params">videoTracks</span> =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"New video tracks:"</span>, videoTracks);
+  currentVideoTracks = videoTracks;
+})
+
+rxPlayer.addEventListener(<span class="hljs-string">"availableTextTracksChange"</span>, <span class="hljs-function"><span class="hljs-params">textTracks</span> =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"New text tracks:"</span>, textTracks);
+  currentTextTracks = textTracks;
+})
+</code></pre>
+<p><a name="subchapter-Should%20you%20use%20the%20methods%20or%20events?"></a></p>
+<h3>Should you use the methods or events?</h3>
+<p>Both the exposed methods and events return the same data.</p>
+<p>Whether you should rely on the former or on the latter will depend on what
+corresponds the most to your codebase:</p>
+<ul>
+<li>
+<p>if you want to fetch that list at a given point in time - such as when the
+user clicks on a button - it can be easier to just call the methods.</p>
+</li>
+<li>
+<p>if you want to know that list as soon as available and perform an action
+right after (such as selecting a track, displaying this list…), you might
+prefer relying on the events.</p>
+<p>Here you will also have to re-set that list yourself when the player has no
+content loaded anymore (in the <code>STOPPED</code>, <code>LOADING</code> or <code>RELOADING</code> player
+state).</p>
+</li>
+</ul>
+<p><a name="chapter-Knowing%20the%20current%20track"></a></p>
+<h2>Knowing the current track</h2>
+<p>You might also want to know which track is the one currently selected.
+There are several ways to do that.</p>
+<p><a name="subchapter-Through%20methods"></a></p>
+<h3>Through methods</h3>
+<p>The RxPlayer has a set of methods that just return the currently active tracks:</p>
+<ul>
+<li>
+<p><a href="../api/index.html#meth-getAudioTrack"><code>getAudioTrack</code></a>: return information
+on the current audio track</p>
+</li>
+<li>
+<p><a href="../api/index.html#meth-getVideoTrack"><code>getVideoTrack</code></a>: return information
+on the current video track</p>
+</li>
+<li>
+<p><a href="../api/index.html#meth-getTextTrack"><code>getTextTrack</code></a>: return information
+on the current text track</p>
+</li>
+</ul>
+<p>Those methods will return an object describing the attributes of the current
+tracks.
+They can also return <code>null</code> if no track has been enabled (for example, the user
+could have wanted to disable all text tracks) and <code>undefined</code> if the track is
+either unknown (which is a very rare occurence) or if no content is currently
+playing.</p>
+<p>Like the <code>getAvailable...Tracks</code> methods, the format of the objects returned
+will entirely depend on which method you call. You can refer to the API
+documentation to get more information on this.</p>
+<p>Also like the <code>getAvailable...Tracks</code> methods, the current text track will
+usually only be known once the RxPlayer has loaded a content (which means we are
+not in the <code>STOPPED</code>, <code>LOADING</code> or <code>RELOADING</code> <a href="../api/states.html">player
+state</a>). If no content is loaded, those APIs will just return
+<code>undefined</code>.</p>
+<h4>Examples</h4>
+<p>Here is an example on how you could use them:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> currentTextTrack = rxPlayer.getTextTrack();
+<span class="hljs-keyword">if</span> (currentTextTrack === <span class="hljs-literal">null</span>) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"No text track is enabled"</span>);
+} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (currentTextTrack === <span class="hljs-literal">undefined</span>) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"We don't know the current text track. "</span> +
+              <span class="hljs-string">"Are you sure a content is loaded?"</span>);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-keyword">const</span> language = currentTextTrack.language;
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"We have a current text track in the "</span> + language + <span class="hljs-string">"language"</span>);
+}
+</code></pre>
+<p><a name="subchapter-Through%20events"></a></p>
+<h3>Through events</h3>
+<p>Exactly like you would obtain the list of available tracks through the
+<code>available...TracksChange</code> events, you can know when the current track change as
+soon as possible through the following events:</p>
+<ul>
+<li>
+<p><a href="../api/player_events.html#events-audioTrackChange"><code>"audioTrackChange"</code></a>:
+the currently-active audio track changed</p>
+</li>
+<li>
+<p><a href="../api/player_events.html#events-videoTrackChange"><code>"videoTrackChange"</code></a>:
+the currently-active video track changed</p>
+</li>
+<li>
+<p><a href="../api/player_events.html#events-textTrackChange"><code>"textTrackChange"</code></a>:
+the currently-active text track changed</p>
+</li>
+</ul>
+<p>Those events just emit the current track information as soon as it changes, in
+the same format that the <code>get...Track</code> methods.</p>
+<p>Unlike for the <code>get...Track</code> methods however, its payload cannot be set to
+<code>undefined</code>: you won’t receive any <code>...TracksChange</code> event if the track is
+unknown or if there is no content.</p>
+<p>This also means that you won’t have any event when the RxPlayer stops or
+re-load the current content, despite the fact that you don’t have any current
+track in that case.
+Calling the <code>get...Track</code> method in those cases will return <code>undefined</code>, as it
+should. This has to be considered.</p>
+<h4>Example</h4>
+<p>Like for any events, you will have to register an event listener:</p>
+<pre><code class="language-js">rxPlayer.addEventListener(<span class="hljs-string">"textTrackChange"</span>, <span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> {
+  <span class="hljs-keyword">if</span> (track === <span class="hljs-literal">null</span>) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"No text track is active"</span>);
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"new active text track in the following language: "</span> + track.language);
+  }
+});
+</code></pre>
+<p><a name="subchapter-Through%20the%20list%20of%20available%20tracks"></a></p>
+<h3>Through the list of available tracks</h3>
+<p>As written earlier the <code>available...TracksChange</code> events and the
+<code>getAvailable...Tracks</code> methods both return arrays of objects, each object
+defining a single track.</p>
+<p>In each of those object, you will find an <code>active</code> boolean property, which will
+be set to <code>true</code> if the track is the currently chosen one and <code>false</code> otherwise.</p>
+<p>Note that it’s possible that none of the available tracks are active. This is
+for example the case when the track has been disabled (for example when the user
+wants no text tracks at all).</p>
+<pre><code class="language-js"><span class="hljs-comment">// get the active audio track through `getAvailableAudioTracks`</span>
+<span class="hljs-keyword">const</span> activeAudioTrack1 = rxPlayer.getAvailableAudioTracks()
+  .find(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.active);
+
+<span class="hljs-comment">// get the active audio track through `availableAudioTracksChange`</span>
+<span class="hljs-keyword">let</span> activeAudioTrack2;
+rxPlayer.addEventListener(<span class="hljs-string">"availableAudioTracksChange"</span>, <span class="hljs-function">(<span class="hljs-params">tracks</span>) =&gt;</span> {
+  activeAudioTrack2 = tracks.find(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.active);
+});
+</code></pre>
+<p><a name="subchapter-Which%20one%20to%20use?"></a></p>
+<h3>Which one to use?</h3>
+<p>As usual here, this is highly dependant on your application. All of those APIs
+give the same information through different means.</p>
+<p>Accessing with the <code>get...Track</code> method is simple to use, the events allow to
+know at the earliest possible time and relying on the list of available tracks
+can simplify your code if you want both of them.</p>
+<p><a name="chapter-Selecting%20a%20track"></a></p>
+<h2>Selecting a track</h2>
+<p>Now that we have the list of available tracks and the current one, we might want
+to choose another one, or let the final user choose another one.</p>
+<p>To do that, you will have to use one of those three RxPlayer methods:</p>
+<ul>
+<li><a href="../api/index.html#meth-setAudioTrack"><code>setAudioTrack()</code></a>: change the current
+audio track</li>
+<li><a href="../api/index.html#meth-setVideoTrack"><code>setVideoTrack()</code></a>: change the current
+video track</li>
+<li><a href="../api/index.html#meth-setTextTrack"><code>setTextTrack()</code></a>: change the current
+text track</li>
+</ul>
+<p>Each of those methods take a single string as argument. That string should be
+the value of the <code>id</code> property of the chosen track.</p>
+<p>For example, to choose the first audio track with an audio description, you can
+do:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> firstAudioTrackWithAD = rxPlayer.getAvailableAudioTracks()
+  .find(<span class="hljs-function"><span class="hljs-params">track</span> =&gt;</span> track.audioDescription);
+
+<span class="hljs-keyword">if</span> (firstAudioTrackWithAD !== <span class="hljs-literal">undefined</span>) {
+  rxPlayer.setAudioTrack(firstAudioTrackWithAD.id);
+}
+</code></pre>
+<p>It’s important to consider that those APIs only allow to change the current
+track and will have no impact on the other contents you will encounter in the
+future.</p>
+<p>Depending on your application, you might also want to set a global preference at
+some point, such as saying that the final user will prefer english audio
+tracks for now on.</p>
+<p>Although <code>setAudioTrack</code> can be used for this use case - by just setting an
+english audio track every times the available audio tracks list change (we can
+know that through the <code>availableAudioTracksChange</code> event) - it is much more
+efficient and less cumbersome to use audio track preference APIs for that.
+Those will be described later in this tutorial, so stay with me!</p>
+<p>After manually setting a track through the <code>set...Track</code> methods, you will
+receive the corresponding <code>...TrackChange</code> event when the change is applied.</p>
+<p>Note that on some contents, changing a track from a given type might
+automatically also change the current track for another types. For example,
+switching to another audio language might also automatically turn on the
+subtitles. This is because some streaming protocols might “force” some
+combination.</p>
+<p>To detect those cases, you can either listen to every <code>...TrackChange</code> events
+or call the corresponding <code>get...Track</code> method everytime you want to use them.</p>
+<p><a name="chapter-Disabling%20a%20track"></a></p>
+<h2>Disabling a track</h2>
+<p>Now what if you want no track at all?</p>
+<p>This is for example a frequent need for text tracks, where you might prefer to
+have no subtitles or closed captions appearing on the screen.</p>
+<p>You could also want to disable the video track, which is a trick often used to
+reduce the network bandwidth used by a content.</p>
+<p>You can disable respectively the current text track and the current video track
+by calling those methods:</p>
+<ul>
+<li><a href="../api/index.html#meth-disableTextTrack"><code>disableTextTrack</code></a></li>
+<li><a href="../api/index.html#meth-disableVideoTrack"><code>disableVideoTrack</code></a></li>
+</ul>
+<p>However, like for selecting a track, this only concerns the current content
+being played. When playing a new content or even when just switching to another
+part of the content with a different track list, you might need to re-do the
+same method call.</p>
+<p>This is problematic most-of-all when disabling the video track, as going in and
+out of that usually requires a short but visible “re-loading” step by the
+RxPlayer. You want thus to limit the need to call <code>disableVideoTrack</code> every
+times a new content is encountered.</p>
+<p>Thankfully, the RxPlayer has another set of API to let you choose a track even
+for future contents: the “track preferences APIs”.</p>
+<p><a name="chapter-Track%20preferences%20APIs"></a></p>
+<h2>Track preferences APIs</h2>
+<p>All methods and events discussed until now only have an effect for the current
+content being played.</p>
+<p>This has multiple disadvantages:</p>
+<ul>
+<li>
+<p>that code has to be run each time a new content is loaded (and each time the
+track list changes, if there are multiple track lists for a single
+contents).</p>
+</li>
+<li>
+<p>it is inefficient:
+In some cases the RxPlayer pre-load new content to allow a smooth transition
+between the current content and that new one.
+To do that, it chooses a track itself and begin to download it.</p>
+<p>If when reaching the new content a totally other track is finally chosen,
+we might have wasted network bandwidth for nothing as we would have to
+re-download a completely different track.</p>
+<p>Even more important, the transition won’t be smooth at all because we
+will have to stop to build some buffer with the wanted track instead.</p>
+</li>
+</ul>
+<p>Thankfully, there exists another set of APIs we call the “track preferences”.</p>
+<p>With those, you can tell the RxPlayer that you might always prefer the audio
+track to be in english - for example - or that you would prefer the video track
+to be in a given codec.</p>
+<p>Bear in mind that track preferences APIs are for a different use case than the
+classic track selection APIs:</p>
+<ul>
+<li>
+<p>the “classic” track selection APIs are here to select a precize track
+amongst available ones.</p>
+<p>This is probably the APIs you will use when displaying a list of available
+tracks to the final user and choosing one.</p>
+</li>
+<li>
+<p>the track preferences APIs give hints of what the finally user generally
+wants, so that the right track is automatically chosen by the RxPlayer. It
+is also useful for optimizations such as when pre-loading the next content.</p>
+<p>This is the APIs you will use in most other use cases, where you want to
+give the general track settings the user wants to the RxPlayer.</p>
+</li>
+</ul>
+<p>The track preferences can be set in two manners:</p>
+<ol>
+<li>During instanciation of the RxPlayer</li>
+<li>At any time, through specific methods</li>
+</ol>
+<p><a name="subchapter-Setting%20a%20track%20preference%20on%20instanciation"></a></p>
+<h3>Setting a track preference on instanciation</h3>
+<p>There are three options you can give to the RxPlayer on instanciation to set the
+track preferences:</p>
+<ul>
+<li><a href="../api/player_options.html#prop-preferredAudioTracks"><code>preferredAudioTracks</code></a>:
+set the preferences for the audio tracks</li>
+<li><a href="../api/player_options.html#prop-preferredTextTracks"><code>preferredTextTracks</code></a>:
+for the text tracks</li>
+<li><a href="../api/player_options.html#prop-preferredVideoTracks"><code>preferredVideoTracks</code></a>:
+for the video tracks</li>
+</ul>
+<p>You can click on the name of the option to be redirected to its corresponding
+API documentation.</p>
+<p>Each of those take an array of object which will define which track you want the
+RxPlayer to choose by default.</p>
+<p>As a simple example, to choose french audio tracks without audio description by
+default you could do:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> rxPlayer = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">preferredAudioTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }],
+});
+</code></pre>
+<p>Because not all contents could have a track matching that preferences, you can
+add even more elements in that array. For example, if you want to fallback to
+english if no french audio track is found you can do:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> rxPlayer = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">preferredAudioTracks</span>: [
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  ],
+});
+</code></pre>
+<p>Here, the RxPlayer will enable a french audio track if it finds one, but if it
+does not, it will enable the english one instead.</p>
+<p>If none of your preferences is found for a given content, the RxPlayer will
+choose the content’s default (or first, if no default is announced in the
+content) track itself.</p>
+<p>Those options allow much more powerful configurations. You can refer to the API
+documentation for that.</p>
+<p><a name="subchapter-track%20preferences%20methods"></a></p>
+<h3>track preferences methods</h3>
+<p>You can also update at any time those track preferences - even when no content
+is playing - by calling the following methods:
+- <a href="../api/index.html#meth-setPreferredAudioTracks"><code>setPreferredAudioTracks</code></a>:
+update the audio preferences
+- <a href="../api/index.html#meth-setPreferredTextTracks"><code>setPreferredTextTracks</code></a>
+update the text preferences
+- <a href="../api/index.html#meth-setPreferredVideoTracks"><code>setPreferredVideoTracks</code></a>
+update the video preferences</p>
+<p>Those methods mostly work the same way than the constructor options. You give
+them an array of the wanted track configurations and the RxPlayer will try to
+choose a track that match with the earliest possible configuration in that
+array:</p>
+<pre><code class="language-js">rxPlayer.setPreferredAudioTracks([
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+]);
+</code></pre>
+<p>But there’s another element to consider here.
+When calling the method (unlike when giving an option to the constructor), the
+RxPlayer may already be playing a content. So here, there’s a dilemma:</p>
+<ul>
+<li>
+<p>should the RxPlayer apply the new preferences to the current content? It
+could, but it might be unexpected if a track chosen explicitely by the user
+for the current content changes because it does not match the preferences.</p>
+</li>
+<li>
+<p>or should the RxPlayer only apply it to new contents? In that case, it could
+also be an unexpected behavior.
+Especially for contents with multiple track lists - here you could inversely
+want your new preferences to be considered when seeking back to an
+already-played content.</p>
+</li>
+</ul>
+<p>There’s no good answer here, it all depends on the implementation you want to
+do.</p>
+<p>Because of that, those methods all can take a boolean as a second argument.
+When this second argument is set to <code>true</code>, the RxPlayer will also apply that
+preference to the already-loaded content:</p>
+<pre><code class="language-js"><span class="hljs-comment">// disable the text tracks from every contents - the current one included</span>
+rxPlayer.setPreferredTextTracks([<span class="hljs-literal">null</span>], <span class="hljs-literal">true</span>);
+</code></pre>
+<p>If not set or set to <code>false</code>, it will only be applied for content that have not
+been loaded yet.</p>
+<pre><code class="language-js"><span class="hljs-comment">// Only disable the text tracks from the next encountered contents.</span>
+rxPlayer.setPreferredTextTracks([<span class="hljs-literal">null</span>]);
+</code></pre>
+<p><a name="subchapter-Obtaining%20the%20last%20set%20preferences"></a></p>
+<h3>Obtaining the last set preferences</h3>
+<p>The RxPlayer also has three methods which will return the last set preferences:</p>
+<ul>
+<li><a href="../api/index.html#meth-getPreferredAudioTracks"><code>getPreferredAudioTracks</code></a>:
+return the audio preferences</li>
+<li><a href="../api/index.html#meth-getPreferredTextTracks"><code>getPreferredTextTracks</code></a>:
+return the text preferences</li>
+<li><a href="../api/index.html#meth-getPreferredVideoTracks"><code>getPreferredVideoTracks</code></a>:
+return the video preferences</li>
+</ul>
+<p>The format of the returned array will be the exact same than the array given to
+the corresponding <code>setPreferred...Tracks</code> method (or the value of the
+<code>preferred...Tracks</code> constructor option if the method was never called - or
+just an empty array by default when neither was used).</p>
+<p><a name="chapter-What%20set%20of%20APIs%20should%20you%20use"></a></p>
+<h2>What set of APIs should you use</h2>
+<p>The “classic” track selection APIs (<code>getAvailable...Tracks</code>, <code>get...Track</code> and
+<code>set...Track</code>) are the APIs you should use when explicitely exposing the current
+available tracks and selecting one precizely.</p>
+<p>The track preferences APIs should be used for anything else.</p>
+<p>This is because the track preferences APIs allow to completely move the task
+of selecting a track out of your code and into the RxPlayer and will allow
+some optimizations to take place.</p>
+<p>The “classic” track selection APIs still allow to make a much more precize
+choice and allow to know which tracks are currently available.
+Due to that, they are a perfect fit when you want to propose a track choice menu
+to the final user.</p>
+<p><a name="chapter-Notes%20about%20the%20%22textTrackMode%22%20option"></a></p>
+<h2>Notes about the “textTrackMode” option</h2>
+<p>This tutorial was focused on track selection but there’s still a last point I
+want to approach, which is how subtitles will be displayed to the user.</p>
+<p>By default, text tracks will be displayed through <code>&lt;tracks&gt;</code> elements which
+will be contained in the media element where the content plays.
+This allows to display subtitles but may not be sufficient when wanting to
+display richer subtitles (such as closed-captions).</p>
+<p>This is why the RxPlayer has a
+<a href="../api/loadVideo_options.html#prop-textTrackMode"><code>textTrackMode</code></a> concept.</p>
+<p>By setting the <code>textTrackMode</code> to <code>"html"</code> in a
+<a href="../api/index.html#meth-loadVideo"><code>loadVideo</code></a> call, you will be able to profit
+from much richer subtitles than what you could have by default.
+If you do that, you also need to set the
+<a href="../api/loadVideo_options.html#prop-textTrackElement"><code>textTrackElement</code></a> property
+to an HTML element, that the RxPlayer will use to display subtitles into.</p>
+<p>More information on those options can be found in the RxPlayer API.</p>
+</body></html></div></div></div></body>

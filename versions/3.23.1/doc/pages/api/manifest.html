@@ -1,0 +1,312 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Manifest Object - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Manifest%20Object">Manifest Object</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Structure%20of%20a%20Manifest%20Object">Structure of a Manifest Object</a>
+<ul>
+<li><a href="#subchapter-properties">properties</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Structure%20of%20a%20Period%20Object">Structure of a Period Object</a>
+<ul>
+<li><a href="#subchapter-properties-bis">properties</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Structure%20of%20an%20Adaptation%20Object">Structure of an Adaptation Object</a>
+<ul>
+<li><a href="#subchapter-properties-bis-bis">properties</a></li>
+<li><a href="#subchapter-methods">methods</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Structure%20of%20a%20Representation%20Object">Structure of a Representation Object</a>
+<ul>
+<li><a href="#subchapter-properties-bis-bis-bis">properties</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Structure%20of%20a%20RepresentationIndex%20Object">Structure of a RepresentationIndex Object</a>
+<ul>
+<li><a href="#subchapter-methods-bis">methods</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Structure%20of%20a%20Segment%20Object">Structure of a Segment Object</a>
+<ul>
+<li><a href="#subchapter-properties-bis-bis-bis-bis">properties</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Manifest%20Object"></a></p>
+<h1>Manifest Object</h1>
+<p><a name="overview"></a>
+<a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>A Manifest Object and its sub-parts are data structures returned by multiple
+APIs of the player.</p>
+<p>Its data represents the corresponding streaming protocol’s
+<a href="../terms.html#manifest">Manifest</a> equivalent (MPD for DASH, Manifest for
+Microsoft Smooth Streaming etc.).</p>
+<p>Basically, the structure of a Manifest file has the following hierarchy:</p>
+<pre><code>Manifest Object
+  ...Manifest data and methods
+  Period Object
+    ...Period properties
+    Adaptation Object
+      ...Adaptation data and methods
+      Representation Object
+        ...Representation data and methods
+        RepresentationIndex Object
+          ...RepresentationIndex data and methods
+            SegmentObject
+            ...SegmentObject data
+</code></pre>
+<p>Due to this highly hierachical structure, each level will be described in its
+own chapter here.</p>
+<p><span class="emoji emoji_warning">⚠️</span> Like in the rest of this documentation, any variable or method not
+defined here can change without notice.</p>
+<p>Only use the documented variables and open an issue if you think it’s not
+enough.</p>
+<p><a name="manifest"></a>
+<a name="chapter-Structure%20of%20a%20Manifest%20Object"></a></p>
+<h2>Structure of a Manifest Object</h2>
+<p>The manifest Object represents the <a href="../terms.html#manifest">Manifest file</a> of the
+content loaded.</p>
+<p><a name="manifest-props"></a>
+<a name="subchapter-properties"></a></p>
+<h3>properties</h3>
+<p>The manifest Object has the following properties.</p>
+<h4>periods</h4>
+<p><em>type</em>: <code>Array.&lt;Period&gt;</code></p>
+<p>A single Manifest instance can contain multiple <a href="../terms.html#period">Periods</a>,
+which are periods of time for which the list of available type of contents
+(audio tracks, subtitles, video tracks…) can be different.</p>
+<p>Such example of Periods could be multiple Programs of a live contents, which can
+be each in different languages, for example.</p>
+<p>The player will switch smoothly across subsequent Periods within playback.</p>
+<p>Most Streaming technologies (e.g. HLS and Smooth) do not have a “Period”
+concept. For those, the Manifest will only have one Period for the whole
+content.</p>
+<h4>adaptations</h4>
+<hr>
+<p><span class="emoji emoji_warning">⚠️</span> This property is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>type</em>: <code>Object</code></p>
+<p>Adaptation objects for the first Period.</p>
+<p>Both of those lines have the same effect:</p>
+<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(manifest.adaptations);
+<span class="hljs-built_in">console</span>.log(manifest.periods[<span class="hljs-number">0</span>].adaptations);
+</code></pre>
+<p>See <a href="#period-props">the Period chapter</a> for more information on Adaptations.</p>
+<h4>isLive</h4>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><code>true</code> if the content is a “live” content (e.g. a live TV Channel).
+<code>false</code> otherwise.</p>
+<h4>uris</h4>
+<p><em>type</em>: <code>Array.&lt;string&gt;</code></p>
+<p>The list of uris that can be used to refer to the Manifest file.</p>
+<h4>transport</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>The type of transport used. For now, this can only be equal to either <code>dash</code>
+or <code>smooth</code>.</p>
+<p><a name="period"></a>
+<a name="chapter-Structure%20of%20a%20Period%20Object"></a></p>
+<h2>Structure of a Period Object</h2>
+<p>A Period is an object describing what to play during a certain time periods.</p>
+<p>A Manifest can have a single Period, which means that the played content do not
+change its characteristics (same languages, same bitrates etc.) or multiple
+ones.</p>
+<p>A good example of a content with multiple Periods would be a live channel
+broadcasting multiple foreign films. Each film, being in a different language,
+will need to be part of a new Period.</p>
+<p><a name="period-props"></a>
+<a name="subchapter-properties-bis"></a></p>
+<h3>properties</h3>
+<h4>id</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>This id should be a string unique to that Period. It serves identifications
+purpose, when updating the Manifest for example.</p>
+<h4>start</h4>
+<p><em>type</em>: <code>Number</code></p>
+<p>Start time at which the Period begins in the whole content, in seconds.</p>
+<h4>end</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>End time at which the Period ends in the whole content, in seconds.</p>
+<p>If not set or set to undefined, it means that the end is unknown, in which case
+it is the current last content of the current Manifest.</p>
+<h4>adaptations</h4>
+<p><em>type</em>: <code>Object</code></p>
+<p>The <a href="../terms.html#adaptation">Adaptations</a> (tracks if you want) for the current
+content, per-type (audio/video/text/image).</p>
+<p>See <a href="#adaptation">the Adaptation chapter</a> for more info about an Adaptation’s
+structure.</p>
+<p>The Adaptation object <em>can</em> contain any of the following keys:</p>
+<ul>
+<li>audio (<code>Array.&lt;Adaptation&gt;</code>): The audio Adaptation(s) available.</li>
+<li>video (<code>Array.&lt;Adaptation&gt;</code>): The video Adaptation(s) available.</li>
+<li>text (<code>Array.&lt;Adaptation&gt;</code>): The text Adaptation(s) available.</li>
+<li>image (<code>Array.&lt;Adaptation&gt;</code>): The image Adaptation(s) available.</li>
+</ul>
+<p><a name="adaptation"></a>
+<a name="chapter-Structure%20of%20an%20Adaptation%20Object"></a></p>
+<h2>Structure of an Adaptation Object</h2>
+<p>An <a href="../terms.html#adaptation">Adaptation</a> is a set of streams representing the
+exact same contents in multiple forms (different sizes, different bitrates…).
+Concretely, a frequent usecase is to have a single video Adaptation and multiple
+audio ones, one for each language available.</p>
+<p>As such, it is also often called in the API a <code>track</code>.</p>
+<p><a name="adaptation-props"></a>
+<a name="subchapter-properties-bis-bis"></a></p>
+<h3>properties</h3>
+<h4>id</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>This id should be a string unique to that Adaptation. It serves
+identifications purpose, when updating the Manifest for example.</p>
+<h4>type</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>The type of the Adaptation. The possible types are:</p>
+<ul>
+<li><code>"video"</code></li>
+<li><code>"audio"</code></li>
+<li><code>"text"</code></li>
+<li><code>"image"</code></li>
+</ul>
+<h4>language</h4>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>The language of the Adaptation. This is particularly useful for audio and text
+Adaptations.</p>
+<p>Note that this property is not always present in an Adaptation.</p>
+<h4>normalizedLanguage</h4>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>An attempt to translate the language of the Adaptation into an ISO 639-3 code.
+If the translation attempt fails (no corresponding ISO 639-3 language code is
+found), it will equal the value of <code>language</code></p>
+<p>Note that this property is not always present in an Adaptation.</p>
+<h4>isAudioDescription</h4>
+<p><em>type</em>: <code>Boolean|undefined</code></p>
+<p>This property only makes sense for audio Adaptations. In this case, if <code>true</code>
+it means that the audio track has added commentaries for the visually impaired.</p>
+<h4>isClosedCaption</h4>
+<p><em>type</em>: <code>Boolean|undefined</code></p>
+<p>This property only makes sense for text Adaptations. In this case, if <code>true</code>
+it means that the text track has added hints for the hard of hearing.</p>
+<h4>representations</h4>
+<p><em>type</em>: <code>Array.&lt;Representation&gt;</code></p>
+<p>The <a href="../terms.html#representation">Represesentations</a> for this Adaptation.</p>
+<p>See <a href="#representation">the Representation chapter</a> for more info about a
+Representation’s structure.</p>
+<p><a name="adaptation-meth"></a>
+<a name="subchapter-methods"></a></p>
+<h3>methods</h3>
+<h4>getAvailableBitrates</h4>
+<p><em>return value</em>: <code>Array.&lt;Number&gt;</code></p>
+<p>Returns every bitrates available for this Adaptation.</p>
+<p><a name="representation"></a>
+<a name="chapter-Structure%20of%20a%20Representation%20Object"></a></p>
+<h2>Structure of a Representation Object</h2>
+<p>A <a href="../terms.html#representation">Representation</a> is an
+<a href="../terms.html#adaptation">Adaptation</a> encoded in a certain way. It is defined by
+multiple values (a codec, a bitrate). Only some of them are documented here (as
+stated before, open an issue if you would like to access other properties).</p>
+<p><a name="representation-props"></a>
+<a name="subchapter-properties-bis-bis-bis"></a></p>
+<h3>properties</h3>
+<h4>id</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>This id should be a string unique to that Representation.</p>
+<h4>bitrate</h4>
+<p><em>type</em>: <code>Number</code></p>
+<p>The bitrate of the Representation.</p>
+<h4>codec</h4>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>The codec of the Representation.</p>
+<h4>decipherable</h4>
+<p><em>type</em>: <code>boolean|undefined</code></p>
+<p>Whether we are able to decrypt this Representation / unable to decrypt it or
+if we don’t know yet:</p>
+<ul>
+<li>if <code>true</code>, it means that we know we were able to decrypt this
+Representation in the current content.</li>
+<li>if <code>false</code>, it means that we know we were unable to decrypt this
+Representation</li>
+<li>if <code>undefined</code> there is no certainty on this matter</li>
+</ul>
+<h4>height</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>This property makes the most sense for video Representations.
+It defines the height of the video, in pixels.</p>
+<h4>width</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>This property makes the most sense for video Representations.
+It defines the width of the video, in pixels.</p>
+<h4>index</h4>
+<p><em>type</em>: <code>RepresentationIndex</code></p>
+<p>The represesentation index for this Representation.</p>
+<p>See <a href="#representation-index">the RepresentationIndex chapter</a> for more info about
+a RepresentationIndex’s structure.</p>
+<h4>frameRate</h4>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>The represesentation frame rate for this Representation. It defines either the
+number of frames per second as an integer (24), or as a ratio (24000 / 1000).</p>
+<p><a name="representation-index"></a>
+<a name="chapter-Structure%20of%20a%20RepresentationIndex%20Object"></a></p>
+<h2>Structure of a RepresentationIndex Object</h2>
+<p>A RepresentationIndex is an uniform way of declaring the segment index in any
+<a href="../terms.html#manifest">Manifest</a>.</p>
+<p>That’s the part that calculates which segments will be needed. Because the index
+can be different depending on the type of contents/transport most interactions
+here are done through few methods which hide the complexity underneath.</p>
+<p><a name="representation-index-meth"></a>
+<a name="subchapter-methods-bis"></a></p>
+<h3>methods</h3>
+<h4>getSegments</h4>
+<p><em>arguments</em>:</p>
+<ul>
+<li>
+<p><em>up</em> (<code>Number</code>): The position, in seconds from which you want to get the
+segment.</p>
+</li>
+<li>
+<p><em>duration</em> (<code>Number</code>): The duration in seconds from the asked position</p>
+</li>
+</ul>
+<p><em>return value</em>: <code>Array.&lt;Segment&gt;</code></p>
+<p>Returns the needed segments as defined by the current Manifest during an asked
+timeframe.</p>
+<p>See <a href="#segment">the Segment chapter</a> for more info about a Segment’s structure.</p>
+<p><a name="segment"></a>
+<a name="chapter-Structure%20of%20a%20Segment%20Object"></a></p>
+<h2>Structure of a Segment Object</h2>
+<p>A Segment object defines a segment, as generated by the RepresentationIndex.</p>
+<p>Those segments can have multiple useful properties which for the most part are
+described here.</p>
+<p><a name="segment-props"></a>
+<a name="subchapter-properties-bis-bis-bis-bis"></a></p>
+<h3>properties</h3>
+<h4>id</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>This id should be a string unique to that segment.</p>
+<h4>timescale</h4>
+<p><em>type</em>: <code>Number</code></p>
+<p>The timescale in which the duration and time are expressed.</p>
+<p>Basically, divide any of those by the timescale to obtain seconds.</p>
+<h4>duration</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>The duration, timescaled, of the Segments in s.</p>
+<h4>time</h4>
+<p><em>type</em>: <code>Number</code></p>
+<p>The start time, timescaled, of the Segments in s.</p>
+<h4>isInit</h4>
+<p><em>type</em>: <code>Boolean|undefined</code></p>
+<p>If true, the segment concerned is an init segment.</p>
+<h4>range</h4>
+<p><em>type</em>: <code>Array.&lt;Number&gt;|null|undefined</code></p>
+<p>If defined, it means that the segment is defined in a certain byte range
+remotely. In this case, the array contains two elements, the start byte and the
+end byte.</p>
+<h4>indexRange</h4>
+<p><em>type</em>: <code>Array.&lt;Number&gt;|null|undefined</code></p>
+<p>If defined, it means that a segment index is defined in a certain byte range
+remotely. In this case, the array contains two elements, the start byte and the
+end byte.</p>
+<h4>number</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>The number of the segment (if numbered), useful with certain types of index.</p>
+</body></html></div></div></div></body>

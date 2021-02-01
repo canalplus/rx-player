@@ -1,0 +1,348 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Minimal player with Feature selection - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Minimal%20player%20with%20Feature%20selection">Minimal player with Feature selection</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Importing%20a%20minimal%20version">Importing a minimal version</a>
+<ul>
+<li><a href="#subchapter-How%20it%20works">How it works</a></li>
+<li><a href="#subchapter-List%20of%20features">List of features</a></li>
+<li><a href="#subchapter-Examples">Examples</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Building%20with%20environment%20variables">Building with environment variables</a>
+<ul>
+<li><a href="#subchapter-How%20it%20works-bis">How it works</a></li>
+<li><a href="#subchapter-List%20of%20environment%20variables">List of environment variables</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Minimal%20player%20with%20Feature%20selection"></a></p>
+<h1>Minimal player with Feature selection</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The RxPlayer comes with many features, even some you might never need.
+For example, you may only care for DASH with TTML subtitles and not about
+Smooth streaming, VTT or SRT parsing.</p>
+<p>Because each implementation has its need, we permit multiple ways to import
+the player with limited features.
+This principally leads to a smaller file size.</p>
+<p>This customization can be done through two principal ways:</p>
+<ul>
+<li>
+<p>by importing a minimal version and then adding only the features your want</p>
+</li>
+<li>
+<p>by setting environment variables at build time</p>
+</li>
+</ul>
+<p>The first solution is the most straightforward and should be used in most
+usecases. The main disadvantages of this solution are that to reduce file size:</p>
+<ul>
+<li>
+<p>you will need to use a module-bundler or minifier which performs
+<a href="https://en.wikipedia.org/wiki/Tree_shaking">tree-shaking</a>, like webpack’s
+production mode or rollup.</p>
+</li>
+<li>
+<p>you will need to use the package published on npm (as opposed to the git
+repository directly).</p>
+</li>
+</ul>
+<p>The second solution will always work but needs you to build the bundle yourself
+through our npm scripts.</p>
+<p><a name="chapter-Importing%20a%20minimal%20version"></a></p>
+<h2>Importing a minimal version</h2>
+<p><a name="subchapter-How%20it%20works"></a></p>
+<h3>How it works</h3>
+<p>If you imported the RxPlayer library through the npm package (like via the <code>npm install rx-player</code> command), you can import a minimal version of the player by
+importing it from <code>"rx-player/minimal"</code>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> MinimalRxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+
+<span class="hljs-comment">// This player has the same API than the RxPlayer, but with no feature</span>
+<span class="hljs-comment">// (e.g. no DASH, Smooth or Directfile playback)</span>
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> MinimalRxPlayer();
+
+<span class="hljs-comment">// use the regular APIs...</span>
+player.setVolume(<span class="hljs-number">0.5</span>);
+</code></pre>
+<p>You then will need to add the features you want on it. Those can be accessed
+through the path <code>"rx-player/features"</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// import the DASH and Smooth features, which will be added to the RxPlayer</span>
+<span class="hljs-keyword">import</span> { DASH, SMOOTH } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+</code></pre>
+<p>At last you can add those features to the imported RxPlayer class by calling the
+special <code>addFeatures</code> static method, which is only present on the minimal
+version of the Player:</p>
+<pre><code class="language-js"><span class="hljs-comment">// addFeatures takes an array of features as argument</span>
+MinimalRxPlayer.addFeatures([DASH, SMOOTH]);
+</code></pre>
+<p>Here is the complete example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> MinimalRxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> { DASH, SMOOTH } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+
+MinimalRxPlayer.addFeatures([DASH, SMOOTH]);
+</code></pre>
+<p>There is also “experimental” features. Such features can completely change from
+one version to the next - unlike regular features which just follows semantic
+versioning. This means that you may have to keep the concerned code up-to-date
+each time you depend on a new RxPlayer version.
+Such features are imported from <code>"rx-player/experimental/features"</code> instead:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> MinimalRxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> { METAPLAYLIST } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/features"</span>;
+
+MinimalRxPlayer.addFeatures([METAPLAYLIST]);
+</code></pre>
+<p>You can of course depend on both experimental and regular features:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> MinimalRxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> { DASH, SMOOTH } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+<span class="hljs-keyword">import</span> { METAPLAYLIST } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/features"</span>;
+
+MinimalRxPlayer.addFeatures([DASH, SMOOTH, METAPLAYLIST]);
+</code></pre>
+<p>By using the minimal version, you will reduce the final bundle file <strong>if
+tree-shaking is performed on the final code</strong> (like in webpack’s production
+mode).</p>
+<p>The key is just to know which feature does what. The next chapter will list
+and explain the role of every one of them.</p>
+<p><a name="subchapter-List%20of%20features"></a></p>
+<h3>List of features</h3>
+<p>Features, which are variables imported from the <code>"rx-player/features"</code> path,
+are all objects declared in upper-case.</p>
+<p>Here is the anotated exhaustive list (notes are at the bottom of the table):</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description of the feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SMOOTH</code></td>
+<td>Enable Smooth streaming (HSS) playback</td>
+</tr>
+<tr>
+<td><code>DASH</code></td>
+<td>Enable DASH playback</td>
+</tr>
+<tr>
+<td><code>DIRECTFILE</code></td>
+<td>Enable playback of “directfile” contents</td>
+</tr>
+<tr>
+<td><code>EME</code></td>
+<td>Enable playback of encrypted contents</td>
+</tr>
+<tr>
+<td><code>NATIVE_TEXT_BUFFER</code> [1]</td>
+<td>Allow to display text tracks through &lt;tracks&gt; elements</td>
+</tr>
+<tr>
+<td><code>HTML_TEXT_BUFFER</code> [1]</td>
+<td>Allow to display richer text tracks through HTML elements</td>
+</tr>
+<tr>
+<td><code>IMAGE_BUFFER</code> [1]</td>
+<td>Allow to display thumbnails through the images buffer</td>
+</tr>
+<tr>
+<td><code>NATIVE_SRT_PARSER</code> [2]</td>
+<td>Parse SRT text tracks for the native text buffer</td>
+</tr>
+<tr>
+<td><code>NATIVE_VTT_PARSER</code> [2]</td>
+<td>Parse VTT text tracks for the native text buffer</td>
+</tr>
+<tr>
+<td><code>NATIVE_TTML_PARSER</code> [2]</td>
+<td>Parse TTML text tracks for the native text buffer</td>
+</tr>
+<tr>
+<td><code>NATIVE_SAMI_PARSER</code> [2]</td>
+<td>Parse SAMI text tracks for the native text buffer</td>
+</tr>
+<tr>
+<td><code>HTML_SRT_PARSER</code> [3]</td>
+<td>Parse SRT text tracks for the HTML text buffer</td>
+</tr>
+<tr>
+<td><code>HTML_VTT_PARSER</code> [3]</td>
+<td>Parse VTT text tracks for the HTML text buffer</td>
+</tr>
+<tr>
+<td><code>HTML_TTML_PARSER</code> [3]</td>
+<td>Parse TTML text tracks for the HTML text buffer</td>
+</tr>
+<tr>
+<td><code>HTML_SAMI_PARSER</code> [3]</td>
+<td>Parse SAMI text tracks for the HTML text buffer</td>
+</tr>
+<tr>
+<td><code>BIF_PARSER</code> [4]</td>
+<td>Parse BIF image tracks for the image buffer</td>
+</tr>
+<tr>
+<td><code>LOCAL_MANIFEST</code> [5]</td>
+<td>Enable playback of “local” contents</td>
+</tr>
+<tr>
+<td><code>METAPLAYLIST</code> [5]</td>
+<td>Enable playback of “metaplaylist” contents</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><strong>Notes</strong>:</p>
+<p><strong>[1]</strong>: You will need to also add at least one parser for this type of buffer
+for those features to be useful.
+(example: <code>NATIVE_SRT_PARSER</code> will parse srt subtitles for the
+<code>NATIVE_TEXT_BUFFER</code>)</p>
+<p><strong>[2]</strong>: Those features will only be used if <code>NATIVE_TEXT_BUFFER</code> is an added
+feature.</p>
+<p><strong>[3]</strong>: Those features will only be used if <code>HTML_TEXT_BUFFER</code> is an added
+feature.</p>
+<p><strong>[4]</strong>: This feature will only be used if <code>IMAGE_BUFFER</code> is an added feature.</p>
+<p><strong>[5]</strong>: Those type of contents are experimental. They should be imported
+from <code>rx-player/experimental/features</code>.</p>
+<hr>
+<p><a name="subchapter-Examples"></a></p>
+<h3>Examples</h3>
+<p>To help you choose your features, are some examples that represents common
+usecases.</p>
+<h4>unencrypted DASH contents with native webVTT subtitles</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> {
+  DASH,
+  NATIVE_TEXT_BUFFER,
+  NATIVE_VTT_PARSER
+} <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+
+RxPlayer.addFeatures([DASH, NATIVE_TEXT_BUFFER, NATIVE_VTT_PARSER]);
+</code></pre>
+<h4>possibly-encrypted DASH contents with HMTL webVTT and TTML subtitles</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> {
+  DASH,
+  EME,
+  HTML_TEXT_BUFFER,
+  HTML_VTT_PARSER,
+  HTML_HTML_PARSER
+} <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+
+RxPlayer.addFeatures([
+  DASH,
+  EME,
+  HTML_TEXT_BUFFER,
+  HTML_VTT_PARSER,
+  HTML_TTML_PARSER
+]);
+</code></pre>
+<h4>Smooth contents with thumbnails (BIF) support</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> {
+  SMOOTH,
+  IMAGE_BUFFER,
+  BIF_PARSER
+} <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+
+RxPlayer.addFeatures([ SMOOTH, IMAGE_BUFFER, BIF_PARSER ]);
+</code></pre>
+<p><a name="chapter-Building%20with%20environment%20variables"></a></p>
+<h2>Building with environment variables</h2>
+<p><a name="subchapter-How%20it%20works-bis"></a></p>
+<h3>How it works</h3>
+<p>You can also include only the features you need on the RxPlayer library by
+building it while having specific environment variables.</p>
+<p>The code related to the unwanted features should be removed when the final code
+is minified (as the corresponding code is made unreachable).</p>
+<p>To avoid any conflict with other environment variables, they all are named
+<code>RXP_&lt;FEATURE-NAME&gt;</code>.</p>
+<p>For example, the following will remove all code related to Microsoft Smooth
+Streaming from the build:</p>
+<pre><code class="language-sh">RXP_SMOOTH=<span class="hljs-literal">false</span> npm run build:min
+</code></pre>
+<p><a name="subchapter-List%20of%20environment%20variables"></a></p>
+<h3>List of environment variables</h3>
+<p><a name="env-smooth"></a></p>
+<h4>RXP_SMOOTH</h4>
+<p>True by default. If set to “false”, all code relative to HSS streaming will be
+ignored during a build.</p>
+<p><a name="env-dash"></a></p>
+<h4>RXP_DASH</h4>
+<p>True by default. If set to “false”, all code relative to DASH streaming will be
+ignored during a build.</p>
+<p><a name="env-dash"></a></p>
+<h4>RXP_DIRECTFILE</h4>
+<p>True by default. If set to “false”, all code relative to directfile streaming
+will be ignored during a build.</p>
+<p><a name="env-local"></a></p>
+<h4>RXP_LOCAL_MANIFEST</h4>
+<p>False by default. If set to “true”, all code relative to the “local” transport
+(to be able to play content offline for example) will be included during a
+build.</p>
+<p><a name="env-metaplaylist"></a></p>
+<h4>RXP_METAPLAYLIST</h4>
+<p>False by default. If set to “true”, all code relative to metaplaylist streaming
+will be included during a build.</p>
+<p><a name="env-eme"></a></p>
+<h4>RXP_EME</h4>
+<p>True by default. If set to “false”, all code relative to encrypted contents will
+be ignored during a build.</p>
+<p><a name="env-native-ttml"></a></p>
+<h4>RXP_NATIVE_TTML</h4>
+<p>True by default. If set to “false”, all code relative to TTML parsing for native
+text tracks will be ignored during a build.</p>
+<p><a name="env-native-sami"></a></p>
+<h4>RXP_NATIVE_SAMI</h4>
+<p>True by default. If set to “false”, all code relative to SAMI parsing for native
+text tracks will be ignored during a build.</p>
+<p><a name="env-native-vtt"></a></p>
+<h4>RXP_NATIVE_VTT</h4>
+<p>True by default. If set to “false”, all code relative to VTT parsing for native
+text tracks will be ignored during a build.</p>
+<p><a name="env-native-srt"></a></p>
+<h4>RXP_NATIVE_SRT</h4>
+<p>True by default. If set to “false”, all code relative to SRT parsing for native
+text tracks will be ignored during a build.</p>
+<p><a name="env-html-ttml"></a></p>
+<h4>RXP_HTML_TTML</h4>
+<p>True by default. If set to “false”, all code relative to TTML parsing for html
+text tracks<a href="#note-1">[1]</a> will be ignored during a build.</p>
+<p><a name="env-html-sami"></a></p>
+<h4>RXP_HTML_SAMI</h4>
+<p>True by default. If set to “false”, all code relative to SAMI parsing for html
+text tracks<a href="#note-1">[1]</a> will be ignored during a build.</p>
+<p><a name="env-html-vtt"></a></p>
+<h4>RXP_HTML_VTT</h4>
+<p>True by default. If set to “false”, all code relative to VTT parsing for html
+text tracks<a href="#note-1">[1]</a> will be ignored during a build.</p>
+<p><a name="env-html-srt"></a></p>
+<h4>RXP_HTML_SRT</h4>
+<p>True by default. If set to “false”, all code relative to SRT parsing for html
+text tracks<a href="#note-1">[1]</a> will be ignored during a build.</p>
+<p><a name="env-bif"></a></p>
+<h4>RXP_BIF_PARSER</h4>
+<p>True by default. If set to “false”, all code relative to BIF image parsing will
+be ignored during a build.</p>
+<p><a name="env-barebone"></a></p>
+<h4>RXP_BAREBONE</h4>
+<p>If set to true, no feature is activated by default and all other environment
+variables are considered as false by default (unless set).</p>
+<p>For example, to only activate DASH, you could do:</p>
+<pre><code class="language-sh">RXP_BAREBONE=<span class="hljs-literal">true</span> RXP_DASH=<span class="hljs-literal">true</span> npm run build:min
+</code></pre>
+<p><a name="env-env"></a></p>
+<h4>RXP_ENV</h4>
+<p>Either “production” or “development”. “production” as a default.
+In the “development” case:</p>
+<ul>
+<li>logs will be activated</li>
+<li>the code will be less tolerant towards unwanted behavior</li>
+<li>the code will be less optimized</li>
+</ul>
+<hr>
+<p><strong>Notes</strong>:</p>
+<p><a name="note-1"></a><strong>[1]</strong> html text tracks are tracks which are added to a
+DOM element instead of a <code>&lt;track&gt;</code> (the latter here being called “native”) tag
+for a richer formatting.</p>
+<hr>
+</body></html></div></div></div></body>
