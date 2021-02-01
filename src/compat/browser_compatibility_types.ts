@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../errors";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import isNode from "./is_node";
 
@@ -183,35 +182,6 @@ const MediaSource_ : typeof MediaSource | undefined =
   !isNullOrUndefined(win.WebKitMediaSource) ? win.WebKitMediaSource :
                                               win.MSMediaSource;
 
-/**
- * MediaKeys implementation, including vendored implementations and a fallback
- * one which will throw when calling one of its methods.
- */
-const MediaKeys_ : ICompatMediaKeysConstructor = (() => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return !isNullOrUndefined(win.MediaKeys)    ? win.MediaKeys :
-         !isNullOrUndefined(win.MozMediaKeys) ? win.MozMediaKeys :
-
-         // fallback implementation if not supported
-         class {
-           public readonly create : () => never;
-           public readonly isTypeSupported : () => never;
-           public readonly createSession : () => never;
-           public readonly setServerCertificate : () => never;
-           constructor() {
-             const noMediaKeys = () => {
-               throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
-                                    "No `MediaKeys` implementation found " +
-                                    "in the current browser.");
-             };
-             this.create = noMediaKeys;
-             this.createSession = noMediaKeys;
-             this.isTypeSupported = noMediaKeys;
-             this.setServerCertificate = noMediaKeys;
-           }
-         };
-})();
-
 /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
@@ -244,7 +214,6 @@ export {
   ICompatTextTrack,
   ICompatVTTCue,
   ICompatVTTCueConstructor,
-  MediaKeys_,
   MediaSource_,
   READY_STATES,
   VTTCue_,
