@@ -134,7 +134,7 @@ if (isNode ||
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     /* eslint-disable @typescript-eslint/no-unsafe-return */
     const { MediaKeys } = window as any;
-    const checkForNativeMediaKeysAPI = () => {
+    const checkForStandardMediaKeys = () => {
       if (MediaKeys === undefined) {
         throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
                              "No `MediaKeys` implementation found " +
@@ -148,12 +148,12 @@ if (isNode ||
       }
     };
     isTypeSupported = (keyType: string): boolean => {
-      checkForNativeMediaKeysAPI();
+      checkForStandardMediaKeys();
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-call */
       return MediaKeys.isTypeSupported(keyType);
     };
     createCustomMediaKeys = (keyType: string) => {
-      checkForNativeMediaKeysAPI();
+      checkForStandardMediaKeys();
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-call */
       return new MediaKeys(keyType);
     };
