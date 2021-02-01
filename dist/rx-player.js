@@ -257,12 +257,10 @@ module.exports = __webpack_require__(5666);
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "DQ": () => /* binding */ HTMLElement_,
-/* harmony export */   "v8": () => /* binding */ MediaKeys_,
 /* harmony export */   "JJ": () => /* binding */ MediaSource_,
 /* harmony export */   "cX": () => /* binding */ READY_STATES,
 /* harmony export */   "w": () => /* binding */ VTTCue_
 /* harmony export */ });
-/* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3714);
 /* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1946);
 /* harmony import */ var _is_node__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2203);
 /**
@@ -280,7 +278,6 @@ module.exports = __webpack_require__(5666);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -302,37 +299,11 @@ var VTTCue_ = !(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__/* .de
 /** MediaSource implementation, including vendored implementations. */
 
 var MediaSource_ = !(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__/* .default */ .Z)(win.MediaSource) ? win.MediaSource : !(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__/* .default */ .Z)(win.MozMediaSource) ? win.MozMediaSource : !(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__/* .default */ .Z)(win.WebKitMediaSource) ? win.WebKitMediaSource : win.MSMediaSource;
-/**
- * MediaKeys implementation, including vendored implementations and a fallback
- * one which will throw when calling one of its methods.
- */
-
-var MediaKeys_ = function () {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return !(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__/* .default */ .Z)(win.MediaKeys) ? win.MediaKeys : !(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__/* .default */ .Z)(win.MozMediaKeys) ? win.MozMediaKeys :
-  /*#__PURE__*/
-  // fallback implementation if not supported
-  function () {
-    function _class() {
-      var noMediaKeys = function noMediaKeys() {
-        throw new _errors__WEBPACK_IMPORTED_MODULE_2__/* .default */ .Z("MEDIA_KEYS_NOT_SUPPORTED", "No `MediaKeys` implementation found " + "in the current browser.");
-      };
-
-      this.create = noMediaKeys;
-      this.createSession = noMediaKeys;
-      this.isTypeSupported = noMediaKeys;
-      this.setServerCertificate = noMediaKeys;
-    }
-
-    return _class;
-  }();
-}();
 /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 /** List an HTMLMediaElement's possible values for its readyState property. */
-
 
 var READY_STATES = {
   HAVE_NOTHING: 0,
@@ -474,7 +445,7 @@ function clearElementSrc(element) {
 
 /***/ }),
 
-/***/ 4443:
+/***/ 6139:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -491,10 +462,10 @@ var throwError = __webpack_require__(4944);
 var of = __webpack_require__(8170);
 // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/defer.js
 var defer = __webpack_require__(1410);
+// EXTERNAL MODULE: ./src/errors/media_error.ts
+var media_error = __webpack_require__(3714);
 // EXTERNAL MODULE: ./src/utils/cast_to_observable.ts
 var cast_to_observable = __webpack_require__(8117);
-// EXTERNAL MODULE: ./src/compat/browser_compatibility_types.ts
-var browser_compatibility_types = __webpack_require__(3774);
 // EXTERNAL MODULE: ./src/compat/browser_detection.ts
 var browser_detection = __webpack_require__(3666);
 // EXTERNAL MODULE: ./src/compat/is_node.ts
@@ -844,6 +815,87 @@ function getIE11MediaKeysCallbacks() {
   };
 }
 
+;// CONCATENATED MODULE: ./src/compat/eme/custom_media_keys/moz_media_keys_constructor.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+var MozMediaKeysConstructor;
+
+if (!is_node/* default */.Z) {
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  var moz_media_keys_constructor_window = window,
+      MozMediaKeys = moz_media_keys_constructor_window.MozMediaKeys;
+
+  if (MozMediaKeys !== undefined && MozMediaKeys.prototype !== undefined && typeof MozMediaKeys.isTypeSupported === "function" && typeof MozMediaKeys.prototype.createSession === "function") {
+    MozMediaKeysConstructor = MozMediaKeys;
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+
+}
+
+
+function getMozMediaKeysCallbacks() {
+  var isTypeSupported = function isTypeSupported(keySystem, type) {
+    if (MozMediaKeysConstructor === undefined) {
+      throw new Error("No MozMediaKeys API.");
+    }
+
+    if (type !== undefined) {
+      return MozMediaKeysConstructor.isTypeSupported(keySystem, type);
+    }
+
+    return MozMediaKeysConstructor.isTypeSupported(keySystem);
+  };
+
+  var createCustomMediaKeys = function createCustomMediaKeys(keyType) {
+    if (MozMediaKeysConstructor === undefined) {
+      throw new Error("No MozMediaKeys API.");
+    }
+
+    return new MozMediaKeysConstructor(keyType);
+  };
+
+  var setMediaKeys = function setMediaKeys(elt, mediaKeys) {
+    /* eslint-disable @typescript-eslint/no-unsafe-return */
+
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
+    if (elt.mozSetMediaKeys === undefined || typeof elt.mozSetMediaKeys !== "function") {
+      throw new Error("Can't set video on MozMediaKeys.");
+    }
+
+    return elt.mozSetMediaKeys(mediaKeys);
+    /* eslint-enable @typescript-eslint/no-unsafe-return */
+
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
+  };
+
+  return {
+    isTypeSupported: isTypeSupported,
+    createCustomMediaKeys: createCustomMediaKeys,
+    setMediaKeys: setMediaKeys
+  };
+}
 // EXTERNAL MODULE: ./src/utils/base64.ts
 var base64 = __webpack_require__(9689);
 // EXTERNAL MODULE: ./src/utils/string_parsing.ts
@@ -1436,6 +1488,7 @@ function getWebKitMediaKeysCallbacks() {
 
 
 
+
 var requestMediaKeySystemAccess = null;
 
 var _setMediaKeys = function defaultSetMediaKeys(elt, mediaKeys) {
@@ -1487,30 +1540,14 @@ var _setMediaKeys = function defaultSetMediaKeys(elt, mediaKeys) {
  * is available.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 
 if (is_node/* default */.Z || navigator.requestMediaKeySystemAccess != null && !(0,should_favour_custom_safari_EME/* default */.Z)()) {
   requestMediaKeySystemAccess = function requestMediaKeySystemAccess(a, b) {
     return (0,cast_to_observable/* default */.Z)(navigator.requestMediaKeySystemAccess(a, b));
   };
-} else if (browser_compatibility_types/* MediaKeys_.isTypeSupported */.v8.isTypeSupported !== undefined) {
-  var isTypeSupported = function isTypeSupported(keyType) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return browser_compatibility_types/* MediaKeys_.isTypeSupported */.v8.isTypeSupported(keyType);
-  };
-
-  var createCustomMediaKeys = function createCustomMediaKeys(keyType) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return new browser_compatibility_types/* MediaKeys_ */.v8(keyType);
-  };
-  /* eslint-enable @typescript-eslint/no-unsafe-call */
-
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-  // This is for Chrome with unprefixed EME api
-
+} else {
+  var isTypeSupported;
+  var createCustomMediaKeys; // This is for Chrome with unprefixed EME api
 
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
     var callbacks = getOldWebKitMediaKeysCallbacks();
@@ -1529,6 +1566,51 @@ if (is_node/* default */.Z || navigator.requestMediaKeySystemAccess != null && !
     isTypeSupported = _callbacks2.isTypeSupported;
     createCustomMediaKeys = _callbacks2.createCustomMediaKeys;
     _setMediaKeys = _callbacks2.setMediaKeys;
+  } else if (MozMediaKeysConstructor !== undefined) {
+    var _callbacks3 = getMozMediaKeysCallbacks();
+
+    isTypeSupported = _callbacks3.isTypeSupported;
+    createCustomMediaKeys = _callbacks3.createCustomMediaKeys;
+    _setMediaKeys = _callbacks3.setMediaKeys;
+  } else {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+    /* eslint-disable @typescript-eslint/no-unsafe-return */
+    var custom_media_keys_window = window,
+        MediaKeys = custom_media_keys_window.MediaKeys;
+
+    var checkForStandardMediaKeys = function checkForStandardMediaKeys() {
+      if (MediaKeys === undefined) {
+        throw new media_error/* default */.Z("MEDIA_KEYS_NOT_SUPPORTED", "No `MediaKeys` implementation found " + "in the current browser.");
+      }
+
+      if (MediaKeys.isTypeSupported === undefined) {
+        var message = "This browser seems to be unable to play encrypted contents " + "currently. Note: Some browsers do not allow decryption " + "in some situations, like when not using HTTPS.";
+        throw new Error(message);
+      }
+    };
+
+    isTypeSupported = function isTypeSupported(keyType) {
+      checkForStandardMediaKeys();
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-call */
+
+      return MediaKeys.isTypeSupported(keyType);
+    };
+
+    createCustomMediaKeys = function createCustomMediaKeys(keyType) {
+      checkForStandardMediaKeys();
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-call */
+
+      return new MediaKeys(keyType);
+    };
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+
+    /* eslint-enable @typescript-eslint/no-unsafe-return */
+
   }
 
   requestMediaKeySystemAccess = function requestMediaKeySystemAccess(keyType, keySystemConfigurations) {
@@ -1565,11 +1647,6 @@ if (is_node/* default */.Z || navigator.requestMediaKeySystemAccess != null && !
     }
 
     return (0,throwError/* throwError */._)(undefined);
-  };
-} else {
-  requestMediaKeySystemAccess = function requestMediaKeySystemAccess(_a, _b) {
-    var message = "This browser seems to be unable to play encrypted contents " + "currently. Note: Some browsers do not allow decryption " + "in some situations, like when not using HTTPS.";
-    return (0,throwError/* throwError */._)(new Error(message));
   };
 }
 /**
@@ -5458,8 +5535,8 @@ function getSession(initializationData, stores, wantedSessionType) {
 }
 // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/ReplaySubject.js + 4 modules
 var ReplaySubject = __webpack_require__(2135);
-// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 6 modules
-var custom_media_keys = __webpack_require__(4443);
+// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 7 modules
+var custom_media_keys = __webpack_require__(6139);
 // EXTERNAL MODULE: ./src/core/eme/media_keys_infos_store.ts
 var media_keys_infos_store = __webpack_require__(6033);
 ;// CONCATENATED MODULE: ./src/core/eme/attach_media_keys.ts
@@ -8033,8 +8110,8 @@ var merge = __webpack_require__(4370);
 var of = __webpack_require__(8170);
 // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/map.js
 var map = __webpack_require__(5709);
-// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 6 modules
-var custom_media_keys = __webpack_require__(4443);
+// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 7 modules
+var custom_media_keys = __webpack_require__(6139);
 ;// CONCATENATED MODULE: ./src/compat/has_eme_apis.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -13017,8 +13094,8 @@ var ranges = __webpack_require__(2829);
 var warn_once = __webpack_require__(8806);
 // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/defer.js
 var defer = __webpack_require__(1410);
-// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 6 modules
-var custom_media_keys = __webpack_require__(4443);
+// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 7 modules
+var custom_media_keys = __webpack_require__(6139);
 // EXTERNAL MODULE: ./src/core/eme/media_keys_infos_store.ts
 var media_keys_infos_store = __webpack_require__(6033);
 ;// CONCATENATED MODULE: ./src/core/eme/dispose_media_keys.ts
@@ -25675,7 +25752,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     videoElement.preload = "auto";
     _this.version =
     /* PLAYER_VERSION */
-    "3.23.0";
+    "3.23.1";
     _this.log = log/* default */.Z;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -28268,7 +28345,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
 Player.version =
 /* PLAYER_VERSION */
-"3.23.0";
+"3.23.1";
 /* harmony default export */ const public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**

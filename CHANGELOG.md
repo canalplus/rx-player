@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.23.1 (2021/02/01)
+
+### Bug fixes
+
+  - Fix support of encrypted contents on Safari (v3.23.0 regression)
+
+
 ## v3.23.0 (2021/02/01)
 
 ### Features
@@ -11,7 +18,7 @@
 
 ### Bug fixes
 
-  - Fix impossibility to fallback to another Representation (with the `keySystems[].fallbackOn` `loadVideo` options) when a decryption key has been found to be non-usable [#843, #889]
+  - Fix impossibility to fallback to another Representation (with the `keySystems[].fallbackOn` `loadVideo` options) when a decryption key has been found to be non-usable [#889]
   - Fix DRM-related events being sent twice in a row instead of just once [#850]
   - Stop and throw `MANIFEST_PARSE_ERROR` error again when either audio or video has only unsupported codecs (instead of just playing the other type) [#864]
   - Avoid re-downloading a segment that ends a lot before its expected end [#846]
