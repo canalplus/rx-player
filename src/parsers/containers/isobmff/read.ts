@@ -60,8 +60,23 @@ function getMDIA(buf : Uint8Array) : Uint8Array|null {
   return getBoxContent(trak, 0x6D646961 /* "mdia" */);
 }
 
+/**
+ * Returns EMSG Box from the while ISOBMFF File.
+ * Returns null if not found.
+ * @param {Uint8Array} buffer
+ * @returns {Uint8Array|null}
+ */
+function getEMSG(buffer: Uint8Array, offset = 0) : Uint8Array|null {
+  const emsg = getBoxContent(buffer.subarray(offset), 0x656D7367 /* emsg */);
+  if (emsg === null) {
+    return null;
+  }
+  return emsg;
+}
+
 export {
   getTRAF,
   getMDAT,
   getMDIA,
+  getEMSG,
 };

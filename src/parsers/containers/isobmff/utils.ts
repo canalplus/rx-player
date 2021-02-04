@@ -24,7 +24,10 @@ import {
   itobe4,
   itobe8,
 } from "../../../utils/byte_parsing";
-import { hexToBytes } from "../../../utils/string_parsing";
+import {
+  hexToBytes,
+  readTerminatedString,
+} from "../../../utils/string_parsing";
 import { MAX_32_BIT_INT } from "./constants";
 import { createBox } from "./create_box";
 import { getPlayReadyKIDFromPrivateData } from "./drm";
@@ -33,6 +36,7 @@ import {
   getBoxOffsets,
 } from "./get_box";
 import {
+  getEMSG,
   getMDIA,
   getTRAF,
 } from "./read";
@@ -44,6 +48,14 @@ export interface IISOBMFFPSSHInfo {
   /** Additional data contained in the PSSH Box. */
   privateData : Uint8Array;
 }
+
+export interface IEMSG { schemeId: string;
+                         value: string;
+                         timescale: number;
+                         presentationTimeDelta: number;
+                         eventDuration: number;
+                         id: number;
+                         messageData: Uint8Array; }
 
 /** Segment information from a parsed sidx. */
 export interface ISidxSegment {
@@ -409,6 +421,56 @@ function updateBoxLength(buf : Uint8Array) : Uint8Array {
   }
 }
 
+/**
+ * Parse EMSG boxes from ISOBMFF data.
+ * @param {Uint8Array} buf
+ * @returns {Array.<Object>}
+ */
+function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] {
+  const emsgs: IEMSG[] = [];
+  let offset = 0;
+  while (offset < buffer.length) {
+    const emsg = getEMSG(buffer, offset);
+    if (emsg === null) {
+      return emsgs;
+    }
+    const length = emsg.length;
+    offset += length;
+
+    let position = 4; // skip version + flags
+
+    const { end: schemeIdEnd, string: schemeId } = readTerminatedString(emsg, position);
+    position = schemeIdEnd; // skip schemeId
+
+    const { end: valueEnd, string: value } = readTerminatedString(emsg, position);
+    position = valueEnd; // skip value
+
+    const timescale = be4toi(emsg, position);
+    position += 4; // skip timescale
+
+    const presentationTimeDelta = be4toi(emsg, position);
+    position += 4; // skip presentationTimeDelta
+
+    const eventDuration = be4toi(emsg, position);
+    position += 4; // skip eventDuration
+
+    const id = be4toi(emsg, position);
+    position += 4; // skip id
+
+    const messageData = emsg.subarray(position, length);
+
+    const emsgData = { schemeId,
+                       value,
+                       timescale,
+                       presentationTimeDelta,
+                       eventDuration,
+                       id,
+                       messageData };
+    emsgs.push(emsgData);
+  }
+  return emsgs;
+}
+
 export {
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
@@ -417,4 +479,5 @@ export {
   getSegmentsFromSidx,
   patchPssh,
   updateBoxLength,
+  parseEmsgBoxes,
 };

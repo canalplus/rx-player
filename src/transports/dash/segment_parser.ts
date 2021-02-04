@@ -15,11 +15,13 @@
  */
 
 import { of as observableOf } from "rxjs";
+import log from "../../log";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
+import { parseEmsgBoxes } from "../../parsers/containers/isobmff/utils";
 import {
   getSegmentsFromCues,
   getTimeCodeScale,
@@ -72,6 +74,25 @@ export default function generateAudioVideoSegmentParser(
                                                    new Uint8Array(data);
     const isWEBM = isWEBMEmbeddedTrack(representation);
 
+    if (!isWEBM) {
+      const emsgs = parseEmsgBoxes(chunkData);
+      if (emsgs.length > 0) {
+        const streamEvents = emsgs.map((emsg) => {
+          const start = (emsg.presentationTimeDelta / emsg.timescale) +
+                        segment.time / segment.timescale;
+          const duration = emsg.eventDuration / emsg.timescale;
+          const end = start + duration;
+          const id = emsg.id.toString();
+          const streamEvent = { start,
+                                end,
+                                id,
+                                data: { type: "isobmff-emsg" as const,
+                                        value: emsg } };
+          return streamEvent;
+        });
+        log.info("DASH Pipelines : Encountered stream events", segment, streamEvents);
+      }
+    }
     if (!segment.isInit) {
       const chunkInfos = isWEBM ? null : // TODO extract time info from webm
                                   getISOBMFFTimingInfos(chunkData,
