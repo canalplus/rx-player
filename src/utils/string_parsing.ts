@@ -366,6 +366,31 @@ function guidToUuid(guid : Uint8Array) : Uint8Array {
   return uuid;
 }
 
+/**
+ * Decode string from bytes (UTF-8).
+ * Keeps reading until it reaches a byte that equals to zero.
+ * @param {Uint8Array} buffer
+ * @param {number} offset
+ * @returns {Object}
+ */
+function readTerminatedString(buffer: Uint8Array, offset: number): {
+  end: number;
+  string: string;
+} {
+  let position = offset;
+  while (position < buffer.length) {
+    const value = buffer[position];
+    if (value === 0) {
+      break;
+    }
+    position += 1;
+  }
+
+  const bytes = buffer.subarray(offset, position);
+  return { end: position + 1,
+           string: utf8ToStr(bytes) };
+}
+
 export {
   bytesToHex,
   hexToBytes,
@@ -380,4 +405,6 @@ export {
   beUtf16ToStr,
 
   guidToUuid,
+
+  readTerminatedString,
 };
