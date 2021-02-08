@@ -41,16 +41,10 @@ import {
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
 import log from "../../log";
-import Manifest from "../../manifest";
-import {
-  ILoadedManifest,
-  ITransportPipelines,
-} from "../../transports";
 import deferSubscriptions from "../../utils/defer_subscriptions";
 import { fromEvent } from "../../utils/event_emitter";
 import filterMap from "../../utils/filter_map";
 import objectAssign from "../../utils/object_assign";
-import throttle from "../../utils/rx-throttle";
 import ABRManager, {
   IABRManagerArguments,
 } from "../abr";
@@ -61,7 +55,6 @@ import {
 } from "../eme";
 import {
   IManifestFetcherParsedResult,
-  IManifestFetcherParserOptions,
   IManifestFetcherWarningEvent,
   ManifestFetcher,
   SegmentFetcherCreator,
@@ -82,7 +75,6 @@ import {
   IInitClockTick,
   IInitEvent,
   IMediaSourceLoaderEvent,
-  IWarningEvent,
 } from "./types";
 
 const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
@@ -115,43 +107,29 @@ export interface IInitializeArguments {
   };
   /** Regularly emit current playback conditions. */
   clock$ : Observable<IInitClockTick>;
-  /** Information on the content we want to play */
-  content : {
-    /** Initial value of the Manifest, if already parsed. */
-    initialManifest? : ILoadedManifest;
-    /** Optional shorter version of the Manifest used for updates only. */
-    manifestUpdateUrl? : string;
-    /** URL of the Manifest. */
-    url? : string;
-  };
   /** Every encryption configuration set. */
   keySystems : IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
   lowLatencyMode : boolean;
-  /** The HTMLMediaElement on which we will play. */
+  /** Initial Manifest value. */
+  manifest$ : Observable<IManifestFetcherWarningEvent |
+                         IManifestFetcherParsedResult>;
+  /** Interface allowing to load and refresh the Manifest */
+  manifestFetcher : ManifestFetcher;
+  /** Optional shorter version of the Manifest used for updates only. */
+  manifestUpdateUrl? : string;
+/** The HTMLMediaElement on which we will play. */
   mediaElement : HTMLMediaElement;
   /** Limit the frequency of Manifest updates. */
   minimumManifestUpdateInterval : number;
-  /** Requests configuration. */
-  networkConfig: {
-    /** Maximum number of Manifest retry. */
-    manifestRetry? : number;
-    /** Maximum number of offline segment retry. */
-    offlineRetry? : number;
-    /** Maximum number of non-offline segment retry. */
-    segmentRetry? : number;
-  };
+  /** Interface allowing to load segments */
+  segmentFetcherCreator : SegmentFetcherCreator<any>;
   /** Emit the playback rate (speed) set by the user. */
   speed$ : Observable<number>;
   /** The configured starting position. */
   startAt? : IInitialTimeOptions;
   /** Configuration specific to the text track. */
   textTrackOptions : ITextTrackSegmentBufferOptions;
-  /**
-   * "Transport pipelines": logic specific to the current transport
-   * (e.g. DASH, Smooth...)
-   */
-  transportPipelines : ITransportPipelines;
 }
 
 /**
@@ -190,45 +168,18 @@ export default function InitializeOnMediaSource(
     autoPlay,
     bufferOptions,
     clock$,
-    content,
     keySystems,
     lowLatencyMode,
+    manifest$,
+    manifestFetcher,
+    manifestUpdateUrl,
     mediaElement,
     minimumManifestUpdateInterval,
-    networkConfig,
+    segmentFetcherCreator,
     speed$,
     startAt,
-    textTrackOptions,
-    transportPipelines } : IInitializeArguments
+    textTrackOptions } : IInitializeArguments
 ) : Observable<IInitEvent> {
-  const { url, initialManifest, manifestUpdateUrl } = content;
-  const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
-
-  const manifestFetcher = new ManifestFetcher(url,
-                                              transportPipelines,
-                                              { lowLatencyMode,
-                                                maxRetryRegular: manifestRetry,
-                                                maxRetryOffline: offlineRetry });
-
-  /**
-   * Fetch and parse the manifest from the URL given.
-   * Throttled to avoid doing multiple simultaneous requests.
-   */
-  const fetchManifest = throttle(
-    (manifestURL : string | undefined, options : IManifestFetcherParserOptions)
-    : Observable<IWarningEvent | IManifestFetcherParsedResult> =>
-      manifestFetcher.fetch(manifestURL).pipe(
-        mergeMap((response) => response.type === "warning" ?
-          observableOf(response) : // bubble-up warnings
-          response.parse(options)),
-        share()));
-
-  /** Interface used to download segments. */
-  const segmentFetcherCreator =
-    new SegmentFetcherCreator<any>(transportPipelines, { lowLatencyMode,
-                                                         maxRetryOffline: offlineRetry,
-                                                         maxRetryRegular: segmentRetry });
-
   /** Choose the right "Representation" for a given "Adaptation". */
   const abrManager = new ABRManager(adaptiveOptions);
 
@@ -270,20 +221,6 @@ export default function InitializeOnMediaSource(
    */
   const mediaError$ = throwOnMediaError(mediaElement);
 
-  let initialManifestRequest$: Observable<IManifestFetcherParsedResult |
-                                          IManifestFetcherWarningEvent>;
-  if (initialManifest instanceof Manifest) {
-    initialManifestRequest$ = observableOf({ type: "parsed",
-                                             manifest: initialManifest });
-  } else if (initialManifest !== undefined) {
-    initialManifestRequest$ =
-      manifestFetcher.parse(initialManifest, { previousManifest: null,
-                                               unsafeMode: false });
-  } else {
-    initialManifestRequest$ =
-      fetchManifest(url, { previousManifest: null, unsafeMode: false });
-  }
-
   /**
    * Wait for the MediaKeys to have been created before
    * opening MediaSource, and ask EME to attach MediaKeys.
@@ -315,7 +252,7 @@ export default function InitializeOnMediaSource(
   );
 
   /** Load and play the content asked. */
-  const loadContent$ = observableCombineLatest([initialManifestRequest$,
+  const loadContent$ = observableCombineLatest([manifest$,
                                                 prepareMediaSource$]).pipe(
     mergeMap(([manifestEvt, initialMediaSource]) => {
       if (manifestEvt.type === "warning") {
@@ -346,9 +283,9 @@ export default function InitializeOnMediaSource(
       // Emit when we want to manually update the manifest.
       const scheduleRefresh$ = new Subject<IManifestRefreshSchedulerEvent>();
 
-      const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
-                                                        initialManifest: manifestEvt,
+      const manifestUpdate$ = manifestUpdateScheduler({ initialManifest: manifestEvt,
                                                         manifestUpdateUrl,
+                                                        manifestFetcher,
                                                         minimumManifestUpdateInterval,
                                                         scheduleRefresh$ });
 

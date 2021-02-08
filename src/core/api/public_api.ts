@@ -26,6 +26,7 @@ import {
   ConnectableObservable,
   EMPTY,
   merge as observableMerge,
+  Observable,
   of as observableOf,
   ReplaySubject,
   Subject,
@@ -36,6 +37,7 @@ import {
   filter,
   map,
   mapTo,
+  mergeMap,
   mergeMapTo,
   publish,
   share,
@@ -91,6 +93,12 @@ import {
   disposeEME,
   getCurrentKeySystem,
 } from "../eme";
+import {
+  IManifestFetcherParsedResult,
+  IManifestFetcherWarningEvent,
+  ManifestFetcher,
+  SegmentFetcherCreator,
+} from "../fetchers";
 import initializeMediaSourcePlayback, {
   IInitEvent,
   ILoadedEvent,
@@ -711,25 +719,31 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("the attached video element is disposed");
     }
 
-    // now that every checks have passed, stop previous content
-    this.stop();
-
     const isDirectFile = transport === "directfile";
-
-    this._priv_currentError = null;
-    this._priv_contentInfos = { url,
-                                isDirectFile,
-                                segmentBuffersStore: null,
-                                thumbnails: null,
-                                manifest: null,
-                                currentPeriod: null,
-                                activeAdaptations: null,
-                                activeRepresentations: null,
-                                initialAudioTrack: defaultAudioTrack,
-                                initialTextTrack: defaultTextTrack };
-
-    // inilialize `_priv_playing$` to false (meaning the content is not playing yet)
-    this._priv_playing$.next(false);
+    /**
+     * Callback to call once we're ready to officially stop the previous content
+     * and consider the new one in our API.
+     * We don't want to do that right now because the `stop` operation might
+     * take time (from milliseconds to several hundred of milliseconds on some
+     * devices).
+     * Here we can optimize that time by for example doing that while waiting on
+     * a HTTP request to respond.
+     */
+    const resetState = () => {
+      this.stop();
+      this._priv_currentError = null;
+      this._priv_contentInfos = { url,
+                                  isDirectFile,
+                                  segmentBuffersStore: null,
+                                  thumbnails: null,
+                                  manifest: null,
+                                  currentPeriod: null,
+                                  activeAdaptations: null,
+                                  activeRepresentations: null,
+                                  initialAudioTrack: defaultAudioTrack,
+                                  initialTextTrack: defaultTextTrack };
+      this._priv_playing$.next(false);
+    };
 
     const videoElement = this.videoElement;
 
@@ -750,10 +764,53 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
       if (typeof transportFn !== "function") {
+        resetState();
         throw new Error(`transport "${transport}" not supported`);
       }
 
       const transportPipelines = transportFn(transportOptions);
+
+      const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
+
+      /** Interface used to load and refresh the Manifest. */
+      const manifestFetcher = new ManifestFetcher(url,
+                                                  transportPipelines,
+                                                  { lowLatencyMode,
+                                                    maxRetryRegular: manifestRetry,
+                                                    maxRetryOffline: offlineRetry });
+
+      /** Interface used to download segments. */
+      const segmentFetcherCreator = new SegmentFetcherCreator<any>(
+        transportPipelines,
+        { lowLatencyMode,
+          maxRetryOffline: offlineRetry,
+          maxRetryRegular: segmentRetry });
+
+      /** Observable emitting the initial Manifest */
+      let manifest$ : Observable<IManifestFetcherParsedResult |
+                                 IManifestFetcherWarningEvent>;
+
+      if (initialManifest instanceof Manifest) {
+        manifest$ = observableOf({ type: "parsed",
+                                   manifest: initialManifest });
+      } else if (initialManifest !== undefined) {
+        manifest$ = manifestFetcher.parse(initialManifest, { previousManifest: null,
+                                                             unsafeMode: false });
+      } else {
+        manifest$ = manifestFetcher.fetch(url).pipe(
+          mergeMap((response) => response.type === "warning" ?
+            observableOf(response) : // bubble-up warnings
+            response.parse({ previousManifest: null, unsafeMode: false })));
+      }
+
+      // Load the Manifest right now and share it with every subscriber until
+      // the content is stopped
+      manifest$ = manifest$.pipe(takeUntil(contentIsStopped$),
+                                 share());
+      manifest$.subscribe();
+
+      // now that the Manifest is loading, stop previous content and reset state
+      resetState();
 
       const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
       const throttlers = { throttle: {},
@@ -826,15 +883,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     autoPlay,
                                                     bufferOptions,
                                                     clock$,
-                                                    content: { initialManifest,
-                                                               manifestUpdateUrl,
-                                                               url },
                                                     keySystems,
                                                     lowLatencyMode,
+                                                    manifest$,
+                                                    manifestFetcher,
+                                                    manifestUpdateUrl,
                                                     mediaElement: videoElement,
                                                     minimumManifestUpdateInterval,
-                                                    networkConfig,
-                                                    transportPipelines,
+                                                    segmentFetcherCreator,
                                                     speed$: this._priv_speed$,
                                                     startAt,
                                                     textTrackOptions })
@@ -842,6 +898,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       playback$ = publish<IInitEvent>()(init$);
     } else {
+      resetState();
       if (features.directfile === null) {
         throw new Error("DirectFile feature not activated in your build.");
       }

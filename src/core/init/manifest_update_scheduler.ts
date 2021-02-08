@@ -27,14 +27,17 @@ import {
   mapTo,
   mergeMap,
   mergeMapTo,
+  share,
   take,
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../log";
 import Manifest from "../../manifest";
+import throttle from "../../utils/rx-throttle";
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
+  ManifestFetcher,
 } from "../fetchers";
 import { IWarningEvent } from "./types";
 
@@ -44,8 +47,8 @@ const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
 
 /** Arguments to give to the `manifestUpdateScheduler` */
 export interface IManifestUpdateSchedulerArguments {
-  /** Function used to refresh the manifest */
-  fetchManifest : IManifestFetcher;
+  /** Interface allowing to refresh the Manifest */
+  manifestFetcher : ManifestFetcher;
   /** Information about the initial load of the manifest */
   initialManifest : { manifest : Manifest;
                       sendingTime? : number;
@@ -94,12 +97,25 @@ export type IManifestRefreshScheduler = Observable<IManifestRefreshSchedulerEven
  * @returns {Observable}
  */
 export default function manifestUpdateScheduler({
-  fetchManifest,
   initialManifest,
+  manifestFetcher,
   manifestUpdateUrl,
   minimumManifestUpdateInterval,
   scheduleRefresh$,
 } : IManifestUpdateSchedulerArguments) : Observable<IWarningEvent> {
+  /**
+   * Fetch and parse the manifest from the URL given.
+   * Throttled to avoid doing multiple simultaneous requests.
+   */
+  const fetchManifest = throttle(
+    (manifestURL : string | undefined, options : IManifestFetcherParserOptions)
+    : Observable<IWarningEvent | IManifestFetcherParsedResult> =>
+      manifestFetcher.fetch(manifestURL).pipe(
+        mergeMap((response) => response.type === "warning" ?
+          observableOf(response) : // bubble-up warnings
+          response.parse(options)),
+        share()));
+
   // The Manifest always keeps the same Manifest
   const { manifest } = initialManifest;
 
