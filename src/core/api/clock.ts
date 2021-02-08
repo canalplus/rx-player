@@ -45,7 +45,6 @@ import { getRange } from "../../utils/ranges";
 export type IMediaInfosState = "init" | // set once on first emit
                                "canplay" | // HTML5 Event
                                "play" | // HTML5 Event
-                               "progress" | // HTML5 Event
                                "seeking" | // HTML5 Event
                                "seeked" | // HTML5 Event
                                "loadedmetadata" | // HTML5 Event
@@ -115,7 +114,6 @@ const { SAMPLING_INTERVAL_MEDIASOURCE,
  */
 const SCANNED_MEDIA_ELEMENTS_EVENTS : IMediaInfosState[] = [ "canplay",
                                                              "play",
-                                                             "progress",
                                                              "seeking",
                                                              "seeked",
                                                              "loadedmetadata",
