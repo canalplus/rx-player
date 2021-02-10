@@ -41,6 +41,7 @@ import {
   mergeMapTo,
   publish,
   share,
+  shareReplay,
   skipWhile,
   startWith,
   switchMapTo,
@@ -807,7 +808,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       // Load the Manifest right now and share it with every subscriber until
       // the content is stopped
       manifest$ = manifest$.pipe(takeUntil(stopContent$),
-                                 share());
+                                 shareReplay());
       manifest$.subscribe();
 
       // now that the Manifest is loading, stop previous content and reset state
