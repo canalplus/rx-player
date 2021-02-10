@@ -147,12 +147,6 @@ file](./CONTRIBUTING.md) at the root of this repository.
 If you need more information, you can contact us via our [gitter
 room](https://gitter.im/canalplus/rx-player).
 
-We also began to add a little architecture documentation [here
-](https://canalplus.github.io/rx-player/doc/pages/architecture/index.html).
-Those pages are automatically generated from the content of [the
-``doc/architecture`` directory.
-](https://github.com/canalplus/rx-player/tree/master/doc/architecture)
-
 
 ### Dependencies ###############################################################
 

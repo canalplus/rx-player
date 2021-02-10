@@ -45,13 +45,13 @@ Even if we hope the current code is straightforward, readable and commented
 enough we can still admit that going blind into the codebase can be hard at
 first (as it would be for any non-small codebase).
 
-We thus encourage you to rely on [the architecture documentation
-](https://canalplus.github.io/rx-player/doc/pages/architecture/index.html)
-(note: this page is updated with each new version. For any older version, it can
-also be found in the `doc/architecture/` directory, in the markdown format).
+We thus encourage you to rely on the architecture documentation you can usually
+find alongside the code, in `README.md` files.
+You can for example start by reading `src/README.md`, to have a clearer idea
+of the general code architecture of the player.
 
-A good place to start would be the [file organization of the project
-](https://canalplus.github.io/rx-player/doc/pages/architecture/files.html).
+Also, for a more exhaustive approach to the documentation of the project's file
+organization, you can look at `FILES.md` at the root of this repository.
 
 The code of the RxPlayer being heavily modularized, you should not need to read
 the whole documentation to be ready, only the parts you want to update

@@ -1,6 +1,63 @@
-# Transport pipeline ###########################################################
+# Transport code ###############################################################
 
-## Definition ##################################################################
+
+## Overview ####################################################################
+
+The `transports` code in the ``transports/`` directory is the code translating
+the streaming protocols available into a unified API.
+
+Its roles are to:
+
+  - download the Manifest and parse it into an object that can be understood
+    by the core of the rx-player
+
+  - download segments, convert them into a decodable format if needed, and
+    report important information about them (like the duration of a segment)
+
+  - give networking metrics to allow the core to better adapt to poor networking
+    conditions
+
+
+As such, most network request needed by the player are directly performed by
+the `transports` code.
+
+Note: the only HTTP request which might be done elsewhere would be the request
+for a `directfile` content. That request is not done explicely with a JavaScript
+API but implicitely by the browser (inclusion of an `src` attribute).
+
+
+
+## Implementation ##############################################################
+
+This code is completely divided by streaming protocols used.
+E.g.  `DASH` streaming is entirely defined in its own directory and the same
+thing is true for `Smooth Streaming` or `MetaPlaylist` contents.
+
+When playing a `DASH` content only the DASH-related code will be called. When
+switching to a `Smooth Streaming` content, only the `Smooth Streaming` code
+will be used instead.
+
+To allow this logic, any streaming protocol exposed in `transports` exposes
+the same interface and abstracts the difference to the rest of the code.
+For the core of the rx-player, we do not have any difference between playing
+any of the streaming protocols available.
+
+This also means that the code relative to a specific streaming technology is
+within the `transports` directory.
+This allows to greatly simplify code maintenance and evolutivity. For example,
+managing a new streaming protocol would mainly just need us to add some code
+there (you might also need to add parsers in the `parsers` directory). Same
+thing for adding a new feature to e.g. `DASH` or `Smooth`.
+
+Each streaming protocol implementation present in the `transports` code exports
+a single `transport` function.
+
+The object returned by that function is often referenced as the `transport
+pipelines`.
+
+
+
+## Transport pipeline ##########################################################
 
 Each streaming protocol defines a function that takes some options in arguments
 and returns an object. This object is often referenced as the `transport
@@ -17,7 +74,7 @@ As you can see, there's two recurrent concepts here: the loader and the parser.
 
 
 
-## A loader ####################################################################
+### A loader ###################################################################
 
 A loader in the transport pipeline is a function whose role is to "load" the
 resource.
@@ -53,7 +110,7 @@ This is better explained in the related chapter below.
 
 
 
-## A parser ####################################################################
+### A parser ###################################################################
 
 A parser's role is to extract the data and other important information from a
 loaded resource.
@@ -86,7 +143,7 @@ just for those requests.
 
 
 
-## Manifest loader #############################################################
+### Manifest loader ############################################################
 
 The Manifest loader is the "loader" downloading the Manifest (or MPD) file.
 
@@ -106,7 +163,7 @@ finished downloading it:
 
 
 
-## Manifest parser #############################################################
+### Manifest parser ############################################################
 
 The Manifest parser is a function whose role is to parse the Manifest in its
 original form to convert it to the RxPlayer's internal representation of it.
@@ -132,7 +189,7 @@ Manifest:
 
 
 
-## Segment loader ##############################################################
+### Segment loader #############################################################
 
 A Transport pipeline declares one Segment loader per type of buffer (e.g. audio,
 text, video...)
@@ -225,7 +282,7 @@ In the low-latency mode, the following events can be sent instead:
 
 
 
-## Segment parser ##############################################################
+### Segment parser #############################################################
 
 A segment parser is a function whose role is to extract some information from
 the segment's data:
