@@ -73,6 +73,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import { IEventMessage } from "../../parsers/containers/isobmff";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
@@ -219,6 +220,7 @@ interface IPublicAPIEvent {
   seeked : null;
   streamEvent : IStreamEvent;
   streamEventSkip : IStreamEvent;
+  eventMessage : IEventMessage;
 }
 
 /**
@@ -2268,6 +2270,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
+      case "event-messages":
+        const eventMessages = event.value;
+        const emsgsNbr = eventMessages.length;
+        for (let i = 0; i < emsgsNbr; i++) {
+          const eventMessage = eventMessages[i];
+          this.trigger("eventMessage", eventMessage);
+        }
+        return;
       case "stream-event":
         this.trigger("streamEvent", event.value);
         break;

@@ -26,6 +26,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../manifest";
+import { IEventMessage } from "../parsers/containers/isobmff";
 import { IBifThumbnail } from "../parsers/images/bif";
 import { ILocalManifest } from "../parsers/manifest/local";
 import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
@@ -371,6 +372,7 @@ export interface ISegmentParserParsedSegment<T> {
                    number | undefined ]; // end window for the segment
                                          // (part of the segment after that time
                                          // will be ignored)
+  emsgs? : IEventMessage[];
 }
 
 // What a segment parser returns when parsing an init segment
