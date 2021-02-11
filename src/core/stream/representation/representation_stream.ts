@@ -33,7 +33,6 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
-  of,
   ReplaySubject,
   Subject,
 } from "rxjs";
@@ -53,6 +52,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import { IEventMessage } from "../../../parsers/containers/isobmff";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
 import { IStalledStatus } from "../../api";
@@ -344,6 +344,7 @@ export default function RepresentationStream<T>({
                  ISegmentFetcherWarning |
                  IProtectedSegmentEvent |
                  IEventMessagesEvent |
+                 IStreamNeedsManifestRefresh |
                  IStreamManifestMightBeOutOfSync>
   {
     switch (evt.type) {
@@ -384,9 +385,26 @@ export default function RepresentationStream<T>({
             take(1),
             mergeMap((initSegmentData) => {
               if (evt.value.emsgs !== undefined) {
-                const emsgsEvent$ = of({ type: "event-messages" as const,
-                                         value: evt.value.emsgs });
-                return observableConcat(emsgsEvent$,
+                const { needsManifestRefresh, nonInterpretedMessages } = evt.value.emsgs
+                  .reduce((acc, val: IEventMessage) => {
+                    // Scheme that signals manifest update
+                    if (val.schemeId === "urn:mpeg:dash:event:2012") {
+                      acc.needsManifestRefresh = true;
+                    } else {
+                      acc.nonInterpretedMessages.push(val);
+                    }
+                    return acc;
+                  }, { needsManifestRefresh: false,
+                       nonInterpretedMessages: [] as IEventMessage[] });
+                const manifestRefresh$ = needsManifestRefresh ?
+                  observableOf(EVENTS.needsManifestRefresh()) :
+                  EMPTY;
+                const emsgsEvent$ = nonInterpretedMessages.length > 0 ?
+                  observableOf({ type: "event-messages" as const,
+                                 value: nonInterpretedMessages }) :
+                  EMPTY;
+                return observableConcat(manifestRefresh$,
+                                        emsgsEvent$,
                                         pushMediaSegment({ clock$,
                                                            content,
                                                            initSegmentData,
