@@ -22,6 +22,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
+import { IContentProtection } from "../eme";
 import { IBufferType } from "../segment_buffers";
 
 /** Information about a Segment waiting to be loaded by the Stream. */
@@ -151,21 +152,10 @@ export interface IStreamManifestMightBeOutOfSync {
   value : undefined;
 }
 
-/** Parsed DRM information detected in an initialization segment. */
-export interface ISegmentProtection {
-  /**
-   * The "format" of the DRM initialization data, as specified in:
-   * https://www.w3.org/TR/eme-initdata-registry/
-   */
-  type : string;
-  /** The DRM initialization data itself. */
-  data : Uint8Array;
-}
-
 /** Emitted when a segment with protection information has been encountered. */
-export interface IProtectedSegmentEvent {
-  type : "protected-segment";
-  value : ISegmentProtection;
+export interface IEncryptionDataEncounteredEvent {
+  type : "encryption-data-encountered";
+  value : IContentProtection;
 }
 
 /**
@@ -395,7 +385,7 @@ export interface INeedsDecipherabilityFlush {
 /** Event sent by a `RepresentationStream`. */
 export type IRepresentationStreamEvent<T> = IStreamStatusEvent |
                                             IStreamEventAddedSegment<T> |
-                                            IProtectedSegmentEvent |
+                                            IEncryptionDataEncounteredEvent |
                                             IStreamManifestMightBeOutOfSync |
                                             IStreamTerminatingEvent |
                                             IStreamNeedsManifestRefresh |
@@ -411,7 +401,7 @@ export type IAdaptationStreamEvent<T> = IBitrateEstimationChangeEvent |
 
                                         IStreamStatusEvent |
                                         IStreamEventAddedSegment<T> |
-                                        IProtectedSegmentEvent |
+                                        IEncryptionDataEncounteredEvent |
                                         IStreamManifestMightBeOutOfSync |
                                         IStreamNeedsManifestRefresh |
                                         IStreamWarningEvent;
@@ -432,7 +422,7 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
 
                                  IStreamStatusEvent |
                                  IStreamEventAddedSegment<unknown> |
-                                 IProtectedSegmentEvent |
+                                 IEncryptionDataEncounteredEvent |
                                  IStreamManifestMightBeOutOfSync |
                                  IStreamNeedsManifestRefresh |
                                  IStreamWarningEvent;
@@ -458,7 +448,7 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
 
                                           IStreamStatusEvent |
                                           IStreamEventAddedSegment<unknown> |
-                                          IProtectedSegmentEvent |
+                                          IEncryptionDataEncounteredEvent |
                                           IStreamManifestMightBeOutOfSync |
                                           IStreamNeedsManifestRefresh |
                                           IStreamWarningEvent;
@@ -487,7 +477,7 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
 
                                        IStreamStatusEvent |
                                        IStreamEventAddedSegment<unknown> |
-                                       IProtectedSegmentEvent |
+                                       IEncryptionDataEncounteredEvent |
                                        IStreamManifestMightBeOutOfSync |
                                        IStreamNeedsManifestRefresh |
                                        IStreamWarningEvent;

@@ -29,14 +29,6 @@ import castToObservable from "../../utils/cast_to_observable";
 import { PSSH_TO_INTEGER } from "./constants";
 import { ICustomMediaKeySession } from "./custom_media_keys";
 
-/** Information about the encryption initialization data. */
-export interface IInitializationDataInfo {
-  /** The initialization data type. */
-  type : string | undefined;
-  /** Initialization data itself. */
-  data : Uint8Array;
-}
-
 /**
  * Modify "initialization data" sent to a `generateKeyRequest` EME call to
  * improve the player's browser compatibility:
@@ -148,17 +140,18 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
  */
 export default function generateKeyRequest(
   session: MediaKeySession|ICustomMediaKeySession,
-  initializationData : IInitializationDataInfo
+  initializationDataType : string | undefined,
+  initializationData : Uint8Array
 ) : Observable<unknown> {
   return observableDefer(() => {
     log.debug("Compat: Calling generateRequest on the MediaKeySession");
     let patchedInit : Uint8Array;
     try {
-      patchedInit = patchInitData(initializationData.data);
+      patchedInit = patchInitData(initializationData);
     } catch (_e) {
-      patchedInit = initializationData.data;
+      patchedInit = initializationData;
     }
-    const initDataType = initializationData.type ?? "";
+    const initDataType = initializationDataType ?? "";
     return castToObservable(session.generateRequest(initDataType, patchedInit))
       .pipe(catchError(error => {
         if (initDataType !== "" || !(error instanceof TypeError)) {

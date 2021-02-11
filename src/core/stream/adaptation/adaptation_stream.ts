@@ -66,7 +66,6 @@ import RepresentationStream, {
 import {
   IAdaptationStreamEvent,
   IRepresentationStreamEvent,
-  IStreamEventAddedSegment,
 } from "../types";
 import reloadAfterSwitch from "../utils";
 import createRepresentationEstimator from "./create_representation_estimator";
@@ -106,14 +105,6 @@ export interface IAdaptationStreamArguments<T> {
   content : { manifest : Manifest;
               period : Period;
               adaptation : Adaptation; };
-  /**
-   * Strategy taken when the user switch manually the current Representation:
-   *   - "seamless": the switch will happen smoothly, with the Representation
-   *     with the new bitrate progressively being pushed alongside the old
-   *     Representation.
-   *   - "direct": hard switch. The Representation switch will be directly
-   *     visible but may necessitate the current MediaSource to be reloaded.
-   */
   options: IAdaptationStreamOptions;
   /** SourceBuffer wrapper - needed to push media segments. */
   segmentBuffer : SegmentBuffer<T>;
@@ -383,6 +374,3 @@ export default function AdaptationStream<T>({
     });
   }
 }
-
-// Re-export RepresentationStream events used by the AdaptationStream
-export { IStreamEventAddedSegment };

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { IInitializationDataInfo } from "../core/eme";
 import { ICustomError } from "../errors";
 import { IParsedManifest } from "../parsers/manifest";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
@@ -504,17 +505,26 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @param {Array.<ArrayBuffer>} keyIDs
    */
   public addUndecipherableProtectionData(
-    initDataType : string,
-    initData : Uint8Array
+    initData : IInitializationDataInfo
   ) : void {
     const updates = updateDeciperability(this, (representation) => {
       if (representation.decipherable === false) {
         return true;
       }
-      const segmentProtections = representation.getProtectionsInitializationData();
+      const segmentProtections = representation.contentProtections?.initData ?? [];
       for (let i = 0; i < segmentProtections.length; i++) {
-        if (segmentProtections[i].type === initDataType) {
-          if (areArraysOfNumbersEqual(initData, segmentProtections[i].data)) {
+        if (initData.type === undefined ||
+            segmentProtections[i].type === initData.type)
+        {
+          const containedInitData = initData.values.every(undecipherableVal => {
+            return segmentProtections[i].values.some(currVal => {
+              return (undecipherableVal.systemId === undefined ||
+                      currVal.systemId === undecipherableVal.systemId) &&
+                     areArraysOfNumbersEqual(currVal.data,
+                                             undecipherableVal.data);
+            });
+          });
+          if (containedInitData) {
             return false;
           }
         }

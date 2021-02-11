@@ -29,6 +29,7 @@ import {
   // throwError as observableThrow,
 } from "rxjs";
 import { takeUntil } from "rxjs/operators";
+import { IEncryptedEventData } from "../../../../compat/eme";
 import { IContentProtection } from "../../types";
 import {
   expectEncryptedEventReceived,
@@ -40,20 +41,6 @@ import {
   mockCompat,
   // testEMEManagerImmediateError,
 } from "./utils";
-
-/**
- * Create fake encrypted event which should (hopefully) be processed by the EME
- * logic.
- * @param {string} initDataType
- * @param {Uint8Array} initData
- * @returns {Object}
- */
-function generateEncryptedEvent(
-  initDataType : string,
-  initData : Uint8Array
-) : Event & { initDataType : string; initData : ArrayBuffer } {
-  return { ...new Event("encrypted"), initDataType, initData: initData.buffer };
-}
 
 describe("core - eme - global tests - init data", () => {
   /** Default video element used in our tests. */
@@ -101,14 +88,17 @@ describe("core - eme - global tests - init data", () => {
             expect(evt.type).toEqual("attached-media-keys");
             break;
           case 3:
-            expectLicenseRequestMessage(evt, initData, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData } ] });
             setTimeout(() => {
               kill$.next();
               expect(createSessionSpy).toHaveBeenCalledTimes(1);
               expect(createSessionSpy).toHaveBeenCalledWith("temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenCalledWith(mediaKeySession, { data: initData, type: "cenc" });
+                .toHaveBeenCalledWith(mediaKeySession, "cenc", initData);
               done();
             }, 10);
             break;
@@ -116,7 +106,8 @@ describe("core - eme - global tests - init data", () => {
             throw new Error("Unexpected event");
         }
       });
-    initDataSubject.next({ type: "cenc", data: initData });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
   });
 
   /* eslint-disable max-len */
@@ -149,12 +140,18 @@ describe("core - eme - global tests - init data", () => {
             expect(evt.type).toEqual("attached-media-keys");
             break;
           case 3:
-            expectLicenseRequestMessage(evt, initData, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData } ] });
             break;
           case 4:
           case 5:
           case 6:
-            expectInitDataIgnored(evt, initData, "cenc");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData } ] });
             if (eventsReceived === 6) {
               setTimeout(() => {
                 kill$.next();
@@ -162,8 +159,7 @@ describe("core - eme - global tests - init data", () => {
                 expect(createSessionSpy).toHaveBeenCalledWith("temporary");
                 expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
                 expect(generateKeyRequestSpy)
-                  .toHaveBeenCalledWith(mediaKeySession, { data: initData,
-                                                           type: "cenc" });
+                  .toHaveBeenCalledWith(mediaKeySession, "cenc", initData);
                 done();
               }, 10);
             }
@@ -172,10 +168,14 @@ describe("core - eme - global tests - init data", () => {
             throw new Error("Unexpected event");
         }
       });
-    initDataSubject.next({ type: "cenc", data: initData });
-    initDataSubject.next({ type: "cenc", data: initData });
-    initDataSubject.next({ type: "cenc", data: initData });
-    initDataSubject.next({ type: "cenc", data: initData });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
   });
 
   /* eslint-disable max-len */
@@ -214,19 +214,34 @@ describe("core - eme - global tests - init data", () => {
             expect(evt.type).toEqual("attached-media-keys");
             break;
           case 3:
-            expectLicenseRequestMessage(evt, initData1, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData1 } ] });
             break;
           case 4:
-            expectInitDataIgnored(evt, initData1, "cenc");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData1 } ] });
             break;
           case 5:
-            expectLicenseRequestMessage(evt, initData2, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData2 } ] });
             break;
           case 6:
-            expectInitDataIgnored(evt, initData1, "cenc");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData1 } ] });
             break;
           case 7:
-            expectInitDataIgnored(evt, initData2, "cenc");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData2 } ] });
             setTimeout(() => {
               kill$.next();
               expect(createSessionSpy).toHaveBeenCalledTimes(2);
@@ -234,11 +249,9 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenNthCalledWith(2, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(1, mediaKeySession1, { data: initData1,
-                                                                type: "cenc" });
+                .toHaveBeenNthCalledWith(1, mediaKeySession1, "cenc", initData1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(2, mediaKeySession2, { data: initData2,
-                                                                type: "cenc" });
+                .toHaveBeenNthCalledWith(2, mediaKeySession2, "cenc", initData2);
               done();
             }, 10);
             break;
@@ -246,11 +259,16 @@ describe("core - eme - global tests - init data", () => {
             throw new Error("Unexpected event");
         }
       });
-    initDataSubject.next({ type: "cenc", data: initData1 });
-    initDataSubject.next({ type: "cenc", data: initData1 });
-    initDataSubject.next({ type: "cenc", data: initData2 });
-    initDataSubject.next({ type: "cenc", data: initData1 });
-    initDataSubject.next({ type: "cenc", data: initData2 });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData2 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData2 } ] });
   });
 
   /* eslint-disable max-len */
@@ -290,16 +308,28 @@ describe("core - eme - global tests - init data", () => {
             expect(evt.type).toEqual("attached-media-keys");
             break;
           case 3:
-            expectLicenseRequestMessage(evt, initData1, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData1 } ] });
             break;
           case 4:
-            expectLicenseRequestMessage(evt, initData1, "cenc2");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc2",
+                                          values: [ { systemId: "15",
+                                                      data: initData1 } ] });
             break;
           case 5:
-            expectLicenseRequestMessage(evt, initData2, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData2 } ] });
             break;
           case 6:
-            expectLicenseRequestMessage(evt, initData2, "cenc2");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc2",
+                                          values: [ { systemId: "15",
+                                                      data: initData2 } ] });
             setTimeout(() => {
               kill$.next();
               expect(createSessionSpy).toHaveBeenCalledTimes(4);
@@ -309,17 +339,13 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenNthCalledWith(4, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(4);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(1, mediaKeySessions[0], { data: initData1,
-                                                                   type: "cenc" });
+                .toHaveBeenNthCalledWith(1, mediaKeySessions[0], "cenc", initData1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(2, mediaKeySessions[1], { data: initData1,
-                                                                   type: "cenc2" });
+                .toHaveBeenNthCalledWith(2, mediaKeySessions[1], "cenc2", initData1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(3, mediaKeySessions[2], { data: initData2,
-                                                                   type: "cenc" });
+                .toHaveBeenNthCalledWith(3, mediaKeySessions[2], "cenc", initData2);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], { data: initData2,
-                                                                   type: "cenc2" });
+                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], "cenc2", initData2);
               done();
             }, 10);
             break;
@@ -327,10 +353,14 @@ describe("core - eme - global tests - init data", () => {
             throw new Error("Unexpected event");
         }
       });
-    initDataSubject.next({ type: "cenc", data: initData1 });
-    initDataSubject.next({ type: "cenc2", data: initData1 });
-    initDataSubject.next({ type: "cenc", data: initData2 });
-    initDataSubject.next({ type: "cenc2", data: initData2 });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc2",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData2 } ] });
+    initDataSubject.next({ type: "cenc2",
+                           values: [ { systemId: "15", data: initData2 } ] });
   });
 
   /* eslint-disable max-len */
@@ -347,7 +377,9 @@ describe("core - eme - global tests - init data", () => {
     // == vars ==
     let eventsReceived = 0;
     const initData = new Uint8Array([54, 55, 75]);
-    const initDataEvent = generateEncryptedEvent("cenc", initData);
+    const initDataEvent = { type: "cenc",
+                            values: [ { systemId: "15",
+                                        data: initData } ] };
     const kill$ = new Subject();
 
     // == test ==
@@ -357,7 +389,7 @@ describe("core - eme - global tests - init data", () => {
       .subscribe((evt : any) => {
         switch (++eventsReceived) {
           case 1:
-            expectEncryptedEventReceived(evt, initData, "cenc");
+            expectEncryptedEventReceived(evt, initDataEvent);
             expect(getInitDataSpy).toHaveBeenCalledTimes(1);
             expect(getInitDataSpy).toHaveBeenCalledWith(initDataEvent);
             break;
@@ -369,15 +401,17 @@ describe("core - eme - global tests - init data", () => {
             expect(evt.type).toEqual("attached-media-keys");
             break;
           case 4:
-            expectLicenseRequestMessage(evt, initData, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData } ] });
             setTimeout(() => {
               kill$.next();
               expect(createSessionSpy).toHaveBeenCalledTimes(1);
               expect(createSessionSpy).toHaveBeenCalledWith("temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenCalledWith(mediaKeySession, { data: initData,
-                                                         type: "cenc" });
+                .toHaveBeenCalledWith(mediaKeySession, "cenc", initData);
               done();
             }, 10);
             break;
@@ -402,7 +436,9 @@ describe("core - eme - global tests - init data", () => {
     // == vars ==
     let eventsReceived = 0;
     const initData = new Uint8Array([54, 55, 75]);
-    const initDataEvent = generateEncryptedEvent("cenc", initData);
+    const initDataEvent = { type: "cenc",
+                            values: [ { systemId: "15",
+                                        data: initData } ] };
     const kill$ = new Subject();
 
     // == test ==
@@ -415,7 +451,7 @@ describe("core - eme - global tests - init data", () => {
           case 2:
           case 3:
           case 4:
-            expectEncryptedEventReceived(evt, initData, "cenc");
+            expectEncryptedEventReceived(evt, initDataEvent);
             expect(getInitDataSpy).toHaveBeenCalledTimes(eventsReceived);
             expect(getInitDataSpy).toHaveBeenNthCalledWith(eventsReceived, initDataEvent);
             break;
@@ -427,12 +463,18 @@ describe("core - eme - global tests - init data", () => {
             expect(evt.type).toEqual("attached-media-keys");
             break;
           case 7:
-            expectLicenseRequestMessage(evt, initData, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData } ] });
             break;
           case 8:
           case 9:
           case 10:
-            expectInitDataIgnored(evt, initData, "cenc");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData } ] });
             if (eventsReceived === 10) {
               setTimeout(() => {
                 kill$.next();
@@ -440,8 +482,7 @@ describe("core - eme - global tests - init data", () => {
                 expect(createSessionSpy).toHaveBeenCalledWith("temporary");
                 expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
                 expect(generateKeyRequestSpy)
-                  .toHaveBeenCalledWith(mediaKeySession, { data: initData,
-                                                           type: "cenc" });
+                  .toHaveBeenCalledWith(mediaKeySession, "cenc", initData);
                 done();
               }, 10);
             }
@@ -476,19 +517,21 @@ describe("core - eme - global tests - init data", () => {
     let eventsReceived = 0;
     const initData1 = new Uint8Array([54, 55, 75]);
     const initData2 = new Uint8Array([87, 32]);
-    const initDataEvent1 = generateEncryptedEvent("cenc", initData1);
-    const initDataEvent2 = generateEncryptedEvent("cenc", initData2);
+    const initDataEvent1 = { type: "cenc",
+                             values: [ { systemId: "15",
+                                         data: initData1 } ] };
+    const initDataEvent2 = { type: "cenc",
+                             values: [ { systemId: "15",
+                                         data: initData2 } ] };
     const kill$ = new Subject();
 
     function checkEncryptedEventReceived(
       evt : any,
-      initDataEvent : unknown,
-      initData : Uint8Array,
+      initDataEvent : IEncryptedEventData,
       nb : number
     ) {
       expect(evt.type).toEqual("encrypted-event-received");
-      expect(evt.value.type).toEqual("cenc");
-      expect(evt.value.data).toEqual(initData);
+      expect(evt.value).toEqual(initDataEvent);
       expect(getInitDataSpy).toHaveBeenCalledTimes(nb);
       expect(getInitDataSpy)
         .toHaveBeenNthCalledWith(nb, initDataEvent);
@@ -502,22 +545,45 @@ describe("core - eme - global tests - init data", () => {
         switch (++eventsReceived) {
           case 1:
           case 2:
-            checkEncryptedEventReceived(evt, initDataEvent1, initData1, eventsReceived);
+            checkEncryptedEventReceived(evt, initDataEvent1, eventsReceived);
             break;
-          case 3: checkEncryptedEventReceived(evt, initDataEvent2, initData2, 3); break;
-          case 4: checkEncryptedEventReceived(evt, initDataEvent1, initData1, 4); break;
-          case 5: checkEncryptedEventReceived(evt, initDataEvent2, initData2, 5); break;
+          case 3: checkEncryptedEventReceived(evt, initDataEvent2, 3); break;
+          case 4: checkEncryptedEventReceived(evt, initDataEvent1, 4); break;
+          case 5: checkEncryptedEventReceived(evt, initDataEvent2, 5); break;
           case 6:
             expect(evt.type).toEqual("created-media-keys");
             evt.value.attachMediaKeys$.next();
             break;
           case 7: expect(evt.type).toEqual("attached-media-keys"); break;
-          case 8: expectLicenseRequestMessage(evt, initData1, "cenc"); break;
-          case 9: expectInitDataIgnored(evt, initData1, "cenc"); break;
-          case 10: expectLicenseRequestMessage(evt, initData2, "cenc"); break;
-          case 11: expectInitDataIgnored(evt, initData1, "cenc"); break;
+          case 8:
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData1 } ] });
+            break;
+          case 9:
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData1 } ] });
+            break;
+          case 10:
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData2 } ] });
+            break;
+          case 11:
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData1 } ] });
+            break;
           case 12:
-            expectInitDataIgnored(evt, initData2, "cenc");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData2 } ] });
             setTimeout(() => {
               kill$.next();
               expect(createSessionSpy).toHaveBeenCalledTimes(2);
@@ -525,11 +591,9 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenNthCalledWith(2, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(1, mediaKeySession1, { data: initData1,
-                                                                type: "cenc" });
+                .toHaveBeenNthCalledWith(1, mediaKeySession1, "cenc", initData1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(2, mediaKeySession2, { data: initData2,
-                                                                type: "cenc" });
+                .toHaveBeenNthCalledWith(2, mediaKeySession2, "cenc", initData2);
               done();
             }, 10);
             break;
@@ -565,21 +629,27 @@ describe("core - eme - global tests - init data", () => {
     let eventsReceived = 0;
     const initData1 = new Uint8Array([54, 55, 75]);
     const initData2 = new Uint8Array([87, 32]);
-    const initDataEvent1 = generateEncryptedEvent("cenc", initData1);
-    const initDataEvent2 = generateEncryptedEvent("cenc2", initData1);
-    const initDataEvent3 = generateEncryptedEvent("cenc", initData2);
-    const initDataEvent4 = generateEncryptedEvent("cenc2", initData2);
+    const initDataEvent1 = { type: "cenc",
+                             values: [ { systemId: "15",
+                                         data: initData1 } ] };
+    const initDataEvent2 = { type: "cenc2",
+                             values: [ { systemId: "15",
+                                         data: initData1 } ] };
+    const initDataEvent3 = { type: "cenc",
+                             values: [ { systemId: "15",
+                                         data: initData2 } ] };
+    const initDataEvent4 = { type: "cenc2",
+                             values: [ { systemId: "15",
+                                         data: initData2 } ] };
     const kill$ = new Subject();
 
     function checkEncryptedEventReceived(
       evt : any,
-      initDataEvent : { initDataType : string },
-      initData : Uint8Array,
+      initDataEvent : IEncryptedEventData,
       nb : number
     ) {
       expect(evt.type).toEqual("encrypted-event-received");
-      expect(evt.value.type).toEqual(initDataEvent.initDataType);
-      expect(evt.value.data).toEqual(initData);
+      expect(evt.value).toEqual(initDataEvent);
       expect(getInitDataSpy).toHaveBeenCalledTimes(nb);
       expect(getInitDataSpy)
         .toHaveBeenNthCalledWith(nb, initDataEvent);
@@ -591,20 +661,38 @@ describe("core - eme - global tests - init data", () => {
       .pipe(takeUntil(kill$))
       .subscribe((evt : any) => {
         switch (++eventsReceived) {
-          case 1: checkEncryptedEventReceived(evt, initDataEvent1, initData1, 1); break;
-          case 2: checkEncryptedEventReceived(evt, initDataEvent2, initData1, 2); break;
-          case 3: checkEncryptedEventReceived(evt, initDataEvent3, initData2, 3); break;
-          case 4: checkEncryptedEventReceived(evt, initDataEvent4, initData2, 4); break;
+          case 1: checkEncryptedEventReceived(evt, initDataEvent1, 1); break;
+          case 2: checkEncryptedEventReceived(evt, initDataEvent2, 2); break;
+          case 3: checkEncryptedEventReceived(evt, initDataEvent3, 3); break;
+          case 4: checkEncryptedEventReceived(evt, initDataEvent4, 4); break;
           case 5:
             expect(evt.type).toEqual("created-media-keys");
             evt.value.attachMediaKeys$.next();
             break;
           case 6: expect(evt.type).toEqual("attached-media-keys"); break;
-          case 7: expectLicenseRequestMessage(evt, initData1, "cenc"); break;
-          case 8: expectLicenseRequestMessage(evt, initData1, "cenc2"); break;
-          case 9: expectLicenseRequestMessage(evt, initData2, "cenc"); break;
+          case 7:
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData1 } ] });
+            break;
+          case 8:
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc2",
+                                          values: [ { systemId: "15",
+                                                      data: initData1 } ] });
+            break;
+          case 9:
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData2 } ] });
+            break;
           case 10:
-            expectLicenseRequestMessage(evt, initData2, "cenc2");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc2",
+                                          values: [ { systemId: "15",
+                                                      data: initData2 } ] });
             setTimeout(() => {
               kill$.next();
               expect(createSessionSpy).toHaveBeenCalledTimes(4);
@@ -614,17 +702,13 @@ describe("core - eme - global tests - init data", () => {
               expect(createSessionSpy).toHaveBeenNthCalledWith(4, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(4);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(1, mediaKeySessions[0], { data: initData1,
-                                                                   type: "cenc" });
+                .toHaveBeenNthCalledWith(1, mediaKeySessions[0], "cenc", initData1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(2, mediaKeySessions[1], { data: initData1,
-                                                                   type: "cenc2" });
+                .toHaveBeenNthCalledWith(2, mediaKeySessions[1], "cenc2", initData1);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(3, mediaKeySessions[2], { data: initData2,
-                                                                   type: "cenc" });
+                .toHaveBeenNthCalledWith(3, mediaKeySessions[2], "cenc", initData2);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], { data: initData2,
-                                                                   type: "cenc2" });
+                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], "cenc2", initData2);
               done();
             }, 10);
             break;
@@ -658,21 +742,27 @@ describe("core - eme - global tests - init data", () => {
     let eventsReceived = 0;
     const initData1 = new Uint8Array([54, 55, 75]);
     const initData2 = new Uint8Array([87, 32]);
-    const initDataEvent1 = generateEncryptedEvent("cenc", initData1);
-    const initDataEvent2 = generateEncryptedEvent("cenc2", initData1);
-    const initDataEvent3 = generateEncryptedEvent("cenc", initData2);
-    const initDataEvent4 = generateEncryptedEvent("cenc2", initData2);
+    const initDataEvent1 = { type: "cenc",
+                             values: [ { systemId: "15",
+                                         data: initData1 } ] };
+    const initDataEvent2 = { type: "cenc2",
+                             values: [ { systemId: "15",
+                                         data: initData1 } ] };
+    const initDataEvent3 = { type: "cenc",
+                             values: [ { systemId: "15",
+                                         data: initData2 } ] };
+    const initDataEvent4 = { type: "cenc2",
+                             values: [ { systemId: "15",
+                                         data: initData2 } ] };
     const kill$ = new Subject();
 
     function checkEncryptedEventReceived(
       evt : any,
-      initDataEvent : { initDataType : string },
-      initData : Uint8Array,
+      initDataEvent : IEncryptedEventData,
       nb : number
     ) {
       expect(evt.type).toEqual("encrypted-event-received");
-      expect(evt.value.type).toEqual(initDataEvent.initDataType);
-      expect(evt.value.data).toEqual(initData);
+      expect(evt.value).toEqual(initDataEvent);
       expect(getInitDataSpy).toHaveBeenCalledTimes(nb);
       expect(getInitDataSpy)
         .toHaveBeenNthCalledWith(nb, initDataEvent);
@@ -684,7 +774,7 @@ describe("core - eme - global tests - init data", () => {
       .pipe(takeUntil(kill$))
       .subscribe((evt : any) => {
         switch (++eventsReceived) {
-          case 1: checkEncryptedEventReceived(evt, initDataEvent1, initData1, 1); break;
+          case 1: checkEncryptedEventReceived(evt, initDataEvent1, 1); break;
           case 2:
             expect(evt.type).toEqual("created-media-keys");
             evt.value.attachMediaKeys$.next();
@@ -695,83 +785,103 @@ describe("core - eme - global tests - init data", () => {
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(0);
             break;
           case 4:
-            expectLicenseRequestMessage(evt, initData1, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData1 } ] });
             expect(createSessionSpy).toHaveBeenCalledTimes(1);
             expect(createSessionSpy).toHaveBeenNthCalledWith(1, "temporary");
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
             expect(generateKeyRequestSpy)
-              .toHaveBeenNthCalledWith(1, mediaKeySessions[0], { data: initData1,
-                                                                 type: "cenc" });
+              .toHaveBeenNthCalledWith(1, mediaKeySessions[0], "cenc", initData1);
             break;
           case 5:
-            expectInitDataIgnored(evt, initData1, "cenc");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData1 } ] });
             expect(getInitDataSpy).toHaveBeenCalledTimes(1);
             expect(createSessionSpy).toHaveBeenCalledTimes(1);
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(1);
             break;
           case 6:
-            expectLicenseRequestMessage(evt, initData1, "cenc2");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc2",
+                                          values: [ { systemId: "15",
+                                                      data: initData1 } ] });
             expect(createSessionSpy).toHaveBeenCalledTimes(2);
             expect(createSessionSpy).toHaveBeenNthCalledWith(2, "temporary");
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
             expect(generateKeyRequestSpy)
-              .toHaveBeenNthCalledWith(2, mediaKeySessions[1], { data: initData1,
-                                                                 type: "cenc2" });
+              .toHaveBeenNthCalledWith(2, mediaKeySessions[1], "cenc2", initData1);
             break;
           case 7:
-            checkEncryptedEventReceived(evt, initDataEvent2, initData1, 2);
+            checkEncryptedEventReceived(evt, initDataEvent2, 2);
             expect(getInitDataSpy).toHaveBeenCalledTimes(2);
             expect(createSessionSpy).toHaveBeenCalledTimes(2);
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
             break;
           case 8:
-            expectInitDataIgnored(evt, initData1, "cenc2");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc2",
+                                    values: [ { systemId: "15",
+                                                data: initData1 } ] });
             expect(getInitDataSpy).toHaveBeenCalledTimes(2);
             expect(createSessionSpy).toHaveBeenCalledTimes(2);
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
             break;
           case 9:
-            expectInitDataIgnored(evt, initData1, "cenc");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData1 } ] });
             expect(getInitDataSpy).toHaveBeenCalledTimes(2);
             expect(createSessionSpy).toHaveBeenCalledTimes(2);
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
             break;
           case 10:
-            checkEncryptedEventReceived(evt, initDataEvent3, initData2, 3);
+            checkEncryptedEventReceived(evt, initDataEvent3, 3);
             expect(getInitDataSpy).toHaveBeenCalledTimes(3);
             expect(createSessionSpy).toHaveBeenCalledTimes(2);
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(2);
             break;
           case 11:
-            expectLicenseRequestMessage(evt, initData2, "cenc");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc",
+                                          values: [ { systemId: "15",
+                                                      data: initData2 } ] });
             expect(createSessionSpy).toHaveBeenCalledTimes(3);
             expect(createSessionSpy).toHaveBeenNthCalledWith(3, "temporary");
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(3);
             expect(generateKeyRequestSpy)
-              .toHaveBeenNthCalledWith(3, mediaKeySessions[2], { data: initData2,
-                                                                 type: "cenc" });
+              .toHaveBeenNthCalledWith(3, mediaKeySessions[2], "cenc", initData2);
             break;
           case 12:
-            expectInitDataIgnored(evt, initData2, "cenc");
+            expectInitDataIgnored(evt,
+                                  { type: "cenc",
+                                    values: [ { systemId: "15",
+                                                data: initData2 } ] });
             expect(getInitDataSpy).toHaveBeenCalledTimes(3);
             expect(createSessionSpy).toHaveBeenCalledTimes(3);
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(3);
             break;
           case 13:
-            checkEncryptedEventReceived(evt, initDataEvent4, initData2, 4);
+            checkEncryptedEventReceived(evt, initDataEvent4, 4);
             expect(getInitDataSpy).toHaveBeenCalledTimes(4);
             expect(createSessionSpy).toHaveBeenCalledTimes(3);
             expect(generateKeyRequestSpy).toHaveBeenCalledTimes(3);
             break;
           case 14:
-            expectLicenseRequestMessage(evt, initData2, "cenc2");
+            expectLicenseRequestMessage(evt,
+                                        { type: "cenc2",
+                                          values: [ { systemId: "15",
+                                                      data: initData2 } ] });
             setTimeout(() => {
               expect(createSessionSpy).toHaveBeenCalledTimes(4);
               expect(createSessionSpy).toHaveBeenNthCalledWith(4, "temporary");
               expect(generateKeyRequestSpy).toHaveBeenCalledTimes(4);
               expect(generateKeyRequestSpy)
-                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], { data: initData2,
-                                                                   type: "cenc2" });
+                .toHaveBeenNthCalledWith(4, mediaKeySessions[3], "cenc2", initData2);
               kill$.next();
               done();
             }, 5);
@@ -781,13 +891,17 @@ describe("core - eme - global tests - init data", () => {
         }
       });
     triggerEncrypted.next(initDataEvent1);
-    initDataSubject.next({ type: "cenc", data: initData1 });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
     setTimeout(() => {
-      initDataSubject.next({ type: "cenc2", data: initData1 });
+      initDataSubject.next({ type: "cenc2",
+                             values: [ { systemId: "15", data: initData1 } ] });
       triggerEncrypted.next(initDataEvent2);
-      initDataSubject.next({ type: "cenc", data: initData1 });
+      initDataSubject.next({ type: "cenc",
+                             values: [ { systemId: "15", data: initData1 } ] });
       triggerEncrypted.next(initDataEvent3);
-      initDataSubject.next({ type: "cenc", data: initData2 });
+      initDataSubject.next({ type: "cenc",
+                             values: [ { systemId: "15", data: initData2 } ] });
       triggerEncrypted.next(initDataEvent4);
     }, 5);
   });

@@ -325,27 +325,30 @@ export interface IChunkTimeInfo {
   time : number;
 }
 
-/** Encryption information linked to a segment. */
-export interface ISegmentProtection {
-  /**
-   * The `initialization data type` of that segment protection information.
-   * (https://www.w3.org/TR/encrypted-media/#initialization-data-type)
-   */
-  type : string;
-  /** The segment protection information. */
-  data : Uint8Array;
-}
-
-// Format of a parsed initialization segment
+/** Payload sent when an initialization segment has been parsed. */
 export interface ISegmentParserParsedInitSegment<T> {
-  initializationData : T | null; // Data to push to initialize the decoder
-  initTimescale? : number; // timescale taken from the init segment which might
-                           // be useful for the following regular segments.
-  segmentProtections : ISegmentProtection[]; // Information about the
-                                             // protection put in place
-                                            // for the segments in this
-                                            // Representation
-                                            // Empty if not encrypted.
+  /**
+   * Initialization segment that can be directly pushed to the corresponding
+   * buffer.
+   */
+  initializationData : T | null;
+  /**
+   * Timescale metadata found inside this initialization segment.
+   * That timescale might be useful when parsing further merdia segments.
+   */
+  initTimescale? : number;
+  /**
+   * If set to `true`, some protection information has been found in this
+   * initialization segment and lead the corresponding `Representation`
+   * object to be updated with that new information.
+   *
+   * In that case, you can re-check any encryption-related information with the
+   * `Representation` linked to that segment.
+   *
+   * In the great majority of cases, this is set to `true` when new content
+   * protection initialization data to have been encountered.
+   */
+  protectionDataUpdate : boolean;
 }
 
 // Format of a parsed regular (non-initialization) segment

@@ -59,7 +59,7 @@ export function imageParser(
   if (content.segment.isInit) { // image init segment has no use
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: null,
-                                   segmentProtections: [],
+                                   protectionDataUpdate: false,
                                    initTimescale: undefined } });
   }
 

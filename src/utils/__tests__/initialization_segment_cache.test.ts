@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { Representation } from "../../manifest";
 import InitializationSegmentCache from "../initialization_segment_cache";
 
 const representation1 = {
@@ -21,48 +22,20 @@ const representation1 = {
   id: "r1",
   getMimeTypeString() : string { return ""; },
   isSupported: true,
-  index: {
-    getInitSegment() : null { return null; },
-    getSegments() : never { throw new Error("Not implemented"); },
-    shouldRefresh() : boolean { return false; },
-    getFirstPosition() : undefined { return ; },
-    getLastPosition() : undefined { return ; },
-    checkDiscontinuity() : number | null { return null; },
-    areSegmentsChronologicallyGenerated() : boolean { return true; },
-    isSegmentStillAvailable() : undefined { return ; },
-    canBeOutOfSyncError() : true { return true; },
-    isFinished() : true { return true; },
-    isInitialized() : true { return true; },
-    _replace() : never { throw new Error("Not implemented"); },
-    _update() : never { throw new Error("Not implemented"); },
-  },
+  index: {},
   getProtectionsInitializationData() : [] { return []; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
-};
+} as unknown as Representation;
 
 const representation2 = {
   bitrate: 14,
   id: "r2",
   getMimeTypeString() : string { return ""; },
   isSupported: true,
-  index: {
-    getInitSegment() : null { return null; },
-    getSegments() : never { throw new Error("Not implemented"); },
-    shouldRefresh() : boolean { return false; },
-    getFirstPosition() : undefined { return ; },
-    getLastPosition() : undefined { return ; },
-    checkDiscontinuity() : number | null { return null; },
-    areSegmentsChronologicallyGenerated() : boolean { return true; },
-    isSegmentStillAvailable() : undefined { return ; },
-    canBeOutOfSyncError() : false { return false; },
-    isFinished() : true { return true; },
-    isInitialized() : true { return true; },
-    _replace() : never { throw new Error("Not implemented"); },
-    _update() : never { throw new Error("Not implemented"); },
-  },
+  index: {},
   getProtectionsInitializationData() : [] { return []; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
-};
+} as unknown as Representation;
 
 const initSegment1 = {
   id: "init1",

@@ -41,10 +41,9 @@ export default function segmentParser({
 
   if (data === null) {
     if (segment.isInit) {
-      const _segmentProtections = representation.getProtectionsInitializationData();
       return observableOf({ type: "parsed-init-segment",
                             value: { initializationData: null,
-                                     segmentProtections: _segmentProtections,
+                                     protectionDataUpdate: false,
                                      initTimescale: undefined } });
     }
     return observableOf({ type: "parsed-segment",
@@ -57,26 +56,25 @@ export default function segmentParser({
   const chunkData = new Uint8Array(data);
   const isWEBM = isWEBMEmbeddedTrack(representation);
 
-  if (!isWEBM) {
-    const psshInfo = takePSSHOut(chunkData);
-    if (psshInfo.length > 0) {
-      for (let i = 0; i < psshInfo.length; i++) {
-        const { systemID, data: psshData } = psshInfo[i];
-        representation._addProtectionData("cenc", systemID, psshData);
+  if (segment.isInit) {
+    let protectionDataUpdate = false;
+    let timescale;
+    if (isWEBM) {
+      timescale = getTimeCodeScale(chunkData, 0);
+    } else {
+      // assume ISOBMFF-compliance
+      timescale = getMDHDTimescale(chunkData);
+      const psshInfo = takePSSHOut(chunkData);
+      if (psshInfo.length > 0) {
+        protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
       }
     }
-  }
-
-  if (segment.isInit) {
-    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
-                               getMDHDTimescale(chunkData);
-    const segmentProtections = representation.getProtectionsInitializationData();
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: chunkData,
                                    initTimescale: isNullOrUndefined(timescale) ?
                                      undefined :
                                      timescale,
-                                   segmentProtections } });
+                                   protectionDataUpdate } });
   }
 
   const chunkInfos = isWEBM ? null : // TODO extract from webm

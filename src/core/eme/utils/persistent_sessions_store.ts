@@ -22,6 +22,7 @@ import {
   base64ToBytes,
   bytesToBase64,
 } from "../../../utils/base64";
+import { concat } from "../../../utils/byte_parsing";
 import hashBuffer from "../../../utils/hash_buffer";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
@@ -30,6 +31,7 @@ import {
   IPersistentSessionInfo,
   IPersistentSessionStorage,
 } from "../types";
+import areInitializationValuesCompatible from "./are_init_values_compatible";
 
 /**
  * Throw if the given storage does not respect the right interface.
@@ -41,7 +43,7 @@ function checkStorage(storage : IPersistentSessionStorage) : void {
                   "licenseStorage");
 }
 
-/** Wrap initialization data and allow linearization of it into base64. */
+/** Wrap initialization data and allow serialization of it into base64. */
 class InitDataContainer {
   /** The initData itself. */
   public initData : Uint8Array;
@@ -181,13 +183,11 @@ export default class PersistentSessionsStore {
       this.delete(initData);
     }
 
-    const hash = hashBuffer(initData.data);
     log.info("EME-PSS: Add new session", sessionId, session);
 
-    this._entries.push({ version: 2,
+    this._entries.push({ version: 3,
                          sessionId,
-                         initData: new InitDataContainer(initData.data),
-                         initDataHash: hash,
+                         values: this._formatValuesForStore(initData.values),
                          initDataType: initData.type });
     this._save();
   }
@@ -198,7 +198,7 @@ export default class PersistentSessionsStore {
    * @param {Uint8Array}  initData
    * @param {string|undefined} initDataType
    */
-  delete(initData : IInitializationDataInfo) : void {
+  public delete(initData : IInitializationDataInfo) : void {
     const index = this._getIndex(initData);
     if (index === -1) {
       log.warn("EME-PSS: initData to delete not found.");
@@ -210,7 +210,7 @@ export default class PersistentSessionsStore {
     this._save();
   }
 
-  deleteOldSessions(sessionsToDelete : number) : void {
+  public deleteOldSessions(sessionsToDelete : number) : void {
     log.info(`EME-PSS: Deleting last ${sessionsToDelete} sessions.`);
     if (sessionsToDelete <= 0) {
       return;
@@ -242,39 +242,57 @@ export default class PersistentSessionsStore {
    * @returns {number}
    */
   private _getIndex(initData : IInitializationDataInfo) : number {
-    const hash = hashBuffer(initData.data);
+    const formatted = this._formatValuesForStore(initData.values);
+
+    // Older versions of the format include a concatenation of all
+    // initialization data and its hash.
+    const concatInitData = concat(...initData.values.map(i => i.data));
+    const concatInitDataHash = hashBuffer(concatInitData);
+
     for (let i = 0; i < this._entries.length; i++) {
       const entry = this._entries[i];
       if (entry.initDataType === initData.type) {
-        if (entry.version === 2) {
-          if (entry.initDataHash === hash) {
-            try {
-              const decodedInitData : Uint8Array = typeof entry.initData === "string" ?
-                InitDataContainer.decode(entry.initData) :
-                entry.initData.initData;
-              if (areArraysOfNumbersEqual(decodedInitData, initData.data)) {
+        switch (entry.version) {
+
+          case 3:
+            if (areInitializationValuesCompatible(formatted, entry.values)) {
+              return i;
+            }
+            break;
+
+          case 2:
+            if (entry.initDataHash === concatInitDataHash) {
+              try {
+                const decodedInitData : Uint8Array = typeof entry.initData === "string" ?
+                  InitDataContainer.decode(entry.initData) :
+                  entry.initData.initData;
+                if (areArraysOfNumbersEqual(decodedInitData, concatInitData)) {
+                  return i;
+                }
+              } catch (e) {
+                log.warn("EME-PSS: Could not decode initialization data.", e);
+              }
+            }
+            break;
+
+          case 1:
+            if (entry.initDataHash === concatInitDataHash) {
+              if (typeof entry.initData.length === "undefined") {
+                // If length is undefined, it has been linearized. We could still
+                // convert it back to an Uint8Array but this would necessitate some
+                // ugly unreadable logic for a very very minor possibility.
+                // Just consider that it is a match based on the hash.
+                return i;
+              } else if (areArraysOfNumbersEqual(entry.initData, concatInitData)) {
                 return i;
               }
-            } catch (e) {
-              log.warn("EME-PSS: Could not decode initialization data.", e);
             }
-          }
-        } else if (entry.version === 1) {
-          if (entry.initDataHash === hash) {
-            if (typeof entry.initData.length === "undefined") {
-              // If length is undefined, it has been linearized. We could still
-              // convert it back to an Uint8Array but this would necessitate some
-              // ugly unreadable logic for a very very minor possibility.
-              // Just consider that it is a match based on the hash.
-              return i;
-            } else if (areArraysOfNumbersEqual(entry.initData, initData.data)) {
+            break;
+
+          default:
+            if (entry.initData === concatInitDataHash) {
               return i;
             }
-          }
-        } else {
-          if (entry.initData === hash) {
-            return i;
-          }
         }
       }
     }
@@ -290,5 +308,29 @@ export default class PersistentSessionsStore {
     } catch (e) {
       log.warn("EME-PSS: Could not save licenses in localStorage");
     }
+  }
+
+  /**
+   * Format given initializationData's values so they are ready to be stored:
+   *   - sort them by systemId, so they are faster to compare
+   *   - add hash for each initialization data encountered.
+   * @param {Array.<Object>} initialValues
+   * @returns {Array.<Object>}
+   */
+  private _formatValuesForStore(
+    initialValues : Array<{ systemId : string | undefined;
+                            data : Uint8Array; }>
+  ) : Array<{ systemId : string | undefined;
+              hash : number;
+              data : InitDataContainer; }> {
+    return initialValues.slice()
+      .sort((a, b) => a.systemId === b.systemId ? 0 :
+                      a.systemId === undefined  ? 1 :
+                      b.systemId === undefined  ? -1 :
+                      a.systemId < b.systemId   ? -1 :
+                      1)
+      .map(({ systemId, data }) => ({ systemId,
+                                      data : new InitDataContainer(data),
+                                      hash : hashBuffer(data) }));
   }
 }

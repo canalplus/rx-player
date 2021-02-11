@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import takePSSHOut from "./take_pssh_out";
+import takePSSHOut, {
+  getPsshSystemID,
+} from "./take_pssh_out";
 
 export {
   createBox,
@@ -42,4 +44,7 @@ export {
   patchPssh,
   updateBoxLength,
 } from "./utils";
-export { takePSSHOut };
+export {
+  getPsshSystemID,
+  takePSSHOut,
+};

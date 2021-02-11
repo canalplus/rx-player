@@ -28,6 +28,7 @@ import {
   of as observableOf,
   Subject,
 } from "rxjs";
+import { IEncryptedEventData } from "../../../../compat/eme";
 import {
   base64ToBytes,
   bytesToBase64,
@@ -248,7 +249,7 @@ export function requestMediaKeySystemAccessImpl(
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function mockCompat(exportedFunctions = {}) {
-  const triggerEncrypted = new Subject();
+  const triggerEncrypted = new Subject<IEncryptedEventData>();
   const triggerKeyMessage = new Subject();
   const triggerKeyError = new Subject();
   const triggerKeyStatusesChange = new Subject();
@@ -269,18 +270,17 @@ export function mockCompat(exportedFunctions = {}) {
   const setMediaKeysSpy = jest.fn(() => observableOf(null));
   const generateKeyRequestSpy = jest.fn((
     mks : MediaKeySessionImpl,
-    initializationData: { data : BufferSource;
-                          type : string; }
+    initializationDataType,
+    initializationData
   ) => {
     return observableDefer(() => {
-      return castToObservable(mks.generateRequest(initializationData.type,
-                                                  initializationData.data));
+      return castToObservable(mks.generateRequest(initializationDataType,
+                                                  initializationData));
     });
   });
 
-  const getInitDataSpy = jest.fn((encryptedEvent) => {
-    const { initData, initDataType } = encryptedEvent;
-    return { initData: new Uint8Array(initData), initDataType };
+  const getInitDataSpy = jest.fn((encryptedEvent : IEncryptedEventData) => {
+    return encryptedEvent;
   });
 
   jest.mock("../../../../compat", () => (
@@ -339,18 +339,17 @@ export function testEMEManagerImmediateError(
  * Check that the event received corresponds to the session-message event for a
  * license request.
  * @param {Object} evt
- * @param {Uint8Array} initData
- * @param {string|undefined} initDataType
+ * @param {Object} initDataVal
  */
 export function expectLicenseRequestMessage(
   evt : { type : string; value : any},
-  initData : Uint8Array,
-  initDataType : string | undefined
+  initDataVal : { type : string | undefined;
+                  values : Array<{ systemId : string | unknown;
+                                   data : Uint8Array; }>; }
 ) : void {
   expect(evt.type).toEqual("session-message");
   expect(evt.value.messageType).toEqual("license-request");
-  expect(evt.value.initializationData.data).toEqual(initData);
-  expect(evt.value.initializationData.type).toEqual(initDataType);
+  expect(evt.value.initializationData).toEqual(initDataVal);
 }
 
 /**
@@ -360,12 +359,12 @@ export function expectLicenseRequestMessage(
  */
 export function expectInitDataIgnored(
   evt : { type : string; value : any},
-  initData : Uint8Array,
-  initDataType : string | undefined
+  initDataVal : { type : string | undefined;
+                  values : Array<{ systemId : string | undefined;
+                                   data : Uint8Array; }>; }
 ) : void {
   expect(evt.type).toEqual("init-data-ignored");
-  expect(evt.value.initializationData.data).toEqual(initData);
-  expect(evt.value.initializationData.type).toEqual(initDataType);
+  expect(evt.value.initializationData).toEqual(initDataVal);
 }
 
 /**
@@ -375,12 +374,10 @@ export function expectInitDataIgnored(
  */
 export function expectEncryptedEventReceived(
   evt : { type : string; value : any},
-  initData : Uint8Array,
-  initDataType : string | undefined
+  initData : IEncryptedEventData
 ) : void {
   expect(evt.type).toEqual("encrypted-event-received");
-  expect(evt.value.data).toEqual(initData);
-  expect(evt.value.type).toEqual(initDataType);
+  expect(evt.value).toEqual(initData);
 }
 
 /**

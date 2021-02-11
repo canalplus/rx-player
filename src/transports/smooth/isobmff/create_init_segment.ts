@@ -25,7 +25,6 @@ import {
   createHDLRBox,
   createMDHDBox,
   createMVHDBox,
-  createPSSHBox,
   createTKHDBox,
   createTREXBox,
 } from "./create_boxes";
@@ -40,20 +39,14 @@ export type IPSSList = Array<{
  * @param {Uint8Array} mvhd
  * @param {Uint8Array} mvex
  * @param {Uint8Array} trak
- * @param {Object} pssList
  * @returns {Array.<Uint8Array>}
  */
 function createMOOVBox(
   mvhd : Uint8Array,
   mvex : Uint8Array,
-  trak : Uint8Array,
-  pssList : IPSSList
+  trak : Uint8Array
 ) : Uint8Array {
   const children = [mvhd, mvex, trak];
-  pssList.forEach((pss) => {
-    const pssh = createPSSHBox(pss.systemId, pss.privateData, pss.keyIds);
-    children.push(pssh);
-  });
   return createBoxWithChildren("moov", children);
 }
 
@@ -75,8 +68,7 @@ export default function createInitSegment(
   stsd : Uint8Array,
   mhd : Uint8Array,
   width : number,
-  height : number,
-  pssList : IPSSList
+  height : number
 ) : Uint8Array {
 
   const stbl = createBoxWithChildren("stbl", [
@@ -101,7 +93,7 @@ export default function createInitSegment(
   const mvhd = createMVHDBox(timescale, 1); // in fact, we don't give a sh** about
                                             // this value :O
 
-  const moov = createMOOVBox(mvhd, mvex, trak, pssList);
+  const moov = createMOOVBox(mvhd, mvex, trak);
   const ftyp = createFTYPBox("isom", ["isom", "iso2", "iso6", "avc1", "dash"]);
 
   return concat(ftyp, moov);

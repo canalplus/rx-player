@@ -55,10 +55,9 @@ export default function generateAudioVideoSegmentParser(
 
     if (data === null) {
       if (segment.isInit) {
-        const _segmentProtections = representation.getProtectionsInitializationData();
         return observableOf({ type: "parsed-init-segment" as const,
                               value: { initializationData: null,
-                                       segmentProtections: _segmentProtections,
+                                       protectionDataUpdate: false,
                                        initTimescale: undefined } });
       }
       return observableOf({ type: "parsed-segment" as const,
@@ -125,18 +124,18 @@ export default function generateAudioVideoSegmentParser(
                                getMDHDTimescale(chunkData);
     const parsedTimescale = isNullOrUndefined(timescale) ? undefined :
                                                            timescale;
-    if (!isWEBM) { // TODO extract webm protection information
+
+    let protectionDataUpdate = false;
+    if (!isWEBM) {
       const psshInfo = takePSSHOut(chunkData);
-      for (let i = 0; i < psshInfo.length; i++) {
-        const { systemID, data: psshData } = psshInfo[i];
-        representation._addProtectionData("cenc", systemID, psshData);
+      if (psshInfo.length > 0) {
+        protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
       }
     }
 
-    const segmentProtections = representation.getProtectionsInitializationData();
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: chunkData,
-                                   segmentProtections,
+                                   protectionDataUpdate,
                                    initTimescale: parsedTimescale } });
   };
 }
