@@ -22,6 +22,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
+import { IEventMessage } from "../../parsers/containers/isobmff";
 import { IBufferType } from "../segment_buffers";
 
 /** Information about a Segment waiting to be loaded by the Stream. */
@@ -166,6 +167,11 @@ export interface ISegmentProtection {
 export interface IProtectedSegmentEvent {
   type : "protected-segment";
   value : ISegmentProtection;
+}
+
+export interface IEventMessagesEvent {
+  type : "event-messages";
+  value : IEventMessage[];
 }
 
 /**
@@ -399,7 +405,8 @@ export type IRepresentationStreamEvent<T> = IStreamStatusEvent |
                                             IStreamManifestMightBeOutOfSync |
                                             IStreamTerminatingEvent |
                                             IStreamNeedsManifestRefresh |
-                                            IStreamWarningEvent;
+                                            IStreamWarningEvent |
+                                            IEventMessagesEvent;
 
 /** Event sent by an `AdaptationStream`. */
 export type IAdaptationStreamEvent<T> = IBitrateEstimationChangeEvent |
@@ -414,7 +421,8 @@ export type IAdaptationStreamEvent<T> = IBitrateEstimationChangeEvent |
                                         IProtectedSegmentEvent |
                                         IStreamManifestMightBeOutOfSync |
                                         IStreamNeedsManifestRefresh |
-                                        IStreamWarningEvent;
+                                        IStreamWarningEvent |
+                                        IEventMessagesEvent;
 
 /** Event sent by a `PeriodStream`. */
 export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
@@ -435,7 +443,8 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
                                  IProtectedSegmentEvent |
                                  IStreamManifestMightBeOutOfSync |
                                  IStreamNeedsManifestRefresh |
-                                 IStreamWarningEvent;
+                                 IStreamWarningEvent |
+                                 IEventMessagesEvent;
 
 /** Event coming from function(s) managing multiple PeriodStreams. */
 export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
@@ -461,7 +470,8 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
                                           IProtectedSegmentEvent |
                                           IStreamManifestMightBeOutOfSync |
                                           IStreamNeedsManifestRefresh |
-                                          IStreamWarningEvent;
+                                          IStreamWarningEvent |
+                                          IEventMessagesEvent;
 
 /** Every event sent by the `StreamOrchestrator`. */
 export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
@@ -490,4 +500,5 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
                                        IProtectedSegmentEvent |
                                        IStreamManifestMightBeOutOfSync |
                                        IStreamNeedsManifestRefresh |
-                                       IStreamWarningEvent;
+                                       IStreamWarningEvent |
+                                       IEventMessagesEvent;

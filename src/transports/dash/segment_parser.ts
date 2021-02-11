@@ -15,7 +15,6 @@
  */
 
 import { of as observableOf } from "rxjs";
-import log from "../../log";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
@@ -74,25 +73,6 @@ export default function generateAudioVideoSegmentParser(
                                                    new Uint8Array(data);
     const isWEBM = isWEBMEmbeddedTrack(representation);
 
-    if (!isWEBM) {
-      const emsgs = parseEmsgBoxes(chunkData);
-      if (emsgs.length > 0) {
-        const streamEvents = emsgs.map((emsg) => {
-          const start = (emsg.presentationTimeDelta / emsg.timescale) +
-                        segment.time / segment.timescale;
-          const duration = emsg.eventDuration / emsg.timescale;
-          const end = start + duration;
-          const id = emsg.id.toString();
-          const streamEvent = { start,
-                                end,
-                                id,
-                                data: { type: "isobmff-emsg" as const,
-                                        value: emsg } };
-          return streamEvent;
-        });
-        log.info("DASH Pipelines : Encountered stream events", segment, streamEvents);
-      }
-    }
     if (!segment.isInit) {
       const chunkInfos = isWEBM ? null : // TODO extract time info from webm
                                   getISOBMFFTimingInfos(chunkData,
@@ -100,11 +80,13 @@ export default function generateAudioVideoSegmentParser(
                                                         segment,
                                                         initTimescale);
       const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+      const emsgs = isWEBM ? undefined : parseEmsgBoxes(chunkData);
       return observableOf({ type: "parsed-segment",
                             value: { chunkData,
                                      chunkInfos,
                                      chunkOffset,
-                                     appendWindow } });
+                                     appendWindow,
+                                     emsgs } });
     }
     // we're handling an initialization segment
     const { indexRange } = segment;
