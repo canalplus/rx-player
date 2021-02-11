@@ -59,7 +59,10 @@ export default function segmentParser({
 
   if (!isWEBM) {
     const psshInfo = takePSSHOut(chunkData);
-    if (psshInfo.length > 0) {
+
+    // we only want to add segment protection data if we didn't have any
+    // associated to the Representation before,
+    if (representation.getProtectionsInitializationData().length === 0) {
       for (let i = 0; i < psshInfo.length; i++) {
         const { systemID, data: psshData } = psshInfo[i];
         representation._addProtectionData("cenc", systemID, psshData);

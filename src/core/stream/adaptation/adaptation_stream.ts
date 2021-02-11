@@ -304,8 +304,12 @@ export default function AdaptationStream<T>({
       observableOf(EVENTS.representationChange(adaptation.type,
                                                period,
                                                representation));
-
+    const protectedEvents$ = observableOf(
+      ...representation.getProtectionsInitializationData().map(segmentProt => {
+        return EVENTS.protectedSegment(segmentProt);
+      }));
     return observableConcat(representationChange$,
+                            protectedEvents$,
                             createRepresentationStream(representation,
                                                        terminateCurrentStream$,
                                                        fastSwitchThreshold$)).pipe(

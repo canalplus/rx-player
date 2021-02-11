@@ -28,12 +28,6 @@ import {
 } from "./create_boxes";
 import createInitSegment from "./create_init_segment";
 
-type IPSSList = Array<{
-  systemId : string;
-  privateData? : Uint8Array;
-  keyIds? : Uint8Array;
-}>;
-
 /**
  * Return full video Init segment as Uint8Array
  * @param {Number} timescale - lowest number, this one will be set into mdhd
@@ -58,11 +52,8 @@ export default function createVideoInitSegment(
   vRes : number,
   nalLength : number,
   codecPrivateData : string,
-  keyId? : Uint8Array,
-  pssList? : IPSSList
+  keyId? : Uint8Array
 ) : Uint8Array {
-  const _pssList = pssList === undefined ? [] :
-                                           pssList;
   const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
   if (spsHex === undefined || ppsHex === undefined) {
     throw new Error("Smooth: unsupported codec private data.");
@@ -73,7 +64,7 @@ export default function createVideoInitSegment(
   // TODO NAL length is forced to 4
   const avcc = createAVCCBox(sps, pps, nalLength);
   let stsd;
-  if (_pssList.length === 0 || keyId === undefined) {
+  if (keyId === undefined) {
     const avc1 = createAVC1Box(width, height, hRes, vRes, "AVC Coding", 24, avcc);
     stsd = createSTSDBox([avc1]);
   } else {
@@ -86,7 +77,5 @@ export default function createVideoInitSegment(
     stsd = createSTSDBox([encv]);
   }
 
-  return createInitSegment(
-    timescale, "video", stsd, createVMHDBox(), width, height, _pssList
-  );
+  return createInitSegment(timescale, "video", stsd, createVMHDBox(), width, height);
 }

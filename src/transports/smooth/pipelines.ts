@@ -29,10 +29,7 @@ import Manifest, {
   ISegment,
   Representation,
 } from "../../manifest";
-import {
-  getMDAT,
-  takePSSHOut,
-} from "../../parsers/containers/isobmff";
+import { getMDAT } from "../../parsers/containers/isobmff";
 import createSmoothManifestParser, {
   SmoothRepresentationIndex,
 } from "../../parsers/manifest/smooth";
@@ -181,14 +178,13 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       initTimescale,
     } : ISegmentParserArguments< ArrayBuffer | Uint8Array | null >
     ) : IAudioVideoParserObservable {
-      const { segment, representation, adaptation, manifest } = content;
+      const { segment, adaptation, manifest } = content;
       const { data, isChunked } = response;
       if (data === null) {
         if (segment.isInit) {
-          const segmentProtections = representation.getProtectionsInitializationData();
           return observableOf({ type: "parsed-init-segment",
                                 value: { initializationData: null,
-                                         segmentProtections,
+                                         segmentProtections: [],
                                          initTimescale: undefined } });
         }
         return observableOf({ type: "parsed-segment",
@@ -202,21 +198,13 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                                           new Uint8Array(data);
 
       if (segment.isInit) {
-        const psshInfo = takePSSHOut(responseBuffer);
-        if (psshInfo.length > 0) {
-          for (let i = 0; i < psshInfo.length; i++) {
-            const { systemID, data: psshData } = psshInfo[i];
-            representation._addProtectionData("cenc", systemID, psshData);
-          }
-        }
-        const segmentProtections = representation.getProtectionsInitializationData();
         const timescale = segment.privateInfos?.smoothInitSegment?.timescale;
         return observableOf({ type: "parsed-init-segment",
                               value: { initializationData: data,
                                        // smooth init segments are crafted by hand.
                                        // Their timescale is the one from the manifest.
                                        initTimescale: timescale,
-                                       segmentProtections } });
+                                       segmentProtections: [] } });
       }
 
       const timingInfos = initTimescale !== undefined ?

@@ -125,9 +125,7 @@ interface ISmoothInitSegmentPrivateInfos {
   codecPrivateData? : string;
   packetSize? : number;
   samplingRate? : number;
-  protection? : { keyId : Uint8Array;
-                  keySystems: Array<{ systemId : string;
-                                      privateData : Uint8Array; }>; };
+  protection? : { keyId : Uint8Array };
 }
 
 /**
@@ -146,11 +144,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
                                 packetSize? : number;
                                 samplingRate? : number;
                                 timescale : number;
-                                protection? : { keyId : Uint8Array;
-                                                keySystems: Array<{
-                                                  systemId : string;
-                                                  privateData : Uint8Array;
-                                                }>; }; };
+                                protection? : { keyId : Uint8Array }; };
 
   // if true, this class will return segments even if we're not sure they had
   // time to be generated on the server side.

@@ -101,8 +101,7 @@ const generateSegmentLoader = (
                                               height,
                                               72, 72, 4, // vRes, hRes, nal
                                               codecPrivateData,
-                                              protection.keyId,
-                                              protection.keySystems);
+                                              protection.keyId);
         break;
       }
       case "audio": {
@@ -116,8 +115,7 @@ const generateSegmentLoader = (
                                               packetSize,
                                               samplingRate,
                                               codecPrivateData,
-                                              protection.keyId,
-                                              protection.keySystems);
+                                              protection.keyId);
         break;
       }
       default:
