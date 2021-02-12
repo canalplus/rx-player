@@ -80,13 +80,13 @@ export default function generateAudioVideoSegmentParser(
                                                         segment,
                                                         initTimescale);
       const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-      const emsgs = isWEBM ? undefined : parseEmsgBoxes(chunkData);
+      const inbandsEvents = isWEBM ? undefined : parseEmsgBoxes(chunkData);
       return observableOf({ type: "parsed-segment",
                             value: { chunkData,
                                      chunkInfos,
                                      chunkOffset,
                                      appendWindow,
-                                     emsgs } });
+                                     inbandsEvents } });
     }
     // we're handling an initialization segment
     const { indexRange } = segment;

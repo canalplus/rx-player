@@ -38,7 +38,7 @@ import {
   IAdaptationChangeEvent,
   IBitrateEstimationChangeEvent,
   ICompletedStreamEvent,
-  IEventMessagesEvent,
+  IInbandEventsEvent,
   INeedsDecipherabilityFlush,
   INeedsMediaSourceReload,
   IPeriodStreamClearedEvent,
@@ -151,7 +151,7 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
                                       IProtectedSegmentEvent |
                                       IStreamManifestMightBeOutOfSync |
                                       IStreamNeedsManifestRefresh |
-                                      IEventMessagesEvent;
+                                      IInbandEventsEvent;
 
 /** Every events emitted by the `Init` module. */
 export type IInitEvent = IManifestReadyEvent |
@@ -191,7 +191,7 @@ export type IInitEvent = IManifestReadyEvent |
                          IBitrateEstimationChangeEvent |
                          IRepresentationChangeEvent |
                          IStreamEventAddedSegment<unknown> |
-                         IEventMessagesEvent;
+                         IInbandEventsEvent;
 
 /** Events emitted by the `Init` module for directfile contents. */
 export type IDirectfileEvent = IStalledEvent |
