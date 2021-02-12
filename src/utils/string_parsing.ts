@@ -373,7 +373,7 @@ function guidToUuid(guid : Uint8Array) : Uint8Array {
  * @param {number} offset
  * @returns {Object}
  */
-function readTerminatedString(buffer: Uint8Array, offset: number): {
+function readNullTerminatedString(buffer: Uint8Array, offset: number): {
   end: number;
   string: string;
 } {
@@ -406,5 +406,5 @@ export {
 
   guidToUuid,
 
-  readTerminatedString,
+  readNullTerminatedString,
 };
