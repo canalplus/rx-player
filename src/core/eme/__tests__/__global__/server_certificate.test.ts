@@ -56,7 +56,7 @@ describe("core - eme - global tests - server certificate", () => {
   });
 
   /* eslint-disable max-len */
-  it("should set the serverCertificate after receiving the first encrypted event", (done) => {
+  it("should set the serverCertificate only after the MediaKeys is attached", (done) => {
   /* eslint-enable max-len */
 
     // == mocks ==
@@ -88,14 +88,14 @@ describe("core - eme - global tests - server certificate", () => {
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
             expect(createSessionSpy).not.toHaveBeenCalled();
-            expect(serverCertificateSpy).toHaveBeenCalledTimes(0);
+            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
+            expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
             initDataSubject.next({ type: "cenc", data: initData });
             break;
           case 3:
             expectLicenseRequestMessage(evt, initData, "cenc");
             setTimeout(() => {
               expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-              expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
               expect(createSessionSpy).toHaveBeenCalledTimes(1);
               initDataSubject.next({ type: "cenc2", data: initData });
             }, 10);
@@ -146,13 +146,10 @@ describe("core - eme - global tests - server certificate", () => {
             evt.value.attachMediaKeys$.next();
             break;
           case 2:
-            expect(evt.type).toEqual("attached-media-keys");
-            expect(createSessionSpy).not.toHaveBeenCalled();
-            expect(serverCertificateSpy).toHaveBeenCalledTimes(0);
-            initDataSubject.next({ type: "cenc", data: initData });
-            break;
-          case 3:
             expect(evt.type).toEqual("warning");
+            expect(createSessionSpy).not.toHaveBeenCalled();
+            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
+            expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
             expect(evt.value.name).toEqual("EncryptedMediaError");
             expect(evt.value.type).toEqual("ENCRYPTED_MEDIA_ERROR");
             expect(evt.value.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
@@ -161,11 +158,16 @@ describe("core - eme - global tests - server certificate", () => {
                 "EncryptedMediaError (LICENSE_SERVER_CERTIFICATE_ERROR) " +
                 "`setServerCertificate` error");
             break;
+          case 3:
+            expect(evt.type).toEqual("attached-media-keys");
+            expect(createSessionSpy).not.toHaveBeenCalled();
+            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
+            initDataSubject.next({ type: "cenc", data: initData });
+            break;
           case 4:
             expectLicenseRequestMessage(evt, initData, "cenc");
             setTimeout(() => {
               expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-              expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
               expect(createSessionSpy).toHaveBeenCalledTimes(1);
               initDataSubject.next({ type: "cenc2", data: initData });
             }, 10);
@@ -216,13 +218,9 @@ describe("core - eme - global tests - server certificate", () => {
             evt.value.attachMediaKeys$.next();
             break;
           case 2:
-            expect(evt.type).toEqual("attached-media-keys");
-            expect(createSessionSpy).not.toHaveBeenCalled();
-            expect(serverCertificateSpy).toHaveBeenCalledTimes(0);
-            initDataSubject.next({ type: "cenc", data: initData });
-            break;
-          case 3:
             expect(evt.type).toEqual("warning");
+            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
+            expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
             expect(evt.value.name).toEqual("EncryptedMediaError");
             expect(evt.value.type).toEqual("ENCRYPTED_MEDIA_ERROR");
             expect(evt.value.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
@@ -231,11 +229,16 @@ describe("core - eme - global tests - server certificate", () => {
                 "EncryptedMediaError (LICENSE_SERVER_CERTIFICATE_ERROR) Error: some error"
               );
             break;
+          case 3:
+            expect(evt.type).toEqual("attached-media-keys");
+            expect(createSessionSpy).not.toHaveBeenCalled();
+            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
+            initDataSubject.next({ type: "cenc", data: initData });
+            break;
           case 4:
             expectLicenseRequestMessage(evt, initData, "cenc");
             setTimeout(() => {
               expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-              expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
               expect(createSessionSpy).toHaveBeenCalledTimes(1);
               initDataSubject.next({ type: "cenc2", data: initData });
             }, 10);

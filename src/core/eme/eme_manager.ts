@@ -101,10 +101,23 @@ export default function EMEManager(
 
   /** Emit the MediaKeys instance and its related information when ready. */
   const mediaKeysInit$ = initMediaKeys(mediaElement, keySystemsConfigs)
-    .pipe(shareReplay()); // Share side-effects and cache success
+    .pipe(
+      mergeMap((mediaKeysEvt) => {
+        if (mediaKeysEvt.type !== "attached-media-keys") {
+          return observableOf(mediaKeysEvt);
+        }
+        const { mediaKeys, options } = mediaKeysEvt.value;
+        const { serverCertificate } = options;
+        if (isNullOrUndefined(serverCertificate)) {
+          return observableOf(mediaKeysEvt);
+        }
+        return observableConcat(setServerCertificate(mediaKeys, serverCertificate),
+                                observableOf(mediaKeysEvt));
+      }),
+      shareReplay()); // Share side-effects and cache success
 
   /** Emit when the MediaKeys instance has been attached the HTMLMediaElement. */
-  const attachedMediaKeys$ = mediaKeysInit$.pipe(
+  const attachedMediaKeys$ : Observable<IAttachedMediaKeysEvent> = mediaKeysInit$.pipe(
     filter((evt) : evt is IAttachedMediaKeysEvent => {
       return evt.type === "attached-media-keys";
     }),
@@ -132,13 +145,15 @@ export default function EMEManager(
 
   /** Create MediaKeySessions and handle the corresponding events. */
   const bindSession$ = initializationData$.pipe(
+
     // Add attached MediaKeys info once available
     mergeMap((initializationData) => attachedMediaKeys$.pipe(
       map((mediaKeysEvt) : [IInitializationDataInfo, IAttachedMediaKeysEvent] =>
         [ initializationData, mediaKeysEvt ]))),
+
     /* Attach server certificate and create/reuse MediaKeySession */
-    mergeMap(([initializationData, mediaKeysEvent], i) => {
-      const { mediaKeys, mediaKeySystemAccess, stores, options } = mediaKeysEvent.value;
+    mergeMap(([initializationData, mediaKeysEvent]) => {
+      const { mediaKeySystemAccess, stores, options } = mediaKeysEvent.value;
 
       const blacklistError = blacklistedInitData.get(initializationData);
       if (blacklistError !== undefined) {
@@ -161,11 +176,6 @@ export default function EMEManager(
                               value: { initializationData } });
       }
 
-      const { serverCertificate } = options;
-      const serverCertificate$ = i === 0 && !isNullOrUndefined(serverCertificate) ?
-        setServerCertificate(mediaKeys, serverCertificate) :
-        EMPTY;
-
       let wantedSessionType : MediaKeySessionType;
       if (options.persistentLicense !== true) {
         wantedSessionType = "temporary";
@@ -176,13 +186,9 @@ export default function EMEManager(
         wantedSessionType = "persistent-license";
       }
 
-      return observableConcat(serverCertificate$,
-                              getSession(initializationData, stores, wantedSessionType))
+      return getSession(initializationData, stores, wantedSessionType)
         .pipe(mergeMap((sessionEvt) =>  {
           switch (sessionEvt.type) {
-            case "warning":
-              return observableOf(sessionEvt);
-
             case "cleaning-old-session":
               handledInitData.remove(sessionEvt.value.initializationData);
               return EMPTY;
