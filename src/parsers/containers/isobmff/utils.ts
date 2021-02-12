@@ -26,7 +26,7 @@ import {
 } from "../../../utils/byte_parsing";
 import {
   hexToBytes,
-  readTerminatedString,
+  readNullTerminatedString,
 } from "../../../utils/string_parsing";
 import { MAX_32_BIT_INT } from "./constants";
 import { createBox } from "./create_box";
@@ -439,10 +439,11 @@ function parseEmsgBoxes(buffer: Uint8Array) : IEventMessage[] | undefined {
 
     let position = 4; // skip version + flags
 
-    const { end: schemeIdEnd, string: schemeId } = readTerminatedString(emsg, position);
+    const { end: schemeIdEnd, string: schemeId } =
+      readNullTerminatedString(emsg, position);
     position = schemeIdEnd; // skip schemeId
 
-    const { end: valueEnd, string: value } = readTerminatedString(emsg, position);
+    const { end: valueEnd, string: value } = readNullTerminatedString(emsg, position);
     position = valueEnd; // skip value
 
     const timescale = be4toi(emsg, position);
