@@ -73,7 +73,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { IEventMessage } from "../../parsers/containers/isobmff";
+import { IInbandEvent } from "../../parsers/containers/isobmff";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
@@ -220,7 +220,7 @@ interface IPublicAPIEvent {
   seeked : null;
   streamEvent : IStreamEvent;
   streamEventSkip : IStreamEvent;
-  eventMessage : IEventMessage;
+  inbandEvent : IInbandEvent;
 }
 
 /**
@@ -2270,12 +2270,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
-      case "event-messages":
-        const eventMessages = event.value;
-        const emsgsNbr = eventMessages.length;
-        for (let i = 0; i < emsgsNbr; i++) {
-          const eventMessage = eventMessages[i];
-          this.trigger("eventMessage", eventMessage);
+      case "inband-events":
+        const inbandEvents = event.value;
+        const eventNbr = inbandEvents.length;
+        for (let i = 0; i < eventNbr; i++) {
+          const inbandEvent = inbandEvents[i];
+          this.trigger("inbandEvent", inbandEvent);
         }
         return;
       case "stream-event":

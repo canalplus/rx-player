@@ -49,7 +49,7 @@ export interface IISOBMFFPSSHInfo {
   privateData : Uint8Array;
 }
 
-export interface IEventMessage { schemeId: string;
+export interface IInbandEvent { schemeId: string;
                                  value: string;
                                  timescale: number;
                                  presentationTimeDelta: number;
@@ -426,8 +426,8 @@ function updateBoxLength(buf : Uint8Array) : Uint8Array {
  * @param {Uint8Array} buf
  * @returns {Array.<Object>}
  */
-function parseEmsgBoxes(buffer: Uint8Array) : IEventMessage[] | undefined {
-  const emsgs: IEventMessage[] = [];
+function parseEmsgBoxes(buffer: Uint8Array) : IInbandEvent[] | undefined {
+  const emsgs: IInbandEvent[] = [];
   let offset = 0;
   while (offset < buffer.length) {
     const emsg = getEMSG(buffer, offset);

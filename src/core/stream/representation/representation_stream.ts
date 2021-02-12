@@ -55,7 +55,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
-import { IEventMessage } from "../../../parsers/containers/isobmff";
+import { IInbandEvent } from "../../../parsers/containers/isobmff";
 import {
   ISegmentParserInitSegment,
   ISegmentParserParsedInitSegment,
@@ -80,7 +80,7 @@ import {
   IStreamManifestMightBeOutOfSync,
   IStreamNeedsManifestRefresh,
   IStreamTerminatingEvent,
-  IEventMessagesEvent,
+  IInbandEventsEvent,
 } from "../types";
 import getBufferStatus from "./get_buffer_status";
 import getSegmentPriority from "./get_segment_priority";
@@ -451,7 +451,7 @@ export default function RepresentationStream<T>({
   ) : Observable<IStreamEventAddedSegment<T> |
                  ISegmentFetcherWarning |
                  IProtectedSegmentEvent |
-                 IEventMessagesEvent |
+                 IInbandEventsEvent |
                  IStreamNeedsManifestRefresh |
                  IStreamManifestMightBeOutOfSync>
   {
@@ -487,7 +487,7 @@ export default function RepresentationStream<T>({
         const initSegmentData = initSegmentObject?.initializationData ?? null;
         if (evt.value.emsgs !== undefined) {
           const { needsManifestRefresh, nonInterpretedMessages } = evt.value.emsgs
-            .reduce((acc, val: IEventMessage) => {
+            .reduce((acc, val: IInbandEvent) => {
               // Scheme that signals manifest update
               if (val.schemeId === "urn:mpeg:dash:event:2012") {
                 acc.needsManifestRefresh = true;
@@ -496,16 +496,16 @@ export default function RepresentationStream<T>({
               }
               return acc;
             }, { needsManifestRefresh: false,
-                 nonInterpretedMessages: [] as IEventMessage[] });
+                 nonInterpretedMessages: [] as IInbandEvent[] });
           const manifestRefresh$ = needsManifestRefresh ?
             observableOf(EVENTS.needsManifestRefresh()) :
             EMPTY;
-          const emsgsEvent$ = nonInterpretedMessages.length > 0 ?
-            observableOf({ type: "event-messages" as const,
+          const inbandEvents$ = nonInterpretedMessages.length > 0 ?
+            observableOf({ type: "inband-events" as const,
                            value: nonInterpretedMessages }) :
             EMPTY;
           return observableConcat(manifestRefresh$,
-                                  emsgsEvent$,
+                                  inbandEvents$,
                                   pushMediaSegment({ clock$,
                                                      content,
                                                      initSegmentData,
