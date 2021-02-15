@@ -31,10 +31,10 @@
 
 import addFeatures from "./add_features";
 import features from "./features_object";
-import { IFeatureFunction } from "./types";
+import { IFeature } from "./types";
 
 export default features;
 export {
   addFeatures,
-  IFeatureFunction,
+  IFeature,
 };

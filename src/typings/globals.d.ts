@@ -41,6 +41,7 @@ declare const __FEATURES__ : {
 declare const __RELATIVE_PATH__ : {
   BIF_PARSER: string;
   DASH: string;
+  DASH_JS_PARSER: string;
   DIRECTFILE: string;
   EME_MANAGER: string;
   HTML_SAMI: string;

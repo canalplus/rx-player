@@ -1,0 +1,16 @@
+[package]
+name = "mpd-node-parser"
+version = "0.1.0"
+authors = ["Paul Berberian <pea.berberian@gmail.com>"]
+edition = "2018"
+
+[lib]
+path = "rs/lib.rs"
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+opt-level = 3
+
+[dependencies]
+quick-xml = "0.21.0"

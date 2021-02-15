@@ -208,6 +208,7 @@ export interface ILoaderDataLoadedValue<T> {
 
 /** Form that can take a loaded Manifest once loaded. */
 export type ILoadedManifest = Document |
+                              ArrayBuffer |
                               string |
                               IMetaPlaylist |
                               ILocalManifest |
@@ -333,8 +334,8 @@ export interface IManifestParserArguments {
    * profiting from the same retries and error management than the loader.
    */
   scheduleRequest : (request : () =>
-    Observable< ILoaderDataLoadedValue< Document | string > >) =>
-    Observable< ILoaderDataLoadedValue< Document | string > >;
+    Observable< ILoaderDataLoadedValue< string | Document | ArrayBuffer > >) =>
+    Observable< ILoaderDataLoadedValue< string | Document | ArrayBuffer > >;
   /**
    * If set to `true`, the Manifest parser can perform advanced optimizations
    * to speed-up the parsing process. Those optimizations might lead to a

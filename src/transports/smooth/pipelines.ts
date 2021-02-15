@@ -55,8 +55,8 @@ import {
   ITransportPipelines,
 } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
+import generateManifestLoader from "../utils/generate_manifest_loader";
 import returnParsedManifest from "../utils/return_parsed_manifest";
-import generateManifestLoader from "../utils/text_manifest_loader";
 import extractTimingsInfos, {
   INextSegmentsInfos,
 } from "./extract_timings_infos";
@@ -101,7 +101,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
 
   const manifestLoaderOptions = { customManifestLoader: options.manifestLoader };
-  const manifestLoader = generateManifestLoader(manifestLoaderOptions);
+  const manifestLoader = generateManifestLoader(manifestLoaderOptions,
+                                                "text");
 
   const manifestPipeline = {
     resolver(

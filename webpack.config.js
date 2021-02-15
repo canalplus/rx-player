@@ -82,6 +82,7 @@ const plugins = [
       BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
       SMOOTH: JSON.stringify("../transports/smooth/index.ts"),
       DASH: JSON.stringify("../transports/dash/index.ts"),
+      DASH_JS_PARSER: JSON.stringify("../parsers/manifest/dash/js-parser/index.ts"),
       LOCAL_MANIFEST: JSON.stringify("../transports/local/index.ts"),
       METAPLAYLIST: JSON.stringify("../transports/metaplaylist/index.ts"),
       NATIVE_TEXT_BUFFER: JSON.stringify("../core/segment_buffers/implementations/text/native/index.ts"),

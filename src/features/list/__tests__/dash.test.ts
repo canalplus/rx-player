@@ -16,6 +16,7 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
+import dashJsParser from "../../../parsers/manifest/dash/js-parser";
 import DASHFeature from "../../../transports/dash";
 import addDASHFeature from "../dash";
 
@@ -26,9 +27,13 @@ jest.mock("../../../transports/dash", () => ({
 
 describe("Features list - DASH", () => {
   it("should add DASH in the current features", () => {
-    const featureObject : any = { transports: {} };
+    const featureObject : any = { transports: {},
+                                  dashParsers: { js: null,
+                                                 wasm: null } };
     addDASHFeature(featureObject);
-    expect(featureObject).toEqual({ transports: { dash: DASHFeature } });
+    expect(featureObject).toEqual({ transports: { dash: DASHFeature },
+                                    dashParsers: { js: dashJsParser,
+                                                   wasm: null } });
     expect(featureObject.transports.dash).toBe(DASHFeature);
   });
 });
