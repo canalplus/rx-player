@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+import features from "../../features";
 import {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
-import generateManifestLoader from "../utils/text_manifest_loader";
+import generateManifestLoader from "../utils/generate_manifest_loader";
 import {
   imageLoader,
   imageParser,
@@ -36,9 +37,11 @@ import generateTextTrackParser from "./text_parser";
  * @returns {Object}
  */
 export default function(options : ITransportOptions) : ITransportPipelines {
-  const manifestLoader = generateManifestLoader({
-    customManifestLoader: options.manifestLoader,
-  });
+  const manifestLoader = generateManifestLoader(
+    { customManifestLoader: options.manifestLoader },
+    mightUseDashWasmFeature() ? "text" :
+                                "arraybuffer");
+
   const manifestParser = generateManifestParser(options);
   const segmentLoader = generateSegmentLoader(options);
   const audioVideoSegmentParser = generateAudioVideoSegmentParser(options);
@@ -55,4 +58,15 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                    parser: textTrackParser },
            image: { loader: imageLoader,
                     parser: imageParser } };
+}
+
+/**
+ * Returns true if the DASH-WASM parser is either initialized or being
+ * initialized.
+ * @returns {boolean}
+ */
+function mightUseDashWasmFeature() : boolean {
+  return features.dashParsers.wasm !== null &&
+         (features.dashParsers.wasm.status === "initialized" ||
+          features.dashParsers.wasm.status === "initializing");
 }

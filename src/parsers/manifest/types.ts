@@ -16,12 +16,20 @@
 
 import { IRepresentationIndex } from "../../manifest";
 import { IHDRInformation } from "../../manifest/types";
-import { IParsedStreamEventData } from "./dash/node_parsers/EventStream";
 
 export interface IManifestStreamEvent { start: number;
                                         end?: number;
                                         id?: string;
                                         data: IParsedStreamEventData; }
+
+export interface IParsedStreamEventData {
+  type: "dash-event-stream";
+  value: {
+    schemeIdUri: string;
+    timescale: number;
+    element: Element;
+  };
+}
 
 /** Describes information about an encryption Key ID of a given media. */
 export interface IContentProtectionKID { keyId : Uint8Array;

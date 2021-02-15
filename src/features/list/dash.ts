@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import dashJsParser from "../../parsers/manifest/dash/js-parser";
 import dash from "../../transports/dash";
 import { IFeaturesObject } from "../types";
 
@@ -22,7 +23,10 @@ import { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addDASHFeature(features : IFeaturesObject) : void {
-  features.transports.dash = dash;
+  if (!features.transports.hasOwnProperty("dash")) {
+    features.transports.dash = dash;
+  }
+  features.dashParsers.js = dashJsParser;
 }
 
 export { addDASHFeature as DASH };

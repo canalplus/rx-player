@@ -28,6 +28,11 @@ import {
 } from "../core/init/initialize_directfile";
 import { SegmentBuffer } from "../core/segment_buffers";
 import {
+  IDashParserResponse,
+  IMPDParserArguments,
+} from "../parsers/manifest/dash/parsers_types";
+import DashWasmParser from "../parsers/manifest/dash/wasm-parser";
+import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
 } from "../parsers/texttracks";
@@ -81,6 +86,11 @@ export type IImageBuffer =
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);
 
+export type IDashJsParser = (
+  document: Document,
+  args : IMPDParserArguments
+) => IDashParserResponse<string>;
+
 // interface of the global `features` object through which features are
 // accessed.
 export interface IFeaturesObject {
@@ -93,8 +103,19 @@ export interface IFeaturesObject {
   imageBuffer : IImageBuffer|null;
   imageParser : IImageParser|null;
   transports : Partial<Record<string, ITransportFunction>>;
+  dashParsers : {
+    wasm : DashWasmParser | null;
+    js : IDashJsParser | null;
+  };
   nativeTextTracksBuffer : INativeTextTracksBuffer|null;
   nativeTextTracksParsers : Partial<Record<string, INativeTextTracksParserFn>>;
 }
 
+export interface IFeatureObject {
+  _addFeature(features : IFeaturesObject) : void;
+}
+
 export type IFeatureFunction = (features : IFeaturesObject) => void;
+
+export type IFeature = IFeatureObject |
+                       IFeatureFunction;
