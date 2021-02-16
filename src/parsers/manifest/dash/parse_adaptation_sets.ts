@@ -32,6 +32,7 @@ import {
   IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
 import { IParsedSegmentTemplate } from "./node_parsers/SegmentTemplate";
+import { IScheme } from "./node_parsers/utils";
 import parseRepresentations, {
   IAdaptationInfos,
 } from "./parse_representations";
@@ -325,7 +326,7 @@ export default function parseAdaptationSets(
       videoMainAdaptation.representations.push(...representations);
       newID = videoMainAdaptation.id;
     } else {
-      const { accessibility } = adaptationChildren;
+      const { accessibilities } = adaptationChildren;
 
       let isDub : boolean|undefined;
       if (roles !== undefined &&
@@ -334,19 +335,23 @@ export default function parseAdaptationSets(
         isDub = true;
       }
 
-      const isClosedCaption = type === "text" &&
+      const isClosedCaptionPredicate = (accessibility: IScheme) => type === "text" &&
                               accessibility != null &&
                               isHardOfHearing(accessibility) ? true :
                                                                undefined;
-      const isAudioDescription = type === "audio" &&
+      const isClosedCaption = accessibilities?.some(isClosedCaptionPredicate);
+
+      const isAudioDescriptionPredicate = (accessibility: IScheme) => type === "audio" &&
                                  accessibility != null &&
                                  isVisuallyImpaired(accessibility) ? true :
                                                                      undefined;
+      const isAudioDescription = accessibilities?.some(isAudioDescriptionPredicate);
 
-      const isSignInterpreted = type === "video" &&
+      const isSignInterpretedPredicate = (accessibility: IScheme) => type === "video" &&
                                 accessibility != null &&
                                 hasSignLanguageInterpretation(accessibility) ? true :
                                                                                undefined;
+      const isSignInterpreted = accessibilities?.some(isSignInterpretedPredicate);
 
       let adaptationID = getAdaptationID(adaptation,
                                          { isAudioDescription,
