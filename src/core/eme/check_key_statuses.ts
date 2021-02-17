@@ -48,22 +48,26 @@ export interface IKeyStatusesCheckingOptions {
 
 /**
  * Look at the current key statuses in the sessions and construct the
- * appropriate warnings and blacklisted key ids.
+ * appropriate warnings, whitelisted and blacklisted key ids.
  *
  * Throws if one of the keyID is on an error.
  * @param {MediaKeySession} session - The MediaKeySession from which the keys
  * will be checked.
  * @param {Object} options
  * @param {String} keySystem - The configuration keySystem used for deciphering
- * @returns {Array} - Warnings to send and blacklisted key ids.
+ * @returns {Array} - Warnings to send, whitelisted and blacklisted key ids.
  */
 export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
   options: IKeyStatusesCheckingOptions,
   keySystem: string
-) : [IEMEWarningEvent[], Uint8Array[]] {
+) : { warnings : IEMEWarningEvent[];
+      blacklistedKeyIDs : Uint8Array[];
+      whitelistedKeyIds : Uint8Array[]; }
+{
   const warnings : IEMEWarningEvent[] = [];
   const blacklistedKeyIDs : Uint8Array[] = [];
+  const whitelistedKeyIds : Uint8Array[] = [];
   const { fallbackOn = {}, throwOnLicenseExpiration } = options;
 
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -90,6 +94,7 @@ export default function checkKeyStatuses(
           throw error;
         }
         warnings.push({ type: "warning", value: error });
+        whitelistedKeyIds.push(keyId);
         break;
       }
 
@@ -116,7 +121,11 @@ export default function checkKeyStatuses(
         blacklistedKeyIDs.push(keyId);
         break;
       }
+
+      default:
+        whitelistedKeyIds.push(keyId);
+        break;
     }
   });
-  return [warnings, blacklistedKeyIDs];
+  return { warnings, blacklistedKeyIDs, whitelistedKeyIds };
 }
