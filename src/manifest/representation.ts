@@ -26,8 +26,22 @@ import { IRepresentationIndex } from "./representation_index";
 import { IAdaptationType } from "./types";
 
 export interface IContentProtectionsInitDataObject {
+  /**
+   * The initialization data type - or the format of the `data` attribute (e.g.
+   * "cenc")
+   */
   type : string;
+  /** The initialization data itself */
   data : Uint8Array;
+  /**
+   * The key ids linked to those initialization data.
+   * This should be the key ids for the key concerned by the media which have
+   * the present initialization data.
+   *
+   * `undefined` when not known (different from an empty array - which would
+   * just mean that there's no key id involved).
+   */
+  keyIds? : Uint8Array[];
 }
 
 /**
@@ -159,7 +173,8 @@ class Representation {
         }
         const initData = concat(...initDataArr.map(({ data }) => data));
         acc.push({ type: initDataType,
-                   data: initData });
+                   data: initData,
+                   keyIds: this.contentProtections?.keyIds.map(val => val.keyId) });
         return acc;
       }, []);
   }

@@ -55,12 +55,12 @@ import checkKeyStatuses, {
   IKeyStatusesCheckingOptions,
 } from "./check_key_statuses";
 import {
-  IBlacklistKeysEvent,
   IInitializationDataInfo,
   IEMEWarningEvent,
   IKeyMessageHandledEvent,
   IKeyStatusChangeHandledEvent,
   IKeySystemOption,
+  IKeysUpdateEvent,
   INoUpdateEvent,
   ISessionMessageEvent,
   ISessionUpdatedEvent,
@@ -105,8 +105,8 @@ export default function SessionEventsListener(
 ) : Observable<IEMEWarningEvent |
                ISessionMessageEvent |
                INoUpdateEvent |
-               ISessionUpdatedEvent |
-               IBlacklistKeysEvent>
+               IKeysUpdateEvent |
+               ISessionUpdatedEvent>
 {
   log.info("EME: Binding session events", session);
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
@@ -173,13 +173,13 @@ export default function SessionEventsListener(
       evt : IEMEWarningEvent |
             ISessionMessageEvent |
             IKeyMessageHandledEvent |
-            IKeyStatusChangeHandledEvent |
-            IBlacklistKeysEvent
+            IKeysUpdateEvent |
+            IKeyStatusChangeHandledEvent
     ) : Observable< IEMEWarningEvent |
                     ISessionMessageEvent |
                     INoUpdateEvent |
                     ISessionUpdatedEvent |
-                    IBlacklistKeysEvent > => {
+                    IKeysUpdateEvent > => {
       switch (evt.type) {
         case "key-message-handled":
         case "key-status-change-handled":
@@ -217,19 +217,20 @@ function getKeyStatusesEvents(
   session : MediaKeySession | ICustomMediaKeySession,
   options : IKeyStatusesCheckingOptions,
   keySystem : string
-) : Observable<IEMEWarningEvent | IBlacklistKeysEvent> {
+) : Observable<IEMEWarningEvent | IKeysUpdateEvent> {
   return observableDefer(() => {
-    const [warnings, blacklistedKeyIDs] =
+    if (session.keyStatuses.size === 0) {
+      return EMPTY;
+    }
+    const { warnings, blacklistedKeyIDs, whitelistedKeyIds } =
       checkKeyStatuses(session, options, keySystem);
 
     const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
-      EMPTY;
-
-    const blackListUpdate$ = blacklistedKeyIDs.length > 0 ?
-      observableOf({ type: "blacklist-keys" as const,
-                     value: blacklistedKeyIDs }) :
-      EMPTY;
-    return observableConcat(warnings$, blackListUpdate$);
+                                            EMPTY;
+    const keysUpdate$ = observableOf({ type : "keys-update" as const,
+                                       value : { whitelistedKeyIds,
+                                                 blacklistedKeyIDs } });
+    return observableConcat(warnings$, keysUpdate$);
   });
 }
 
@@ -299,7 +300,7 @@ function handleKeyStatusesChangeEvent(
   keySystemOptions : IKeySystemOption,
   keySystem : string,
   keyStatusesEvent : Event
-) : Observable<IKeyStatusChangeHandledEvent | IBlacklistKeysEvent | IEMEWarningEvent> {
+) : Observable<IKeyStatusChangeHandledEvent | IKeysUpdateEvent | IEMEWarningEvent> {
   log.info("EME: keystatuseschange event received", session, keyStatusesEvent);
   const callback$ = observableDefer(() => {
     if (typeof keySystemOptions.onKeyStatusesChange !== "function") {
@@ -322,8 +323,8 @@ function handleKeyStatusesChangeEvent(
       throw err;
     })
   );
-  return observableConcat(getKeyStatusesEvents(session, keySystemOptions, keySystem),
-                          callback$);
+  return observableMerge(getKeyStatusesEvents(session, keySystemOptions, keySystem),
+                         callback$);
 }
 
 /**

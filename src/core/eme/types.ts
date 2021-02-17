@@ -26,10 +26,23 @@ import PersistentSessionsStore from "./utils/persistent_sessions_store";
 
 /** Information about the encryption initialization data. */
 export interface IInitializationDataInfo {
-  /** The initialization data type. */
+  /**
+   * The initialization data type - or the format of the `data` attribute (e.g.
+   * "cenc").
+   * `undefined` if unknown.
+   */
   type : string | undefined;
-  /** Initialization data itself. */
+  /** The initialization data itself */
   data : Uint8Array;
+  /**
+   * The key ids linked to those initialization data.
+   * This should be the key ids for the key concerned by the media which have
+   * the present initialization data.
+   *
+   * `undefined` when not known (different from an empty array - which would
+   * just mean that there's no key id involved).
+   */
+  keyIds? : Uint8Array[];
 }
 
 /** Event emitted when a minor - recoverable - error happened. */
@@ -135,6 +148,51 @@ export interface INoUpdateEvent {
 }
 
 /**
+ * Some key ids have updated their status.
+ *
+ * We put them in two different list:
+ *
+ *   - `blacklistedKeyIDs`: Those key ids won't be used for decryption and the
+ *     corresponding media it decrypts should not be pushed to the buffer
+ *     Note that a blacklisted key id can become whitelisted in the future.
+ *
+ *   - `whitelistedKeyIds`: Those key ids were found and their corresponding
+ *     keys are now being considered for decryption.
+ *     Note that a whitelisted key id can become blacklisted in the future.
+ *
+ * Note that each `IKeysUpdateEvent` is independent of any other.
+ *
+ * A new `IKeysUpdateEvent` does not completely replace a previously emitted
+ * one, as it can for example be linked to a whole other decryption session.
+ *
+ * However, if a key id is encountered in both an older and a newer
+ * `IKeysUpdateEvent`, only the older status should be considered.
+ */
+export interface IKeysUpdateEvent {
+  type: "keys-update";
+  value: IKeyUpdateValue;
+}
+
+/** Information on key ids linked to a MediaKeySession. */
+export interface IKeyUpdateValue {
+  /**
+   * The list of key ids that are blacklisted.
+   * As such, their corresponding keys won't be used by that session, despite
+   * the fact that they were part of the pushed license.
+   *
+   * Reasons for blacklisting a keys depend on options, but mainly involve unmet
+   * output restrictions and CDM internal errors linked to that key id.
+   */
+  blacklistedKeyIDs : Uint8Array[];
+  /*
+   * The list of key id linked to that session which are not blacklisted.
+   * Together with `blacklistedKeyIDs` it regroups all key ids linked to the
+   * session.
+   */
+  whitelistedKeyIds : Uint8Array[];
+}
+
+/**
  * Emitted after the `MediaKeySession.prototype.update` function resolves.
  * This function is called when the `getLicense` callback resolves with a data
  * different than `null`.
@@ -147,12 +205,6 @@ export interface ISessionUpdatedEvent {
                     null;
            initializationData : IInitializationDataInfo; };
 }
-
-// Emitted when individual keys are considered undecipherable and are thus
-// blacklisted.
-// Emit the corresponding keyIDs as payload.
-export interface IBlacklistKeysEvent { type : "blacklist-keys";
-                                       value: Uint8Array[]; }
 
 /**
  * Event Emitted when specific "protection data" cannot be deciphered and is thus
@@ -172,16 +224,32 @@ export type IEMEManagerEvent = IEMEWarningEvent | // minor error
                                IInitDataIgnoredEvent | // initData already handled
                                ISessionMessageEvent | // MediaKeySession event
                                INoUpdateEvent | // `getLicense` returned `null`
+                               IKeysUpdateEvent | // Status of keys changed
                                ISessionUpdatedEvent | // `update` call resolved
-                               IBlacklistKeysEvent | // keyIDs undecipherable
                                IBlacklistProtectionDataEvent; // initData undecipherable
 
 export type ILicense = BufferSource |
                        ArrayBuffer;
 
-// Segment protection manually sent to the EMEManager
-export interface IContentProtection { type : string; // initDataType
-                                      data : Uint8Array; } // initData
+/** Content protection data sent to the EMEManager. */
+export interface IContentProtection {
+  /**
+   * The initialization data type - or the format of the `data` attribute (e.g.
+   * "cenc")
+   */
+  type : string;
+  /** The initialization data itself */
+  data : Uint8Array;
+  /**
+   * The key ids linked to those initialization data.
+   * This should be the key ids for the key concerned by the media which have
+   * the present initialization data.
+   *
+   * `undefined` when not known (different from an empty array - which would
+   * just mean that there's no key id involved).
+   */
+  keyIds? : Uint8Array[];
+}
 
 // Emitted after the `onKeyStatusesChange` callback has been called
 export interface IKeyStatusChangeHandledEvent { type: "key-status-change-handled";
@@ -363,6 +431,9 @@ export interface IKeySystemOption {
    * closed when the current playback stops.
    */
   closeSessionsOnStop? : boolean;
+
+  singleLicensePer? : "content" |
+                      "init-data";
   /** Callback called when one of the key's status change. */
   onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
                                                  ICustomMediaKeySession)

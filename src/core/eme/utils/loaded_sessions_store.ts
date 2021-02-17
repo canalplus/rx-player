@@ -99,7 +99,7 @@ export default class LoadedSessionsStore {
    * its internal storage, as returned by the `getAll` method.
    *
    * This can be used for example to tell when a previously-stored
-   * MediaKeySession is re-used to then be able to implement a caching
+   * initialization data is re-used to then be able to implement a caching
    * replacement algorithm based on the least-recently-used values by just
    * evicting the first values returned by `getAll`.
    * @param {Uint8Array} initData
@@ -113,6 +113,21 @@ export default class LoadedSessionsStore {
     return entry === undefined ? null :
                                  { mediaKeySession: entry.mediaKeySession,
                                    sessionType: entry.sessionType };
+  }
+
+  /**
+   * Moves the corresponding MediaKeySession to the end of its internal storage,
+   * as returned by the `getAll` method.
+   *
+   * This can be used to signal that a previously-stored initialization data is
+   * re-used to then be able to implement a caching replacement algorithm based
+   * on the least-recently-used values by just evicting the first values
+   * returned by `getAll`.
+   */
+  public moveOnTop(
+    initializationData : IInitializationDataInfo
+  ) : boolean {
+    return this._storage.getAndReuse(initializationData) !== undefined;
   }
 
   /**

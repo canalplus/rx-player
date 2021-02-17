@@ -20,6 +20,7 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
+  ReplaySubject,
   throwError,
 } from "rxjs";
 import {
@@ -41,6 +42,7 @@ import {
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
+import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import arrayIncludes from "../../utils/array_includes";
 import assertUnreachable from "../../utils/assert_unreachable";
 import filterMap from "../../utils/filter_map";
@@ -58,6 +60,7 @@ import {
   IEMEManagerEvent,
   IInitializationDataInfo,
   IKeySystemOption,
+  IKeyUpdateValue,
 } from "./types";
 import InitDataStore from "./utils/init_data_store";
 
@@ -85,15 +88,19 @@ export default function EMEManager(
   log.debug("EME: Starting EMEManager logic.");
 
    /**
-    * Keep track of all initialization data handled for the current `EMEManager`
-    * instance.
-    * This allows to avoid handling multiple times the same encrypted events.
+    * Keep track of all decryption keys currently handled by the `EMEManager`.
+    * This allows to avoid creating multiple MediaKeySessions handling the same
+    * decryption keys.
     */
-  const handledInitData = new InitDataStore<boolean>();
+  const handledSessions = new InitDataStore<{
+    /** Initialization data which triggered the creation of this session. */
+    initializationData : IInitializationDataInfo;
+    /** Last key update event received for that session. */
+    lastKeyUpdate$ : ReplaySubject<IKeyUpdateValue>;
+  }>();
 
   /**
-   * Keep track of which initialization data have been blacklisted (linked to
-   * non-decypherable content).
+   * Keep track of which initialization data have been blacklisted.
    * If the same initialization data is encountered again, we can directly emit
    * the same `BlacklistedSessionError`.
    */
@@ -170,7 +177,33 @@ export default function EMEManager(
                               value: initializationData });
       }
 
-      if (!handledInitData.storeIfNone(initializationData, true)) {
+      const lastKeyUpdate$ = new ReplaySubject<IKeyUpdateValue>(1);
+
+      // First, check that this initialization data is not already handled
+      const keyIds = initializationData.keyIds;
+      if (options.singleLicensePer === "content" &&
+          handledSessions.getLength() > 0 &&
+          keyIds !== undefined)
+      {
+        const firstSession = handledSessions.getAll()[0];
+        return firstSession.lastKeyUpdate$.pipe(mergeMap((evt) => {
+          for (let i = 0; i < evt.whitelistedKeyIds.length; i++) {
+            for (let j = 0; j < keyIds.length; j++) {
+              if (areArraysOfNumbersEqual(evt.whitelistedKeyIds[i], keyIds[j])) {
+                // Move corresponding session on top of the cache if it exists
+                const { loadedSessionsStore } = mediaKeysEvent.value.stores;
+                loadedSessionsStore.moveOnTop(firstSession.initializationData);
+                return observableOf({ type: "init-data-ignored" as const,
+                                      value: { initializationData } });
+              }
+            }
+          }
+          return observableOf({ type: "keys-update" as const,
+                                value: { blacklistedKeyIDs: keyIds,
+                                         whitelistedKeyIds: [] } });
+        }));
+      } else if (!handledSessions.storeIfNone(initializationData, { initializationData,
+                                                                    lastKeyUpdate$ })) {
         log.debug("EME: Init data already received. Skipping it.");
         return observableOf({ type: "init-data-ignored" as const,
                               value: { initializationData } });
@@ -190,7 +223,7 @@ export default function EMEManager(
         .pipe(mergeMap((sessionEvt) =>  {
           switch (sessionEvt.type) {
             case "cleaning-old-session":
-              handledInitData.remove(sessionEvt.value.initializationData);
+              handledSessions.remove(sessionEvt.value.initializationData);
               return EMPTY;
 
             case "cleaned-old-session":
@@ -236,27 +269,33 @@ export default function EMEManager(
                                                        mediaKeySystemAccess.keySystem,
                                                        initializationData),
                                  generateRequest$)
-            .pipe(catchError(err => {
-              if (!(err instanceof BlacklistedSessionError)) {
-                throw err;
-              }
+            .pipe(
+              tap((evt) => {
+                if (evt.type === "keys-update") {
+                  lastKeyUpdate$.next(evt.value);
+                }
+              }),
+              catchError(err => {
+                if (!(err instanceof BlacklistedSessionError)) {
+                  throw err;
+                }
 
-              blacklistedInitData.store(initializationData, err);
+                blacklistedInitData.store(initializationData, err);
 
-              const { sessionError } = err;
-              if (initializationData.type === undefined) {
-                log.error("EME: Current session blacklisted and content not known. " +
-                          "Throwing.");
-                sessionError.fatal = true;
-                throw sessionError;
-              }
+                const { sessionError } = err;
+                if (initializationData.type === undefined) {
+                  log.error("EME: Current session blacklisted and content not known. " +
+                            "Throwing.");
+                  sessionError.fatal = true;
+                  throw sessionError;
+                }
 
-              log.warn("EME: Current session blacklisted. Blacklisting content.");
-              return observableOf({ type: "warning" as const,
-                                    value: sessionError },
-                                  { type: "blacklist-protection-data" as const,
-                                    value: initializationData });
-            }));
+                log.warn("EME: Current session blacklisted. Blacklisting content.");
+                return observableOf({ type: "warning" as const,
+                                      value: sessionError },
+                                    { type: "blacklist-protection-data" as const,
+                                      value: initializationData });
+              }));
         }));
     }));
 
