@@ -87,7 +87,7 @@ interface IAdaptationSwitchingInfos  {
 /**
  * Detect if the accessibility given defines an adaptation for the visually
  * impaired.
- * Based on DVB Document A168 (DVB-DASH).
+ * Based on DVB Document A168 (DVB-DASH) and DASH-IF 4.3.
  * @param {Object} accessibility
  * @returns {Boolean}
  */
@@ -98,8 +98,17 @@ function isVisuallyImpaired(
     return false;
   }
 
-  return (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-          accessibility.value === "1");
+  const isVisuallyImpairedAudioDvbDash = (
+    accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
+    accessibility.value === "1"
+  );
+
+  const isVisuallyImpairedDashIf = (
+    accessibility.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+    accessibility.value === "description"
+  );
+
+  return isVisuallyImpairedAudioDvbDash || isVisuallyImpairedDashIf;
 }
 
 /**
