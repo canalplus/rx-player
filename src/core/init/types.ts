@@ -26,11 +26,11 @@ import {
 } from "../api";
 import {
   IAttachedMediaKeysEvent,
-  IBlacklistKeysEvent,
   IBlacklistProtectionDataEvent,
   ICreatedMediaKeysEvent,
   IEncryptedEvent,
   IInitDataIgnoredEvent,
+  IKeysUpdateEvent,
   INoUpdateEvent,
   ISessionMessageEvent,
   ISessionUpdatedEvent,
@@ -171,9 +171,9 @@ export type IInitEvent = IManifestReadyEvent |
                          IAttachedMediaKeysEvent |
                          IInitDataIgnoredEvent |
                          ISessionMessageEvent |
+                         IKeysUpdateEvent |
                          INoUpdateEvent |
                          ISessionUpdatedEvent |
-                         IBlacklistKeysEvent |
                          IBlacklistProtectionDataEvent |
 
                          // Coming from the `MediaSourceLoader`
@@ -210,7 +210,7 @@ export type IDirectfileEvent = IStalledEvent |
                                IAttachedMediaKeysEvent |
                                IInitDataIgnoredEvent |
                                ISessionMessageEvent |
+                               IKeysUpdateEvent |
                                INoUpdateEvent |
                                ISessionUpdatedEvent |
-                               IBlacklistKeysEvent |
                                IBlacklistProtectionDataEvent;

@@ -15,22 +15,15 @@
  */
 
 import { isCodecSupported } from "../compat";
+import { IContentProtection } from "../core/eme";
 import log from "../log";
 import {
   IContentProtections,
-  IContentProtectionInitData,
-  IContentProtectionKID,
   IParsedRepresentation,
 } from "../parsers/manifest";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import { IRepresentationIndex } from "./representation_index";
 import { IAdaptationType } from "./types";
-
-export {
-  IContentProtectionInitData,
-  IContentProtectionKID,
-  IContentProtections,
-};
 
 /**
  * Normalized Representation structure.
@@ -161,7 +154,7 @@ class Representation {
    * @param {string} drmSystemId - The hexa-encoded DRM system ID
    * @returns {Array.<Object>}
    */
-  public getEncryptionData(drmSystemId : string) : IContentProtectionInitData[] {
+  public getEncryptionData(drmSystemId : string) : IContentProtection[] {
     const allInitData = this.getAllEncryptionData();
     const filtered = [];
     for (let i = 0; i < allInitData.length; i++) {
@@ -170,7 +163,9 @@ class Representation {
       for (let j = 0; j < initData.values.length; j++) {
         if (initData.values[j].systemId.toLowerCase() === drmSystemId.toLowerCase()) {
           if (!createdObjForType) {
+            const keyIds = this.contentProtections?.keyIds.map(val => val.keyId);
             filtered.push({ type: initData.type,
+                            keyIds,
                             values: [initData.values[j]] });
             createdObjForType = true;
           } else {
@@ -209,9 +204,18 @@ class Representation {
    * after parsing this Representation's initialization segment, if one exists.
    * @returns {Array.<Object>}
    */
-  public getAllEncryptionData() : IContentProtectionInitData[] {
-    return this.contentProtections === undefined ? [] :
-                                                   this.contentProtections.initData;
+  public getAllEncryptionData() : IContentProtection[] {
+    if (this.contentProtections === undefined ||
+        this.contentProtections.initData.length === 0)
+    {
+      return [];
+    }
+    const keyIds = this.contentProtections?.keyIds.map(val => val.keyId);
+    return this.contentProtections.initData.map((x) => {
+      return { type: x.type,
+               keyIds,
+               values: x.values };
+    });
   }
 
   /**
