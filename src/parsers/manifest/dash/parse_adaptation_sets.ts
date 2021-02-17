@@ -344,22 +344,17 @@ export default function parseAdaptationSets(
         isDub = true;
       }
 
-      const isClosedCaptionPredicate = (accessibility: IScheme) => type === "text" &&
-                              accessibility != null &&
-                              isHardOfHearing(accessibility) ? true :
-                                                               undefined;
+      const isClosedCaptionPredicate = (accessibility: IScheme) =>
+        type === "text" && isHardOfHearing(accessibility) ? true : undefined;
       const isClosedCaption = accessibilities?.some(isClosedCaptionPredicate);
 
-      const isAudioDescriptionPredicate = (accessibility: IScheme) => type === "audio" &&
-                                 accessibility != null &&
-                                 isVisuallyImpaired(accessibility) ? true :
-                                                                     undefined;
+      const isAudioDescriptionPredicate = (accessibility: IScheme) =>
+        type === "audio" && isVisuallyImpaired(accessibility) ? true : undefined;
       const isAudioDescription = accessibilities?.some(isAudioDescriptionPredicate);
 
-      const isSignInterpretedPredicate = (accessibility: IScheme) => type === "video" &&
-                                accessibility != null &&
-                                hasSignLanguageInterpretation(accessibility) ? true :
-                                                                               undefined;
+      const isSignInterpretedPredicate = (accessibility: IScheme) =>
+        type === "video" && hasSignLanguageInterpretation(accessibility) ?
+        true : undefined;
       const isSignInterpreted = accessibilities?.some(isSignInterpretedPredicate);
 
       let adaptationID = getAdaptationID(adaptation,
