@@ -123,7 +123,7 @@ function parseAdaptationSetChildren(
       switch (currentElement.nodeName) {
 
         case "Accessibility":
-          if (children.accessibilities == null) {
+          if (children.accessibilities === undefined) {
             children.accessibilities = [parseScheme(currentElement)];
           } else {
             children.accessibilities.push(parseScheme(currentElement));
