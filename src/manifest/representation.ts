@@ -165,6 +165,7 @@ class Representation {
     if (contentProtections === undefined) {
       return [];
     }
+    const keyIds = this.contentProtections?.keyIds.map(val => val.keyId);
     return Object.keys(contentProtections.initData)
       .reduce<IContentProtectionsInitDataObject[]>((acc, initDataType) => {
         const initDataArr = contentProtections.initData[initDataType];
@@ -174,7 +175,7 @@ class Representation {
         const initData = concat(...initDataArr.map(({ data }) => data));
         acc.push({ type: initDataType,
                    data: initData,
-                   keyIds: this.contentProtections?.keyIds.map(val => val.keyId) });
+                   keyIds });
         return acc;
       }, []);
   }
