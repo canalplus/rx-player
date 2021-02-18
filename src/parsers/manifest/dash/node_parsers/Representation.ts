@@ -27,10 +27,12 @@ import parseSegmentTemplate, {
   IParsedSegmentTemplate,
 } from "./SegmentTemplate";
 import {
+  IScheme,
   MPDError,
   parseBoolean,
   parseMPDFloat,
   parseMPDInteger,
+  parseScheme,
   ValueParser,
 } from "./utils";
 
@@ -44,6 +46,7 @@ export interface IRepresentationChildren {
   baseURLs : IBaseURL[];
 
   // optional
+  signaledInbandEventSchemeIds? : IScheme[];
   segmentBase? : IParsedSegmentBase;
   segmentList? : IParsedSegmentList;
   segmentTemplate? : IParsedSegmentTemplate;
@@ -90,6 +93,12 @@ function parseRepresentationChildren(
             children.baseURLs.push(baseURLObj);
           }
           warnings = warnings.concat(baseURLWarnings);
+          break;
+        case "InbandEventStream":
+          if (children.signaledInbandEventSchemeIds === undefined) {
+            children.signaledInbandEventSchemeIds = [];
+          }
+          children.signaledInbandEventSchemeIds.push(parseScheme(currentElement));
           break;
         case "SegmentBase":
           const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
