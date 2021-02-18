@@ -38,6 +38,7 @@ const representation1 = {
   },
   getProtectionsInitializationData() : [] { return []; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
+  _isInbandEventAllowed() : true { return true; },
 };
 
 const representation2 = {
@@ -62,6 +63,7 @@ const representation2 = {
   },
   getProtectionsInitializationData() : [] { return []; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
+  _isInbandEventAllowed() : true { return true; },
 };
 
 const initSegment1 = {
