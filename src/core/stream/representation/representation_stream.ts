@@ -280,8 +280,8 @@ export default function RepresentationStream<T>({
       }
 
       const mostNeededSegment = neededSegments[0];
-      const initSegmentRequest = downloadingQueue.getCurrentInitRequest();
-      const currentSegmentRequest = downloadingQueue.getCurrentMediaRequest();
+      const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
+      const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
 
       if (terminate === null) {
         downloadQueue$.next({ initSegment: neededInitSegment,
