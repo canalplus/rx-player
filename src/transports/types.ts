@@ -372,7 +372,7 @@ export interface ISegmentParserParsedSegment<T> {
                    number | undefined ]; // end window for the segment
                                          // (part of the segment after that time
                                          // will be ignored)
-  emsgs? : IInbandEvent[];
+  inbandEvents? : IInbandEvent[]; // Inband events parsed from segment data
 }
 
 // What a segment parser returns when parsing an init segment

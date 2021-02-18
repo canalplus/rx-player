@@ -485,24 +485,25 @@ export default function RepresentationStream<T>({
 
       case "parsed-segment":
         const initSegmentData = initSegmentObject?.initializationData ?? null;
-        if (evt.value.emsgs !== undefined) {
-          const { needsManifestRefresh, nonInterpretedMessages } = evt.value.emsgs
+        if (evt.value.inbandEvents !== undefined) {
+          const { needsManifestRefresh,
+                  nonInterpretedEvents } = evt.value.inbandEvents
             .reduce((acc, val: IInbandEvent) => {
               // Scheme that signals manifest update
               if (val.schemeId === "urn:mpeg:dash:event:2012") {
                 acc.needsManifestRefresh = true;
               } else {
-                acc.nonInterpretedMessages.push(val);
+                acc.nonInterpretedEvents.push(val);
               }
               return acc;
             }, { needsManifestRefresh: false,
-                 nonInterpretedMessages: [] as IInbandEvent[] });
+                 nonInterpretedEvents: [] as IInbandEvent[] });
           const manifestRefresh$ = needsManifestRefresh ?
             observableOf(EVENTS.needsManifestRefresh()) :
             EMPTY;
-          const inbandEvents$ = nonInterpretedMessages.length > 0 ?
+          const inbandEvents$ = nonInterpretedEvents.length > 0 ?
             observableOf({ type: "inband-events" as const,
-                           value: nonInterpretedMessages }) :
+                           value: nonInterpretedEvents }) :
             EMPTY;
           return observableConcat(manifestRefresh$,
                                   inbandEvents$,
