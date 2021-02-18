@@ -180,11 +180,14 @@ export default function EMEManager(
       const lastKeyUpdate$ = new ReplaySubject<IKeyUpdateValue>(1);
 
       // First, check that this initialization data is not already handled
-      const keyIds = initializationData.keyIds;
-      if (options.singleLicensePer === "content" &&
-          handledSessions.getLength() > 0 &&
-          keyIds !== undefined)
-      {
+      if (options.singleLicensePer === "content" && handledSessions.getLength() > 0) {
+        const keyIds = initializationData.keyIds;
+        if (keyIds === undefined) {
+          log.warn("EME: Initialization data linked to unknown key id, we'll" +
+                   "not able to fallback from it.");
+          return observableOf({ type: "init-data-ignored" as const,
+                                value: { initializationData } });
+        }
         const firstSession = handledSessions.getAll()[0];
         return firstSession.lastKeyUpdate$.pipe(mergeMap((evt) => {
           for (let i = 0; i < evt.whitelistedKeyIds.length; i++) {
