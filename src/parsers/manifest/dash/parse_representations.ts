@@ -33,13 +33,13 @@ import { IScheme } from "./node_parsers/utils";
 import parseRepresentationIndex from "./parse_representation_index";
 
 /**
- * Combine unique inband event streams from representation and
+ * Combine inband event streams from representation and
  * adaptation data.
  * @param {Object} representation
  * @param {Object} adaptation
  * @returns {undefined | Array.<Object>}
  */
-function getAcceptedInbandEventStreams(
+function combineAllowedInbandEventStreams(
   representation: IRepresentationIntermediateRepresentation,
   adaptation: IAdaptationSetIntermediateRepresentation
 ): IScheme[] | undefined {
@@ -48,23 +48,7 @@ function getAcceptedInbandEventStreams(
     newSchemeId.push(...representation.children.signaledInbandEventSchemeIds);
   }
   if (adaptation.children.signaledInbandEventSchemeIds !== undefined) {
-    if (newSchemeId.length === 0) {
-      newSchemeId.push(...adaptation.children.signaledInbandEventSchemeIds);
-    } else {
-      const len = adaptation.children.signaledInbandEventSchemeIds.length;
-      for (let i = 0; i < len; i++) {
-        const signaledInbandEventSchemeId =
-          adaptation.children.signaledInbandEventSchemeIds[i];
-        const isNonDuplicatedInbandEventStream =
-          !newSchemeId.some(({ schemeIdUri, value }) => {
-            return schemeIdUri === signaledInbandEventSchemeId.schemeIdUri &&
-                   value === signaledInbandEventSchemeId.value;
-          });
-        if (isNonDuplicatedInbandEventStream) {
-          newSchemeId.push(signaledInbandEventSchemeId);
-        }
-      }
-    }
+    newSchemeId.push(...adaptation.children.signaledInbandEventSchemeIds);
   }
   if (newSchemeId.length === 0) {
     return undefined;
@@ -216,7 +200,7 @@ export default function parseRepresentations(
     }
 
     parsedRepresentation.signaledInbandEventSchemeIds =
-      getAcceptedInbandEventStreams(representation, adaptation);
+      combineAllowedInbandEventStreams(representation, adaptation);
 
     if (adaptation.children.contentProtections != null) {
       const contentProtections = adaptation.children.contentProtections
