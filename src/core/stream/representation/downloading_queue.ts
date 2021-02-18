@@ -174,7 +174,7 @@ export default class DownloadingQueue<T> {
    * Returns `null` if no initialization segment request is pending.
    * @returns {Object}
    */
-  public getCurrentInitRequest() : ISegment | null {
+  public getRequestedInitSegment() : ISegment | null {
     return this._initSegmentRequest === null ? null :
                                                this._initSegmentRequest.segment;
   }
@@ -184,7 +184,7 @@ export default class DownloadingQueue<T> {
    * Returns `null` if no media segment request is pending.
    * @returns {Object}
    */
-  public getCurrentMediaRequest() : ISegment | null {
+  public getRequestedMediaSegment() : ISegment | null {
     return this._mediaSegmentRequest === null ? null :
                                                 this._mediaSegmentRequest.segment;
   }
