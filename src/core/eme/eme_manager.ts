@@ -195,7 +195,7 @@ export default function EMEManager(
               if (areArraysOfNumbersEqual(evt.whitelistedKeyIds[i], keyIds[j])) {
                 // Move corresponding session on top of the cache if it exists
                 const { loadedSessionsStore } = mediaKeysEvent.value.stores;
-                loadedSessionsStore.moveOnTop(firstSession.initializationData);
+                loadedSessionsStore.reuse(firstSession.initializationData);
                 return observableOf({ type: "init-data-ignored" as const,
                                       value: { initializationData } });
               }
