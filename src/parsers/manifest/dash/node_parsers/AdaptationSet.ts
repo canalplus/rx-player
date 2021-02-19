@@ -62,7 +62,7 @@ export interface IAdaptationSetChildren {
   contentComponent? : IParsedContentComponent;
   contentProtections? : IParsedContentProtection[];
   essentialProperties? : IScheme[];
-  signaledInbandEventSchemeIds? : IScheme[];
+  inbandEventStreams? : IScheme[];
   roles? : IScheme[];
   supplementalProperties? : IScheme[];
 
@@ -150,10 +150,10 @@ function parseAdaptationSetChildren(
           break;
 
         case "InbandEventStream":
-          if (children.signaledInbandEventSchemeIds === undefined) {
-            children.signaledInbandEventSchemeIds = [];
+          if (children.inbandEventStreams === undefined) {
+            children.inbandEventStreams = [];
           }
-          children.signaledInbandEventSchemeIds.push(parseScheme(currentElement));
+          children.inbandEventStreams.push(parseScheme(currentElement));
           break;
 
         case "Representation":

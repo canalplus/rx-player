@@ -16,12 +16,10 @@
 
 import { isCodecSupported } from "../compat";
 import log from "../log";
-import { IInbandEvent } from "../parsers/containers/isobmff";
 import {
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
-import { IScheme } from "../parsers/manifest/dash/node_parsers/utils";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import { concat } from "../utils/byte_parsing";
 import { IRepresentationIndex } from "./representation_index";
@@ -97,9 +95,6 @@ class Representation {
   /** `true` if the Representation is in a supported codec, false otherwise. */
   public isSupported : boolean;
 
-  /** List of signaled inband event scheme ids */
-  private _signaledInbandEventSchemeIds?: IScheme[];
-
   /**
    * @param {Object} args
    */
@@ -126,10 +121,6 @@ class Representation {
 
     if (args.frameRate != null) {
       this.frameRate = args.frameRate;
-    }
-
-    if (args.signaledInbandEventSchemeIds !== undefined) {
-      this._signaledInbandEventSchemeIds = args.signaledInbandEventSchemeIds;
     }
 
     this.index = args.index;
@@ -209,24 +200,6 @@ class Representation {
       }
     }
     initDataArr.push(newElement);
-  }
-
-  /**
-   * Some inband events may not be allowed and filtered out.
-   * Example : MPEG-DASH tells about inband events presence on stream with an
-   * InbandEventStream tag. Each inband event from stream must have a scheme id
-   * that is defined in one of the InbandEventStream. If not, the event must be
-   * ignored.
-   * @param {Object} inbandEvent
-   * @returns {boolean}
-   */
-  _isInbandEventAllowed(inbandEvent: IInbandEvent): boolean {
-    if (this._signaledInbandEventSchemeIds === undefined) {
-      return false;
-    }
-    return this._signaledInbandEventSchemeIds.some(({ schemeIdUri }) => {
-      return schemeIdUri === inbandEvent.schemeId;
-    });
   }
 }
 

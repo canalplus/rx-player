@@ -19,6 +19,7 @@ import {
   Representation,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
+import { IInbandEvent } from "../../containers/isobmff";
 // eslint-disable-next-line max-len
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import {
@@ -35,6 +36,7 @@ import {
   IRepresentationIntermediateRepresentation,
 } from "./node_parsers/Representation";
 import { IParsedSegmentTemplate } from "./node_parsers/SegmentTemplate";
+import { IScheme } from "./node_parsers/utils";
 import resolveBaseURLs from "./resolve_base_urls";
 
 /** Supplementary context needed to parse a RepresentationIndex. */
@@ -75,6 +77,8 @@ export interface IRepresentationInfos {
    * de-synchronization with what is actually on the server.
    */
   unsafelyBaseOnPreviousRepresentation : Representation | null;
+  /** List of inband event streams that are present on the representation */
+  inbandEventStreams: IScheme[] | undefined;
 }
 
 /**
@@ -98,10 +102,20 @@ export default function parseRepresentationIndex(
           start: periodStart,
           receivedTime,
           timeShiftBufferDepth,
-          unsafelyBaseOnPreviousRepresentation } = representationInfos;
+          unsafelyBaseOnPreviousRepresentation,
+          inbandEventStreams } = representationInfos;
+
+  const isInbandEventWhitelisted = (inbandEvent: IInbandEvent): boolean => {
+    if (inbandEventStreams === undefined) {
+      return false;
+    }
+    return inbandEventStreams
+      .some(({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeId);
+  };
   const context = { aggressiveMode,
                     availabilityTimeOffset,
                     unsafelyBaseOnPreviousRepresentation,
+                    isInbandEventWhitelisted,
                     manifestBoundsCalculator,
                     isDynamic,
                     periodEnd,

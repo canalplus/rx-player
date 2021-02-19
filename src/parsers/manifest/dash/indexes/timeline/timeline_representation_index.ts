@@ -25,6 +25,7 @@ import {
   ISegment,
   Representation,
 } from "../../../../../manifest";
+import { IInbandEvent } from "../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../utils/clear_timeline_from_position";
 import {
   checkDiscontinuity,
@@ -164,6 +165,8 @@ export interface ITimelineIndexContextArgument {
    * Use with moderation.
    */
   unsafelyBaseOnPreviousRepresentation : Representation | null;
+  /* Function that tells if an inband event is whitelisted by the manifest */
+  isInbandEventWhitelisted: (inbandEvent: IInbandEvent) => boolean;
 }
 
 export interface ILastSegmentInformation {
@@ -209,6 +212,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   private _unsafelyBaseOnPreviousIndex : TimelineRepresentationIndex | null;
 
+  /* Function that tells if an inband event is whitelisted by the manifest */
+  private _isInbandEventWhitelisted: (inbandEvent: IInbandEvent) => boolean;
+
   /**
    * @param {Object} index
    * @param {Object} context
@@ -224,7 +230,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
             representationId,
             representationBitrate,
             periodStart,
-            periodEnd } = context;
+            periodEnd,
+            isInbandEventWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
@@ -236,6 +243,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
 
+    this._isInbandEventWhitelisted = isInbandEventWhitelisted;
     this._lastUpdate = context.receivedTime == null ?
                                  performance.now() :
                                  context.receivedTime;
@@ -282,7 +290,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    return getInitSegment(this._index);
+    const initSegment = getInitSegment(this._index);
+    if (initSegment.privateInfos === undefined) {
+      initSegment.privateInfos = {};
+    }
+    initSegment.privateInfos.isInbandEventWhitelisted = this._isInbandEventWhitelisted;
+    return initSegment;
   }
 
   /**
@@ -310,7 +323,15 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                                      indexTimeOffset },
                                    from,
                                    duration,
-                                   this._scaledPeriodEnd);
+                                   this._scaledPeriodEnd)
+      .map((segment) => {
+        if (segment.privateInfos === undefined) {
+          segment.privateInfos = {};
+        }
+        segment.privateInfos.isInbandEventWhitelisted =
+          this._isInbandEventWhitelisted;
+        return segment;
+      });
   }
 
   /**

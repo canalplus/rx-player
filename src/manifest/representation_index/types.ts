@@ -20,6 +20,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import { IInbandEvent } from "../../parsers/containers/isobmff";
 import {
   ILocalIndexSegment,
   ILocalManifestInitSegmentLoader,
@@ -123,6 +124,7 @@ export interface IPrivateInfos {
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
   localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
   localManifestSegment? : ILocalManifestSegmentPrivateInfos;
+  isInbandEventWhitelisted? : (evt: IInbandEvent) => boolean;
 }
 
 /** Represent a single Segment from a Representation. */

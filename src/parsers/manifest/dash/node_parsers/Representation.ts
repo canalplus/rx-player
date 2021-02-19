@@ -46,7 +46,7 @@ export interface IRepresentationChildren {
   baseURLs : IBaseURL[];
 
   // optional
-  signaledInbandEventSchemeIds? : IScheme[];
+  inbandEventStreams? : IScheme[];
   segmentBase? : IParsedSegmentBase;
   segmentList? : IParsedSegmentList;
   segmentTemplate? : IParsedSegmentTemplate;
@@ -95,10 +95,10 @@ function parseRepresentationChildren(
           warnings = warnings.concat(baseURLWarnings);
           break;
         case "InbandEventStream":
-          if (children.signaledInbandEventSchemeIds === undefined) {
-            children.signaledInbandEventSchemeIds = [];
+          if (children.inbandEventStreams === undefined) {
+            children.inbandEventStreams = [];
           }
-          children.signaledInbandEventSchemeIds.push(parseScheme(currentElement));
+          children.inbandEventStreams.push(parseScheme(currentElement));
           break;
         case "SegmentBase":
           const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
