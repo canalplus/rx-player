@@ -67,7 +67,7 @@ function getConcernedRequests(
     }
     const segmentEnd = request.time + request.duration;
     return segmentEnd > neededPosition &&
-           Math.abs(neededPosition - request.time) < -0.3;
+           neededPosition - request.time > -1.2;
   });
 
   if (nextSegmentIndex < 0) { // Not found
@@ -146,7 +146,10 @@ function estimateStarvationModeBitrate(
   currentRepresentation : Representation | null,
   lastEstimatedBitrate : number|undefined
 ) : number|undefined {
-  const nextNeededPosition = playbackInfo.position + playbackInfo.bufferGap;
+  const { bufferGap, speed, position } = playbackInfo;
+  const realBufferGap = isFinite(bufferGap) ? bufferGap :
+                                              0;
+  const nextNeededPosition = position + realBufferGap;
   const concernedRequests = getConcernedRequests(pendingRequests, nextNeededPosition);
 
   if (concernedRequests.length !== 1) { // 0  == no request
@@ -172,7 +175,7 @@ function estimateStarvationModeBitrate(
     if ((now - lastProgressEvent.timestamp) / 1000 <= remainingTime) {
       // Calculate estimated time spent rebuffering if we continue doing that request.
       const expectedRebufferingTime = remainingTime -
-        (playbackInfo.bufferGap / playbackInfo.speed);
+        (realBufferGap / speed);
       if (expectedRebufferingTime > 2000) {
         return bandwidthEstimate;
       }
@@ -181,7 +184,7 @@ function estimateStarvationModeBitrate(
 
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const reasonableElapsedTime = requestElapsedTime <=
-    ((chunkDuration * 1.5 + 2) / playbackInfo.speed);
+    ((chunkDuration * 1.5 + 2) / speed);
   if (currentRepresentation == null || reasonableElapsedTime) {
     return undefined;
   }
@@ -212,7 +215,9 @@ function shouldDirectlySwitchToLowBitrate(
   playbackInfo : IPlaybackConditionsInfo,
   requests : IRequestInfo[]
 ) : boolean {
-  const nextNeededPosition = playbackInfo.position + playbackInfo.bufferGap;
+  const realBufferGap = isFinite(playbackInfo.bufferGap) ? playbackInfo.bufferGap :
+                                                           0;
+  const nextNeededPosition = playbackInfo.position + realBufferGap;
   const nextRequest = arrayFind(requests, (r) =>
     r.duration > 0 && (r.time + r.duration) > nextNeededPosition);
 
@@ -236,7 +241,7 @@ function shouldDirectlySwitchToLowBitrate(
     return true;
   }
   const expectedRebufferingTime = remainingTime -
-    (playbackInfo.bufferGap / playbackInfo.speed);
+    (realBufferGap / playbackInfo.speed);
   return expectedRebufferingTime > -1.5;
 }
 
@@ -287,19 +292,23 @@ export default class NetworkAnalyzer {
     currentRequests : IRequestInfo[],
     lastEstimatedBitrate: number|undefined
   ) : { bandwidthEstimate? : number; bitrateChosen : number } {
-    let newBitrateCeil; // bitrate ceil for the chosen Representation
+    let newBitrateCeil : number | undefined; // bitrate ceil for the chosen Representation
     let bandwidthEstimate;
     const localConf = this._config;
     const { bufferGap, position, duration } = playbackInfo;
+    const realBufferGap = isFinite(bufferGap) ? bufferGap :
+                                                0;
 
     // check if should get in/out of starvation mode
     if (isNaN(duration) ||
-        bufferGap + position < duration - ABR_STARVATION_DURATION_DELTA)
+        realBufferGap + position < duration - ABR_STARVATION_DURATION_DELTA)
     {
-      if (!this._inStarvationMode && bufferGap <= localConf.starvationGap) {
+      if (!this._inStarvationMode && realBufferGap <= localConf.starvationGap) {
         log.info("ABR: enter starvation mode.");
         this._inStarvationMode = true;
-      } else if (this._inStarvationMode && bufferGap >= localConf.outOfStarvationGap) {
+      } else if (this._inStarvationMode &&
+                 realBufferGap >= localConf.outOfStarvationGap)
+      {
         log.info("ABR: exit starvation mode.");
         this._inStarvationMode = false;
       }
