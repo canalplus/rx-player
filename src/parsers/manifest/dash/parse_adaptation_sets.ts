@@ -32,7 +32,6 @@ import {
   IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
 import { IParsedSegmentTemplate } from "./node_parsers/SegmentTemplate";
-import { IScheme } from "./node_parsers/utils";
 import parseRepresentations, {
   IAdaptationInfos,
 } from "./parse_representations";
@@ -344,18 +343,11 @@ export default function parseAdaptationSets(
         isDub = true;
       }
 
-      const isClosedCaptionPredicate = (accessibility: IScheme) =>
-        type === "text" && isHardOfHearing(accessibility) ? true : undefined;
-      const isClosedCaption = accessibilities?.some(isClosedCaptionPredicate);
+      const isClosedCaption = accessibilities?.some(isHardOfHearing);
 
-      const isAudioDescriptionPredicate = (accessibility: IScheme) =>
-        type === "audio" && isVisuallyImpaired(accessibility) ? true : undefined;
-      const isAudioDescription = accessibilities?.some(isAudioDescriptionPredicate);
+      const isAudioDescription = accessibilities?.some(isVisuallyImpaired);
 
-      const isSignInterpretedPredicate = (accessibility: IScheme) =>
-        type === "video" && hasSignLanguageInterpretation(accessibility) ?
-        true : undefined;
-      const isSignInterpreted = accessibilities?.some(isSignInterpretedPredicate);
+      const isSignInterpreted = accessibilities?.some(hasSignLanguageInterpretation);
 
       let adaptationID = getAdaptationID(adaptation,
                                          { isAudioDescription,
