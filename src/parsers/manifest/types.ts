@@ -16,7 +16,6 @@
 
 import { IRepresentationIndex } from "../../manifest";
 import { IParsedStreamEventData } from "./dash/node_parsers/EventStream";
-import { IScheme } from "./dash/node_parsers/utils";
 
 export interface IManifestStreamEvent { start: number;
                                         end?: number;
@@ -86,9 +85,6 @@ export interface IParsedRepresentation {
    * Not set if unknown or if it makes no sense (e.g. for audio).
    */
   width?: number;
-
-  /** List of signaled inband event scheme ids */
-  signaledInbandEventSchemeIds?: IScheme[];
 }
 
 /** Every possible types an Adaptation can have. */
