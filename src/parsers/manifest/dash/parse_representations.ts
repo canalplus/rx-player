@@ -39,16 +39,16 @@ import parseRepresentationIndex from "./parse_representation_index";
  * @param {Object} adaptation
  * @returns {undefined | Array.<Object>}
  */
-function combineAllowedInbandEventStreams(
+function combineInbandEventStreams(
   representation: IRepresentationIntermediateRepresentation,
   adaptation: IAdaptationSetIntermediateRepresentation
 ): IScheme[] | undefined {
   const newSchemeId = [];
-  if (representation.children.signaledInbandEventSchemeIds !== undefined) {
-    newSchemeId.push(...representation.children.signaledInbandEventSchemeIds);
+  if (representation.children.inbandEventStreams !== undefined) {
+    newSchemeId.push(...representation.children.inbandEventStreams);
   }
-  if (adaptation.children.signaledInbandEventSchemeIds !== undefined) {
-    newSchemeId.push(...adaptation.children.signaledInbandEventSchemeIds);
+  if (adaptation.children.inbandEventStreams !== undefined) {
+    newSchemeId.push(...adaptation.children.inbandEventStreams);
   }
   if (newSchemeId.length === 0) {
     return undefined;
@@ -138,9 +138,13 @@ export default function parseRepresentations(
       .unsafelyBaseOnPreviousAdaptation?.getRepresentation(representationID) ??
       null;
 
+    const inbandEventStreams =
+      combineInbandEventStreams(representation, adaptation);
+
     const representationInfos = objectAssign({}, adaptationInfos,
                                              { unsafelyBaseOnPreviousRepresentation,
-                                               adaptation });
+                                               adaptation,
+                                               inbandEventStreams });
     const representationIndex = parseRepresentationIndex(representation,
                                                          representationInfos);
 
@@ -198,9 +202,6 @@ export default function parseRepresentations(
       parsedRepresentation.width =
         adaptation.attributes.width;
     }
-
-    parsedRepresentation.signaledInbandEventSchemeIds =
-      combineAllowedInbandEventStreams(representation, adaptation);
 
     if (adaptation.children.contentProtections != null) {
       const contentProtections = adaptation.children.contentProtections

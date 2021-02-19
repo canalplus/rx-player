@@ -84,7 +84,11 @@ export default function generateAudioVideoSegmentParser(
       let inbandEvents;
       if (parsedInbandEvents !== undefined) {
         const filteredInbandEvents = parsedInbandEvents.filter((evt) => {
-          return representation._isInbandEventAllowed(evt);
+          if (segment.privateInfos === undefined ||
+              segment.privateInfos.isInbandEventWhitelisted === undefined) {
+            return false;
+          }
+          return segment.privateInfos.isInbandEventWhitelisted(evt);
         });
         if (filteredInbandEvents.length > 0) {
           inbandEvents = filteredInbandEvents;

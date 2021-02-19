@@ -19,6 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import { IInbandEvent } from "../../../containers/isobmff";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import isPeriodFulfilled from "./is_period_fulfilled";
@@ -126,6 +127,8 @@ export interface ITemplateIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
+  /* Function that tells if an inband event is whitelisted by the manifest */
+  isInbandEventWhitelisted: (inbandEvent: IInbandEvent) => boolean;
 }
 
 /**
@@ -151,6 +154,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _availabilityTimeOffset? : number;
   /** Whether the corresponding Manifest can be updated and changed. */
   private _isDynamic : boolean;
+  /* Function that tells if an inband event is whitelisted by the manifest */
+  private _isInbandEventWhitelisted : (inbandEvent: IInbandEvent) => boolean;
 
   /**
    * @param {Object} index
@@ -168,7 +173,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             periodStart,
             representationBaseURLs,
             representationId,
-            representationBitrate } = context;
+            representationBitrate,
+            isInbandEventWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
     this._availabilityTimeOffset = availabilityTimeOffset;
@@ -207,6 +213,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._periodStart = periodStart;
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 (periodEnd - periodStart) * timescale;
+    this._isInbandEventWhitelisted = isInbandEventWhitelisted;
   }
 
   /**
@@ -214,7 +221,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    return getInitSegment(this._index);
+    const initSegment = getInitSegment(this._index);
+    if (initSegment.privateInfos === undefined) {
+      initSegment.privateInfos = {};
+    }
+    initSegment.privateInfos.isInbandEventWhitelisted = this._isInbandEventWhitelisted;
+    return initSegment;
   }
 
   /**
@@ -285,7 +297,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                      isInit: false,
                      scaledDuration: realDuration / timescale,
                      mediaURLs: detokenizedURLs,
-                     timestampOffset: -(index.indexTimeOffset / timescale) };
+                     timestampOffset: -(index.indexTimeOffset / timescale),
+                     privateInfos: {
+                       isInbandEventWhitelisted: this._isInbandEventWhitelisted,
+                     } };
       segments.push(args);
       numberIndexedToZero++;
     }
