@@ -39,10 +39,9 @@ import StreamOrchestrator, {
   IStreamOrchestratorOptions,
 } from "../stream";
 import { setDurationToMediaSource } from "./create_media_source";
-import createStreamClock from "./create_stream_clock";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
-import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
+import initialSeekAndPlay from "./initial_seek_and_play";
 import StallAvoider, {
   IDiscontinuityEvent,
 } from "./stall_avoider";
@@ -117,24 +116,20 @@ export default function createMediaSourceLoader(
     /** Interface to create media buffers for loaded segments. */
     const segmentBuffersStore = new SegmentBuffersStore(mediaElement, mediaSource);
 
-    const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
-                                                        mediaElement,
-                                                        startTime: initialTime,
-                                                        mustAutoPlay: autoPlay,
-                                                        isDirectfile: false });
 
-    const initialPlay$ = load$.pipe(filter((evt) => evt !== "not-loaded-metadata"));
+    const { loaded$,
+            clock$: updatedClock$ } = initialSeekAndPlay(mediaElement,
+                                                         clock$,
+                                                         { autoPlay,
+                                                           manifest,
+                                                           speed$,
+                                                           startTime: initialTime });
 
-    const streamEvents$ = initialPlay$.pipe(
+    const isLoaded$ = loaded$.pipe(filter((evt) => evt !== "not-loaded-metadata"));
+
+    const streamEvents$ = isLoaded$.pipe(
       mergeMap(() => streamEventsEmitter(manifest, mediaElement, clock$))
     );
-
-    const streamClock$ = createStreamClock(clock$, { autoPlay,
-                                                     initialPlay$,
-                                                     initialSeek$: seek$,
-                                                     manifest,
-                                                     speed$,
-                                                     startTime: initialTime });
 
     /** Cancel endOfStream calls when streams become active again. */
     const cancelEndOfStream$ = new Subject<null>();
@@ -144,7 +139,7 @@ export default function createMediaSourceLoader(
 
     // Creates Observable which will manage every Stream for the given Content.
     const streams$ = StreamOrchestrator({ manifest, initialPeriod },
-                                        streamClock$,
+                                        updatedClock$,
                                         abrManager,
                                         segmentBuffersStore,
                                         segmentFetcherCreator,
@@ -192,7 +187,7 @@ export default function createMediaSourceLoader(
                                        manifest,
                                        discontinuityUpdate$);
 
-    const loadedEvent$ = load$
+    const loadedEvent$ = loaded$
       .pipe(mergeMap((evt) => {
         if (evt === "autoplay-blocked") {
           const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",

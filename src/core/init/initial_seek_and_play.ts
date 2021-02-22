@@ -15,154 +15,135 @@
  */
 
 import {
-  concat as observableConcat,
+  combineLatest as observableCombineLatest,
+  merge as observableMerge,
   Observable,
-  of as observableOf,
+  ReplaySubject,
 } from "rxjs";
 import {
-  catchError,
-  filter,
-  mapTo,
-  mergeMap,
-  shareReplay,
-  take,
+  ignoreElements,
+  map,
   tap,
+  shareReplay,
 } from "rxjs/operators";
-import {
-  play$,
-  shouldValidateMetadata,
-  shouldWaitForDataBeforeLoaded,
-  whenLoadedMetadata$,
-} from "../../compat";
-import log from "../../log";
+import Manifest from "../../manifest";
+import { IStreamOrchestratorClockTick } from "../stream";
+import tryBeginningPlayback, {
+  ILoadEvents,
+} from "./try_beginning_playback";
+import tryInitialSeek from "./try_initial_seek";
 import { IInitClockTick } from "./types";
 
-export type ILoadEvents =
-  "not-loaded-metadata" | // metadata are not loaded. Manual action required
-  "autoplay-blocked" | // loaded but autoplay is blocked by the browser
-  "autoplay" | // loaded and autoplayed succesfully
-  "loaded"; // loaded without autoplay enabled
+/** Arguments for the `initialSeekAndPlay` function. */
+export interface IInitialSeekAndPlayArguments {
+  /** `true` if you want to play automatically when possible. */
+  autoPlay : boolean;
+  /** Manifest linked to that content. */
+  manifest : Manifest;
+  /** Always emits the last speed requested by the user. */
+  speed$ : Observable<number>;
+  /** The initial time you want to seek to. */
+  startTime : number;
+}
 
 /**
- * Emit once a "can-play" message as soon as the clock$ announce that the content
- * can begin to be played.
+ * When the HTMLMediaElement is ready, perform if needed:
+ *  - the initial seek
+ *  - the initial autoplay operation
  *
- * Warn you if the metadata is not yet loaded metadata by emitting a
- * "not-loaded-metadata" message first.
- * @param {Observable} clock$
+ * Returns the following Observables:
+ *
+ *   - `clock$`: The central observable performing both the seek and autoPlay.
+ *     Also returns an updated clock's tick (which includes information such as
+ *     the position offset until the seek is taken into account or the last
+ *     wanted playback speed).
+ *
+ *   - `loaded$`: An observable emitting events specifically related to the
+ *     loading status. Will always emit its last value on subscription.
+ *
+ *     @see ILoadEvents for more information.
+ *
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Observable} initClock$
+ * @param {Object} streamClockArgument
  * @returns {Observable}
  */
-function canPlay(
-  clock$ : Observable<IInitClockTick>,
+export default function initialSeekAndPlay(
   mediaElement : HTMLMediaElement,
-  isDirectfile : boolean
-) : Observable<"can-play"|"not-loaded-metadata"> {
-  const isLoaded$ = clock$.pipe(
-    filter((tick) => {
-      const { seeking, stalled, readyState, currentRange } = tick;
-      if (seeking || stalled !== null) {
-        return false;
-      }
-      if (!shouldWaitForDataBeforeLoaded(
-        isDirectfile,
-        mediaElement.hasAttribute("playsinline"))) {
-        return readyState >= 1 && mediaElement.duration > 0;
-      }
-      if (readyState >= 4 || (readyState === 3 && currentRange !== null)) {
-        return shouldValidateMetadata() ? mediaElement.duration > 0 :
-                                          true;
-      }
-      return false;
-    }),
-    take(1),
-    mapTo("can-play" as const)
-  );
-
-  if (shouldValidateMetadata() && mediaElement.duration === 0) {
-    return observableConcat(
-      observableOf("not-loaded-metadata" as const),
-      isLoaded$
-    );
+  initClock$ : Observable<IInitClockTick>,
+  { autoPlay,
+    manifest,
+    speed$,
+    startTime } : IInitialSeekAndPlayArguments
+) : {
+    clock$: Observable<IStreamOrchestratorClockTick>;
+    loaded$ : Observable<ILoadEvents>;
   }
+{
+  /**
+   * `true` once the content is considered "loaded".
+   * This means it can begin to play.
+   */
+  let isLoaded = false;
 
-  return isLoaded$;
-}
+  /** `true` once the seek to a protential initial position has been performed. */
+  let isSeekDone = false;
 
-/**
- * Try to play content then handle autoplay errors.
- * @param {HTMLMediaElement} - mediaElement
- * @returns {Observable}
- */
-function autoPlay$(
-  mediaElement: HTMLMediaElement
-): Observable<"autoplay"|"autoplay-blocked"> {
-  return play$(mediaElement).pipe(
-    mapTo("autoplay" as const),
-    catchError((error : unknown) => {
-      if (error instanceof Error && error.name === "NotAllowedError") {
-        // auto-play was probably prevented.
-        log.warn("Init: Media element can't play." +
-                 " It may be due to browser auto-play policies.");
-        return observableOf("autoplay-blocked" as const);
-      } else {
-        throw error;
+  /**
+   * Emit loading-related events.
+   * As its own ReplaySubject to avoid polluting the more general clock$
+   * Observable. */
+  const loaded$ = new ReplaySubject<ILoadEvents>(1);
+
+  /**
+   * Silent Observable (does not emit anything) which performs autoPlay if
+   * needed and which emits through `loaded$` the current loading status.
+   * Completes when done.
+   */
+  const load$ = tryBeginningPlayback(initClock$, mediaElement, autoPlay, false).pipe(
+    tap((evt) => {
+      isLoaded = true;
+      loaded$.next(evt);
+    }),
+    ignoreElements());
+
+  /**
+   * Observable trying to perform the initial seek and emitting updated clock
+   * ticks.
+   */
+  const clock$ = observableCombineLatest([initClock$, speed$]).pipe(
+    map(([tick, speed]) => {
+      /** True if the tick's position is at the right value */
+      let isRightPosition = true;
+      if (!isSeekDone) {
+        isRightPosition = tick.position === startTime;
+        isSeekDone = tryInitialSeek(tick, mediaElement, startTime);
       }
-    })
-  );
-}
+      const liveGap = manifest.isLive ? manifest.getMaximumPosition() - tick.position :
+                                        Infinity;
+      return {
+        position: tick.position,
+        getCurrentTime: tick.getCurrentTime,
+        duration: tick.duration,
+        isPaused: isLoaded ? tick.paused :
+                             !autoPlay,
+        liveGap,
+        readyState: tick.readyState,
+        speed,
+        stalled: tick.stalled,
 
-/**
- * Returns two Observables:
- *
- *   - seek$: when subscribed, will seek to the wanted started time as soon as
- *     it can. Emit and complete when done.
- *
- *   - load$: when subscribed, will play if and only if the `mustAutoPlay`
- *     option is set as soon as it can. Emit and complete when done.
- *     When this observable emits, it also means that the content is `loaded`
- *     and can begin to play the current content.
- *
- * @param {Object} args
- * @returns {Object}
- */
-export default function seekAndLoadOnMediaEvents(
-  { clock$,
-    mediaElement,
-    startTime,
-    mustAutoPlay,
-    isDirectfile } : { clock$ : Observable<IInitClockTick>;
-                       isDirectfile : boolean;
-                       mediaElement : HTMLMediaElement;
-                       mustAutoPlay : boolean;
-                       startTime : number|(() => number); }
-) : { seek$ : Observable<unknown>; load$ : Observable<ILoadEvents> } {
-  const seek$ = whenLoadedMetadata$(mediaElement).pipe(
-    take(1),
-    tap(() => {
-      log.info("Init: Set initial time", startTime);
-      mediaElement.currentTime = typeof startTime === "function" ? startTime() :
-                                                                   startTime;
-    }),
-    shareReplay({ refCount: true })
-  );
+        // wantedTimeOffset is an offset to add to the timing's current time to have
+        // the "real" wanted position.
+        // For now, this is seen when the media element has not yet seeked to its
+        // initial position, the currentTime will most probably be 0 where the
+        // effective starting position will be _startTime_.
+        // Thus we initially set a wantedTimeOffset equal to startTime.
+        wantedTimeOffset: isRightPosition ? 0 :
+                                            startTime - tick.position,
+      };
+    }));
 
-  const load$ : Observable<ILoadEvents> = seek$.pipe(
-    mergeMap(() => {
-      return canPlay(clock$, mediaElement, isDirectfile).pipe(
-        tap(() => log.info("Init: Can begin to play content")),
-        mergeMap((evt) => {
-          if (evt === "can-play") {
-            if (!mustAutoPlay) {
-              return observableOf("loaded" as const);
-            }
-            return autoPlay$(mediaElement);
-          }
-          return observableOf(evt);
-        })
-      );
-    }),
-    shareReplay({ refCount: true })
-  );
-
-  return { seek$, load$ };
+  return { loaded$,
+           clock$: observableMerge(load$, clock$).pipe(
+             shareReplay({ bufferSize: 1, refCount: true })) };
 }
