@@ -129,7 +129,7 @@ export default function StreamOrchestrator(
                                 Infinity;
       return BufferGarbageCollector({
         segmentBuffer,
-        clock$: clock$.pipe(map(tick => tick.position)),
+        clock$: clock$.pipe(map(tick => tick.position + tick.wantedTimeOffset)),
         maxBufferBehind$: maxBufferBehind$.pipe(
           map(val => Math.min(val, defaultMaxBehind))),
         maxBufferAhead$: maxBufferAhead$.pipe(
