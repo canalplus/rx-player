@@ -20,7 +20,10 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { IStalledStatus } from "../api";
+import {
+  IClockMediaEventType,
+  IStalledStatus,
+} from "../api";
 import {
   IAttachedMediaKeysEvent,
   IBlacklistKeysEvent,
@@ -60,7 +63,7 @@ export interface IInitClockTick { position : number;
                                   buffered : TimeRanges;
                                   duration : number;
                                   bufferGap : number;
-                                  state : string;
+                                  event : IClockMediaEventType;
                                   playbackRate : number;
                                   currentRange : { start : number;
                                                    end : number; } |
