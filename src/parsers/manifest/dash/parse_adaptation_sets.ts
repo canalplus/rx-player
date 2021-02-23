@@ -343,11 +343,11 @@ export default function parseAdaptationSets(
         isDub = true;
       }
 
-      const isClosedCaption = accessibilities?.some(isHardOfHearing);
+      const isClosedCaption = type === "text" && accessibilities?.some(isHardOfHearing);
 
-      const isAudioDescription = accessibilities?.some(isVisuallyImpaired);
+      const isAudioDescription = type === "audio" && accessibilities?.some(isVisuallyImpaired);
 
-      const isSignInterpreted = accessibilities?.some(hasSignLanguageInterpretation);
+      const isSignInterpreted = type === "video" && accessibilities?.some(hasSignLanguageInterpretation);
 
       let adaptationID = getAdaptationID(adaptation,
                                          { isAudioDescription,
