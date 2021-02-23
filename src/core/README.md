@@ -33,9 +33,6 @@ Those modules are:
     Choose which media segments to download and push them to media buffers (here
     called the `SegmentBuffers`) to then be able to decode them.
 
-    Various files documenting the Stream architecture should be available in
-    the ``doc/architecture/stream`` directory.
-
 
   - __the `SegmentBuffers` (./segment_buffers)__
 
