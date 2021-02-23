@@ -23,8 +23,6 @@ It completely takes care of segment downloading and pushing for a whole content.
 
 To do so, it creates the right ``PeriodStream``s depending on the current
 playback conditions.
-For more information on it, you can look at [the StreamOrchestrator
-documentation](./stream_orchestrator.md).
 
 
 
@@ -59,6 +57,3 @@ segment downloading and pushing itself.
 The ``RepresentationStream`` is the part that actually monitors the buffer to
 deduce which segments should be downloaded, ask to download them and then give
 the order to push them to the `SegmentBuffer`.
-
-You can have more information on it in [the RepresentationStream
-documentation](./representation_stream.md).

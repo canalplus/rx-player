@@ -66,13 +66,11 @@ These allow to publish more modular codebases to npm.
 ## The doc/ directory: Player documentation ####################################
 
 Documentation, mostly in markdown, of various subjects related to the rx-player:
-
   - API documentation
-
-  - code architecture documentation
-
-  - documentation to help developpers (to use APIs, switch versions, know which
-    APIs are deprecated)
+  - tutorials
+  - list of deprecated APIs...
+  - how to transition between RxPlayer versions
+  - etc.
 
 
 <a name="scripts"></a>

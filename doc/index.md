@@ -3,13 +3,7 @@
 
 ## Overview ####################################################################
 
-You can find here various documentation pages about the RxPlayer.
-
-If you wish to use the RxPlayer as a library, you can directly check the API
-Documentation.
-
-For those wanting to contribute, we also began documenting the code
-architecture.
+You can find here various documentation pages about the RxPlayer API.
 
 
 
@@ -37,15 +31,6 @@ Those are all linked [here](./tutorials/index.md).
 
 To quickly start using the player, you can directly refer to the [quick start
 tutorial](./tutorials/quick_start.md).
-
-
-
-## Architecture Documentation ##################################################
-
-An architecture documentation is in progress.
-
-The main page can be found here:
-  - [Code architecture documentation](./architecture/index.md)
 
 
 

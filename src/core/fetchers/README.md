@@ -1,14 +1,9 @@
-# The fetchers #################################################################
+# The `fetchers` ###############################################################
 
+The fetchers is the part of the code interacting with `transports` files, which
+allows, to download and parse the Manifest and the media segments.
 
-## Overview ####################################################################
-
-The fetchers is the part of the code interacting with the transport protocol,
-defined in `transports`, to download and parse:
-  - the Manifest
-  - media Segments
-
-Each of those task is performed by a discrete component of the fetchers:
+This directory actually exports two completely isolated type of fetchers:
 
   - The __Manifest fetcher__ is used to download and parse the manifest file.
 
@@ -20,7 +15,8 @@ Each of those task is performed by a discrete component of the fetchers:
 ## The Manifest fetcher ########################################################
 
 The Manifest fetcher allows to download and parse the Manifest/Playlist of the
-current transport protocol to return an unified Manifest object.
+current transport protocol to then return a `Manifest` object, which is
+protocol-agnostic.
 
 This is the part of the code that interacts with `transports` to perform the
 request and parsing of the Manifest file.
@@ -32,7 +28,7 @@ request and parsing of the Manifest file.
 The SegmentFetcherCreator allows to easily perform segment downloads for the
 rest of the code.
 This is the part of the code that interacts with the transport protocols -
-defined in `transports` - to load and parse media segments.
+defined in `stc/transports` - to load and parse media segments.
 
 To do so, the SegmentFetcherCreator creates "segment fetchers" of different
 types (example: a video or audio segment fetcher) when you ask for it.
@@ -46,6 +42,7 @@ effectively be done - more prioritary requests will be done first.
 
 During the lifecycle of the request, the segment fetcher will communicate about
 data and metrics through several means - documented in the code.
+
 
 ### Priorization ###############################################################
 
@@ -72,6 +69,11 @@ one of the current request(s) done by the SegmentFetcherCreator:
   - If a new request has a priorization number lower or equal than all current
     downloads, we perform the request immediately without interrupting the
     current, lower-priority ones.
+
+  - If a new request has a very low priorization number (so a very high
+    priority, the number is defined in `src/config.ts`), all current downloads
+    with a very high priorization number (also defined in the config) will be
+    interrupted.
 
 The priority of a download can be updated at any time, until this request either
 has finished, was canceled or failed. The same rules apply when the priorization

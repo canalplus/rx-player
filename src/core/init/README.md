@@ -1,7 +1,4 @@
-# The Init #####################################################################
-
-
-## Overview ####################################################################
+# The `Init` ###################################################################
 
 The Init is the part of the code starting the logic behind playing a content.
 
@@ -28,15 +25,10 @@ the API through events.
 ```
 During the various events happening on content playback, the Init will create /
 destroy / update various player blocks. Example of such blocks are:
-
   - Adaptive streaming management
-
-  - DRM management
-
+  - DRM handling
   - Manifest loading, parsing and refreshing
-
   - Buffer management
-
   - ...
 
 
@@ -47,12 +39,9 @@ Concretely, the Init is a function which returns an Observable.
 This Observable:
 
   - will automatically load the described content on subscription
-
   - will automatically stop and clean-up infos related to the content on
     unsubscription
-
   - communicate on various streaming events through emitted notifications
-
   - throw in the case of a fatal error (i.e. an error interrupting playback)
 
 
@@ -62,19 +51,14 @@ Objects emitted by the Observable is the only way the Init should be able to
 communicate with the API.
 
 The API is then able to communicate back to the Init, either:
-
   - by Observable provided by the API as arguments when the Init function was
     called
-
   - by emitting through Subject provided by the Init, as a payload of one of
     its event
 
 Thus, there is three ways the API and Init can communicate:
-
   - API -> Init: When the Init function is called (so a single time)
-
   - Init -> API: Through events emitted by the returned Observable
-
   - API -> Init: Through Observables/Subjects the Init function is in possession
     of.
 
