@@ -342,13 +342,14 @@ export default function InitializeOnMediaSource(
             switch (evt.type) {
               case "needs-manifest-refresh":
                 scheduleRefresh$.next({ completeRefresh: false,
-                                        canUseUnsafeMode: true });
+                                        canUseUnsafeMode: true,
+                                        getRefreshDelay: evt.value?.getDelay });
                 return null;
               case "manifest-might-be-out-of-sync":
                 scheduleRefresh$.next({
                   completeRefresh: true,
                   canUseUnsafeMode: false,
-                  delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
+                  getRefreshDelay: () => OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
                 });
                 return null;
               case "needs-media-source-reload":

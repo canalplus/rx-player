@@ -203,6 +203,13 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public availabilityStartTime? : number;
 
   /**
+   * It specifies the wall-clock time when the manifest was generated and published
+   * at the origin server. It is present in order to identify different versions
+   * of manifest instances.
+   */
+  public publishTime?: number;
+
+  /**
    * Array containing every minor errors that happened when the Manifest has
    * been created, in the order they have happened.
    */
@@ -331,7 +338,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.lifetime = parsedManifest.lifetime;
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
-
+    this.publishTime = parsedManifest.publishTime;
     if (supplementaryImageTracks.length > 0) {
       this._addSupplementaryImageAdaptations(supplementaryImageTracks);
     }

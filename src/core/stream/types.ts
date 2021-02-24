@@ -138,7 +138,12 @@ export interface IStreamEventAddedSegment<T> {
  */
 export interface IStreamNeedsManifestRefresh {
   type : "needs-manifest-refresh";
-  value : undefined;
+  /**
+   * The function returns a delay that is the wanted delay that the scheduler
+   * has to wait before refreshing the manifest. It may equals the delay until the
+   * current used manifest will expire.
+   */
+  value : undefined | { getDelay: () => number };
 }
 
 /**

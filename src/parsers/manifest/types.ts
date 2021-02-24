@@ -186,6 +186,11 @@ export interface IParsedManifest {
   isLive : boolean;
   /** Periods contained in this manifest. */
   periods: IParsedPeriod[];
+  /**
+   * The wall-clock time when the manifest was generated and published at the
+   * origin server
+   */
+  publishTime?: number;
   /** Underlying transport protocol: "smooth", "dash", "metaplaylist" etc. */
   transportType: string;
   /** Base time from which the segments are generated. */
