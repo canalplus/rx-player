@@ -183,7 +183,7 @@ export default function EMEManager(
       if (options.singleLicensePer === "content" && handledSessions.getLength() > 0) {
         const keyIds = initializationData.keyIds;
         if (keyIds === undefined) {
-          log.warn("EME: Initialization data linked to unknown key id, we'll" +
+          log.warn("EME: Initialization data linked to unknown key id, we'll " +
                    "not able to fallback from it.");
           return observableOf({ type: "init-data-ignored" as const,
                                 value: { initializationData } });
