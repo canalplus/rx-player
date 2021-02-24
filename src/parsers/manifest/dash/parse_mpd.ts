@@ -326,6 +326,7 @@ function parseCompleteIntermediateRepresentation(
     isDynamic,
     isLive: isDynamic,
     periods: parsedPeriods,
+    publishTime: rootAttributes.publishTime,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,
     transportType: "dash",
     timeBounds: { absoluteMinimumTime: minimumTime,

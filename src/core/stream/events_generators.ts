@@ -93,9 +93,9 @@ const EVENTS = {
              value: undefined };
   },
 
-  needsManifestRefresh() : IStreamNeedsManifestRefresh {
+  needsManifestRefresh(getDelay?: () => number) : IStreamNeedsManifestRefresh {
     return { type : "needs-manifest-refresh",
-             value :  undefined };
+             value : (getDelay !== undefined) ? { getDelay } : undefined };
   },
 
   manifestMightBeOufOfSync() : IStreamManifestMightBeOutOfSync {

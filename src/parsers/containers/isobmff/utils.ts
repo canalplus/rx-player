@@ -50,12 +50,12 @@ export interface IISOBMFFPSSHInfo {
 }
 
 export interface IInbandEvent { schemeId: string;
-                                 value: string;
-                                 timescale: number;
-                                 presentationTimeDelta: number;
-                                 eventDuration: number;
-                                 id: number;
-                                 messageData: Uint8Array; }
+                                value: string;
+                                timescale: number;
+                                presentationTimeDelta: number;
+                                eventDuration: number;
+                                id: number;
+                                messageData: Uint8Array; }
 
 /** Segment information from a parsed sidx. */
 export interface ISidxSegment {
