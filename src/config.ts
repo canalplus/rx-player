@@ -1072,4 +1072,22 @@ export default {
 
   /** Interval we will use to poll for checking if an event shall be emitted */
   STREAM_EVENT_EMITTER_POLL_INTERVAL: 250,
+
+  /**
+   * In Javascript, numbers are encoded in a way that a floating number may be
+   * represented internally with a rounding error. When multiplying times in
+   * seconds by the timescale, we've encoutered cases were the rounding error
+   * was amplified by a factor which is about the timescale.
+   * Example :
+   * (192797480.641122).toFixed(20) = 192797480.64112201333045959473
+   * (error is 0.0000000133...)
+   * 192797480.641122 * 10000000 = 1927974806411220.2 (error is 0.2)
+   * 192797480.641122 * 10000000 * 4 = 7711899225644881 (error is 1)
+   * The error is much more significant here, once the timescale has been
+   * applied.
+   * Thus, we consider that our max tolerable rounding error is 1ms.
+   * It is much more than max rounding errors when seen into practice,
+   * and not significant from the media loss perspective.
+   */
+  DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR: 1 / 1000,
 };
