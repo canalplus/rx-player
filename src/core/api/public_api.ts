@@ -739,21 +739,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                            initialAudioTrack: defaultAudioTrack,
                            initialTextTrack: defaultTextTrack };
 
-    /**
-     * Callback to call once we're ready to officially stop the previous content
-     * and consider the new one in our API.
-     * We don't want to do that right now because the `stop` operation might
-     * take time (from milliseconds to several hundred of milliseconds on some
-     * devices).
-     * Here we can optimize that time by for example doing that while waiting on
-     * a HTTP request to respond.
-     */
-    const resetState = () => {
-      this.stop();
-      this._priv_currentError = null;
-      this._priv_playing$.next(false);
-    };
-
     const videoElement = this.videoElement;
 
     /** Global "clock" used for content playback */
@@ -766,7 +751,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
       if (typeof transportFn !== "function") {
-        resetState();
+        // Stop previous content and reset its state
+        this.stop();
+        this._priv_currentError = null;
+        this._priv_playing$.next(false);
         throw new Error(`transport "${transport}" not supported`);
       }
 
@@ -812,7 +800,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       manifest$.subscribe();
 
       // now that the Manifest is loading, stop previous content and reset state
-      resetState();
+      // This is done after fetching the Manifest as `stop` could technically
+      // take time.
+      this.stop();
+      this._priv_currentError = null;
+      this._priv_playing$.next(false);
       this._priv_contentInfos = contentInfos;
 
       const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
@@ -901,7 +893,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       playback$ = publish<IInitEvent>()(init$);
     } else {
-      resetState();
+      // Stop previous content and reset its state
+      this.stop();
+      this._priv_currentError = null;
+      this._priv_playing$.next(false);
       if (features.directfile === null) {
         throw new Error("DirectFile feature not activated in your build.");
       }
