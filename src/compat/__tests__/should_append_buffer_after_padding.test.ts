@@ -29,17 +29,30 @@ describe("shouldAppendBufferAfterPadding", () => {
   it("should be true if on Safari", () => {
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
-               isSafari: true };
+               isSafari: true,
+               isTizen: false };
     });
     const shouldAppendBufferAfterPadding =
       require("../should_append_buffer_after_padding").default;
     expect(shouldAppendBufferAfterPadding).toBe(true);
   });
 
-  it("should be false if not on Safari", () => {
+  it("should be true if on Tizen", () => {
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
-               isSafari: false };
+               isSafari: false,
+               isTizen: true };
+    });
+    const shouldAppendBufferAfterPadding =
+      require("../should_append_buffer_after_padding").default;
+    expect(shouldAppendBufferAfterPadding).toBe(true);
+  });
+
+  it("should be false if not on Safari nor tizen", () => {
+    jest.mock("../browser_detection", () => {
+      return { __esModule: true as const,
+               isSafari: false,
+               isTizen: false };
     });
     const shouldAppendBufferAfterPadding =
       require("../should_append_buffer_after_padding").default;
