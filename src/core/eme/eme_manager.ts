@@ -43,6 +43,7 @@ import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import arrayIncludes from "../../utils/array_includes";
 import assertUnreachable from "../../utils/assert_unreachable";
+import { concat } from "../../utils/byte_parsing";
 import filterMap from "../../utils/filter_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import cleanOldStoredPersistentInfo from "./clean_old_stored_persistent_info";
@@ -138,7 +139,16 @@ export default function EMEManager(
 
   /** Encryption events coming from the `contentProtections$` argument. */
   const externalEvents$ = contentProtections$.pipe(
-    tap((evt) => { log.debug("EME: Encrypted event received from Player", evt); }));
+    map((evt) => {
+      log.debug("EME: Protection event received from Player", evt);
+      const { values } = evt;
+      // sort per systemId to be sure we don't reemit the same initialization
+      // data twice
+      values.sort((a, b) => a.systemId < b.systemId ? -1 :
+                            a.systemId > b.systemId ? 1 :
+                                                      0);
+      return { type: evt.type, data: concat(...values.map(v => v.data)) };
+    }));
 
   /** Emit events signaling that an encryption initialization data is encountered. */
   const initializationData$ = observableMerge(externalEvents$, mediaEncryptedEvents$);
@@ -166,8 +176,9 @@ export default function EMEManager(
         }
         log.warn("EME: The current session has already been blacklisted. " +
                  "Blacklisting content.");
-        return observableOf({ type: "blacklist-protection-data" as const,
-                              value: initializationData });
+        // XXX TODO find a way to blacklist based on initializationData
+        // return observableOf({ type: "blacklist-protection-data" as const,
+        //                       value: initializationData });
       }
 
       if (!handledInitData.storeIfNone(initializationData, true)) {
@@ -253,9 +264,12 @@ export default function EMEManager(
 
               log.warn("EME: Current session blacklisted. Blacklisting content.");
               return observableOf({ type: "warning" as const,
-                                    value: sessionError },
-                                  { type: "blacklist-protection-data" as const,
-                                    value: initializationData });
+                                    value: sessionError });
+              // XXX TODO find a way to blacklist based on initializationData
+              // return observableOf({ type: "warning" as const,
+              //                       value: sessionError },
+              //                     { type: "blacklist-protection-data" as const,
+              //                       value: initializationData });
             }));
         }));
     }));

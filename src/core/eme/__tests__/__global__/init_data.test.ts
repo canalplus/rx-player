@@ -116,7 +116,8 @@ describe("core - eme - global tests - init data", () => {
             throw new Error("Unexpected event");
         }
       });
-    initDataSubject.next({ type: "cenc", data: initData });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
   });
 
   /* eslint-disable max-len */
@@ -172,10 +173,14 @@ describe("core - eme - global tests - init data", () => {
             throw new Error("Unexpected event");
         }
       });
-    initDataSubject.next({ type: "cenc", data: initData });
-    initDataSubject.next({ type: "cenc", data: initData });
-    initDataSubject.next({ type: "cenc", data: initData });
-    initDataSubject.next({ type: "cenc", data: initData });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData } ] });
   });
 
   /* eslint-disable max-len */
@@ -246,11 +251,16 @@ describe("core - eme - global tests - init data", () => {
             throw new Error("Unexpected event");
         }
       });
-    initDataSubject.next({ type: "cenc", data: initData1 });
-    initDataSubject.next({ type: "cenc", data: initData1 });
-    initDataSubject.next({ type: "cenc", data: initData2 });
-    initDataSubject.next({ type: "cenc", data: initData1 });
-    initDataSubject.next({ type: "cenc", data: initData2 });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData2 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData2 } ] });
   });
 
   /* eslint-disable max-len */
@@ -327,10 +337,14 @@ describe("core - eme - global tests - init data", () => {
             throw new Error("Unexpected event");
         }
       });
-    initDataSubject.next({ type: "cenc", data: initData1 });
-    initDataSubject.next({ type: "cenc2", data: initData1 });
-    initDataSubject.next({ type: "cenc", data: initData2 });
-    initDataSubject.next({ type: "cenc2", data: initData2 });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc2",
+                           values: [ { systemId: "15", data: initData1 } ] });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData2 } ] });
+    initDataSubject.next({ type: "cenc2",
+                           values: [ { systemId: "15", data: initData2 } ] });
   });
 
   /* eslint-disable max-len */
@@ -781,13 +795,17 @@ describe("core - eme - global tests - init data", () => {
         }
       });
     triggerEncrypted.next(initDataEvent1);
-    initDataSubject.next({ type: "cenc", data: initData1 });
+    initDataSubject.next({ type: "cenc",
+                           values: [ { systemId: "15", data: initData1 } ] });
     setTimeout(() => {
-      initDataSubject.next({ type: "cenc2", data: initData1 });
+      initDataSubject.next({ type: "cenc2",
+                             values: [ { systemId: "15", data: initData1 } ] });
       triggerEncrypted.next(initDataEvent2);
-      initDataSubject.next({ type: "cenc", data: initData1 });
+      initDataSubject.next({ type: "cenc",
+                             values: [ { systemId: "15", data: initData1 } ] });
       triggerEncrypted.next(initDataEvent3);
-      initDataSubject.next({ type: "cenc", data: initData2 });
+      initDataSubject.next({ type: "cenc",
+                             values: [ { systemId: "15", data: initData2 } ] });
       triggerEncrypted.next(initDataEvent4);
     }, 5);
   });

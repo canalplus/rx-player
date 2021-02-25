@@ -332,6 +332,8 @@ export interface ISegmentProtection {
    * (https://www.w3.org/TR/encrypted-media/#initialization-data-type)
    */
   type : string;
+  /** Hex-encoded system ID identifying the key system used. */
+  systemId : string;
   /** The segment protection information. */
   data : Uint8Array;
 }

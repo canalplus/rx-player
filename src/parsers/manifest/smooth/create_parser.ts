@@ -407,16 +407,22 @@ function createSmoothStreamingParser(
                                                                     codecs,
                                                                     id });
       if (keyIDs.length > 0 || firstProtection !== undefined) {
-        const initData = firstProtection === undefined ?
-          [] :
-          firstProtection.keySystems.map((keySystemData) => {
-            const { systemId, privateData } = keySystemData;
-            const cleanedSystemId = systemId.replace(/-/g, "");
-            const pssh = createPSSHBox(cleanedSystemId, privateData);
-            return { systemId: cleanedSystemId, data: pssh };
-          });
-        representation.contentProtections = { keyIds: keyIDs,
-                                              initData: { cenc: initData } };
+        const initDataValues : Array<{ systemId: string;
+                                       data: Uint8Array; }> =
+          firstProtection === undefined ?
+            [] :
+            firstProtection.keySystems.map((keySystemData) => {
+              const { systemId, privateData } = keySystemData;
+              const cleanedSystemId = systemId.replace(/-/g, "");
+              const pssh = createPSSHBox(cleanedSystemId, privateData);
+              return { systemId: cleanedSystemId, data: pssh };
+            });
+        if (initDataValues.length > 0) {
+          const initData = [{ type: "cenc", values: initDataValues }];
+          representation.contentProtections = { keyIds: keyIDs, initData };
+        } else {
+          representation.contentProtections = { keyIds: keyIDs, initData: [] };
+        }
       }
       return representation;
     });

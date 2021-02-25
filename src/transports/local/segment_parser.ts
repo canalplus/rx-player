@@ -25,6 +25,7 @@ import takeFirstSet from "../../utils/take_first_set";
 import {
   IAudioVideoParserObservable,
   ISegmentParserArguments,
+  ISegmentProtection,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
@@ -41,10 +42,9 @@ export default function segmentParser({
 
   if (data === null) {
     if (segment.isInit) {
-      const _segmentProtections = representation.getProtectionsInitializationData();
       return observableOf({ type: "parsed-init-segment",
                             value: { initializationData: null,
-                                     segmentProtections: _segmentProtections,
+                                     segmentProtections: [],
                                      initTimescale: undefined } });
     }
     return observableOf({ type: "parsed-segment",
@@ -57,23 +57,21 @@ export default function segmentParser({
   const chunkData = new Uint8Array(data);
   const isWEBM = isWEBMEmbeddedTrack(representation);
 
-  if (!isWEBM) {
-    const psshInfo = takePSSHOut(chunkData);
-
-    // we only want to add segment protection data if we didn't have any
-    // associated to the Representation before,
-    if (representation.getProtectionsInitializationData().length === 0) {
-      for (let i = 0; i < psshInfo.length; i++) {
-        const { systemID, data: psshData } = psshInfo[i];
-        representation._addProtectionData("cenc", systemID, psshData);
+  if (segment.isInit) {
+    let segmentProtections : ISegmentProtection[] = [];
+    let timescale;
+    if (isWEBM) {
+      timescale = getTimeCodeScale(chunkData, 0);
+    } else {
+      // assume ISOBMFF-compliance
+      timescale = getMDHDTimescale(chunkData);
+      const psshInfo = takePSSHOut(chunkData);
+      if (psshInfo.length > 0) {
+        segmentProtections = psshInfo.map((p) => ({ type: "cenc",
+                                                    systemId: p.systemId,
+                                                    data: p.data }));
       }
     }
-  }
-
-  if (segment.isInit) {
-    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
-                               getMDHDTimescale(chunkData);
-    const segmentProtections = representation.getProtectionsInitializationData();
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: chunkData,
                                    initTimescale: isNullOrUndefined(timescale) ?

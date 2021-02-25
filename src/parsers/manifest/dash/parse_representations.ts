@@ -16,6 +16,7 @@
 
 import log from "../../../log";
 import { Adaptation } from "../../../manifest";
+import arrayFind from "../../../utils/array_find";
 import objectAssign from "../../../utils/object_assign";
 import {
   IContentProtections,
@@ -190,16 +191,23 @@ export default function parseRepresentations(
           }
           if (systemId !== undefined) {
             const { cencPssh } = cp.children;
+            const values : Array<{ systemId: string;
+                                   data: Uint8Array; }> = [];
             for (let i = 0; i < cencPssh.length; i++) {
               const data = cencPssh[i];
-              if (acc.initData.cenc === undefined) {
-                acc.initData.cenc = [];
+              values.push({ systemId, data });
+            }
+            if (values.length > 0) {
+              const cencInitData = arrayFind(acc.initData, (i) => i.type === "cenc");
+              if (cencInitData === undefined) {
+                acc.initData.push({ type: "cenc", values });
+              } else {
+                cencInitData.values.push(...values);
               }
-              acc.initData.cenc.push({ systemId, data });
             }
           }
           return acc;
-        }, { keyIds: [], initData: {} });
+        }, { keyIds: [], initData: [] });
       if (Object.keys(contentProtections.initData).length > 0 ||
           contentProtections.keyIds.length > 0)
       {

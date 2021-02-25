@@ -25,7 +25,7 @@ import {
 /** Information related to a PSSH box. */
 export interface IISOBMFFPSSHInfo {
   /** Corresponding DRM's system ID, as an hexadecimal string. */
-  systemID : string;
+  systemId : string;
   /** Additional data contained in the PSSH Box. */
   data : Uint8Array;
 }
@@ -59,9 +59,9 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
       return psshBoxes;
     }
     const pssh = sliceUint8Array(moov, psshOffsets[0], psshOffsets[2]);
-    const systemID = getSystemID(pssh, psshOffsets[1] - psshOffsets[0]);
-    if (systemID !== null) {
-      psshBoxes.push({ systemID, data: pssh });
+    const systemId = getSystemID(pssh, psshOffsets[1] - psshOffsets[0]);
+    if (systemId !== null) {
+      psshBoxes.push({ systemId, data: pssh });
     }
 
     // replace by `free` box.
@@ -75,7 +75,7 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
 }
 
 /**
- * Parse systemID from a "pssh" box into an hexadecimal string.
+ * Parse systemId from a "pssh" box into an hexadecimal string.
  * @param {Uint8Array} buff - The pssh box
  * @param {number} initialDataOffset - offset of the first byte after the size
  * and name in this pssh box.

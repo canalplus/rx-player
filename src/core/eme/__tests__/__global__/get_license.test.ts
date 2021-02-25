@@ -405,5 +405,5 @@ function checkGetLicense(
         throw new Error(`Unexpected error: ${error}`);
       }
     });
-  initDataSubject.next({ type: "cenc", data: initData });
+  initDataSubject.next({ type: "cenc", values: [ { systemId: "15", data: initData } ] });
 }

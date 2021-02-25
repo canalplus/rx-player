@@ -1,3 +1,6 @@
+import {
+  IContentProtection as IEMEContentProtection,
+} from "../../core/eme";
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -30,15 +33,12 @@ export interface IContentProtectionKID { keyId : Uint8Array;
  * Describes information about the encryption initialization data of a given
  * media.
  */
-export interface IContentProtectionInitData { systemId : string;
-                                              data : Uint8Array; }
-
 /** Describes every encryption protection parsed for a given media. */
 export interface IContentProtections {
   /** The different encryption key IDs associated with that content. */
   keyIds : IContentProtectionKID[];
   /** The different encryption initialization data associated with that content. */
-  initData : Partial<Record<string, IContentProtectionInitData[]>>;
+  initData : IEMEContentProtection[];
 }
 
 /** Representation of a "quality" available in an Adaptation. */

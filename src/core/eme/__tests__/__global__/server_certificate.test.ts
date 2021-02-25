@@ -90,14 +90,16 @@ describe("core - eme - global tests - server certificate", () => {
             expect(createSessionSpy).not.toHaveBeenCalled();
             expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
             expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
-            initDataSubject.next({ type: "cenc", data: initData });
+            initDataSubject.next({ type: "cenc",
+                                   values: [ { systemId: "15", data: initData } ] });
             break;
           case 3:
             expectLicenseRequestMessage(evt, initData, "cenc");
             setTimeout(() => {
               expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
               expect(createSessionSpy).toHaveBeenCalledTimes(1);
-              initDataSubject.next({ type: "cenc2", data: initData });
+              initDataSubject.next({ type: "cenc2",
+                                     values: [ { systemId: "15", data: initData } ] });
             }, 10);
             break;
           case 4:
@@ -162,14 +164,16 @@ describe("core - eme - global tests - server certificate", () => {
             expect(evt.type).toEqual("attached-media-keys");
             expect(createSessionSpy).not.toHaveBeenCalled();
             expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-            initDataSubject.next({ type: "cenc", data: initData });
+            initDataSubject.next({ type: "cenc",
+                                   values: [ { systemId: "15", data: initData } ] });
             break;
           case 4:
             expectLicenseRequestMessage(evt, initData, "cenc");
             setTimeout(() => {
               expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
               expect(createSessionSpy).toHaveBeenCalledTimes(1);
-              initDataSubject.next({ type: "cenc2", data: initData });
+              initDataSubject.next({ type: "cenc2",
+                                     values: [ { systemId: "15", data: initData } ] });
             }, 10);
             break;
           case 5:
@@ -233,14 +237,16 @@ describe("core - eme - global tests - server certificate", () => {
             expect(evt.type).toEqual("attached-media-keys");
             expect(createSessionSpy).not.toHaveBeenCalled();
             expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-            initDataSubject.next({ type: "cenc", data: initData });
+            initDataSubject.next({ type: "cenc",
+                                   values: [ { systemId: "15", data: initData } ] });
             break;
           case 4:
             expectLicenseRequestMessage(evt, initData, "cenc");
             setTimeout(() => {
               expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
               expect(createSessionSpy).toHaveBeenCalledTimes(1);
-              initDataSubject.next({ type: "cenc2", data: initData });
+              initDataSubject.next({ type: "cenc2",
+                                     values: [ { systemId: "15", data: initData } ] });
             }, 10);
             break;
           case 5:
@@ -298,14 +304,16 @@ describe("core - eme - global tests - server certificate", () => {
             expect(evt.type).toEqual("attached-media-keys");
             expect(createSessionSpy).not.toHaveBeenCalled();
             expect(serverCertificateSpy).toHaveBeenCalledTimes(0);
-            initDataSubject.next({ type: "cenc", data: initData });
+            initDataSubject.next({ type: "cenc",
+                                   values: [ { systemId: "15", data: initData } ] });
             break;
           case 3:
             expectLicenseRequestMessage(evt, initData, "cenc");
             setTimeout(() => {
               expect(serverCertificateSpy).toHaveBeenCalledTimes(0);
               expect(createSessionSpy).toHaveBeenCalledTimes(1);
-              initDataSubject.next({ type: "cenc2", data: initData });
+              initDataSubject.next({ type: "cenc2",
+                                     values: [ { systemId: "15", data: initData } ] });
             }, 10);
             break;
           case 4:

@@ -224,37 +224,46 @@ export default function InitializeOnMediaSource(
   /**
    * Wait for the MediaKeys to have been created before
    * opening MediaSource, and ask EME to attach MediaKeys.
+   * Emit selected DRM options susceptible to be in interest here.
    */
   const prepareMediaSource$ = emeManager$.pipe(
     mergeMap((evt) => {
       switch (evt.type) {
         case "eme-disabled":
-        case "attached-media-keys":
-          return observableOf(undefined);
-        case "created-media-keys":
+          return observableOf({ canRelyOnManifestEncryptionData: false });
+        case "attached-media-keys": {
+          const canRelyOnManifestEncryptionData = evt.value.options
+            .canRelyOnManifestEncryptionData === true;
+          return observableOf({ canRelyOnManifestEncryptionData });
+        }
+        case "created-media-keys": {
           return openMediaSource$.pipe(mergeMap(() => {
             evt.value.attachMediaKeys$.next();
 
-            const shouldDisableLock = evt.value.options
-              .disableMediaKeysAttachmentLock === true;
+            const canRelyOnManifestEncryptionData = evt.value.options
+              .canRelyOnManifestEncryptionData === true;
+            const shouldDisableLock =
+              evt.value.options.disableMediaKeysAttachmentLock === true;
             if (shouldDisableLock) {
-              return observableOf(undefined);
+              return observableOf({ canRelyOnManifestEncryptionData });
             }
             // wait for "attached-media-keys"
             return EMPTY;
           }));
+        }
         default:
           return EMPTY;
       }
     }),
     take(1),
-    exhaustMap(() => openMediaSource$)
-  );
+    exhaustMap((encryptionOptions) => openMediaSource$
+      .pipe(map((mediaSource) => ({ mediaSource,
+                                    encryptionOptions })))));
 
   /** Load and play the content asked. */
   const loadContent$ = observableCombineLatest([manifest$,
                                                 prepareMediaSource$]).pipe(
-    mergeMap(([manifestEvt, initialMediaSource]) => {
+    mergeMap(([manifestEvt, { mediaSource: initialMediaSource, encryptionOptions }]) => {
       if (manifestEvt.type === "warning") {
         return observableOf(manifestEvt);
       }
@@ -267,7 +276,9 @@ export default function InitializeOnMediaSource(
 
       const mediaSourceLoader = createMediaSourceLoader({
         abrManager,
-        bufferOptions: objectAssign({ textTrackOptions }, bufferOptions),
+        bufferOptions: objectAssign({ textTrackOptions },
+                                    encryptionOptions,
+                                    bufferOptions),
         clock$,
         manifest,
         mediaElement,
@@ -303,8 +314,9 @@ export default function InitializeOnMediaSource(
           } else if (evt.type === "blacklist-protection-data") {
             log.info("Init: blacklisting Representations based on protection data.");
             if (evt.value.type !== undefined) {
-              manifest.addUndecipherableProtectionData(evt.value.type,
-                                                       evt.value.data);
+              // XXX TODO find a way to blacklist based on initializationData
+              // manifest.addUndecipherableProtectionData(evt.value.type,
+              //                                          evt.value.data);
             }
           }
         }),
@@ -367,7 +379,7 @@ export default function InitializeOnMediaSource(
                   mediaElement.currentTime = position;
                 }
                 return null;
-              case "protected-segment":
+              case "encryption-data-encountered":
                 protectedSegments$.next(evt.value);
                 return null;
             }

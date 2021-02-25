@@ -17,6 +17,7 @@
 import RepresentationStream, {
   IRepresentationStreamArguments,
   IRepresentationStreamClockTick,
+  IRepresentationStreamOptions,
   ITerminationOrder,
 } from "./representation_stream";
 
@@ -24,5 +25,6 @@ export default RepresentationStream;
 export {
   IRepresentationStreamArguments,
   IRepresentationStreamClockTick,
+  IRepresentationStreamOptions,
   ITerminationOrder,
 };

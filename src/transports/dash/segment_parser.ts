@@ -30,6 +30,7 @@ import takeFirstSet from "../../utils/take_first_set";
 import {
   IAudioVideoParserObservable,
   ISegmentParserArguments,
+  ISegmentProtection,
   ITransportAudioVideoSegmentParser,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
@@ -125,21 +126,16 @@ export default function generateAudioVideoSegmentParser(
     const parsedTimescale = isNullOrUndefined(timescale) ? undefined :
                                                            timescale;
 
-    // TODO also extract webm protection information
+    let segmentProtections : ISegmentProtection[] = [];
     if (!isWEBM) {
       const psshInfo = takePSSHOut(chunkData);
-
-      // we only want to add segment protection data if we didn't have any
-      // associated to the Representation before,
-      if (representation.getProtectionsInitializationData().length === 0) {
-        for (let i = 0; i < psshInfo.length; i++) {
-          const { systemID, data: psshData } = psshInfo[i];
-          representation._addProtectionData("cenc", systemID, psshData);
-        }
+      if (psshInfo.length > 0) {
+        segmentProtections = psshInfo.map((p) => ({ type: "cenc",
+                                                    systemId: p.systemId,
+                                                    data: p.data }));
       }
     }
 
-    const segmentProtections = representation.getProtectionsInitializationData();
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: chunkData,
                                    segmentProtections,

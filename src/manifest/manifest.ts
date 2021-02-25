@@ -495,37 +495,38 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
   }
 
-  /**
-   * Look in the Manifest for Representations linked to the given content
-   * protection initialization data and mark them as being impossible to
-   * decrypt.
-   * Then trigger a "blacklist-update" event to notify everyone of the changes
-   * performed.
-   * @param {Array.<ArrayBuffer>} keyIDs
-   */
-  public addUndecipherableProtectionData(
-    initDataType : string,
-    initData : Uint8Array
-  ) : void {
-    const updates = updateDeciperability(this, (representation) => {
-      if (representation.decipherable === false) {
-        return true;
-      }
-      const segmentProtections = representation.getProtectionsInitializationData();
-      for (let i = 0; i < segmentProtections.length; i++) {
-        if (segmentProtections[i].type === initDataType) {
-          if (areArraysOfNumbersEqual(initData, segmentProtections[i].data)) {
-            return false;
-          }
-        }
-      }
-      return true;
-    });
+  // XXX TODO find a way to blacklist based on initializationData
+  // /**
+  //  * Look in the Manifest for Representations linked to the given content
+  //  * protection initialization data and mark them as being impossible to
+  //  * decrypt.
+  //  * Then trigger a "blacklist-update" event to notify everyone of the changes
+  //  * performed.
+  //  * @param {Array.<ArrayBuffer>} keyIDs
+  //  */
+  // public addUndecipherableProtectionData(
+  //   initDataType : string,
+  //   initData : Uint8Array
+  // ) : void {
+  //   const updates = updateDeciperability(this, (representation) => {
+  //     if (representation.decipherable === false) {
+  //       return true;
+  //     }
+  //     const segmentProtections = representation.contentProtections?.initData ?? [];
+  //     for (let i = 0; i < segmentProtections.length; i++) {
+  //       if (segmentProtections[i].type === initDataType) {
+  //         if (areArraysOfNumbersEqual(initData, segmentProtections[i].data)) {
+  //           return false;
+  //         }
+  //       }
+  //     }
+  //     return true;
+  //   });
 
-    if (updates.length > 0) {
-      this.trigger("decipherabilityUpdate", updates);
-    }
-  }
+  //   if (updates.length > 0) {
+  //     this.trigger("decipherabilityUpdate", updates);
+  //   }
+  // }
 
   /**
    * @deprecated only returns adaptations for the first period

@@ -52,9 +52,12 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import { ISegmentProtection } from "../../../transports";
+import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
 import { IStalledStatus } from "../../api";
+import { IContentProtection } from "../../eme";
 import {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherWarning,
@@ -62,13 +65,13 @@ import {
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import {
-  IProtectedSegmentEvent,
+  IEncryptionDataEncounteredEvent,
   IQueuedSegment,
   IRepresentationStreamEvent,
-  IStreamStatusEvent,
   IStreamEventAddedSegment,
   IStreamManifestMightBeOutOfSync,
   IStreamNeedsManifestRefresh,
+  IStreamStatusEvent,
   IStreamTerminatingEvent,
 } from "../types";
 import DownloadingQueue, {
@@ -162,6 +165,29 @@ export interface IRepresentationStreamArguments<T> {
    * `0` can be emitted to disable any kind of fast-switching.
    */
   fastSwitchThreshold$: Observable< undefined | number>;
+  options: IRepresentationStreamOptions;
+}
+
+/**
+ * Various specific stream "options" which tweak the behavior of the
+ * RepresentationStream.
+ */
+export interface IRepresentationStreamOptions {
+  /**
+   * To play encrypted contents we need to forward encryption "initialization
+   * data" that is usually found in one of two places:
+   *   1. The Manifest file
+   *   2. The initialization segment
+   *
+   * Under normal circumstances, we wait until the initialization segment has
+   * been fetched, to merge both information in case of differences between the
+   * two.
+   *
+   * However, as an optimization, you can set this boolean to `true` so we don't
+   * have to wait until initialization segments are fetched before starting, if
+   * encryption data is already in the Manifest.
+   */
+  canRelyOnManifestEncryptionData : boolean;
 }
 
 /**
@@ -202,9 +228,20 @@ export default function RepresentationStream<T>({
   segmentBuffer,
   segmentFetcher,
   terminate$,
+  options,
 } : IRepresentationStreamArguments<T>) : Observable<IRepresentationStreamEvent<T>> {
   const { period, adaptation, representation } = content;
+  const { canRelyOnManifestEncryptionData } = options;
   const bufferType = adaptation.type;
+
+  /**
+   * Protection initialization data indicated for this Representation.
+   * Empty array if no encryption initialization data is anounced for this
+   * Representation.
+   */
+  const representationInitData = representation.contentProtections === undefined ?
+    [] :
+    representation.contentProtections.initData;
 
   /** Current initialization segment state for this representation. */
   const initSegmentState : IInitSegmentState<T> = {
@@ -329,7 +366,15 @@ export default function RepresentationStream<T>({
     takeWhile((e) => e.type !== "stream-terminating", true)
   );
 
-  return observableMerge(status$, queue$).pipe(share());
+  let encryptionEvent$ : Observable<IEncryptionDataEncounteredEvent> = EMPTY;
+  if (canRelyOnManifestEncryptionData && representationInitData.length > 0) {
+    encryptionEvent$ = observableOf(...representationInitData.map(d =>
+      EVENTS.encryptionDataEncountered(d)));
+  }
+
+  return observableConcat(encryptionEvent$,
+                          observableMerge(status$, queue$))
+    .pipe(share());
 
   /**
    * React to event from the `DownloadingQueue`.
@@ -340,7 +385,7 @@ export default function RepresentationStream<T>({
     evt : IDownloadingQueueEvent<T>
   ) : Observable<IStreamEventAddedSegment<T> |
                  ISegmentFetcherWarning |
-                 IProtectedSegmentEvent |
+                 IEncryptionDataEncounteredEvent |
                  IStreamManifestMightBeOutOfSync>
   {
     switch (evt.type) {
@@ -364,16 +409,32 @@ export default function RepresentationStream<T>({
         });
         initSegmentState.segmentData$.next(evt.value.initializationData);
         initSegmentState.isParsed = true;
-        const protectedEvents$ = observableOf(
-          ...evt.value.segmentProtections.map(segmentProt => {
-            return EVENTS.protectedSegment(segmentProt);
-          }));
+        const { segmentProtections } = evt.value;
+        let initEncEvt$ : Observable<IEncryptionDataEncounteredEvent>;
+        if (segmentProtections.length === 0) { // no protection anounced
+          initEncEvt$ = canRelyOnManifestEncryptionData ||
+                        representationInitData.length === 0 ?
+            EMPTY : // already sent or nothing to send
+            // send them now
+            observableOf(...representationInitData
+              .map(p => EVENTS.encryptionDataEncountered(p)));
+        } else if (canRelyOnManifestEncryptionData &&
+                   representationInitData.length > 0)
+        {
+          log.info("Stream: Ignoring init segment protection data. Such " +
+                   "data was already found in the Manifest");
+          initEncEvt$ = EMPTY;
+        } else {
+          initEncEvt$ = observableOf(
+            ...mergeEncryptionData(representationInitData, segmentProtections)
+              .map(p => EVENTS.encryptionDataEncountered(p)));
+        }
         const pushEvent$ = pushInitSegment({ clock$,
                                              content,
                                              segment: evt.segment,
                                              segmentData: evt.value.initializationData,
                                              segmentBuffer });
-        return observableMerge(protectedEvents$, pushEvent$);
+        return observableMerge(initEncEvt$, pushEvent$);
 
       case "parsed-segment":
         return initSegmentState.segmentData$
@@ -403,3 +464,84 @@ export default function RepresentationStream<T>({
     }
   }
 }
+
+// /**
+//  * Returns every protection initialization data concatenated.
+//  * This data can then be used through the usual EME APIs.
+//  * `null` if this Representation has no detected protection initialization
+//  * data.
+//  * @returns {Array.<Object>|null}
+//  */
+// function formatRepresentationInitData(
+//   representationInitData : IContentProtectionInitData[]
+// ) : IContentProtection[] {
+//   const perType : Partial<Record<string, IContentProtection>> = {};
+//   return representationInitData
+//     .reduce<IContentProtection[]>((acc, initData) => {
+//       const oldValue = perType[initData.type];
+//       if (oldValue !== undefined) {
+//         oldValue.values.push({ systemId: initData.systemId,
+//                                data: initData.data });
+//       } else {
+//         const values = [{ systemId: initData.systemId, data: initData.data }];
+//         const newEl = { type: initData.type, values };
+//         acc.push(newEl);
+//         perType[initData.type] = newEl;
+//       }
+//       return acc;
+//     }, []);
+// }
+
+/**
+ * Add protection data to the Representation to be able to properly blacklist
+ * it if that data is.
+ * /!\ Mutates the current Representation
+ * @param {string} initDataArr
+ * @param {string} systemId
+ * @param {Uint8Array} data
+ */
+function mergeEncryptionData(
+  representationInitData : IContentProtection[],
+  initSegmentEncryptionData : ISegmentProtection[]
+) : IContentProtection[] {
+  const result = representationInitData.slice();
+
+  for (let i = 0; i < initSegmentEncryptionData.length; i++) {
+    const segInitdata = initSegmentEncryptionData[i];
+    let added = false;
+    for (let j = 0; j < result.length; j++) {
+      if (result[j].type === segInitdata.type) {
+        for (let k = 0; k < result[j].values.length; k++) {
+          const formattedVal = result[j].values[k];
+          if (formattedVal.systemId === segInitdata.systemId) {
+            if (!areArraysOfNumbersEqual(formattedVal.data, segInitdata.data)) {
+              log.warn("Stream: Two different init data for same systemId.");
+              result[j].values.push({ systemId: segInitdata.systemId,
+                                      data: segInitdata.data });
+              added = true;
+            } else {
+              added = true;
+            }
+            // exit both loops
+            k = result[j].values.length;
+            j = result.length;
+          }
+        }
+        if (!added) {
+          result[j].values.push({ systemId: segInitdata.systemId,
+                                  data: segInitdata.data });
+        }
+        j = result.length; // exit loop
+      }
+    }
+    if (!added) {
+      result.push({ type: segInitdata.type,
+                    values: [ { systemId: segInitdata.systemId,
+                                data: segInitdata.data } ] });
+    }
+  }
+  return result;
+}
+
+// Re-export RepresentationStream events used by the AdaptationStream
+export { IStreamEventAddedSegment };

@@ -61,12 +61,12 @@ import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import RepresentationStream, {
   IRepresentationStreamClockTick,
+  IRepresentationStreamOptions,
   ITerminationOrder,
 } from "../representation";
 import {
   IAdaptationStreamEvent,
   IRepresentationStreamEvent,
-  IStreamEventAddedSegment,
 } from "../types";
 import reloadAfterSwitch from "../utils";
 import createRepresentationEstimator from "./create_representation_estimator";
@@ -106,14 +106,6 @@ export interface IAdaptationStreamArguments<T> {
   content : { manifest : Manifest;
               period : Period;
               adaptation : Adaptation; };
-  /**
-   * Strategy taken when the user switch manually the current Representation:
-   *   - "seamless": the switch will happen smoothly, with the Representation
-   *     with the new bitrate progressively being pushed alongside the old
-   *     Representation.
-   *   - "direct": hard switch. The Representation switch will be directly
-   *     visible but may necessitate the current MediaSource to be reloaded.
-   */
   options: IAdaptationStreamOptions;
   /** SourceBuffer wrapper - needed to push media segments. */
   segmentBuffer : SegmentBuffer<T>;
@@ -131,7 +123,7 @@ export interface IAdaptationStreamArguments<T> {
  * Various specific stream "options" which tweak the behavior of the
  * AdaptationStream.
  */
-export interface IAdaptationStreamOptions {
+export type IAdaptationStreamOptions = IRepresentationStreamOptions & {
   /**
    * Strategy taken when the user switch manually the current Representation:
    *   - "seamless": the switch will happen smoothly, with the Representation
@@ -155,7 +147,7 @@ export interface IAdaptationStreamOptions {
    * those devices.
    */
   enableFastSwitching : boolean;
-}
+};
 
 /**
  * Create new AdaptationStream Observable, which task will be to download the
@@ -304,12 +296,8 @@ export default function AdaptationStream<T>({
       observableOf(EVENTS.representationChange(adaptation.type,
                                                period,
                                                representation));
-    const protectedEvents$ = observableOf(
-      ...representation.getProtectionsInitializationData().map(segmentProt => {
-        return EVENTS.protectedSegment(segmentProt);
-      }));
+
     return observableConcat(representationChange$,
-                            protectedEvents$,
                             createRepresentationStream(representation,
                                                        terminateCurrentStream$,
                                                        fastSwitchThreshold$)).pipe(
@@ -363,7 +351,8 @@ export default function AdaptationStream<T>({
                                     segmentFetcher,
                                     terminate$: terminateCurrentStream$,
                                     bufferGoal$,
-                                    fastSwitchThreshold$ })
+                                    fastSwitchThreshold$,
+                                    options })
         .pipe(catchError((err : unknown) => {
           const formattedError = formatError(err, {
             defaultCode: "NONE",
@@ -387,6 +376,3 @@ export default function AdaptationStream<T>({
     });
   }
 }
-
-// Re-export RepresentationStream events used by the AdaptationStream
-export { IStreamEventAddedSegment };

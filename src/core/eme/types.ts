@@ -162,7 +162,7 @@ export interface IBlacklistKeysEvent { type : "blacklist-keys";
  * be deciphered.
  */
 export interface IBlacklistProtectionDataEvent { type: "blacklist-protection-data";
-                                                 value: IInitializationDataInfo; }
+                                                 value: IContentProtection; }
 
 // Every event sent by the EMEManager
 export type IEMEManagerEvent = IEMEWarningEvent | // minor error
@@ -179,9 +179,37 @@ export type IEMEManagerEvent = IEMEWarningEvent | // minor error
 export type ILicense = BufferSource |
                        ArrayBuffer;
 
-// Segment protection manually sent to the EMEManager
-export interface IContentProtection { type : string; // initDataType
-                                      data : Uint8Array; } // initData
+/** Segment protection sent by the RxPlayer to the EMEManager. */
+export interface IContentProtection {
+  /**
+   * Initialization data type.
+   * String describing the format of the initialization data sent through this
+   * event.
+   * https://www.w3.org/TR/eme-initdata-registry/
+   */
+  type: string;
+  /**
+   * Every initialization data for that type.
+   *
+   * /!\ It is very important to always sort them the same way, if two events
+   * contain the same data.
+   * Failure to do so might result in multiple licenses fetched for the same
+   * content.
+   */
+  values: Array<{
+    /**
+     * Hex encoded system id, which identifies the key system.
+     * https://dashif.org/identifiers/content_protection/
+     */
+    systemId: string;
+    /**
+     * The initialization data itself for that type and systemId.
+     * For example, with ISOBMFF "cenc" initialization data, this will be the
+     * whole PSSH box.
+     */
+     data: Uint8Array;
+  }>;
+}
 
 // Emitted after the `onKeyStatusesChange` callback has been called
 export interface IKeyStatusChangeHandledEvent { type: "key-status-change-handled";
@@ -327,6 +355,7 @@ export interface IKeySystemOption {
   /** Supplementary optional configuration for the getLicense call. */
   getLicenseConfig? : { retry? : number;
                         timeout? : number; };
+  canRelyOnManifestEncryptionData? : boolean;
   /**
    * Optional `serverCertificate` we will try to set to speed-up the
    * license-fetching process.
