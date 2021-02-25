@@ -38,6 +38,7 @@ import updateSegmentTimeline from "../../../utils/update_segment_timeline";
 import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
 import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
+import isPeriodFulfilled from "../is_period_fulfilled";
 import { createIndexURLs } from "../tokens";
 import constructTimelineFromElements from "./construct_timeline_from_elements";
 // eslint-disable-next-line max-len
@@ -472,10 +473,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const lastTime = getIndexSegmentEnd(lastTimelineElement,
                                         null,
                                         this._scaledPeriodEnd);
-
-    // We can never be truly sure if a SegmentTimeline-based index is finished
-    // or not (1 / 60 for possible rounding errors)
-    return (lastTime + 1 / 60) >= this._scaledPeriodEnd;
+    return isPeriodFulfilled(this._index.timescale, lastTime, this._scaledPeriodEnd);
   }
 
   /**
