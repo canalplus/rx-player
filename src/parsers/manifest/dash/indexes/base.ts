@@ -244,15 +244,11 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Array.<Object>}
    */
   getSegments(_up : number, _to : number) : ISegment[] {
-    return getSegmentsFromTimeline(this._index, _up, _to, this._scaledPeriodEnd)
-      .map((segment) => {
-        if (segment.privateInfos === undefined) {
-          segment.privateInfos = {};
-        }
-        segment.privateInfos.isInbandEventWhitelisted =
-          this._isInbandEventWhitelisted;
-        return segment;
-      });
+    return getSegmentsFromTimeline(this._index,
+                                   _up,
+                                   _to,
+                                   this._isInbandEventWhitelisted,
+                                   this._scaledPeriodEnd);
   }
 
   /**
