@@ -61,56 +61,82 @@ export type IDownloadingQueueEvent<T> = IParsedSegmentEvent<T> |
                                         ILoaderRetryEvent |
                                         IEndOfQueueEvent;
 
-/** Notify that the initialization segment has been parsed. */
+/**
+ * Notify that the initialization segment has been fully loaded and parsed.
+ *
+ * You can now push that segment to its corresponding buffer and use its parsed
+ * metadata.
+ */
 export type IParsedInitSegmentEvent<T> = ISegmentParserInitSegment<T> &
                                          { segment : ISegment };
 
-/** Notify that a media segment has been parsed. */
+/**
+ * Notify that a media chunk (decodable sub-part of a media segment) has been
+ * loaded and parsed.
+ *
+ * It can now be pushed to its corresponding buffer. Note that there might be
+ * multiple `IParsedSegmentEvent` for a single segment, if that segment is
+ * divided into multiple decodable chunks.
+ * You will know that all `IParsedSegmentEvent` have been loaded for a given
+ * segment once you received the `IEndOfSegmentEvent` for that segment.
+ */
 export type IParsedSegmentEvent<T> = ISegmentParserSegment<T> &
                                      { segment : ISegment };
 
-/** Notify that a segment has been fully-loaded. */
+/** Notify that a media or initialization segment has been fully-loaded. */
+// TODO Shouldn't that event anounce when the segment has been fully loaded AND
+// parsed? There is technically a risk here if parsing takes too much
+// (asynchronous) time leading to that event being sent before a
+// `IParsedSegmentEvent` for that same segment.
+// In that case we could have all sorts of funny issues.
 export interface IEndOfSegmentEvent { type : "end-of-segment";
                                       value: { segment : ISegment }; }
 
-/** Notify that a segment request is retried. */
+/**
+ * Notify that a media or initialization segment request is retried.
+ * This happened most likely because of an HTTP error.
+ */
 export interface ILoaderRetryEvent { type : "retry";
                                      value : { segment : ISegment;
                                                error : ICustomError; }; }
 
-/** Notify that the media segment queue is now empty. */
+/**
+ * Notify that the media segment queue is now empty.
+ * This can be used to re-check if any segment are now needed.
+ */
 export interface IEndOfQueueEvent { type : "end-of-queue"; value : null }
 
 /**
- * Items emitted through the "downloadQueue$" observable, passed to the
- * DownloadingQueue.
+ * Structure of the object that has to be emitted through the `downloadQueue$`
+ * Observable, to signal which segments are currently needed.
  */
 export interface IDownloadQueueItem {
   /**
-   * Set when an initialization segment needs to be loaded.
-   * It is generally requested in parralel of any media segment.
+   * A potential initialization segment that needs to be loaded and parsed.
+   * It will generally be requested in parralel of any media segment.
+   *
+   * Can be set to `null` if you don't need to load the initialization segment
+   * (e.g. because you already have it or because there is none here).
    */
   initSegment : IQueuedSegment | null;
 
-  /** The queue of segments currently needed for download.  */
+  /**
+   * The queue of media segments currently needed for download.
+   * Those will be loaded from the first element in that queue to the last
+   * element in it.
+   */
   segmentQueue : IQueuedSegment[];
 }
 
-/** Object describing a pending Segment request. */
-interface ISegmentRequestObject<T> {
-  /** The segment the request is for. */
-  segment : ISegment; // The Segment the request is for
-  /** The request Observable itself. Can be used to update its priority. */
-  request$ : Observable<IPrioritizedSegmentFetcherEvent<T>>;
-  /** Last set priority of the segment request (lower number = higher priority). */
-  priority : number; // The current priority of the request
-}
-
 /** Context for segments downloaded through the DownloadingQueue. */
-export interface IContent {
+export interface IDownloadingQueueContext {
+  /** Adaptation linked to the segments you want to load. */
   adaptation : Adaptation;
+  /** Manifest linked to the segments you want to load. */
   manifest : Manifest;
+  /** Period linked to the segments you want to load. */
   period : Period;
+  /** Representation linked to the segments you want to load. */
   representation : Representation;
 }
 
@@ -121,7 +147,7 @@ export interface IContent {
  */
 export default class DownloadingQueue<T> {
   /** Context of the Representation that will be loaded through this DownloadingQueue. */
-  private _content : IContent;
+  private _content : IDownloadingQueueContext;
   /**
    * DownloadingQueue Observable.
    * We only can have maximum one at a time.
@@ -153,7 +179,7 @@ export default class DownloadingQueue<T> {
    * segments.
    */
   constructor(
-    content: IContent,
+    content: IDownloadingQueueContext,
     downloadQueue$ : BehaviorSubject<IDownloadQueueItem>,
     segmentFetcher : IPrioritizedSegmentFetcher<T>
   ) {
@@ -185,6 +211,13 @@ export default class DownloadingQueue<T> {
                                                 this._mediaSegmentRequest.segment;
   }
 
+  /**
+   * Start the current downloading queue, emitting events as it loads
+   * initialization and media segments.
+   *
+   * If it was already started, returns the same - shared - Observable.
+   * @returns {Observable}
+   */
   public start() : Observable<IDownloadingQueueEvent<T>> {
     if (this._currentObs$ !== null) {
       return this._currentObs$;
@@ -354,4 +387,14 @@ export default class DownloadingQueue<T> {
         }
       })).pipe(finalize(() => { this._initSegmentRequest = null; }));
   }
+}
+
+/** Object describing a pending Segment request. */
+interface ISegmentRequestObject<T> {
+  /** The segment the request is for. */
+  segment : ISegment; // The Segment the request is for
+  /** The request Observable itself. Can be used to update its priority. */
+  request$ : Observable<IPrioritizedSegmentFetcherEvent<T>>;
+  /** Last set priority of the segment request (lower number = higher priority). */
+  priority : number; // The current priority of the request
 }
