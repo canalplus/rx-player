@@ -487,54 +487,71 @@ export default function RepresentationStream<T>({
       case "parsed-segment":
         const initSegmentData = initSegmentObject?.initializationData ?? null;
         if (evt.value.inbandEvents !== undefined) {
-          const { manifestRefreshEvent,
+          const { manifestRefreshEvents,
                   nonInterpretedEvents } = evt.value.inbandEvents
             .reduce((acc, val: IInbandEvent) => {
               // Scheme that signals manifest update
               if (val.schemeId === "urn:mpeg:dash:event:2012" &&
                   // TODO support value 2 and 3
                   val.value === "1") {
-                acc.manifestRefreshEvent = val;
+                acc.manifestRefreshEvents.push(val);
               } else {
                 acc.nonInterpretedEvents.push(val);
               }
               return acc;
-            }, { manifestRefreshEvent: undefined as undefined | IInbandEvent,
+            }, { manifestRefreshEvents: [] as IInbandEvent[],
                  nonInterpretedEvents: [] as IInbandEvent[] });
           const manifestRefresh$ = clock$.pipe(
             take(1),
             mergeMap(({ position }) => {
-              if (manifestRefreshEvent === undefined) {
+              if (manifestRefreshEvents.length === 0) {
                 return EMPTY;
               }
-              const currentManifestPublishTime = content.manifest.publishTime;
-              const { messageData } = manifestRefreshEvent;
-              const strPublishTime = utf8ToStr(messageData);
-              const eventManifestPublishTime = Date.parse(strPublishTime);
-              if (currentManifestPublishTime === undefined ||
-                  eventManifestPublishTime === undefined ||
-                  isNaN(eventManifestPublishTime) ||
-                  // DASH-if 4.3 tells (4.5.2.1) :
-                  // "The media presentation time beyond the event time (indicated
-                  // time by presentation_time_delta) is correctly described only
-                  // by MPDs with publish time greater than indicated value in the
-                  // message_data field."
-                  //
-                  // Here, if the current manifest has its publish time superior
-                  // to event manifest publish time, then the manifest does not need
-                  // to be updated
-                  eventManifestPublishTime < currentManifestPublishTime) {
+              let minManifestExpiration: undefined | number;
+              const len = manifestRefreshEvents.length;
+              for (let i = 0; i < len; i++) {
+                const manifestRefreshEvent = manifestRefreshEvents[i];
+                const currentManifestPublishTime = content.manifest.publishTime;
+                const { messageData } = manifestRefreshEvent;
+                const strPublishTime = utf8ToStr(messageData);
+                const eventManifestPublishTime = Date.parse(strPublishTime);
+                if (currentManifestPublishTime === undefined ||
+                    eventManifestPublishTime === undefined ||
+                    isNaN(eventManifestPublishTime) ||
+                    // DASH-if 4.3 tells (4.5.2.1) :
+                    // "The media presentation time beyond the event time (indicated
+                    // time by presentation_time_delta) is correctly described only
+                    // by MPDs with publish time greater than indicated value in the
+                    // message_data field."
+                    //
+                    // Here, if the current manifest has its publish time superior
+                    // to event manifest publish time, then the manifest does not
+                    // need to be updated
+                    eventManifestPublishTime < currentManifestPublishTime) {
+                  break;
+                }
+                const { timescale, presentationTimeDelta } = manifestRefreshEvent;
+                const eventPresentationTime =
+                  (evt.segment.time / evt.segment.timescale) +
+                  (presentationTimeDelta / timescale);
+                minManifestExpiration =
+                  minManifestExpiration === undefined ?
+                    eventPresentationTime :
+                    Math.min(minManifestExpiration,
+                             eventPresentationTime);
+              }
+              if (minManifestExpiration === undefined) {
                 return EMPTY;
               }
-              const { timescale, presentationTimeDelta } = manifestRefreshEvent;
-              const eventPresentationTime =
-                (evt.segment.time / evt.segment.timescale) +
-                (presentationTimeDelta / timescale);
+              // redefine manifest expiration time, as typescript does not
+              // understand that it can't be undefined when using it in the
+              // getDelay callback
+              const manifestExpirationTime = minManifestExpiration;
               const delayComputingTime = performance.now();
               const getDelay = () => {
                 const now = performance.now();
                 const gap = (now - delayComputingTime) / 1000;
-                return Math.max(0, eventPresentationTime - position - gap);
+                return Math.max(0, manifestExpirationTime - position - gap);
               };
               return observableOf(EVENTS.needsManifestRefresh(getDelay));
             })
