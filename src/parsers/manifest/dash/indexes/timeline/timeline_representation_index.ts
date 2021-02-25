@@ -323,15 +323,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                                      indexTimeOffset },
                                    from,
                                    duration,
-                                   this._scaledPeriodEnd)
-      .map((segment) => {
-        if (segment.privateInfos === undefined) {
-          segment.privateInfos = {};
-        }
-        segment.privateInfos.isInbandEventWhitelisted =
-          this._isInbandEventWhitelisted;
-        return segment;
-      });
+                                   this._isInbandEventWhitelisted,
+                                   this._scaledPeriodEnd);
   }
 
   /**

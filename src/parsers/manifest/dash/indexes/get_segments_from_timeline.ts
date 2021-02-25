@@ -15,6 +15,7 @@
  */
 
 import { ISegment } from "../../../../manifest";
+import { IInbandEvent } from "../../../containers/isobmff";
 import {
   calculateRepeat,
   IIndexSegment,
@@ -46,6 +47,7 @@ function getWantedRepeatIndex(
  * @param {Object} index - index object, constructed by parsing the manifest.
  * @param {number} from - starting timestamp wanted, in seconds
  * @param {number} durationWanted - duration wanted, in seconds
+ * @param {function} isInbandEventWhitelisted
  * @param {number|undefined} maximumTime
  * @returns {Array.<Object>}
  */
@@ -57,6 +59,7 @@ export default function getSegmentsFromTimeline(
             indexTimeOffset : number; },
   from : number,
   durationWanted : number,
+  isInbandEventWhitelisted: (inbandEvent: IInbandEvent) => boolean,
   maximumTime? : number
 ) : ISegment[] {
   const scaledUp = toIndexTime(from, index);
@@ -102,7 +105,8 @@ export default function getSegmentsFromTimeline(
                         timescale: 1 as const,
                         mediaURLs: detokenizedURLs,
                         number: segmentNumber,
-                        timestampOffset: -(index.indexTimeOffset / timescale) };
+                        timestampOffset: -(index.indexTimeOffset / timescale),
+                        privateInfos: { isInbandEventWhitelisted } };
       segments.push(segment);
 
       // update segment number and segment time for the next segment
