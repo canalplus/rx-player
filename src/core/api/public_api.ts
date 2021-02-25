@@ -26,6 +26,7 @@ import {
   ConnectableObservable,
   EMPTY,
   merge as observableMerge,
+  Observable,
   of as observableOf,
   ReplaySubject,
   Subject,
@@ -36,9 +37,11 @@ import {
   filter,
   map,
   mapTo,
+  mergeMap,
   mergeMapTo,
   publish,
   share,
+  shareReplay,
   skipWhile,
   startWith,
   switchMapTo,
@@ -91,6 +94,12 @@ import {
   disposeEME,
   getCurrentKeySystem,
 } from "../eme";
+import {
+  IManifestFetcherParsedResult,
+  IManifestFetcherWarningEvent,
+  ManifestFetcher,
+  SegmentFetcherCreator,
+} from "../fetchers";
 import initializeMediaSourcePlayback, {
   IInitEvent,
   ILoadedEvent,
@@ -243,9 +252,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private readonly _priv_destroy$ : Subject<void>;
 
-  /** Emit to stop the current content and clean-up all related ressources. */
-  private readonly _priv_stopCurrentContent$ : Subject<void>;
-
   /**
    * Emit true when the previous content is cleaning-up, false when it's done.
    * A new content cannot be launched until it emits false.
@@ -316,6 +322,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * currently being played.
      */
     url? : string;
+
+    /** Subject allowing to stop playing that content. */
+    stop$ : Subject<void>;
 
     /**
      * `true` if the current content is in DirectFile mode.
@@ -535,7 +544,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_playing$ = new ReplaySubject(1);
     this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
-    this._priv_stopCurrentContent$ = new Subject();
     this._priv_contentLock$ = new BehaviorSubject<boolean>(false);
 
     this._priv_bufferOptions = {
@@ -582,9 +590,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Stop the playback for the current content.
    */
   stop() : void {
+    if (this._priv_contentInfos !== null) {
+      this._priv_contentInfos.stop$.next();
+      this._priv_contentInfos.stop$.complete();
+    }
+    this._priv_cleanUpCurrentContentState();
     if (this.state !== PLAYER_STATES.STOPPED) {
-      this._priv_stopCurrentContent$.next();
-      this._priv_cleanUpCurrentContentState();
       this._priv_setPlayerState(PLAYER_STATES.STOPPED);
     }
   }
@@ -607,7 +618,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_destroy$.complete();
 
     // Complete all subjects
-    this._priv_stopCurrentContent$.complete();
     this._priv_playing$.complete();
     this._priv_speed$.complete();
     this._priv_contentLock$.complete();
@@ -711,25 +721,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("the attached video element is disposed");
     }
 
-    // now that every checks have passed, stop previous content
-    this.stop();
-
     const isDirectFile = transport === "directfile";
 
-    this._priv_currentError = null;
-    this._priv_contentInfos = { url,
-                                isDirectFile,
-                                segmentBuffersStore: null,
-                                thumbnails: null,
-                                manifest: null,
-                                currentPeriod: null,
-                                activeAdaptations: null,
-                                activeRepresentations: null,
-                                initialAudioTrack: defaultAudioTrack,
-                                initialTextTrack: defaultTextTrack };
+    /** Subject which will emit to stop the current content. */
+    const stopContent$ = new Subject<void>();
 
-    // inilialize `_priv_playing$` to false (meaning the content is not playing yet)
-    this._priv_playing$.next(false);
+    /** Future `this._priv_contentInfos` related to this content. */
+    const contentInfos = { url,
+                           stop$: stopContent$,
+                           isDirectFile,
+                           segmentBuffersStore: null,
+                           thumbnails: null,
+                           manifest: null,
+                           currentPeriod: null,
+                           activeAdaptations: null,
+                           activeRepresentations: null,
+                           initialAudioTrack: defaultAudioTrack,
+                           initialTextTrack: defaultTextTrack };
 
     const videoElement = this.videoElement;
 
@@ -737,23 +745,67 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile,
                                                lowLatencyMode });
 
-    /** Emit when the current content has been stopped. */
-    const contentIsStopped$ = observableMerge(
-      this._priv_stopCurrentContent$,
-      this._priv_stopAtEnd ? onEnded$(videoElement) :
-                             EMPTY
-    ).pipe(take(1));
-
     /** Emit playback events. */
     let playback$ : ConnectableObservable<IInitEvent>;
 
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
       if (typeof transportFn !== "function") {
+        // Stop previous content and reset its state
+        this.stop();
+        this._priv_currentError = null;
+        this._priv_playing$.next(false);
         throw new Error(`transport "${transport}" not supported`);
       }
 
       const transportPipelines = transportFn(transportOptions);
+
+      const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
+
+      /** Interface used to load and refresh the Manifest. */
+      const manifestFetcher = new ManifestFetcher(url,
+                                                  transportPipelines,
+                                                  { lowLatencyMode,
+                                                    maxRetryRegular: manifestRetry,
+                                                    maxRetryOffline: offlineRetry });
+
+      /** Interface used to download segments. */
+      const segmentFetcherCreator = new SegmentFetcherCreator<any>(
+        transportPipelines,
+        { lowLatencyMode,
+          maxRetryOffline: offlineRetry,
+          maxRetryRegular: segmentRetry });
+
+      /** Observable emitting the initial Manifest */
+      let manifest$ : Observable<IManifestFetcherParsedResult |
+                                 IManifestFetcherWarningEvent>;
+
+      if (initialManifest instanceof Manifest) {
+        manifest$ = observableOf({ type: "parsed",
+                                   manifest: initialManifest });
+      } else if (initialManifest !== undefined) {
+        manifest$ = manifestFetcher.parse(initialManifest, { previousManifest: null,
+                                                             unsafeMode: false });
+      } else {
+        manifest$ = manifestFetcher.fetch(url).pipe(
+          mergeMap((response) => response.type === "warning" ?
+            observableOf(response) : // bubble-up warnings
+            response.parse({ previousManifest: null, unsafeMode: false })));
+      }
+
+      // Load the Manifest right now and share it with every subscriber until
+      // the content is stopped
+      manifest$ = manifest$.pipe(takeUntil(stopContent$),
+                                 shareReplay());
+      manifest$.subscribe();
+
+      // now that the Manifest is loading, stop previous content and reset state
+      // This is done after fetching the Manifest as `stop` could technically
+      // take time.
+      this.stop();
+      this._priv_currentError = null;
+      this._priv_playing$.next(false);
+      this._priv_contentInfos = contentInfos;
 
       const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
       const throttlers = { throttle: {},
@@ -769,7 +821,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             video: isActive().pipe(
               map(active => active ? Infinity :
                                        0),
-              takeUntil(this._priv_stopCurrentContent$)),
+              takeUntil(stopContent$)),
           };
         }
       }
@@ -782,7 +834,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             video: isVideoVisible(this._priv_pictureInPictureEvent$).pipe(
               map(active => active ? Infinity :
                                      0),
-              takeUntil(this._priv_stopCurrentContent$)),
+              takeUntil(stopContent$)),
           };
         }
       }
@@ -793,7 +845,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         } else {
           throttlers.limitWidth = {
             video: videoWidth$(videoElement, this._priv_pictureInPictureEvent$)
-              .pipe(takeUntil(this._priv_stopCurrentContent$)),
+              .pipe(takeUntil(stopContent$)),
           };
         }
       }
@@ -826,25 +878,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     autoPlay,
                                                     bufferOptions,
                                                     clock$,
-                                                    content: { initialManifest,
-                                                               manifestUpdateUrl,
-                                                               url },
                                                     keySystems,
                                                     lowLatencyMode,
+                                                    manifest$,
+                                                    manifestFetcher,
+                                                    manifestUpdateUrl,
                                                     mediaElement: videoElement,
                                                     minimumManifestUpdateInterval,
-                                                    networkConfig,
-                                                    transportPipelines,
+                                                    segmentFetcherCreator,
                                                     speed$: this._priv_speed$,
                                                     startAt,
                                                     textTrackOptions })
-        .pipe(takeUntil(contentIsStopped$));
+        .pipe(takeUntil(stopContent$));
 
       playback$ = publish<IInitEvent>()(init$);
     } else {
+      // Stop previous content and reset its state
+      this.stop();
+      this._priv_currentError = null;
+      this._priv_playing$.next(false);
       if (features.directfile === null) {
         throw new Error("DirectFile feature not activated in your build.");
       }
+      this._priv_contentInfos = contentInfos;
 
       this._priv_mediaElementTrackChoiceManager =
         new features.directfile.mediaElementTrackChoiceManager(this.videoElement);
@@ -909,7 +965,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                              speed$: this._priv_speed$,
                                              startAt,
                                              url })
-          .pipe(takeUntil(contentIsStopped$));
+          .pipe(takeUntil(stopContent$));
 
       playback$ = publish<IInitEvent>()(directfileInit$);
     }
@@ -951,7 +1007,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       endedEvent$.pipe(startWith(null)),
       seekingEvent$.pipe(startWith(null)),
     ]).pipe(
-      takeUntil(this._priv_stopCurrentContent$),
+      takeUntil(stopContent$),
       map(([isPlaying, stalledStatus]) =>
         getPlayerState(videoElement, isPlaying, stalledStatus)
       )
@@ -986,7 +1042,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     ).pipe(distinctUntilChanged());
 
     let playbackSubscription : Subscription|undefined;
-    this._priv_stopCurrentContent$
+    stopContent$
       .pipe(take(1))
       .subscribe(() => {
         if (playbackSubscription !== undefined) {
@@ -996,18 +1052,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // Link `_priv_onPlayPauseNext` Observable to "play"/"pause" events
     onPlayPause$(videoElement)
-      .pipe(takeUntil(this._priv_stopCurrentContent$))
+      .pipe(takeUntil(stopContent$))
       .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"), noop);
 
     // Link "positionUpdate" events to the clock
     clock$
-      .pipe(takeUntil(this._priv_stopCurrentContent$))
+      .pipe(takeUntil(stopContent$))
       .subscribe(x => this._priv_triggerPositionUpdate(x), noop);
 
     // Link "seeking" and "seeked" events (once the content is loaded)
     loaded$.pipe(
       switchMapTo(emitSeekEvents(this.videoElement, clock$)),
-      takeUntil(this._priv_stopCurrentContent$)
+      takeUntil(stopContent$)
     ).subscribe((evt : "seeking" | "seeked") => {
       log.info(`API: Triggering "${evt}" event`);
       this.trigger(evt, null);
@@ -1015,8 +1071,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // Handle state updates
     playerState$
-      .pipe(takeUntil(this._priv_stopCurrentContent$))
+      .pipe(takeUntil(stopContent$))
       .subscribe(x => this._priv_setPlayerState(x), noop);
+
+    (this._priv_stopAtEnd ? onEnded$(videoElement) :
+                            EMPTY)
+      .pipe(takeUntil(stopContent$))
+      .subscribe(() => {
+        stopContent$.next();
+        stopContent$.complete();
+      });
+
 
     // Link playback events to the corresponding callbacks
     playback$.subscribe(
@@ -1030,7 +1095,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       .pipe(
         filter((isLocked) => !isLocked),
         take(1),
-        takeUntil(this._priv_stopCurrentContent$)
+        takeUntil(stopContent$)
       )
       .subscribe(() => {
         // start playback!
@@ -2282,7 +2347,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     });
     formattedError.fatal = true;
 
-    this._priv_stopCurrentContent$.next();
+    if (this._priv_contentInfos !== null) {
+      this._priv_contentInfos.stop$.next();
+      this._priv_contentInfos.stop$.complete();
+    }
     this._priv_cleanUpCurrentContentState();
     this._priv_currentError = formattedError;
     log.error("API: The player stopped because of an error:", error);
@@ -2303,7 +2371,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackFinished() : void {
     log.info("API: Previous playback finished. Stopping and cleaning-up...");
-    this._priv_stopCurrentContent$.next();
+    if (this._priv_contentInfos !== null) {
+      this._priv_contentInfos.stop$.next();
+      this._priv_contentInfos.stop$.complete();
+    }
     this._priv_cleanUpCurrentContentState();
     this._priv_setPlayerState(PLAYER_STATES.ENDED);
   }
@@ -2328,14 +2399,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Object} value
    */
   private _priv_onManifestReady({ manifest } : { manifest : Manifest }) : void {
-    if (this._priv_contentInfos === null) {
+    const contentInfos = this._priv_contentInfos;
+    if (contentInfos === null) {
       log.error("API: The manifest is loaded but no content is.");
       return;
     }
-    this._priv_contentInfos.manifest = manifest;
+    contentInfos.manifest = manifest;
     this._priv_lastContentPlaybackInfos.manifest = manifest;
 
-    const { initialAudioTrack, initialTextTrack } = this._priv_contentInfos;
+    const { initialAudioTrack, initialTextTrack } = contentInfos;
     this._priv_trackChoiceManager = new TrackChoiceManager();
 
     const preferredAudioTracks = initialAudioTrack === undefined ?
@@ -2352,7 +2424,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                           true);
 
     fromEvent(manifest, "manifestUpdate")
-      .pipe(takeUntil(this._priv_stopCurrentContent$))
+      .pipe(takeUntil(contentInfos.stop$))
       .subscribe(() => {
         // Update the tracks chosen if it changed
         if (this._priv_trackChoiceManager !== null) {
