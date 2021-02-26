@@ -221,12 +221,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    const initSegment = getInitSegment(this._index);
-    if (initSegment.privateInfos === undefined) {
-      initSegment.privateInfos = {};
-    }
-    initSegment.privateInfos.isInbandEventWhitelisted = this._isInbandEventWhitelisted;
-    return initSegment;
+    return getInitSegment(this._index, this._isInbandEventWhitelisted);
   }
 
   /**
