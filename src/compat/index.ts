@@ -62,6 +62,7 @@ import shouldRenewMediaKeys from "./should_renew_media_keys";
 import shouldUnsetMediaKeys from "./should_unset_media_keys";
 import shouldValidateMetadata from "./should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "./should_wait_for_data_before_loaded";
+import tryToUnfreeze from "./try_to_unfreeze";
 import whenLoadedMetadata$ from "./when_loaded_metadata";
 import whenMediaSourceOpen$ from "./when_media_source_open";
 
@@ -109,6 +110,7 @@ export {
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,
   tryToChangeSourceBufferType,
+  tryToUnfreeze,
   VTTCue_,
   whenLoadedMetadata$,
   whenMediaSourceOpen$,

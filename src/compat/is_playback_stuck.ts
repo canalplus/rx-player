@@ -14,29 +14,20 @@
  * limitations under the License.
  */
 
-import { isFirefox } from "./browser_detection";
+import { IStalledStatus } from "../core/api";
 
 /**
- * firefox fix: sometimes playback can be stalled, even if we are in a buffer.
- * TODO This seems to be about an old Firefox version. Delete it?
- * @param {number} time
- * @param {Object|null} currentRange
- * @param {string} state
- * @param {Boolean} isStalled
+ * Consider playback to be stuck if is has been freezing for a long time.
+ * @param {Object | null} stalledStatus
  * @returns {Boolean}
  */
 export default function isPlaybackStuck(
-  time : number,
-  currentRange : { start: number;
-                   end: number; } |
-                 null,
-  state : string,
-  isStalled : boolean
+  stalledStatus: IStalledStatus
 ) : boolean {
-  const FREEZE_THRESHOLD = 10; // freeze threshold in seconds
-  return (isFirefox &&
-          isStalled &&
-          state === "timeupdate" &&
-          currentRange != null &&
-          currentRange.end - time > FREEZE_THRESHOLD);
+  const now = performance.now();
+  if (stalledStatus.reason === "freezing" &&
+      now - stalledStatus.timestamp >= 1000) {
+    return true;
+  }
+  return false;
 }

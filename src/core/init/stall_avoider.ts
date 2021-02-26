@@ -20,7 +20,10 @@ import {
   scan,
   withLatestFrom,
 } from "rxjs/operators";
-import { isPlaybackStuck } from "../../compat";
+import {
+  isPlaybackStuck,
+  tryToUnfreeze,
+} from "../../compat";
 import config from "../../config";
 import { MediaError } from "../../errors";
 import log from "../../log";
@@ -165,19 +168,6 @@ export default function StallAvoider(
         }
       }
 
-      // Is it a browser bug? -> force seek at the same current time
-      if (isPlaybackStuck(position,
-                          currentRange,
-                          state,
-                          stalled !== null)
-      ) {
-        log.warn("Init: After freeze seek", position, currentRange);
-        mediaElement.currentTime = position;
-        return EVENTS.warning(generateDiscontinuityError(position,
-                                                         position));
-
-      }
-
       const freezePosition = stalledPosition ?? position;
 
       // Is it a very short discontinuity in buffer ? -> Seek at the beginning of the
@@ -214,6 +204,13 @@ export default function StallAvoider(
           }
           break;
         }
+      }
+
+      // Enter in that code if no discontinuity has been found, but we're still
+      // stalled.
+      if (isPlaybackStuck(stalled)) {
+        log.warn("Init: After freeze seek", position, currentRange);
+        tryToUnfreeze(mediaElement, state);
       }
 
       return { type: "stalled" as const,

@@ -262,7 +262,12 @@ function getStalledStatus(
                     ) &&
                     (playbackRate !== 0 && prevPlaybackRate !== 0) &&
                     currentRange !== null;
-  const isFreezing = (currentTime === prevTime) && canFreeze;
+
+  const minBufferGapToFreeze = 5;
+  const isFreezing = (currentTime === prevTime) &&
+                     canFreeze &&
+                     bufferGap !== Infinity &&
+                     bufferGap >= minBufferGapToFreeze;
 
   let shouldStall : boolean | undefined;
   let shouldUnstall : boolean | undefined;
