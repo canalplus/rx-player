@@ -76,12 +76,14 @@ interface IMediaInfos {
   /** Current `seeking` value on the mediaElement. */
   seeking : boolean;
   /** "State" that triggered this clock tick. */
-  state : IMediaInfosState; }
+  state : IMediaInfosState;
+  timestamp: number; }
 
 /** Describes when the player is "stalled" and what event started that status. */
 export interface IStalledStatus {
   /** What started the player to stall. */
-  reason : "seeking" | // Building buffer after seeking
+  reason : "freezing" | // Playback seems to be frozen
+           "seeking" | // Building buffer after seeking
            "not-ready" | // Building buffer after low readyState
            "buffering"; // Other cases
   /** `performance.now` at the time the stalling happened. */
@@ -140,6 +142,7 @@ function getResumeGap(stalled : IStalledStatus, lowLatencyMode : boolean) : numb
     case "not-ready":
       return RESUME_GAP_AFTER_NOT_ENOUGH_DATA[suffix];
     case "buffering":
+    case "freezing":
       return RESUME_GAP_AFTER_BUFFERING[suffix];
   }
 }
@@ -195,7 +198,8 @@ function getMediaInfos(
            playbackRate,
            readyState,
            seeking,
-           state: currentState };
+           state: currentState,
+           timestamp: performance.now() };
 }
 
 /**
@@ -221,12 +225,16 @@ function getStalledStatus(
           currentRange,
           duration,
           paused,
+          playbackRate,
           readyState,
           ended } = currentTimings;
 
   const { stalled: prevStalled,
           state: prevState,
-          position: prevTime } = prevTimings;
+          position: prevTime,
+          paused: prevPaused,
+          playbackRate: prevPlaybackRate,
+          readyState: prevReadyState } = prevTimings;
 
   const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode);
 
@@ -236,6 +244,26 @@ function getStalledStatus(
                     !(fullyLoaded || ended));
 
   let stalledPosition : number | null = null;
+
+  /**
+   * On some browsers on specific devices, playback may freeze sometimes
+   * whereas content has been buffered, and engine should be able to play.
+   *
+   * Here if enough data has been buffered, and HTMLMediaElement tells that
+   * content should be playing, another check is performed to see if video
+   * current time has change or not between two clock ticks.
+   *
+   * If so, the playback is considered as freezing.
+   */
+  const canFreeze = ((!paused &&
+                      !prevPaused) ||
+                     (readyState >= 1 &&
+                      prevReadyState >= 1)
+                    ) &&
+                    (playbackRate !== 0 && prevPlaybackRate !== 0) &&
+                    currentRange !== null;
+  const isFreezing = (currentTime === prevTime) && canFreeze;
+
   let shouldStall : boolean | undefined;
   let shouldUnstall : boolean | undefined;
 
@@ -247,7 +275,8 @@ function getStalledStatus(
       if (bufferGap <= stallGap) {
         shouldStall = true;
         stalledPosition = currentTime + bufferGap;
-      } else if (bufferGap === Infinity) {
+      } else if (bufferGap === Infinity ||
+                 isFreezing) {
         shouldStall = true;
         stalledPosition = currentTime;
       } else if (readyState === 1) {
@@ -255,9 +284,10 @@ function getStalledStatus(
       }
     } else if (prevStalled !== null) {
       const resumeGap = getResumeGap(prevStalled, lowLatencyMode);
-      if (shouldStall !== true && prevStalled !== null && readyState > 1 &&
-          (fullyLoaded || ended || (bufferGap < Infinity && bufferGap > resumeGap)))
-      {
+      if (shouldStall !== true &&
+          readyState > 1 &&
+          (prevStalled.reason !== "freezing" || !isFreezing) &&
+          (fullyLoaded || ended || (bufferGap < Infinity && bufferGap > resumeGap))) {
         shouldUnstall = true;
       } else if (bufferGap === Infinity || bufferGap <= resumeGap) {
         stalledPosition = bufferGap === Infinity ? currentTime :
@@ -290,10 +320,12 @@ function getStalledStatus(
   if (shouldUnstall === true) {
     return null;
   } else if (shouldStall === true || prevStalled !== null) {
-    let reason : "seeking" | "not-ready" | "buffering";
-    if (currentState === "seeking" ||
-        currentTimings.seeking ||
-        prevStalled !== null && prevStalled.reason === "seeking") {
+    let reason : "seeking" | "not-ready" | "buffering" | "freezing";
+    if (isFreezing) {
+      reason = "freezing";
+    } else if (currentState === "seeking" ||
+               currentTimings.seeking ||
+               prevStalled?.reason === "seeking") {
       reason = "seeking";
     } else if (readyState === 1) {
       reason = "not-ready";
