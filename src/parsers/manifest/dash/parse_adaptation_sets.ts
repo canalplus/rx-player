@@ -343,11 +343,26 @@ export default function parseAdaptationSets(
         isDub = true;
       }
 
-      const isClosedCaption = type === "text" && accessibilities?.some(isHardOfHearing);
+      let isClosedCaption;
+      if (type !== "text") {
+        isClosedCaption = false;
+      } else if (accessibilities !== undefined) {
+        isClosedCaption = accessibilities.some(isHardOfHearing);
+      }
 
-      const isAudioDescription = type === "audio" && accessibilities?.some(isVisuallyImpaired);
+      let isAudioDescription;
+      if (type !== "audio") {
+        isAudioDescription = false;
+      } else if (accessibilities !== undefined) {
+        isAudioDescription = accessibilities.some(isVisuallyImpaired);
+      }
 
-      const isSignInterpreted = type === "video" && accessibilities?.some(hasSignLanguageInterpretation);
+      let isSignInterpreted;
+      if (type !== "video") {
+        isSignInterpreted = false;
+      } else if (accessibilities !== undefined) {
+        isSignInterpreted = accessibilities.some(hasSignLanguageInterpretation);
+      }
 
       let adaptationID = getAdaptationID(adaptation,
                                          { isAudioDescription,
