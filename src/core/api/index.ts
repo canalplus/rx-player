@@ -20,6 +20,7 @@ export {
   IStreamEventData,
 } from "./public_api";
 export {
+  IClockMediaEventType,
   IStalledStatus,
 } from "./clock";
 export {

@@ -137,7 +137,7 @@ export default function StallAvoider(
   return clock$.pipe(
     withLatestFrom(discontinuitiesStore$),
     map(([tick, discontinuitiesStore]) => {
-      const { buffered, currentRange, position, state, stalled } = tick;
+      const { buffered, currentRange, position, event, stalled } = tick;
       if (stalled === null) {
         return { type: "unstalled" as const,
                  value: null };
@@ -168,7 +168,7 @@ export default function StallAvoider(
       // Is it a browser bug? -> force seek at the same current time
       if (isPlaybackStuck(position,
                           currentRange,
-                          state,
+                          event,
                           stalled !== null)
       ) {
         log.warn("Init: After freeze seek", position, currentRange);
