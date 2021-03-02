@@ -222,8 +222,9 @@ export default function InitializeOnMediaSource(
   const mediaError$ = throwOnMediaError(mediaElement);
 
   /**
-   * Wait for the MediaKeys to have been created before
-   * opening MediaSource, and ask EME to attach MediaKeys.
+   * Wait for the MediaKeys to have been created before opening the MediaSource,
+   * after that second step is done, ask the EMEManager to attach the MediaKeys.
+   * Steps are done in that specific order to avoid compatibility issues.
    */
   const prepareMediaSource$ = emeManager$.pipe(
     mergeMap((evt) => {
@@ -233,15 +234,17 @@ export default function InitializeOnMediaSource(
           return observableOf(undefined);
         case "created-media-keys":
           return openMediaSource$.pipe(mergeMap(() => {
+            // Now that the MediaSource has been opened and linked to the media
+            // element we can attach the MediaKeys instance to the latter.
             evt.value.attachMediaKeys$.next();
 
+            // If the `disableMediaKeysAttachmentLock` option has been set to
+            // `true`, we should not wait until the MediaKeys instance has been
+            // attached to start loading the content.
             const shouldDisableLock = evt.value.options
               .disableMediaKeysAttachmentLock === true;
-            if (shouldDisableLock) {
-              return observableOf(undefined);
-            }
-            // wait for "attached-media-keys"
-            return EMPTY;
+            return shouldDisableLock ? observableOf(undefined) :
+                                       EMPTY;
           }));
         default:
           return EMPTY;

@@ -307,8 +307,15 @@ export interface IPersistentSessionInfoV0 {
 }
 
 /** Persistent MediaKeySession storage interface. */
-export interface IPersistentSessionStorage { load() : IPersistentSessionInfo[];
-                                             save(x : IPersistentSessionInfo[]) : void; }
+export interface IPersistentSessionStorage {
+  /** Load persistent MediaKeySessions previously saved through the `save` callback. */
+  load() : IPersistentSessionInfo[];
+  /**
+   * Save new persistent MediaKeySession information.
+   * The given argument should be returned by the next `load` call.
+   */
+  save(x : IPersistentSessionInfo[]) : void;
+}
 
 /** Options related to a single key system. */
 export interface IKeySystemOption {
