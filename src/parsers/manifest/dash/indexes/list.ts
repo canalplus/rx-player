@@ -19,7 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
-import { IInbandEvent } from "../../../containers/isobmff";
+import { IEMSG } from "../../../containers/isobmff";
 import { getTimescaledRange } from "../../utils/index_helpers";
 import getInitSegment from "./get_init_segment";
 import { createIndexURLs } from "./tokens";
@@ -111,8 +111,8 @@ export interface IListIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
-  /* Function that tells if an inband event is whitelisted by the manifest */
-  isInbandEventWhitelisted: (inbandEvent: IInbandEvent) => boolean;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
 
 export default class ListRepresentationIndex implements IRepresentationIndex {
@@ -120,8 +120,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   private _index : IListIndex;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
   protected _periodStart : number;
-  /* Function that tells if an inband event is whitelisted by the manifest */
-  private _isInbandEventWhitelisted: (inbandEvent: IInbandEvent) => boolean;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 
   /**
    * @param {Object} index
@@ -132,8 +132,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
             representationBaseURLs,
             representationId,
             representationBitrate,
-            isInbandEventWhitelisted } = context;
-    this._isInbandEventWhitelisted = isInbandEventWhitelisted;
+            isEMSGWhitelisted } = context;
+    this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._periodStart = periodStart;
     const presentationTimeOffset =
       index.presentationTimeOffset != null ? index.presentationTimeOffset :
@@ -170,7 +170,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     if (initSegment.privateInfos === undefined) {
       initSegment.privateInfos = {};
     }
-    initSegment.privateInfos.isInbandEventWhitelisted = this._isInbandEventWhitelisted;
+    initSegment.privateInfos.isEMSGWhitelisted = this._isEMSGWhitelisted;
     return initSegment;
   }
 
@@ -203,8 +203,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
           end: time + durationInSeconds,
           mediaURLs,
           timestampOffset: -(index.indexTimeOffset / timescale),
-          privateInfos: { isInbandEventWhitelisted:
-                            this._isInbandEventWhitelisted } };
+          privateInfos: { isEMSGWhitelisted:
+                            this._isEMSGWhitelisted } };
       segments.push(segment);
       i++;
     }

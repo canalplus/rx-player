@@ -19,7 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
-import { IInbandEvent } from "../../../containers/isobmff";
+import { IEMSG } from "../../../containers/isobmff";
 import {
   fromIndexTime,
   getIndexSegmentEnd,
@@ -115,8 +115,8 @@ export interface IBaseIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
-  /* Function that tells if an inband event is whitelisted by the manifest */
-  isInbandEventWhitelisted: (inbandEvent: IInbandEvent) => boolean;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
 
 /**
@@ -170,8 +170,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   /** Absolute end of the period, timescaled and converted to index time. */
   private _scaledPeriodEnd : number | undefined;
 
-  /* Function that tells if an inband event is whitelisted by the manifest */
-  private _isInbandEventWhitelisted: (inbandEvent: IInbandEvent) => boolean;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 
   /**
    * @param {Object} index
@@ -183,7 +183,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
             representationBaseURLs,
             representationId,
             representationBitrate,
-            isInbandEventWhitelisted } = context;
+            isEMSGWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
@@ -222,7 +222,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
     this._isInitialized = this._index.timeline.length > 0;
-    this._isInbandEventWhitelisted = isInbandEventWhitelisted;
+    this._isEMSGWhitelisted = isEMSGWhitelisted;
   }
 
   /**
@@ -234,7 +234,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     if (initSegment.privateInfos === undefined) {
       initSegment.privateInfos = {};
     }
-    initSegment.privateInfos.isInbandEventWhitelisted = this._isInbandEventWhitelisted;
+    initSegment.privateInfos.isEMSGWhitelisted = this._isEMSGWhitelisted;
     return initSegment;
   }
 
@@ -247,7 +247,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     return getSegmentsFromTimeline(this._index,
                                    _up,
                                    _to,
-                                   this._isInbandEventWhitelisted,
+                                   this._isEMSGWhitelisted,
                                    this._scaledPeriodEnd);
   }
 

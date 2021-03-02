@@ -15,12 +15,12 @@
  */
 
 import { ISegment } from "../../../../manifest";
-import { IInbandEvent } from "../../../containers/isobmff";
+import { IEMSG } from "../../../containers/isobmff";
 
 /**
  * Construct init segment for the given index.
  * @param {Object} index
- * @param {function} isInbandEventWhitelisted
+ * @param {function} isEMSGWhitelisted
  * @returns {Object}
  */
 export default function getInitSegment(
@@ -28,12 +28,12 @@ export default function getInitSegment(
            initialization?: { mediaURLs: string[] | null; range?: [number, number] };
            indexRange?: [number, number];
            indexTimeOffset : number; },
-  isInbandEventWhitelisted?: (inbandEvent: IInbandEvent) => boolean
+  isEMSGWhitelisted?: (inbandEvent: IEMSG) => boolean
 ) : ISegment {
   const { initialization } = index;
   let privateInfos;
-  if (isInbandEventWhitelisted !== undefined) {
-    privateInfos = { isInbandEventWhitelisted };
+  if (isEMSGWhitelisted !== undefined) {
+    privateInfos = { isEMSGWhitelisted };
   }
   return { id: "init",
            isInit: true,

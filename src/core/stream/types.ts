@@ -22,7 +22,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
-import { IInbandEvent } from "../../parsers/containers/isobmff";
+import { IEMSG } from "../../parsers/containers/isobmff";
 import { IBufferType } from "../segment_buffers";
 
 /** Information about a Segment waiting to be loaded by the Stream. */
@@ -174,10 +174,14 @@ export interface IProtectedSegmentEvent {
   value : ISegmentProtection;
 }
 
-export interface IInbandEventsEvent {
-  type : "inband-events";
-  value : IInbandEvent[];
-}
+export interface IInbandEvent { type: "dash-emsg";
+                                value: IEMSG; }
+
+export interface IManifestRefreshEvent { type: "manifest-refresh";
+                                          value: { manifestExpirationTime: number }; }
+
+export interface IInbandEventsEvent { type : "inband-events";
+                                      value : IInbandEvent[]; }
 
 /**
  * Event sent when a `RepresentationStream` is terminating:

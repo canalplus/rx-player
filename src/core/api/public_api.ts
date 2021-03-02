@@ -73,7 +73,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { IInbandEvent } from "../../parsers/containers/isobmff";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
@@ -112,6 +111,7 @@ import SegmentBuffersStore, {
   IBufferedChunk,
   IBufferType,
 } from "../segment_buffers";
+import { IInbandEvent } from "../stream";
 import createClock, {
   IClockTick,
 } from "./clock";
