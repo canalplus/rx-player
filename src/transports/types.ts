@@ -17,6 +17,10 @@
 import {
   Observable,
 } from "rxjs";
+import {
+  IInbandEvent,
+  IManifestRefreshEvent,
+} from "../core/stream";
 import Manifest, {
   Adaptation,
   IRepresentationFilter,
@@ -26,7 +30,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../manifest";
-import { IInbandEvent } from "../parsers/containers/isobmff";
 import { IBifThumbnail } from "../parsers/images/bif";
 import { ILocalManifest } from "../parsers/manifest/local";
 import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
@@ -373,6 +376,7 @@ export interface ISegmentParserParsedSegment<T> {
                                          // (part of the segment after that time
                                          // will be ignored)
   inbandEvents? : IInbandEvent[]; // Inband events parsed from segment data
+  manifestRefreshEvent?: IManifestRefreshEvent; // Inband Manifest refresh events
 }
 
 // What a segment parser returns when parsing an init segment

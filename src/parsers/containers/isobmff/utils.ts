@@ -49,13 +49,13 @@ export interface IISOBMFFPSSHInfo {
   privateData : Uint8Array;
 }
 
-export interface IInbandEvent { schemeId: string;
-                                value: string;
-                                timescale: number;
-                                presentationTimeDelta: number;
-                                eventDuration: number;
-                                id: number;
-                                messageData: Uint8Array; }
+export interface IEMSG { schemeId: string;
+                         value: string;
+                         timescale: number;
+                         presentationTimeDelta: number;
+                         eventDuration: number;
+                         id: number;
+                         messageData: Uint8Array; }
 
 /** Segment information from a parsed sidx. */
 export interface ISidxSegment {
@@ -426,8 +426,8 @@ function updateBoxLength(buf : Uint8Array) : Uint8Array {
  * @param {Uint8Array} buf
  * @returns {Array.<Object>}
  */
-function parseEmsgBoxes(buffer: Uint8Array) : IInbandEvent[] | undefined {
-  const emsgs: IInbandEvent[] = [];
+function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
+  const emsgs: IEMSG[] = [];
   let offset = 0;
   while (offset < buffer.length) {
     const emsg = getEMSG(buffer, offset);

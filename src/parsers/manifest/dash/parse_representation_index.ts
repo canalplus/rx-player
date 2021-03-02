@@ -19,7 +19,7 @@ import {
   Representation,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
-import { IInbandEvent } from "../../containers/isobmff";
+import { IEMSG } from "../../containers/isobmff";
 // eslint-disable-next-line max-len
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import {
@@ -105,7 +105,7 @@ export default function parseRepresentationIndex(
           unsafelyBaseOnPreviousRepresentation,
           inbandEventStreams } = representationInfos;
 
-  const isInbandEventWhitelisted = (inbandEvent: IInbandEvent): boolean => {
+  const isEMSGWhitelisted = (inbandEvent: IEMSG): boolean => {
     if (inbandEventStreams === undefined) {
       return false;
     }
@@ -115,7 +115,7 @@ export default function parseRepresentationIndex(
   const context = { aggressiveMode,
                     availabilityTimeOffset,
                     unsafelyBaseOnPreviousRepresentation,
-                    isInbandEventWhitelisted,
+                    isEMSGWhitelisted,
                     manifestBoundsCalculator,
                     isDynamic,
                     periodEnd,

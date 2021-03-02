@@ -19,7 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
-import { IInbandEvent } from "../../../containers/isobmff";
+import { IEMSG } from "../../../containers/isobmff";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import isPeriodFulfilled from "./is_period_fulfilled";
@@ -127,8 +127,8 @@ export interface ITemplateIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
-  /* Function that tells if an inband event is whitelisted by the manifest */
-  isInbandEventWhitelisted: (inbandEvent: IInbandEvent) => boolean;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
 
 /**
@@ -154,8 +154,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _availabilityTimeOffset? : number;
   /** Whether the corresponding Manifest can be updated and changed. */
   private _isDynamic : boolean;
-  /* Function that tells if an inband event is whitelisted by the manifest */
-  private _isInbandEventWhitelisted : (inbandEvent: IInbandEvent) => boolean;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  private _isEMSGWhitelisted : (inbandEvent: IEMSG) => boolean;
 
   /**
    * @param {Object} index
@@ -174,7 +174,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             representationBaseURLs,
             representationId,
             representationBitrate,
-            isInbandEventWhitelisted } = context;
+            isEMSGWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
     this._availabilityTimeOffset = availabilityTimeOffset;
@@ -213,7 +213,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._periodStart = periodStart;
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 (periodEnd - periodStart) * timescale;
-    this._isInbandEventWhitelisted = isInbandEventWhitelisted;
+    this._isEMSGWhitelisted = isEMSGWhitelisted;
   }
 
   /**
@@ -221,7 +221,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    return getInitSegment(this._index, this._isInbandEventWhitelisted);
+    return getInitSegment(this._index, this._isEMSGWhitelisted);
   }
 
   /**
@@ -294,7 +294,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                      mediaURLs: detokenizedURLs,
                      timestampOffset: -(index.indexTimeOffset / timescale),
                      privateInfos: {
-                       isInbandEventWhitelisted: this._isInbandEventWhitelisted,
+                       isEMSGWhitelisted: this._isEMSGWhitelisted,
                      } };
       segments.push(args);
       numberIndexedToZero++;

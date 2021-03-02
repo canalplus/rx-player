@@ -38,7 +38,7 @@ export {
   getTrackFragmentDecodeTime,
   getDurationFromTrun,
   getSegmentsFromSidx,
-  IInbandEvent,
+  IEMSG,
   ISidxSegment,
   patchPssh,
   updateBoxLength,
