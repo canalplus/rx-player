@@ -235,12 +235,6 @@ export default function RepresentationStream<T>({
     isLoaded: false,
   };
 
-  if (initSegmentState.segment === null) {
-    // There's no init segment here, we can bypass loading it and parsing it
-    initSegmentState.segmentData$.next(null);
-    initSegmentState.isLoaded = true;
-  }
-
   /** Allows to manually re-check which segments are needed. */
   const reCheckNeededSegments$ = new Subject<void>();
 
@@ -253,6 +247,13 @@ export default function RepresentationStream<T>({
   const downloadingQueue = new DownloadingQueue(content,
                                                 lastSegmentQueue$,
                                                 segmentFetcher);
+
+  if (initSegmentState.segment === null) {
+    // There's no init segment here, we can bypass loading it and parsing it
+    downloadingQueue.declareNoInitializationSegment();
+    initSegmentState.segmentData$.next(null);
+    initSegmentState.isLoaded = true;
+  }
 
   /** Observable loading and pushing segments scheduled through `lastSegmentQueue$`. */
   const queue$ = downloadingQueue.start()
@@ -480,16 +481,16 @@ export default function RepresentationStream<T>({
                        value: inbandEvents }) :
         EMPTY;
 
-      const pushMediaSegment$ = initSegmentState.segmentData$
-        .pipe(mergeMap((initSegmentData) =>
-          pushMediaSegment({ clock$,
-                             content,
-                             initSegmentData,
+      const pushMediaSegment$ = initSegmentState.segmentData$.pipe(
+        take(1),
+        mergeMap((initSegmentData) => pushMediaSegment({ clock$,
+                                                         content,
+                                                         initSegmentData,
 
-                             // XXX TODO
-                             parsedSegment: evt,
-                             segment: evt.segment,
-                             segmentBuffer })));
+                                                         // XXX TODO
+                                                         parsedSegment: evt,
+                                                         segment: evt.segment,
+                                                         segmentBuffer })));
       return observableConcat(segmentEncryptionEvent$,
                               manifestRefresh$,
                               inbandEvents$,

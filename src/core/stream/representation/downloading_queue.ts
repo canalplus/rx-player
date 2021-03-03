@@ -23,7 +23,6 @@ import {
   merge as observableMerge,
   EMPTY,
   ReplaySubject,
-  Subject,
 } from "rxjs";
 import {
   filter,
@@ -32,6 +31,7 @@ import {
   mergeMap,
   share,
   switchMap,
+  take,
 } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
 import log from "../../../log";
@@ -183,6 +183,9 @@ export default class DownloadingQueue<T> {
   /** Interface used to load segments. */
   private _segmentFetcher : IPrioritizedSegmentFetcher<T>;
 
+    /** Emit the timescale anounced in the initialization segment once parsed. */
+  private _parsedInitSegment$ : ReplaySubject<number | undefined>;
+
   /**
    * Create a new DownloadingQueue.
    * @param {Object} content - The context of the Representation you want to
@@ -203,6 +206,12 @@ export default class DownloadingQueue<T> {
     this._initSegmentRequest = null;
     this._mediaSegmentRequest = null;
     this._segmentFetcher = segmentFetcher;
+    this._parsedInitSegment$ = new ReplaySubject<number|undefined>(1);
+  }
+
+  // XXX TODO
+  public declareNoInitializationSegment() : void {
+    this._parsedInitSegment$.next(undefined);
   }
 
   /**
@@ -236,8 +245,6 @@ export default class DownloadingQueue<T> {
     if (this._currentObs$ !== null) {
       return this._currentObs$;
     }
-    /** Emit the timescale anounced in the initialization segment once parsed. */
-    const parsedInitSegment$ = new ReplaySubject<number|undefined>(1);
     const obs = observableDefer(() => {
       const mediaQueue$ = this._downloadQueue$.pipe(
         filter(({ segmentQueue }) => {
@@ -257,7 +264,7 @@ export default class DownloadingQueue<T> {
           return false;
         }),
         switchMap(({ segmentQueue }) =>
-          segmentQueue.length > 0 ? this._requestMediaSegments(parsedInitSegment$) :
+          segmentQueue.length > 0 ? this._requestMediaSegments() :
                                     EMPTY));
 
       const initSegmentPush$ = this._downloadQueue$.pipe(
@@ -277,7 +284,7 @@ export default class DownloadingQueue<T> {
           if (nextQueue.initSegment === null) {
             return EMPTY;
           }
-          return this._requestInitSegment(nextQueue.initSegment, parsedInitSegment$);
+          return this._requestInitSegment(nextQueue.initSegment);
         }));
 
       return observableMerge(initSegmentPush$, mediaQueue$);
@@ -289,12 +296,9 @@ export default class DownloadingQueue<T> {
   }
 
   /**
-   * @param {BehaviorSubject} parsedInitSegment$
    * @returns {Observable}
    */
-  private _requestMediaSegments(
-    parsedInitSegment$ : Subject<number|undefined>
-  ) : Observable<IDownloadingQueueEvent<T>> {
+  private _requestMediaSegments() : Observable<IDownloadingQueueEvent<T>> {
     const { segmentQueue } = this._downloadQueue$.getValue();
     const currentNeededSegment = segmentQueue[0];
     const recursivelyRequestSegments = (
@@ -332,7 +336,8 @@ export default class DownloadingQueue<T> {
 
             case "chunk":
             case "chunk-complete":
-              return parsedInitSegment$.pipe(
+              return this._parsedInitSegment$.pipe(
+                take(1),
                 map((initTimescale) => {
                   if (evt.type === "chunk-complete") {
                     return { type: "end-of-segment" as const,
@@ -360,12 +365,10 @@ export default class DownloadingQueue<T> {
 
   /**
    * @param {Object} queuedInitSegment
-   * @param {BehaviorSubject} parsedInitSegment$
    * @returns {Observable}
    */
   private _requestInitSegment(
-    queuedInitSegment : IQueuedSegment | null,
-    parsedInitSegment$ : Subject<number | undefined>
+    queuedInitSegment : IQueuedSegment | null
   ) : Observable<IDownloadingQueueEvent<T>> {
     if (queuedInitSegment === null) {
       this._initSegmentRequest = null;
@@ -401,7 +404,7 @@ export default class DownloadingQueue<T> {
               // side-effect a posteriori in a concat operator
               observableDefer(() => {
                 if (parsed.segmentType === "init") {
-                  parsedInitSegment$.next(parsed.initTimescale);
+                  this._parsedInitSegment$.next(parsed.initTimescale);
                 }
                 return EMPTY;
               }));
