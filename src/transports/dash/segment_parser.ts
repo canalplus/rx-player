@@ -16,21 +16,16 @@
 
 import { of as observableOf } from "rxjs";
 import {
-  IInbandEvent,
-  IManifestRefreshEvent,
-} from "../../core/stream";
-import {
   getMDHDTimescale,
   getSegmentsFromSidx,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
-import { IEMSG, parseEmsgBoxes } from "../../parsers/containers/isobmff/utils";
+import { parseEmsgBoxes } from "../../parsers/containers/isobmff/utils";
 import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
 import { BaseRepresentationIndex } from "../../parsers/manifest/dash";
-import { utf8ToStr } from "../../tools/string_utils";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
@@ -40,6 +35,7 @@ import {
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import getEventsOutOfEMSGs from "./get_events_out_of_emsgs";
 
 /**
  * @param {Object} config
@@ -85,98 +81,33 @@ export default function generateAudioVideoSegmentParser(
                                                         segment,
                                                         initTimescale);
       const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-      const parsedEMSGs = isWEBM ? undefined : parseEmsgBoxes(chunkData);
-      let whitelistedEMSGs;
-      if (parsedEMSGs !== undefined) {
-        const filteredEMSGs = parsedEMSGs.filter((evt) => {
-          if (segment.privateInfos === undefined ||
-              segment.privateInfos.isEMSGWhitelisted === undefined) {
-            return false;
+
+      if (!isWEBM) {
+        const parsedEMSGs = parseEmsgBoxes(chunkData);
+        if (parsedEMSGs !== undefined) {
+          const whitelistedEMSGs = parsedEMSGs.filter((evt) => {
+            if (segment.privateInfos === undefined ||
+                segment.privateInfos.isEMSGWhitelisted === undefined) {
+              return false;
+            }
+            return segment.privateInfos.isEMSGWhitelisted(evt);
+          });
+          const events = getEventsOutOfEMSGs(whitelistedEMSGs,
+                                             segment,
+                                             manifest.publishTime);
+          if (events !== undefined) {
+            const { manifestRefreshEvent, inbandEvents } = events;
+            return observableOf({ type: "parsed-segment",
+                                  value: { chunkData,
+                                           chunkInfos,
+                                           chunkOffset,
+                                           appendWindow,
+                                           inbandEvents,
+                                           manifestRefreshEvent } });
           }
-          return segment.privateInfos.isEMSGWhitelisted(evt);
-        });
-        if (filteredEMSGs.length > 0) {
-          whitelistedEMSGs = filteredEMSGs;
         }
       }
-      if (whitelistedEMSGs !== undefined &&
-          whitelistedEMSGs.length > 0) {
-        const { manifestRefreshEventsFromEMSGs,
-                EMSGs } = whitelistedEMSGs
-          .reduce((acc, val: IEMSG) => {
-            // Scheme that signals manifest update
-            if (val.schemeId === "urn:mpeg:dash:event:2012" &&
-                // TODO support value 2 and 3
-                val.value === "1") {
-              acc.manifestRefreshEventsFromEMSGs.push(val);
-            } else {
-              acc.EMSGs.push(val);
-            }
-            return acc;
-          }, { manifestRefreshEventsFromEMSGs: [] as IEMSG[],
-               EMSGs: [] as IEMSG[] });
-        let manifestRefreshEvent: IManifestRefreshEvent|undefined;
-        if (manifestRefreshEventsFromEMSGs.length > 0) {
-          let minManifestExpiration: undefined | number;
-          const len = manifestRefreshEventsFromEMSGs.length;
-          for (let i = 0; i < len; i++) {
-            const manifestRefreshEventFromEMSGs = manifestRefreshEventsFromEMSGs[i];
-            const currentManifestPublishTime = manifest.publishTime;
-            const { messageData } = manifestRefreshEventFromEMSGs;
-            const strPublishTime = utf8ToStr(messageData);
-            const eventManifestPublishTime = Date.parse(strPublishTime);
-            if (currentManifestPublishTime === undefined ||
-                eventManifestPublishTime === undefined ||
-                isNaN(eventManifestPublishTime) ||
-                // DASH-if 4.3 tells (4.5.2.1) :
-                // "The media presentation time beyond the event time (indicated
-                // time by presentation_time_delta) is correctly described only
-                // by MPDs with publish time greater than indicated value in the
-                // message_data field."
-                //
-                // Here, if the current manifest has its publish time superior
-                // to event manifest publish time, then the manifest does not need
-                // to be updated
-                eventManifestPublishTime < currentManifestPublishTime) {
-              break;
-            }
-            const { timescale, presentationTimeDelta } = manifestRefreshEventFromEMSGs;
-            const eventPresentationTime =
-              (segment.time / segment.timescale) +
-              (presentationTimeDelta / timescale);
-            minManifestExpiration =
-              minManifestExpiration === undefined ?
-                eventPresentationTime :
-                Math.min(minManifestExpiration,
-                         eventPresentationTime);
-          }
-          if (minManifestExpiration !== undefined) {
-            // redefine manifest expiration time, as typescript does not understand
-            // that it can't be undefined when using it in the getDelay callback
-            const manifestExpirationTime = minManifestExpiration;
-            // const delayComputingTime = performance.now();
-            // const getDelay = () => {
-            //   const now = performance.now();
-            //   const gap = (now - delayComputingTime) / 1000;
-            //   return Math.max(0, manifestExpirationTime - position - gap);
-            // };
-            manifestRefreshEvent = { type: "manifest-refresh",
-                                     value: { manifestExpirationTime } };
-          }
-        }
 
-        const inbandEvents: IInbandEvent[] =
-          EMSGs.map((evt) => ({ type: "dash-emsg",
-                                value: evt }));
-
-        return observableOf({ type: "parsed-segment",
-                              value: { chunkData,
-                                       chunkInfos,
-                                       chunkOffset,
-                                       appendWindow,
-                                       inbandEvents,
-                                       manifestRefreshEvent } });
-      }
       return observableOf({ type: "parsed-segment",
                             value: { chunkData,
                                      chunkInfos,
