@@ -31,6 +31,7 @@ import {
   mergeMap,
   share,
   switchMap,
+  take,
 } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
 import log from "../../../log";
@@ -319,6 +320,7 @@ export default class DownloadingQueue<T> {
             case "chunk":
             case "chunk-complete":
               return initSegmentTimescale$.pipe(
+                take(1),
                 mergeMap((initTimescale) => {
                   if (evt.type === "chunk-complete") {
                     return observableOf({ type: "end-of-segment" as const,
