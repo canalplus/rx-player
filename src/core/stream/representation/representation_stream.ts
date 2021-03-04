@@ -376,8 +376,9 @@ export default function RepresentationStream<T>({
         return observableMerge(protectedEvents$, pushEvent$);
 
       case "parsed-segment":
-        return initSegmentState.segmentData$
-          .pipe(mergeMap((initSegmentData) =>
+        return initSegmentState.segmentData$.pipe(
+          take(1),
+          mergeMap((initSegmentData) =>
             pushMediaSegment({ clock$,
                                content,
                                initSegmentData,
