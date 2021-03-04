@@ -107,6 +107,11 @@ export interface IClock {
   setCurrentTime: (time: number) => void;
 }
 
+export interface IClock {
+  clock$: Observable<IClockTick>;
+  setCurrentTime: (time: number) => void;
+}
+
 const { SAMPLING_INTERVAL_MEDIASOURCE,
         SAMPLING_INTERVAL_LOW_LATENCY,
         SAMPLING_INTERVAL_NO_MEDIASOURCE,
