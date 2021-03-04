@@ -30,9 +30,13 @@ import {
 } from "../../compat";
 import { MediaError } from "../../errors";
 import log from "../../log";
+import Manifest from "../../manifest";
 import isNonEmptyString from "../../utils/is_non_empty_string";
 
 const { onSourceOpen$ } = events;
+
+/** Number of seconds in a regular year. */
+const YEAR_IN_SECONDS = 365 * 24 * 3600;
 
 /**
  * Set the media duration in the mediaSource.
@@ -41,10 +45,20 @@ const { onSourceOpen$ } = events;
  */
 export function setDurationToMediaSource(
   mediaSource : MediaSource,
-  duration : number
+  manifest : Manifest
 ) : void {
-  const newDuration = duration === Infinity ? Number.MAX_VALUE :
-                                              duration;
+  const maximumPosition = manifest.getMaximumPosition();
+
+  // Some targets poorly support setting a very high number for durations.
+  // Yet, in live contents, we would prefer setting a value as high as possible
+  // to still be able to seek anywhere we want to (even ahead of the Manifest if
+  // we want to). As such, we put it at a safe default value of 2^32 excepted
+  // when the maximum position is already relatively close to that value, where
+  // we authorize exceptionally going over it.
+  const newDuration = !manifest.isLive ? maximumPosition :
+                                         Math.max(Math.pow(2, 32),
+                                                  maximumPosition + YEAR_IN_SECONDS);
+
   if (mediaSource.duration !== newDuration) {
     log.info("Init: Setting duration", newDuration);
     mediaSource.duration = newDuration;
