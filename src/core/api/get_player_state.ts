@@ -76,7 +76,7 @@ export default function getLoadedContentState(
     }
 
     if (stalledStatus.reason === "internal-seek") {
-      return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
+      return PLAYER_STATES.BUFFERING;
     }
 
     return stalledStatus.reason === "seeking" ? PLAYER_STATES.SEEKING :

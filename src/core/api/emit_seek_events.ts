@@ -17,12 +17,12 @@
 import {
   defer as observableDefer,
   EMPTY,
-  fromEvent as observableFromEvent,
   merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
 import {
+  distinctUntilChanged,
   mergeMap,
   startWith,
   switchMapTo,
@@ -48,24 +48,21 @@ export default function emitSeekEvents(
       return EMPTY;
     }
 
-    const isSeeking$ = observableFromEvent(mediaElement, "seeking").pipe(
+    const isSeeking$ = clock$.pipe(
+      distinctUntilChanged((prev, curr) => prev.seeking === curr.seeking),
+      mergeMap((tick: IClockTick) => {
+        return tick.seeking && tick.stalled?.reason !== "internal-seek" ?
+          observableOf("seeking" as const) :
+          EMPTY
+        }));
+    const hasSeeked$ = isSeeking$.pipe(
       switchMapTo(
-        clock$.pipe(
-          mergeMap((tick: IClockTick) => {
-            return tick.stalled !== null && tick.stalled.reason !== "internal-seek" ?
-              observableOf("seeking" as const) :
-              EMPTY
-          }),
-          take(1))));
-    const hasSeeked$ = observableFromEvent(mediaElement, "seeked").pipe(
-      switchMapTo(
-        clock$.pipe(
-          mergeMap((tick : IClockTick) => {
-            return tick.stalled === null || tick.stalled.reason !== "seeking" ?
-              observableOf("seeked" as const) :
-              EMPTY;
-          }),
-          take(1))));
+        clock$.pipe(mergeMap((tick : IClockTick) => {
+          return tick.stalled === null || tick.stalled.reason !== "seeking" && tick.stalled.reason !== "internal-seek" ?
+          observableOf("seeked" as const) :
+          EMPTY;
+        }),
+        take(1))));
     const seekingEvents$ = observableMerge(isSeeking$, hasSeeked$);
     return mediaElement.seeking ? seekingEvents$.pipe(startWith("seeking" as const)) :
                                   seekingEvents$;
