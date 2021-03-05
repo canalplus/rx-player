@@ -88,11 +88,12 @@ export default function EMEManager(
   log.debug("EME: Starting EMEManager logic.");
 
    /**
-    * Keep track of all decryption keys currently handled by the `EMEManager`.
+    * Keep track of all decryption keys handled by this instance of the
+    * `EMEManager`.
     * This allows to avoid creating multiple MediaKeySessions handling the same
     * decryption keys.
     */
-  const handledSessions = new InitDataStore<{
+  const contentSessions = new InitDataStore<{
     /** Initialization data which triggered the creation of this session. */
     initializationData : IInitializationDataInfo;
     /** Last key update event received for that session. */
@@ -100,7 +101,8 @@ export default function EMEManager(
   }>();
 
   /**
-   * Keep track of which initialization data have been blacklisted.
+   * Keep track of which initialization data have been blacklisted in the
+   * current instance of the `EMEManager`.
    * If the same initialization data is encountered again, we can directly emit
    * the same `BlacklistedSessionError`.
    */
@@ -180,7 +182,7 @@ export default function EMEManager(
       const lastKeyUpdate$ = new ReplaySubject<IKeyUpdateValue>(1);
 
       // First, check that this initialization data is not already handled
-      if (options.singleLicensePer === "content" && handledSessions.getLength() > 0) {
+      if (options.singleLicensePer === "content" && !contentSessions.isEmpty()) {
         const keyIds = initializationData.keyIds;
         if (keyIds === undefined) {
           log.warn("EME: Initialization data linked to unknown key id, we'll " +
@@ -188,7 +190,7 @@ export default function EMEManager(
           return observableOf({ type: "init-data-ignored" as const,
                                 value: { initializationData } });
         }
-        const firstSession = handledSessions.getAll()[0];
+        const firstSession = contentSessions.getAll()[0];
         return firstSession.lastKeyUpdate$.pipe(mergeMap((evt) => {
           for (let i = 0; i < evt.whitelistedKeyIds.length; i++) {
             for (let j = 0; j < keyIds.length; j++) {
@@ -205,7 +207,7 @@ export default function EMEManager(
                                 value: { blacklistedKeyIDs: keyIds,
                                          whitelistedKeyIds: [] } });
         }));
-      } else if (!handledSessions.storeIfNone(initializationData, { initializationData,
+      } else if (!contentSessions.storeIfNone(initializationData, { initializationData,
                                                                     lastKeyUpdate$ })) {
         log.debug("EME: Init data already received. Skipping it.");
         return observableOf({ type: "init-data-ignored" as const,
@@ -226,7 +228,7 @@ export default function EMEManager(
         .pipe(mergeMap((sessionEvt) =>  {
           switch (sessionEvt.type) {
             case "cleaning-old-session":
-              handledSessions.remove(sessionEvt.value.initializationData);
+              contentSessions.remove(sessionEvt.value.initializationData);
               return EMPTY;
 
             case "cleaned-old-session":

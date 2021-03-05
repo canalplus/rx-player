@@ -56,6 +56,16 @@ export default class InitDataStore<T> {
   }
 
   /**
+   * Returns `true` if no initialization data is stored yet in this
+   * InitDataStore.
+   * Returns `false` otherwise.
+   * @returns {boolean}
+   */
+  public isEmpty() : boolean {
+    return this._storage.length === 0;
+  }
+
+  /**
    * Returns the element associated with the given initData and initDataType.
    * Returns `undefined` if not found.
    * @param {Uint8Array} initData
