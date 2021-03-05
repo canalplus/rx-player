@@ -63,7 +63,6 @@ import shouldUnsetMediaKeys from "./should_unset_media_keys";
 import shouldValidateMetadata from "./should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "./should_wait_for_data_before_loaded";
 import shouldWaitForSeekValidation from "./should_wait_for_seek_validation";
-import whenLoadedMetadata$ from "./when_loaded_metadata";
 import whenMediaSourceOpen$ from "./when_media_source_open";
 
 // TODO To remove. This seems to be the only side-effect done on import, which
@@ -112,6 +111,5 @@ export {
   shouldWaitForSeekValidation,
   tryToChangeSourceBufferType,
   VTTCue_,
-  whenLoadedMetadata$,
   whenMediaSourceOpen$,
 };
