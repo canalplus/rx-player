@@ -26,3 +26,6 @@
 /experimental
 /types
 /tools
+
+/docs/.docusaurus
+/docs/build
