@@ -377,7 +377,7 @@ function createClock(
     function getCurrentClockTick(state : IMediaInfosState) : IClockTick {
       const mediaTimings = getMediaInfos(mediaElement, state);
       const stalledState = getStalledStatus(lastTimings, mediaTimings, options, internalSeek);
-      if (!mediaTimings.seeking && internalSeek) {
+      if (state !== "seeking" && internalSeek) {
         internalSeek = false;
       }
       const timings = objectAssign({},

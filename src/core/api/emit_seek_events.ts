@@ -22,7 +22,6 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  distinctUntilChanged,
   mergeMap,
   startWith,
   switchMapTo,
@@ -49,18 +48,17 @@ export default function emitSeekEvents(
     }
 
     const isSeeking$ = clock$.pipe(
-      distinctUntilChanged((prev, curr) => prev.seeking === curr.seeking),
       mergeMap((tick: IClockTick) => {
-        return tick.seeking && tick.stalled?.reason !== "internal-seek" ?
+        return tick.state === "seeking" && tick.stalled?.reason !== "internal-seek" ?
           observableOf("seeking" as const) :
           EMPTY
         }));
     const hasSeeked$ = isSeeking$.pipe(
       switchMapTo(
         clock$.pipe(mergeMap((tick : IClockTick) => {
-          return tick.stalled === null || tick.stalled.reason !== "seeking" && tick.stalled.reason !== "internal-seek" ?
-          observableOf("seeked" as const) :
-          EMPTY;
+          return tick.state === "seeked" ?
+            observableOf("seeked" as const) :
+            EMPTY;
         }),
         take(1))));
     const seekingEvents$ = observableMerge(isSeeking$, hasSeeked$);
