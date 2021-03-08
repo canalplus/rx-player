@@ -51,16 +51,17 @@ export default function emitSeekEvents(
       mergeMap((tick: IClockTick) => {
         return tick.state === "seeking" && tick.stalled?.reason !== "internal-seek" ?
           observableOf("seeking" as const) :
-          EMPTY
-        }));
+          EMPTY;
+      }));
     const hasSeeked$ = isSeeking$.pipe(
       switchMapTo(
-        clock$.pipe(mergeMap((tick : IClockTick) => {
-          return tick.state === "seeked" ?
+        clock$.pipe(
+          mergeMap((tick : IClockTick) => {
+            return tick.state === "seeked" ?
             observableOf("seeked" as const) :
             EMPTY;
-        }),
-        take(1))));
+          }),
+          take(1))));
     const seekingEvents$ = observableMerge(isSeeking$, hasSeeked$);
     return mediaElement.seeking ? seekingEvents$.pipe(startWith("seeking" as const)) :
                                   seekingEvents$;

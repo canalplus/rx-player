@@ -106,7 +106,7 @@ export interface IDirectFileOptions { autoPlay : boolean;
                                       speed$ : Observable<number>;
                                       startAt? : IInitialTimeOptions;
                                       url? : string;
-                                      setCurrentTime: (nb: number) => void }
+                                      setCurrentTime: (nb: number) => void; }
 
 /**
  * Launch a content in "Directfile mode".

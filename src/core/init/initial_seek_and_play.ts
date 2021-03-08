@@ -141,8 +141,9 @@ export default function seekAndLoadOnMediaEvents(
   const seek$ = whenLoadedMetadata$(mediaElement).pipe(
     take(1),
     tap(() => {
-      log.info("Init: Set initial time", startTime);
-      setCurrentTime(typeof startTime === "function" ? startTime() : startTime)
+      const startTimeValue = typeof startTime === "function" ? startTime() : startTime;
+      log.info("Init: Set initial time", startTimeValue);
+      setCurrentTime(startTimeValue);
     }),
     shareReplay({ refCount: true })
   );

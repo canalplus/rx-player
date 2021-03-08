@@ -734,8 +734,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const videoElement = this.videoElement;
     /** Global "clock" used for content playback */
-    const { setCurrentTime, clock$ } = createClock(videoElement, { withMediaSource: !isDirectFile,
-                                                                   lowLatencyMode });
+    const { setCurrentTime, clock$ } = createClock(videoElement, {
+      withMediaSource: !isDirectFile,
+      lowLatencyMode,
+    });
 
     /** Emit when the current content has been stopped. */
     const contentIsStopped$ = observableMerge(
