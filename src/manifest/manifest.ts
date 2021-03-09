@@ -690,6 +690,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.parsingErrors = newManifest.parsingErrors;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
+    this.publishTime = newManifest.publishTime;
 
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       this._timeBounds = newManifest._timeBounds;
