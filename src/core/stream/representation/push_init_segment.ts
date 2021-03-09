@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-import {
-  defer as observableDefer,
-  EMPTY,
-  Observable,
-} from "rxjs";
-import { map } from "rxjs/operators";
+import { Observable } from "rxjs";
 import Manifest, {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../../manifest";
+import TaskCanceller from "../../../utils/task_canceller";
 import {
   IPushedChunkData,
   SegmentBuffer,
@@ -47,7 +43,7 @@ export default function pushInitSegment<T>(
     content,
     segment,
     segmentData,
-    segmentBuffer } : { clock$ : Observable<{ position : number }>;
+    segmentBuffer } : { clock$ : Observable<{ getCurrentTime : () => number }>;
                         content: { adaptation : Adaptation;
                                    manifest : Manifest;
                                    period : Period;
@@ -56,9 +52,9 @@ export default function pushInitSegment<T>(
                         segment : ISegment;
                         segmentBuffer : SegmentBuffer<T>; }
 ) : Observable< IStreamEventAddedSegment<T> > {
-  return observableDefer(() => {
+  return new Observable((obs) => {
     if (segmentData === null) {
-      return EMPTY;
+      obs.complete();
     }
     const codec = content.representation.getMimeTypeString();
     const data : IPushedChunkData<T> = { initSegment: segmentData,
@@ -66,11 +62,21 @@ export default function pushInitSegment<T>(
                                          timestampOffset: 0,
                                          appendWindow: [ undefined, undefined ],
                                          codec };
-    return appendSegmentToBuffer(clock$, segmentBuffer, { data,
-                                                          inventoryInfos: null })
-      .pipe(map(() => {
+
+    const canceller = new TaskCanceller();
+    appendSegmentToBuffer(clock$,
+                          segmentBuffer,
+                          { data, inventoryInfos: null },
+                          canceller.signal)
+      .then(() => {
         const buffered = segmentBuffer.getBufferedRanges();
-        return EVENTS.addedSegment(content, segment, buffered, segmentData);
-      }));
+        obs.next(EVENTS.addedSegment(content, segment, buffered, segmentData as T));
+        obs.complete();
+      }, (e) => {
+        obs.error(e);
+      });
+    return () => {
+      canceller.cancel();
+    };
   });
 }

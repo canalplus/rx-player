@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import request from "../../utils/request";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
   CustomManifestLoader,
-  IManifestLoaderArguments,
-  IManifestLoaderEvent,
+  ILoadedManifestFormat,
+  IRequestedData,
 } from "../types";
 import callCustomManifestLoader from "./call_custom_manifest_loader";
 
@@ -30,12 +29,13 @@ import callCustomManifestLoader from "./call_custom_manifest_loader";
  * @returns {Observable}
  */
 function regularManifestLoader(
-  { url } : IManifestLoaderArguments
-) : Observable< IManifestLoaderEvent > {
+  url : string | undefined,
+  cancelSignal : CancellationSignal
+) : Promise< IRequestedData<ILoadedManifestFormat> > {
   if (url === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
-  return request({ url, responseType: "text" });
+  return request({ url, responseType: "text", cancelSignal });
 }
 
 /**
@@ -45,10 +45,12 @@ function regularManifestLoader(
  */
 export default function generateManifestLoader(
   { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
-) : (x : IManifestLoaderArguments) => Observable< IManifestLoaderEvent > {
-  if (isNullOrUndefined(customManifestLoader)) {
-    return regularManifestLoader;
-  }
-  return callCustomManifestLoader(customManifestLoader,
-                                  regularManifestLoader);
+) : (
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) => Promise<IRequestedData<ILoadedManifestFormat>>
+{
+  return typeof customManifestLoader !== "function" ?
+    regularManifestLoader :
+    callCustomManifestLoader(customManifestLoader, regularManifestLoader);
 }

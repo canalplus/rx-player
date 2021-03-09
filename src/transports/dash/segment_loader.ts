@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Observer,
-  of as observableOf,
-} from "rxjs";
-import xhr, {
+import PPromise from "pinkie";
+import request, {
   fetchIsSupported,
 } from "../../utils/request";
+import {
+  CancellationError,
+  CancellationSignal,
+} from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
 import {
   CustomSegmentLoader,
-  ILoaderProgressEvent,
+  ILoadedAudioVideoSegmentFormat,
+  ISegmentContext,
   ISegmentLoader,
-  ISegmentLoaderArguments,
-  ISegmentLoaderDataLoadedEvent,
-  ISegmentLoaderEvent,
+  ISegmentLoaderCallbacks,
+  ISegmentLoaderResultChunkedComplete,
+  ISegmentLoaderResultSegmentCreated,
+  ISegmentLoaderResultSegmentLoaded,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
@@ -37,42 +39,49 @@ import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader"
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
-type ICustomSegmentLoaderObserver =
-  Observer<ILoaderProgressEvent |
-           ISegmentLoaderDataLoadedEvent<Uint8Array|ArrayBuffer>>;
-
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
- * @param {Object} opt
- * @returns {Observable}
+ * @param {string} uri
+ * @param {Object} content
+ * @param {boolean} lowLatencyMode
+ * @param {Object} callbacks
+ * @param {Object} cancelSignal
+ * @returns {Promise}
  */
-function regularSegmentLoader(
+export function regularSegmentLoader(
   url : string,
-  args : ISegmentLoaderArguments,
-  lowLatencyMode : boolean
-) : Observable< ISegmentLoaderEvent<ArrayBuffer | Uint8Array>> {
-
-  if (args.segment.isInit) {
-    return initSegmentLoader(url, args);
+  content : ISegmentContext,
+  lowLatencyMode : boolean,
+  callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>,
+  cancelSignal : CancellationSignal
+) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
+            ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
+            ISegmentLoaderResultChunkedComplete>
+{
+  if (content.segment.isInit) {
+    return initSegmentLoader(url, content.segment, cancelSignal, callbacks);
   }
 
-  const isWEBM = isWEBMEmbeddedTrack(args.representation);
+  const isWEBM = isWEBMEmbeddedTrack(content.representation);
   if (lowLatencyMode && !isWEBM) {
     if (fetchIsSupported()) {
-      return lowLatencySegmentLoader(url, args);
+      return lowLatencySegmentLoader(url, content, callbacks, cancelSignal);
     } else {
       warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                "a higher chance of rebuffering when playing close to the live edge");
     }
   }
 
-  const { segment } = args;
-  return xhr({ url,
-               responseType: "arraybuffer",
-               sendProgressEvents: true,
-               headers: segment.range !== undefined ?
-                 { Range: byteRange(segment.range) } :
-                 undefined });
+  const { segment } = content;
+  return request({ url,
+                   responseType: "arraybuffer",
+                   headers: segment.range !== undefined ?
+                     { Range: byteRange(segment.range) } :
+                     undefined,
+                   cancelSignal,
+                   onProgress: callbacks.onProgress })
+    .then((data) => ({ resultType: "segment-loaded",
+                       resultData: data }));
 }
 
 /**
@@ -85,7 +94,7 @@ export default function generateSegmentLoader(
     checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
                                      segmentLoader? : CustomSegmentLoader;
                                      checkMediaSegmentIntegrity? : boolean; }
-) : ISegmentLoader< Uint8Array | ArrayBuffer | null > {
+) : ISegmentLoader<Uint8Array | ArrayBuffer | null> {
   return checkMediaSegmentIntegrity !== true ? segmentLoader :
                                                addSegmentIntegrityChecks(segmentLoader);
 
@@ -94,16 +103,21 @@ export default function generateSegmentLoader(
    * @returns {Observable}
    */
   function segmentLoader(
-    content : ISegmentLoaderArguments
-  ) : Observable< ISegmentLoaderEvent< Uint8Array | ArrayBuffer | null > > {
-    const { url } = content;
+    url : string | null,
+    content : ISegmentContext,
+    cancelSignal : CancellationSignal,
+    callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>
+  ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
+              ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
+              ISegmentLoaderResultChunkedComplete>
+  {
     if (url == null) {
-      return observableOf({ type: "data-created" as const,
-                            value: { responseData: null } });
+      return PPromise.resolve({ resultType: "segment-created",
+                                resultData: null });
     }
 
     if (lowLatencyMode || customSegmentLoader === undefined) {
-      return regularSegmentLoader(url, content, lowLatencyMode);
+      return regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal);
     }
 
     const args = { adaptation: content.adaptation,
@@ -114,7 +128,7 @@ export default function generateSegmentLoader(
                    transport: "dash",
                    url };
 
-    return new Observable((obs : ICustomSegmentLoaderObserver) => {
+    return new Promise((res, rej) => {
       let hasFinished = false;
       let hasFallbacked = false;
 
@@ -127,14 +141,15 @@ export default function generateSegmentLoader(
                   size? : number;
                   duration? : number; }
       ) => {
-        if (!hasFallbacked) {
-          hasFinished = true;
-          obs.next({ type: "data-loaded" as const,
-                     value: { responseData: _args.data,
-                              size: _args.size,
-                              duration: _args.duration } });
-          obs.complete();
+        hasFinished = true;
+        if (hasFallbacked || cancelSignal.isCancelled) {
+          return;
         }
+        cancelSignal.removeListener(abortCustomLoader);
+        res({ resultType: "segment-loaded",
+              resultData: { responseData: _args.data,
+                            size: _args.size,
+                            duration: _args.duration } });
       };
 
       /**
@@ -142,10 +157,12 @@ export default function generateSegmentLoader(
        * @param {*} err - The corresponding error encountered
        */
       const reject = (err = {}) : void => {
-        if (!hasFallbacked) {
-          hasFinished = true;
-          obs.error(err);
+        hasFinished = true;
+        if (hasFallbacked || cancelSignal.isCancelled) {
+          return;
         }
+        cancelSignal.removeListener(abortCustomLoader);
+        rej(err);
       };
 
       const progress = (
@@ -153,11 +170,12 @@ export default function generateSegmentLoader(
                   size : number;
                   totalSize? : number; }
       ) => {
-        if (!hasFallbacked) {
-          obs.next({ type: "progress", value: { duration: _args.duration,
-                                                size: _args.size,
-                                                totalSize: _args.totalSize } });
+        if (hasFallbacked || cancelSignal.isCancelled) {
+          return;
         }
+        callbacks.onProgress({ duration: _args.duration,
+                               size: _args.size,
+                               totalSize: _args.totalSize });
       };
 
       /**
@@ -166,25 +184,29 @@ export default function generateSegmentLoader(
        */
       const fallback = () => {
         hasFallbacked = true;
-        const regular$ = regularSegmentLoader(url, content, lowLatencyMode);
-
-        // HACK What is TypeScript/RxJS doing here??????
-        /* eslint-disable import/no-deprecated */
-        /* eslint-disable @typescript-eslint/ban-ts-comment */
-        // @ts-ignore
-        regular$.subscribe(obs);
-        /* eslint-enable import/no-deprecated */
-        /* eslint-enable @typescript-eslint/ban-ts-comment */
+        cancelSignal.removeListener(abortCustomLoader);
+        regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal)
+          .then(res, rej);
       };
 
-      const callbacks = { reject, resolve, progress, fallback };
-      const abort = customSegmentLoader(args, callbacks);
+      const customCallbacks = { reject, resolve, progress, fallback };
+      const abort = customSegmentLoader(args, customCallbacks);
 
-      return () => {
-        if (!hasFinished && !hasFallbacked && typeof abort === "function") {
+      cancelSignal.addListener(abortCustomLoader);
+
+      /**
+       * The logic to run when the custom loader is cancelled while pending.
+       * @param {Error} err
+       */
+      function abortCustomLoader(err : CancellationError) {
+        if (hasFallbacked) {
+          return;
+        }
+        if (!hasFinished && typeof abort === "function") {
           abort();
         }
-      };
+        rej(err);
+      }
     });
   }
 }

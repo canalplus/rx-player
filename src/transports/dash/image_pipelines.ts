@@ -14,37 +14,50 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
+import PPromise from "pinkie";
 import features from "../../features";
 import request from "../../utils/request";
 import takeFirstSet from "../../utils/take_first_set";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
   IImageTrackSegmentData,
-  ISegmentLoaderArguments,
-  ISegmentLoaderEvent,
-  ISegmentParserArguments,
+  ILoadedImageSegmentFormat,
+  ISegmentContext,
+  ISegmentLoaderCallbacks,
+  ISegmentLoaderResultChunkedComplete,
+  ISegmentLoaderResultSegmentCreated,
+  ISegmentLoaderResultSegmentLoaded,
   ISegmentParserParsedInitSegment,
   ISegmentParserParsedSegment,
 } from "../types";
 
 /**
- * @param {Object} args
- * @returns {Observable}
+ * @param {string|null} url
+ * @param {Object} content
+ * @param {Object} cancelSignal
+ * @param {Object} callbacks
+ * @returns {Promise}
  */
 export function imageLoader(
-  { segment,
-    url } : ISegmentLoaderArguments
-) : Observable< ISegmentLoaderEvent< ArrayBuffer | null > > {
+  url : string | null,
+  content : ISegmentContext,
+  cancelSignal : CancellationSignal,
+  callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
+) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
+            ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat> |
+            ISegmentLoaderResultChunkedComplete>
+{
+  const { segment } = content;
   if (segment.isInit || url === null) {
-    return observableOf({ type: "data-created" as const,
-                          value: { responseData: null } });
+    return PPromise.resolve({ resultType: "segment-created",
+                              resultData: null });
   }
   return request({ url,
                    responseType: "arraybuffer",
-                   sendProgressEvents: true });
+                   onProgress: callbacks.onProgress,
+                   cancelSignal })
+    .then((data) => ({ resultType: "segment-loaded",
+                       resultData: data }));
 }
 
 /**
@@ -52,13 +65,13 @@ export function imageLoader(
  * @returns {Observable}
  */
 export function imageParser(
-  { response,
-    content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<IImageTrackSegmentData | null>
-{
+  loadedSegment : { data : ArrayBuffer | Uint8Array | null;
+                    isChunked : boolean; },
+  content : ISegmentContext
+) : ISegmentParserParsedSegment< IImageTrackSegmentData | null > |
+    ISegmentParserParsedInitSegment< null > {
   const { segment, period } = content;
-  const { data, isChunked } = response;
+  const { data, isChunked } = loadedSegment;
 
   if (content.segment.isInit) { // image init segment has no use
     return { segmentType: "init",

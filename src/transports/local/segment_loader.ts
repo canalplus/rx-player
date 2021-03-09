@@ -14,31 +14,29 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Observer,
-} from "rxjs";
+import PPromise from "pinkie";
 import {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import { CancellationError, CancellationSignal } from "../../utils/task_canceller";
 import {
-  ISegmentLoaderArguments,
-  ISegmentLoaderDataLoadedEvent,
-  ISegmentLoaderEvent,
+  ISegmentContext,
+  ISegmentLoaderCallbacks,
+  ISegmentLoaderResultSegmentLoaded,
 } from "../types";
 
 /**
  * @param {Function} customSegmentLoader
- * @returns {Observable}
+ * @param {Object} cancelSignal
+ * @returns {Promise}
  */
 function loadInitSegment(
-  customSegmentLoader : ILocalManifestInitSegmentLoader
-) : Observable< ISegmentLoaderDataLoadedEvent<ArrayBuffer | null>> {
-  return new Observable((obs : Observer<
-    ISegmentLoaderDataLoadedEvent< ArrayBuffer | null >
-  >) => {
+  customSegmentLoader : ILocalManifestInitSegmentLoader,
+  cancelSignal : CancellationSignal
+) : PPromise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
+  return new PPromise((res, rej) => {
     let hasFinished = false;
 
     /**
@@ -51,11 +49,13 @@ function loadInitSegment(
       duration? : number;
     }) => {
       hasFinished = true;
-      obs.next({ type: "data-loaded",
-                 value: { responseData: _args.data,
-                          size: _args.size,
-                          duration: _args.duration } });
-      obs.complete();
+      if (!cancelSignal.isCancelled) {
+        cancelSignal.removeListener(abortLoader);
+        res({ resultType: "segment-loaded",
+              resultData: { responseData: _args.data,
+                            size: _args.size,
+                            duration: _args.duration } });
+      }
     };
 
     /**
@@ -64,31 +64,40 @@ function loadInitSegment(
      */
     const reject = (err? : Error) => {
       hasFinished = true;
-      obs.error(err);
+      if (!cancelSignal.isCancelled) {
+        cancelSignal.removeListener(abortLoader);
+        rej(err);
+      }
     };
 
     const abort = customSegmentLoader({ resolve, reject });
 
-    return () => {
+    cancelSignal.addListener(abortLoader);
+    /**
+     * The logic to run when this loader is cancelled while pending.
+     * @param {Error} err
+     */
+    function abortLoader(err : CancellationError) {
       if (!hasFinished && typeof abort === "function") {
         abort();
       }
-    };
+      rej(err);
+    }
   });
 }
 
 /**
  * @param {Object} segment
  * @param {Function} customSegmentLoader
+ * @param {Object} cancelSignal
  * @returns {Observable}
  */
 function loadSegment(
   segment : { time : number; duration : number; timestampOffset? : number },
-  customSegmentLoader : ILocalManifestSegmentLoader
-) : Observable< ISegmentLoaderDataLoadedEvent<ArrayBuffer | null>> {
-  return new Observable((obs : Observer<
-    ISegmentLoaderDataLoadedEvent< ArrayBuffer | null >
-  >) => {
+  customSegmentLoader : ILocalManifestSegmentLoader,
+  cancelSignal : CancellationSignal
+) : PPromise< ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
+  return new PPromise((res, rej) => {
     let hasFinished = false;
 
     /**
@@ -100,12 +109,14 @@ function loadSegment(
       size? : number;
       duration? : number;
     }) => {
+      cancelSignal.removeListener(abortLoader);
       hasFinished = true;
-      obs.next({ type: "data-loaded",
-                 value: { responseData: _args.data,
-                          size: _args.size,
-                          duration: _args.duration } });
-      obs.complete();
+      if (!cancelSignal.isCancelled) {
+        res({ resultType: "segment-loaded",
+              resultData: { responseData: _args.data,
+                            size: _args.size,
+                            duration: _args.duration } });
+      }
     };
 
     /**
@@ -113,40 +124,58 @@ function loadSegment(
      * @param {*} err - The corresponding error encountered
      */
     const reject = (err? : Error) => {
+      cancelSignal.removeListener(abortLoader);
       hasFinished = true;
-      obs.error(err);
+      if (!cancelSignal.isCancelled) {
+        rej(err);
+      }
     };
 
     const abort = customSegmentLoader(segment, { resolve, reject });
 
-    return () => {
+    cancelSignal.addListener(abortLoader);
+    /**
+     * The logic to run when this loader is cancelled while pending.
+     * @param {Error} err
+     */
+    function abortLoader(err : CancellationError) {
       if (!hasFinished && typeof abort === "function") {
         abort();
       }
-    };
+      rej(err);
+    }
   });
 }
 
 /**
  * Generic segment loader for the local Manifest.
- * @param {Object} arg
- * @returns {Observable}
+ * @param {string | null} _url
+ * @param {Object} content
+ * @param {Object} cancelSignal
+ * @param {Object} _callbacks
+ * @returns {Promise}
  */
 export default function segmentLoader(
-  { segment } : ISegmentLoaderArguments
-) : Observable< ISegmentLoaderEvent< ArrayBuffer | Uint8Array | null > > {
+  _url : string | null,
+  content : ISegmentContext,
+  cancelSignal : CancellationSignal,
+  _callbacks : ISegmentLoaderCallbacks<ArrayBuffer | null>
+) : PPromise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
+  const { segment } = content;
   const privateInfos = segment.privateInfos;
   if (segment.isInit) {
     if (privateInfos === undefined ||
         isNullOrUndefined(privateInfos.localManifestInitSegment)) {
       throw new Error("Segment is not a local Manifest segment");
     }
-    return loadInitSegment(privateInfos.localManifestInitSegment.load);
+    return loadInitSegment(privateInfos.localManifestInitSegment.load,
+                           cancelSignal);
   }
   if (privateInfos === undefined ||
       isNullOrUndefined(privateInfos.localManifestSegment)) {
     throw new Error("Segment is not an local Manifest segment");
   }
   return loadSegment(privateInfos.localManifestSegment.segment,
-                     privateInfos.localManifestSegment.load);
+                     privateInfos.localManifestSegment.load,
+                     cancelSignal);
 }

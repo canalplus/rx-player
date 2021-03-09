@@ -14,27 +14,33 @@
  * limitations under the License.
  */
 
+import PPromise from "pinkie";
 import {
-  Observable,
-  Observer,
-} from "rxjs";
+  CancellationError,
+  CancellationSignal,
+} from "../../utils/task_canceller";
 import {
   CustomManifestLoader,
-  ILoadedManifest,
-  IManifestLoaderArguments,
-  IManifestLoaderEvent,
+  ILoadedManifestFormat,
+  IRequestedData,
 } from "../types";
 
 export default function callCustomManifestLoader(
   customManifestLoader : CustomManifestLoader,
   fallbackManifestLoader : (
-    x : IManifestLoaderArguments
-  ) => Observable< IManifestLoaderEvent >
-) : (x : IManifestLoaderArguments) => Observable< IManifestLoaderEvent > {
-
-  return (args : IManifestLoaderArguments) : Observable< IManifestLoaderEvent > => {
-    return new Observable((obs: Observer<IManifestLoaderEvent>) => {
-      const { url } = args;
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) => Promise< IRequestedData<ILoadedManifestFormat> >
+) : (
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) => Promise< IRequestedData<ILoadedManifestFormat> >
+{
+  return (
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) : Promise< IRequestedData<ILoadedManifestFormat> > => {
+    return new PPromise((res, rej) => {
       const timeAPIsDelta = Date.now() - performance.now();
       let hasFinished = false;
       let hasFallbacked = false;
@@ -43,30 +49,30 @@ export default function callCustomManifestLoader(
        * Callback triggered when the custom manifest loader has a response.
        * @param {Object} args
        */
-      const resolve = (_args : { data : ILoadedManifest;
+      const resolve = (_args : { data : ILoadedManifestFormat;
                                  size? : number;
                                  duration? : number;
                                  url? : string;
                                  receivingTime? : number;
                                  sendingTime? : number; }) =>
       {
-        if (!hasFallbacked) {
-          hasFinished = true;
-          const receivedTime =
-            _args.receivingTime !== undefined ? _args.receivingTime - timeAPIsDelta :
-                                                undefined;
-          const sendingTime =
-            _args.sendingTime !== undefined ? _args.sendingTime - timeAPIsDelta :
-                                              undefined;
-
-          obs.next({ type: "data-loaded",
-                     value: { responseData: _args.data,
-                              size: _args.size,
-                              duration: _args.duration,
-                              url: _args.url,
-                              receivedTime, sendingTime } });
-          obs.complete();
+        hasFinished = true;
+        if (hasFallbacked || cancelSignal.isCancelled) {
+          return;
         }
+        cancelSignal.removeListener(abortCustomLoader);
+        const receivedTime =
+          _args.receivingTime !== undefined ? _args.receivingTime - timeAPIsDelta :
+                                              undefined;
+        const sendingTime =
+          _args.sendingTime !== undefined ? _args.sendingTime - timeAPIsDelta :
+                                            undefined;
+
+        res({ responseData: _args.data,
+              size: _args.size,
+              duration: _args.duration,
+              url: _args.url,
+              receivedTime, sendingTime });
       };
 
       /**
@@ -74,9 +80,10 @@ export default function callCustomManifestLoader(
        * @param {*} err - The corresponding error encountered
        */
       const reject = (err : unknown) : void => {
-        if (!hasFallbacked) {
-          hasFinished = true;
-          obs.error(err);
+        hasFinished = true;
+        if (!hasFallbacked && !cancelSignal.isCancelled) {
+          cancelSignal.removeListener(abortCustomLoader);
+          rej(err);
         }
       };
 
@@ -86,17 +93,29 @@ export default function callCustomManifestLoader(
        */
       const fallback = () => {
         hasFallbacked = true;
-        fallbackManifestLoader(args).subscribe(obs);
+        if (!cancelSignal.isCancelled) {
+          cancelSignal.removeListener(abortCustomLoader);
+          fallbackManifestLoader(url, cancelSignal).then(res, rej);
+        }
       };
 
       const callbacks = { reject, resolve, fallback };
       const abort = customManifestLoader(url, callbacks);
 
-      return () => {
-        if (!hasFinished && !hasFallbacked && typeof abort === "function") {
+      cancelSignal.addListener(abortCustomLoader);
+      /**
+       * The logic to run when the custom loader is cancelled while pending.
+       * @param {Error} err
+       */
+      function abortCustomLoader(err : CancellationError) {
+        if (hasFallbacked || hasFinished) {
+          return;
+        }
+        if (typeof abort === "function") {
           abort();
         }
-      };
+        rej(err);
+      }
     });
   };
 }

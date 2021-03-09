@@ -25,7 +25,7 @@ import { IRepresentationFilter } from "../../manifest";
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
-  ILoadedManifest,
+  ILoadedManifestFormat,
   ITransportOptions as IParsedTransportOptions,
 } from "../../transports";
 import arrayIncludes from "../../utils/array_includes";
@@ -84,7 +84,7 @@ export interface ITransportOptions {
    */
   checkMediaSegmentIntegrity? : boolean;
   /** Manifest object that will be used initially. */
-  initialManifest? : ILoadedManifest;
+  initialManifest? : ILoadedManifestFormat;
   /** Custom implementation for performing Manifest requests. */
   manifestLoader? : CustomManifestLoader;
   /** Possible custom URL pointing to a shorter form of the Manifest. */
@@ -272,7 +272,7 @@ interface IParsedLoadVideoOptionsBase {
   url : string | undefined;
   transport : string;
   autoPlay : boolean;
-  initialManifest : ILoadedManifest | undefined;
+  initialManifest : ILoadedManifestFormat | undefined;
   keySystems : IKeySystemOption[];
   lowLatencyMode : boolean;
   minimumManifestUpdateInterval : number;

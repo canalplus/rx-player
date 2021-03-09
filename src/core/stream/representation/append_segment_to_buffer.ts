@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-/**
- * This file allows any Stream to push data to a SegmentBuffer.
- */
-
-import {
-  concat as observableConcat,
-  Observable,
-} from "rxjs";
-import {
-  catchError,
-  ignoreElements,
-} from "rxjs/operators";
+import { Observable } from "rxjs";
+import { take } from "rxjs/operators";
 import { MediaError } from "../../../errors";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 import {
   IPushChunkInfos,
   SegmentBuffer,
@@ -43,32 +36,38 @@ import forceGarbageCollection from "./force_garbage_collection";
  * @param {Object} dataInfos
  * @returns {Observable}
  */
-export default function appendSegmentToBuffer<T>(
-  clock$ : Observable<{ position : number }>,
+export default async function appendSegmentToBuffer<T>(
+  clock$ : Observable<{ getCurrentTime : () => number }>,
   segmentBuffer : SegmentBuffer<T>,
-  dataInfos : IPushChunkInfos<T>
-) : Observable<unknown> {
-  const append$ = segmentBuffer.pushChunk(dataInfos);
+  dataInfos : IPushChunkInfos<T>,
+  cancellationSignal : CancellationSignal
+) : Promise<void> {
+  try {
+    await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
+  } catch (appendError) {
+    if (TaskCanceller.isCancellationError(appendError)) {
+      throw appendError;
+    } else if (!(appendError instanceof Error) ||
+               appendError.name !== "QuotaExceededError")
+    {
+      const reason = appendError instanceof Error ?
+        appendError.toString() :
+        "An unknown error happened when pushing content";
+      throw new MediaError("BUFFER_APPEND_ERROR", reason);
+    }
 
-  return append$.pipe(
-    catchError((appendError : unknown) => {
-      if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
-        const reason = appendError instanceof Error ?
-          appendError.toString() :
-          "An unknown error happened when pushing content";
-        throw new MediaError("BUFFER_APPEND_ERROR", reason);
+    try {
+      // TODO Refacto the clock so that ugly hack is not needed anymore
+      const { getCurrentTime } = await clock$.pipe(take(1)).toPromise();
+      await forceGarbageCollection(getCurrentTime, segmentBuffer, cancellationSignal);
+      await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
+    } catch (forcedGCError) {
+      if (TaskCanceller.isCancellationError(forcedGCError)) {
+        throw forcedGCError;
       }
-
-      return observableConcat(
-        forceGarbageCollection(clock$, segmentBuffer).pipe(ignoreElements()),
-        append$
-      ).pipe(
-        catchError((forcedGCError : unknown) => {
-          const reason = forcedGCError instanceof Error ? forcedGCError.toString() :
-                                                          "Could not clean the buffer";
-
-          throw new MediaError("BUFFER_FULL_ERROR", reason);
-        })
-      );
-    }));
+      const reason = forcedGCError instanceof Error ? forcedGCError.toString() :
+                                                      "Could not clean the buffer";
+      throw new MediaError("BUFFER_FULL_ERROR", reason);
+    }
+  }
 }

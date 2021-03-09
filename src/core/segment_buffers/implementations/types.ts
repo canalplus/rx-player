@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
 import {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../../manifest";
+import { CancellationSignal } from "../../../utils/task_canceller";
 import SegmentInventory, {
   IBufferedChunk,
   IInsertedChunkInfos,
@@ -110,28 +110,41 @@ export abstract class SegmentBuffer<T> {
    * `data.chunk` argument to null.
    *
    * @param {Object} infos
-   * @returns {Observable}
+   * @param {CancellationSignal} cancellationSignal
+   * @returns {Promise}
    */
-  public abstract pushChunk(infos : IPushChunkInfos<T>) : Observable<void>;
+  public abstract pushChunk(
+    infos : IPushChunkInfos<T>,
+    cancellationSignal : CancellationSignal
+  ) : Promise<void>;
 
   /**
    * Remove buffered data (added to the same FIFO queue than `pushChunk`).
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
-   * @returns {Observable}
+   * @param {CancellationSignal} cancellationSignal
+   * @returns {Promise}
    */
-  public abstract removeBuffer(start : number, end : number) : Observable<void>;
+  public abstract removeBuffer(
+    start : number,
+    end : number,
+    cancellationSignal : CancellationSignal
+  ) : Promise<void>;
 
   /**
    * Indicate that every chunks from a Segment has been given to pushChunk so
    * far.
    * This will update our internal Segment inventory accordingly.
-   * The returned Observable will emit and complete successively once the whole
-   * segment has been pushed and this indication is acknowledged.
+   * The returned Promise will resolve once the whole segment has been pushed
+   * and this indication is acknowledged.
    * @param {Object} infos
-   * @returns {Observable}
+   * @param {CancellationSignal} cancellationSignal
+   * @returns {Promise}
    */
-  public abstract endOfSegment(infos : IEndOfSegmentInfos) : Observable<void>;
+  public abstract endOfSegment(
+    infos : IEndOfSegmentInfos,
+    cancellationSignal : CancellationSignal
+  ) : Promise<void>;
 
   /**
    * Returns the currently buffered data, in a TimeRanges object.

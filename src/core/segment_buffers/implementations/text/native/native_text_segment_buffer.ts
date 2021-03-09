@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  defer as observableDefer,
-  Observable,
-  of as observableOf,
-} from "rxjs";
+import PPromise from "pinkie";
 import {
   addTextTrack,
   ICompatTextTrack,
@@ -77,110 +73,113 @@ export default class NativeTextSegmentBuffer
    * @param {Object} infos
    * @returns {Observable}
    */
-  public pushChunk(infos : IPushChunkInfos<ITextTrackSegmentData>) : Observable<void> {
-    return observableDefer(() => {
-      log.debug("NTSB: Appending new native text tracks");
-      if (infos.data.chunk === null) {
-        return observableOf(undefined);
+  public pushChunk(infos : IPushChunkInfos<ITextTrackSegmentData>) : Promise<void> {
+    log.debug("NTSB: Appending new native text tracks");
+    if (infos.data.chunk === null) {
+      return PPromise.resolve();
+    }
+    const { timestampOffset,
+            appendWindow,
+            chunk } = infos.data;
+    const { start: startTime,
+            end: endTime,
+            data: dataString,
+            type,
+            language } = chunk;
+    const appendWindowStart = appendWindow[0] ?? 0;
+    const appendWindowEnd = appendWindow[1] ?? Infinity;
+
+    let cues;
+    try {
+      cues = parseTextTrackToCues(type, dataString, timestampOffset, language);
+    } catch (err) {
+      return PPromise.reject(err);
+    }
+
+    if (appendWindowStart !== 0 && appendWindowEnd !== Infinity) {
+      // Removing before window start
+      let i = 0;
+      while (i < cues.length && cues[i].endTime <= appendWindowStart) {
+        i++;
       }
-      const { timestampOffset,
-              appendWindow,
-              chunk } = infos.data;
-      const { start: startTime,
-              end: endTime,
-              data: dataString,
-              type,
-              language } = chunk;
-      const appendWindowStart = appendWindow[0] ?? 0;
-      const appendWindowEnd = appendWindow[1] ?? Infinity;
+      cues.splice(0, i);
 
-      const cues = parseTextTrackToCues(type, dataString, timestampOffset, language);
-
-      if (appendWindowStart !== 0 && appendWindowEnd !== Infinity) {
-        // Removing before window start
-        let i = 0;
-        while (i < cues.length && cues[i].endTime <= appendWindowStart) {
-          i++;
-        }
-        cues.splice(0, i);
-
-        i = 0;
-        while (i < cues.length && cues[i].startTime < appendWindowStart) {
-          cues[i].startTime = appendWindowStart;
-          i++;
-        }
-
-        // Removing after window end
-        i = cues.length - 1;
-
-        while (i >= 0 && cues[i].startTime >= appendWindowEnd) {
-          i--;
-        }
-        cues.splice(i, cues.length);
-
-        i = cues.length - 1;
-        while (i >= 0 && cues[i].endTime > appendWindowEnd) {
-          cues[i].endTime = appendWindowEnd;
-          i--;
-        }
+      i = 0;
+      while (i < cues.length && cues[i].startTime < appendWindowStart) {
+        cues[i].startTime = appendWindowStart;
+        i++;
       }
 
-      let start : number;
-      if (startTime !== undefined) {
-        start = Math.max(appendWindowStart, startTime);
-      } else {
-        if (cues.length <= 0) {
-          log.warn("NTSB: Current text tracks have no cues nor start time. Aborting");
-          return observableOf(undefined);
+      // Removing after window end
+      i = cues.length - 1;
+
+      while (i >= 0 && cues[i].startTime >= appendWindowEnd) {
+        i--;
+      }
+      cues.splice(i, cues.length);
+
+      i = cues.length - 1;
+      while (i >= 0 && cues[i].endTime > appendWindowEnd) {
+        cues[i].endTime = appendWindowEnd;
+        i--;
+      }
+    }
+
+    let start : number;
+    if (startTime !== undefined) {
+      start = Math.max(appendWindowStart, startTime);
+    } else {
+      if (cues.length <= 0) {
+        log.warn("NTSB: Current text tracks have no cues nor start time. Aborting");
+        return PPromise.resolve();
+      }
+      log.warn("NTSB: No start time given. Guessing from cues.");
+      start = cues[0].startTime;
+    }
+
+    let end : number;
+    if (endTime !== undefined) {
+      end = Math.min(appendWindowEnd, endTime);
+    } else {
+      if (cues.length <= 0) {
+        log.warn("NTSB: Current text tracks have no cues nor end time. Aborting");
+        return PPromise.resolve();
+      }
+      log.warn("NTSB: No end time given. Guessing from cues.");
+      end = cues[cues.length - 1].endTime;
+    }
+
+    if (end <= start) {
+      log.warn("NTSB: Invalid text track appended: ",
+               "the start time is inferior or equal to the end time.");
+      return PPromise.resolve();
+    }
+
+    if (cues.length > 0) {
+      const firstCue = cues[0];
+
+      // NOTE(compat): cleanup all current cues if the newly added
+      // ones are in the past. this is supposed to fix an issue on
+      // IE/Edge.
+      // TODO Move to compat
+      const currentCues = this._track.cues;
+      if (currentCues !== null && currentCues.length > 0) {
+        if (
+          firstCue.startTime < currentCues[currentCues.length - 1].startTime
+        ) {
+          this._removeData(firstCue.startTime, +Infinity);
         }
-        log.warn("NTSB: No start time given. Guessing from cues.");
-        start = cues[0].startTime;
       }
 
-      let end : number;
-      if (endTime !== undefined) {
-        end = Math.min(appendWindowEnd, endTime);
-      } else {
-        if (cues.length <= 0) {
-          log.warn("NTSB: Current text tracks have no cues nor end time. Aborting");
-          return observableOf(undefined);
-        }
-        log.warn("NTSB: No end time given. Guessing from cues.");
-        end = cues[cues.length - 1].endTime;
+      for (let i = 0; i < cues.length; i++) {
+        this._track.addCue(cues[i]);
       }
-
-      if (end <= start) {
-        log.warn("NTSB: Invalid text track appended: ",
-                 "the start time is inferior or equal to the end time.");
-        return observableOf(undefined);
-      }
-
-      if (cues.length > 0) {
-        const firstCue = cues[0];
-
-        // NOTE(compat): cleanup all current cues if the newly added
-        // ones are in the past. this is supposed to fix an issue on
-        // IE/Edge.
-        // TODO Move to compat
-        const currentCues = this._track.cues;
-        if (currentCues !== null && currentCues.length > 0) {
-          if (
-            firstCue.startTime < currentCues[currentCues.length - 1].startTime
-          ) {
-            this._removeData(firstCue.startTime, +Infinity);
-          }
-        }
-
-        for (let i = 0; i < cues.length; i++) {
-          this._track.addCue(cues[i]);
-        }
-      }
-      this._buffered.insert(start, end);
-      if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos);
-      }
-      return observableOf(undefined);
-    });
+    }
+    this._buffered.insert(start, end);
+    if (infos.inventoryInfos !== null) {
+      this._segmentInventory.insertChunk(infos.inventoryInfos);
+    }
+    return PPromise.resolve();
   }
 
   /**
@@ -189,11 +188,9 @@ export default class NativeTextSegmentBuffer
    * @param {number} end - end position, in seconds
    * @returns {Observable}
    */
-  public removeBuffer(start : number, end : number) : Observable<void> {
-    return observableDefer(() => {
-      this._removeData(start, end);
-      return observableOf(undefined);
-    });
+  public removeBuffer(start : number, end : number) : PPromise<void> {
+    this._removeData(start, end);
+    return PPromise.resolve();
   }
 
   /**
@@ -205,11 +202,9 @@ export default class NativeTextSegmentBuffer
    * @param {Object} infos
    * @returns {Observable}
    */
-  public endOfSegment(_infos : IEndOfSegmentInfos) : Observable<void> {
-    return observableDefer(() => {
-      this._segmentInventory.completeSegment(_infos);
-      return observableOf(undefined);
-    });
+  public endOfSegment(_infos : IEndOfSegmentInfos) : PPromise<void> {
+    this._segmentInventory.completeSegment(_infos);
+    return PPromise.resolve();
   }
 
   /**

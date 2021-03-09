@@ -22,7 +22,8 @@ import {
 } from "../../utils/string_parsing";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  ISegmentParserArguments,
+  ILoadedTextSegmentFormat,
+  ISegmentContext,
   ISegmentParserParsedInitSegment,
   ISegmentParserParsedSegment,
   ITextTrackSegmentData,
@@ -36,25 +37,21 @@ import {
 
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.
- * @param {Object} infos
- * @returns {Observable.<Object>}
+ * @param {string|Uint8Array|ArrayBuffer} data
+ * @param {boolean} isChunked
+ * @param {Object} content
+ * @param {number | undefined} initTimescale
+ * @returns {Object}
  */
 function parseISOBMFFEmbeddedTextTrack(
-  { response,
-    content,
-    initTimescale } : ISegmentParserArguments< Uint8Array |
-                                               ArrayBuffer |
-                                               string >
+  data : string | Uint8Array | ArrayBuffer,
+  isChunked : boolean,
+  content : ISegmentContext,
+  initTimescale : number | undefined
 ) : ISegmentParserParsedInitSegment<null> |
     ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
-  const { data, isChunked } = response;
-
-  // Should already have been taken care of
-  // TODO better use TypeScript here?
-  assert(data !== null);
-
   const chunkBytes = typeof data === "string" ? strToUtf8(data) :
                      data instanceof Uint8Array ? data :
                                                   new Uint8Array(data);
@@ -83,14 +80,15 @@ function parseISOBMFFEmbeddedTextTrack(
 
 /**
  * Parse TextTrack data in plain text form.
- * @param {Object} infos
- * @returns {Observable.<Object>}
+ * @param {string|Uint8Array|ArrayBuffer} data
+ * @param {boolean} isChunked
+ * @param {Object} content
+ * @returns {Object}
  */
 function parsePlainTextTrack(
-  { response,
-    content } : ISegmentParserArguments< Uint8Array |
-                                         ArrayBuffer |
-                                         string >
+  data : string | Uint8Array | ArrayBuffer,
+  isChunked : boolean,
+  content : ISegmentContext
 ) : ISegmentParserParsedInitSegment<null> |
     ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
@@ -102,7 +100,6 @@ function parsePlainTextTrack(
              protectionDataUpdate: false };
   }
 
-  const { data, isChunked } = response;
   let textTrackData : string;
   if (typeof data !== "string") {
     // Should already have been taken care of
@@ -126,22 +123,21 @@ function parsePlainTextTrack(
 
 /**
  * Parse TextTrack data.
- * @param {Object} infos
- * @returns {Observable.<Object>}
+ * @param {Object} loadedSegment
+ * @param {Object} content
+ * @param {number | undefined} initTimescale
+ * @returns {Object}
  */
 export default function textTrackParser(
-  { response,
-    content,
-    initTimescale } : ISegmentParserArguments< Uint8Array |
-                                      ArrayBuffer |
-                                      string |
-                                      null >
+  loadedSegment : { data : ILoadedTextSegmentFormat;
+                    isChunked : boolean; },
+  content : ISegmentContext,
+  initTimescale : number | undefined
 ) : ISegmentParserParsedInitSegment<null> |
     ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, representation, segment } = content;
-  const { data, isChunked } = response;
-  if (data === null) { // No data, just return empty infos
+  if (loadedSegment.data === null) { // No data, just return empty infos
     if (segment.isInit) {
       return { segmentType: "init",
                initializationData: null,
@@ -158,10 +154,11 @@ export default function textTrackParser(
 
   const isMP4 = isMP4EmbeddedTextTrack(representation);
   if (isMP4) {
-    return parseISOBMFFEmbeddedTextTrack({ response: { data, isChunked },
-                                           content,
-                                           initTimescale });
+    return parseISOBMFFEmbeddedTextTrack(loadedSegment.data,
+                                         loadedSegment.isChunked,
+                                         content,
+                                         initTimescale);
   } else {
-    return parsePlainTextTrack({ response: { data, isChunked }, content });
+    return parsePlainTextTrack(loadedSegment.data, loadedSegment.isChunked, content);
   }
 }

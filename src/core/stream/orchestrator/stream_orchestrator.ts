@@ -44,7 +44,9 @@ import Manifest, {
 import deferSubscriptions from "../../../utils/defer_subscriptions";
 import { fromEvent } from "../../../utils/event_emitter";
 import filterMap from "../../../utils/filter_map";
+import observablifyCancellablePromise from "../../../utils/observablify_promise";
 import SortedList from "../../../utils/sorted_list";
+import TaskCanceller from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
 import { SegmentFetcherCreator } from "../../fetchers";
@@ -324,8 +326,12 @@ export default function StreamOrchestrator(
         destroyStreams$.next();
 
         return observableConcat(
-          ...rangesToClean.map(({ start, end }) =>
-            segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),
+          ...rangesToClean.map(({ start, end }) => {
+            const canceller = new TaskCanceller();
+            return observablifyCancellablePromise(canceller, () =>
+              segmentBuffer.removeBuffer(start, end)
+            ).pipe(ignoreElements());
+          }),
           clock$.pipe(take(1), mergeMap((lastTick) => {
             return observableConcat(
               observableOf(EVENTS.needsDecipherabilityFlush(lastTick.position,

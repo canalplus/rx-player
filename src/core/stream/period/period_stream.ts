@@ -41,7 +41,9 @@ import Manifest, {
   Period,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
+import observablifyCancellablePromise from "../../../utils/observablify_promise";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
+import TaskCanceller from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
 import { IStalledStatus } from "../../api";
@@ -166,10 +168,12 @@ export default function PeriodStream({
           if (SegmentBuffersStore.isNative(bufferType)) {
             return reloadAfterSwitch(period, clock$, relativePosAfterSwitch);
           }
-          cleanBuffer$ = segmentBufferStatus.value
-            .removeBuffer(period.start,
-                          period.end == null ? Infinity :
-                                               period.end);
+          const canceller = new TaskCanceller();
+          cleanBuffer$ = observablifyCancellablePromise(canceller, () =>
+            segmentBufferStatus.value.removeBuffer(period.start,
+                                                   period.end == null ? Infinity :
+                                                                        period.end,
+                                                   canceller.signal));
         } else {
           if (segmentBufferStatus.type === "uninitialized") {
             segmentBuffersStore.disableSegmentBuffer(bufferType);
@@ -209,10 +213,13 @@ export default function PeriodStream({
             return reloadAfterSwitch(period, clock$, relativePosAfterSwitch);
           }
 
-          const cleanBuffer$ = strategy.type === "clean-buffer" ?
-            observableConcat(...strategy.value.map(({ start, end }) =>
-              segmentBuffer.removeBuffer(start, end))
-            ).pipe(ignoreElements()) : EMPTY;
+          const cleanBuffer$ = strategy.type !== "clean-buffer" ?
+            EMPTY :
+            observableConcat(...strategy.value.map(({ start, end }) => {
+              const canceller = new TaskCanceller();
+              return observablifyCancellablePromise(canceller, () =>
+                segmentBuffer.removeBuffer(start, end, canceller.signal));
+            })).pipe(ignoreElements());
 
           const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
           const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);

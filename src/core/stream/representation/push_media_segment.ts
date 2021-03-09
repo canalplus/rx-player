@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  defer as observableDefer,
-  EMPTY,
-  Observable,
-} from "rxjs";
-import { map } from "rxjs/operators";
+import { Observable } from "rxjs";
 import config from "../../../config";
 import Manifest, {
   Adaptation,
@@ -29,6 +24,7 @@ import Manifest, {
 } from "../../../manifest";
 import { ISegmentParserParsedSegment } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
+import TaskCanceller from "../../../utils/task_canceller";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
@@ -50,7 +46,7 @@ export default function pushMediaSegment<T>(
     initSegmentData,
     parsedSegment,
     segment,
-    segmentBuffer } : { clock$ : Observable<{ position : number }>;
+    segmentBuffer } : { clock$ : Observable<{ getCurrentTime : () => number }>;
                         content: { adaptation : Adaptation;
                                    manifest : Manifest;
                                    period : Period;
@@ -60,9 +56,9 @@ export default function pushMediaSegment<T>(
                         segment : ISegment;
                         segmentBuffer : SegmentBuffer<T>; }
 ) : Observable< IStreamEventAddedSegment<T> > {
-  return observableDefer(() => {
+  return new Observable((obs) => {
     if (parsedSegment.chunkData === null) {
-      return EMPTY;
+      return obs.complete();
     }
     const { chunkData,
             chunkInfos,
@@ -103,10 +99,20 @@ export default function pushMediaSegment<T>(
                                           end: estimatedEnd },
                                         content);
 
-    return appendSegmentToBuffer(clock$, segmentBuffer, { data, inventoryInfos })
-      .pipe(map(() => {
+    const canceller = new TaskCanceller();
+    appendSegmentToBuffer(clock$,
+                          segmentBuffer,
+                          { data, inventoryInfos },
+                          canceller.signal)
+      .then(() => {
         const buffered = segmentBuffer.getBufferedRanges();
-        return EVENTS.addedSegment(content, segment, buffered, chunkData);
-      }));
+        obs.next(EVENTS.addedSegment(content, segment, buffered, chunkData));
+        obs.complete();
+      }, (e) => {
+        obs.error(e);
+      });
+    return () => {
+      canceller.cancel();
+    };
   });
 }

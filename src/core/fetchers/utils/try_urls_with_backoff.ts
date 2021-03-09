@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import PPromise from "pinkie";
 import {
   EMPTY,
   Observable,
@@ -33,6 +34,10 @@ import {
 } from "../../../errors";
 import log from "../../../log";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
+import TaskCanceller, {
+  CancellationError,
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 
 /**
  * Called on a loader error.
@@ -71,6 +76,14 @@ export interface IBackoffOptions { baseDelay : number;
                                    maxDelay : number;
                                    maxRetryRegular : number;
                                    maxRetryOffline : number; }
+
+export interface IBackoffSettings {
+  baseDelay : number;
+  maxDelay : number;
+  maxRetryRegular : number;
+  maxRetryOffline : number;
+  onRetry : (err : unknown) => void;
+}
 
 export interface IBackoffRetry {
   type : "retry";
@@ -130,6 +143,121 @@ function getRequestErrorType(error : unknown) : REQUEST_ERROR_TYPES {
  * @param {Object} options - Configuration options.
  * @returns {Observable}
  */
+export async function tryURLsWithBackoff2<T>(
+  urls : Array<string|null>,
+  performRequest : (url : string | null) => Promise<T>,
+  options : IBackoffSettings,
+  cancellationSignal : CancellationSignal
+) : Promise<T> {
+  if (cancellationSignal.isCancelled) {
+    return PPromise.reject(cancellationSignal.cancellationError);
+  }
+
+  const { baseDelay,
+          maxDelay,
+          maxRetryRegular,
+          maxRetryOffline,
+          onRetry } = options;
+  let retryCount = 0;
+  let lastError = REQUEST_ERROR_TYPES.None;
+
+  const urlsToTry = urls.slice();
+  if (urlsToTry.length === 0) {
+    log.warn("Fetchers: no URL given to `tryURLsWithBackoff`.");
+    return PPromise.reject(new Error("No URL to request"));
+  }
+  return tryURLsRecursively(urlsToTry[0], 0);
+
+  /**
+   * Try to do the request of a given `url` which corresponds to the `index`
+   * argument in the `urlsToTry` Array.
+   *
+   * If it fails try the next one.
+   *
+   * If all URLs fail, start a timer and retry the first element in that array
+   * by following the configuration.
+   *
+   * @param {string|null} url
+   * @param {number} index
+   * @returns {Observable}
+   */
+  async function tryURLsRecursively(
+    url : string | null,
+    index : number
+  ) : Promise<T> {
+    try {
+      return performRequest(url);
+    } catch (error : unknown) {
+      if (TaskCanceller.isCancellationError(error)) {
+        throw error;
+      }
+
+      if (!shouldRetry(error)) { // ban this URL
+        if (urlsToTry.length <= 1) { // This was the last one, throw
+          throw error;
+        }
+
+        // else, remove that element from the array and go the next URL
+        urlsToTry.splice(index, 1);
+        const newIndex = index >= urlsToTry.length - 1 ? 0 :
+                                                         index;
+        onRetry(error);
+        if (cancellationSignal.isCancelled) {
+          throw cancellationSignal.cancellationError;
+        }
+        return tryURLsRecursively(urlsToTry[newIndex], newIndex);
+      }
+
+      const currentError = getRequestErrorType(error);
+      const maxRetry = currentError === REQUEST_ERROR_TYPES.Offline ? maxRetryOffline :
+                                                                      maxRetryRegular;
+
+      if (currentError !== lastError) {
+        retryCount = 0;
+        lastError = currentError;
+      }
+
+      if (index < urlsToTry.length - 1) { // there is still URLs to test
+        const newIndex = index + 1;
+        onRetry(error);
+        if (cancellationSignal.isCancelled) {
+          throw cancellationSignal.cancellationError;
+        }
+        return tryURLsRecursively(urlsToTry[newIndex], newIndex);
+      }
+
+      // Here, we were using the last element of the `urlsToTry` array.
+      // Increment counter and restart with the first URL
+
+      retryCount++;
+      if (retryCount > maxRetry) {
+        throw error;
+      }
+      const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1),
+                             maxDelay);
+      const fuzzedDelay = getFuzzedDelay(delay);
+      const nextURL = urlsToTry[0];
+      onRetry(error);
+      if (cancellationSignal.isCancelled) {
+        throw cancellationSignal.cancellationError;
+      }
+
+      return new Promise((res, rej) => {
+        const timeout = setTimeout(() => {
+          cancellationSignal.removeListener(onCancel);
+          tryURLsRecursively(nextURL, 0).then(res, res);
+        }, fuzzedDelay);
+        cancellationSignal.addListener(onCancel);
+
+        function onCancel(cancellationError : CancellationError) {
+          clearTimeout(timeout);
+          rej(cancellationError);
+        }
+      });
+    }
+  }
+}
+
 export default function tryURLsWithBackoff<T>(
   urls : Array<string|null>,
   request$ : (url : string | null) => Observable<T>,
@@ -229,4 +357,20 @@ export function tryRequestObservableWithBackoff<T>(
 ) : Observable<IBackoffEvent<T>> {
   // same than for a single unknown URL
   return tryURLsWithBackoff([null], () => request$, options);
+}
+
+/**
+ * Lightweight version of the request algorithm, this time with only a simple
+ * Promise given.
+ * @param {Function} request$
+ * @param {Object} options
+ * @returns {Observable}
+ */
+export function tryRequestPromiseWithBackoff<T>(
+  performRequest : () => Promise<T>,
+  options : IBackoffSettings,
+  cancellationSignal : CancellationSignal
+) : Promise<T> {
+  // same than for a single unknown URL
+  return tryURLsWithBackoff2([null], performRequest, options, cancellationSignal);
 }

@@ -35,8 +35,7 @@ import Manifest, {
 import {
   ILoaderDataLoadedValue,
   ILoaderProgressEvent,
-  ISegmentLoaderArguments,
-  ISegmentLoaderEvent as ITransportSegmentLoaderEvent,
+  ISegmentLoader,
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import castToObservable from "../../../utils/cast_to_observable";
@@ -98,16 +97,38 @@ export interface ISegmentLoaderCache<T> {
   get : (obj : ISegmentLoaderContent) => ILoaderDataLoadedValue<T> | null;
 }
 
-/** Abstraction to load a segment in the current transport protocol. */
-export type ISegmentPipelineLoader<T> =
-  (x : ISegmentLoaderArguments) => Observable< ITransportSegmentLoaderEvent<T> >;
-
 /** Content used by the segment loader as a context to load a new segment. */
 export interface ISegmentLoaderContent { manifest : Manifest;
                                          period : Period;
                                          adaptation : Adaptation;
                                          representation : Representation;
                                          segment : ISegment; }
+
+// /**
+//  * Returns a function allowing to load any wanted segment.
+//  *
+//  * The function returned takes in argument information about the wanted segment
+//  * and returns an Observable which will emit various events related to the
+//  * segment request (see ISegmentLoaderEvent).
+//  *
+//  * This observable will throw if, following the options given, the request and
+//  * possible retry all failed.
+//  *
+//  * This observable will complete after emitting all the segment's data.
+//  *
+//  * Type parameters:
+//  *   - T: type of the data emitted
+//  *
+//  * @param {Function} loader
+//  * @param {Object | undefined} cache
+//  * @param {Object} options
+//  * @returns {Function}
+//  */
+// export default function createSegmentLoader<LoadedDataType> (
+//   loader : ISegmentLoader<LoadedDataType>,
+//   cache : ISegmentLoaderCache<LoadedDataType> | undefined,
+//   backoffOptions : IBackoffOptions
+// ) : (x : ISegmentLoaderContent) => Observable<ISegmentLoaderEvent<T>> {
 
 /**
  * Returns a function allowing to load any wanted segment.
@@ -129,9 +150,9 @@ export interface ISegmentLoaderContent { manifest : Manifest;
  * @param {Object} options
  * @returns {Function}
  */
-export default function createSegmentLoader<T>(
-  loader : ISegmentPipelineLoader<T>,
-  cache : ISegmentLoaderCache<T> | undefined,
+export default function createSegmentLoader<LoadedDataType> (
+  loader : ISegmentLoader<LoadedDataType>,
+  cache : ISegmentLoaderCache<LoadedDataType> | undefined,
   backoffOptions : IBackoffOptions
 ) : (x : ISegmentLoaderContent) => Observable<ISegmentLoaderEvent<T>> {
   /**
@@ -215,6 +236,9 @@ export default function createSegmentLoader<T>(
         if ((arg.type === "data-chunk-complete" || arg.type === "data-loaded") &&
             arg.value.size !== undefined && arg.value.duration !== undefined)
         {
+          // callbacks.onMetrics({ size: arg.value.size,
+          //                       duration: arg.value.duration,
+          //                       content })
           metrics$ = observableOf({ type: "metrics",
                                     value: { size: arg.value.size,
                                              duration: arg.value.duration,

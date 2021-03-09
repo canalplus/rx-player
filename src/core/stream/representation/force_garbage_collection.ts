@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-import {
-  from as observableFrom,
-  Observable,
-} from "rxjs";
-import {
-  concatAll,
-  mergeMap,
-  take,
-} from "rxjs/operators";
+import PPromise from "pinkie";
 import config from "../../../config";
 import log from "../../../log";
 import { getInnerAndOuterTimeRanges } from "../../../utils/ranges";
+import { CancellationSignal } from "../../../utils/task_canceller";
 import { SegmentBuffer } from "../../segment_buffers";
 
 const GC_GAP_CALM = config.BUFFER_GC_GAPS.CALM;
@@ -41,29 +34,26 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
  * @param {Object} bufferingQueue
  * @returns {Observable}
  */
-export default function forceGarbageCollection(
-  timings$ : Observable<{ position : number }>,
-  bufferingQueue : SegmentBuffer<unknown>
-) : Observable<unknown> {
-  // wait for next timing event
-  return timings$.pipe(
-    take(1),
-    mergeMap((timing) => {
-      log.warn("Stream: Running garbage collector");
-      const buffered = bufferingQueue.getBufferedRanges();
-      let cleanedupRanges = selectGCedRanges(timing.position, buffered, GC_GAP_CALM);
+export default async function forceGarbageCollection(
+  getCurrentTime : () => number,
+  bufferingQueue : SegmentBuffer<unknown>,
+  cancellationSignal : CancellationSignal
+) : PPromise<void> {
+  const currentTime = getCurrentTime();
+  log.warn("Stream: Running garbage collector");
+  const buffered = bufferingQueue.getBufferedRanges();
+  let cleanedupRanges = selectGCedRanges(currentTime, buffered, GC_GAP_CALM);
 
-      // more aggressive GC if we could not find any range to clean
-      if (cleanedupRanges.length === 0) {
-        cleanedupRanges = selectGCedRanges(timing.position, buffered, GC_GAP_BEEFY);
-      }
+  // more aggressive GC if we could not find any range to clean
+  if (cleanedupRanges.length === 0) {
+    cleanedupRanges = selectGCedRanges(currentTime, buffered, GC_GAP_BEEFY);
+  }
 
-      log.debug("Stream: GC cleaning", cleanedupRanges);
-      return observableFrom(
-        cleanedupRanges.map(({ start, end }) => bufferingQueue.removeBuffer(start, end))
-      ).pipe(concatAll());
-    })
-  );
+  log.debug("Stream: GC cleaning", cleanedupRanges);
+  for (let i  = 0; i < cleanedupRanges.length; i++) {
+    const { start, end } = cleanedupRanges[i];
+    await bufferingQueue.removeBuffer(start, end, cancellationSignal);
+  }
 }
 
 /**

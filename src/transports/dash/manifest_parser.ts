@@ -14,31 +14,21 @@
  * limitations under the License.
  */
 
-import {
-  combineLatest as observableCombineLatest,
-  concat as observableConcat,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
-  filter,
-  map,
-  mergeMap,
-} from "rxjs/operators";
+import PPromise from "pinkie";
 import Manifest from "../../manifest";
 import dashManifestParser, {
   IMPDParserResponse,
 } from "../../parsers/manifest/dash";
 import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
+import TaskCanceller from "../../utils/task_canceller";
 import {
-  ILoaderDataLoadedValue,
-  IManifestParserArguments,
-  IManifestParserResponseEvent,
-  IManifestParserWarningEvent,
+  IManifestParserOptions,
+  IManifestParserRequestScheduler,
+  IManifestParserResult,
+  IRequestedData,
   ITransportOptions,
 } from "../types";
-import returnParsedManifest from "../utils/return_parsed_manifest";
 
 /**
  * Request external "xlink" ressource from a MPD.
@@ -47,21 +37,19 @@ import returnParsedManifest from "../utils/return_parsed_manifest";
  */
 function requestStringResource(
   url : string
-) : Observable< ILoaderDataLoadedValue< string > > {
+) : Promise< IRequestedData< string > > {
   return request({ url,
-                   responseType: "text" })
-    .pipe(filter((e) => e.type === "data-loaded"),
-          map((e) => e.value));
+                   responseType: "text" });
 }
 
-/**
- * @param {Object} options
- * @returns {Function}
- */
 export default function generateManifestParser(
   options : ITransportOptions
-) : (x : IManifestParserArguments) => Observable<IManifestParserWarningEvent |
-                                                 IManifestParserResponseEvent>
+) : (
+    manifestData : IRequestedData<unknown>,
+    parserOptions : IManifestParserOptions,
+    onWarnings : (warnings : Error[]) => void,
+    scheduleRequest : IManifestParserRequestScheduler
+  ) => IManifestParserResult | Promise<IManifestParserResult>
 {
   const { aggressiveMode,
           referenceDateTime } = options;
@@ -69,21 +57,23 @@ export default function generateManifestParser(
     options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime :
     undefined;
   return function manifestParser(
-    args : IManifestParserArguments
-  ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
-    const { response, scheduleRequest } = args;
-    const argClockOffset = args.externalClockOffset;
-    const loaderURL = args.url;
-    const url = response.url ?? loaderURL;
-    const data = typeof response.responseData === "string" ?
-                   new DOMParser().parseFromString(response.responseData,
+    manifestData : IRequestedData<unknown>,
+    parserOptions : IManifestParserOptions,
+    onWarnings : (warnings : Error[]) => void,
+    scheduleRequest : IManifestParserRequestScheduler
+  ) : IManifestParserResult | Promise<IManifestParserResult> {
+    const argClockOffset = parserOptions.externalClockOffset;
+    const url = manifestData.url ?? parserOptions.originalUrl;
+    const data = typeof manifestData.responseData === "string" ?
+                   new DOMParser().parseFromString(manifestData.responseData,
                                                    "text/xml") :
                    // TODO find a way to check if Document?
-                   response.responseData as Document;
+                   manifestData.responseData as Document;
 
     const externalClockOffset = serverTimeOffset ?? argClockOffset;
-    const unsafelyBaseOnPreviousManifest = args.unsafeMode ? args.previousManifest :
-                                                             null;
+    const unsafelyBaseOnPreviousManifest = parserOptions.unsafeMode ?
+      parserOptions.previousManifest :
+      null;
     const parsedManifest = dashManifestParser(data, { aggressiveMode:
                                                         aggressiveMode === true,
                                                       unsafelyBaseOnPreviousManifest,
@@ -94,35 +84,36 @@ export default function generateManifestParser(
 
     function loadExternalResources(
       parserResponse : IMPDParserResponse
-    ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
+    ) : IManifestParserResult | Promise<IManifestParserResult> {
       if (parserResponse.type === "done") {
-        const { warnings, parsed } = parserResponse.value;
-        const warningEvents = warnings.map(warning => ({ type: "warning" as const,
-                                                         value: warning }));
-        const manifest = new Manifest(parsed, options);
-        return observableConcat(observableOf(...warningEvents),
-                                returnParsedManifest(manifest, url));
+        if (parserResponse.value.warnings.length > 0) {
+          onWarnings(parserResponse.value.warnings);
+        }
+        const manifest = new Manifest(parserResponse.value.parsed, options);
+        return { manifest, url };
       }
 
       const { ressources, continue: continueParsing } = parserResponse.value;
 
-      const externalResources$ = ressources
-        .map(resource => scheduleRequest(() => requestStringResource(resource)));
+      const externalResources = ressources
+        .map(resource => {
+          const canceller = new TaskCanceller();
+          return scheduleRequest(() => requestStringResource(resource), canceller);
+        });
 
-      return observableCombineLatest(externalResources$)
-        .pipe(mergeMap(loadedResources => {
-          const resources : Array<ILoaderDataLoadedValue<string>> = [];
-          for (let i = 0; i < loadedResources.length; i++) {
-            const resource = loadedResources[i];
-            if (typeof resource.responseData !== "string") {
-              throw new Error("External DASH resources should only be strings");
-            }
-            // Normally not needed but TypeScript is just dumb here
-            resources.push(objectAssign(resource,
-                                        { responseData: resource.responseData }));
+      return PPromise.all(externalResources).then(loadedResources => {
+        const resources : Array<IRequestedData<string>> = [];
+        for (let i = 0; i < loadedResources.length; i++) {
+          const resource = loadedResources[i];
+          if (typeof resource.responseData !== "string") {
+            throw new Error("External DASH resources should only be strings");
           }
-          return loadExternalResources(continueParsing(resources));
-        }));
+          // Normally not needed but TypeScript is just dumb here
+          resources.push(objectAssign(resource,
+                                      { responseData: resource.responseData }));
+        }
+        return loadExternalResources(continueParsing(resources));
+      });
     }
   };
 }

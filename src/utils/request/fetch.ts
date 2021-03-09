@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-} from "rxjs";
+import PPromise from "pinkie";
 import config from "../../config";
 import {
   NetworkErrorTypes,
@@ -24,35 +22,35 @@ import {
 } from "../../errors";
 import log from "../../log";
 import isNullOrUndefined from "../is_null_or_undefined";
+import {
+  CancellationError,
+  CancellationSignal,
+} from "../task_canceller";
 
-export interface IDataChunk {
-  type : "data-chunk";
-  value : {
-    currentTime : number;
-    duration : number;
-    chunkSize : number;
-    size : number;
-    sendingTime : number;
-    url : string;
-    totalSize? : number;
-    chunk: ArrayBuffer;
-  };
+export interface IFetchedStreamComplete {
+  duration : number;
+  receivedTime : number;
+  sendingTime : number;
+  size : number;
+  status : number;
+  url : string;
 }
 
-export interface IDataComplete {
-  type : "data-complete";
-  value : {
-    duration : number;
-    receivedTime : number;
-    sendingTime : number;
-    size : number;
-    status : number;
-    url : string;
-  };
+export interface IFetchedDataObject {
+  currentTime : number;
+  duration : number;
+  chunkSize : number;
+  size : number;
+  sendingTime : number;
+  url : string;
+  totalSize? : number;
+  chunk: ArrayBuffer;
 }
 
 export interface IFetchOptions {
   url : string;
+  onData : (data : IFetchedDataObject) => void;
+  cancelSignal : CancellationSignal;
   headers? : { [ header: string ] : string }|null;
   timeout? : number;
 }
@@ -70,9 +68,9 @@ const _AbortController : IAbortControllerConstructor|null =
     AbortController :
     null;
 
-function fetchRequest(
+export default function fetchRequest(
   options : IFetchOptions
-) : Observable< IDataChunk | IDataComplete > {
+) : PPromise<IFetchedStreamComplete> {
   let headers : Headers | { [key : string ] : string } | undefined;
   if (!isNullOrUndefined(options.headers)) {
     if (isNullOrUndefined(_Headers)) {
@@ -87,127 +85,113 @@ function fetchRequest(
     }
   }
 
-  return new Observable((obs) => {
-    log.debug("Fetch: Called with URL", options.url);
-    let hasAborted = false;
-    let timeouted = false;
-    let isDone = false;
-    const sendingTime = performance.now();
-    const abortController: AbortController | null =
-      !isNullOrUndefined(_AbortController) ? new _AbortController() :
-                                             null;
+  log.debug("Fetch: Called with URL", options.url);
+  let cancellation : CancellationError | null = null;
+  let timeouted = false;
+  const sendingTime = performance.now();
+  const abortController: AbortController | null =
+    !isNullOrUndefined(_AbortController) ? new _AbortController() :
+                                           null;
 
-    /**
-     * Abort current fetchRequest by triggering AbortController signal.
-     * @returns {void}
-     */
-    function abortRequest(): void {
-      if (!isDone) {
-        if (!isNullOrUndefined(abortController)) {
-          abortController.abort();
-          return;
-        }
-        log.warn("Fetch: AbortController API not available.");
-      }
+  /**
+   * Abort current fetchRequest by triggering AbortController signal.
+   * @returns {void}
+   */
+  function abortFetch(): void {
+    if (isNullOrUndefined(abortController)) {
+      log.warn("Fetch: AbortController API not available.");
+      return;
+    }
+    abortController.abort();
+  }
+
+  const requestTimeout = isNullOrUndefined(options.timeout) ?
+    DEFAULT_REQUEST_TIMEOUT :
+    options.timeout;
+  const timeout = window.setTimeout(() => {
+    timeouted = true;
+    abortFetch();
+  }, requestTimeout);
+
+  options.cancelSignal.addListener(abortRequest);
+
+  function abortRequest(err : CancellationError) {
+    cancellation = err;
+    abortFetch();
+  }
+
+  return fetch(options.url,
+               { headers,
+                 method: "GET",
+                 signal: !isNullOrUndefined(abortController) ? abortController.signal :
+                                                               undefined }
+  ).then((response : Response) : PPromise<IFetchedStreamComplete> => {
+    if (!isNullOrUndefined(timeout)) {
+      clearTimeout(timeout);
+    }
+    if (response.status >= 300) {
+      log.warn("Fetch: Request HTTP Error", response);
+      throw new RequestError(response.url,
+                             response.status,
+                             NetworkErrorTypes.ERROR_HTTP_CODE);
     }
 
-    const requestTimeout = isNullOrUndefined(options.timeout) ?
-      DEFAULT_REQUEST_TIMEOUT :
-      options.timeout;
-    const timeout = window.setTimeout(() => {
-      timeouted = true;
-      abortRequest();
-    }, requestTimeout);
+    if (isNullOrUndefined(response.body)) {
+      throw new RequestError(response.url,
+                             response.status,
+                             NetworkErrorTypes.PARSE_ERROR);
+    }
 
-    fetch(options.url,
-          { headers,
-            method: "GET",
-            signal: !isNullOrUndefined(abortController) ? abortController.signal :
-                                                          undefined }
-    ).then((response) => {
-      if (!isNullOrUndefined(timeout)) {
-        clearTimeout(timeout);
+    const contentLengthHeader = response.headers.get("Content-Length");
+    const contentLength = !isNullOrUndefined(contentLengthHeader) &&
+                          !isNaN(+contentLengthHeader) ? +contentLengthHeader :
+                                                         undefined;
+    const reader = response.body.getReader();
+    let size = 0;
+
+    return readBufferAndSendEvents();
+
+    async function readBufferAndSendEvents() : PPromise<IFetchedStreamComplete> {
+      const data = await reader.read();
+
+      if (!data.done && !isNullOrUndefined(data.value)) {
+        size += data.value.byteLength;
+        const currentTime = performance.now();
+        const dataInfo = { url: response.url,
+                           currentTime,
+                           duration: currentTime - sendingTime,
+                           sendingTime,
+                           chunkSize: data.value.byteLength,
+                           chunk: data.value.buffer,
+                           size,
+                           totalSize: contentLength };
+        options.onData(dataInfo);
+        return readBufferAndSendEvents();
+      } else if (data.done) {
+        options.cancelSignal.removeListener(abortRequest);
+        const receivedTime = performance.now();
+        const duration = receivedTime - sendingTime;
+        return { duration,
+                 receivedTime,
+                 sendingTime,
+                 size,
+                 status: response.status,
+                 url: response.url };
       }
-      if (response.status >= 300) {
-        log.warn("Fetch: Request HTTP Error", response);
-        obs.error(new RequestError(response.url,
-                                   response.status,
-                                   NetworkErrorTypes.ERROR_HTTP_CODE));
-        return undefined;
-      }
-
-      if (isNullOrUndefined(response.body)) {
-        obs.error(new RequestError(response.url,
-                                   response.status,
-                                   NetworkErrorTypes.PARSE_ERROR));
-        return undefined;
-      }
-
-      const contentLengthHeader = response.headers.get("Content-Length");
-      const contentLength = !isNullOrUndefined(contentLengthHeader) &&
-                            !isNaN(+contentLengthHeader) ? +contentLengthHeader :
-                                                           undefined;
-      const reader = response.body.getReader();
-      let size = 0;
-
       return readBufferAndSendEvents();
-
-      async function readBufferAndSendEvents() : Promise<undefined> {
-        const data = await reader.read();
-
-        if (!data.done && !isNullOrUndefined(data.value)) {
-          size += data.value.byteLength;
-          const currentTime = performance.now();
-          const dataChunk = { type: "data-chunk" as const,
-                              value: { url: response.url,
-                                       currentTime,
-                                       duration: currentTime - sendingTime,
-                                       sendingTime,
-                                       chunkSize: data.value.byteLength,
-                                       chunk: data.value.buffer,
-                                       size,
-                                       totalSize: contentLength } };
-          obs.next(dataChunk);
-          return readBufferAndSendEvents();
-        } else if (data.done) {
-          const receivedTime = performance.now();
-          const duration = receivedTime - sendingTime;
-          isDone = true;
-          obs.next({ type: "data-complete" as const,
-                     value: { duration,
-                              receivedTime,
-                              sendingTime,
-                              size,
-                              status: response.status,
-                              url: response.url } });
-          obs.complete();
-        }
-      }
-    }).catch((err : unknown) => {
-      if (hasAborted) {
-        log.debug("Fetch: Request aborted.");
-        return;
-      }
-      if (timeouted) {
-        log.warn("Fetch: Request timeouted.");
-        obs.error(new RequestError(options.url,
-                                   0,
-                                   NetworkErrorTypes.TIMEOUT));
-        return;
-      }
-      log.warn("Fetch: Request Error", err instanceof Error ?
-                                         err.toString() :
-                                         "");
-      obs.error(new RequestError(options.url,
-                                 0,
-                                 NetworkErrorTypes.ERROR_EVENT));
-      return;
-    });
-
-    return () => {
-      hasAborted = true;
-      abortRequest();
-    };
+    }
+  }).catch((err : unknown) => {
+    if (cancellation !== null) {
+      throw cancellation;
+    }
+    options.cancelSignal.removeListener(abortRequest);
+    if (timeouted) {
+      log.warn("Fetch: Request timeouted.");
+      throw new RequestError(options.url, 0, NetworkErrorTypes.TIMEOUT);
+    }
+    log.warn("Fetch: Request Error", err instanceof Error ? err.toString() :
+                                                            "");
+    throw new RequestError(options.url, 0, NetworkErrorTypes.ERROR_EVENT);
   });
 }
 
@@ -220,5 +204,3 @@ export function fetchIsSupported() : boolean {
           !isNullOrUndefined(_AbortController) &&
           !isNullOrUndefined(_Headers));
 }
-
-export default fetchRequest;

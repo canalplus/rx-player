@@ -19,23 +19,20 @@
  * It always should be imported through the `features` object.
  */
 
-import { Observable } from "rxjs";
 import Manifest from "../../manifest";
 import parseLocalManifest, {
   ILocalManifest,
 } from "../../parsers/manifest/local";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  IManifestLoaderArguments,
-  IManifestLoaderEvent,
-  IManifestParserArguments,
-  IManifestParserResponseEvent,
-  IManifestParserWarningEvent,
+  ILoadedManifestFormat,
+  IManifestParserResult,
+  IRequestedData,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
 import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
-import returnParsedManifest from "../utils/return_parsed_manifest";
 import segmentLoader from "./segment_loader";
 import segmentParser from "./segment_parser";
 import textTrackParser from "./text_parser";
@@ -51,7 +48,10 @@ export default function getLocalManifestPipelines(
 
   const customManifestLoader = options.manifestLoader;
   const manifestPipeline = {
-    loader(args : IManifestLoaderArguments) : Observable< IManifestLoaderEvent > {
+    loadManifest(
+      url : string | undefined,
+      cancelSignal : CancellationSignal
+    ) : Promise<IRequestedData<ILoadedManifestFormat>> {
       if (isNullOrUndefined(customManifestLoader)) {
         throw new Error("A local Manifest is not loadable through regular HTTP(S) " +
                         " calls. You have to set a `manifestLoader` when calling " +
@@ -62,32 +62,30 @@ export default function getLocalManifestPipelines(
         () : never => {
           throw new Error("Cannot fallback from the `manifestLoader` of a " +
                           "`local` transport");
-        })(args);
+        })(url, cancelSignal);
     },
 
-    parser(
-      { response } : IManifestParserArguments
-    ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
-      const manifestData = response.responseData;
+    parseManifest(manifestData : IRequestedData<unknown>) : IManifestParserResult {
+      const loadedManifest = manifestData.responseData;
       if (typeof manifestData !== "object") {
         throw new Error("Wrong format for the manifest data");
       }
-      const parsed = parseLocalManifest(response.responseData as ILocalManifest);
+      const parsed = parseLocalManifest(loadedManifest as ILocalManifest);
       const manifest = new Manifest(parsed, options);
-      return returnParsedManifest(manifest);
+      return { manifest, url: undefined };
     },
   };
 
-  const segmentPipeline = { loader: segmentLoader,
-                            parser: segmentParser };
-  const textTrackPipeline = { loader: segmentLoader,
-                              parser: textTrackParser };
+  const segmentPipeline = { loadSegment: segmentLoader,
+                            parseSegment: segmentParser };
+  const textTrackPipeline = { loadSegment: segmentLoader,
+                              parseSegment: textTrackParser };
 
   const imageTrackPipeline = {
-    loader:  () : never => {
+    loadSegment:  () : never => {
       throw new Error("Images track not supported in local transport.");
     },
-    parser: () : never => {
+    parseSegment: () : never => {
       throw new Error("Images track not supported in local transport.");
     },
   };
