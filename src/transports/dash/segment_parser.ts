@@ -93,7 +93,6 @@ export default function generateAudioVideoSegmentParser(
             return segment.privateInfos.isEMSGWhitelisted(evt);
           });
           const events = getEventsOutOfEMSGs(whitelistedEMSGs,
-                                             segment,
                                              manifest.publishTime);
           if (events !== undefined) {
             const { manifestRefreshEvent, inbandEvents } = events;

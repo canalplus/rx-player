@@ -15,7 +15,6 @@
  */
 
 import { IInbandEvent, IManifestRefreshEvent } from "../../core/stream";
-import { ISegment } from "../../manifest";
 import { IEMSG } from "../../parsers/containers/isobmff";
 import { utf8ToStr } from "../../tools/string_utils";
 
@@ -28,13 +27,11 @@ import { utf8ToStr } from "../../tools/string_utils";
  * @returns {undefined | Object}
  */
 function getManifestRefreshEvent(emsgs: IEMSG[],
-                                 segment: ISegment,
                                  manifestPublishTime: number
 ): IManifestRefreshEvent|undefined {
   if (emsgs.length <= 0) {
     return undefined;
   }
-  let minManifestExpiration: undefined | number;
   const len = emsgs.length;
   for (let i = 0; i < len; i++) {
     const manifestRefreshEventFromEMSGs = emsgs[i];
@@ -51,27 +48,13 @@ function getManifestRefreshEvent(emsgs: IEMSG[],
         // by MPDs with publish time greater than indicated value in the
         // message_data field."
         //
-        // Here, if the current manifest has its publish time superior
-        // to event manifest publish time, then the manifest does not need
+        // Here, if the current manifest has its publish time inferior or
+        // identical to the event manifest publish time, then the manifest needs
         // to be updated
-        eventManifestPublishTime < currentManifestPublishTime) {
-      break;
+        eventManifestPublishTime >= currentManifestPublishTime) {
+      return { type: "manifest-refresh", value: undefined };
     }
-    const { timescale, presentationTimeDelta } = manifestRefreshEventFromEMSGs;
-    const eventPresentationTime =
-      (segment.time / segment.timescale) +
-      (presentationTimeDelta / timescale);
-    minManifestExpiration =
-      minManifestExpiration === undefined ?
-        eventPresentationTime :
-        Math.min(minManifestExpiration,
-                 eventPresentationTime);
   }
-  if (minManifestExpiration === undefined) {
-    return undefined;
-  }
-  return { type: "manifest-refresh",
-           value: { manifestExpirationTime: minManifestExpiration } };
 }
 
 /**
@@ -84,7 +67,6 @@ function getManifestRefreshEvent(emsgs: IEMSG[],
  */
 export default function getEventsOutOfEMSGs(
   parsedEMSGs: IEMSG[],
-  segment: ISegment,
   manifestPublishTime?: number
 ): { manifestRefreshEvent: IManifestRefreshEvent | undefined;
      inbandEvents: IInbandEvent[] | undefined; } | undefined {
@@ -118,7 +100,6 @@ export default function getEventsOutOfEMSGs(
      manifestRefreshEventsFromEMSGs === undefined) ?
       undefined :
       getManifestRefreshEvent(manifestRefreshEventsFromEMSGs,
-                              segment,
                               manifestPublishTime);
   return { inbandEvents, manifestRefreshEvent };
 }

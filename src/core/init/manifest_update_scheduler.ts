@@ -76,10 +76,10 @@ export interface IManifestRefreshSchedulerEvent {
    */
   completeRefresh : boolean;
   /**
-   * Optional function that returns the wanted refresh delay, which is the minimum
+   * Optional number that is the wanted refresh delay, which is the minimum
    * time you want to wait before updating the Manifest
    */
-  getRefreshDelay? : () => number;
+  delay? : number;
   /**
    * Whether the parsing can be done in the more efficient "unsafeMode".
    * This mode is extremely fast but can lead to de-synchronisation with the
@@ -148,11 +148,10 @@ export default function manifestUpdateScheduler({
         false;
 
     const internalRefresh$ = scheduleRefresh$
-      .pipe(mergeMap(({ completeRefresh, getRefreshDelay, canUseUnsafeMode }) => {
+      .pipe(mergeMap(({ completeRefresh, delay, canUseUnsafeMode }) => {
         const unsafeMode = canUseUnsafeMode && unsafeModeEnabled;
-        const delay = getRefreshDelay === undefined ? 0 :
-                      getRefreshDelay();
-        return startManualRefreshTimer(delay,
+        const wantedDelay = delay === undefined ? 0 : delay;
+        return startManualRefreshTimer(wantedDelay,
                                        minimumManifestUpdateInterval,
                                        sendingTime)
           .pipe(mapTo({ completeRefresh, unsafeMode }));
