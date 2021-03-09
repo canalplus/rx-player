@@ -230,12 +230,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    const initSegment = getInitSegment(this._index);
-    if (initSegment.privateInfos === undefined) {
-      initSegment.privateInfos = {};
-    }
-    initSegment.privateInfos.isEMSGWhitelisted = this._isEMSGWhitelisted;
-    return initSegment;
+    return getInitSegment(this._index, this._isEMSGWhitelisted);
   }
 
   /**
