@@ -34,7 +34,7 @@ describe("core - eme - initMediaKeys", () => {
   });
 
   it("should emit `created-media-keys` event once MediaKeys has been created", done => {
-    const fakeResult = { mediaKeySystemAccess: { a: 5 },
+    const fakeResult = { mediaKeySystemAccess: { a: 5, keySystem: "toto" },
                          mediaKeys: { b: 4 },
                          stores: { loadedSessionsStore: { c: 3 },
                                    persistentSessionsStore: { d: 2 } },
@@ -83,7 +83,7 @@ describe("core - eme - initMediaKeys", () => {
   });
 
   it("should return MediaKeys information after media keys has been attached", (done) => {
-    const fakeResult = { mediaKeySystemAccess: { a: 5 },
+    const fakeResult = { mediaKeySystemAccess: { a: 5, keySystem: "toto" },
                          mediaKeys: { b: 4 },
                          stores: { loadedSessionsStore: { c: 3 },
                                    persistentSessionsStore: { d: 2 } },
@@ -177,7 +177,7 @@ describe("core - eme - initMediaKeys", () => {
   });
 
   it("Should throw if attachMediaKeys throws", (done) => {
-    const fakeResult = { mediaKeySystemAccess: { a: 5 },
+    const fakeResult = { mediaKeySystemAccess: { a: 5, keySystem: "toto" },
                          mediaKeys: { b: 4 },
                          stores: { loadedSessionsStore: { c: 3 },
                                    persistentSessionsStore: { d: 2 } },

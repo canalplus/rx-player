@@ -25,11 +25,13 @@ import {
 } from "rxjs";
 import {
   exhaustMap,
+  filter,
   finalize,
   ignoreElements,
   map,
   mapTo,
   mergeMap,
+  mergeScan,
   share,
   shareReplay,
   startWith,
@@ -51,6 +53,7 @@ import ABRManager, {
 import {
   getCurrentKeySystem,
   IContentProtection,
+  IEMEManagerEvent,
   IKeySystemOption,
 } from "../eme";
 import {
@@ -60,7 +63,9 @@ import {
   SegmentFetcherCreator,
 } from "../fetchers";
 import { ITextTrackSegmentBufferOptions } from "../segment_buffers";
-import createEMEManager from "./create_eme_manager";
+import createEMEManager, {
+  IEMEDisabledEvent,
+} from "./create_eme_manager";
 import openMediaSource from "./create_media_source";
 import EVENTS from "./events_generators";
 import getInitialTime, {
@@ -225,44 +230,65 @@ export default function InitializeOnMediaSource(
    * Wait for the MediaKeys to have been created before opening the MediaSource,
    * after that second step is done, ask the EMEManager to attach the MediaKeys.
    * Steps are done in that specific order to avoid compatibility issues.
+   *
+   * This Observable will emit when ready both the MediaSource and useful
+   * DRM-specific information.
    */
   const prepareMediaSource$ = emeManager$.pipe(
-    mergeMap((evt) => {
+    mergeScan((
+      acc : {
+        /** set to true once EME APIs have been initialized. */
+        isEmeReady : boolean;
+        /**
+         * ID identifying the current MediaKeys' system ID. Can be used to only
+         * send initialization data linked to that ID as an optimization measure.
+         */
+        drmSystemId? : string;
+      },
+      evt : IEMEManagerEvent | IEMEDisabledEvent
+    ) => {
       switch (evt.type) {
         case "eme-disabled":
         case "attached-media-keys":
-          return observableOf(undefined);
+          return observableOf({ isEmeReady: true,
+                                drmSystemId: acc.drmSystemId });
         case "created-media-keys":
-          return openMediaSource$.pipe(mergeMap(() => {
-            // Now that the MediaSource has been opened and linked to the media
-            // element we can attach the MediaKeys instance to the latter.
-            evt.value.attachMediaKeys$.next();
+          const drmSystemId = evt.value.initializationDataSystemId;
+          return openMediaSource$.pipe(
+            mergeMap(() => {
+              // Now that the MediaSource has been opened and linked to the media
+              // element we can attach the MediaKeys instance to the latter.
+              evt.value.attachMediaKeys$.next();
 
-            // If the `disableMediaKeysAttachmentLock` option has been set to
-            // `true`, we should not wait until the MediaKeys instance has been
-            // attached to start loading the content.
-            const shouldDisableLock = evt.value.options
-              .disableMediaKeysAttachmentLock === true;
-            return shouldDisableLock ? observableOf(undefined) :
-                                       EMPTY;
-          }));
+              // If the `disableMediaKeysAttachmentLock` option has been set to
+              // `true`, we should not wait until the MediaKeys instance has been
+              // attached to start loading the content.
+              const shouldDisableLock = evt.value.options
+                .disableMediaKeysAttachmentLock === true;
+              return shouldDisableLock ? observableOf({ isEmeReady: true,
+                                                        drmSystemId }) :
+                                         EMPTY;
+            }),
+            startWith({ isEmeReady: false, drmSystemId }));
         default:
           return EMPTY;
       }
-    }),
+    }, { isEmeReady: false, drmSystemId: undefined }),
+    filter((emitted) => emitted.isEmeReady),
     take(1),
-    exhaustMap(() => openMediaSource$)
-  );
+    exhaustMap(({ drmSystemId }) =>
+      openMediaSource$
+        .pipe(map((mediaSource) => ({ mediaSource, drmSystemId })))));
 
   /** Load and play the content asked. */
   const loadContent$ = observableCombineLatest([manifest$,
                                                 prepareMediaSource$]).pipe(
-    mergeMap(([manifestEvt, initialMediaSource]) => {
+    mergeMap(([manifestEvt, mediaSourceInfo]) => {
       if (manifestEvt.type === "warning") {
         return observableOf(manifestEvt);
       }
-
       const { manifest } = manifestEvt;
+      const { mediaSource: initialMediaSource, drmSystemId } = mediaSourceInfo;
 
       log.debug("Init: Calculating initial time");
       const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
@@ -270,7 +296,8 @@ export default function InitializeOnMediaSource(
 
       const mediaSourceLoader = createMediaSourceLoader({
         abrManager,
-        bufferOptions: objectAssign({ textTrackOptions }, bufferOptions),
+        bufferOptions: objectAssign({ textTrackOptions, drmSystemId },
+                                    bufferOptions),
         clock$,
         manifest,
         mediaElement,

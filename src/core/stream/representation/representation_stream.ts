@@ -143,12 +143,33 @@ export interface IRepresentationStreamArguments<T> {
    * Observable once the corresponding segments have been pushed).
    */
   terminate$ : Observable<ITerminationOrder>;
+  /** Supplementary arguments which configure the RepresentationStream's behavior. */
+  options: IRepresentationStreamOptions;
+}
+
+/**
+ * Various specific stream "options" which tweak the behavior of the
+ * RepresentationStream.
+ */
+export interface IRepresentationStreamOptions {
   /**
    * The buffer size we have to reach in seconds (compared to the current
    * position. When that size is reached, no segments will be loaded until it
    * goes below that size again.
    */
   bufferGoal$ : Observable<number>;
+  /**
+   * Hex-encoded DRM "system ID" as found in:
+   * https://dashif.org/identifiers/content_protection/
+   *
+   * Allows to identify which DRM system is currently used, to allow potential
+   * optimizations.
+   *
+   * Set to `undefined` in two cases:
+   *   - no DRM system is used (e.g. the content is unencrypted).
+   *   - We don't know which DRM system is currently used.
+   */
+  drmSystemId : string | undefined;
   /**
    * Bitrate threshold from which no "fast-switching" should occur on a segment.
    *
@@ -216,15 +237,15 @@ interface ISegmentRequestObject<T> {
  * @returns {Observable}
  */
 export default function RepresentationStream<T>({
-  bufferGoal$,
   clock$,
   content,
-  fastSwitchThreshold$,
   segmentBuffer,
   segmentFetcher,
   terminate$,
+  options,
 } : IRepresentationStreamArguments<T>) : Observable<IRepresentationStreamEvent<T>> {
   const { manifest, period, adaptation, representation } = content;
+  const { bufferGoal$, drmSystemId, fastSwitchThreshold$ } = options;
   const bufferType = adaptation.type;
   const initSegment = representation.index.getInitSegment();
 
@@ -367,6 +388,22 @@ export default function RepresentationStream<T>({
   );
 
   /**
+   * `true` if the event notifying about encryption data has already been
+   * constructed.
+   * Allows to avoid sending multiple times protection events.
+   */
+  let hasSentEncryptionData = false;
+  let encryptionEvent$ : Observable<IEncryptionDataEncounteredEvent> = EMPTY;
+  if (drmSystemId !== undefined) {
+    const encryptionData = representation.getEncryptionData(drmSystemId);
+    if (encryptionData.length > 0) {
+      encryptionEvent$ = observableOf(...encryptionData.map(d =>
+        EVENTS.encryptionDataEncountered(d)));
+      hasSentEncryptionData = true;
+    }
+  }
+
+  /**
    * Stream Queue:
    *   - download every segments queued sequentially
    *   - when a segment is loaded, append it to the SegmentBuffer
@@ -375,7 +412,8 @@ export default function RepresentationStream<T>({
     switchMap(() => downloadQueue.length > 0 ? loadSegmentsFromQueue() : EMPTY),
     mergeMap(onLoaderEvent));
 
-  return observableMerge(status$, streamQueue$).pipe(share());
+  return observableConcat(encryptionEvent$,
+                          observableMerge(status$, streamQueue$).pipe(share()));
 
   /**
    * Request every Segment in the ``downloadQueue`` on subscription.
@@ -471,8 +509,10 @@ export default function RepresentationStream<T>({
 
         // Now that the initialization segment has been parsed - which may have
         // included encryption information - take care of the encryption event
+        // if not already done.
         const allEncryptionData = representation.getAllEncryptionData();
-        const encEvt$ = allEncryptionData.length > 0 ?
+        const initEncEvt$ = !hasSentEncryptionData &&
+                            allEncryptionData.length > 0 ?
           observableOf(...allEncryptionData.map(p =>
             EVENTS.encryptionDataEncountered(p))) :
           EMPTY;
@@ -481,7 +521,7 @@ export default function RepresentationStream<T>({
                                              segment: evt.segment,
                                              segmentData: evt.value.initializationData,
                                              segmentBuffer });
-        return observableMerge(encEvt$, pushEvent$);
+        return observableMerge(initEncEvt$, pushEvent$);
 
       case "parsed-segment":
         const initSegmentData = initSegmentObject?.initializationData ?? null;

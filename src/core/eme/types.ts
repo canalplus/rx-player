@@ -60,6 +60,31 @@ export interface ICreatedMediaKeysEvent {
     /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
     mediaKeySystemAccess: MediaKeySystemAccess |
                           ICustomMediaKeySystemAccess;
+
+    /**
+     * Hex-encoded identifier for the key system used.
+     * A list of available IDs can be found here:
+     * https://dashif.org/identifiers/content_protection/
+     *
+     * This ID can be used to select the encryption initialization data to send
+     * to the EMEManager.
+     *
+     * Note that this is only for optimization purposes (e.g. to not
+     * unnecessarily wait for new encryption initialization data to arrive when
+     * those linked to the right key system is already available) as sending all
+     * available encryption initialization data should also work in all cases.
+     *
+     * Can be `undefined` in two cases:
+     *
+     *   - the current system ID is not known
+     *
+     *   - the current system ID is known, but we don't want to communicate it
+     *     to ensure all encryption initialization data is still sent.
+     *     This is usually done to work-around retro-compatibility issues with
+     *     older persisted decryption session.
+     */
+    initializationDataSystemId : string | undefined;
+
     /** The MediaKeys instance. */
     mediaKeys : MediaKeys |
                 ICustomMediaKeys;
@@ -380,6 +405,18 @@ export interface IPersistentSessionStorage {
    * The given argument should be returned by the next `load` call.
    */
   save(x : IPersistentSessionInfo[]) : void;
+  /**
+   * By default, MediaKeySessions persisted through an older version of the
+   * RxPlayer will still be available under this version.
+   *
+   * By setting this value to `true`, we can disable that condition in profit of
+   * multiple optimizations (to load a content faster, use less CPU resources
+   * etc.).
+   *
+   * As such, if being able to load MediaKeySession persisted via older version
+   * is not important to you, we recommend setting that value to `true`.
+   */
+  disableRetroCompatibility? : boolean;
 }
 
 /** Options related to a single key system. */
