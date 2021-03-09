@@ -62,6 +62,8 @@ import {
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
+import observablifyCancellablePromise from "../../../utils/observablify_promise";
+import TaskCanceller from "../../../utils/task_canceller";
 import { IStalledStatus } from "../../api";
 import {
   IPrioritizedSegmentFetcher,
@@ -472,26 +474,38 @@ export default function RepresentationStream<T>({
           ...evt.value.segmentProtections.map(segmentProt => {
             return EVENTS.protectedSegment(segmentProt);
           }));
-        const pushEvent$ = pushInitSegment({ clock$,
-                                             content,
-                                             segment: evt.segment,
-                                             segmentData: evt.value.initializationData,
-                                             segmentBuffer });
+        const pushEvent$ = clock$.pipe(
+          take(1),
+          mergeMap((tick) =>
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            pushInitSegment({ getCurrentTime: tick.getCurrentTime,
+                              content,
+                              segment: evt.segment,
+                              segmentData: evt.value.initializationData,
+                              segmentBuffer })));
         return observableMerge(protectedEvents$, pushEvent$);
 
       case "parsed-segment":
         const initSegmentData = initSegmentObject?.initializationData ?? null;
-        return pushMediaSegment({ clock$,
-                                  content,
-                                  initSegmentData,
-                                  parsedSegment: evt.value,
-                                  segment: evt.segment,
-                                  segmentBuffer });
+        return clock$
+          .pipe(
+            take(1),
+            mergeMap((clockTick) =>
+              // eslint-disable-next-line @typescript-eslint/unbound-method
+              pushMediaSegment({ getCurrentTime: clockTick.getCurrentTime,
+                                 content,
+                                 initSegmentData,
+                                 parsedSegment: evt.value,
+                                 segment: evt.segment,
+                                 segmentBuffer })));
 
       case "end-of-segment": {
         const { segment } = evt.value;
-        return segmentBuffer.endOfSegment(objectAssign({ segment }, content))
-          .pipe(ignoreElements());
+        const canceller = new TaskCanceller();
+        return observablifyCancellablePromise(canceller, () =>
+          segmentBuffer.endOfSegment(objectAssign({ segment }, content),
+                                     canceller.signal)
+        ).pipe(ignoreElements());
       }
 
       default:

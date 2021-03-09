@@ -23,7 +23,10 @@ import isNullOrUndefined from "./is_null_or_undefined";
  * @param {string} [message] - Optional message property for the AssertionError.
  * @throws AssertionError - Throws if the assertion given is false
  */
-export default function assert(assertion : boolean, message? : string) : void {
+export default function assert(
+  assertion : boolean,
+  message? : string
+) : asserts assertion {
   if (!assertion) {
     throw new AssertionError(message === undefined ? "invalid assertion" :
                                                      message);

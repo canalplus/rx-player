@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
 import {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../../manifest";
+import { CancellationSignal } from "../../../utils/task_canceller";
 import SegmentInventory, {
   IBufferedChunk,
   IInsertedChunkInfos,
@@ -112,7 +112,10 @@ export abstract class SegmentBuffer<T> {
    * @param {Object} infos
    * @returns {Observable}
    */
-  public abstract pushChunk(infos : IPushChunkInfos<T>) : Observable<void>;
+  public abstract pushChunk(
+    infos : IPushChunkInfos<T>,
+    cancellationSignal : CancellationSignal
+  ) : Promise<void>;
 
   /**
    * Remove buffered data (added to the same FIFO queue than `pushChunk`).
@@ -120,7 +123,11 @@ export abstract class SegmentBuffer<T> {
    * @param {number} end - end position, in seconds
    * @returns {Observable}
    */
-  public abstract removeBuffer(start : number, end : number) : Observable<void>;
+  public abstract removeBuffer(
+    start : number,
+    end : number,
+    cancellationSignal : CancellationSignal
+  ) : Promise<void>;
 
   /**
    * Indicate that every chunks from a Segment has been given to pushChunk so
@@ -131,7 +138,10 @@ export abstract class SegmentBuffer<T> {
    * @param {Object} infos
    * @returns {Observable}
    */
-  public abstract endOfSegment(infos : IEndOfSegmentInfos) : Observable<void>;
+  public abstract endOfSegment(
+    infos : IEndOfSegmentInfos,
+    cancellationSignal : CancellationSignal
+  ) : Promise<void>;
 
   /**
    * Returns the currently buffered data, in a TimeRanges object.
