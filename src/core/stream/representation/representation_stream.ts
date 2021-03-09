@@ -487,25 +487,9 @@ export default function RepresentationStream<T>({
         if (evt.value.inbandEvents !== undefined) {
           const { inbandEvents,
                   manifestRefreshEvent } = evt.value;
-          const manifestRefresh$ = clock$.pipe(
-            take(1),
-            mergeMap(({ position }) => {
-              if (manifestRefreshEvent === undefined) {
-                return EMPTY;
-              }
-              // redefine manifest expiration time, as typescript does not
-              // understand that it can't be undefined when using it in the
-              // getDelay callback
-              const { manifestExpirationTime } = manifestRefreshEvent.value;
-              const delayComputingTime = performance.now();
-              const getDelay = () => {
-                const now = performance.now();
-                const gap = (now - delayComputingTime) / 1000;
-                return Math.max(0, manifestExpirationTime - position - gap);
-              };
-              return observableOf(EVENTS.needsManifestRefresh(getDelay));
-            })
-          );
+          const manifestRefresh$ =  manifestRefreshEvent === undefined ?
+            EMPTY :
+            observableOf(EVENTS.needsManifestRefresh());
           const inbandEvents$ = inbandEvents.length > 0 ?
             observableOf({ type: "inband-events" as const,
                            value: inbandEvents }) :

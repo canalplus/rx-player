@@ -178,7 +178,7 @@ export interface IInbandEvent { type: "dash-emsg";
                                 value: IEMSG; }
 
 export interface IManifestRefreshEvent { type: "manifest-refresh";
-                                          value: { manifestExpirationTime: number }; }
+                                          value: undefined; }
 
 export interface IInbandEventsEvent { type : "inband-events";
                                       value : IInbandEvent[]; }
