@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import assertUnreachable from "../../utils/assert_unreachable";
 import request from "../../utils/request";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
   CustomManifestLoader,
-  IManifestLoaderArguments,
-  IManifestLoaderEvent,
+  ILoadedManifestFormat,
+  IRequestedData,
 } from "../types";
 import callCustomManifestLoader from "./call_custom_manifest_loader";
 
@@ -31,14 +31,32 @@ import callCustomManifestLoader from "./call_custom_manifest_loader";
  */
 function generateRegularManifestLoader(
   preferredType: "arraybuffer" | "text" | "document"
-) : (arg : IManifestLoaderArguments) => Observable < IManifestLoaderEvent > {
+) : (
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) => Promise < IRequestedData<ILoadedManifestFormat> >
+{
   return function regularManifestLoader(
-    { url } : IManifestLoaderArguments
-  ) : Observable< IManifestLoaderEvent > {
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) : Promise< IRequestedData<ILoadedManifestFormat> > {
     if (url === undefined) {
       throw new Error("Cannot perform HTTP(s) request. URL not known");
     }
-    return request({ url, responseType: preferredType });
+
+    // What follows could be written in a single line, but TypeScript wouldn't
+    // shut up.
+    // So I wrote that instead, temporarily of course ;)
+    switch (preferredType) {
+      case "arraybuffer":
+        return request({ url, responseType: "arraybuffer", cancelSignal });
+      case "text":
+        return request({ url, responseType: "text", cancelSignal });
+      case "document":
+        return request({ url, responseType: "document", cancelSignal });
+      default:
+        assertUnreachable(preferredType);
+    }
   };
 }
 
@@ -50,9 +68,13 @@ function generateRegularManifestLoader(
 export default function generateManifestLoader(
   { customManifestLoader } : { customManifestLoader?: CustomManifestLoader },
   preferredType: "arraybuffer" | "text" | "document"
-) : (x : IManifestLoaderArguments) => Observable< IManifestLoaderEvent > {
+) : (
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) => Promise<IRequestedData<ILoadedManifestFormat>>
+{
   const regularManifestLoader = generateRegularManifestLoader(preferredType);
-  if (isNullOrUndefined(customManifestLoader)) {
+  if (typeof customManifestLoader !== "function") {
     return regularManifestLoader;
   }
   return callCustomManifestLoader(customManifestLoader,

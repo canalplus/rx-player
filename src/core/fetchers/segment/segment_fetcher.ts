@@ -15,29 +15,30 @@
  */
 
 import {
-  concat as observableConcat,
   Observable,
-  of as observableOf,
   Subject,
 } from "rxjs";
+import config from "../../../config";
+import { formatError, ICustomError } from "../../../errors";
+import Manifest, {
+  Adaptation,
+  ISegment,
+  Period,
+  Representation,
+} from "../../../manifest";
 import {
-  filter,
-  finalize,
-  mergeMap,
-  share,
-  tap,
-} from "rxjs/operators";
-import { formatError } from "../../../errors";
-import { ISegment } from "../../../manifest";
-import {
+  ISegmentLoadingProgressInformation,
   ISegmentParserParsedInitSegment,
   ISegmentParserParsedSegment,
   ISegmentPipeline,
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
-import assertUnreachable from "../../../utils/assert_unreachable";
 import idGenerator from "../../../utils/id_generator";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
+import objectAssign from "../../../utils/object_assign";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 import {
   IABRMetricsEvent,
   IABRRequestBeginEvent,
@@ -45,20 +46,229 @@ import {
   IABRRequestProgressEvent,
 } from "../../abr";
 import { IBufferType } from "../../segment_buffers";
-import { IBackoffOptions } from "../utils/try_urls_with_backoff";
-import createSegmentLoader, {
-  ISegmentLoaderChunk,
-  ISegmentLoaderChunkComplete,
-  ISegmentLoaderContent,
-  ISegmentLoaderData,
-  ISegmentLoaderWarning,
-} from "./create_segment_loader";
+import errorSelector from "../utils/error_selector";
+import { tryURLsWithBackoff } from "../utils/try_urls_with_backoff";
+
+const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+        DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+        INITIAL_BACKOFF_DELAY_BASE,
+        MAX_BACKOFF_DELAY_BASE } = config;
+
+const generateRequestID = idGenerator();
 
 /**
- * Event sent when the segment request needs to be renewed (e.g. due to an HTTP
- * error).
+ * Create a function which will fetch and parse segments.
+ * @param {string} bufferType
+ * @param {Object} transport
+ * @param {Subject} requests$
+ * @param {Object} options
+ * @returns {Function}
  */
-export type ISegmentFetcherWarning = ISegmentLoaderWarning;
+export default function createSegmentFetcher<
+  LoadedFormat,
+  TSegmentDataType,
+>(
+  bufferType : IBufferType,
+  pipeline : ISegmentPipeline<LoadedFormat, TSegmentDataType>,
+  requests$ : Subject<IABRMetricsEvent |
+                      IABRRequestBeginEvent |
+                      IABRRequestProgressEvent |
+                      IABRRequestEndEvent>,
+  options : ISegmentFetcherOptions
+) : ISegmentFetcher<TSegmentDataType> {
+
+  /**
+   * Cache audio and video initialization segments.
+   * This allows to avoid doing too many requests for what are usually very
+   * small files.
+   */
+  const cache = arrayIncludes(["audio", "video"], bufferType) ?
+    new InitializationSegmentCache<LoadedFormat>() :
+    undefined;
+
+  const { loadSegment, parseSegment } = pipeline;
+
+  /**
+   * Fetch a specific segment.
+   *
+   * This function returns an Observable which will fetch the segment on
+   * subscription.
+   * This Observable will emit various events during that request lifecycle and
+   * throw if the segment request(s) (including potential retries) fail.
+   *
+   * The Observable will automatically complete once no events are left to be
+   * sent.
+   * @param {Object} content
+   * @returns {Observable}
+   */
+  return function fetchSegment(
+    content : ISegmentLoaderContent
+  ) : Observable<ISegmentFetcherEvent<TSegmentDataType>> {
+    const { segment } = content;
+    return new Observable((obs) => {
+      // Retrieve from cache if it exists
+      const cached = cache !== undefined ? cache.get(content) :
+                                           null;
+      if (cached !== null) {
+        obs.next({ type: "chunk" as const,
+                   parse: generateParserFunction(cached, false) });
+        obs.next({ type: "chunk-complete" as const });
+        obs.complete();
+        return undefined;
+      }
+
+      const id = generateRequestID();
+      requests$.next({ type: "requestBegin",
+                       value: { duration: segment.duration,
+                                time: segment.time,
+                                requestTimestamp: performance.now(),
+                                id } });
+
+      const canceller = new TaskCanceller();
+      let hasRequestEnded = false;
+
+      const loaderCallbacks = {
+        /**
+         * Callback called when the segment loader has progress information on
+         * the request.
+         * @param {Object} info
+         */
+        onProgress(info : ISegmentLoadingProgressInformation) : void {
+          if (info.totalSize !== undefined && info.size < info.totalSize) {
+            requests$.next({ type: "progress",
+                             value: { duration: info.duration,
+                                      size: info.size,
+                                      totalSize: info.totalSize,
+                                      timestamp: performance.now(),
+                                      id } });
+          }
+        },
+
+        /**
+         * Callback called when the segment is communicated by the loader
+         * through decodable sub-segment(s) called chunk(s), with a chunk in
+         * argument.
+         * @param {*} chunkData
+         */
+        onNewChunk(chunkData : LoadedFormat) : void {
+          obs.next({ type: "chunk" as const,
+                     parse: generateParserFunction(chunkData, true) });
+        },
+      };
+
+
+      tryURLsWithBackoff(segment.mediaURLs ?? [null],
+                         callLoaderWithUrl,
+                         objectAssign({ onRetry }, options),
+                         canceller.signal)
+        .then((res) => {
+          if (res.resultType === "segment-loaded") {
+            const loadedData = res.resultData.responseData;
+            if (cache !== undefined) {
+              cache.add(content, res.resultData.responseData);
+            }
+            obs.next({ type: "chunk" as const,
+                       parse: generateParserFunction(loadedData, false) });
+          } else if (res.resultType === "segment-created") {
+            obs.next({ type: "chunk" as const,
+                       parse: generateParserFunction(res.resultData, false) });
+          }
+
+          hasRequestEnded = true;
+          obs.next({ type: "chunk-complete" as const });
+
+          if ((res.resultType === "segment-loaded" ||
+               res.resultType === "chunk-complete") &&
+               res.resultData.size !== undefined &&
+               res.resultData.duration !== undefined)
+          {
+            requests$.next({ type: "metrics",
+                             value: { size: res.resultData.size,
+                                      duration: res.resultData.duration,
+                                      content } });
+          }
+
+          if (!canceller.isUsed) {
+            // The current Observable could have been canceled as a result of one
+            // of the previous `next` calls. In that case, we don't want to send
+            // a "requestEnd" again as it has already been sent on cancellation.
+            //
+            // Note that we only perform this check for `"requestEnd"` on
+            // purpose. Observable's events should have been ignored by RxJS if
+            // the Observable has already been canceled and we don't care if
+            // `"metrics"` is sent there.
+            requests$.next({ type: "requestEnd", value: { id } });
+          }
+          obs.complete();
+        })
+        .catch((err) => {
+          hasRequestEnded = true;
+          obs.error(errorSelector(err));
+        });
+
+      return () => {
+        if (!hasRequestEnded) {
+          canceller.cancel();
+          requests$.next({ type: "requestEnd", value: { id } });
+        }
+      };
+
+      /**
+       * Call a segment loader for the given URL with the right arguments.
+       * @param {string|null} url
+       * @param {Object} cancellationSignal
+       * @returns {Promise}
+       */
+      function callLoaderWithUrl(
+        url : string | null,
+        cancellationSignal: CancellationSignal
+      ) {
+        return loadSegment(url, content, cancellationSignal, loaderCallbacks);
+      }
+
+      /**
+       * Generate function allowing to parse a loaded segment.
+       * @param {*} data
+       * @param {Boolean} isChunked
+       * @returns {Function}
+       */
+      function generateParserFunction(data : LoadedFormat, isChunked : boolean)  {
+        return function parse(initTimescale? : number) :
+          ISegmentParserParsedInitSegment<TSegmentDataType> |
+          ISegmentParserParsedSegment<TSegmentDataType>
+        {
+          const loaded = { data, isChunked };
+
+          try {
+            return parseSegment(loaded, content, initTimescale);
+          } catch (error) {
+            throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
+                                       defaultReason: "Unknown parsing error" });
+          }
+        };
+      }
+
+      /**
+       * Function called when the function request is retried.
+       * @param {*} err
+       */
+      function onRetry(err: unknown) : void {
+        obs.next({ type: "warning" as const,
+                   value: errorSelector(err) });
+      }
+    });
+  };
+}
+
+export type ISegmentFetcher<TSegmentDataType> = (content : ISegmentLoaderContent) =>
+  Observable<ISegmentFetcherEvent<TSegmentDataType>>;
+
+/** Event sent by the SegmentFetcher when fetching a segment. */
+export type ISegmentFetcherEvent<TSegmentDataType> =
+  ISegmentFetcherChunkCompleteEvent |
+  ISegmentFetcherChunkEvent<TSegmentDataType> |
+  ISegmentFetcherWarning;
+
 
 /**
  * Event sent when a new "chunk" of the segment is available.
@@ -66,6 +276,7 @@ export type ISegmentFetcherWarning = ISegmentLoaderWarning;
  */
 export interface ISegmentFetcherChunkEvent<TSegmentDataType> {
   type : "chunk";
+  /** Parse the downloaded chunk. */
   /**
    * Parse the downloaded chunk.
    *
@@ -87,158 +298,58 @@ export interface ISegmentFetcherChunkEvent<TSegmentDataType> {
  */
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete" }
 
-/** Event sent by the SegmentFetcher when fetching a segment. */
-export type ISegmentFetcherEvent<TSegmentDataType> =
-  ISegmentFetcherChunkCompleteEvent |
-  ISegmentFetcherChunkEvent<TSegmentDataType> |
-  ISegmentFetcherWarning;
+/** Content used by the segment loader as a context to load a new segment. */
+export interface ISegmentLoaderContent { manifest : Manifest;
+                                         period : Period;
+                                         adaptation : Adaptation;
+                                         representation : Representation;
+                                         segment : ISegment; }
 
-export type ISegmentFetcher<TSegmentDataType> = (content : ISegmentLoaderContent) =>
-  Observable<ISegmentFetcherEvent<TSegmentDataType>>;
+/** An Error happened while loading (usually a request error). */
+export interface ISegmentFetcherWarning { type : "warning";
+                                          value : ICustomError; }
 
-const generateRequestID = idGenerator();
+export interface ISegmentFetcherOptions {
+  /**
+   * Initial delay to wait if a request fails before making a new request, in
+   * milliseconds.
+   */
+  baseDelay : number;
+  /**
+   * Maximum delay to wait if a request fails before making a new request, in
+   * milliseconds.
+   */
+  maxDelay : number;
+  /**
+   * Maximum number of retries to perform on "regular" errors (e.g. due to HTTP
+   * status, integrity errors, timeouts...).
+   */
+  maxRetryRegular : number;
+  /**
+   * Maximum number of retries to perform when it appears that the user is
+   * currently offline.
+   */
+  maxRetryOffline : number;
+}
 
 /**
- * Create a function which will fetch and parse segments.
  * @param {string} bufferType
- * @param {Object} transport
- * @param {Subject} requests$
- * @param {Object} options
- * @returns {Function}
+ * @param {Object}
+ * @returns {Object}
  */
-export default function createSegmentFetcher<
-  LoadedFormat,
-  TSegmentDataType
->(
-  bufferType : IBufferType,
-  segmentPipeline : ISegmentPipeline<LoadedFormat, TSegmentDataType>,
-  requests$ : Subject<IABRMetricsEvent |
-                      IABRRequestBeginEvent |
-                      IABRRequestProgressEvent |
-                      IABRRequestEndEvent>,
-  options : IBackoffOptions
-) : ISegmentFetcher<TSegmentDataType> {
-  const cache = arrayIncludes(["audio", "video"], bufferType) ?
-    new InitializationSegmentCache<any>() :
-    undefined;
-  const segmentLoader = createSegmentLoader(segmentPipeline.loader, cache, options);
-  const segmentParser = segmentPipeline.parser;
-
-  /**
-   * Process the segmentLoader observable to adapt it to the the rest of the
-   * code:
-   *   - use the requests subject for network requests and their progress
-   *   - use the warning$ subject for retries' error messages
-   *   - only emit the data
-   * @param {Object} content
-   * @returns {Observable}
-   */
-  return function fetchSegment(
-    content : ISegmentLoaderContent
-  ) : Observable<ISegmentFetcherEvent<TSegmentDataType>> {
-    const id = generateRequestID();
-    let requestBeginSent = false;
-    return segmentLoader(content).pipe(
-      tap((arg) => {
-        switch (arg.type) {
-          case "metrics": {
-            requests$.next(arg);
-            break;
-          }
-
-          case "request": {
-            const { value } = arg;
-
-            // format it for ABR Handling
-            const segment : ISegment|undefined = value.segment;
-            if (segment === undefined) {
-              return;
-            }
-            requestBeginSent = true;
-            requests$.next({ type: "requestBegin",
-                             value: { duration: segment.duration,
-                                      time: segment.time,
-                                      requestTimestamp: performance.now(),
-                                      id } });
-            break;
-          }
-
-          case "progress": {
-            const { value } = arg;
-            if (value.totalSize != null && value.size < value.totalSize) {
-              requests$.next({ type: "progress",
-                               value: { duration: value.duration,
-                                        size: value.size,
-                                        totalSize: value.totalSize,
-                                        timestamp: performance.now(),
-                                        id } });
-            }
-            break;
-          }
-        }
-      }),
-
-      finalize(() => {
-        if (requestBeginSent) {
-          requests$.next({ type: "requestEnd", value: { id } });
-        }
-      }),
-
-      filter((e) : e is ISegmentLoaderChunk |
-                        ISegmentLoaderChunkComplete |
-                        ISegmentLoaderData<LoadedFormat> |
-                        ISegmentFetcherWarning => {
-        switch (e.type) {
-          case "warning":
-          case "chunk":
-          case "chunk-complete":
-          case "data":
-            return true;
-          case "progress":
-          case "metrics":
-          case "request":
-            return false;
-          default:
-            assertUnreachable(e);
-        }
-      }),
-      mergeMap((evt) => {
-        if (evt.type === "warning") {
-          return observableOf(evt);
-        }
-        if (evt.type === "chunk-complete") {
-          return observableOf({ type: "chunk-complete" as const });
-        }
-
-        const isChunked = evt.type === "chunk";
-        const data = {
-          type: "chunk" as const,
-          /**
-           * Parse the loaded data.
-           * @param {Object} [initTimescale]
-           * @returns {Observable}
-           */
-          parse(initTimescale? : number) :
-            ISegmentParserParsedInitSegment<TSegmentDataType> |
-            ISegmentParserParsedSegment<TSegmentDataType>
-          {
-            const response = { data: evt.value.responseData, isChunked };
-            try {
-              return segmentParser({ response, initTimescale, content });
-            } catch (error : unknown) {
-              throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
-                                         defaultReason: "Unknown parsing error" });
-            }
-          },
-        };
-
-        if (isChunked) {
-          return observableOf(data);
-        }
-        return observableConcat(observableOf(data),
-                                observableOf({ type: "chunk-complete" as const }));
-      }),
-      share() // avoid multiple side effects if multiple subs
-    );
-  };
+export function getSegmentFetcherOptions(
+  bufferType : string,
+  { maxRetryRegular,
+    maxRetryOffline,
+    lowLatencyMode } : { maxRetryRegular? : number;
+                         maxRetryOffline? : number;
+                         lowLatencyMode : boolean; }
+) : ISegmentFetcherOptions {
+  return { maxRetryRegular: bufferType === "image" ? 0 :
+                            maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+           maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+           baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
+                                       INITIAL_BACKOFF_DELAY_BASE.REGULAR,
+           maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
+                                      MAX_BACKOFF_DELAY_BASE.REGULAR };
 }

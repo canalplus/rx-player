@@ -14,71 +14,94 @@
  * limitations under the License.
  */
 
-import {
-  combineLatest as observableCombineLatest,
-  Observable,
-} from "rxjs";
-import { map } from "rxjs/operators";
+import PPromise from "pinkie";
+import { ISegment } from "../../manifest";
 import { concat } from "../../utils/byte_parsing";
-import xhr from "../../utils/request";
+import request from "../../utils/request";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  ISegmentLoaderArguments,
-  ISegmentLoaderEvent,
+  ISegmentLoaderCallbacks,
+  ISegmentLoaderResultChunkedComplete,
+  ISegmentLoaderResultSegmentCreated,
+  ISegmentLoaderResultSegmentLoaded,
 } from "../types";
 import byteRange from "../utils/byte_range";
 
 /**
  * Perform a request for an initialization segment, agnostic to the container.
  * @param {string} url
- * @param {Object} content
+ * @param {Object} segment
+ * @param {CancellationSignal} cancelSignal
+ * @param {Object} callbacks
+ * @returns {Promise}
  */
 export default function initSegmentLoader(
   url : string,
-  { segment } : ISegmentLoaderArguments
-) : Observable< ISegmentLoaderEvent< ArrayBuffer | Uint8Array >> {
+  segment : ISegment,
+  cancelSignal : CancellationSignal,
+  callbacks : ISegmentLoaderCallbacks<ArrayBuffer | Uint8Array>
+) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | Uint8Array> |
+            ISegmentLoaderResultSegmentCreated<ArrayBuffer | Uint8Array> |
+            ISegmentLoaderResultChunkedComplete>
+{
   if (segment.range === undefined) {
-    return xhr({ url, responseType: "arraybuffer", sendProgressEvents: true });
+    return request({ url,
+                     responseType: "arraybuffer",
+                     cancelSignal,
+                     onProgress: callbacks.onProgress })
+      .then(data => ({ resultType: "segment-loaded",
+                       resultData: data }));
   }
 
   if (segment.indexRange === undefined) {
-    return xhr({ url,
-                 headers: { Range: byteRange(segment.range) },
-                 responseType: "arraybuffer",
-                 sendProgressEvents: true });
+    return request({ url,
+                     headers: { Range: byteRange(segment.range) },
+                     responseType: "arraybuffer",
+                     cancelSignal,
+                     onProgress: callbacks.onProgress })
+      .then(data => ({ resultType: "segment-loaded",
+                       resultData: data }));
   }
 
   // range and indexRange are contiguous (99% of the cases)
   if (segment.range[1] + 1 === segment.indexRange[0]) {
-    return xhr({ url,
-                 headers: { Range: byteRange([segment.range[0],
-                                              segment.indexRange[1] ]) },
-                 responseType: "arraybuffer",
-                 sendProgressEvents: true });
+    return request({ url,
+                     headers: { Range: byteRange([segment.range[0],
+                                                  segment.indexRange[1] ]) },
+                     responseType: "arraybuffer",
+                     cancelSignal,
+                     onProgress: callbacks.onProgress })
+      .then(data => ({ resultType: "segment-loaded",
+                       resultData: data }));
   }
 
-  const rangeRequest$ = xhr({ url,
-                              headers: { Range: byteRange(segment.range) },
-                              responseType: "arraybuffer",
-                              sendProgressEvents: false });
-  const indexRequest$ = xhr({ url,
-                              headers: { Range: byteRange(segment.indexRange) },
-                              responseType: "arraybuffer",
-                              sendProgressEvents: false });
-  return observableCombineLatest([rangeRequest$, indexRequest$])
-    .pipe(map(([initData, indexData]) => {
-      const data = concat(new Uint8Array(initData.value.responseData),
-                          new Uint8Array(indexData.value.responseData));
+  const rangeRequest$ = request({ url,
+                                  headers: { Range: byteRange(segment.range) },
+                                  responseType: "arraybuffer",
+                                  cancelSignal,
+                                  onProgress: callbacks.onProgress });
+  const indexRequest$ = request({ url,
+                                  headers: { Range: byteRange(segment.indexRange) },
+                                  responseType: "arraybuffer",
+                                  cancelSignal,
+                                  onProgress: callbacks.onProgress });
 
-      const sendingTime = Math.min(initData.value.sendingTime,
-                                   indexData.value.sendingTime);
-      const receivedTime = Math.max(initData.value.receivedTime,
-                                    indexData.value.receivedTime);
-      return { type: "data-loaded",
-               value: { url,
-                        responseData: data,
-                        size: initData.value.size + indexData.value.size,
-                        duration: receivedTime - sendingTime,
-                        sendingTime,
-                        receivedTime } };
-    }));
+  return PPromise.all([rangeRequest$, indexRequest$])
+    .then(([ initData, indexData ]) => {
+      const data = concat(new Uint8Array(initData.responseData),
+                          new Uint8Array(indexData.responseData));
+
+      const sendingTime = Math.min(initData.sendingTime,
+                                   indexData.sendingTime);
+      const receivedTime = Math.max(initData.receivedTime,
+                                    indexData.receivedTime);
+      return { resultType: "segment-loaded" as const,
+               resultData: { url,
+                             responseData: data,
+                             size: initData.size + indexData.size,
+                             duration: receivedTime - sendingTime,
+                             sendingTime,
+                             receivedTime } };
+
+    });
 }

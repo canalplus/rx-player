@@ -14,56 +14,18 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
 import config from "../../config";
 import { RequestError } from "../../errors";
 import isNonEmptyString from "../is_non_empty_string";
 import isNullOrUndefined from "../is_null_or_undefined";
+import {
+  CancellationError,
+  CancellationSignal,
+} from "../task_canceller";
 
 const { DEFAULT_REQUEST_TIMEOUT } = config;
 
 const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
-
-// Interface for "progress" events
-export interface IRequestProgress { type : "progress";
-                                    value : { currentTime : number;
-                                              duration : number;
-                                              size : number;
-                                              sendingTime : number;
-                                              url : string;
-                                              totalSize? : number; };
-}
-
-// Interface for "response" events
-export interface IRequestResponse<T, U> { type : "data-loaded";
-                                          value : { duration : number;
-                                                    receivedTime : number;
-                                                    responseData : T;
-                                                    responseType : U;
-                                                    sendingTime : number;
-                                                    size : number;
-                                                    status : number;
-                                                    url : string; }; }
-
-// Arguments for the "request" utils
-export interface IRequestOptions<T, U> { url : string;
-                                         headers? : { [ header: string ] : string } |
-                                                    null;
-                                         responseType? : T;
-                                         timeout? : number;
-                                         sendProgressEvents? : U; }
-
-/**
- * @param {string} data
- * @returns {Object|null}
- */
-function toJSONForIE(data : string) : unknown|null {
-  try {
-    return JSON.parse(data);
-  } catch (e) {
-    return null;
-  }
-}
 
 /**
  * # request function
@@ -146,63 +108,27 @@ function toJSONForIE(data : string) : unknown|null {
  * @param {Object} options
  * @returns {Observable}
  */
-
-// overloading to the max
-function request(options : IRequestOptions< undefined | null | "" | "text",
-                                            false | undefined>)
-: Observable<IRequestResponse< string, "text" >>;
-function request(options : IRequestOptions< undefined | null | "" | "text",
-                                            true >)
-: Observable<IRequestResponse< string, "text" > |
-             IRequestProgress >;
-
-function request(options : IRequestOptions< "arraybuffer",
-                                            false | undefined>)
-: Observable<IRequestResponse< ArrayBuffer, "arraybuffer" >>;
-function request(options : IRequestOptions<"arraybuffer", true>)
-: Observable<IRequestResponse<ArrayBuffer, "arraybuffer"> |
-             IRequestProgress >;
-
-function request(options : IRequestOptions< "document",
-                                            false | undefined >)
-: Observable<IRequestResponse< Document, "document" >>;
-function request(options : IRequestOptions< "document",
-                                            true >)
-: Observable<IRequestResponse< Document, "document" > |
-             IRequestProgress >;
-
-function request(options : IRequestOptions< "json",
-                                            false | undefined >)
-                // eslint-disable-next-line @typescript-eslint/ban-types
-: Observable<IRequestResponse< object, "json" >>;
-function request(options : IRequestOptions< "json", true >)
-                // eslint-disable-next-line @typescript-eslint/ban-types
-: Observable<IRequestResponse< object, "json" > |
-             IRequestProgress >;
-
-function request(options : IRequestOptions< "blob",
-                                            false|undefined >)
-: Observable<IRequestResponse< Blob, "blob" >>;
-function request(options : IRequestOptions<"blob", true>)
-: Observable<IRequestResponse< Blob, "blob" > |
-             IRequestProgress >;
-
-function request<T>(
-  options : IRequestOptions< XMLHttpRequestResponseType | null | undefined,
-                             false | undefined >)
-: Observable<IRequestResponse< T, XMLHttpRequestResponseType >>;
-function request<T>(
-  options : IRequestOptions< XMLHttpRequestResponseType | null | undefined,
-                             true >)
-: Observable<IRequestResponse< T, XMLHttpRequestResponseType > |
-             IRequestProgress
->;
-function request<T>(
-  options : IRequestOptions< XMLHttpRequestResponseType | null | undefined,
-                            boolean | undefined >
-) : Observable<IRequestResponse< T, XMLHttpRequestResponseType > |
-               IRequestProgress
-> {
+export default function request(
+  options : IRequestOptions< undefined | null | "" | "text" >
+) : Promise<IRequestResponse< string, "text" >>;
+export default function request(
+  options : IRequestOptions< "arraybuffer" >
+) : Promise<IRequestResponse< ArrayBuffer, "arraybuffer" >>;
+export default function request(
+  options : IRequestOptions< "document" >
+) : Promise<IRequestResponse< Document, "document" >>;
+export default function request(
+  options : IRequestOptions< "json" >
+)
+// eslint-disable-next-line @typescript-eslint/ban-types
+: Promise<IRequestResponse< object, "json" >>;
+export default function request(
+  options : IRequestOptions< "blob" >,
+)
+: Promise<IRequestResponse< Blob, "blob" >>;
+export default function request<T>(
+  options : IRequestOptions< XMLHttpRequestResponseType | null | undefined >
+) : Promise<IRequestResponse< T, XMLHttpRequestResponseType >> {
   const requestOptions = {
     url: options.url,
     headers: options.headers,
@@ -212,7 +138,8 @@ function request<T>(
                                                   options.timeout,
   };
 
-  return new Observable((obs) => {
+  return new Promise((resolve, reject) => {
+    const { onProgress, cancelSignal } = options;
     const { url,
             headers,
             responseType,
@@ -241,29 +168,53 @@ function request<T>(
 
     const sendingTime = performance.now();
 
+    // Handle request cancellation
+    let deregisterCancellationListener : (() => void) | null = null;
+    if (cancelSignal !== undefined) {
+      deregisterCancellationListener = cancelSignal
+        .register(function abortRequest(err : CancellationError) {
+          if (!isNullOrUndefined(xhr) && xhr.readyState !== 4) {
+            xhr.abort();
+          }
+          reject(err);
+        });
+
+      if (cancelSignal.isCancelled) {
+        return;
+      }
+    }
+
     xhr.onerror = function onXHRError() {
-      obs.error(new RequestError(url, xhr.status, "ERROR_EVENT", xhr));
+      if (deregisterCancellationListener !== null) {
+        deregisterCancellationListener();
+      }
+      reject(new RequestError(url, xhr.status, "ERROR_EVENT", xhr));
     };
 
     xhr.ontimeout = function onXHRTimeout() {
-      obs.error(new RequestError(url, xhr.status, "TIMEOUT", xhr));
+      if (deregisterCancellationListener !== null) {
+        deregisterCancellationListener();
+      }
+      reject(new RequestError(url, xhr.status, "TIMEOUT", xhr));
     };
 
-    if (options.sendProgressEvents === true) {
+    if (onProgress !== undefined) {
       xhr.onprogress = function onXHRProgress(event) {
         const currentTime = performance.now();
-        obs.next({ type: "progress",
-                   value: { url,
-                            duration: currentTime - sendingTime,
-                            sendingTime,
-                            currentTime,
-                            size: event.loaded,
-                            totalSize: event.total } });
+        onProgress({ url,
+                     duration: currentTime - sendingTime,
+                     sendingTime,
+                     currentTime,
+                     size: event.loaded,
+                     totalSize: event.total });
       };
     }
 
     xhr.onload = function onXHRLoad(event : ProgressEvent) {
       if (xhr.readyState === 4) {
+        if (deregisterCancellationListener !== null) {
+          deregisterCancellationListener();
+        }
         if (xhr.status >= 200 && xhr.status < 300) {
           const receivedTime = performance.now();
           const totalSize = xhr.response instanceof
@@ -287,34 +238,97 @@ function request<T>(
           }
 
           if (isNullOrUndefined(responseData)) {
-            obs.error(new RequestError(url, xhr.status, "PARSE_ERROR", xhr));
+            reject(new RequestError(url, xhr.status, "PARSE_ERROR", xhr));
             return;
           }
 
-          obs.next({ type: "data-loaded",
-                     value: { status,
-                              url: _url,
-                              responseType: loadedResponseType,
-                              sendingTime,
-                              receivedTime,
-                              duration: receivedTime - sendingTime,
-                              size: totalSize,
-                              responseData } });
-          obs.complete();
+          resolve({ status,
+                    url: _url,
+                    responseType: loadedResponseType,
+                    sendingTime,
+                    receivedTime,
+                    duration: receivedTime - sendingTime,
+                    size: totalSize,
+                    responseData });
 
         } else {
-          obs.error(new RequestError(url, xhr.status, "ERROR_HTTP_CODE", xhr));
+          reject(new RequestError(url, xhr.status, "ERROR_HTTP_CODE", xhr));
         }
       }
     };
 
     xhr.send();
-    return () => {
-      if (!isNullOrUndefined(xhr) && xhr.readyState !== 4) {
-        xhr.abort();
-      }
-    };
   });
 }
 
-export default request;
+/**
+ * @param {string} data
+ * @returns {Object|null}
+ */
+function toJSONForIE(data : string) : unknown|null {
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return null;
+  }
+}
+
+/** Options given to `request` */
+export interface IRequestOptions<ResponseType> {
+  /** URL you want to request. */
+  url : string;
+  /** Dictionary of headers you want to set. `null` or `undefined` for no header. */
+  headers? : { [ header: string ] : string } |
+             null;
+  /** Wanted format for the response */
+  responseType? : ResponseType;
+  /**
+   * Optional timeout, in milliseconds, after which we will cancel a request.
+   * Set to DEFAULT_REQUEST_TIMEOUT by default.
+   */
+  timeout? : number;
+  /**
+   * "Cancelation token" used to be able to cancel the request.
+   * When this token is "cancelled", the request will be aborted and the Promise
+   * returned by `request` will be rejected.
+   */
+  cancelSignal? : CancellationSignal;
+  /**
+   * When defined, this callback will be called on each XHR "progress" event
+   * with data related to this request's progress.
+   */
+  onProgress? : (info : IProgressInfo) => void;
+}
+
+/** Data emitted by `request`'s Promise when the request succeeded. */
+export interface IRequestResponse<T, U> {
+  /** Time taken by the request, in milliseconds. */
+  duration : number;
+  /** Time (relative to the "time origin") at which the request ended. */
+  receivedTime : number;
+  /** Data requested. Its type will depend on the responseType. */
+  responseData : T;
+  /** `responseType` requested, gives an indice on the type of `responseData`. */
+  responseType : U;
+  /** Time (relative to the "time origin") at which the request began. */
+  sendingTime : number;
+  /** Full size of the requested data, in bytes. */
+  size : number;
+  /** HTTP status of the response */
+  status : number;
+  /**
+   * Actual URL requested.
+   * Can be different from the one given to `request` due to a possible
+   * redirection.
+   */
+  url : string;
+}
+
+export interface IProgressInfo {
+  currentTime : number;
+  duration : number;
+  size : number;
+  sendingTime : number;
+  url : string;
+  totalSize? : number;
+}

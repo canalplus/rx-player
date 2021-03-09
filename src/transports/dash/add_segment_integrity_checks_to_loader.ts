@@ -14,39 +14,80 @@
  * limitations under the License.
  */
 
-import { tap } from "rxjs/operators";
-import {
-  ISegmentLoader,
-} from "../types";
+import TaskCanceller, {
+  CancellationError,
+} from "../../utils/task_canceller";
+import { ISegmentLoader } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import inferSegmentContainer from "../utils/infer_segment_container";
 
 /**
  * Add multiple checks on the response given by the `segmentLoader` in argument.
- * If the response appear to be corrupted, this Observable will throw an error
- * with an `INTEGRITY_ERROR` code.
+ * If the response appear to be corrupted, the returned Promise will reject with
+ * an error with an `INTEGRITY_ERROR` code.
  * @param {Function} segmentLoader
  * @returns {Function}
  */
-export default function addSegmentIntegrityChecks(
-  segmentLoader : ISegmentLoader<ArrayBuffer | Uint8Array | null>
-) : ISegmentLoader<ArrayBuffer | Uint8Array | null>;
-export default function addSegmentIntegrityChecks(
-  segmentLoader : ISegmentLoader<ArrayBuffer | Uint8Array | string | null>
-) : ISegmentLoader< ArrayBuffer | Uint8Array | string | null>;
-export default function addSegmentIntegrityChecks(
-  segmentLoader : ISegmentLoader<ArrayBuffer | Uint8Array | string | null>
-) : ISegmentLoader<ArrayBuffer | Uint8Array | string | null>
-{
-  return (content) => segmentLoader(content).pipe(tap((res) => {
-    if ((res.type === "data-loaded" || res.type === "data-chunk") &&
-        res.value.responseData !== null &&
-        typeof res.value.responseData !== "string" &&
-        inferSegmentContainer(content.adaptation.type,
-                              content.representation) === "mp4")
-    {
-      checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
-                            content.segment.isInit);
-    }
-  }));
+export default function addSegmentIntegrityChecks<T>(
+  segmentLoader : ISegmentLoader<T>
+) : ISegmentLoader<T> {
+  return (url, content, initialCancelSignal, callbacks) => {
+    return new Promise((res, rej) => {
+
+      const canceller = new TaskCanceller();
+      const unregisterCancelLstnr = initialCancelSignal
+        .register(function onCheckCancellation(err : CancellationError) {
+          canceller.cancel();
+          rej(err);
+        });
+
+      /**
+       * If the data's seems to be corrupted, cancel the loading task and reject
+       * with an `INTEGRITY_ERROR` error.
+       * @param {*} data
+       */
+      function cancelAndRejectOnBadIntegrity(data : T) : void {
+        if (!(data instanceof Array) && !(data instanceof Uint8Array) ||
+            inferSegmentContainer(content.adaptation.type,
+                                  content.representation) !== "mp4")
+        {
+          return;
+        }
+        try {
+          checkISOBMFFIntegrity(new Uint8Array(data), content.segment.isInit);
+        } catch (err) {
+          unregisterCancelLstnr();
+          canceller.cancel();
+          rej(err);
+        }
+      }
+
+      segmentLoader(url, content, canceller.signal, {
+        ...callbacks,
+        onNewChunk(data) {
+          cancelAndRejectOnBadIntegrity(data);
+          if (!canceller.isUsed) {
+            callbacks.onNewChunk(data);
+          }
+        },
+      }).then((info) => {
+        if (canceller.isUsed) {
+          return;
+        }
+        unregisterCancelLstnr();
+
+        if (info.resultType === "segment-loaded") {
+          cancelAndRejectOnBadIntegrity(info.resultData.responseData);
+        }
+        res(info);
+
+      }, (error : unknown) => {
+        // The segmentLoader's cancellations cases are all handled here
+        if (!TaskCanceller.isCancellationError(error)) {
+          unregisterCancelLstnr();
+          rej(error);
+        }
+      });
+    });
+  };
 }

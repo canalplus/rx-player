@@ -48,16 +48,16 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   const textTrackLoader = generateTextTrackLoader(options);
   const textTrackParser = generateTextTrackParser(options);
 
-  return { manifest: { loader: manifestLoader,
-                       parser: manifestParser },
-           audio: { loader: segmentLoader,
-                    parser: audioVideoSegmentParser },
-           video: { loader: segmentLoader,
-                    parser: audioVideoSegmentParser },
-           text: { loader: textTrackLoader,
-                   parser: textTrackParser },
-           image: { loader: imageLoader,
-                    parser: imageParser } };
+  return { manifest: { loadManifest: manifestLoader,
+                       parseManifest: manifestParser },
+           audio: { loadSegment: segmentLoader,
+                    parseSegment: audioVideoSegmentParser },
+           video: { loadSegment: segmentLoader,
+                    parseSegment: audioVideoSegmentParser },
+           text: { loadSegment: textTrackLoader,
+                   parseSegment: textTrackParser },
+           image: { loadSegment: imageLoader,
+                    parseSegment: imageParser } };
 }
 
 /**

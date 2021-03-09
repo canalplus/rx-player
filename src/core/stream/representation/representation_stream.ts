@@ -201,14 +201,15 @@ export interface IRepresentationStreamOptions {
  * @param {Object} args
  * @returns {Observable}
  */
-export default function RepresentationStream<T>({
+export default function RepresentationStream<TSegmentDataType>({
   clock$,
   content,
   segmentBuffer,
   segmentFetcher,
   terminate$,
   options,
-} : IRepresentationStreamArguments<T>) : Observable<IRepresentationStreamEvent<T>> {
+} : IRepresentationStreamArguments<TSegmentDataType>
+) : Observable<IRepresentationStreamEvent<TSegmentDataType>> {
   const { manifest, period, adaptation, representation } = content;
   const { bufferGoal$, drmSystemId, fastSwitchThreshold$ } = options;
   const bufferType = adaptation.type;
@@ -218,7 +219,8 @@ export default function RepresentationStream<T>({
    * Saved initialization segment state for this representation.
    * `null` if the initialization segment hasn't been loaded yet.
    */
-  let initSegmentObject : ISegmentParserParsedInitSegment<T | null> | null =
+  let initSegmentObject : ISegmentParserParsedInitSegment<TSegmentDataType | null> |
+                          null =
     initSegment === null ? { segmentType: "init",
                              initializationData: null,
                              protectionDataUpdate: false,
@@ -238,7 +240,8 @@ export default function RepresentationStream<T>({
    * Keep track of the information about the pending segment request.
    * `null` if no segment request is pending in that RepresentationStream.
    */
-  let currentSegmentRequest : ISegmentRequestObject<T>|null = null;
+  let currentSegmentRequest : ISegmentRequestObject<TSegmentDataType> |
+                              null = null;
 
   const status$ = observableCombineLatest([
     clock$,
@@ -395,9 +398,9 @@ export default function RepresentationStream<T>({
    * error).
    * @returns {Observable}
    */
-  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>> {
+  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<TSegmentDataType>> {
     const requestNextSegment$ =
-      observableDefer(() : Observable<ISegmentLoadingEvent<T>> => {
+      observableDefer(() : Observable<ISegmentLoadingEvent<TSegmentDataType>> => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment === undefined) {
           nextTick(() => { reCheckNeededSegments$.next(); });
@@ -410,7 +413,7 @@ export default function RepresentationStream<T>({
 
         currentSegmentRequest = { segment, priority, request$ };
         return request$
-          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>> => {
+          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<TSegmentDataType>> => {
             switch (evt.type) {
               case "warning":
                 return observableOf({ type: "retry" as const,
@@ -450,8 +453,8 @@ export default function RepresentationStream<T>({
    * @returns {Observable}
    */
   function onLoaderEvent(
-    evt : ISegmentLoadingEvent<T>
-  ) : Observable<IStreamEventAddedSegment<T> |
+    evt : ISegmentLoadingEvent<TSegmentDataType>
+  ) : Observable<IStreamEventAddedSegment<TSegmentDataType> |
                  ISegmentFetcherWarning |
                  IEncryptionDataEncounteredEvent |
                  IInbandEventsEvent |
@@ -494,8 +497,8 @@ export default function RepresentationStream<T>({
    * @returns {Observable}
    */
   function onParsedChunk(
-    evt : IParsedSegmentEvent<T>
-  ) : Observable<IStreamEventAddedSegment<T> |
+    evt : IParsedSegmentEvent<TSegmentDataType>
+  ) : Observable<IStreamEventAddedSegment<TSegmentDataType> |
                  IEncryptionDataEncounteredEvent |
                  IInbandEventsEvent |
                  IStreamNeedsManifestRefresh |
@@ -520,7 +523,6 @@ export default function RepresentationStream<T>({
                                            segmentData: parsed.initializationData,
                                            segmentBuffer });
       return observableMerge(initEncEvt$, pushEvent$);
-
     } else {
       const initSegmentData = initSegmentObject?.initializationData ?? null;
       const { inbandEvents,
@@ -543,6 +545,7 @@ export default function RepresentationStream<T>({
         observableOf({ type: "inband-events" as const,
                        value: inbandEvents }) :
         EMPTY;
+
       return observableConcat(segmentEncryptionEvent$,
                               manifestRefresh$,
                               inbandEvents$,

@@ -28,7 +28,8 @@ import { BaseRepresentationIndex } from "../../parsers/manifest/dash";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  ISegmentParserArguments,
+  ISegmentContext,
+  ISegmentParser,
   ISegmentParserParsedInitSegment,
   ISegmentParserParsedSegment,
 } from "../types";
@@ -42,27 +43,29 @@ import getEventsOutOfEMSGs from "./get_events_out_of_emsgs";
  */
 export default function generateAudioVideoSegmentParser(
   { __priv_patchLastSegmentInSidx } : { __priv_patchLastSegmentInSidx? : boolean }
-) {
+) : ISegmentParser<
+  ArrayBuffer | Uint8Array | null,
+  ArrayBuffer | Uint8Array | null
+> {
   return function audioVideoSegmentParser(
-    { content,
-      response,
-      initTimescale } : ISegmentParserArguments< Uint8Array |
-                                                 ArrayBuffer |
-                                                 null >
-  ) : ISegmentParserParsedInitSegment<Uint8Array | ArrayBuffer | null> |
-      ISegmentParserParsedSegment< Uint8Array | ArrayBuffer | null> {
+    loadedSegment : { data : ArrayBuffer | Uint8Array | null;
+                      isChunked : boolean; },
+    content : ISegmentContext,
+    initTimescale : number | undefined
+  ) : ISegmentParserParsedSegment< Uint8Array | ArrayBuffer | null > |
+      ISegmentParserParsedInitSegment< Uint8Array | ArrayBuffer | null > {
     const { period, adaptation, representation, segment, manifest } = content;
-    const { data, isChunked } = response;
+    const { data, isChunked } = loadedSegment;
     const appendWindow : [number, number | undefined] = [ period.start, period.end ];
 
     if (data === null) {
       if (segment.isInit) {
-        return { segmentType: "init" as const,
+        return { segmentType: "init",
                  initializationData: null,
                  protectionDataUpdate: false,
                  initTimescale: undefined };
       }
-      return { segmentType: "media" as const,
+      return { segmentType: "media",
                chunkData: null,
                chunkInfos: null,
                chunkOffset: 0,

@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
-  map, tap,
-} from "rxjs/operators";
+import PPromise from "pinkie";
 import features from "../../features";
 import log from "../../log";
 import Manifest, {
   Adaptation,
   ISegment,
-  Representation,
 } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
 import createSmoothManifestParser, {
@@ -37,17 +30,21 @@ import {
   strToUtf8,
   utf8ToStr,
 } from "../../utils/string_parsing";
+import { CancellationSignal } from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
 import {
   IChunkTimeInfo,
   IImageTrackSegmentData,
-  IManifestLoaderArguments,
-  IManifestParserArguments,
-  IManifestParserResponseEvent,
-  IManifestParserWarningEvent,
-  ISegmentLoaderArguments,
-  ISegmentLoaderEvent,
-  ISegmentParserArguments,
+  ILoadedAudioVideoSegmentFormat,
+  ILoadedImageSegmentFormat,
+  ILoadedTextSegmentFormat,
+  IManifestParserOptions,
+  IManifestParserResult,
+  IRequestedData,
+  ISegmentContext,
+  ISegmentLoaderCallbacks,
+  ISegmentLoaderResultSegmentCreated,
+  ISegmentLoaderResultSegmentLoaded,
   ISegmentParserParsedInitSegment,
   ISegmentParserParsedSegment,
   ITextTrackSegmentData,
@@ -56,7 +53,6 @@ import {
 } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import generateManifestLoader from "../utils/generate_manifest_loader";
-import returnParsedManifest from "../utils/return_parsed_manifest";
 import extractTimingsInfos, {
   INextSegmentsInfos,
 } from "./extract_timings_infos";
@@ -65,6 +61,7 @@ import generateSegmentLoader from "./segment_loader";
 import {
   extractISML,
   extractToken,
+  isMP4EmbeddedTrack,
   replaceToken,
   resolveManifest,
 } from "./utils";
@@ -98,93 +95,105 @@ function addNextSegments(
 
 export default function(options : ITransportOptions) : ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(options);
-  const segmentLoader = generateSegmentLoader(options.segmentLoader);
+  const segmentLoader = generateSegmentLoader(options);
 
   const manifestLoaderOptions = { customManifestLoader: options.manifestLoader };
   const manifestLoader = generateManifestLoader(manifestLoaderOptions,
                                                 "text");
 
   const manifestPipeline = {
-    resolver(
-      { url } : IManifestLoaderArguments
-    ) : Observable<IManifestLoaderArguments> {
+    // TODO (v4.x.x) Remove that function
+    resolveManifestUrl(
+      url : string | undefined,
+      cancelSignal : CancellationSignal
+    ) : Promise<string | undefined> {
       if (url === undefined) {
-        return observableOf({ url : undefined });
+        return PPromise.resolve(undefined);
       }
 
-      // TODO Remove WSX logic
-      let resolving;
+      let resolving : Promise<string>;
       if (WSX_REG.test(url)) {
         warnOnce("Giving WSX URL to loadVideo is deprecated." +
-          " You should only give Manifest URLs.");
+                 " You should only give Manifest URLs.");
         resolving = request({ url: replaceToken(url, ""),
-                              responseType: "document" })
-          .pipe(map(({ value }) : string => {
+                              responseType: "document",
+                              cancelSignal })
+          .then(value => {
             const extractedURL = extractISML(value.responseData);
             if (extractedURL === null || extractedURL.length === 0) {
               throw new Error("Invalid ISML");
             }
             return extractedURL;
-          }));
+          });
       } else {
-        resolving = observableOf(url);
+        resolving = PPromise.resolve(url);
       }
 
       const token = extractToken(url);
-      return resolving.pipe(map((_url) => ({
-        url: replaceToken(resolveManifest(_url), token),
-      })));
+      return resolving.then((_url) =>
+        replaceToken(resolveManifest(_url), token));
     },
 
-    loader: manifestLoader,
+    loadManifest: manifestLoader,
 
-    parser(
-      { response, url: reqURL } : IManifestParserArguments
-    ) : Observable<IManifestParserWarningEvent |
-                   IManifestParserResponseEvent> {
-      const url = response.url === undefined ? reqURL :
-                                               response.url;
-      const data = typeof response.responseData === "string" ?
-        new DOMParser().parseFromString(response.responseData, "text/xml") :
-        response.responseData as Document; // TODO find a way to check if Document?
-      const { receivedTime: manifestReceivedTime } = response;
-      const parserResult = smoothManifestParser(data, url, manifestReceivedTime);
+    parseManifest(
+      manifestData : IRequestedData<unknown>,
+      parserOptions : IManifestParserOptions
+    ) : IManifestParserResult {
+      const url = manifestData.url ?? parserOptions.originalUrl;
+      const { receivedTime: manifestReceivedTime, responseData } = manifestData;
+
+      const documentData = typeof responseData === "string" ?
+        new DOMParser().parseFromString(responseData, "text/xml") :
+        responseData as Document; // TODO find a way to check if Document?
+
+      const parserResult = smoothManifestParser(documentData,
+                                                url,
+                                                manifestReceivedTime);
+
       const manifest = new Manifest(parserResult, {
         representationFilter: options.representationFilter,
         supplementaryImageTracks: options.supplementaryImageTracks,
         supplementaryTextTracks: options.supplementaryTextTracks,
       });
-      return returnParsedManifest(manifest, url);
+      return { manifest, url };
     },
   };
 
-  const segmentPipeline = {
-    loader(
-      content : ISegmentLoaderArguments
-    ) : Observable< ISegmentLoaderEvent< ArrayBuffer|Uint8Array|null> > {
-      if (content.segment.isInit || options.checkMediaSegmentIntegrity !== true) {
-        return segmentLoader(content);
-      }
-      return segmentLoader(content).pipe(tap(res => {
-        if ((res.type === "data-loaded" || res.type === "data-chunk") &&
-            res.value.responseData !== null)
-        {
-          checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
-                                content.segment.isInit);
-        }
-      }));
+  /**
+   * Export functions allowing to load and parse audio and video smooth
+   * segments.
+   */
+  const audioVideoPipeline = {
+    /**
+     * Load a Smooth audio/video segment.
+     * @param {string|null} url
+     * @param {Object} content
+     * @param {Object} cancelSignal
+     * @param {Object} callbacks
+     * @returns {Promise}
+     */
+    loadSegment(
+      url : string | null,
+      content : ISegmentContext,
+      cancelSignal : CancellationSignal,
+      callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>
+    ) : PPromise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
+                 ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat>>
+    {
+      return segmentLoader(url, content, cancelSignal, callbacks);
     },
 
-    parser({
-      content,
-      response,
-      initTimescale,
-    } : ISegmentParserArguments< ArrayBuffer | Uint8Array | null >
-    ) : ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null>  |
-        ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>
+    parseSegment(
+      loadedSegment : { data : ArrayBuffer | Uint8Array | null;
+                        isChunked : boolean; },
+      content : ISegmentContext,
+      initTimescale : number | undefined
+    ) : ISegmentParserParsedInitSegment< ArrayBuffer | Uint8Array | null> |
+        ISegmentParserParsedSegment< ArrayBuffer | Uint8Array | null >
     {
       const { segment, adaptation, manifest } = content;
-      const { data, isChunked } = response;
+      const { data, isChunked } = loadedSegment;
       if (data === null) {
         if (segment.isInit) {
           return { segmentType: "init",
@@ -241,45 +250,58 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   };
 
   const textTrackPipeline = {
-    loader(
-      { segment,
-        representation,
-        url } : ISegmentLoaderArguments
-    ) : Observable< ISegmentLoaderEvent<string|ArrayBuffer|null> > {
+    loadSegment(
+      url : string | null,
+      content : ISegmentContext,
+      cancelSignal : CancellationSignal,
+      callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
+    ) : PPromise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
+                 ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat>> {
+      const { segment, representation } = content;
       if (segment.isInit || url === null) {
-        return observableOf({ type: "data-created" as const,
-                              value: { responseData: null } });
+        return PPromise.resolve({ resultType: "segment-created",
+                                  resultData: null });
       }
+
       const isMP4 = isMP4EmbeddedTrack(representation);
-      if (!isMP4 || options.checkMediaSegmentIntegrity !== true) {
+      if (!isMP4) {
         return request({ url,
-                         responseType: isMP4 ? "arraybuffer" : "text",
-                         sendProgressEvents: true });
+                         responseType: "text",
+                         cancelSignal,
+                         onProgress: callbacks.onProgress })
+          .then((data) => ({ resultType: "segment-loaded" as const,
+                             resultData: data }));
+      } else {
+        return request({ url,
+                         responseType: "arraybuffer",
+                         cancelSignal,
+                         onProgress: callbacks.onProgress })
+          .then((data) => {
+            if (options.checkMediaSegmentIntegrity !== true) {
+              return { resultType: "segment-loaded" as const,
+                       resultData: data };
+            }
+            const dataU8 = new Uint8Array(data.responseData);
+            checkISOBMFFIntegrity(dataU8, content.segment.isInit);
+            return { resultType: "segment-loaded" as const,
+                     resultData: { ...data, responseData: dataU8 } };
+          });
       }
-      return request({ url,
-                       responseType: "arraybuffer",
-                       sendProgressEvents: true })
-        .pipe(tap(res => {
-          if (res.type === "data-loaded") {
-            checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
-                                  segment.isInit);
-          }
-        }));
     },
 
-    parser({
-      content,
-      response,
-      initTimescale,
-    } : ISegmentParserArguments<string|ArrayBuffer|Uint8Array|null>
-    ) : ISegmentParserParsedInitSegment<null>  |
-        ISegmentParserParsedSegment<ITextTrackSegmentData | null>
+    parseSegment(
+      loadedSegment : { data : ArrayBuffer | Uint8Array | string | null;
+                        isChunked : boolean; },
+      content : ISegmentContext,
+      initTimescale : number | undefined
+    ) : ISegmentParserParsedInitSegment< null > |
+        ISegmentParserParsedSegment< ITextTrackSegmentData | null >
     {
       const { manifest, adaptation, representation, segment } = content;
       const { language } = adaptation;
       const isMP4 = isMP4EmbeddedTrack(representation);
       const { mimeType = "", codec = "" } = representation;
-      const { data, isChunked } = response;
+      const { data, isChunked } = loadedSegment;
       if (segment.isInit) { // text init segment has no use in HSS
         return { segmentType: "init",
                  initializationData: null,
@@ -409,27 +431,36 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   };
 
   const imageTrackPipeline = {
-    loader(
-      { segment,
-        url } : ISegmentLoaderArguments
-    ) : Observable< ISegmentLoaderEvent<ArrayBuffer|null> > {
-      if (segment.isInit || url === null) {
+    loadSegment(
+      url : string | null,
+      content : ISegmentContext,
+      cancelSignal : CancellationSignal,
+      callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
+    ) : PPromise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
+                 ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>> {
+      if (content.segment.isInit || url === null) {
         // image do not need an init segment. Passthrough directly to the parser
-        return observableOf({ type: "data-created" as const,
-                              value: { responseData: null } });
+        return PPromise.resolve({ resultType: "segment-created" as const,
+                                  resultData: null });
       }
 
       return request({ url,
                        responseType: "arraybuffer",
-                       sendProgressEvents: true });
+                       onProgress: callbacks.onProgress,
+                       cancelSignal })
+        .then((data) => ({ resultType: "segment-loaded" as const,
+                           resultData: data }));
     },
 
-    parser(
-      { response, content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ISegmentParserParsedInitSegment<null> |
-        ISegmentParserParsedSegment<IImageTrackSegmentData | null>
+    parseSegment(
+      loadedSegment : { data : ArrayBuffer | Uint8Array | null;
+                        isChunked : boolean; },
+      content : ISegmentContext,
+      _initTimescale : number | undefined
+    ) : ISegmentParserParsedInitSegment< null > |
+        ISegmentParserParsedSegment< IImageTrackSegmentData | null >
     {
-      const { data, isChunked } = response;
+      const { data, isChunked } = loadedSegment;
 
       if (content.segment.isInit) { // image init segment has no use
         return { segmentType: "init",
@@ -464,24 +495,13 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                              duration: Number.MAX_VALUE },
                chunkOffset: 0,
                protectionDataUpdate: false,
-               appendWindow: [undefined, undefined] } ;
+               appendWindow: [undefined, undefined] };
     },
   };
 
   return { manifest: manifestPipeline,
-           audio: segmentPipeline,
-           video: segmentPipeline,
+           audio: audioVideoPipeline,
+           video: audioVideoPipeline,
            text: textTrackPipeline,
            image: imageTrackPipeline };
-}
-
-/**
- * Returns true if the given texttrack segment represents a textrack embedded
- * in a mp4 file.
- * @param {Representation} representation
- * @returns {Boolean}
- */
-function isMP4EmbeddedTrack(representation : Representation) : boolean {
-  return typeof representation.mimeType === "string" &&
-         representation.mimeType.indexOf("mp4") >= 0;
 }

@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  ISegment,
-  Period,
-  Representation,
-} from "../../manifest";
 import { getMDHDTimescale } from "../../parsers/containers/isobmff";
 import {
   strToUtf8,
@@ -27,7 +21,8 @@ import {
 } from "../../utils/string_parsing";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  ISegmentParserArguments,
+  ILoadedTextSegmentFormat,
+  ISegmentContext,
   ISegmentParserParsedInitSegment,
   ISegmentParserParsedSegment,
   ITextTrackSegmentData,
@@ -41,7 +36,6 @@ import {
 
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.
- *
  * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
  * @param {boolean} isChunked - If `true`, the `data` may contain only a
  * decodable subpart of the full data in the linked segment.
@@ -53,18 +47,13 @@ import {
  * to that segment if no new timescale is defined in it.
  * Can be `undefined` if no timescale was defined, if it is not known, or if
  * no linked initialization segment was yet parsed.
- * @returns {Observable.<Object>}
+ * @returns {Object}
  */
 function parseISOBMFFEmbeddedTextTrack(
-  data : Uint8Array | ArrayBuffer | string,
+  data : string | Uint8Array | ArrayBuffer,
   isChunked : boolean,
-  content : { manifest : Manifest;
-              period : Period;
-              adaptation : Adaptation;
-              representation : Representation;
-              segment : ISegment; },
-  initTimescale : number | undefined,
-  __priv_patchLastSegmentInSidx? : boolean
+  content : ISegmentContext,
+  initTimescale : number | undefined
 ) : ISegmentParserParsedInitSegment<null> |
     ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
@@ -99,23 +88,18 @@ function parseISOBMFFEmbeddedTextTrack(
 
 /**
  * Parse TextTrack data when it is in plain text form.
- *
  * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
  * @param {boolean} isChunked - If `true`, the `data` may contain only a
  * decodable subpart of the full data in the linked segment.
  * @param {Object} content - Object describing the context of the given
  * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
  * `Manifest` it is a part of etc.
- * @returns {Observable.<Object>}
+ * @returns {Object}
  */
 function parsePlainTextTrack(
-  data : Uint8Array | ArrayBuffer | string,
+  data : string | Uint8Array | ArrayBuffer,
   isChunked : boolean,
-  content : { manifest : Manifest;
-              period : Period;
-              adaptation : Adaptation;
-              representation : Representation;
-              segment : ISegment; }
+  content : ISegmentContext
 ) : ISegmentParserParsedInitSegment<null> |
     ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
@@ -147,21 +131,21 @@ function parsePlainTextTrack(
 
 /**
  * Parse TextTrack data.
- * @param {Object} infos
- * @returns {Observable.<Object>}
+ * @param {Object} loadedSegment
+ * @param {Object} content
+ * @param {number | undefined} initTimescale
+ * @returns {Object}
  */
 export default function textTrackParser(
-  { response,
-    content,
-    initTimescale } : ISegmentParserArguments< Uint8Array |
-                                      ArrayBuffer |
-                                      string |
-                                      null >
+  loadedSegment : { data : ILoadedTextSegmentFormat;
+                    isChunked : boolean; },
+  content : ISegmentContext,
+  initTimescale : number | undefined
 ) : ISegmentParserParsedInitSegment<null> |
     ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, adaptation, representation, segment } = content;
-  const { data, isChunked } = response;
+  const { data, isChunked } = loadedSegment;
 
   if (data === null) {
     // No data, just return an empty placeholder object
