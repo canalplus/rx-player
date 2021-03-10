@@ -41,10 +41,7 @@ export default function waitForState(player, wantedState, whitelist) {
         player.removeEventListener("playerStateChange", onPlayerStateChange);
         resolve();
       } else if (whitelist && !whitelist.includes(state)) {
-        if (state === "STOPPED" && player.getError() !== null) {
-          console.error("!!!!!!!!!", player.getError().toString());
-        }
-        reject(new Error("invalid state: " + state));
+        reject("invalid state: " + state);
       }
     }
     player.addEventListener("playerStateChange", onPlayerStateChange);
