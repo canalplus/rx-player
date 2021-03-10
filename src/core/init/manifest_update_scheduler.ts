@@ -76,8 +76,8 @@ export interface IManifestRefreshSchedulerEvent {
    */
   completeRefresh : boolean;
   /**
-   * Optional number that is the wanted refresh delay, which is the minimum
-   * time you want to wait before updating the Manifest
+   * Optional wanted refresh delay, which is the minimum time you want to wait
+   * before updating the Manifest
    */
   delay? : number;
   /**
@@ -150,8 +150,7 @@ export default function manifestUpdateScheduler({
     const internalRefresh$ = scheduleRefresh$
       .pipe(mergeMap(({ completeRefresh, delay, canUseUnsafeMode }) => {
         const unsafeMode = canUseUnsafeMode && unsafeModeEnabled;
-        const wantedDelay = delay === undefined ? 0 : delay;
-        return startManualRefreshTimer(wantedDelay,
+        return startManualRefreshTimer(delay ?? 0,
                                        minimumManifestUpdateInterval,
                                        sendingTime)
           .pipe(mapTo({ completeRefresh, unsafeMode }));
