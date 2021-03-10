@@ -86,7 +86,7 @@ interface IAdaptationSwitchingInfos  {
 /**
  * Detect if the accessibility given defines an adaptation for the visually
  * impaired.
- * Based on DVB Document A168 (DVB-DASH).
+ * Based on DVB Document A168 (DVB-DASH) and DASH-IF 4.3.
  * @param {Object} accessibility
  * @returns {Boolean}
  */
@@ -97,8 +97,17 @@ function isVisuallyImpaired(
     return false;
   }
 
-  return (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-          accessibility.value === "1");
+  const isVisuallyImpairedAudioDvbDash = (
+    accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
+    accessibility.value === "1"
+  );
+
+  const isVisuallyImpairedDashIf = (
+    accessibility.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+    accessibility.value === "description"
+  );
+
+  return isVisuallyImpairedAudioDvbDash || isVisuallyImpairedDashIf;
 }
 
 /**
@@ -325,7 +334,7 @@ export default function parseAdaptationSets(
       videoMainAdaptation.representations.push(...representations);
       newID = videoMainAdaptation.id;
     } else {
-      const { accessibility } = adaptationChildren;
+      const { accessibilities } = adaptationChildren;
 
       let isDub : boolean|undefined;
       if (roles !== undefined &&
@@ -334,19 +343,26 @@ export default function parseAdaptationSets(
         isDub = true;
       }
 
-      const isClosedCaption = type === "text" &&
-                              accessibility != null &&
-                              isHardOfHearing(accessibility) ? true :
-                                                               undefined;
-      const isAudioDescription = type === "audio" &&
-                                 accessibility != null &&
-                                 isVisuallyImpaired(accessibility) ? true :
-                                                                     undefined;
+      let isClosedCaption;
+      if (type !== "text") {
+        isClosedCaption = false;
+      } else if (accessibilities !== undefined) {
+        isClosedCaption = accessibilities.some(isHardOfHearing);
+      }
 
-      const isSignInterpreted = type === "video" &&
-                                accessibility != null &&
-                                hasSignLanguageInterpretation(accessibility) ? true :
-                                                                               undefined;
+      let isAudioDescription;
+      if (type !== "audio") {
+        isAudioDescription = false;
+      } else if (accessibilities !== undefined) {
+        isAudioDescription = accessibilities.some(isVisuallyImpaired);
+      }
+
+      let isSignInterpreted;
+      if (type !== "video") {
+        isSignInterpreted = false;
+      } else if (accessibilities !== undefined) {
+        isSignInterpreted = accessibilities.some(hasSignLanguageInterpretation);
+      }
 
       let adaptationID = getAdaptationID(adaptation,
                                          { isAudioDescription,

@@ -58,7 +58,7 @@ export interface IAdaptationSetChildren {
   representations : IRepresentationIntermediateRepresentation[];
 
   // optional
-  accessibility? : IScheme;
+  accessibilities? : IScheme[];
   contentComponent? : IParsedContentComponent;
   contentProtections? : IParsedContentProtection[];
   essentialProperties? : IScheme[];
@@ -123,7 +123,11 @@ function parseAdaptationSetChildren(
       switch (currentElement.nodeName) {
 
         case "Accessibility":
-          children.accessibility = parseScheme(currentElement);
+          if (children.accessibilities === undefined) {
+            children.accessibilities = [parseScheme(currentElement)];
+          } else {
+            children.accessibilities.push(parseScheme(currentElement));
+          }
           break;
 
         case "BaseURL":
