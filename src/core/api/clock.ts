@@ -100,6 +100,7 @@ export interface IClockTick extends IMediaInfos {
   /** Set if the player is stalled, `null` if not. */
   stalled : IStalledStatus | null;
   getCurrentTime : () => number;
+  isInternallySeeking: boolean;
 }
 
 /** Handle time relative information */
@@ -224,7 +225,7 @@ function getStalledStatus(
   prevTimings : IClockTick,
   currentTimings : IMediaInfos,
   { withMediaSource, lowLatencyMode } : IClockOptions,
-  internalSeek: boolean
+  isInternallySeeking: boolean
 ) : IStalledStatus | null {
   const { state: currentState,
           position: currentTime,
@@ -305,7 +306,7 @@ function getStalledStatus(
     if (currentState === "seeking" ||
         currentTimings.seeking ||
         prevStalled !== null && prevStalled.reason === "seeking") {
-      if (internalSeek) {
+      if (isInternallySeeking) {
         reason = "internal-seek";
       } else {
         reason = "seeking";
@@ -359,27 +360,29 @@ function createClock(
   mediaElement : HTMLMediaElement,
   options : IClockOptions
 ) : IClockHandler {
-  let internalSeek = false;
+  let isInternallySeeking = false;
   function setCurrentTime(time: number) {
-    internalSeek = true;
+    isInternallySeeking = true;
     mediaElement.currentTime = time;
   }
   const clock$ = observableDefer(() : Observable<IClockTick> => {
     let lastTimings : IClockTick = objectAssign(
       getMediaInfos(mediaElement, "init"),
       { stalled: null,
-        getCurrentTime: () => mediaElement.currentTime }
+        getCurrentTime: () => mediaElement.currentTime,
+        isInternallySeeking: false }
     );
     function getCurrentClockTick(state : IMediaInfosState) : IClockTick {
       const mediaTimings = getMediaInfos(mediaElement, state);
       const stalledState = getStalledStatus(lastTimings, mediaTimings,
-                                            options, internalSeek);
-      if (state !== "seeking" && internalSeek) {
-        internalSeek = false;
+                                            options, isInternallySeeking);
+      if (state !== "seeking" && isInternallySeeking) {
+        isInternallySeeking = false;
       }
       const timings = objectAssign({},
                                    { stalled: stalledState,
-                                     getCurrentTime: () => mediaElement.currentTime },
+                                     getCurrentTime: () => mediaElement.currentTime,
+                                     isInternallySeeking },
                                    mediaTimings);
       log.debug("API: current media element state", timings);
       return timings;

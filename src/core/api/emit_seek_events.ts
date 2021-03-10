@@ -49,7 +49,7 @@ export default function emitSeekEvents(
 
     const isSeeking$ = clock$.pipe(
       mergeMap((tick: IClockTick) => {
-        return tick.state === "seeking" && tick.stalled?.reason !== "internal-seek" ?
+        return tick.state === "seeking" && !tick.isInternallySeeking ?
           observableOf("seeking" as const) :
           EMPTY;
       }));
