@@ -84,7 +84,7 @@ function getInitializationDataValues(
                  data: initData } ];
     }
     const currentPSSH = initData.subarray(offset, offset + len);
-    const systemId = getPsshSystemID(currentPSSH, 8) ?? undefined;
+    const systemId = getPsshSystemID(currentPSSH, 8);
     const currentItem = { systemId, data: currentPSSH };
     if (isPSSHAlreadyEncountered(result, currentItem)) {
       // As we observed on some browsers (IE and Edge), the initialization data on

@@ -60,7 +60,7 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
     }
     const pssh = sliceUint8Array(moov, psshOffsets[0], psshOffsets[2]);
     const systemId = getPsshSystemID(pssh, psshOffsets[1] - psshOffsets[0]);
-    if (systemId !== null) {
+    if (systemId !== undefined) {
       psshBoxes.push({ systemId, data: pssh });
     }
 
@@ -76,23 +76,24 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
 
 /**
  * Parse systemId from a "pssh" box into an hexadecimal string.
+ * `undefined` if we could not extract a systemId.
  * @param {Uint8Array} buff - The pssh box
  * @param {number} initialDataOffset - offset of the first byte after the size
  * and name in this pssh box.
- * @returns {string|null}
+ * @returns {string|undefined}
  */
 export function getPsshSystemID(
   buff : Uint8Array,
   initialDataOffset : number
-) : string|null {
+) : string | undefined {
   if (buff[initialDataOffset] > 1) {
     log.warn("ISOBMFF: un-handled PSSH version");
-    return null;
+    return undefined;
   }
   const offset = initialDataOffset +
                  4; /* version + flags */
   if (offset + 16 > buff.length) {
-    return null;
+    return undefined;
   }
   const systemIDBytes = sliceUint8Array(buff, offset, offset + 16);
   return bytesToHex(systemIDBytes);
