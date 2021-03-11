@@ -10,7 +10,7 @@ slug: playerEvents
 To communicate about events (like an error or the update of the current video
 bitrate) the player use the event listener pattern.
 
-As [documented in the API](./index.md#meth-addEventListener), you can call
+As [documented in the API](./basicMethods/addEventListener.md), you can call
 `addEventListener` to register a callback for a particular event, like:
 
 ```js
@@ -20,7 +20,7 @@ player.addEventListener("videoBitrateChange", (newVideoBitrate) => {
 ```
 
 You can unregister a callback through the `removeEventListener` API,
-documented [here](./index.md#meth-removeEventListener).
+documented [here](./basicMethods/removeEventListener.md).
 
 ## Basic events
 
@@ -38,8 +38,6 @@ paused, is rebuffering, is ended or is stopped.
 As it is a central part of our API and can be difficult concept to understand,
 we have a special [page of documentation on player states](./states.md).
 
-<a name="events-error"></a>
-
 ### error
 
 _payload type_: `Error`
@@ -49,8 +47,7 @@ Triggered when a fatal error happened.
 A fatal error is an error that led the player to stop playing the current
 content.
 
-The payload is the corresponding error. See [the Player Error
-documentation](./errors.md) for more information.
+The payload is the corresponding error. See [the Player Error](./errors.md) documentation for more information.
 
 ### warning
 
@@ -62,8 +59,7 @@ This error won't lead the RxPlayer to stop the content. It can for example be
 an HTTP request error, some minor error detected in the content or the current
 position being to far below the minimum playable position.
 
-The payload is the corresponding error. See [the Player Error
-documentation](./errors.md) for more information.
+The payload is the corresponding error. See [the Player Error](./errors.md) documentation for more information.
 
 ### positionUpdate
 
@@ -118,8 +114,6 @@ This chapter describes events linked to the current audio, video or text track.
 
 _payload type_: `Array.<Object>`
 
----
-
 Triggered when the currently available audio tracks change (e.g.: at the
 beginning of the content, when period changes...).
 
@@ -132,7 +126,7 @@ The array emitted contains object describing each available audio track:
   setting the track via `setAudioTrack`.
 
 - `language` (`string`): The language the audio track is in, as set in
-  the [Manifest](../terms.md#manifest).
+  the [Manifest](../glossary.md#manifest).
 
 - `normalized` (`string`): An attempt to translate the `language`
   property into an ISO 639-3 language code (for now only support translations
@@ -155,8 +149,6 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Array.<Object>`
 
----
-
 Triggered when the currently available video tracks change (e.g.: at the
 beginning of the content, when period changes...).
 
@@ -169,7 +161,7 @@ The array emitted contains object describing each available video track:
   active or not.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../terms.md#representation) of this video track, with
+  [Representations](../glossary.md#representation) of this video track, with
   attributes:
 
   - `id` (`string`): The id used to identify this Representation.
@@ -192,8 +184,6 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Array.<Object>`
 
----
-
 Triggered when the currently available text tracks change (e.g.: at the
 beginning of the content, when period changes...).
 
@@ -203,7 +193,7 @@ The array emitted contains object describing each available text track:
   setting the track via `setTextTrack`.
 
 - `language` (`string`): The language the text track is in, as set in the
-  [Manifest](../terms.md#manifest).
+  [Manifest](../glossary.md#manifest).
 
 - `normalized` (`string`): An attempt to translate the `language`
   property into an ISO 639-3 language code (for now only support translations
@@ -222,8 +212,6 @@ This event only concerns the currently-playing Period.
 ### audioTrackChange
 
 _payload type_: `Object|null`
-
----
 
 Information about the current audio track, each time it changes (the last
 received segment got a new one).
@@ -247,8 +235,6 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Object|null`
 
----
-
 Information about the current text track, each time it changes (the last
 received segment got a new one).
 
@@ -266,8 +252,6 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Object|null`
 
----
-
 Information about the current video track, each time it changes (the last
 received segment got a new one).
 
@@ -278,7 +262,7 @@ properties:
   the track via `setVideoTrack`.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../terms.md#representation) of this video track, with
+  [Representations](../glossary.md#representation) of this video track, with
   attributes:
 
   - `id` (`string`): The id used to identify this Representation.
@@ -317,13 +301,8 @@ This chapter describes events linked to audio and/or video bitrates and quality.
 
 _payload type_: `Array.<Number>`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 Triggered when the currently available audio bitrates change (e.g.: at the
@@ -339,13 +318,8 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Array.<Number>`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 Triggered when the currently available video bitrates change (e.g.: at the
@@ -361,13 +335,8 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Number`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 The payload is the new audio bitrate, in bits per seconds. It is emitted every
@@ -381,13 +350,8 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Number`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 The payload is the new video bitrate, in bits per seconds. It is emitted every
@@ -401,20 +365,15 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Object`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 Information about the last bitrate estimation performed, by type of buffer
 (`audio`, `video` etc.).
 
 Note that this event is sent only if the corresponding buffer type has multiple
-[Representations](../terms.md#representation) for the given content (as bitrate
+[Representations](../glossary.md#representation) for the given content (as bitrate
 estimations are only useful in that case).
 
 The payload is an object with the following properties:
@@ -435,31 +394,20 @@ current content.
 
 _payload type_: `Object`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
-Triggered when the current [Period](../terms.md#period) being seen changes.
+Triggered when the current [Period](../glossary.md#period) being seen changes.
 
-The payload is the corresponding Period. See [the Manifest
-documentation](./manifest.md#period) for more information.
+The payload is the corresponding Period. See [the Manifest documentation](./manifest.md#period) for more information.
 
 ### decipherabilityUpdate
 
 _payload type_: `Array.<Object>`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 Triggered when a or multiple Representation's decipherability status were
@@ -502,13 +450,8 @@ not through their `decipherable` property.
 
 _payload type_: `Object`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 Event triggered when the player enters the time boundaries of a "stream event".
@@ -542,8 +485,7 @@ time:
 The payload of a `streamEvent` depends on the source of the event. For example,
 it will not have the same format when it comes from a Manifest than when it
 comes from the media container.
-All possible formats are described in the [stream event
-tutorial](../tutorials/stream_events.md).
+All possible formats are described in the [stream event tutorial](../tutorials/stream_events.md).
 
 Note: When an event has both a start and an end time, you can define a `onExit`
 callback on the payload. That callback will automatically be triggered when the
@@ -555,17 +497,12 @@ concern this iteration of the event (and not possible subsequent ones).
 
 _payload type_: `Object`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 Event triggered when the player skipped the time boundaries of a "stream event"
-(you can refer to the [`streamEvent` event](#events-streamEvent) for a
+(you can refer to the [`streamEvent`](#streamevent) event for a
 definition of what a "stream event" is).
 
 This means that the current position the player plays at, immediately changed
@@ -578,8 +515,7 @@ any `streamEventSkip` event.
 
 The payload of a `streamEventSkip` is the same than for a `streamEvent` and as
 such depends on the source of the event.
-All possible formats are described in the [stream event
-tutorial](../tutorials/stream_events.md).
+All possible formats are described in the [stream event tutorial](../tutorials/stream_events.md).
 
 Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
@@ -593,21 +529,14 @@ users to not use those as they might become not supported in the future.
 ### imageTrackUpdate
 
 :::caution
-
 This event is deprecated, it will disappear in the next major
 release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
-
 :::
 
 _payload type_: `Object`
 
----
-
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 Triggered each time the current image playlist changes (has new images).
@@ -615,16 +544,13 @@ Triggered each time the current image playlist changes (has new images).
 Has the following property in its payload:
 _data_ (`Array.<Object>`): Every image data.
 
-Each image has a structure as defined in the [Images structure
-page](./images.md#api-structure).
+Each image has a structure as defined in the [Images structure page](./images.md#api-structure).
 
 ### fullscreenChange
 
 :::caution
-
 This event is deprecated, it will disappear in the next major
 release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
-
 :::
 
 _payload type_: `Boolean`
@@ -637,19 +563,14 @@ it.
 ### nativeTextTracksChange
 
 :::caution
-
 This event is deprecated, it will disappear in the next major
 release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
-
 :::
 
 _payload type_: `Array.<TextTrackElement>`
 
 :::caution
-
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 Triggered each times a new `<track>` element is removed or added to the video

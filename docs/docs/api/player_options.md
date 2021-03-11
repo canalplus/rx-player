@@ -70,7 +70,7 @@ const player = new Player({
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo.md#prop-transport)).
+mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 ### initialAudioBitrate
@@ -104,7 +104,7 @@ const player = new Player({
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo.md#prop-transport)).
+mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 ### minVideoBitrate
@@ -148,7 +148,7 @@ Note that this only affects adaptive strategies. Forcing the bitrate manually
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo.md#prop-transport)).
+mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 ### minAudioBitrate
@@ -192,7 +192,7 @@ Note that this only affects adaptive strategies. Forcing the bitrate manually
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo.md#prop-transport)).
+mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 ### maxVideoBitrate
@@ -236,7 +236,7 @@ Note that this only affects adaptive strategies. Forcing the bitrate manually
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo.md#prop-transport)).
+mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 ### maxAudioBitrate
@@ -280,7 +280,7 @@ Note that this only affects adaptive strategies. Forcing the bitrate manually
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo.md#prop-transport)).
+mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 ### wantedBufferAhead
@@ -299,7 +299,7 @@ segments anymore.
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo.md#prop-transport)).
+mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 ### preferredAudioTracks
@@ -355,8 +355,7 @@ on which tracks will be filtered):
 ```
 
 This array of preferrences can be updated at any time through the
-`setPreferredAudioTracks` method, documented
-[here](./index.md#meth-getPreferredAudioTracks).
+`setPreferredAudioTracks` method, documented [here](./api/trackSelection/getPreferredAudioTracks.md).
 
 #### Examples
 
@@ -418,7 +417,7 @@ const player = new RxPlayer({
 
 :::caution
 This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./loadVideo.md#prop-transport)) when either :
+(see [loadVideo options](./basicMethods/loadVideo.md#transport)) when either :
 
 - No audio track API is supported on the current browser
 - The media file tracks are not supported on the browser
@@ -455,7 +454,7 @@ preferred is not available, it will look if the second one etc.).
 
 This array of preferrences can be updated at any time through the
 `setPreferredTextTracks` method, documented
-[here](./index.md#meth-getPreferredTextTracks).
+[here](./api/trackSelection/getPreferredTextTracks.md).
 
 #### Example
 
@@ -476,14 +475,12 @@ const player = new RxPlayer({
 
 :::caution
 This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./loadVideo.md#prop-transport)) when either :
+(see [loadVideo options](./basicMethods/loadVideo.md#transport)) when either :
 
 - No text track API is supported on the current browser
 - The media file tracks are not supported on the browser
 
 :::
-
----
 
 ### preferredVideoTracks
 
@@ -537,7 +534,7 @@ on which tracks will be filtered):
 
 This array of preferrences can be updated at any time through the
 `setPreferredVideoTracks` method, documented
-[here](./index.md#meth-getPreferredVideoTracks).
+[here](./api/trackSelection/getPreferredVideoTracks.md).
 
 #### Examples
 
@@ -575,8 +572,6 @@ const player = new RxPlayer({
 });
 ```
 
----
-
 For a totally different example, let's imagine you want to start without any
 video track enabled (e.g. to start in an audio-only mode). To do that, you can
 simply do:
@@ -591,7 +586,7 @@ const player = new RxPlayer({
 
 :::caution
 This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./loadVideo.md#prop-transport)) when either :
+(see [loadVideo options](./basicMethods/loadVideo.md#transport)) when either :
 
 - No video track API is supported on the current browser
 - The media file tracks are not supported on the browser
@@ -626,14 +621,13 @@ Bear in mind that a too-low configuration there (e.g. inferior to
 `10`) might prevent the browser to play the content at all.
 :::
 
-You can update that limit at any time through the [setMaxBufferAhead
-method](./index.md#meth-setMaxBufferAhead).
+You can update that limit at any time through the [setMaxBufferAhead](./api/bufferControl/setMaxBufferAhead.md) method.
 
 ---
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo.md#prop-transport)).
+mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 ### maxBufferBehind
@@ -656,14 +650,13 @@ of the player, you might want to set this limit.
 Its default value, `Infinity`, will remove this limit and just let the browser
 do this job instead.
 
-You can update that limit at any time through the [setMaxBufferBehind
-method](./index.md#meth-setMaxBufferBehind).
+You can update that limit at any time through the [setMaxBufferBehind](./api/bufferControl/setMaxBufferBehind.md) method.
 
 ---
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo.md#prop-transport)).
+mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 :::
 
 ### limitVideoWidth
@@ -698,8 +691,7 @@ fullscreen, specific environments), you might not want to activate this limit.
 :::caution
 This option will have no effect for contents loaded :
 
-- In _DirectFile_ mode (see [loadVideo options]
-  (./loadVideo.md#prop-transport)).
+- In _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 - On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
   feature or window is enabled and we can't know PIP window size. Thus we can't
   rely on video element size attributes, that may not reflect the real video size
@@ -731,8 +723,7 @@ const player = Player({
 :::caution
 This option will have no effect for contents loaded :
 
-- In _DirectFile_ mode (see [loadVideo options]
-  (./loadVideo.md#prop-transport)).
+- In _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
 - On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
   feature or window is enabled. Thus we can't rely on document hiddenness
   attributes, as the video may be visible, through the PIP window.
@@ -761,20 +752,25 @@ const player = Player({
 });
 ```
 
-### throttleWhenHidden
-
 ---
+
+### throttleWhenHidden
 
 :::caution
 This option is deprecated, it will disappear in the next major release
 `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+
+This option will have no effect for contents loaded :
+
+- In _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
+- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
+  feature or window is enabled. Thus we can't rely on document hiddenness
+  attributes, as the video may be visible, through the PIP window.
+
 :::
 
-Please use the
-[throttleVideoBitrateWhenHidden](#prop-throttleVideoBitrateWhenHidden) property
+Please use the [throttleVideoBitrateWhenHidden](#throttlevideobitratewhenhidden) property
 instead, which is better defined for advanced cases, such as Picture-In-Picture.
-
---
 
 _type_: `Boolean`
 
@@ -790,16 +786,3 @@ const player = Player({
   throttleWhenHidden: true,
 });
 ```
-
----
-
-:::caution
-This option will have no effect for contents loaded :
-
-- In _DirectFile_ mode (see [loadVideo options]
-  (./loadVideo.md#prop-transport)).
-- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
-  feature or window is enabled. Thus we can't rely on document hiddenness
-  attributes, as the video may be visible, through the PIP window.
-
-:::

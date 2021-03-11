@@ -150,45 +150,45 @@ not happen at random. There is actually possible state transitions (like from
 We will list here every possible state transitions.
 _Note that we can never have two times the same state consecutively._
 
-From `STOPPED`:
+### From `STOPPED`
 
 - `LOADING`: a new content begin to load
 
-From `LOADING`:
+### From `LOADING`
 
 - `LOADED`: the loading content was loaded succesfully and can now be played
   (most of the content-related APIs can also be used from this point)
 
 - `STOPPED`: Either:
-  - You stopped the current through the [stop](./index.md#meth-stop) method.
+  - You stopped the current through the [stop](./basicMethods/stop.md) method.
   - You are loading a new content.
   - An error happened which made it impossible to load the content.
     The corresponding [error](./errors.md) can be found either through the
-    [`getError` method](./index.md#meth-getError) method or through the
-    [`playerStateChange`](./player_events.md#events-playerStateChange)
-    [player event](./player_events.md).
+    [`getError`](./basicMethods/getError.md) method or through the
+    [`playerStateChange`](./events.md#playerstatechange)
+    [player event](./events.md).
 
-From `LOADED`:
+### From `LOADED`
 
 - `PLAYING`: The content started to play.
 
 - `SEEKING`: A user seeked in the content.
 
 - `ENDED`: You are at the end of the content.
-  Calling [`play`](./index.md#meth-play) will play back from the beginning.
+  Calling [`play`](./basicMethods/play.md) will play back from the beginning.
 
 - `RELOADING`: The content needs to be reloaded.
 
 - `STOPPED`: Either:
-  - You stopped the current through the [stop](./index.md#meth-stop) method.
+  - You stopped the current through the [stop](./basicMethods/stop.md) method.
   - You are loading a new content.
   - An error happened which made it impossible to play the content.
     The corresponding [error](./errors.md) can be found either through the
-    [`getError` method](./index.md#meth-getError) method or through the
-    [`playerStateChange`](./player_events.md#events-playerStateChange)
-    [player event](./player_events.md).
+    [`getError`](./basicMethods/getError.md) method or through the
+    [`playerStateChange`](./events.md#playerstatechange)
+    [player event](./events.md).
 
-From `PLAYING`:
+### From `PLAYING`
 
 - `PAUSED`: The content is paused.
 
@@ -197,20 +197,20 @@ From `PLAYING`:
 - `BUFFERING`: The player needs to pause to download content.
 
 - `ENDED`: You are at the end of the content.
-  Calling [`play`](./index.md#meth-play) will play back from the beginning.
+  Calling [`play`](./basicMethods/play.md) will play back from the beginning.
 
 - `RELOADING`: The content needs to be reloaded.
 
 - `STOPPED`: Either:
-  - You stopped the current through the [stop](./index.md#meth-stop) method.
+  - You stopped the current through the [stop](./basicMethods/stop.md) method.
   - You are loading a new content.
   - An error happened which made it impossible to play the content.
     The corresponding [error](./errors.md) can be found either through the
-    [`getError` method](./index.md#meth-getError) method or through the
-    [`playerStateChange`](./player_events.md#events-playerStateChange)
-    [player event](./player_events.md).
+    [`getError`](./basicMethods/getError.md) method or through the
+    [`playerStateChange`](./events.md#playerstatechange)
+    [player event](./events.md).
 
-From `PAUSED`:
+### From `PAUSED`
 
 - `PLAYING`: The content plays (is un-paused).
 
@@ -219,64 +219,64 @@ From `PAUSED`:
 - `BUFFERING`: The player needs to pause to download content.
 
 - `ENDED`: You are at the end of the content.
-  Calling [`play`](./index.md#meth-play) will play back from the beginning.
+  Calling [`play`](./basicMethods/play.md) will play back from the beginning.
 
 - `RELOADING`: The content needs to be reloaded.
 
 - `STOPPED`: Either:
-  - You stopped the current through the [stop](./index.md#meth-stop) method.
+  - You stopped the current through the [stop](./basicMethods/stop.md) method.
   - You are loading a new content.
   - An error happened which made it impossible to play the content.
     The corresponding [error](./errors.md) can be found either through the
-    [`getError` method](./index.md#meth-getError) method or through the
-    [`playerStateChange`](./player_events.md#events-playerStateChange)
-    [player event](./player_events.md).
+    [`getError`](./basicMethods/getError.md) method or through the
+    [`playerStateChange`](./events.md#playerstatechange)
+    [player event](./events.md).
 
-From `BUFFERING`:
+### From `BUFFERING`
 
 - `PLAYING`: The content plays (and finished buffering)
 
 - `PAUSED`: The content is paused (and finished buffering)
 
 - `ENDED`: You are at the end of the content.
-  Calling [`play`](./index.md#meth-play) will play back from the beginning.
+  Calling [`play`](./basicMethods/play.md) will play back from the beginning.
 
 - `RELOADING`: The content needs to be reloaded.
 
 - `STOPPED`: Either:
-  - You stopped the current through the [stop](./index.md#meth-stop) method.
+  - You stopped the current through the [stop](./basicMethods/stop.md) method.
   - You are loading a new content.
   - An error happened which made it impossible to play the content.
     The corresponding [error](./errors.md) can be found either through the
-    [`getError` method](./index.md#meth-getError) method or through the
-    [`playerStateChange`](./player_events.md#events-playerStateChange)
-    [player event](./player_events.md).
+    [`getError`](./basicMethods/getError.md) method or through the
+    [`playerStateChange`](./events.md#playerstatechange)
+    [player event](./events.md).
 
-From `SEEKING`:
+### From `SEEKING`
 
 - `PLAYING`: The content plays (and finished to seek)
 
 - `PAUSED`: The content is paused (and finished to seek)
 
 - `ENDED`: You are at the end of the content.
-  Calling [`play`](./index.md#meth-play) will play back from the beginning.
+  Calling [`play`](./basicMethods/play.md) will play back from the beginning.
 
 - `RELOADING`: The content needs to be reloaded.
 
 - `STOPPED`: Either:
-  - You stopped the current through the [stop](./index.md#meth-stop) method.
+  - You stopped the current through the [stop](./basicMethods/stop.md) method.
   - You are loading a new content.
   - An error happened which made it impossible to play the content.
     The corresponding [error](./errors.md) can be found either through the
-    [`getError` method](./index.md#meth-getError) method or through the
-    [`playerStateChange`](./player_events.md#events-playerStateChange)
-    [player event](./player_events.md).
+    [`getError`](./basicMethods/getError.md) method or through the
+    [`playerStateChange`](./events.md#playerstatechange)
+    [player event](./events.md).
 
 From `ENDED` if the `stopAtEnd` [player option](./player_options.md) has been
 set to `true` or not set:
 
 - `STOPPED`: Only state transition possible here. Happens if either:
-  - You stopped the current through the [stop](./index.md#meth-stop) method.
+  - You stopped the current through the [stop](./basicMethods/stop.md) method.
   - You are loading a new content.
 
 From `ENDED` if the `stopAtEnd` [player option](./player_options.md) has been
@@ -294,15 +294,15 @@ set to `false`:
 - `RELOADING`: The content needs to be reloaded.
 
 - `STOPPED`: Either:
-  - You stopped the current through the [stop](./index.md#meth-stop) method.
+  - You stopped the current through the [stop](./basicMethods/stop.md) method.
   - You are loading a new content.
   - An error happened which made it impossible to play the content.
     The corresponding [error](./errors.md) can be found either through the
-    [`getError` method](./index.md#meth-getError) method or through the
-    [`playerStateChange`](./player_events.md#events-playerStateChange)
+    [`getError` method](./basicMethods/getError.md) method or through the
+    [`playerStateChange`](./events.md#playerstatechange)
     [player event](./player_events.md).
 
-From `RELOADING`:
+### From `RELOADING`
 
 - `PLAYING`: The content finished to reload and was not paused before
   reloading.
@@ -312,13 +312,13 @@ From `RELOADING`:
 
 - `ENDED`: The content finished to reload and you are at the end of the
   content.
-  Calling [`play`](./index.md#meth-play) will play back from the beginning.
+  Calling [`play`](./basicMethods/play.md) will play back from the beginning.
 
 - `STOPPED`: Either:
-  - You stopped the current through the [stop](./index.md#meth-stop) method.
+  - You stopped the current through the [stop](./basicMethods/stop.md) method.
   - You are loading a new content.
   - An error happened which made it impossible to reload the content.
     The corresponding [error](./errors.md) can be found either through the
-    [`getError` method](./index.md#meth-getError) method or through the
-    [`playerStateChange`](./player_events.md#events-playerStateChange)
+    [`getError` method](./basicMethods/getError.md) method or through the
+    [`playerStateChange`](./events.md#playerstatechange)
     [player event](./player_events.md).
