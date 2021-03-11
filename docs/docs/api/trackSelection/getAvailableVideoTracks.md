@@ -2,16 +2,16 @@
 id: getAvailableVideoTracks-api
 title: getAvailableVideoTracks method
 sidebar_label: getAvailableVideoTracks
-slug: api/track-selection/getAvailableVideoTracks
+slug: getAvailableVideoTracks
 ---
 
---
+---
 
 **syntax**: `const videoTracks = player.getAvailableVideoTracks()`
 
 **return value**: `Array.<Object>`
 
---
+---
 
 Returns the list of available video tracks for the current content.
 
@@ -24,7 +24,7 @@ Each of the objects in the returned array have the following properties:
   active or not.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../terms.md#representation) of this video track, with
+  [Representations](../../glossary.md#representation) of this video track, with
   attributes:
 
   - `id` (`string`): The id used to identify this Representation.
@@ -47,16 +47,15 @@ Each of the objects in the returned array have the following properties:
   If not set or set to undefined we don't know whether that video track
   contains an interpretation in sign language.
 
---
-
+:::note
 Note for multi-Period contents:
 
 This method will only return the available tracks of the
-[Period](../terms.md#period) that is currently playing.
+[Period](../../glossary.md#period) that is currently playing.
+:::
 
---
-
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), if there are no supported
+:::caution
+In _DirectFile_ mode (see [loadVideo options](./../basicMethods/loadVideo.md#transport)), if there are no supported
 tracks in the file or no track management API this method will return an empty
 Array.
+:::

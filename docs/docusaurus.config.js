@@ -1,6 +1,6 @@
 module.exports = {
   title: "RxPlayer",
-  tagline: "a modern DASH/Smooth HTML5 Video Player",
+  tagline: "a feature full DASH/Smooth HTML5 Video Player",
   url: "https://your-docusaurus-test-site.com",
   baseUrl: "/",
   onBrokenLinks: "ignore",

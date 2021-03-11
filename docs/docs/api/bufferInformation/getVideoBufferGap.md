@@ -2,16 +2,16 @@
 id: getVideoBufferGap-api
 title: getVideoBufferGap method
 sidebar_label: getVideoBufferGap
-slug: api/buffer-information/getVideoBufferGap
+slug: getVideoBufferGap
 ---
 
---
+---
 
 **syntax**: `const bufferGap = player.getVideoBufferGap()`
 
 **return value**: `Number`
 
---
+---
 
 Returns in seconds the difference between:
 

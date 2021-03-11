@@ -2,16 +2,16 @@
 id: getVideoLoadedTime-api
 title: getVideoLoadedTime method
 sidebar_label: getVideoLoadedTime
-slug: api/buffer-information/getVideoLoadedTime
+slug: getVideoLoadedTime
 ---
 
---
+---
 
 **syntax**: `const loadedTime = player.getVideoLoadedTime()`
 
 **return value**: `Number`
 
---
+---
 
 Returns in seconds the difference between:
 

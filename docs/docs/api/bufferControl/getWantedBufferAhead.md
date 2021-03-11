@@ -2,16 +2,16 @@
 id: getWantedBufferAhead-api
 title: getWantedBufferAhead method
 sidebar_label: getWantedBufferAhead
-slug: api/buffer-control/getWantedBufferAhead
+slug: getWantedBufferAhead
 ---
 
---
+---
 
 **syntax**: `const bufferGoal = player.getWantedBufferAhead()`
 
 **return value**: `Number`
 
---
+---
 
 returns the buffering goal, as a duration ahead of the current position, in
 seconds.

@@ -2,16 +2,16 @@
 id: isMute-api
 title: isMute method
 sidebar_label: isMute
-slug: api/speedControl/isMute
+slug: isMute
 ---
 
---
+---
 
 **syntax**: `const isMute = player.isMute()`
 
 **return value**: `Boolean`
 
---
+---
 
 Returns true if the volume is set to `0`.
 

@@ -2,10 +2,10 @@
 id: setPlaybackRate-api
 title: setPlaybackRate method
 sidebar_label: setPlaybackRate
-slug: api/speed-control/setPlaybackRate
+slug: setPlaybackRate
 ---
 
---
+---
 
 **syntax**: `player.setPlaybackRate(speed)`
 
@@ -13,7 +13,7 @@ slug: api/speed-control/setPlaybackRate
 
 - _speed_ (`Number`): The speed / playback rate you want to set.
 
---
+---
 
 Updates the current playback rate, i.e. the speed at which contents are played.
 

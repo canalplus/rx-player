@@ -33,10 +33,11 @@ The returned Promise informs you on the result:
   [warning event](../errors.md) containing a `MEDIA_ERROR` with the code:
   `MEDIA_ERR_PLAY_NOT_ALLOWED`.
 
-Note: On browsers which do not support Promises natively (such as Internet
+:::note
+On browsers which do not support Promises natively (such as Internet
 Explorer 11), a JavaScript implementation is provided instead. This
-implementation has the exact same implementation than [ES2015
-Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
+implementation has the exact same implementation than [ES2015 Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
+:::
 
 You might want for a content to be loaded before being able to play (the
 current state has to be different than `LOADING`, `RELOADING` or `STOPPED`).

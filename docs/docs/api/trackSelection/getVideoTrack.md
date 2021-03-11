@@ -2,16 +2,16 @@
 id: getVideoTrack-api
 title: getVideoTrack method
 sidebar_label: getVideoTrack
-slug: api/track-selection/getVideoTrack
+slug: getVideoTrack
 ---
 
---
+---
 
 **syntax**: `const videoTrack = player.getVideoTrack()`
 
 **return value**: `Object|null|undefined`
 
---
+---
 
 Get information about the video track currently set.
 `null` if no video track is enabled right now.
@@ -20,14 +20,14 @@ If a video track is set and information about it is known, this method will
 return an object with the following properties:
 
 - `id` (`Number|string`): The id used to identify this track. No other
-  video track for the same [Period](../terms.md#period) will have the same
+  video track for the same [Period](../../glossary.md#period) will have the same
   `id`.
 
   This can be useful when setting the track through the `setVideoTrack`
   method.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../terms.md#representation) of this video track, with
+  [Representations](../../glossary.md#representation) of this video track, with
   attributes:
 
   - `id` (`string`): The id used to identify this Representation.
@@ -54,15 +54,15 @@ return an object with the following properties:
 `undefined` if no video content has been loaded yet or if its information is
 unknown.
 
---
-
+:::note
 Note for multi-Period contents:
 
 This method will only return the chosen video track for the
-[Period](../terms.md#period) that is currently playing.
+[Period](../../glossary.md#period) that is currently playing.
+:::
 
---
-
+:::caution
 In _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
+(see [loadVideo options](./../basicMethods/loadVideo.md#transport)), if there is
 no video tracks API in the browser, this method will return `undefined`.
+:::

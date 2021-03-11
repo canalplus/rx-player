@@ -2,16 +2,16 @@
 id: getPreferredAudioTracks-api
 title: getPreferredAudioTracks method
 sidebar_label: getPreferredAudioTracks
-slug: api/track-selection/getPreferredAudioTracks
+slug: getPreferredAudioTracks
 ---
 
---
+---
 
 **syntax**: `const preferences = player.getPreferredAudioTracks()`
 
 **return value**: `Array.<Object>`
 
---
+---
 
 Returns the current list of preferred audio tracks - by order of preference.
 

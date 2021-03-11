@@ -2,7 +2,7 @@
 id: getAudioBitrate-api
 title: getAudioBitrate method
 sidebar_label: getAudioBitrate
-slug: api/bitrate-selection/getAudioBitrate
+slug: getAudioBitrate
 ---
 
 ---
@@ -17,14 +17,13 @@ Returns the bitrate of the audio quality currently chosen, in bits per second.
 
 Returns `undefined` if no content is loaded.
 
---
-
+:::note
 Note for multi-Period contents:
 
 This method will only return the chosen audio bitrate for the
-[Period](../terms.md#period) that is currently playing.
+[Period](../../glossary.md#period) that is currently playing.
+:::
 
---
-
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns `undefined`.
+:::caution
+In _DirectFile_ mode (see [loadVideooptions](./../basicMethods/loadVideo.md#transport)), returns `undefined`.
+:::

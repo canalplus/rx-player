@@ -189,6 +189,14 @@ module.exports = {
       ],
     },
     {
+      type: "category",
+      label: "Additional ressources",
+      items: [
+        "additional_ressources/manifest",
+        "additional_ressources/dash_rxplayer_adaptation_difference",
+      ],
+    },
+    {
       type: "doc",
       id: "glossary",
     },

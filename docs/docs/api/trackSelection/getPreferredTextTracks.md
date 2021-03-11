@@ -2,16 +2,16 @@
 id: getPreferredTextTracks-api
 title: getPreferredTextTracks method
 sidebar_label: getPreferredTextTracks
-slug: api/track-selection/getPreferredTextTracks
+slug: getPreferredTextTracks
 ---
 
---
+---
 
 **syntax**: `const preferences = player.getPreferredTextTracks()`
 
 **return value**: `Array.<Object|null>`
 
---
+---
 
 Returns the current list of preferred text tracks - by order of preference.
 

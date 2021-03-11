@@ -2,10 +2,10 @@
 id: setVolume-api
 title: setVolume method
 sidebar_label: setVolume
-slug: api/speedControl/setVolume
+slug: setVolume
 ---
 
---
+---
 
 **syntax**: `player.setVolume(volume)`
 
@@ -13,7 +13,7 @@ slug: api/speedControl/setVolume
 
 - _volume_ (`Number`): Volume from 0 to 1.
 
---
+---
 
 Set the current volume, from 0 (no sound) to 1 (the maximum sound level).
 

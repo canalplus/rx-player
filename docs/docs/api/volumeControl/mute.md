@@ -2,14 +2,14 @@
 id: mute-api
 title: mute method
 sidebar_label: mute
-slug: api/speedControl/mute
+slug: mute
 ---
 
---
+---
 
 **syntax**: `player.mute()`
 
---
+---
 
 Mute the volume.
 

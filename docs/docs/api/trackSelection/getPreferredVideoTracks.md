@@ -2,16 +2,16 @@
 id: getPreferredVideoTracks-api
 title: getPreferredVideoTracks method
 sidebar_label: getPreferredVideoTracks
-slug: api/track-selection/getPreferredVideoTracks
+slug: getPreferredVideoTracks
 ---
 
---
+---
 
 **syntax**: `const preferences = player.getPreferredVideoTracks()`
 
 **return value**: `Array.<Object|null>`
 
---
+---
 
 Returns the current list of preferred video tracks - by order of preference.
 

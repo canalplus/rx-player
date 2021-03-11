@@ -21,18 +21,15 @@ problem notification.
 
 You can know if a fatal error interrupted your playback by:
 
-- adding an event listener to the `"error"` event (see the [player events
-  documentation](./player_events.md)). This event listener will take the error
+- adding an event listener to the `"error"` event (see the [player events](./events.md) documentation). This event listener will take the error
   directly in argument.
 
 - calling the `getError` API if the current state is `STOPPED`. If
-  different from `null`, it means that a fatal error happened (see the
-  [documentation for getError](./index.md#meth-getError)).
+  different from `null`, it means that a fatal error happened (see the documentation for [getError](./basicMethods/getError.md)).
 
 You can also be warned of any non-fatal error by:
 
-- adding an event listener to the `"warning"` event (see the [player events
-  documentation](./player_events.md)). The event listener will take the
+- adding an event listener to the `"warning"` event (see the [player events](./events.md) documentation). The event listener will take the
   non-fatal error directly in argument.
 
 All of those are in essence `Error` instances with added information.
@@ -71,7 +68,7 @@ all have a `type` property equal to `"NETWORK_ERROR"`.
 
 A NetworkError can only have the following code (`code` property):
 
-- `"PIPELINE_LOAD_ERROR"`: the [Manifest](../terms.md#manifest) or segment
+- `"PIPELINE_LOAD_ERROR"`: the [Manifest](../glossary.md#manifest) or segment
   request failed.
 
 #### more information
@@ -100,13 +97,15 @@ Among its properties, you have:
 - `xhr` (`XMLHttpRequest|undefined`): The xhr associated with the request.
   Not defined if the current content has been launched in `lowLatencyMode`.
 
-  Note: This last property is deprecated. It will disappear in the next major
-  release, the `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+:::note
+This last property is deprecated. It will disappear in the next major
+release, the `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+:::
 
 ### MEDIA_ERROR
 
 Error related to the media itself. It can both come from the player itself
-([Manifest](../terms.md#manifest) parsing) or from the browser itself (content
+([Manifest](../glossary.md#manifest) parsing) or from the browser itself (content
 playback).
 
 They all have a `type` property equal to `"MEDIA_ERROR"`.
@@ -125,15 +124,15 @@ A MediaError can have the following codes (`code` property):
   "video" / "text") has no media buffer implementation in your build.
 
 - `"MANIFEST_INCOMPATIBLE_CODECS_ERROR"`: An
-  [Adaptation](../terms.md#adaptation) (or track) has none of its
-  [Representations](../terms.md#representation) (read quality) in a supported
+  [Adaptation](../glossary.md#adaptation) (or track) has none of its
+  [Representations](../glossary.md#representation) (read quality) in a supported
   codec.
 
 - `"MANIFEST_PARSE_ERROR"`: Generic error to signal than the
-  [Manifest](../terms.md#manifest) could not be parsed.
+  [Manifest](../glossary.md#manifest) could not be parsed.
 
 - `"MANIFEST_UNSUPPORTED_ADAPTATION_TYPE"`: One of the
-  [Adaptation](../terms.md#adaptation) has a type (e.g. "audio", "text" or
+  [Adaptation](../glossary.md#adaptation) has a type (e.g. "audio", "text" or
   "video" which is not managed by the RxPlayer).
 
 - `"MEDIA_ERR_ABORTED"`: A crucial browser-side fetching operation was
@@ -180,12 +179,12 @@ A MediaError can have the following codes (`code` property):
   time was not found in the corresponding media.
 
 - `"MEDIA_TIME_BEFORE_MANIFEST"`: The current time in the media is behind
-  what is currently declared in the [Manifest](../terms.md#manifest).
+  what is currently declared in the [Manifest](../glossary.md#manifest).
   This can lead to stalling indefinitely as the player won't be able to
   download new segments arround the current time.
 
 - `"MEDIA_TIME_AFTER_MANIFEST"`: The current time in the media is after what
-  is currently declared in the [Manifest](../terms.md#manifest).
+  is currently declared in the [Manifest](../glossary.md#manifest).
   This can lead to stalling indefinitely as the player won't be able to
   download new segments arround the current time.
 
@@ -274,11 +273,11 @@ They all have a `type` property equal to `"OTHER_ERROR"`.
 
 An OtherError can have the following codes (`code` property):
 
-- `"PIPELINE_LOAD_ERROR"`: The [Manifest](../terms.md#manifest) or segment
+- `"PIPELINE_LOAD_ERROR"`: The [Manifest](../glossary.md#manifest) or segment
   request failed and the request has been done through a given callback (i.e.
   not the RxPlayer's XMLHttpRequest implementation).
 
-- `"PIPELINE_PARSE_ERROR"`: The RxPlayer's [Manifest](../terms.md#manifest)
+- `"PIPELINE_PARSE_ERROR"`: The RxPlayer's [Manifest](../glossary.md#manifest)
   or segment parsing logic failed. This is most likely due to a malformed
   Manifest or segment.
 

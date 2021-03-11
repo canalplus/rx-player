@@ -2,10 +2,10 @@
 id: setMaxBufferAhead-api
 title: setMaxBufferAhead method
 sidebar_label: setMaxBufferAhead
-slug: api/buffer-control/setMaxBufferAhead
+slug: setMaxBufferAhead
 ---
 
---
+---
 
 **syntax**: `player.setMaxBufferAhead(bufferSize)`
 
@@ -14,7 +14,7 @@ slug: api/buffer-control/setMaxBufferAhead
 - _bufferSize_ (`Number`): Maximum amount of buffer ahead of the current
   position, in seconds.
 
---
+---
 
 Set the maximum kept buffer ahead of the current position, in seconds.
 
@@ -33,10 +33,12 @@ this job instead.
 The minimum value between this one and the one returned by
 `getWantedBufferAhead` will be considered when downloading new segments.
 
-:warning: Bear in mind that a too-low configuration there (e.g. inferior to
+:::caution
+Bear in mind that a too-low configuration there (e.g. inferior to
 `10`) might prevent the browser to play the content at all.
+:::
 
---
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:::caution
+This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./../basicMethods/loadVideo.md#transport)).
+:::

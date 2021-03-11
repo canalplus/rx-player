@@ -2,10 +2,10 @@
 id: setMaxBufferBehind-api
 title: setMaxBufferBehind method
 sidebar_label: setMaxBufferBehind
-slug: api/buffer-control/setMaxBufferBehind
+slug: setMaxBufferBehind
 ---
 
---
+---
 
 **syntax**: `player.setMaxBufferBehind(bufferSize)`
 
@@ -14,7 +14,7 @@ slug: api/buffer-control/setMaxBufferBehind
 - _bufferSize_ (`Number`): Maximum amount of buffer behind the current
   position, in seconds.
 
---
+---
 
 Set the maximum kept buffer before the current position, in seconds.
 
@@ -30,7 +30,7 @@ of the player, you might want to set this limit.
 You can set it to `Infinity` to remove this limit and just let the browser do
 this job instead.
 
---
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:::caution
+This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./../basicMethods/loadVideo.md#transport)).
+:::

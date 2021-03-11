@@ -2,16 +2,16 @@
 id: getMaxBufferAhead-api
 title: getMaxBufferAhead method
 sidebar_label: getMaxBufferAhead
-slug: api/buffer-control/getMaxBufferAhead
+slug: getMaxBufferAhead
 ---
 
---
+---
 
 **syntax**: `const bufferSize = player.getMaxBufferAhead()`
 
 **return value**: `Number`
 
---
+---
 
 Returns the maximum kept buffer ahead of the current position, in seconds.
 

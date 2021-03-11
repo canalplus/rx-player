@@ -2,10 +2,10 @@
 id: setVideoBitrate-api
 title: setVideoBitrate method
 sidebar_label: setVideoBitrate
-slug: api/bitrate-selection/setVideoBitrate
+slug: setVideoBitrate
 ---
 
---
+---
 
 **syntax**: `player.setVideoBitrate(bitrate)`
 
@@ -14,7 +14,7 @@ slug: api/bitrate-selection/setVideoBitrate
 - _bitrate_ (`Number`): Optimal video bitrate (the quality with the maximum
   bitrate inferior to this value will be chosen if it exists).
 
---
+---
 
 Force the current video track to be of a certain bitrate.
 
@@ -40,7 +40,7 @@ Note that the value set is persistent between `loadVideo` calls.
 As such, this method can also be called when no content is playing (the same
 rules apply for future contents).
 
---
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:::caution
+This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./../basicMethods/loadVideo.md#transport)).
+:::

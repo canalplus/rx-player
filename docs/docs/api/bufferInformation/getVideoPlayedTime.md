@@ -2,16 +2,16 @@
 id: getVideoPlayedTime-api
 title: getVideoPlayedTime method
 sidebar_label: getVideoPlayedTime
-slug: api/buffer-information/getVideoPlayedTime
+slug: getVideoPlayedTime
 ---
 
---
+---
 
 **syntax**: `const playedTime = player.getVideoPlayedTime()`
 
 **return value**: `Number`
 
---
+---
 
 Returns in seconds the difference between:
 

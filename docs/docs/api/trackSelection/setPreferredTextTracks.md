@@ -2,10 +2,10 @@
 id: setPreferredTextTracks-api
 title: setPreferredTextTracks method
 sidebar_label: setPreferredTextTracks
-slug: api/track-selection/setPreferredTextTracks
+slug: setPreferredTextTracks
 ---
 
---
+---
 
 **syntax**: `player.setPreferredTextTracks(preferences)` /
 `player.setPreferredTextTracks(preferences, shouldApply)`
@@ -18,7 +18,7 @@ slug: api/track-selection/setPreferredTextTracks
 - _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
   content being played.
 
---
+---
 
 Allows the RxPlayer to choose an initial text track, based on language
 and accessibility preferences.
@@ -57,8 +57,6 @@ current text track.
 
 As such, if you never want any subtitles, you can just set this argument to
 `[null]` (an array with only the value `null` at the first position).
-
---
 
 The second argument to that function is an optional boolean which - when set
 to `true` - will apply that preference to the content and Period that have
@@ -114,10 +112,12 @@ player.setPreferredTextTracks(
 );
 ```
 
---
+:::caution
 
-:warning: This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./../basicMethods/loadVideo.md#transport)) when either :
 
 - No text track API is supported on the current browser
 - The media file tracks are not supported on the browser
+
+:::

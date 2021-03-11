@@ -2,7 +2,7 @@
 id: listenSteamEvents-tutorials
 title: Listening to stream events
 sidebar_label: Listening to stream events
-slug: tutorials/listening-to-stream-events
+slug: listening-to-stream-events
 ---
 
 # Tutorial: Listening to stream events
@@ -69,8 +69,8 @@ Each `<Event />` element can then be sent through a single RxPlayer events.
 The RxPlayer notify of such events through the usual RxPlayer events.
 
 _As a reminder (or if you didn't know), the RxPlayer can send a multitude of
-[events](../api/player_events.md) that can be listened to by the usage of the
-[addEventListener method](../api/index.md#meth-addEventListener)._
+[events](../api/events.md) that can be listened to by the usage of the
+[addEventListener method](../api/basicMethods/addEventListener.md)._
 
 The events related to stream events are:
 

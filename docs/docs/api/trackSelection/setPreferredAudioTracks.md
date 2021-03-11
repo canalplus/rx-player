@@ -2,10 +2,10 @@
 id: setPreferredAudioTracks-api
 title: setPreferredAudioTracks method
 sidebar_label: setPreferredAudioTracks
-slug: api/track-selection/setPreferredAudioTracks
+slug: setPreferredAudioTracks
 ---
 
---
+---
 
 **syntax**: `player.setPreferredAudioTracks(preferences)` /
 `player.setPreferredAudioTracks(preferences, shouldApply)`
@@ -18,15 +18,13 @@ slug: api/track-selection/setPreferredAudioTracks
 - _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
   content being played.
 
---
+---
 
 Allows the RxPlayer to choose an initial audio track, based on language
 preferences, codec preferences or both.
 
 This method can be called at any time - even when no content is loaded, and will
 apply to every future loaded content in the current RxPlayer instance.
-
---
 
 The first argument should be set as an array of objects, each object describing
 constraints an audio track should respect.
@@ -73,8 +71,6 @@ in the array and so on.
 
 As such, this array should be sorted by order of preference: from the most
 wanted constraints to the least.
-
---
 
 The second argument to that function is an optional boolean which - when set
 to `true` - will apply that preference to the content and Period that have
@@ -152,10 +148,12 @@ player.setPreferredAudioTracks([
 ]);
 ```
 
---
+:::caution
 
-:warning: This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./../basicMethods/loadVideo.md#transport)) when either :
 
 - No audio track API is supported on the current browser
 - The media file tracks are not supported on the browser
+
+:::

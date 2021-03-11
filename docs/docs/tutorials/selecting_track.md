@@ -2,7 +2,7 @@
 id: selectingTrack-tutorials
 title: Selecting a track
 sidebar_label: Selecting a track
-slug: tutorials/selecting-a-track
+slug: selecting-a-track
 ---
 
 # Tutorial: Selecting a track
@@ -88,11 +88,11 @@ begin to ask it what is the current list of available tracks.
 
 This can be done through three RxPlayer methods:
 
-- [`getAvailableAudioTracks()`](../api/index.md#meth-getAvailableAudioTracks)
+- [`getAvailableAudioTracks()`](../api/trackSelection/getAvailableAudioTracks.md)
   to list audio tracks
-- [`getAvailableVideoTracks()`](../api/index.md#meth-getAvailableVideoTracks)
+- [`getAvailableVideoTracks()`](../api/trackSelection/getAvailableVideoTracks.md)
   to list video tracks
-- [`getAvailableTextTracks()`](../api/index.md#meth-getAvailableTextTracks)
+- [`getAvailableTextTracks()`](../api/trackSelection/getAvailableTextTracks.md)
   to list text tracks
 
 Those methods will all return arrays of objects, each object containing
@@ -151,13 +151,13 @@ be a good idea to rely on the related events.
 
 Here are the three events you will need to know:
 
-- [`"availableAudioTracksChange"`](../api/player_events.md#events-availableAudioTracksChange):
+- [`"availableAudioTracksChange"`](../api/events.md#availableaudiotrackschange):
   the list of available audio tracks was just updated
 
-- [`"availableVideoTracksChange"`](../api/player_events.md#events-availableVideoTracksChange):
+- [`"availableVideoTracksChange"`](../api/events.md#availablevideotrackschange):
   idem for video tracks
 
-- [`"availableTextTracksChange"`](../api/player_events.md#events-availableTextTracksChange):
+- [`"availableTextTracksChange"`](../api/events.md#availabletexttrackschange):
   idem for video tracks
 
 All of those events will have the corresponding available tracks as a payload,
@@ -224,13 +224,13 @@ There are several ways to do that.
 
 The RxPlayer has a set of methods that just return the currently active tracks:
 
-- [`getAudioTrack`](../api/index.md#meth-getAudioTrack): return information
+- [`getAudioTrack`](../api/trackSelection/getAudioTrack.md): return information
   on the current audio track
 
-- [`getVideoTrack`](../api/index.md#meth-getVideoTrack): return information
+- [`getVideoTrack`](../api/trackSelection/getVideoTrack.md): return information
   on the current video track
 
-- [`getTextTrack`](../api/index.md#meth-getTextTrack): return information
+- [`getTextTrack`](../api/trackSelection/getTextTrack.md): return information
   on the current text track
 
 Those methods will return an object describing the attributes of the current
@@ -246,8 +246,7 @@ documentation to get more information on this.
 
 Also like the `getAvailable...Tracks` methods, the current text track will
 usually only be known once the RxPlayer has loaded a content (which means we are
-not in the `STOPPED`, `LOADING` or `RELOADING` [player
-state](../api/states.md)). If no content is loaded, those APIs will just return
+not in the `STOPPED`, `LOADING` or `RELOADING` [player state](../api/states.md)). If no content is loaded, those APIs will just return
 `undefined`.
 
 #### Examples
@@ -275,13 +274,13 @@ Exactly like you would obtain the list of available tracks through the
 `available...TracksChange` events, you can know when the current track change as
 soon as possible through the following events:
 
-- [`"audioTrackChange"`](../api/player_events.md#events-audioTrackChange):
+- [`"audioTrackChange"`](../api/events.md#audiotrackchange):
   the currently-active audio track changed
 
-- [`"videoTrackChange"`](../api/player_events.md#events-videoTrackChange):
+- [`"videoTrackChange"`](../api/events.md#videotrackchange):
   the currently-active video track changed
 
-- [`"textTrackChange"`](../api/player_events.md#events-textTrackChange):
+- [`"textTrackChange"`](../api/events.md#texttrackchange):
   the currently-active text track changed
 
 Those events just emit the current track information as soon as it changes, in
@@ -355,11 +354,11 @@ to choose another one, or let the final user choose another one.
 
 To do that, you will have to use one of those three RxPlayer methods:
 
-- [`setAudioTrack()`](../api/index.md#meth-setAudioTrack): change the current
+- [`setAudioTrack()`](../api/trackSelection/setAudioTrack.md): change the current
   audio track
-- [`setVideoTrack()`](../api/index.md#meth-setVideoTrack): change the current
+- [`setVideoTrack()`](../api/trackSelection/setVideoTrack.md): change the current
   video track
-- [`setTextTrack()`](../api/index.md#meth-setTextTrack): change the current
+- [`setTextTrack()`](../api/trackSelection/setTextTrack.md): change the current
   text track
 
 Each of those methods take a single string as argument. That string should be
@@ -417,8 +416,8 @@ reduce the network bandwidth used by a content.
 You can disable respectively the current text track and the current video track
 by calling those methods:
 
-- [`disableTextTrack`](../api/index.md#meth-disableTextTrack)
-- [`disableVideoTrack`](../api/index.md#meth-disableVideoTrack)
+- [`disableTextTrack`](../api/trackSelection/disableTextTrack.md)
+- [`disableVideoTrack`](../api/trackSelection/disableVideoTrack.md)
 
 However, like for selecting a track, this only concerns the current content
 being played. When playing a new content or even when just switching to another
@@ -488,11 +487,11 @@ The track preferences can be set in two manners:
 There are three options you can give to the RxPlayer on instanciation to set the
 track preferences:
 
-- [`preferredAudioTracks`](../api/player_options.md#prop-preferredAudioTracks):
+- [`preferredAudioTracks`](../api/player_options.md#preferredaudiotracks):
   set the preferences for the audio tracks
-- [`preferredTextTracks`](../api/player_options.md#prop-preferredTextTracks):
+- [`preferredTextTracks`](../api/player_options.md#preferredtexttracks):
   for the text tracks
-- [`preferredVideoTracks`](../api/player_options.md#prop-preferredVideoTracks):
+- [`preferredVideoTracks`](../api/player_options.md#preferredvideotracks):
   for the video tracks
 
 You can click on the name of the option to be redirected to its corresponding
@@ -536,9 +535,9 @@ documentation for that.
 ### track preferences methods
 
 You can also update at any time those track preferences - even when no content
-is playing - by calling the following methods: - [`setPreferredAudioTracks`](../api/index.md#meth-setPreferredAudioTracks):
-update the audio preferences - [`setPreferredTextTracks`](../api/index.md#meth-setPreferredTextTracks)
-update the text preferences - [`setPreferredVideoTracks`](../api/index.md#meth-setPreferredVideoTracks)
+is playing - by calling the following methods: - [`setPreferredAudioTracks`](../api/trackSelection/setPreferredAudioTracks.md):
+update the audio preferences - [`setPreferredTextTracks`](../api/trackSelection/setPreferredTextTracks.md)
+update the text preferences - [`setPreferredVideoTracks`](../api/trackSelection/setPreferredVideoTracks.md)
 update the video preferences
 
 Those methods mostly work the same way than the constructor options. You give
@@ -591,11 +590,11 @@ rxPlayer.setPreferredTextTracks([null]);
 
 The RxPlayer also has three methods which will return the last set preferences:
 
-- [`getPreferredAudioTracks`](../api/index.md#meth-getPreferredAudioTracks):
+- [`getPreferredAudioTracks`](../api/trackSelection/getPreferredAudioTracks.md):
   return the audio preferences
-- [`getPreferredTextTracks`](../api/index.md#meth-getPreferredTextTracks):
+- [`getPreferredTextTracks`](../api/trackSelection/getPreferredTextTracks.md):
   return the text preferences
-- [`getPreferredVideoTracks`](../api/index.md#meth-getPreferredVideoTracks):
+- [`getPreferredVideoTracks`](../api/trackSelection/getPreferredVideoTracks.md):
   return the video preferences
 
 The format of the returned array will be the exact same than the array given to
@@ -631,13 +630,13 @@ This allows to display subtitles but may not be sufficient when wanting to
 display richer subtitles (such as closed-captions).
 
 This is why the RxPlayer has a
-[`textTrackMode`](../api/loadVideo_options.md#prop-textTrackMode) concept.
+[`textTrackMode`](../api/basicMethods/loadVideo.md#texttrackmode) concept.
 
 By setting the `textTrackMode` to `"html"` in a
-[`loadVideo`](../api/index.md#meth-loadVideo) call, you will be able to profit
+[`loadVideo`](../api/basicMethods/loadVideo.md) call, you will be able to profit
 from much richer subtitles than what you could have by default.
 If you do that, you also need to set the
-[`textTrackElement`](../api/loadVideo_options.md#prop-textTrackElement) property
+[`textTrackElement`](../api/basicMethods/loadVideo.md#texttrackelement) property
 to an HTML element, that the RxPlayer will use to display subtitles into.
 
 More information on those options can be found in the RxPlayer API.

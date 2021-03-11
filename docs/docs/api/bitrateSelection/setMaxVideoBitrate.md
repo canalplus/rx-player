@@ -2,10 +2,10 @@
 id: setMaxVideoBitrate-api
 title: setMaxVideoBitrate method
 sidebar_label: setMaxVideoBitrate
-slug: api/bitrate-selection/setMaxVideoBitrate
+slug: setMaxVideoBitrate
 ---
 
---
+---
 
 **syntax**: `player.setMaxVideoBitrate(maxBitrate)`
 
@@ -14,7 +14,7 @@ slug: api/bitrate-selection/setMaxVideoBitrate
 - _maxBitrate_ (`Number`): Upper video bitrate limit when adaptive streaming
   is enabled.
 
---
+---
 
 Set a maximum video bitrate reachable through adaptive streaming.
 
@@ -45,7 +45,7 @@ even be called when no content is currently loaded.
 Note that this only affects adaptive strategies. Forcing the bitrate manually
 (for example by calling `setVideoBitrate`) bypass this limit completely.
 
---
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:::caution
+This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./../basicMethods/loadVideo.md#transport)).
+:::

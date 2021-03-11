@@ -2,16 +2,16 @@
 id: isLive-api
 title: isLive method
 sidebar_label: isLive
-slug: api/content-information/isLive
+slug: isLive
 ---
 
---
+---
 
 **syntax**: `const isLive = player.isLive()`
 
 **return value**: `Boolean`
 
---
+---
 
 Returns `true` if the content is a "live" content (e.g. a live TV Channel).
 `false` otherwise.

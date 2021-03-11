@@ -2,16 +2,16 @@
 id: getManualAudioBitrate-api
 title: getManualAudioBitrate method
 sidebar_label: getManualAudioBitrate
-slug: api/bitrate-selection/getManualAudioBitrate
+slug: getManualAudioBitrate
 ---
 
---
+---
 
 **syntax**: `const currentManualAudioBitrate = player.getManualAudioBitrate()`
 
 **return value**: `Number`
 
---
+---
 
 Get the last audio bitrate manually set. Either via `setAudioBitrate` or via
 the `initialAudioBitrate` constructor option.

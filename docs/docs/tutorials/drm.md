@@ -2,7 +2,7 @@
 id: drm-tutorials
 title: Playing contents with DRMs
 sidebar_label: Playing contents with DRMs
-slug: tutorials/playing-contents-with-drms
+slug: playing-contents-with-drms
 ---
 
 # Tutorial: Playing contents with DRMs
@@ -477,8 +477,7 @@ used by the RxPlayer.
 The application could then infer that other contents from the same right holders
 will have the same issues.
 In that case, an optimization is possible by using the `representationFilter`
-API which is part of the `transportOptions` `loadVideo` option, [documented
-here](../api/loadVideo_options.md#prop-transportOptions). By using this API,
+API which is part of the `transportOptions` `loadVideo` option, [documented here](../api/basicMethods/loadVideo.md#transportoptions). By using this API,
 we can filter out un-decipherable quality to avoid downloading them in the
 first place.
 

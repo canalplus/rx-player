@@ -2,16 +2,16 @@
 id: getManualVideoBitrate-api
 title: getManualVideoBitrate method
 sidebar_label: getManualVideoBitrate
-slug: api/bitrate-selection/getManualVideoBitrate
+slug: getManualVideoBitrate
 ---
 
---
+---
 
 **syntax**: `const currentManualVideoBitrate = player.getManualVideoBitrate()`
 
 **return value**: `Number`
 
---
+---
 
 Get the last video bitrate manually set. Either via `setVideoBitrate` or via
 the `initialVideoBitrate` constructor option.

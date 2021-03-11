@@ -2,16 +2,16 @@
 id: getAvailableAudioTracks-api
 title: getAvailableAudioTracks method
 sidebar_label: getAvailableAudioTracks
-slug: api/track-selection/getAvailableAudioTracks
+slug: getAvailableAudioTracks
 ---
 
---
+---
 
 **syntax**: `const audioTracks = player.getAvailableAudioTracks()`
 
 **return value**: `Array.<Object>`
 
---
+---
 
 Returns the list of available audio tracks for the current content.
 
@@ -24,7 +24,7 @@ Each of the objects in the returned array have the following properties:
   setting the track via `setAudioTrack`.
 
 - `language` (`string`): The language the audio track is in, as set in
-  the [Manifest](../terms.md#manifest).
+  the [Manifest](../../glossary.md#manifest).
 
 - `normalized` (`string`): An attempt to translate the `language`
   property into an ISO 639-3 language code (for now only support translations
@@ -42,7 +42,7 @@ Each of the objects in the returned array have the following properties:
   language.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../terms.md#representation) of this video track, with
+  [Representations](../../glossary.md#representation) of this video track, with
   attributes:
 
   - `id` (`string`): The id used to identify this Representation.
@@ -53,16 +53,17 @@ Each of the objects in the returned array have the following properties:
   - `codec` (`string|undefined`): The audio codec the Representation is
     in, as announced in the corresponding Manifest.
 
---
+:::note
 
 Note for multi-Period contents:
 
 This method will only return the available tracks of the
-[Period](../terms.md#period) that is currently playing.
+[Period](../../glossary.md#period) that is currently playing.
 
---
+:::
 
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), if there are no supported
+:::caution
+In _DirectFile_ mode (see [loadVideo options](./../basicMethods/loadVideo.md#transport)), if there are no supported
 tracks in the file or no track management API this method will return an empty
 Array.
+:::

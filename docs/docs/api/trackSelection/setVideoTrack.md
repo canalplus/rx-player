@@ -2,10 +2,10 @@
 id: setVideoTrack-api
 title: setVideoTrack method
 sidebar_label: setVideoTrack
-slug: api/track-selection/setVideoTrack
+slug: setVideoTrack
 ---
 
---
+---
 
 **syntax**: `player.setVideoTrack(videoTrackId)`
 
@@ -13,7 +13,7 @@ slug: api/track-selection/setVideoTrack
 
 - _videoTrackId_ (`string|Number`): The `id` of the track you want to set
 
---
+---
 
 Change the current video track.
 
@@ -43,11 +43,11 @@ During this period of time:
   - `setAudioTrack` will throw
   - `setTextTrack` will throw
 
---
+:::note
 
 Note for multi-Period contents:
 
-This method will only have an effect on the [Period](../terms.md#period) that is
+This method will only have an effect on the [Period](../../glossary.md#period) that is
 currently playing.
 If you want to update the track for other Periods as well, you might want to
 either:
@@ -55,12 +55,16 @@ either:
 - update the current video track once a `"periodChange"` event has been
   received.
 - update first the preferred video tracks through the
-  [setPreferredVideoTracks](#meth-setPreferredVideoTracks) method.
+  [setPreferredVideoTracks](./setPreferredVideoTracks.md) method.
 
---
+:::
 
-:warning: This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+:::caution
+
+This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./../basicMethods/loadVideo.md#transport)) when either :
 
 - No video track API is supported on the current browser
 - The media file tracks are not supported on the browser
+
+:::

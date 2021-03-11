@@ -2,10 +2,10 @@
 id: setMinVideoBitrate-api
 title: setMinVideoBitrate method
 sidebar_label: setMinVideoBitrate
-slug: api/bitrate-selection/setMinVideoBitrate
+slug: setMinVideoBitrate
 ---
 
---
+---
 
 **syntax**: `player.setMinVideoBitrate(minBitrate)`
 
@@ -14,7 +14,7 @@ slug: api/bitrate-selection/setMinVideoBitrate
 - _minBitrate_ (`Number`): Lower video bitrate limit when adaptive streaming
   is enabled.
 
---
+---
 
 Set a minimum video bitrate reachable through adaptive streaming.
 
@@ -45,7 +45,7 @@ even be called when no content is currently loaded.
 Note that this only affects adaptive strategies. Forcing the bitrate manually
 (for example by calling `setVideoBitrate`) bypass this limit completely.
 
---
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:::caution
+This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./../basicMethods/loadVideo.md#transport)).
+:::

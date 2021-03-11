@@ -8,48 +8,70 @@ import styles from "./styles.module.css";
 
 const features = [
   {
-    title: "Easy to Use",
-    imageUrl: "img/undraw_docusaurus_mountain.svg",
+    title: "DASH Streaming",
     description: (
       <>
         Docusaurus was designed from the ground up to be easily installed and
         used to get your website up and running quickly.
       </>
     ),
+    learnMoreURL:
+      "https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP",
   },
   {
-    title: "Focus on What Matters",
-    imageUrl: "img/undraw_docusaurus_tree.svg",
+    title: "Smooth Streaming",
     description: (
       <>
         Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
         ahead and move your docs into the <code>docs</code> directory.
       </>
     ),
+    learnMoreURL:
+      "https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming#Microsoft_Smooth_Streaming",
   },
   {
-    title: "Powered by React",
-    imageUrl: "img/undraw_docusaurus_react.svg",
+    title: "MSE / EME API",
     description: (
       <>
         Extend or customize your website layout by reusing React. Docusaurus can
         be extended while reusing the same header and footer.
       </>
     ),
+    learnMoreURL: "https://google.com",
   },
 ];
 
-function Feature({ imageUrl, title, description }) {
-  const imgUrl = useBaseUrl(imageUrl);
+const featuresDeep = [
+  {
+    title: "Get started instantly",
+    description: <>Description ....</>,
+    imageUrl: "img/undraw_docusaurus_mountain.svg",
+  },
+];
+
+function Feature({ learnMoreURL, title, description }) {
   return (
     <div className={clsx("col col--4", styles.feature)}>
+      <h3>{title}</h3>
+      <p>{description}</p>
+      <a href={learnMoreURL}>Learn more</a>
+    </div>
+  );
+}
+
+function FeatureDeep({ title, description, imageUrl }) {
+  const imgUrl = useBaseUrl(imageUrl);
+  return (
+    <div className={clsx(styles.featureDeep)}>
       {imgUrl && (
         <div className="text--center">
           <img className={styles.featureImage} src={imgUrl} alt={title} />
         </div>
       )}
-      <h3>{title}</h3>
-      <p>{description}</p>
+      <div className={styles.text}>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
     </div>
   );
 }
@@ -96,6 +118,17 @@ function Home() {
               <div className="row">
                 {features.map((props, idx) => (
                   <Feature key={idx} {...props} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+        {featuresDeep && featuresDeep.length > 0 && (
+          <section className={`${styles.features} ${styles.deep}`}>
+            <div className="container">
+              <div className="row">
+                {featuresDeep.map((props, idx) => (
+                  <FeatureDeep key={idx} {...props} />
                 ))}
               </div>
             </div>

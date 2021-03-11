@@ -2,14 +2,14 @@
 id: unMute-api
 title: unMute method
 sidebar_label: unMute
-slug: api/speedControl/unMute
+slug: unMute
 ---
 
---
+---
 
 **syntax**: `player.unMute()`
 
---
+---
 
 When muted, restore the volume to the one previous to the last `mute` call.
 

@@ -2,10 +2,10 @@
 id: setPreferredVideoTracks-api
 title: setPreferredVideoTracks method
 sidebar_label: setPreferredVideoTracks
-slug: api/track-selection/setPreferredVideoTracks
+slug: setPreferredVideoTracks
 ---
 
---
+---
 
 **syntax**: `player.setPreferredVideoTracks(preferences)` /
 `player.setPreferredVideoTracks(preferences, shouldApply)`
@@ -18,15 +18,13 @@ slug: api/track-selection/setPreferredVideoTracks
 - _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
   content being played.
 
---
+---
 
 Allows the RxPlayer to choose an initial video track, based on codec
 preferences, accessibility preferences or both.
 
 This method can be called at any time - even when no content is loaded, and will
 apply to every future loaded content in the current RxPlayer instance.
-
---
 
 The first argument should be set as an array of objects, each object describing
 constraints a video track should respect.
@@ -70,8 +68,6 @@ wanted constraints to the least.
 When the next encountered constraint is set to `null`, the player will simply
 disable the video track. If you want to disable the video track by default,
 you can just set `null` as the first element of this array (e.g. like `[null]`).
-
---
 
 The second argument to that function is an optional boolean which - when set
 to `true` - will apply that preference to the content and Period that have
@@ -139,12 +135,12 @@ simply do:
 player.setPreferredVideoTracks([null], true);
 ````
 
----
+:::caution
 
-:warning: This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./../basicMethods/loadVideo.md#transport)) when either :
 
 - No video track API is supported on the current browser
 - The media file tracks are not supported on the browser
 
----
+:::

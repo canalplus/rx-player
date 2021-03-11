@@ -2,16 +2,16 @@
 id: getVolume-api
 title: getVolume method
 sidebar_label: getVolume
-slug: api/speedControl/getVolume
+slug: getVolume
 ---
 
---
+---
 
 **syntax**: `const volume = player.getVolume()`
 
 **return value**: `Number`
 
---
+---
 
 Current volume of the player, from 0 (no sound) to 1 (maximum sound).
 0 if muted through the `mute` API.

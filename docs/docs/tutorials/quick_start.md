@@ -2,14 +2,13 @@
 id: quickStart-tutorials
 title: Quick Start
 sidebar_label: Quick Start
-slug: tutorials/
+slug: quick_start
 ---
 
 # Tutorial: Quick Start
 
 Because the RxPlayer exports a lot of functionnalities, you might want to
-quickly test basic use cases before you dive deep into the [whole API
-documentation](../api/index.md).
+quickly test basic use cases before you dive deep into the [whole API documentation](../api/player_options.md).
 
 We will here learn how to simply load a video and to react to basic events.
 
@@ -45,8 +44,7 @@ The next logical step is to load a content (audio, video or both).
 
 Loading a new content is done through the `loadVideo` method.
 
-`loadVideo` takes an object as arguments. There is here also [a lot of
-possible options](../api/loadVideo_options.md), but to simplify we will start
+`loadVideo` takes an object as arguments. There is here also [a lot of possible options](../api/basicMethods/loadVideo.md), but to simplify we will start
 with just three:
 
 - `transport`: String describing the transport protocol (can be `"dash"`,
@@ -79,8 +77,7 @@ Now that we are loading a content, we might want to know:
 - when we are able to interact with the content
 
 To do all three of those things, you will need to listen to player events.
-This is done through the [addEventListener
-method](../api/index.md#meth-addEventListener).
+This is done through the [addEventListener](../api/basicMethods/addEventListener.md) method.
 
 This method works the same way than the native one you might already use on
 HTML elements.
@@ -106,8 +103,7 @@ player.addEventListener("playerStateChange", (state) => {
 });
 ```
 
-There is multiple other events, all documented in [the events documentation
-](../api/player_events.md).
+There is multiple other events, all documented in [the events documentation](../api/events.md).
 
 As the state is a central focus of our API, we also heavily documented states in
 [the player states documentation](../api/states.md).
@@ -116,7 +112,7 @@ As the state is a central focus of our API, we also heavily documented states in
 
 We're now ready to interact with the current content.
 
-There is [a huge list of APIs](../api/index.md) you can use.
+There is [a huge list of APIs](../api/basicMethods/play.md) you can use.
 Some are useful only when a content is currently loaded (like `play`,
 `pause`, `seekTo` or `setAudioTrack`) and others can be used in any case
 (like `setVolume`, `getVideoElement` or `loadVideo`).
@@ -165,8 +161,6 @@ player.loadVideo({
 
 ## And now?
 
-Now that you know the basic RxPlayer APIs, you might want to dive deep into [the
-whole API documentation](./api/index.md).
+Now that you know the basic RxPlayer APIs, you might want to dive deep into [the whole API documentation](./api/player_options.md).
 
-You can also read our next tutorial, on how to play contents with DRM,
-[here](./contents_with_DRM.md).
+You can also read our next tutorial, on how to play contents with DRM, [here](./drm.md).

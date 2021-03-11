@@ -2,10 +2,10 @@
 id: setMaxAudioBitrate-api
 title: setMaxAudioBitrate method
 sidebar_label: setMaxAudioBitrate
-slug: api/bitrate-selection/setMaxAudioBitrate
+slug: setMaxAudioBitrate
 ---
 
---
+---
 
 **syntax**: `player.setMaxAudioBitrate(maxBitrate)`
 
@@ -14,7 +14,7 @@ slug: api/bitrate-selection/setMaxAudioBitrate
 - _maxBitrate_ (`Number`): Upper audio bitrate limit when adaptive streaming
   is enabled.
 
---
+---
 
 Set a maximum audio bitrate reachable through adaptive streaming.
 
@@ -45,7 +45,7 @@ even be called when no content is currently loaded.
 Note that this only affects adaptive strategies. Forcing the bitrate manually
 (for example by calling `setAudioBitrate`) bypass this limit completely.
 
---
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:::caution
+This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./../basicMethods/loadVideo.md#transport)).
+:::

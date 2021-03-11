@@ -2,12 +2,16 @@
 id: LogLevel-api
 title: LogLevel method
 sidebar_label: LogLevel
-slug: api/static-properties/LogLevel
+slug: LogLevel
+---
+
 ---
 
 _type_: `string`
 
 _default_: `"NONE"`
+
+---
 
 The current level of verbosity for the RxPlayer logs. Those logs all use the
 console.

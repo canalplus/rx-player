@@ -107,12 +107,13 @@ TextTrackRenderer.addParsers([TTML_PARSER, SRT_PARSER]);
 ```
 
 Here are the different available parsers:
-| Import name | Subtitles format parsed |
-| ------------------------ | ------------------------|
-| `TTML_PARSER` | TTML |
-| `VTT_PARSER` | WebVTT |
-| `SRT_PARSER` | SubRip (.srt) |
-| `SAMI_PARSER` | SAMI |
+
+| Import name   | Subtitles format parsed |
+| ------------- | ----------------------- |
+| `TTML_PARSER` | TTML                    |
+| `VTT_PARSER`  | WebVTT                  |
+| `SRT_PARSER`  | SubRip (.srt)           |
+| `SAMI_PARSER` | SAMI                    |
 
 ## How to use it
 
@@ -171,12 +172,13 @@ try {
 
 Here, `SUBTITLES_FORMAT` is a string indicating in which format the subtitles
 are. It can be any of those strings:
-| type | Corresponding subtitles format |
-| ----------------- | -------------------------------|
-| `"ttml"` | TTML |
-| `"vtt"` | WebVTT |
-| `"srt"` | SubRip (.srt) |
-| `"sami"` | SAMI |
+
+| type     | Corresponding subtitles format |
+| -------- | ------------------------------ |
+| `"ttml"` | TTML                           |
+| `"vtt"`  | WebVTT                         |
+| `"srt"`  | SubRip (.srt)                  |
+| `"sami"` | SAMI                           |
 
 (Each format needs the corresponding parser to be imported. See the previous
 chapter for more information.)
@@ -294,5 +296,7 @@ logger.setLevel(LOGGER_LEVEL);
 
 - `"DEBUG"`: The previous levels + regular events (via `console.log`)
 
-:warning: Updating the logger level will also update the RxPlayer's logger
+:::caution
+Updating the logger level will also update the RxPlayer's logger
 level as it is the exact same logger that is used there.
+:::

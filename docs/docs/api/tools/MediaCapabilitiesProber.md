@@ -2,7 +2,7 @@
 id: MediaCapabilitiesProber-tool
 title: MediaCapabilitiesProber
 sidebar_label: MediaCapabilitiesProber
-slug: tools/media-capabilities-prober
+slug: media-capabilities-prober
 ---
 
 ## Overview
@@ -18,10 +18,12 @@ especially:
 
 - Check the color space support
 
-:warning: This tool is still in an experimental phase, meaning that its API can
+:::caution
+This tool is still in an experimental phase, meaning that its API can
 change at any new release. This is not because it is not stable (it is actually)
 or should not be used in production. This is just because we want to receive
 your feedbacks before locking definitely the API.
+:::
 
 We can for example add supplementary information of even explode the
 MediaCapabilitiesProber into several tools to lower the size of the import.
@@ -260,11 +262,14 @@ The returned string of this function is either:
 - `"Unknown"`: The API is not available or it is but could not check if the
   HDCP type is supported.
 
-:warning: As of the 2018-july-03, this feature is very poorly supported (with only
+:::caution
+As of the 2018-july-03, this feature is very poorly supported (with only
 some support on the EDGE browser).
+
 We should have a real support of it in the coming months on
 [Chrome](https://www.chromestatus.com/feature/5652917147140096) and
 [Firefox](https://bugzilla.mozilla.org/show_bug.cgi?id=1404230).
+:::
 
 #### Example
 

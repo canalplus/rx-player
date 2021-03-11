@@ -40,3 +40,21 @@
   height: 200px;
   width: 200px;
 }
+
+.deep {
+  background-color: #353743;
+  color: white;
+  justify-content: center;
+}
+
+.featureDeep {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+}

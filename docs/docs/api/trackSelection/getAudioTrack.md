@@ -2,16 +2,16 @@
 id: getAudioTrack-api
 title: getAudioTrack method
 sidebar_label: getAudioTrack
-slug: api/track-selection/getAudioTrack
+slug: getAudioTrack
 ---
 
---
+---
 
 **syntax**: `const audioTrack = player.getAudioTrack()`
 
 **return value**: `Object|null|undefined`
 
---
+---
 
 Get information about the audio track currently set.
 `null` if no audio track is enabled right now.
@@ -20,14 +20,14 @@ If an audio track is set and information about it is known, this method will
 return an object with the following properties:
 
 - `id` (`Number|string`): The id used to identify this track. No other
-  audio track for the same [Period](../terms.md#period) will have the
+  audio track for the same [Period](../../glossary.md#period) will have the
   same `id`.
 
   This can be useful when setting the track through the `setAudioTrack`
   method.
 
 - `language` (`string`): The language the audio track is in, as set in the
-  [Manifest](../terms.md#manifest).
+  [Manifest](../../glossary.md#manifest).
 
 - `normalized` (`string`): An attempt to translate the `language`
   property into an ISO 639-3 language code (for now only support translations
@@ -45,7 +45,7 @@ return an object with the following properties:
   language.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../terms.md#representation) of this video track, with
+  [Representations](../../glossary.md#representation) of this video track, with
   attributes:
 
   - `id` (`string`): The id used to identify this Representation.
@@ -60,15 +60,15 @@ return an object with the following properties:
 `undefined` if no audio content has been loaded yet or if its information is
 unknown.
 
---
-
+:::note
 Note for multi-Period contents:
 
 This method will only return the chosen audio track for the
-[Period](../terms.md#period) that is currently playing.
+[Period](../../glossary.md#period) that is currently playing.
+:::
 
-\_\_
-
+:::caution
 In _DirectFile_ mode
-(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
+(see [loadVideo options](./../basicMethods/loadVideo.md#transport)), if there is
 no audio tracks API in the browser, this method will return `undefined`.
+:::

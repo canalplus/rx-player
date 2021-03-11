@@ -2,7 +2,7 @@
 id: addEventListener-api
 title: addEventListener method
 sidebar_label: addEventListener
-slug: /api/addEventListener
+slug: addEventListener
 ---
 
 ---

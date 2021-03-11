@@ -2,22 +2,24 @@
 id: getUrl-api
 title: getUrl method
 sidebar_label: getUrl
-slug: api/content-information/getUrl
+slug: getUrl
 ---
 
---
+---
 
 **syntax**: `const url = player.getUrl()`
 
 **return value**: `string`
 
---
+---
 
-Returns the URL of the downloaded [Manifest](../terms.md#manifest).
+Returns the URL of the downloaded [Manifest](../../glossary.md#manifest).
 
+:::note
 In _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)), returns the URL of the content
 being played.
+:::
 
 Returns `undefined` if no content is loaded yet.
 
