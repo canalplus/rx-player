@@ -370,6 +370,23 @@ useful depending on your needs):
     MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
     the errors documentation](./errors.md#types-media_error).
 
+  - __maxSessionCacheSize__ (`number|undefined`): The RxPlayer maintains a cache
+    of recently opened `MediaKeySession` (and consequently of recently fetched
+    licenses) as an optimization measure.
+    That way, loading a content whose license had already been fetched won't
+    necessitate a new license request, leading to shorter loading times and less
+    requests.
+
+    The size of this cache is usually kept relatively low (in the 10s) by the
+    player.
+    We found out however that some devices have an event lower limit for the
+    number of `MediaKeySession` that can be created at the same time.
+
+    The `maxSessionCacheSize` option allows to configure the maximum number of
+    `MediaKeySession` that should be kept "alive" at the same time. Any
+    supplementary older `MediaKeySession` will be closed, at least when the time
+    comes to create a new one.
+
   - __closeSessionsOnStop__ (``Boolean|undefined``): If set to ``true``, the
     ``MediaKeySession`` created for a content will be immediately closed when
     the content stops its playback.
@@ -379,6 +396,10 @@ useful depending on your needs):
 
     If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the
     same content needs to be re-decrypted.
+
+    If you want to set this property because the current device has a limited
+    number of `MediaKeySession` that can be created at the same time, prefer
+    using `maxSessionCacheSize` instead.
 
   - __singleLicensePer__ (``string|undefined``): Allows to use optimally a
     single license for multiple decryption keys.
