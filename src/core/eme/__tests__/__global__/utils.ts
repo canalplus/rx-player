@@ -195,10 +195,12 @@ export class MediaKeySessionImpl extends EventEmitter<any> {
     this.keyStatuses._setKeyStatus(new Uint8Array([0, 1, 2, this._currentKeyId++]),
                                    "usable");
     const event = new CustomEvent("keystatuseschange");
-    this.trigger("keyStatusesChange", event);
-    if (this.onkeystatuseschange !== null && this.onkeystatuseschange !== undefined) {
-      this.onkeystatuseschange(event);
-    }
+    setTimeout(() => {
+      this.trigger("keyStatusesChange", event);
+      if (this.onkeystatuseschange !== null && this.onkeystatuseschange !== undefined) {
+        this.onkeystatuseschange(event);
+      }
+    }, 0);
     return Promise.resolve();
   }
 }
