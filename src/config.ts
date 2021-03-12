@@ -336,6 +336,23 @@ export default {
   BUFFER_DISCONTINUITY_THRESHOLD: 0.2,
 
   /**
+   * When encountering small discontinuities, the RxPlayer may want, in specific
+   * conditions, ignore those and let the browser seek over them iself (this
+   * allows for example to avoid conflicts when both the browser and the
+   * RxPlayer want to seek at a different position, sometimes leading to a
+   * seeking loop).
+   * In this case, we however still want to seek it ourselves if the browser
+   * doesn't take the opportunity soon enough.
+   *
+   * This value specifies a delay after which a discontinuity ignored by the
+   * RxPlayer is finally considered.
+   * We want to maintain high enough to be sure the browser will not seek yet
+   * small enough so this (arguably rare) situation won't lead to too much
+   * waiting time.
+   */
+  FORCE_DISCONTINUITY_SEEK_DELAY: 2000,
+
+  /**
    * Ratio used to know if an already loaded segment should be re-buffered.
    * We re-load the given segment if the current one times that ratio is
    * inferior to the new one.

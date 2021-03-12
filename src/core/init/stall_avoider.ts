@@ -37,7 +37,8 @@ import {
   IWarningEvent,
 } from "./types";
 
-const { BUFFER_DISCONTINUITY_THRESHOLD } = config;
+const { BUFFER_DISCONTINUITY_THRESHOLD,
+        FORCE_DISCONTINUITY_SEEK_DELAY } = config;
 
 /**
  * Work-around rounding errors with floating points by setting an acceptable,
@@ -134,6 +135,33 @@ export default function StallAvoider(
         updateDiscontinuitiesStore(discontinuitiesStore, evt, tick),
       initialDiscontinuitiesStore));
 
+  /**
+   * On some devices (right now only seen on Tizen), seeking through the
+   * `currentTime` property can lead to the browser re-seeking once the
+   * segments have been loaded to improve seeking performances (for
+   * example, by seeking right to an intra video frame).
+   * In that case, we risk being in a conflict with that behavior: if for
+   * example we encounter a small discontinuity at the position the browser
+   * seeks to, we will seek over it, the browser would seek back and so on.
+   *
+   * This variable allows to store the last known position we were seeking to
+   * so we can detect when the browser seeked back (to avoid performing another
+   * seek after that). When browsers seek back to a position behind a
+   * discontinuity, they are usually able to skip them without our help.
+   */
+  let lastSeekingPosition : number | null = null;
+
+  /**
+   * In some conditions (see `lastSeekingPosition`), we might want to not
+   * automatically seek over discontinuities because the browser might do it
+   * itself instead.
+   * In that case, we still want to perform the seek ourselves if the browser
+   * doesn't do it after sufficient time.
+   * This variable allows to store the timestamp at which a discontinuity began
+   * to be ignored.
+   */
+  let ignoredStallTimeStamp : number | null = null;
+
   return clock$.pipe(
     withLatestFrom(discontinuitiesStore$),
     map(([tick, discontinuitiesStore]) => {
@@ -142,6 +170,24 @@ export default function StallAvoider(
         return { type: "unstalled" as const,
                  value: null };
       }
+
+      if (tick.seeking) {
+        lastSeekingPosition = tick.position;
+      } else if (lastSeekingPosition !== null) {
+        const now = performance.now();
+        if (ignoredStallTimeStamp === null) {
+          ignoredStallTimeStamp = now;
+        }
+        if (tick.position < lastSeekingPosition &&
+            now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY)
+        {
+          return { type: "stalled" as const,
+                   value: stalled };
+        }
+        lastSeekingPosition = null;
+      }
+
+      ignoredStallTimeStamp = null;
 
       /** Position at which data is awaited. */
       const { position: stalledPosition } = stalled;
