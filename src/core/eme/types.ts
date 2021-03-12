@@ -363,6 +363,19 @@ export interface IKeySystemOption {
    * closed when the current playback stops.
    */
   closeSessionsOnStop? : boolean;
+  /**
+   * The RxPlayer maintains a cache of open MediaKeySessions (DRM sessions each
+   * linked to a single license request) to improve performances and avoid
+   * unnecessary requests.
+   * That cache has a high maximum size (50 maximum open MediaKeySessions at
+   * the same time for the moment) that works with most devices and platforms.
+   *
+   * However some devices have a much more limited size or in the contrary
+   * allow much more MediaKeySessions to be opened.
+   * The `maxSessionCacheSize` property allows thus to configure the maximum
+   * number of MediaKeySessions that can be created at the same time.
+   */
+  maxSessionCacheSize? : number;
   /** Callback called when one of the key's status change. */
   onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
                                                  ICustomMediaKeySession)
