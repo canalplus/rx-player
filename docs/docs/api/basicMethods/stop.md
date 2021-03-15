@@ -2,7 +2,7 @@
 id: stop-api
 title: stop method
 sidebar_label: stop
-slug:   stop
+slug: stop
 ---
 
 ---

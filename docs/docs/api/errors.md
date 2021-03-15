@@ -99,7 +99,7 @@ Among its properties, you have:
 
 :::note
 This last property is deprecated. It will disappear in the next major
-release, the `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release, the `v4.0.0` (see [Deprecated APIs](../additional_ressources/deprecated.md)).
 :::
 
 ### MEDIA_ERROR

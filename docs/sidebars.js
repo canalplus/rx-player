@@ -193,7 +193,18 @@ module.exports = {
       label: "Additional ressources",
       items: [
         "additional_ressources/manifest",
+        "additional_ressources/text_tracks",
         "additional_ressources/dash_rxplayer_adaptation_difference",
+        "additional_ressources/images",
+        "additional_ressources/metaplaylist",
+        "additional_ressources/local_contents",
+        "additional_ressources/local_manifest_v0.1",
+        "additional_ressources/minimal_player",
+        "additional_ressources/plugins",
+        "additional_ressources/low_latency",
+        "additional_ressources/initial_position",
+        "additional_ressources/presentation_time_offset",
+        "additional_ressources/deprecated_api",
       ],
     },
     {

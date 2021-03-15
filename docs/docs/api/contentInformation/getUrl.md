@@ -17,7 +17,7 @@ Returns the URL of the downloaded [Manifest](../../glossary.md#manifest).
 
 :::note
 In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns the URL of the content
+options](../basicMethods/loadVideo.md#transport)), returns the URL of the content
 being played.
 :::
 

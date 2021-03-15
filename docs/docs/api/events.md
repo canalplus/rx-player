@@ -400,7 +400,7 @@ This event is not sent in _DirectFile_ mode (see [loadVideo options](./basicMeth
 
 Triggered when the current [Period](../glossary.md#period) being seen changes.
 
-The payload is the corresponding Period. See [the Manifest documentation](./manifest.md#period) for more information.
+The payload is the corresponding Period. See [the Manifest documentation](./additional_ressources/manifest.md#period) for more information.
 
 ### decipherabilityUpdate
 
@@ -435,13 +435,13 @@ Representation whose decipherability's status has been updated.
 Each of those objects have the following properties:
 
 - `representation`: The Representation concerned (more information on its
-  structure [in the Manifest documentation](./manifest.md#representation)).
+  structure [in the Manifest documentation](../additional_ressources/manifest.md#structure-of-a-representation-object)).
 - `adaptation`: The Adaptation linked to that Representation (more information
-  on its structure [in the Manifest documentation](./manifest.md#adaptation)).
+  on its structure [in the Manifest documentation](../additional_ressources/manifest.md#structure-of-an-adaptation-object)).
 - `period`: The Period linked to that Representation (more information on its
-  structure [in the Manifest documentation](./manifest.md#period)).
+  structure [in the Manifest documentation](../additional_ressources/manifest.md#structure-of-an-adaptation-object)).
 - `manifest`: The current Manifest (more information on its structure [in the
-  Manifest documentation](./manifest.md#manifest)).
+  Manifest documentation](../additional_ressources/manifest.md#structure-of-a-manifest-object)).
 
 You can then know if any of those Representations are becoming decipherable or
 not through their `decipherable` property.
@@ -485,7 +485,7 @@ time:
 The payload of a `streamEvent` depends on the source of the event. For example,
 it will not have the same format when it comes from a Manifest than when it
 comes from the media container.
-All possible formats are described in the [stream event tutorial](../tutorials/stream_events.md).
+All possible formats are described in the [stream event tutorial](../tutorials/listen_stream_events.md).
 
 Note: When an event has both a start and an end time, you can define a `onExit`
 callback on the payload. That callback will automatically be triggered when the
@@ -515,7 +515,7 @@ any `streamEventSkip` event.
 
 The payload of a `streamEventSkip` is the same than for a `streamEvent` and as
 such depends on the source of the event.
-All possible formats are described in the [stream event tutorial](../tutorials/stream_events.md).
+All possible formats are described in the [stream event tutorial](../tutorials/listen_stream_events.md).
 
 Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
@@ -530,7 +530,7 @@ users to not use those as they might become not supported in the future.
 
 :::caution
 This event is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../additional_ressources/deprecated.md)).
 :::
 
 _payload type_: `Object`
@@ -544,13 +544,13 @@ Triggered each time the current image playlist changes (has new images).
 Has the following property in its payload:
 _data_ (`Array.<Object>`): Every image data.
 
-Each image has a structure as defined in the [Images structure page](./images.md#api-structure).
+Each image has a structure as defined in the [Images structure page](../additional_ressources/images.md).
 
 ### fullscreenChange
 
 :::caution
 This event is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../additional_ressources/deprecated.md)).
 :::
 
 _payload type_: `Boolean`
@@ -564,7 +564,7 @@ it.
 
 :::caution
 This event is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../additional_ressources/deprecated.md)).
 :::
 
 _payload type_: `Array.<TextTrackElement>`

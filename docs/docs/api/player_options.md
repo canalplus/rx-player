@@ -758,7 +758,7 @@ const player = Player({
 
 :::caution
 This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+`v4.0.0` (see [Deprecated APIs](../additional_ressources/deprecated.md)).
 
 This option will have no effect for contents loaded :
 

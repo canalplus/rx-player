@@ -300,7 +300,7 @@ set to `false`:
     The corresponding [error](./errors.md) can be found either through the
     [`getError` method](./basicMethods/getError.md) method or through the
     [`playerStateChange`](./events.md#playerstatechange)
-    [player event](./player_events.md).
+    [player event](./events.md).
 
 ### From `RELOADING`
 
@@ -321,4 +321,4 @@ set to `false`:
     The corresponding [error](./errors.md) can be found either through the
     [`getError` method](./basicMethods/getError.md) method or through the
     [`playerStateChange`](./events.md#playerstatechange)
-    [player event](./player_events.md).
+    [player event](./events.md).

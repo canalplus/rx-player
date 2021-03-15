@@ -54,10 +54,10 @@ Can be either:
   event in the API.
   :::
 
-- `"metaplaylist"` for [MetaPlaylist](./metaplaylist.md) streams, which are
+- `"metaplaylist"` for [MetaPlaylist](../../additional_ressources/metaplaylist.md) streams, which are
   a concatenation of multiple smooth and DASH contents
 
-- `"local"` for [local manifests](./local_manifest.md), which allows to play
+- `"local"` for [local manifests](../../additional_ressources/local_contents.md), which allows to play
   downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
 
 Example:
@@ -112,7 +112,7 @@ This property is mandatory if the content uses DRM.
 It is here that is defined every options relative to the encryption of your
 content. There's a lot of configuration possible here. In the case you find
 this documentation hard to grasp, we've written a [tutorial on DRM configuration
-here](../tutorials/contents_with_DRM.md).
+here](../../tutorials/drm.md).
 
 This property is an array of objects with the following properties (only
 `type` and `getLicense` are mandatory here):
@@ -172,12 +172,12 @@ This property is an array of objects with the following properties (only
     (e.g. qualities) which might have a different decryption key. If no
     Representation is left, we will throw a MediaError with a
     `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
-    documentation](./errors.md#types-media_error).
+    documentation](../errors.md#media_error).
 
     You will receive a `decipherabilityUpdate` event when we fallback from
     a given Representation. You can find documentation on this event [in
     the corresponding chapter of the events
-    documentation](./player_events.md#events-decipherabilityUpdate).
+    documentation](../events.md#decipherabilityupdate).
 
     This option is thus only useful for contents depending on multiple
     licenses.
@@ -284,7 +284,7 @@ This property is an array of objects with the following properties (only
   You will receive a `decipherabilityUpdate` event when we fallback from
   a given Representation. You can find documentation on this event
   [in the corresponding chapter of the events
-  documentation](./player_events.md#events-decipherabilityUpdate).
+  documentation](../events.md#decipherabilityupdate).
 
   When fallbacking, we might need to reload the current MediaSource, leading
   to a black screen during a brief instant. When reloading, the RxPlayer
@@ -295,7 +295,7 @@ This property is an array of objects with the following properties (only
 
   If we have no Representation to fallback to anymore, we will throw a
   MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
-  the errors documentation](./errors.md#types-media_error).
+  the errors documentation](../errors.md#media_error).
 
 - **onKeyStatusesChange** (`Function|undefined`): Not needed for most
   usecases.
@@ -460,7 +460,7 @@ possible position will be used instead. If it is superior to the maximum
 possible position, the maximum will be used instead as well.
 
 More information on how the initial position is chosen can be found [in the
-specific documentation page on this subject](../infos/initial_position.md).
+specific documentation page on this subject](../../additional_ressources/initial_position.md).
 
 #### Notes for dynamic contents
 
@@ -666,7 +666,7 @@ considered stable:
   });
   ```
 
-  More infos on it can be found [here](./plugins.md#representationFilter).
+  More infos on it can be found [here](../../additional_ressources/plugins.md#representationfilter).
 
 - **segmentLoader** (`Function|undefined`):
 
@@ -684,7 +684,7 @@ considered stable:
   });
   ```
 
-  More info on it can be found [here](./plugins.md#segmentLoader).
+  More info on it can be found [here](../../additional_ressources/plugins.md#segmentloader).
 
 - **manifestLoader** (`function|undefined`):
 
@@ -702,7 +702,7 @@ considered stable:
   });
   ```
 
-  More info on it can be found [here](./plugins.md#manifestLoader).
+  More info on it can be found [here](../../additional_ressources/plugins.md#manifestloader).
 
 - **checkMediaSegmentIntegrity** (`boolean|undefined`):
 
@@ -773,7 +773,7 @@ considered stable:
   added/substracted to unix time. However we consider those situations rare enough
   (and the effect should be relatively weak) to let this as is for the moment. For
   a complete explanation, you can look at the [corresponding chapter of the
-  low-latency documentation](./low_latency.md#note-time-sync).
+  low-latency documentation](../../additional_ressources/low_latency.md#note-time-sync).
 
 - **aggressiveMode** (`boolean|undefined`):
 
@@ -865,7 +865,7 @@ All text track formats supported in `"native"` mode also work in `"html"`
 mode.
 
 More infos on supported text tracks can be found in the [text track
-documentation](./text_tracks.md).
+documentation](../../additional_ressources/text_tracks.md).
 
 ### textTrackElement
 
@@ -1033,7 +1033,7 @@ you might want to begin to play further from the live edge in those cases
 through the `startAt` option.
 
 More information on playing low-latency DASH contents can be found in the
-[corresponding documentation page](./low_latency.md).
+[corresponding documentation page](../../additional_ressources/low_latency.md).
 
 ### networkConfig
 
@@ -1148,7 +1148,8 @@ segment...
 
 :::caution
 This option is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated
+APIs](../../additional_ressources/deprecated.md)).
 :::
 
 ---
@@ -1185,11 +1186,11 @@ This has an effect only if:
 
 :::caution
 This option is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../../additional_ressources/deprecated.md)).
 :::
 
 If you want to parse and display a BIF image track, you can use the
-[`parseBifThumbnails`](./parseBifThumbnails.md) tool, which will also work for
+[`parseBifThumbnails`](../tools/parseBifThumbnails.md) tool, which will also work for
 Directfile contents.
 
 ---
@@ -1239,10 +1240,10 @@ const supplementaryImageTracks = [
 
 :::caution
 This option is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../../additional_ressources/deprecated.md)).
 
 If you want to use supplementary text tracks not defined in the content itself,
-you can use the [`TextTrackRenderer`](./TextTrackRenderer.md) tool, which will
+you can use the [`TextTrackRenderer`](../tools/TextTrackRenderer.md) tool, which will
 also work for Directfile contents.
 :::
 
@@ -1308,18 +1309,18 @@ const supplementaryTextTracks = [{
 ```
 
 To know which type of formats are supported and how to add them, you can read
-the [text track documentation](./text_tracks.md).
+the [text track documentation](../../additional_ressources/text_tracks.md).
 
 ### defaultAudioTrack
 
 ---
 
 :::caution This option is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../../additional_ressources/deprecated.md)).
 
 Please use the [`preferredAudioTracks` constructor
-option](./player_options.md#prop-preferredAudioTracks) or the
-[`setPreferredAudioTracks` method](./index.md#meth-setPreferredAudioTracks)
+option](../player_options.md#preferredaudiotracks) or the
+[`setPreferredAudioTracks` method](../trackSelection/setPreferredAudioTracks.md)
 instead.
 :::
 
@@ -1364,10 +1365,13 @@ This option might have no effect in _DirectFile_ mode (see [transportoption](#tr
 ---
 
 :::caution
-This option is deprecated, it will disappear in the next major release `v4.0.0` see [Deprecated APIs](./deprecated.md).
+This option is deprecated, it will disappear in the next major release `v4.0.0` see [Deprecated
+APIs](../../additional_ressources/deprecated.md).
 
-Please use the [`preferredTextTracks` constructor option](./player_options.md#prop-preferredTextTracks)
-or the [`setPreferredTextTracks` method](./index.md#meth-setPreferredTextTracks) instead.
+Please use the [`preferredTextTracks` constructor
+option](../player_options.md#preferredtexttracks)
+or the [`setPreferredTextTracks`
+method](../trackSelection/setPreferredTextTracks.md) instead.
 :::
 
 ---
