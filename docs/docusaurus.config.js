@@ -42,10 +42,9 @@ module.exports = {
           activeBaseRegex: "docs/api",
         },
         {
-          to: "docs/architecture/overview",
-          label: "Architecture",
-          position: "left",
-          activeBaseRegex: "docs/architecture",
+          href: "https://developers.canal-plus.com/rx-player/",
+          label: "Demo",
+          position: "right",
         },
         { to: "blog", label: "Blog", position: "right" },
         {
@@ -75,16 +74,8 @@ module.exports = {
           title: "Community",
           items: [
             {
-              label: "Stack Overflow",
-              href: "https://stackoverflow.com/questions/tagged/docusaurus",
-            },
-            {
-              label: "Discord",
-              href: "https://discordapp.com/invite/docusaurus",
-            },
-            {
-              label: "Twitter",
-              href: "https://twitter.com/docusaurus",
+              label: "Gitter",
+              href: "https://gitter.im/canalplus/rx-player",
             },
           ],
         },
@@ -96,13 +87,17 @@ module.exports = {
               to: "blog",
             },
             {
+              label: "Demo",
+              href: "https://developers.canal-plus.com/rx-player/",
+            },
+            {
               label: "GitHub",
-              href: "https://github.com/facebook/docusaurus",
+              href: "https://github.com/canalplus/rx-player",
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Canal+, Inc.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Canal+`,
     },
   },
   presets: [
