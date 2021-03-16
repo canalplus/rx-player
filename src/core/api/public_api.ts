@@ -220,7 +220,7 @@ interface IPublicAPIEvent {
   seeked : null;
   streamEvent : IStreamEvent;
   streamEventSkip : IStreamEvent;
-  inbandEvent : IInbandEvent;
+  inbandEvents : IInbandEvent[];
 }
 
 /**
@@ -2272,11 +2272,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     switch (event.type) {
       case "inband-events":
         const inbandEvents = event.value;
-        const eventNbr = inbandEvents.length;
-        for (let i = 0; i < eventNbr; i++) {
-          const inbandEvent = inbandEvents[i];
-          this.trigger("inbandEvent", inbandEvent);
-        }
+        this.trigger("inbandEvents", inbandEvents);
         return;
       case "stream-event":
         this.trigger("streamEvent", event.value);
