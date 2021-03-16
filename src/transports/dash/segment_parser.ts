@@ -95,14 +95,14 @@ export default function generateAudioVideoSegmentParser(
           const events = getEventsOutOfEMSGs(whitelistedEMSGs,
                                              manifest.publishTime);
           if (events !== undefined) {
-            const { manifestRefreshEvent, inbandEvents } = events;
+            const { needsManifestRefresh, inbandEvents } = events;
             return observableOf({ type: "parsed-segment",
                                   value: { chunkData,
                                            chunkInfos,
                                            chunkOffset,
                                            appendWindow,
                                            inbandEvents,
-                                           manifestRefreshEvent } });
+                                           needsManifestRefresh } });
           }
         }
       }

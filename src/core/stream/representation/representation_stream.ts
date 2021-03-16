@@ -486,10 +486,10 @@ export default function RepresentationStream<T>({
         const initSegmentData = initSegmentObject?.initializationData ?? null;
         if (evt.value.inbandEvents !== undefined) {
           const { inbandEvents,
-                  manifestRefreshEvent } = evt.value;
-          const manifestRefresh$ =  manifestRefreshEvent === undefined ?
-            EMPTY :
-            observableOf(EVENTS.needsManifestRefresh());
+                  needsManifestRefresh } = evt.value;
+          const manifestRefresh$ =  needsManifestRefresh === true ?
+            observableOf(EVENTS.needsManifestRefresh()) :
+            EMPTY;
           const inbandEvents$ = inbandEvents.length > 0 ?
             observableOf({ type: "inband-events" as const,
                            value: inbandEvents }) :

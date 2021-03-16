@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import { IInbandEvent, IManifestRefreshEvent } from "../../core/stream";
+import { IInbandEvent } from "../../core/stream";
 import { IEMSG } from "../../parsers/containers/isobmff";
 import { utf8ToStr } from "../../tools/string_utils";
 
 /**
- * Transform multiple EMSGs with manifest validity scheme id
- * into one manifest refresh event
+ * From an array of EMSGs with manifest validity scheme id,
+ * tells if the manifest needs to be refreshed.
  * @param {Array.<Object>} emsgs
  * @param {Object} segment
  * @param {number} manifestPublishTime
- * @returns {undefined | Object}
+ * @returns {boolean}
  */
-function getManifestRefreshEvent(emsgs: IEMSG[],
-                                 manifestPublishTime: number
-): IManifestRefreshEvent|undefined {
+function manifestNeedsToBeRefreshed(emsgs: IEMSG[],
+                                    manifestPublishTime: number
+): boolean {
   if (emsgs.length <= 0) {
-    return undefined;
+    return false;
   }
   const len = emsgs.length;
   for (let i = 0; i < len; i++) {
@@ -52,9 +52,10 @@ function getManifestRefreshEvent(emsgs: IEMSG[],
         // identical to the event manifest publish time, then the manifest needs
         // to be updated
         eventManifestPublishTime >= currentManifestPublishTime) {
-      return { type: "manifest-refresh", value: undefined };
+      return true;
     }
   }
+  return false;
 }
 
 /**
@@ -68,7 +69,7 @@ function getManifestRefreshEvent(emsgs: IEMSG[],
 export default function getEventsOutOfEMSGs(
   parsedEMSGs: IEMSG[],
   manifestPublishTime?: number
-): { manifestRefreshEvent: IManifestRefreshEvent | undefined;
+): { needsManifestRefresh: boolean;
      inbandEvents: IInbandEvent[] | undefined; } | undefined {
   if (parsedEMSGs.length === 0) {
     return undefined;
@@ -95,11 +96,11 @@ export default function getEventsOutOfEMSGs(
          EMSGs: undefined as IEMSG[]|undefined });
   const inbandEvents = EMSGs?.map((evt) => ({ type: "dash-emsg" as const,
                                               value: evt }));
-  const manifestRefreshEvent =
+  const needsManifestRefresh =
     (manifestPublishTime === undefined ||
      manifestRefreshEventsFromEMSGs === undefined) ?
-      undefined :
-      getManifestRefreshEvent(manifestRefreshEventsFromEMSGs,
-                              manifestPublishTime);
-  return { inbandEvents, manifestRefreshEvent };
+      false :
+      manifestNeedsToBeRefreshed(manifestRefreshEventsFromEMSGs,
+                                 manifestPublishTime);
+  return { inbandEvents, needsManifestRefresh };
 }

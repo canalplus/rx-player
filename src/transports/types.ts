@@ -17,10 +17,7 @@
 import {
   Observable,
 } from "rxjs";
-import {
-  IInbandEvent,
-  IManifestRefreshEvent,
-} from "../core/stream";
+import { IInbandEvent } from "../core/stream";
 import Manifest, {
   Adaptation,
   IRepresentationFilter,
@@ -376,7 +373,8 @@ export interface ISegmentParserParsedSegment<T> {
                                          // (part of the segment after that time
                                          // will be ignored)
   inbandEvents? : IInbandEvent[]; // Inband events parsed from segment data
-  manifestRefreshEvent?: IManifestRefreshEvent; // Inband Manifest refresh events
+  needsManifestRefresh?: boolean; // Tells if the result of the parsing shows
+                                  // that the manifest should be refreshed
 }
 
 // What a segment parser returns when parsing an init segment
