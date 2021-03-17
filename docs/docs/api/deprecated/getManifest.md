@@ -15,7 +15,7 @@ slug: getManifest
 
 :::caution
 This method is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../../additional_ressources/deprecated.md)).
 :::
 
 Returns the current loaded [Manifest](../../glossary.md#manifest) if one.
@@ -24,6 +24,6 @@ The Manifest object structure is relatively complex and is described in the
 
 `null` if the player is either stopped or not loaded.
 
-`null` in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
+`null` in _DirectFile_ mode (see [loadVideo options](../basicMethods/loadVideo.md#transport)).
 
 The Manifest will be available before the player reaches the `"LOADED"` state.

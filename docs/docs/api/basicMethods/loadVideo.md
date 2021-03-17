@@ -666,7 +666,7 @@ considered stable:
   });
   ```
 
-  More infos on it can be found [here](../../additional_ressources/plugins.md#representationfilter).
+  More infos on it can be found [here](../plugins.md#representationfilter).
 
 - **segmentLoader** (`Function|undefined`):
 
@@ -684,7 +684,7 @@ considered stable:
   });
   ```
 
-  More info on it can be found [here](../../additional_ressources/plugins.md#segmentloader).
+  More info on it can be found [here](../plugins.md#segmentloader).
 
 - **manifestLoader** (`function|undefined`):
 
@@ -702,7 +702,7 @@ considered stable:
   });
   ```
 
-  More info on it can be found [here](../../additional_ressources/plugins.md#manifestloader).
+  More info on it can be found [here](../plugins.md#manifestloader).
 
 - **checkMediaSegmentIntegrity** (`boolean|undefined`):
 

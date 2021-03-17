@@ -15,7 +15,7 @@ slug: getCurrentRepresentations
 
 :::caution
 This method is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../../additional_ressources/deprecated.md)).
 :::
 
 Returns the [Representations](../../glossary.md#representation) being loaded per type
@@ -28,4 +28,4 @@ An Representation object structure is relatively complex and is described in the
 
 `null` if the current Representations are not known yet.
 
-`null` in _DirectFile_ mode (see [loadVideo options](./basicMethods/loadVideo.md#transport)).
+`null` in _DirectFile_ mode (see [loadVideo options](../basicMethods/loadVideo.md#transport)).

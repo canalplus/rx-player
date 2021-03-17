@@ -15,7 +15,7 @@ slug: getNativeTextTrack
 
 :::caution
 This method is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../../additional_ressources/deprecated.md)).
 :::
 
 Returns the first text track of the video's element, null if none.

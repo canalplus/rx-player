@@ -13,7 +13,7 @@ _return value_: `Boolean`
 
 :::caution
 This method is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../../additional_ressources/deprecated.md)).
 :::
 
 Returns `true` if the video element is in fullscreen mode, `false`

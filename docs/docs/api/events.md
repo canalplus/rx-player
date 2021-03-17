@@ -544,7 +544,7 @@ Triggered each time the current image playlist changes (has new images).
 Has the following property in its payload:
 _data_ (`Array.<Object>`): Every image data.
 
-Each image has a structure as defined in the [Images structure page](../additional_ressources/images.md).
+Each image has a structure as defined in the [Images structure page](./images.md).
 
 ### fullscreenChange
 

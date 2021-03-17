@@ -13,7 +13,7 @@ _arguments_: `Boolean`
 
 :::caution
 This method is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](../../additional_ressources/deprecated.md)).
 :::
 
 Switch or exit the `<video>` element to fullscreen mode. The argument is an
