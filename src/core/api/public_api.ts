@@ -721,6 +721,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("the attached video element is disposed");
     }
 
+    if (!autoPlay && this.videoElement.autoplay) {
+      log.warn("API: 'autoplay' is enabled on media element. Disabling it " +
+               "as content is loaded without the autoplay option enabled.");
+      this.videoElement.autoplay = false;
+    }
+
     const isDirectFile = transport === "directfile";
 
     /** Subject which will emit to stop the current content. */
