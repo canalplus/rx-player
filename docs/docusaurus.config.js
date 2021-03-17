@@ -1,6 +1,6 @@
 module.exports = {
   title: "RxPlayer",
-  tagline: "a feature full DASH/Smooth HTML5 Video Player",
+  tagline: "a featureful DASH/Smooth HTML5 Video Player",
   url: "https://your-docusaurus-test-site.com",
   baseUrl: "/",
   onBrokenLinks: "ignore",
@@ -29,7 +29,7 @@ module.exports = {
       },
       items: [
         {
-          to: "docs/intro",
+          to: "docs/tutorials/quick_start",
           activeBasePath: "docs",
           label: "Get Started",
           position: "left",
@@ -61,12 +61,16 @@ module.exports = {
           title: "Docs",
           items: [
             {
-              label: "Style Guide",
-              to: "docs/",
+              label: "Quick Start",
+              to: "docs/tutorials/quick_start",
             },
             {
-              label: "Second Doc",
-              to: "docs/doc2/",
+              label: "Player options",
+              to: "docs/api/player_options",
+            },
+            {
+              label: "loadVideo method",
+              to: "docs/api/loadVideo",
             },
           ],
         },

@@ -1,7 +1,7 @@
 ---
 id: dash_rxplayer_adaptation_difference
 title: Differences between DASH' AdaptationSets and the rx-player "Adaptation"
-sidebar_label: Differences between DASH' AdaptationSets and the rx-player "Adaptation"
+sidebar_label: DASH' AdaptationSets vs rx-player "Adaptation"
 slug: additional_ressources/dash_rxplayer_adaptation_difference
 ---
 

@@ -45,16 +45,29 @@
   background-color: #353743;
   color: white;
   justify-content: center;
+  padding: 50px;
 }
 
 .featureDeep {
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   width: 100%;
+  margin: 30px 0px;
 }
 
 .text {
   display: flex;
   flex-direction: column;
   align-self: center;
+  max-width: 400px;
+}
+
+.getStarted {
+  color: white;
+  font-size: 18px;
+  padding: 10px 20px;
+}
+
+.getStarted:hover {
+  color: black;
 }

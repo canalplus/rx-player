@@ -299,7 +299,7 @@ player.loadVideo({
 ```
 
 More infos on the `manifestLoader` can be found
-[here](./plugins.md#manifestLoader).
+[here](../api/plugins.md#manifestLoader).
 
 ### Defining an initial position for a dynamic MetaPlaylist
 

@@ -8,44 +8,84 @@ import styles from "./styles.module.css";
 
 const features = [
   {
-    title: "DASH Streaming",
+    title: "DASH/Smooth Streaming",
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        <strong>DASH</strong> and <strong>Smooth</strong> protocol that enables
+        high quality streaming of media content over the Internet delivered from
+        conventional HTTP web servers.
       </>
     ),
-    learnMoreURL:
-      "https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP",
-  },
-  {
-    title: "Smooth Streaming",
-    description: (
-      <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
-      </>
-    ),
-    learnMoreURL:
-      "https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming#Microsoft_Smooth_Streaming",
+    learnMoreURL: "/docs/api/loadVideo#transport",
   },
   {
     title: "MSE / EME API",
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Relying on the Media Source and Encrypted Media Extensions API that
+        enable plugin-free web-based streaming media that are subject to a
+        digital restrictions management scheme.
       </>
     ),
-    learnMoreURL: "https://google.com",
+    learnMoreURL: "/docs/api/loadVideo#keysystems",
+  },
+  {
+    title: "A featureful player",
+    description: (
+      <>
+        Because the streaming universe is vast and each devices is different,
+        the rx-player is strongly customizable with many options.
+      </>
+    ),
+    learnMoreURL: "/docs/api/player_options",
   },
 ];
 
 const featuresDeep = [
   {
-    title: "Get started instantly",
-    description: <>Description ....</>,
-    imageUrl: "img/undraw_docusaurus_mountain.svg",
+    title: "",
+    description: (
+      <>
+        To play live and On Demand Smooth and DASH contents for extended amounts
+        of time, with or without DRM.
+      </>
+    ),
+    backgroundColor: "hsl(231, 12%, 24%)",
+    imageUrl: "img/play-button.svg",
+    positionImage: "left",
+  },
+  {
+    title: "",
+    description: (
+      <>
+        To offer a first-class user experience (best quality without any
+        buffering, low latency...).
+      </>
+    ),
+    backgroundColor: "hsl(231, 12%, 34%)",
+    imageUrl: "img/process.svg",
+    positionImage: "right",
+  },
+  {
+    title: "",
+    description: (
+      <>
+        To be configurable and extendable (e.g. for Peer-to-Peer streaming, STB
+        integration, Smart TV...).
+      </>
+    ),
+    backgroundColor: "hsl(231, 12%, 24%)",
+    imageUrl: "img/settings.svg",
+    positionImage: "left",
+  },
+  {
+    title: "",
+    description: (
+      <>To be easy to integrate and use as a library in various codebases.</>
+    ),
+    backgroundColor: "hsl(231, 12%, 34%)",
+    imageUrl: "img/integration.svg",
+    positionImage: "right",
   },
 ];
 
@@ -59,19 +99,34 @@ function Feature({ learnMoreURL, title, description }) {
   );
 }
 
-function FeatureDeep({ title, description, imageUrl }) {
+function FeatureDeep({ title, description, imageUrl, positionImage }) {
   const imgUrl = useBaseUrl(imageUrl);
+  if (positionImage === "left") {
+    return (
+      <div className={clsx(styles.featureDeep)}>
+        {imgUrl && (
+          <div className="text--center">
+            <img className={styles.featureImage} src={imgUrl} alt={title} />
+          </div>
+        )}
+        <div className={styles.text}>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={clsx(styles.featureDeep)}>
+      <div className={styles.text}>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
       {imgUrl && (
         <div className="text--center">
           <img className={styles.featureImage} src={imgUrl} alt={title} />
         </div>
       )}
-      <div className={styles.text}>
-        <h3>{title}</h3>
-        <p>{description}</p>
-      </div>
     </div>
   );
 }
@@ -91,13 +146,10 @@ function Home() {
           </h1>
           <div className={styles.buttons}>
             <Link
-              className={clsx(
-                "button button--outline button--secondary button--lg",
-                styles.getStarted
-              )}
+              className={clsx("button", styles.getStarted)}
               to={useBaseUrl("docs/intro")}
             >
-              Get Started
+              GET STARTED
             </Link>
             <iframe
               className={styles.spaceBetween}
@@ -123,17 +175,18 @@ function Home() {
             </div>
           </section>
         )}
-        {featuresDeep && featuresDeep.length > 0 && (
-          <section className={`${styles.features} ${styles.deep}`}>
+        {featuresDeep.map((props, idx) => (
+          <section
+            className={`${styles.features} ${styles.deep}`}
+            style={{ backgroundColor: props.backgroundColor }}
+          >
             <div className="container">
               <div className="row">
-                {featuresDeep.map((props, idx) => (
-                  <FeatureDeep key={idx} {...props} />
-                ))}
+                <FeatureDeep key={idx} {...props} />
               </div>
             </div>
           </section>
-        )}
+        ))}
       </main>
     </Layout>
   );

@@ -5,12 +5,27 @@ sidebar_label: Quick Start
 slug: quick_start
 ---
 
-# Tutorial: Quick Start
-
 Because the RxPlayer exports a lot of functionnalities, you might want to
 quickly test basic use cases before you dive deep into the [whole API documentation](../api/player_options.md).
 
 We will here learn how to simply load a video and to react to basic events.
+
+## Install
+
+The fastest way to use the player directly in your code is to add this
+repository as a dependency.
+
+You can do it via **npm** or **yarn**:
+
+```
+npm install --save rx-player
+```
+
+or
+
+```
+yarn add rx-player
+```
 
 ## Instanciating a Player
 

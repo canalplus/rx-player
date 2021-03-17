@@ -132,11 +132,11 @@ const customSegmentLoader = (infos, callbacks) => {
 };
 ```
 
-[1] [Adaptation structure](./manifest.md#adaptation)
+[1] [Adaptation structure](../additional_ressources/manifest.md#adaptation)
 
-[2] [Representation structure](./manifest.md#representation)
+[2] [Representation structure](../additional_ressources/manifest.md#representation)
 
-[3] [Segment structure](./manifest.md#segment)
+[3] [Segment structure](../additional_ressources/manifest.md#segment)
 
 ## manifestLoader
 
@@ -253,7 +253,7 @@ The representationFilter will be called each time we load a
 
 - representation `{Representation}`: The concerned `Representation`.
   A `Representation` structure's is described [in the Manifest structure
-  documentation](./manifest.md#representation).
+  documentation](../additional_ressources/manifest.md#representation).
 
 - representationInfos `{Object}`: Basic information about this
   `Representation`. Contains the following keys:
@@ -311,4 +311,4 @@ function representationFilter(representation, infos) {
 }
 ```
 
-[1] [Representation structure](./manifest.md#representation)
+[1] [Representation structure](../additional_ressources/manifest.md#representation)
