@@ -302,17 +302,17 @@ export default function RepresentationStream<T>({
         downloadQueue = [];
         if (terminate.urgent) {
           log.debug("Stream: urgent termination request, terminate.", bufferType);
-          startDownloadingQueue$.complete(); // complete the downloading queue
-          return observableOf(EVENTS.streamTerminating());
-        } else if (currentSegmentRequest === null) {
-          log.debug("Stream: no request, terminate.", bufferType);
+          startDownloadingQueue$.next(); // interrupt current requests
           startDownloadingQueue$.complete(); // complete the downloading queue
           return observableOf(EVENTS.streamTerminating());
         } else if (
+          currentSegmentRequest === null ||
           mostNeededSegment === undefined ||
           currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
         ) {
-          log.debug("Stream: cancel request and terminate.", bufferType);
+          log.debug("Stream: cancel request and terminate.",
+                    currentSegmentRequest === null,
+                    bufferType);
           startDownloadingQueue$.next(); // interrupt the current request
           startDownloadingQueue$.complete(); // complete the downloading queue
           return observableOf(EVENTS.streamTerminating());
