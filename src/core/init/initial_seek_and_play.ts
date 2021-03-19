@@ -153,6 +153,10 @@ export default function seekAndLoadOnMediaEvents(
         mergeMap((evt) => {
           if (evt === "can-play") {
             if (!mustAutoPlay) {
+              if (mediaElement.autoplay) {
+                log.warn("Init: autoplay is enabled on HTML media element. " +
+                         "Media will play as soon as possible.");
+              }
               return observableOf("loaded" as const);
             }
             return autoPlay$(mediaElement);
