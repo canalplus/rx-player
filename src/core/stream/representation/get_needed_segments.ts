@@ -15,7 +15,6 @@
  */
 
 // eslint-disable-next-line max-len
-import shouldAppendBufferAfterPadding from "../../../compat/should_append_buffer_after_padding";
 import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
@@ -250,9 +249,7 @@ function shouldContentBeReplaced(
   }
 
   const { segment } = oldContent;
-  if (shouldAppendBufferAfterPadding &&
-      segment.time < (currentPlaybackTime + CONTENT_REPLACEMENT_PADDING))
-  {
+  if (segment.time < (currentPlaybackTime + CONTENT_REPLACEMENT_PADDING)) {
     return false;
   }
 
