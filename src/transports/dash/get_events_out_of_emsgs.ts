@@ -16,7 +16,7 @@
 
 import { IInbandEvent } from "../../core/stream";
 import { IEMSG } from "../../parsers/containers/isobmff";
-import { utf8ToStr } from "../../tools/string_utils";
+import { utf8ToStr } from "../../utils/string_parsing";
 
 /**
  * From an array of EMSGs with manifest validity scheme id,
