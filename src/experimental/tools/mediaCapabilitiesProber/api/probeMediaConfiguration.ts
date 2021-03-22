@@ -95,7 +95,7 @@ function probeMediaConfiguration(
           }
         }
       }).catch((error: Error) =>
-        log.debug(error.message === undefined ? error : error.message)));
+        log.debug(error?.message === undefined ? error : error.message)));
     }
   }
 
