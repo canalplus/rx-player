@@ -432,7 +432,7 @@ function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
   while (offset < buffer.length) {
     const emsg = getEMSG(buffer, offset);
     if (emsg === null) {
-      return emsgs;
+      break;
     }
     const length = emsg.length;
     offset += length;
