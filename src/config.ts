@@ -1032,6 +1032,21 @@ export default {
   EME_SESSION_CLOSING_MAX_DELAY: 1000,
 
   /**
+   * After loading a persistent MediaKeySession, the RxPlayer needs to ensure
+   * that its keys still allow to decrypt a content.
+   *
+   * However on some browsers, the `keyStatuses` property that we used to check
+   * the keys' satuses linked to that session can be empty for some time after
+   * the loading operation is done.
+   *
+   * This value allows to configure a delay in milliseconds that will be the
+   * maximum time we will wait after a persistent session is loaded.
+   * If after that time, the `keyStatuses` property is still empty, we will
+   * consider that session as not usable.
+   */
+  EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES: 100,
+
+  /**
    * The player relies on browser events and properties to update its status to
    * "ENDED".
    *

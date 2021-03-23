@@ -18,12 +18,21 @@ import {
   defer as observableDefer,
   Observable,
   of as observableOf,
+  race as observableRace,
+  timer as observableTimer,
 } from "rxjs";
-import { mergeMap } from "rxjs/operators";
+import {
+  mapTo,
+  mergeMap,
+  take,
+} from "rxjs/operators";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
 import tryCatch from "../../utils/rx-try_catch";
+import { onKeyStatusesChange$ } from "../event_listeners";
 import { ICustomMediaKeySession } from "./custom_media_keys";
+
+const EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
 
 /**
  * Load a persistent session, based on its `sessionId`, on the given
@@ -52,28 +61,13 @@ export default function loadSession(
       return observableOf(isLoaded);
     }
 
-    // A browser race condition exists for example in some old Chromium/Chrome
-    // versions where the `keyStatuses` property from a loaded MediaKeySession
-    // would not be populated directly as the load answer but asynchronously
-    // after.
-    //
-    // Even a delay of `0` millisecond is sufficient, letting us think that it
-    // just happens just after and what is required is just to wait the next
-    // event loop turn.
-    // We found out that creating a micro-task (for example by calling
-    // `Promise.resolve.then`) was not sufficient, that's why we're using the
-    // somewhat less elegant `setTimeout` solution instead.
-    // This is also the reason why I didn't use RxJS's `timer` function, as I'm
-    // unsure of possible optimizations (or future optimizations), when the
-    // delay to wait is set to `0`.
-    return new Observable((subscriber) => {
-      const timer = setTimeout(() => {
-        subscriber.next(isLoaded);
-        subscriber.complete();
-      }, 0);
-      return () => {
-        clearTimeout(timer);
-      };
-    });
+    // A browser race condition can exist, seen for example in some
+    // Chromium/Chrome versions where the `keyStatuses` property from a loaded
+    // MediaKeySession would not be populated directly as the load answer but
+    // asynchronously after.
+    return observableRace(
+      observableTimer(EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES),
+      onKeyStatusesChange$(session)
+    ).pipe(take(1), mapTo(isLoaded));
   }));
 }
