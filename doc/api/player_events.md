@@ -27,6 +27,7 @@
  - [Playback information](#events-playback-infos)
     - [periodChange](#events-periodChange)
     - [decipherabilityUpdate](#events-decipherabilityUpdate)
+    - [inbandEvents](#events-inbandEvents)
     - [streamEvent](events-streamEvent)
     - [streamEventSkip](events-streamEventSkip)
  - [Deprecated](#events-deprecated)
@@ -559,6 +560,27 @@ Each of those objects have the following properties:
 You can then know if any of those Representations are becoming decipherable or
 not through their `decipherable` property.
 
+
+<a name="events-inbandEvents"></a>
+### inbandEvents ###############################################################
+
+_payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Event triggered when the player encounters inband events in the stream. These
+events are included in the loaded and parsed chunks, and are often used to carry
+content metadata.
+
+Each event contains :
+  - type (_type_: ``String``) : defines the type of the message, specific to an
+  inband event from a streaming protocol.
+  - value (_type_: ``Object``) : the actual parsed content of the message.
 
 <a name="events-streamEvent"></a>
 ### streamEvent ################################################################
