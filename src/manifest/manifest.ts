@@ -85,6 +85,7 @@ interface IManifestParsingOptions {
   /* eslint-enable import/no-deprecated */
   /** External callback peforming an automatic filtering of wanted Representations. */
   representationFilter? : IRepresentationFilter;
+  manifestUpdateUrl? : string;
 }
 
 /** Representation affected by a `decipherabilityUpdate` event. */
@@ -177,6 +178,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * Listed from the most important to the least important.
    */
   public uris : string[];
+
+  /** Optional URL that points to a shorter version of the Manifest used
+   * for updates only. */
+  public updateUrl?: string;
 
   /**
    * Suggested delay from the "live edge" (i.e. the position corresponding to
@@ -300,7 +305,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     super();
     const { supplementaryTextTracks = [],
             supplementaryImageTracks = [],
-            representationFilter } = options;
+            representationFilter,
+            manifestUpdateUrl } = options;
     this.parsingErrors = [];
     this.id = generateNewManifestId();
     this.expired = parsedManifest.expired ?? null;
@@ -328,6 +334,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.uris = parsedManifest.uris === undefined ? [] :
                                                     parsedManifest.uris;
 
+    this.updateUrl = manifestUpdateUrl;
     this.lifetime = parsedManifest.lifetime;
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
@@ -690,6 +697,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       replacePeriods(this.periods, newManifest.periods);
     } else {
       this._timeBounds.maximumTimeData = newManifest._timeBounds.maximumTimeData;
+      this.updateUrl = newManifest.uris[0];
       updatePeriods(this.periods, newManifest.periods);
 
       // Partial updates do not remove old Periods.

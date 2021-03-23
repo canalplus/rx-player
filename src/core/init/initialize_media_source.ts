@@ -116,8 +116,6 @@ export interface IInitializeArguments {
                          IManifestFetcherParsedResult>;
   /** Interface allowing to load and refresh the Manifest */
   manifestFetcher : ManifestFetcher;
-  /** Optional shorter version of the Manifest used for updates only. */
-  manifestUpdateUrl? : string;
 /** The HTMLMediaElement on which we will play. */
   mediaElement : HTMLMediaElement;
   /** Limit the frequency of Manifest updates. */
@@ -172,7 +170,6 @@ export default function InitializeOnMediaSource(
     lowLatencyMode,
     manifest$,
     manifestFetcher,
-    manifestUpdateUrl,
     mediaElement,
     minimumManifestUpdateInterval,
     segmentFetcherCreator,
@@ -287,7 +284,6 @@ export default function InitializeOnMediaSource(
       const scheduleRefresh$ = new Subject<IManifestRefreshSchedulerEvent>();
 
       const manifestUpdate$ = manifestUpdateScheduler({ initialManifest: manifestEvt,
-                                                        manifestUpdateUrl,
                                                         manifestFetcher,
                                                         minimumManifestUpdateInterval,
                                                         scheduleRefresh$ });
