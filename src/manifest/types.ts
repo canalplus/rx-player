@@ -16,9 +16,15 @@
 
 /** Enumerate the different ways a Manifest update can be done. */
 export enum MANIFEST_UPDATE_TYPE {
-  /** The full version of the Manifest has been re-downloaded. */
+  /** The full version of the Manifest has been re-downloaded.
+   * The manifest has been loaded through the same URL used for loading
+   * it originally.
+   */
   Full,
-  /** Only a shortened version of the Manifest has been downloaded. */
+  /** Only a shortened version of the Manifest has been downloaded.
+   * The manifest has been loaded through the manifest update URL,
+   * which is used only for fetching this version of the manifest.
+   */
   Partial,
 }
 

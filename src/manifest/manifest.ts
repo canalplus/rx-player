@@ -85,6 +85,11 @@ interface IManifestParsingOptions {
   /* eslint-enable import/no-deprecated */
   /** External callback peforming an automatic filtering of wanted Representations. */
   representationFilter? : IRepresentationFilter;
+  /** Optional URL that points to a shorter version of the Manifest used
+   * for updates only. When using this URL for refresh, the manifest will be
+   * updated with the partial update type. If this URL is undefined, then the
+   * manifest will be updated fully when it needs to be refreshed, and it will
+   * fetched through the original URL. */
   manifestUpdateUrl? : string;
 }
 
