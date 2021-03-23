@@ -21,6 +21,7 @@ import {
   withLatestFrom,
 } from "rxjs/operators";
 import { isPlaybackStuck } from "../../compat";
+import isSeekingApproximate from "../../compat/is_seeking_approximate";
 import config from "../../config";
 import { MediaError } from "../../errors";
 import log from "../../log";
@@ -178,7 +179,8 @@ export default function StallAvoider(
         if (ignoredStallTimeStamp === null) {
           ignoredStallTimeStamp = now;
         }
-        if (tick.position < lastSeekingPosition &&
+        if (isSeekingApproximate &&
+            tick.position < lastSeekingPosition &&
             now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY)
         {
           return { type: "stalled" as const,
