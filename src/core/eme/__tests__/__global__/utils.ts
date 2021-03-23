@@ -200,7 +200,7 @@ export class MediaKeySessionImpl extends EventEmitter<any> {
       if (this.onkeystatuseschange !== null && this.onkeystatuseschange !== undefined) {
         this.onkeystatuseschange(event);
       }
-    }, 0);
+    }, 50);
     return Promise.resolve();
   }
 }
