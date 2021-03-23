@@ -424,7 +424,7 @@ function updateBoxLength(buf : Uint8Array) : Uint8Array {
 /**
  * Parse EMSG boxes from ISOBMFF data.
  * @param {Uint8Array} buf
- * @returns {Array.<Object>}
+ * @returns {Array.<Object> | undefined}
  */
 function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
   const emsgs: IEMSG[] = [];
