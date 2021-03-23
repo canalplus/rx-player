@@ -78,7 +78,7 @@ function tryToPlay$(
  * @param {boolean} isDirectfile
  * @returns {Observable}
  */
-export default function tryBeginningPlayback(
+export default function emitLoadedEventWhenReady(
   initClock$ : Observable<IInitClockTick>,
   mediaElement : HTMLMediaElement,
   autoPlay : boolean,

@@ -29,9 +29,9 @@ import {
 import log from "../../log";
 import Manifest from "../../manifest";
 import { IStreamOrchestratorClockTick } from "../stream";
-import tryBeginningPlayback, {
+import emitLoadedEventWhenReady, {
   ILoadEvents,
-} from "./try_beginning_playback";
+} from "./emit_loaded_event";
 import { IInitClockTick } from "./types";
 
 /** Arguments for the `initialSeekAndPlay` function. */
@@ -101,7 +101,7 @@ export default function initialSeekAndPlay(
    * needed and which emits through `loaded$` the current loading status.
    * Completes when done.
    */
-  const load$ = tryBeginningPlayback(initClock$, mediaElement, autoPlay, false).pipe(
+  const load$ = emitLoadedEventWhenReady(initClock$, mediaElement, autoPlay, false).pipe(
     tap((evt) => {
       isLoaded = true;
       loaded$.next(evt);

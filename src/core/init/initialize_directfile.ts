@@ -39,10 +39,10 @@ import log from "../../log";
 import deferSubscriptions from "../../utils/defer_subscriptions";
 import { IKeySystemOption } from "../eme";
 import createEMEManager from "./create_eme_manager";
+import emitLoadedEventWhenReady from "./emit_loaded_event";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
 import throwOnMediaError from "./throw_on_media_error";
-import tryBeginningPlayback from "./try_beginning_playback";
 import {
   IDirectfileEvent,
   IInitClockTick,
@@ -165,7 +165,7 @@ export default function initializeDirectfileContent({
       return evt.type === "eme-disabled" || evt.type === "attached-media-keys";
     }),
     take(1),
-    mergeMapTo(tryBeginningPlayback(clock$, mediaElement, autoPlay, true)),
+    mergeMapTo(emitLoadedEventWhenReady(clock$, mediaElement, autoPlay, true)),
     mergeMap((evt) => {
       if (evt === "autoplay-blocked") {
         const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
