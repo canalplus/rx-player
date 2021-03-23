@@ -22,12 +22,8 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
+import { ignoreElements } from "rxjs/operators";
 import {
-  catchError,
-  ignoreElements,
-} from "rxjs/operators";
-import {
-  closeSession,
   ICustomMediaKeys,
   ICustomMediaKeySession,
 } from "../../../compat";
@@ -35,6 +31,7 @@ import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import { IInitializationDataInfo } from "../types";
+import safelyCloseMediaKeySession from "./close_session";
 import InitDataStore from "./init_data_store";
 
 /** Stored MediaKeySession data assiociated to an initialization data. */
@@ -219,22 +216,4 @@ export default class LoadedSessionsStore {
     });
   }
 
-}
-
-/**
- * Close a MediaKeySession and do not throw if this action throws an error.
- * @param {MediaKeySession} mediaKeySession
- * @returns {Observable}
- */
-function safelyCloseMediaKeySession(
-  mediaKeySession : MediaKeySession | ICustomMediaKeySession
-) : Observable<unknown> {
-  log.debug("EME-LSS: Close MediaKeySession", mediaKeySession);
-  return closeSession(mediaKeySession)
-    .pipe(catchError((err : unknown) => {
-      log.error("EME-LSS: Could not close MediaKeySession: " +
-                (err instanceof Error ? err.toString() :
-                                        "Unknown error"));
-      return observableOf(null);
-    }));
 }

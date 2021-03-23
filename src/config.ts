@@ -1002,6 +1002,36 @@ export default {
   EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION: 1000,
 
   /**
+   * Attempts to closing a MediaKeySession can fail, most likely because the
+   * MediaKeySession was not initialized yet.
+   * When we consider that we're in one of these case, we will retry to close it.
+   *
+   * To avoid going into an infinite loop of retry, this number indicates a
+   * maximum number of attemps we're going to make (`0` meaning no retry at all,
+   * `1` only one retry and so on).
+   */
+  EME_SESSION_CLOSING_MAX_RETRY: 5,
+
+  /**
+   * When closing a MediaKeySession failed due to the reasons explained for the
+   * `EME_SESSION_CLOSING_MAX_RETRY` config property, we may (among other
+   * triggers) choose to wait a delay raising exponentially at each retry before
+   * that new attempt.
+   * This value indicates the initial value for this delay, in milliseconds.
+   */
+  EME_SESSION_CLOSING_INITIAL_DELAY: 100,
+
+  /**
+   * When closing a MediaKeySession failed due to the reasons explained for the
+   * `EME_SESSION_CLOSING_MAX_RETRY` config property, we may (among other
+   * triggers) choose to wait a delay raising exponentially at each retry before
+   * that new attempt.
+   * This value indicates the maximum possible value for this delay, in
+   * milliseconds.
+   */
+  EME_SESSION_CLOSING_MAX_DELAY: 1000,
+
+  /**
    * The player relies on browser events and properties to update its status to
    * "ENDED".
    *
