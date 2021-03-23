@@ -38,8 +38,8 @@ import SegmentBuffersStore from "../segment_buffers";
 import StreamOrchestrator, {
   IStreamOrchestratorOptions,
 } from "../stream";
-import { setDurationToMediaSource } from "./create_media_source";
 import createStreamClock from "./create_stream_clock";
+import DurationUpdater from "./duration_updater";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
@@ -101,8 +101,8 @@ export default function createMediaSourceLoader(
     initialTime : number,
     autoPlay : boolean
   ) {
-    // TODO Update the duration if it evolves?
-    setDurationToMediaSource(mediaSource, manifest);
+    /** Maintains the MediaSource's duration up-to-date with the Manifest */
+    const durationUpdater$ = DurationUpdater(manifest, mediaSource);
 
     const initialPeriod = manifest.getPeriodForTime(initialTime) ??
                           manifest.getNextPeriod(initialTime);
@@ -208,7 +208,8 @@ export default function createMediaSourceLoader(
         return observableOf(EVENTS.loaded(segmentBuffersStore));
       }));
 
-    return observableMerge(loadedEvent$,
+    return observableMerge(durationUpdater$,
+                           loadedEvent$,
                            playbackRate$,
                            stallAvoider$,
                            streams$,
