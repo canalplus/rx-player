@@ -1053,12 +1053,14 @@ export default {
   SOURCE_BUFFER_FLUSHING_INTERVAL: 500,
 
   /**
-   * Padding under which we should not buffer from the current time, on
-   * Safari. To avoid some buffer appending issues on it, we decide not
-   * to load a segment if it may be pushed during playback time.
+   * Any already-pushed segment starting before or at the current position +
+   * CONTENT_REPLACEMENT_PADDING won't be replaced by new segments.
+   *
+   * This allows to avoid overwriting segments that are currently being decoded
+   * as we encountered many decoding issues when doing so.
    * @type {Number} - in seconds
    */
-  CONTENT_REPLACEMENT_PADDING: 2,
+  CONTENT_REPLACEMENT_PADDING: 1.2,
 
   /**
    * For video and audio segments, determines two thresholds below which :
