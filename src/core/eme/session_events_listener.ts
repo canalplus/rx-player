@@ -51,6 +51,7 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import retryObsWithBackoff, {
   IBackoffOptions,
 } from "../../utils/rx-retry_with_backoff";
+import tryCatch from "../../utils/rx-try_catch";
 import checkKeyStatuses, {
   IKeyStatusesCheckingOptions,
 } from "./check_key_statuses";
@@ -302,12 +303,13 @@ function handleKeyStatusesChangeEvent(
 ) : Observable<IKeyStatusChangeHandledEvent | IBlacklistKeysEvent | IEMEWarningEvent> {
   log.info("EME: keystatuseschange event received", session, keyStatusesEvent);
   const callback$ = observableDefer(() => {
-    if (typeof keySystemOptions.onKeyStatusesChange !== "function") {
-      return EMPTY;
-    }
-    return castToObservable(
-      keySystemOptions.onKeyStatusesChange(keyStatusesEvent, session)
-    ) as Observable< BufferSource | null >;
+    return tryCatch(() => {
+      if (typeof keySystemOptions.onKeyStatusesChange !== "function") {
+        return EMPTY;
+      }
+      return castToObservable(keySystemOptions.onKeyStatusesChange(keyStatusesEvent,
+                                                                   session));
+    }, undefined) as Observable< BufferSource | null >;
   }).pipe(
     map(licenseObject => ({ type: "key-status-change-handled" as const,
                             value : { session, license: licenseObject } })),
