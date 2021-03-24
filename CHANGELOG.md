@@ -1,5 +1,45 @@
 # Changelog
 
+## v3.24.0 (2021/04/01)
+
+### Features
+
+  - Add `inbandEvent` event for when an event is encountered in a media segment [#892]
+  - DRM: Add `singleLicensePer` `keySystems` option to be able to signal in advance that the current content has a single license, even if it has multiple encryption keys [#863, #904]
+  - DRM: Add `keySystems[].licenseStorage.disableRetroCompatibility` boolean to unlock optimizations when compatibility with EME sessions persisted in older RxPlayer versions is not important [#919]
+
+### Bug fixes
+
+  - DASH: Fix rounding error that could cause infinite buffering issues when going from a DASH Period to the next [#897, #899]
+  - DRM: Always pass on server certificate before any challenge is generated. Contents with multiple licenses previously could lead to the latter being done before the former. [#895]
+  - DRM: Fix possible leaks of MediaKeySessions if closed at the wrong time [#920]
+  - Fix issue making sudden and acute fall in bandwidth not being considered soon enough [#906]
+  - On some devices when `maxBufferAhead` is set, avoid removing the initially loaded data if done before the initial seek could be performed [#907]
+  - Avoid cases of infinite rebuffering on Tizen 4 by avoiding pushing segments "on top of others" too close to the current position [#925]
+  - Avoid seeking issues on Tizen by not seeking over discontinuities that will be already handled by the browser [#922]
+  - Fix initial seek on Tizen (Samsung TVs) on live contents by setting a much lower duration (to work-around a Tizen overflow) [#914]
+  - DASH: Consider multiple defined `<Accessibility>` tags for a single AdaptationSet [#903]
+  - Fix error that could be thrown on Safari when calling the `getStatusForHDCP` method from the experimental `MediaCapabilitiesProber` tool [#927]
+
+### Other improvements
+
+  - Avoid to push on top of the current position if there's already a segment there as it can provoke minor decoding issues on some devices [#925]
+  - Update video element's duration if the content duration changes [#917]
+  - DASH: Improve loading time with encrypted contents by only using the encrypted initialization data found in the Manifest when found in it [#911, #919]
+  - Record redirections made on a `manifestUpdateUrl` to request directly the right URL on next update. [#929]
+  - Improve loading time when a `serverCertificate` is given by calling the `setServerCertificate` API earlier [#895]
+  - Improve loading time when switching contents by fetching the Manifest at the same time the previous content is cleaned-up [#894]
+  - Improve loading time on some CPU-constrained devices by not running unnecessary playback checks on the "progress" HTMLMediaElement event anymore [#893]
+  - DASH: Consider DASH audio AdaptationSet with a "urn:mpeg:dash:role:2011" schemeIdUri and a "description" role as `audioDescription` tracks [#903]
+  - Warn through the logger when the autoplay attribute is enabled on the media element but not on RxPlayer [#924]
+  - Avoid switching to a SEEKING state if the seek operation was performed inside the RxPlayer's code [#872, #887]
+  - DRM: Wait up to 100 milliseconds after a persistent MediaKeySession has been loaded to wait for possibly late `keyStatuses` updates [#928]
+  - DRM: Only store persistent MediaKeySession once at least one key is known [#926]
+  - DRM: Reconsider Representations that have been fallbacked from if they become decipherable [#905]
+  - Doc: Move architecture documentation closer to the code it documents [#764, #900]
+  - Doc: add "Quick links" to the top of the API documentation [#909]
+
+
 ## v3.23.1 (2021/02/01)
 
 ### Bug fixes
