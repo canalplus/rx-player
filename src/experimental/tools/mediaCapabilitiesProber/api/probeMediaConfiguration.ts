@@ -94,8 +94,11 @@ function probeMediaConfiguration(
               break;
           }
         }
-      }).catch((error: Error) =>
-        log.debug(error.message === undefined ? error : error.message)));
+      }).catch((error: unknown) => {
+        if (error instanceof Error) {
+          log.debug(error.message);
+        }
+      }));
     }
   }
 
