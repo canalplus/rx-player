@@ -245,6 +245,13 @@ export default function EMEManager(
           const { mediaKeySession,
                   sessionType } = sessionEvt.value;
 
+          /**
+           * We only store persistent sessions once its keys are known.
+           * This boolean allows to know if this session has already been
+           * persisted or not.
+           */
+          let isSessionPersisted = false;
+
           // `generateKeyRequest` awaits a single Uint8Array containing all
           // initialization data.
           const concatInitData = concat(...initializationData.values.map(i => i.data));
@@ -254,17 +261,6 @@ export default function EMEManager(
               generateKeyRequest(mediaKeySession,
                                  initializationData.type,
                                  concatInitData).pipe(
-                tap(() => {
-                  const { persistentSessionsStore } = stores;
-                  if (sessionType === "persistent-license" &&
-                      persistentSessionsStore !== null)
-                  {
-                    cleanOldStoredPersistentInfo(
-                      persistentSessionsStore,
-                      EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
-                    persistentSessionsStore.add(initializationData, mediaKeySession);
-                  }
-                }),
                 catchError((error: unknown) => {
                   throw new EncryptedMediaError(
                     "KEY_GENERATE_REQUEST_ERROR",
@@ -280,9 +276,25 @@ export default function EMEManager(
                                  generateRequest$)
             .pipe(
               tap((evt) => {
-                if (evt.type === "keys-update") {
-                  lastKeyUpdate$.next(evt.value);
+                if (evt.type !== "keys-update") {
+                  return;
                 }
+                lastKeyUpdate$.next(evt.value);
+
+                if ((evt.value.whitelistedKeyIds.length === 0 &&
+                     evt.value.blacklistedKeyIDs.length === 0) ||
+                    sessionType === "temporary" ||
+                    stores.persistentSessionsStore === null ||
+                    isSessionPersisted)
+                {
+                  return;
+                }
+                const { persistentSessionsStore } = stores;
+                cleanOldStoredPersistentInfo(
+                  persistentSessionsStore,
+                  EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
+                persistentSessionsStore.add(initializationData, mediaKeySession);
+                isSessionPersisted = true;
               }),
               catchError(err => {
                 if (!(err instanceof BlacklistedSessionError)) {
