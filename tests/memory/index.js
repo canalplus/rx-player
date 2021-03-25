@@ -32,7 +32,7 @@ describe("Memory tests", () => {
                             preferredTextTracks: [{ language: "fra",
                                                     closedCaption: true }] });
     window.gc();
-    await sleep(100);
+    await sleep(1000);
     const initialMemory = window.performance.memory;
 
     player.loadVideo({ url: manifestInfos.url,
@@ -50,7 +50,7 @@ describe("Memory tests", () => {
     player.stop();
     await sleep(100);
     window.gc();
-    await sleep(100);
+    await sleep(1000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize -
                            initialMemory.usedJSHeapSize;
@@ -80,7 +80,7 @@ describe("Memory tests", () => {
                             preferredtexttracks: [{ language: "fra",
                                                     closedcaption: true }] });
     window.gc();
-    await sleep(100);
+    await sleep(1000);
     const initialMemory = window.performance.memory;
 
     for (let i = 0; i < 1000; i++) {
@@ -99,7 +99,7 @@ describe("Memory tests", () => {
 
     await sleep(100);
     window.gc();
-    await sleep(100);
+    await sleep(1000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize -
                            initialMemory.usedJSHeapSize;
@@ -111,6 +111,6 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(2e6);
+    expect(heapDifference).to.be.below(4e6);
   });
 });
