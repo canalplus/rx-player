@@ -110,7 +110,7 @@ export default function parseRepresentationIndex(
       return false;
     }
     return inbandEventStreams
-      .some(({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeId);
+      .some(({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeIdUri);
   };
   const context = { aggressiveMode,
                     availabilityTimeOffset,

@@ -169,7 +169,7 @@ export interface IProtectedSegmentEvent {
   value : ISegmentProtection;
 }
 
-export interface IInbandEvent { type: "dash-emsg";
+export interface IInbandEvent { type: "emsg";
                                 value: IEMSG; }
 
 export interface IInbandEventsEvent { type : "inband-events";

@@ -49,7 +49,7 @@ export interface IISOBMFFPSSHInfo {
   privateData : Uint8Array;
 }
 
-export interface IEMSG { schemeId: string;
+export interface IEMSG { schemeIdUri: string;
                          value: string;
                          timescale: number;
                          presentationTimeDelta: number;
@@ -439,9 +439,9 @@ function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
 
     let position = 4; // skip version + flags
 
-    const { end: schemeIdEnd, string: schemeId } =
+    const { end: schemeIdEnd, string: schemeIdUri } =
       readNullTerminatedString(emsg, position);
-    position = schemeIdEnd; // skip schemeId
+    position = schemeIdEnd; // skip schemeIdUri
 
     const { end: valueEnd, string: value } = readNullTerminatedString(emsg, position);
     position = valueEnd; // skip value
@@ -460,7 +460,7 @@ function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
 
     const messageData = emsg.subarray(position, length);
 
-    const emsgData = { schemeId,
+    const emsgData = { schemeIdUri,
                        value,
                        timescale,
                        presentationTimeDelta,

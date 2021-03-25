@@ -78,7 +78,7 @@ export default function getEventsOutOfEMSGs(
           EMSGs } = parsedEMSGs
     .reduce((acc, val: IEMSG) => {
       // Scheme that signals manifest update
-      if (val.schemeId === "urn:mpeg:dash:event:2012" &&
+      if (val.schemeIdUri === "urn:mpeg:dash:event:2012" &&
           // TODO support value 2 and 3
           val.value === "1") {
         if (acc.manifestRefreshEventsFromEMSGs === undefined) {
@@ -94,7 +94,7 @@ export default function getEventsOutOfEMSGs(
       return acc;
     }, { manifestRefreshEventsFromEMSGs: undefined as IEMSG[]|undefined,
          EMSGs: undefined as IEMSG[]|undefined });
-  const inbandEvents = EMSGs?.map((evt) => ({ type: "dash-emsg" as const,
+  const inbandEvents = EMSGs?.map((evt) => ({ type: "emsg" as const,
                                               value: evt }));
   const needsManifestRefresh =
     (manifestPublishTime === undefined ||
