@@ -40,7 +40,7 @@
     "demo": "Build the demo in demo/bundle.js",
     "demo:min": "Build the demo and minify it in demo/bundle.js",
     "demo:watch": "Build the demo in demo/bundle.js each times the files update.",
-    "doc": "Generate the HTML documentation in doc/pages",
+    "doc": "Generate the HTML documentation in doc/generated/pages",
     "info": "Display the description of all npm scripts for this project",
     "lint": "Lint rx-player source files",
     "lint:demo": "Lint demo source files",

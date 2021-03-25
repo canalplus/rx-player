@@ -1,5 +1,12 @@
 # RxPlayer API ################################################################
 
+## Quick links ################################################################
+
+- [Player Events](./player_events.md)
+- [Player errors and warning](./errors.md)
+- [Player Constructor options](./player_options.md)
+- [loadVideo method](./loadVideo_options.md)
+
 
 ## Table of Contents ###########################################################
 
