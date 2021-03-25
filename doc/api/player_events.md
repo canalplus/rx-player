@@ -578,9 +578,23 @@ events are included in the loaded and parsed chunks, and are often used to carry
 content metadata.
 
 Each event contains :
-  - type (_type_: ``String``) : defines the type of the message, specific to an
+  - type (_type_: ``String``) : defines the type of the event, specific to an
   inband event from a streaming protocol.
-  - value (_type_: ``Object``) : the actual parsed content of the message.
+  - value (_type_: ``Object``) : the actual parsed content of the event.
+
+The supported inband event types are :
+- "emsg" : The emsg (Event message box) provides inband signaling for generic
+  or MPEG-DASH specific events.
+One ISOBMFF media segment may contain one or several boxes. The parsed event contains :
+  - schemeIdUri (``String``)
+  - value (``String``)
+  - timescale (``Number``)
+  - presentationTimeDelta (``Number``)
+  - eventDuration (``Number``)
+  - id (``Number``)
+  - messageData (``Uint8Array``)
+
+These attributes are documented into the ISOBMFF specification.
 
 <a name="events-streamEvent"></a>
 ### streamEvent ################################################################
