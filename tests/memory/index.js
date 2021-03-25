@@ -32,6 +32,7 @@ describe("Memory tests", () => {
                             preferredTextTracks: [{ language: "fra",
                                                     closedCaption: true }] });
     window.gc();
+    await sleep(100);
     const initialMemory = window.performance.memory;
 
     player.loadVideo({ url: manifestInfos.url,
@@ -47,8 +48,9 @@ describe("Memory tests", () => {
     await waitForPlayerState(player, "ENDED");
 
     player.stop();
-    await sleep(1000);
+    await sleep(100);
     window.gc();
+    await sleep(100);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize -
                            initialMemory.usedJSHeapSize;
@@ -60,7 +62,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(1e7);
+    expect(heapDifference).to.be.below(1e6);
   });
 
   it("should not have a sensible memory leak after 1000 LOADED states and adaptive streaming", async function() {
@@ -78,6 +80,7 @@ describe("Memory tests", () => {
                             preferredtexttracks: [{ language: "fra",
                                                     closedcaption: true }] });
     window.gc();
+    await sleep(100);
     const initialMemory = window.performance.memory;
 
     for (let i = 0; i < 1000; i++) {
@@ -94,8 +97,9 @@ describe("Memory tests", () => {
     }
     player.stop();
 
-    await sleep(1000);
+    await sleep(100);
     window.gc();
+    await sleep(100);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize -
                            initialMemory.usedJSHeapSize;
@@ -107,6 +111,6 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(1e7);
+    expect(heapDifference).to.be.below(2e6);
   });
 });
