@@ -111,6 +111,6 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(4e6);
+    expect(heapDifference).to.be.below(5e6);
   });
 });
