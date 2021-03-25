@@ -548,6 +548,7 @@ export interface ITransportOptions {
   checkMediaSegmentIntegrity? : boolean;
   lowLatencyMode : boolean;
   manifestLoader?: CustomManifestLoader;
+  manifestUpdateUrl? : string;
   referenceDateTime? : number;
   representationFilter? : IRepresentationFilter;
   segmentLoader? : CustomSegmentLoader;

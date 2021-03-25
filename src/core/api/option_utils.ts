@@ -275,7 +275,6 @@ interface IParsedLoadVideoOptionsBase {
   initialManifest : ILoadedManifest | undefined;
   keySystems : IKeySystemOption[];
   lowLatencyMode : boolean;
-  manifestUpdateUrl : string | undefined;
   minimumManifestUpdateInterval : number;
   networkConfig: INetworkConfigOption;
   transportOptions : IParsedTransportOptions;
@@ -627,7 +626,6 @@ function parseLoadVideoOptions(
     {};
 
   const initialManifest = options.transportOptions?.initialManifest;
-  const manifestUpdateUrl = options.transportOptions?.manifestUpdateUrl;
   const minimumManifestUpdateInterval =
     options.transportOptions?.minimumManifestUpdateInterval ?? 0;
 
@@ -667,7 +665,6 @@ function parseLoadVideoOptions(
 
   // remove already parsed data to simplify the `transportOptions` object
   delete transportOptions.initialManifest;
-  delete transportOptions.manifestUpdateUrl;
   delete transportOptions.minimumManifestUpdateInterval;
 
   if (options.supplementaryTextTracks !== undefined) {
@@ -788,7 +785,6 @@ function parseLoadVideoOptions(
            lowLatencyMode,
            manualBitrateSwitchingMode,
            audioTrackSwitchingMode,
-           manifestUpdateUrl,
            minimumManifestUpdateInterval,
            networkConfig,
            onCodecSwitch,

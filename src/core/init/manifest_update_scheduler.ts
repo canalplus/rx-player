@@ -54,8 +54,6 @@ export interface IManifestUpdateSchedulerArguments {
                       sendingTime? : number;
                       receivedTime? : number;
                       parsingTime? : number; };
-  /** URL at which a shorter version of the Manifest can be found. */
-  manifestUpdateUrl : string | undefined;
   /** Minimum interval to keep between Manifest updates */
   minimumManifestUpdateInterval : number;
   /** Allows the rest of the code to ask for a Manifest refresh */
@@ -99,7 +97,6 @@ export type IManifestRefreshScheduler = Observable<IManifestRefreshSchedulerEven
 export default function manifestUpdateScheduler({
   initialManifest,
   manifestFetcher,
-  manifestUpdateUrl,
   minimumManifestUpdateInterval,
   scheduleRefresh$,
 } : IManifestUpdateSchedulerArguments) : Observable<IWarningEvent> {
@@ -222,6 +219,7 @@ export default function manifestUpdateScheduler({
       unsafeMode } : { completeRefresh : boolean;
                        unsafeMode : boolean; }
   ) : Observable<IManifestFetcherParsedResult | IWarningEvent> {
+    const manifestUpdateUrl = manifest.updateUrl;
     const fullRefresh = completeRefresh || manifestUpdateUrl === undefined;
     const refreshURL = fullRefresh ? manifest.getUrl() :
                                      manifestUpdateUrl;
