@@ -24,6 +24,7 @@ import {
   IParsedAdaptations,
   IParsedAdaptationType,
 } from "../types";
+import attachTrickModeTrack from "./attach_trickmode_track";
 // eslint-disable-next-line max-len
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import inferAdaptationType from "./infer_adaptation_type";
@@ -152,6 +153,7 @@ function hasSignLanguageInterpretation(
  * Contruct Adaptation ID from the information we have.
  * @param {Object} adaptation
  * @param {Array.<Object>} representations
+ * @param {Array.<Object>} representations
  * @param {Object} infos
  * @returns {string}
  */
@@ -160,24 +162,34 @@ function getAdaptationID(
   infos : { isClosedCaption : boolean | undefined;
             isAudioDescription : boolean | undefined;
             isSignInterpreted : boolean | undefined;
+            isTrickModeTrack: boolean;
             type : string; }
 ) : string {
   if (isNonEmptyString(adaptation.attributes.id)) {
     return adaptation.attributes.id;
   }
 
-  let idString = infos.type;
+  const { isClosedCaption,
+          isAudioDescription,
+          isSignInterpreted,
+          isTrickModeTrack,
+          type } = infos;
+
+  let idString = type;
   if (isNonEmptyString(adaptation.attributes.language)) {
     idString += `-${adaptation.attributes.language}`;
   }
-  if (infos.isClosedCaption === true) {
+  if (isClosedCaption === true) {
     idString += "-cc";
   }
-  if (infos.isAudioDescription === true) {
+  if (isAudioDescription === true) {
     idString += "-ad";
   }
-  if (infos.isSignInterpreted === true) {
+  if (isSignInterpreted === true) {
     idString += "-si";
+  }
+  if (isTrickModeTrack) {
+    idString += "-trickmode";
   }
   if (isNonEmptyString(adaptation.attributes.contentType)) {
     idString += `-${adaptation.attributes.contentType}`;
@@ -234,6 +246,8 @@ export default function parseAdaptationSets(
   periodInfos : IAdaptationSetsContextInfos
 ): IParsedAdaptations {
   const parsedAdaptations : IParsedAdaptations = {};
+  const trickModeAdaptations: Array<{ adaptation: IParsedAdaptation;
+                                      trickModeAttachedAdaptationIds: string[]; }> = [];
   const adaptationSwitchingInfos : IAdaptationSwitchingInfos = {};
   const parsedAdaptationsIDs : string[] = [];
 
@@ -259,15 +273,6 @@ export default function parseAdaptationSets(
     const adaptationChildren = adaptation.children;
     const { essentialProperties,
             roles } = adaptationChildren;
-
-    const isExclusivelyTrickModeTrack = (Array.isArray(essentialProperties) &&
-      essentialProperties.some((ep) =>
-        ep.schemeIdUri === "http://dashif.org/guidelines/trickmode"));
-
-    if (isExclusivelyTrickModeTrack) {
-      // We do not for the moment parse trickmode tracks
-      continue;
-    }
 
     const isMainAdaptation = Array.isArray(roles) &&
       roles.some((role) => role.value === "main") &&
@@ -320,11 +325,25 @@ export default function parseAdaptationSets(
       unsafelyBaseOnPreviousAdaptation: null,
     };
 
+    const trickModeProperty = Array.isArray(essentialProperties) ?
+    arrayFind(
+      essentialProperties,
+      (scheme) => {
+        return scheme.schemeIdUri === "http://dashif.org/guidelines/trickmode";
+      }
+    ) : undefined;
+
+    const trickModeAttachedAdaptationIds: string[]|undefined =
+      trickModeProperty?.value?.split(" ");
+
+    const isTrickModeTrack = trickModeAttachedAdaptationIds !== undefined;
+
     if (type === "video" &&
         isMainAdaptation &&
         parsedAdaptations.video !== undefined &&
         parsedAdaptations.video.length > 0 &&
-        lastMainAdaptationIndex.video !== undefined)
+        lastMainAdaptationIndex.video !== undefined &&
+        !isTrickModeTrack)
     {
       // Add to the already existing main video adaptation
       // TODO remove that ugly custom logic?
@@ -371,6 +390,7 @@ export default function parseAdaptationSets(
                                          { isAudioDescription,
                                            isClosedCaption,
                                            isSignInterpreted,
+                                           isTrickModeTrack,
                                            type });
 
       // Avoid duplicate IDs
@@ -383,12 +403,14 @@ export default function parseAdaptationSets(
 
       adaptationInfos.unsafelyBaseOnPreviousAdaptation = periodInfos
         .unsafelyBaseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
+
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
                                                    adaptationInfos);
-      const parsedAdaptationSet : IParsedAdaptation = { id: adaptationID,
-                                                        representations,
-                                                        type };
+      const parsedAdaptationSet : IParsedAdaptation =
+        { id: adaptationID,
+          representations,
+          type };
       if (adaptation.attributes.language != null) {
         parsedAdaptationSet.language = adaptation.attributes.language;
       }
@@ -406,7 +428,10 @@ export default function parseAdaptationSets(
       }
 
       const adaptationsOfTheSameType = parsedAdaptations[type];
-      if (adaptationsOfTheSameType === undefined) {
+      if (trickModeAttachedAdaptationIds !== undefined) {
+        trickModeAdaptations.push({ adaptation: parsedAdaptationSet,
+                                    trickModeAttachedAdaptationIds });
+      } else if (adaptationsOfTheSameType === undefined) {
         parsedAdaptations[type] = [parsedAdaptationSet];
         if (isMainAdaptation) {
           lastMainAdaptationIndex[type] = 0;
@@ -471,5 +496,6 @@ export default function parseAdaptationSets(
                                                adaptationSetSwitchingIDs };
     }
   }
+  attachTrickModeTrack(parsedAdaptations, trickModeAdaptations);
   return parsedAdaptations;
 }

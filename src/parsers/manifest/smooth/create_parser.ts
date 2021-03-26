@@ -15,6 +15,7 @@
  */
 
 import log from "../../../log";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
 import assert from "../../../utils/assert";
 import {
@@ -70,8 +71,6 @@ type IAdaptationType = "audio" |
                        "video" |
                        "text" |
                        "image";
-
-const KNOWN_ADAPTATION_TYPES : IAdaptationType[] = ["audio", "video", "text", "image"];
 
 const DEFAULT_MIME_TYPES : Partial<Record<string, string>> = {
   audio: "audio/mp4",
@@ -292,7 +291,7 @@ function createSmoothStreamingParser(
     if (typeAttribute === null) {
       throw new Error("StreamIndex without type.");
     }
-    if (!arrayIncludes(KNOWN_ADAPTATION_TYPES, typeAttribute)) {
+    if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, typeAttribute)) {
       log.warn("Smooth Parser: Unrecognized adaptation type:", typeAttribute);
     }
     const adaptationType = typeAttribute as IAdaptationType;
