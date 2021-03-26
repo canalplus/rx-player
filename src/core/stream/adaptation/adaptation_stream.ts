@@ -124,6 +124,18 @@ export interface IAdaptationStreamArguments<T> {
  */
 export interface IAdaptationStreamOptions {
   /**
+   * Hex-encoded DRM "system ID" as found in:
+   * https://dashif.org/identifiers/content_protection/
+   *
+   * Allows to identify which DRM system is currently used, to allow potential
+   * optimizations.
+   *
+   * Set to `undefined` in two cases:
+   *   - no DRM system is used (e.g. the content is unencrypted).
+   *   - We don't know which DRM system is currently used.
+   */
+  drmSystemId : string | undefined;
+  /**
    * Strategy taken when the user switch manually the current Representation:
    *   - "seamless": the switch will happen smoothly, with the Representation
    *     with the new bitrate progressively being pushed alongside the old
@@ -349,8 +361,9 @@ export default function AdaptationStream<T>({
                                     segmentBuffer,
                                     segmentFetcher,
                                     terminate$: terminateCurrentStream$,
-                                    bufferGoal$,
-                                    fastSwitchThreshold$ })
+                                    options: { bufferGoal$,
+                                               drmSystemId: options.drmSystemId,
+                                               fastSwitchThreshold$ } })
         .pipe(catchError((err : unknown) => {
           const formattedError = formatError(err, {
             defaultCode: "NONE",
