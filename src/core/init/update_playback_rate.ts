@@ -27,7 +27,7 @@ import {
   tap,
 } from "rxjs/operators";
 import log from "../../log";
-import { IInitClockTick } from "./types";
+import { IStalledStatus } from "../api";
 
 export interface IPlaybackRateOptions { pauseWhenStalled? : boolean }
 
@@ -38,7 +38,7 @@ export interface IPlaybackRateOptions { pauseWhenStalled? : boolean }
  *
  * @param {HTMLMediaElement} mediaElement
  * @param {Observable} speed$ - emit speed set by the user
- * @param {Observable} clock$ - Current playback conditions
+ * @param {Observable} clock$ - Emit current stalled status.
  * @param {Object} options - Contains the following properties:
  *   - pauseWhenStalled {Boolean|undefined} - true if the player
  *     stalling should lead to a pause until it un-stalls. True by default.
@@ -47,7 +47,7 @@ export interface IPlaybackRateOptions { pauseWhenStalled? : boolean }
 export default function updatePlaybackRate(
   mediaElement : HTMLMediaElement,
   speed$ : Observable<number>,
-  clock$ : Observable<IInitClockTick>,
+  clock$ : Observable<{ stalled : IStalledStatus | null }>,
   { pauseWhenStalled = true } : IPlaybackRateOptions
 ) : Observable<number> {
   let forcePause$ : Observable<boolean>;
