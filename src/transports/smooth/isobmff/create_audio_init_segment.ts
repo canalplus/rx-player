@@ -28,10 +28,6 @@ import {
 import createInitSegment from "./create_init_segment";
 import getAacesHeader from "./get_aaces_header";
 
-type IPSSList = Array<{ systemId : string;
-                        privateData? : Uint8Array;
-                        keyIds? : Uint8Array; }>;
-
 /**
  * Return full audio initialization segment as Uint8Array.
  * @param {Number} timescale
@@ -52,8 +48,7 @@ export default function createAudioInitSegment(
   packetSize : number,
   sampleRate : number,
   codecPrivateData : string,
-  keyId? : Uint8Array,
-  pssList : IPSSList = []
+  keyId? : Uint8Array
 ) : Uint8Array {
   const _codecPrivateData = codecPrivateData.length === 0 ?
     getAacesHeader(2, sampleRate, channelsCount) :
@@ -61,7 +56,7 @@ export default function createAudioInitSegment(
 
   const esds = createESDSBox(1, _codecPrivateData);
   const stsd : Uint8Array = (() => {
-    if (pssList.length === 0 || keyId === undefined) {
+    if (keyId === undefined) {
       const mp4a = createMP4ABox(1,
                                  channelsCount,
                                  sampleSize,
@@ -85,5 +80,5 @@ export default function createAudioInitSegment(
     return createSTSDBox([enca]);
   })();
 
-  return createInitSegment(timescale, "audio", stsd, createSMHDBox(), 0, 0, pssList);
+  return createInitSegment(timescale, "audio", stsd, createSMHDBox(), 0, 0);
 }

@@ -25,7 +25,10 @@ import Manifest, {
   ISupplementaryTextTrack,
 } from "./manifest";
 import Period from "./period";
-import Representation from "./representation";
+import Representation, {
+  IContentProtections,
+  IContentProtectionInitData,
+} from "./representation";
 import {
   IBaseContentInfos,
   IMetaPlaylistPrivateInfos,
@@ -48,6 +51,8 @@ export {
   // types
   IAdaptationType,
   IBaseContentInfos,
+  IContentProtections,
+  IContentProtectionInitData,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
   IRepresentationFilter,

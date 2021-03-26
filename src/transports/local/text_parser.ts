@@ -55,7 +55,7 @@ function parseISOBMFFEmbeddedTextTrack(
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: null,
                                    initTimescale: mdhdTimescale,
-                                   segmentProtections: [] } });
+                                   protectionDataUpdate: false } });
   }
   const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
                                            isChunked,
@@ -89,7 +89,7 @@ function parsePlainTextTrack(
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: null,
                                    initTimescale: undefined,
-                                   segmentProtections: [] } });
+                                   protectionDataUpdate: false } });
   }
 
   const { data, isChunked } = response;
@@ -129,7 +129,7 @@ export default function textTrackParser(
     if (segment.isInit) {
       return observableOf({ type: "parsed-init-segment",
                             value: { initializationData: null,
-                                     segmentProtections: [],
+                                     protectionDataUpdate: false,
                                      initTimescale: undefined } });
     }
     const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);

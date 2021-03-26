@@ -25,7 +25,7 @@ import {
 /** Information related to a PSSH box. */
 export interface IISOBMFFPSSHInfo {
   /** Corresponding DRM's system ID, as an hexadecimal string. */
-  systemID : string;
+  systemId : string;
   /** Additional data contained in the PSSH Box. */
   data : Uint8Array;
 }
@@ -59,9 +59,9 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
       return psshBoxes;
     }
     const pssh = sliceUint8Array(moov, psshOffsets[0], psshOffsets[2]);
-    const systemID = getSystemID(pssh, psshOffsets[1] - psshOffsets[0]);
-    if (systemID !== null) {
-      psshBoxes.push({ systemID, data: pssh });
+    const systemId = getPsshSystemID(pssh, psshOffsets[1] - psshOffsets[0]);
+    if (systemId !== undefined) {
+      psshBoxes.push({ systemId, data: pssh });
     }
 
     // replace by `free` box.
@@ -75,25 +75,26 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
 }
 
 /**
- * Parse systemID from a "pssh" box into an hexadecimal string.
+ * Parse systemId from a "pssh" box into an hexadecimal string.
+ * `undefined` if we could not extract a systemId.
  * @param {Uint8Array} buff - The pssh box
  * @param {number} initialDataOffset - offset of the first byte after the size
  * and name in this pssh box.
- * @returns {string|null}
+ * @returns {string|undefined}
  */
-function getSystemID(
+export function getPsshSystemID(
   buff : Uint8Array,
   initialDataOffset : number
-) : string|null {
+) : string | undefined {
   if (buff[initialDataOffset] > 1) {
     log.warn("ISOBMFF: un-handled PSSH version");
-    return null;
+    return undefined;
   }
   const offset = initialDataOffset +
                  4; /* version + flags */
   if (offset + 16 > buff.length) {
-    return null;
+    return undefined;
   }
-  const systemIDBytes = sliceUint8Array(buff, offset + 16);
+  const systemIDBytes = sliceUint8Array(buff, offset, offset + 16);
   return bytesToHex(systemIDBytes);
 }

@@ -41,11 +41,11 @@ import {
   IAdaptationChangeEvent,
   IBitrateEstimationChangeEvent,
   ICompletedStreamEvent,
+  IEncryptionDataEncounteredEvent,
   INeedsDecipherabilityFlush,
   INeedsMediaSourceReload,
   IPeriodStreamClearedEvent,
   IPeriodStreamReadyEvent,
-  IProtectedSegmentEvent,
   IRepresentationChangeEvent,
   IStreamEventAddedSegment,
   IStreamManifestMightBeOutOfSync,
@@ -150,7 +150,7 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
                                       INeedsDecipherabilityFlush |
                                       IRepresentationChangeEvent |
                                       IStreamEventAddedSegment<unknown> |
-                                      IProtectedSegmentEvent |
+                                      IEncryptionDataEncounteredEvent |
                                       IStreamManifestMightBeOutOfSync |
                                       IStreamNeedsManifestRefresh;
 

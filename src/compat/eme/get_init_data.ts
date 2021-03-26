@@ -15,58 +15,96 @@
  */
 
 import log from "../../log";
+import { getPsshSystemID } from "../../parsers/containers/isobmff";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
-import {
-  be4toi,
-  concat,
-} from "../../utils/byte_parsing";
+import { be4toi } from "../../utils/byte_parsing";
 import { PSSH_TO_INTEGER } from "./constants";
 
-/**
- * As we observed on some browsers (IE and Edge), the initialization data on
- * some segments have sometimes duplicated PSSH when sent through an encrypted
- * event (but not when pushed to the SourceBuffer).
- *
- * This function tries to guess if the initialization data contains only PSSHs
- * concatenated (as it is usually the case).
- * If that's the case, it will filter duplicated PSSHs from it.
- *
- * @param {Uint8Array} initData - Raw initialization data
- * @returns {Uint8Array} - Initialization data, "cleaned"
- */
-function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
-  let resInitData = new Uint8Array();
-  const encounteredPSSHs : Uint8Array[] = [];
+/** Data recuperated from parsing the payload of an `encrypted` event. */
+export interface IEncryptedEventData {
+  /**
+   * Initialization data type.
+   * String describing the format of the initialization data sent through this
+   * event.
+   * https://www.w3.org/TR/eme-initdata-registry/
+   *
+   * `undefined` if not known.
+   */
+  type : string | undefined;
+  /** Every initialization data for that type. */
+  values: Array<{
+    /**
+     * Hex encoded system id, which identifies the key system.
+     * https://dashif.org/identifiers/content_protection/
+     *
+     * If `undefined`, we don't know the system id for that initialization data.
+     * In that case, the initialization data might even be a concatenation of
+     * the initialization data from multiple system ids.
+     */
+    systemId : string | undefined;
+    /**
+     * The initialization data itself for that type and systemId.
+     * For example, with ISOBMFF "cenc" initialization data, this will be the
+     * whole PSSH box.
+     */
+    data: Uint8Array;
+  }>;
+}
 
+/**
+ * Take in input initialization data from an encrypted event and generate the
+ * corresponding array of initialization data values from it.
+ *
+ * At the moment, this function only handles initialization data which have the
+ * "cenc" initialization data type.
+ * It will just return a single value with an `undefined` `systemId` for all
+ * other types of data.
+ * @param {Uint8Array} initData - Raw initialization data
+ * @returns {Array.<Object>}
+ */
+function getInitializationDataValues(
+  initData : Uint8Array
+) : Array<{ systemId : string | undefined; data : Uint8Array }> {
+  const result : Array<{ systemId : string | undefined; data : Uint8Array }> = [];
   let offset = 0;
+
   while (offset < initData.length) {
     if (initData.length < offset + 8 ||
         be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
     ) {
       log.warn("Compat: Unrecognized initialization data. Use as is.");
-      return initData;
+      return [ { systemId: undefined,
+                 data: initData } ];
     }
 
     const len = be4toi(new Uint8Array(initData), offset);
     if (offset + len > initData.length) {
       log.warn("Compat: Unrecognized initialization data. Use as is.");
-      return initData;
+      return [ { systemId: undefined,
+                 data: initData } ];
     }
     const currentPSSH = initData.subarray(offset, offset + len);
-    if (isPSSHAlreadyEncountered(encounteredPSSHs, currentPSSH)) {
+    const systemId = getPsshSystemID(currentPSSH, 8);
+    const currentItem = { systemId, data: currentPSSH };
+    if (isPSSHAlreadyEncountered(result, currentItem)) {
+      // As we observed on some browsers (IE and Edge), the initialization data on
+      // some segments have sometimes duplicated PSSH when sent through an encrypted
+      // event (but not when the corresponding segment has been pushed to the
+      // SourceBuffer).
+      // We prefer filtering them out, to avoid further issues.
       log.warn("Compat: Duplicated PSSH found in initialization data, removing it.");
     } else {
-      resInitData = concat(resInitData, currentPSSH);
-      encounteredPSSHs.push(initData);
+      result.push(currentItem);
     }
     offset += len;
   }
 
   if (offset !== initData.length) {
     log.warn("Compat: Unrecognized initialization data. Use as is.");
-    return initData;
+    return [ { systemId: undefined,
+               data: initData } ];
   }
-  return resInitData;
+  return result;
 }
 
 /**
@@ -78,13 +116,18 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
  * @returns {boolean}
  */
 function isPSSHAlreadyEncountered(
-  encounteredPSSHs : Uint8Array[],
-  pssh : Uint8Array
+  encounteredPSSHs : Array<{ systemId : string | undefined; data : Uint8Array }>,
+  pssh : { systemId : string | undefined; data : Uint8Array }
 ) : boolean {
   for (let i = 0; i < encounteredPSSHs.length; i++) {
     const item = encounteredPSSHs[i];
-    if (areArraysOfNumbersEqual(pssh, item)) {
-      return true;
+    if (pssh.systemId === undefined ||
+        item.systemId === undefined ||
+        pssh.systemId === item.systemId)
+    {
+      if (areArraysOfNumbersEqual(pssh.data, item.data)) {
+        return true;
+      }
     }
   }
   return false;
@@ -103,14 +146,14 @@ function isPSSHAlreadyEncountered(
  */
 export default function getInitData(
   encryptedEvent : MediaEncryptedEvent
-) : { initData : Uint8Array|null; initDataType : string|undefined } {
+) : IEncryptedEventData | null {
   const { initData, initDataType } = encryptedEvent;
   if (initData == null) {
     log.warn("Compat: No init data found on media encrypted event.");
-    return { initData, initDataType };
+    return null;
   }
 
   const initDataBytes = new Uint8Array(initData);
-  return { initData: cleanEncryptedEvent(initDataBytes),
-           initDataType: encryptedEvent.initDataType };
+  const values = getInitializationDataValues(initDataBytes);
+  return { type: initDataType, values };
 }

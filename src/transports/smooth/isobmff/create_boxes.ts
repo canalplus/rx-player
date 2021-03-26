@@ -346,45 +346,6 @@ function createMVHDBox(timescale : number, trackId : number) : Uint8Array {
 }
 
 /**
- * @param {string} systemId - Hex string representing the CDM, 16 bytes.
- * @param {Uint8Array|undefined} privateData - Data associated to protection
- * specific system.
- * @param {Array.<Uint8Array>} keyIds - List of key ids contained in the PSSH
- * @returns {Uint8Array}
- */
-function createPSSHBox(
-  systemId : string,
-  privateData : Uint8Array = new Uint8Array(0),
-  keyIds : Uint8Array = new Uint8Array(0)
-) : Uint8Array {
-  const _systemId = systemId.replace(/-/g, "");
-
-  if (_systemId.length !== 32) {
-    throw new Error("HSS: wrong system id length");
-  }
-
-  let version;
-  let kidList;
-  const kidCount = keyIds.length;
-  if (kidCount > 0) {
-    version = 1;
-    kidList = concat(...[itobe4(kidCount)].concat(keyIds));
-  }
-  else {
-    version = 0;
-    kidList = [];
-  }
-
-  return createBox("pssh", concat(
-    [version, 0, 0, 0],
-    hexToBytes(_systemId),
-    kidList,
-    itobe4(privateData.length),
-    privateData
-  ));
-}
-
-/**
  * @param {Uint8Array} mfhd
  * @param {Uint8Array} tfhd
  * @param {Uint8Array} tfdt
@@ -509,7 +470,6 @@ export {
   createMDHDBox,
   createMP4ABox,
   createMVHDBox,
-  createPSSHBox,
   createSAIOBox,
   createSAIZBox,
   createSCHMBox,

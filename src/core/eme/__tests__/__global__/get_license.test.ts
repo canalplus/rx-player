@@ -334,6 +334,7 @@ function checkGetLicense(
   let licenseReceived = false;
   const initDataSubject = new Subject<IContentProtection>();
   const initData = new Uint8Array([54, 55, 75]);
+  const initDataEvent = { type: "cenc", values: [ { systemId: "15", data: initData } ] };
   const kill$ = new Subject();
   const challenge = formatFakeChallengeFromInitData(initData, "cenc");
   function checkKeyLoadError(error : any) {
@@ -360,7 +361,7 @@ function checkGetLicense(
         if (!licenseReceived) {
           if (ignoreLicenseRequests) {
             expect(evt.type).toEqual("no-update");
-            expect(evt.value.initializationData.data).toEqual(initData);
+            expect(evt.value.initializationData).toEqual(initDataEvent);
             expect(evt.value.initializationData.type).toEqual("cenc");
             expect(updateSpy).toHaveBeenCalledTimes(0);
           } else {
@@ -368,8 +369,7 @@ function checkGetLicense(
             expect(evt.type).toEqual("session-updated");
             expect(evt.value.session).toEqual(mediaKeySession);
             expect(evt.value.license).toEqual(license);
-            expect(evt.value.initializationData.data).toEqual(initData);
-            expect(evt.value.initializationData.type).toEqual("cenc");
+            expect(evt.value.initializationData).toEqual(initDataEvent);
             expect(updateSpy).toHaveBeenCalledTimes(1);
             expect(updateSpy).toHaveBeenCalledWith(license);
           }
@@ -405,5 +405,5 @@ function checkGetLicense(
         throw new Error(`Unexpected error: ${error}`);
       }
     });
-  initDataSubject.next({ type: "cenc", data: initData });
+  initDataSubject.next(initDataEvent);
 }

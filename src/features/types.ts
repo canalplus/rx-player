@@ -18,6 +18,7 @@ import { Observable } from "rxjs";
 // eslint-disable-next-line max-len
 import MediaElementTrackChoiceManager from "../core/api/media_element_track_choice_manager";
 import {
+  IContentProtection,
   IEMEManagerEvent,
   IKeySystemOption,
 } from "../core/eme";
@@ -34,9 +35,6 @@ import { ITransportFunction } from "../transports";
 
 export type IDirectFileInit = (args : IDirectFileOptions) =>
                                 Observable<IDirectfileEvent>;
-
-interface IContentProtection { type : string;
-                               data : Uint8Array; }
 
 export type IEMEManager = (mediaElement : HTMLMediaElement,
                            keySystems: IKeySystemOption[],

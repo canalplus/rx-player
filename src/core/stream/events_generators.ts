@@ -22,18 +22,19 @@ import {
   Period,
   Representation,
 } from "../../manifest";
+import { IContentProtection } from "../eme";
 import { IBufferType } from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,
   IBitrateEstimationChangeEvent,
   ICompletedStreamEvent,
+  IEncryptionDataEncounteredEvent,
   IEndOfStreamEvent,
   INeedsDecipherabilityFlush,
   INeedsMediaSourceReload,
   IPeriodStreamClearedEvent,
   IPeriodStreamReadyEvent,
-  IProtectedSegmentEvent,
   IRepresentationChangeEvent,
   IResumeStreamEvent,
   IStreamEventAddedSegment,
@@ -148,10 +149,10 @@ const EVENTS = {
              value: { type, period } };
   },
 
-  protectedSegment(initDataInfo : { type : string;
-                                    data : Uint8Array; }
-  ) : IProtectedSegmentEvent {
-    return { type: "protected-segment",
+  encryptionDataEncountered(
+    initDataInfo : IContentProtection
+  ) : IEncryptionDataEncounteredEvent {
+    return { type: "encryption-data-encountered",
              value: initDataInfo };
   },
 

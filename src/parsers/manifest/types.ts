@@ -27,18 +27,43 @@ export interface IContentProtectionKID { keyId : Uint8Array;
                                          systemId?: string; }
 
 /**
+ * Encryption initialization data.
+ * This is the data used to initialize a license request.
+ */
+export interface IContentProtectionInitData {
+  /**
+   * Initialization data type.
+   * String describing the format of the initialization data sent through this
+   * event.
+   * https://www.w3.org/TR/eme-initdata-registry/
+   */
+  type: string;
+  /** Every initialization data for that type.  */
+  values: Array<{
+    /**
+     * Hex encoded system id, which identifies the key system.
+     * https://dashif.org/identifiers/content_protection/
+     */
+    systemId: string;
+    /**
+     * The initialization data itself for that type and systemId.
+     * For example, with ISOBMFF "cenc" initialization data, this will be the
+     * whole PSSH box.
+     */
+     data: Uint8Array;
+  }>;
+}
+
+/**
  * Describes information about the encryption initialization data of a given
  * media.
  */
-export interface IContentProtectionInitData { systemId : string;
-                                              data : Uint8Array; }
-
 /** Describes every encryption protection parsed for a given media. */
 export interface IContentProtections {
   /** The different encryption key IDs associated with that content. */
   keyIds : IContentProtectionKID[];
   /** The different encryption initialization data associated with that content. */
-  initData : Partial<Record<string, IContentProtectionInitData[]>>;
+  initData : IContentProtectionInitData[];
 }
 
 /** Representation of a "quality" available in an Adaptation. */

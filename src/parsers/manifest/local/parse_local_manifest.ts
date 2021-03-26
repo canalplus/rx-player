@@ -15,8 +15,9 @@
  */
 
 import idGenerator from "../../../utils/id_generator";
-
 import {
+  IContentProtections,
+  IContentProtectionInitData,
   IParsedAdaptation,
   IParsedManifest,
   IParsedPeriod,
@@ -24,6 +25,7 @@ import {
 } from "../types";
 import LocalRepresentationIndex from "./representation_index";
 import {
+  IContentProtections as ILocalContentProtections,
   ILocalAdaptation,
   ILocalManifest,
   ILocalPeriod,
@@ -136,6 +138,9 @@ function parseRepresentation(
 ) : IParsedRepresentation {
   const { isFinished } = ctxt;
   const id = "representation-" + ctxt.representationIdGenerator();
+  const contentProtections = representation.contentProtections === undefined ?
+    undefined :
+    formatContentProtections(representation.contentProtections);
   return { id,
            bitrate: representation.bitrate,
            height: representation.height,
@@ -143,5 +148,24 @@ function parseRepresentation(
            codecs: representation.codecs,
            mimeType: representation.mimeType,
            index: new LocalRepresentationIndex(representation.index, id, isFinished),
-           contentProtections: representation.contentProtections };
+           contentProtections };
+}
+
+/**
+ * Translate Local Manifest's `contentProtections` attribute to the one defined
+ * for a `Manifest` structure.
+ * @param {Object} localContentProtections
+ * @returns {Object}
+ */
+function formatContentProtections(
+  localContentProtections : ILocalContentProtections
+) : IContentProtections {
+  const keyIds = localContentProtections.keyIds;
+  const initData : IContentProtectionInitData[] =
+    Object.keys(localContentProtections.initData).map((currType) => {
+      const localInitData = localContentProtections.initData[currType] ?? [];
+      return { type: currType,
+               values: localInitData };
+    });
+  return { keyIds, initData };
 }

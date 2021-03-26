@@ -42,13 +42,7 @@ export interface ISmoothInitSegmentPrivateInfos {
   channels? : number;
   packetSize? : number;
   samplingRate? : number;
-  protection? : {
-    keyId : Uint8Array;
-    keySystems : Array<{
-      systemId : string;
-      privateData : Uint8Array;
-    }>;
-  };
+  protection? : { keyId : Uint8Array };
 }
 
 /**

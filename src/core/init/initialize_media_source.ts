@@ -301,10 +301,7 @@ export default function InitializeOnMediaSource(
             manifest.addUndecipherableKIDs(evt.value);
           } else if (evt.type === "blacklist-protection-data") {
             log.info("Init: blacklisting Representations based on protection data.");
-            if (evt.value.type !== undefined) {
-              manifest.addUndecipherableProtectionData(evt.value.type,
-                                                       evt.value.data);
-            }
+            manifest.addUndecipherableProtectionData(evt.value);
           }
         }),
         ignoreElements());
@@ -366,7 +363,7 @@ export default function InitializeOnMediaSource(
                   mediaElement.currentTime = position;
                 }
                 return null;
-              case "protected-segment":
+              case "encryption-data-encountered":
                 protectedSegments$.next(evt.value);
                 return null;
             }

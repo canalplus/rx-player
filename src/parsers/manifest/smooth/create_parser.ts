@@ -17,12 +17,18 @@
 import log from "../../../log";
 import arrayIncludes from "../../../utils/array_includes";
 import assert from "../../../utils/assert";
+import {
+  concat,
+  itobe4,
+} from "../../../utils/byte_parsing";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import objectAssign from "../../../utils/object_assign";
 import resolveURL, {
   normalizeBaseURL,
 } from "../../../utils/resolve_url";
+import { hexToBytes } from "../../../utils/string_parsing";
 import takeFirstSet from "../../../utils/take_first_set";
+import { createBox } from "../../containers/isobmff";
 import {
   IContentProtectionKID,
   IParsedAdaptation,
@@ -386,7 +392,6 @@ function createSmoothStreamingParser(
                                     // instead of the first one
                                     protection: firstProtection != null ? {
                                       keyId: firstProtection.keyId,
-                                      keySystems: firstProtection.keySystems,
                                     } : undefined };
 
       const aggressiveMode = parserOptions.aggressiveMode == null ?
@@ -401,9 +406,23 @@ function createSmoothStreamingParser(
                                                                     mimeType,
                                                                     codecs,
                                                                     id });
-      if (keyIDs.length > 0) {
-        representation.contentProtections = { keyIds: keyIDs,
-                                              initData: {} };
+      if (keyIDs.length > 0 || firstProtection !== undefined) {
+        const initDataValues : Array<{ systemId: string;
+                                       data: Uint8Array; }> =
+          firstProtection === undefined ?
+            [] :
+            firstProtection.keySystems.map((keySystemData) => {
+              const { systemId, privateData } = keySystemData;
+              const cleanedSystemId = systemId.replace(/-/g, "");
+              const pssh = createPSSHBox(cleanedSystemId, privateData);
+              return { systemId: cleanedSystemId, data: pssh };
+            });
+        if (initDataValues.length > 0) {
+          const initData = [{ type: "cenc", values: initDataValues }];
+          representation.contentProtections = { keyIds: keyIDs, initData };
+        } else {
+          representation.contentProtections = { keyIds: keyIDs, initData: [] };
+        }
       }
       return representation;
     });
@@ -629,5 +648,29 @@ function createSmoothStreamingParser(
 
   return parseFromDocument;
 }
+
+/**
+ * @param {string} systemId - Hex string representing the CDM, 16 bytes.
+ * @param {Uint8Array|undefined} privateData - Data associated to protection
+ * specific system.
+ * @returns {Uint8Array}
+ */
+function createPSSHBox(
+  systemId : string,
+  privateData : Uint8Array
+) : Uint8Array {
+  if (systemId.length !== 32) {
+    throw new Error("HSS: wrong system id length");
+  }
+  const version = 0;
+  return createBox("pssh", concat(
+    [version, 0, 0, 0],
+    hexToBytes(systemId),
+    /** To put there KIDs if it exists (necessitate PSSH v1) */
+    itobe4(privateData.length),
+    privateData
+  ));
+}
+
 
 export default createSmoothStreamingParser;
