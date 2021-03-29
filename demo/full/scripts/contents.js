@@ -35,7 +35,7 @@ export default [
   },
   {
     "name": "DASH-IF - Trickmode",
-    "url": "http://dash.akamaized.net/dash264/TestCases/9b/qualcomm/1/MultiRate.mpd",
+    "url": "https://dash.akamaized.net/dash264/TestCases/9b/qualcomm/1/MultiRate.mpd",
     "transport": "dash",
     "live": false,
   },
