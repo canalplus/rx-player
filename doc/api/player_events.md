@@ -27,6 +27,7 @@
  - [Playback information](#events-playback-infos)
     - [periodChange](#events-periodChange)
     - [decipherabilityUpdate](#events-decipherabilityUpdate)
+    - [inbandEvents](#events-inbandEvents)
     - [streamEvent](events-streamEvent)
     - [streamEventSkip](events-streamEventSkip)
  - [Deprecated](#events-deprecated)
@@ -559,6 +560,42 @@ Each of those objects have the following properties:
 You can then know if any of those Representations are becoming decipherable or
 not through their `decipherable` property.
 
+
+<a name="events-inbandEvents"></a>
+### inbandEvents ###############################################################
+
+_payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Event triggered when the player encounters inband events in the stream. These
+events are included in the loaded and parsed chunks, and are often used to carry
+content metadata.
+
+Each event contains :
+  - type (_type_: ``String``) : defines the type of the event, specific to an
+  inband event from a streaming protocol.
+  - value (_type_: ``Object``) : the actual parsed content of the event.
+
+The supported inband event types are :
+- "emsg" : The emsg (Event message box) provides inband signaling for generic
+  or MPEG-DASH specific events.
+  One ISOBMFF media segment may contain one or several boxes. The parsed event
+  contains :
+    - schemeIdUri (``String``)
+    - value (``String``)
+    - timescale (``Number``)
+    - presentationTimeDelta (``Number``)
+    - eventDuration (``Number``)
+    - id (``Number``)
+    - messageData (``Uint8Array``)
+
+  These attributes are documented in the ISOBMFF specification.
 
 <a name="events-streamEvent"></a>
 ### streamEvent ################################################################
