@@ -42,6 +42,7 @@ export default function generateTextTrackLoader(
     checkMediaSegmentIntegrity } : { lowLatencyMode : boolean;
                                      checkMediaSegmentIntegrity? : boolean; }
 ) : (x : ISegmentLoaderArguments) => Observable< ISegmentLoaderEvent< ArrayBuffer |
+                                                                      Uint8Array |
                                                                       string |
                                                                       null > > {
   return checkMediaSegmentIntegrity !== true ? textTrackLoader :
@@ -53,7 +54,7 @@ export default function generateTextTrackLoader(
    */
   function textTrackLoader(
     args : ISegmentLoaderArguments
-  ) : Observable< ISegmentLoaderEvent< ArrayBuffer | string | null > > {
+  ) : Observable< ISegmentLoaderEvent< ArrayBuffer | Uint8Array | string | null > > {
     const { range } = args.segment;
     const { url } = args;
 

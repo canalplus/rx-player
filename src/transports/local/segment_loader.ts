@@ -134,7 +134,7 @@ function loadSegment(
  */
 export default function segmentLoader(
   { segment } : ISegmentLoaderArguments
-) : Observable< ISegmentLoaderEvent< ArrayBuffer | null > > {
+) : Observable< ISegmentLoaderEvent< ArrayBuffer | Uint8Array | null > > {
   const privateInfos = segment.privateInfos;
   if (segment.isInit) {
     if (privateInfos === undefined ||

@@ -50,7 +50,7 @@ function regularSegmentLoader(
   url : string,
   args : ISegmentLoaderArguments,
   lowLatencyMode : boolean
-) : Observable< ISegmentLoaderEvent<ArrayBuffer>> {
+) : Observable< ISegmentLoaderEvent<ArrayBuffer | Uint8Array>> {
 
   if (args.segment.isInit) {
     return initSegmentLoader(url, args);

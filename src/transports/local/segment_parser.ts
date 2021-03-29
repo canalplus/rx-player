@@ -33,7 +33,7 @@ export default function segmentParser({
   content,
   response,
   initTimescale,
-} : ISegmentParserArguments<ArrayBuffer | null>
+} : ISegmentParserArguments<ArrayBuffer | Uint8Array | null>
 ) : IAudioVideoParserObservable {
   const { period, segment, representation } = content;
   const { data } = response;

@@ -35,7 +35,7 @@ import byteRange from "../utils/byte_range";
 export default function initSegmentLoader(
   url : string,
   { segment } : ISegmentLoaderArguments
-) : Observable< ISegmentLoaderEvent< ArrayBuffer >> {
+) : Observable< ISegmentLoaderEvent< ArrayBuffer | Uint8Array >> {
   if (segment.range === undefined) {
     return xhr({ url, responseType: "arraybuffer", sendProgressEvents: true });
   }
