@@ -190,20 +190,27 @@ export default function EMEManager(
         }
         const firstSession = contentSessions.getAll()[0];
         return firstSession.lastKeyUpdate$.pipe(mergeMap((evt) => {
-          for (let i = 0; i < evt.whitelistedKeyIds.length; i++) {
-            for (let j = 0; j < keyIds.length; j++) {
-              if (areArraysOfNumbersEqual(evt.whitelistedKeyIds[i], keyIds[j])) {
-                // Move corresponding session on top of the cache if it exists
-                const { loadedSessionsStore } = mediaKeysEvent.value.stores;
-                loadedSessionsStore.reuse(firstSession.initializationData);
-                return observableOf({ type: "init-data-ignored" as const,
-                                      value: { initializationData } });
+          const hasAllNeededKeyIds = keyIds.every(keyId => {
+            for (let i = 0; i < evt.whitelistedKeyIds.length; i++) {
+              if (areArraysOfNumbersEqual(evt.whitelistedKeyIds[i], keyId)) {
+                return true;
               }
             }
+          });
+
+          if (!hasAllNeededKeyIds) {
+            // Not all keys are available in the current session, blacklist those
+            return observableOf({ type: "keys-update" as const,
+                                  value: { blacklistedKeyIDs: keyIds,
+                                           whitelistedKeyIds: [] } });
           }
-          return observableOf({ type: "keys-update" as const,
-                                value: { blacklistedKeyIDs: keyIds,
-                                         whitelistedKeyIds: [] } });
+
+          // Already handled by the current session.
+          // Move corresponding session on top of the cache if it exists
+          const { loadedSessionsStore } = mediaKeysEvent.value.stores;
+          loadedSessionsStore.reuse(firstSession.initializationData);
+          return observableOf({ type: "init-data-ignored" as const,
+                                value: { initializationData } });
         }));
       } else if (!contentSessions.storeIfNone(initializationData, { initializationData,
                                                                     lastKeyUpdate$ })) {
