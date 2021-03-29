@@ -54,6 +54,7 @@ export default function getLoadedContentState(
   isPlaying : boolean,
   stalledStatus : { reason : "seeking" |
                              "not-ready" |
+                             "internal-seek" |
                              "buffering"; } |
                   null
 ) : IPlayerState {

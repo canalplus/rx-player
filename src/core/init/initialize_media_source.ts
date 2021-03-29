@@ -127,6 +127,8 @@ export interface IInitializeArguments {
   minimumManifestUpdateInterval : number;
   /** Interface allowing to load segments */
   segmentFetcherCreator : SegmentFetcherCreator<any>;
+  /** Perform an internal seek */
+  setCurrentTime: (time: number) => void;
   /** Emit the playback rate (speed) set by the user. */
   speed$ : Observable<number>;
   /** The configured starting position. */
@@ -178,6 +180,7 @@ export default function InitializeOnMediaSource(
     mediaElement,
     minimumManifestUpdateInterval,
     segmentFetcherCreator,
+    setCurrentTime,
     speed$,
     startAt,
     textTrackOptions } : IInitializeArguments
@@ -300,6 +303,7 @@ export default function InitializeOnMediaSource(
         mediaElement,
         segmentFetcherCreator,
         speed$,
+        setCurrentTime,
       });
 
       // handle initial load and reloads
@@ -385,9 +389,9 @@ export default function InitializeOnMediaSource(
                 // to flush the buffers
                 const { position } = evt.value;
                 if (position + 0.001 < evt.value.duration) {
-                  mediaElement.currentTime += 0.001;
+                  setCurrentTime(mediaElement.currentTime + 0.001);
                 } else {
-                  mediaElement.currentTime = position;
+                  setCurrentTime(position);
                 }
                 return null;
               case "encryption-data-encountered":

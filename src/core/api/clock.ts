@@ -62,7 +62,9 @@ export type IClockMediaEventType =
   /** On the HTML5 event with the same name */
   "loadedmetadata" |
   /** On the HTML5 event with the same name */
-  "ratechange";
+  "ratechange" |
+  /** An internal seek happens */
+  "internal-seeking";
 
 /** Information recuperated on the media element on each clock tick. */
 interface IMediaInfos {
@@ -96,6 +98,7 @@ export interface IStalledStatus {
   /** What started the player to stall. */
   reason : "seeking" | // Building buffer after seeking
            "not-ready" | // Building buffer after low readyState
+           "internal-seek" | // Building buffer after a seek happened inside the player
            "buffering"; // Other cases
   /** `performance.now` at the time the stalling happened. */
   timestamp : number;
@@ -111,6 +114,12 @@ export interface IClockTick extends IMediaInfos {
   /** Set if the player is stalled, `null` if not. */
   stalled : IStalledStatus | null;
   getCurrentTime : () => number;
+}
+
+/** Handle time relative information */
+export interface IClockHandler {
+  clock$: Observable<IClockTick>;
+  setCurrentTime: (time: number) => void;
 }
 
 const { SAMPLING_INTERVAL_MEDIASOURCE,
@@ -149,6 +158,7 @@ function getResumeGap(stalled : IStalledStatus, lowLatencyMode : boolean) : numb
 
   switch (stalled.reason) {
     case "seeking":
+    case "internal-seek":
       return RESUME_GAP_AFTER_SEEKING[suffix];
     case "not-ready":
       return RESUME_GAP_AFTER_NOT_ENOUGH_DATA[suffix];
@@ -303,10 +313,15 @@ function getStalledStatus(
   if (shouldUnstall === true) {
     return null;
   } else if (shouldStall === true || prevStalled !== null) {
-    let reason : "seeking" | "not-ready" | "buffering";
+    let reason : "seeking" | "not-ready" | "buffering" | "internal-seek";
     if (currentEvt === "seeking" ||
-        currentTimings.seeking ||
         prevStalled !== null && prevStalled.reason === "seeking") {
+      reason = "seeking";
+    } else if (currentTimings.seeking &&
+        ((currentEvt === "internal-seeking") ||
+        (prevStalled !== null && prevStalled.reason === "internal-seek"))) {
+      reason = "internal-seek";
+    } else if (currentTimings.seeking) {
       reason = "seeking";
     } else if (readyState === 1) {
       reason = "not-ready";
@@ -356,14 +371,25 @@ export interface IClockOptions {
 function createClock(
   mediaElement : HTMLMediaElement,
   options : IClockOptions
-) : Observable<IClockTick> {
-  return observableDefer(() : Observable<IClockTick> => {
+) : IClockHandler {
+  // Allow us to identify seek performed internally by the player.
+  let internalSeekingComingCounter = 0;
+  function setCurrentTime(time: number) {
+    mediaElement.currentTime = time;
+    internalSeekingComingCounter += 1;
+  }
+  const clock$ = observableDefer(() : Observable<IClockTick> => {
     let lastTimings : IClockTick = objectAssign(
       getMediaInfos(mediaElement, "init"),
       { stalled: null, getCurrentTime: () => mediaElement.currentTime });
 
     function getCurrentClockTick(event : IClockMediaEventType) : IClockTick {
-      const mediaTimings = getMediaInfos(mediaElement, event);
+      let tmpEvt: IClockMediaEventType = event;
+      if (tmpEvt === "seeking" && internalSeekingComingCounter > 0) {
+        tmpEvt = "internal-seeking";
+        internalSeekingComingCounter -= 1;
+      }
+      const mediaTimings = getMediaInfos(mediaElement, tmpEvt);
       const stalledState = getStalledStatus(lastTimings, mediaTimings, options);
       const timings = objectAssign({},
                                    { stalled: stalledState,
@@ -404,6 +430,7 @@ function createClock(
     multicast(() => new ReplaySubject<IClockTick>(1)), // Always emit the last
     refCount()
   );
+  return { clock$, setCurrentTime };
 }
 
 /**
