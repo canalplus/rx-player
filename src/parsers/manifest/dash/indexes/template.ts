@@ -19,6 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import { IEMSG } from "../../../containers/isobmff";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import isPeriodFulfilled from "./is_period_fulfilled";
@@ -126,6 +127,8 @@ export interface ITemplateIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
 
 /**
@@ -151,6 +154,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _availabilityTimeOffset? : number;
   /** Whether the corresponding Manifest can be updated and changed. */
   private _isDynamic : boolean;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  private _isEMSGWhitelisted : (inbandEvent: IEMSG) => boolean;
 
   /**
    * @param {Object} index
@@ -168,7 +173,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             periodStart,
             representationBaseURLs,
             representationId,
-            representationBitrate } = context;
+            representationBitrate,
+            isEMSGWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
     this._availabilityTimeOffset = availabilityTimeOffset;
@@ -207,6 +213,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._periodStart = periodStart;
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 (periodEnd - periodStart) * timescale;
+    this._isEMSGWhitelisted = isEMSGWhitelisted;
   }
 
   /**
@@ -214,7 +221,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    return getInitSegment(this._index);
+    return getInitSegment(this._index, this._isEMSGWhitelisted);
   }
 
   /**
@@ -285,7 +292,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                      isInit: false,
                      scaledDuration: realDuration / timescale,
                      mediaURLs: detokenizedURLs,
-                     timestampOffset: -(index.indexTimeOffset / timescale) };
+                     timestampOffset: -(index.indexTimeOffset / timescale),
+                     privateInfos: {
+                       isEMSGWhitelisted: this._isEMSGWhitelisted,
+                     } };
       segments.push(args);
       numberIndexedToZero++;
     }

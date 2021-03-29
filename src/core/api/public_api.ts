@@ -111,6 +111,7 @@ import SegmentBuffersStore, {
   IBufferedChunk,
   IBufferType,
 } from "../segment_buffers";
+import { IInbandEvent } from "../stream";
 import createClock, {
   IClockTick,
 } from "./clock";
@@ -219,6 +220,7 @@ interface IPublicAPIEvent {
   seeked : null;
   streamEvent : IStreamEvent;
   streamEventSkip : IStreamEvent;
+  inbandEvents : IInbandEvent[];
 }
 
 /**
@@ -2270,6 +2272,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
+      case "inband-events":
+        const inbandEvents = event.value;
+        this.trigger("inbandEvents", inbandEvents);
+        return;
       case "stream-event":
         this.trigger("streamEvent", event.value);
         break;

@@ -19,6 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import { IEMSG } from "../../../containers/isobmff";
 import {
   fromIndexTime,
   getIndexSegmentEnd,
@@ -114,6 +115,8 @@ export interface IBaseIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
 
 /**
@@ -167,6 +170,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   /** Absolute end of the period, timescaled and converted to index time. */
   private _scaledPeriodEnd : number | undefined;
 
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
+
   /**
    * @param {Object} index
    * @param {Object} context
@@ -176,7 +182,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
             periodEnd,
             representationBaseURLs,
             representationId,
-            representationBitrate } = context;
+            representationBitrate,
+            isEMSGWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
@@ -215,6 +222,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
     this._isInitialized = this._index.timeline.length > 0;
+    this._isEMSGWhitelisted = isEMSGWhitelisted;
   }
 
   /**
@@ -222,7 +230,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    return getInitSegment(this._index);
+    return getInitSegment(this._index, this._isEMSGWhitelisted);
   }
 
   /**
@@ -231,7 +239,11 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Array.<Object>}
    */
   getSegments(_up : number, _to : number) : ISegment[] {
-    return getSegmentsFromTimeline(this._index, _up, _to, this._scaledPeriodEnd);
+    return getSegmentsFromTimeline(this._index,
+                                   _up,
+                                   _to,
+                                   this._isEMSGWhitelisted,
+                                   this._scaledPeriodEnd);
   }
 
   /**

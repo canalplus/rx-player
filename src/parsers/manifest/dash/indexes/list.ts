@@ -19,6 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import { IEMSG } from "../../../containers/isobmff";
 import { getTimescaledRange } from "../../utils/index_helpers";
 import getInitSegment from "./get_init_segment";
 import { createIndexURLs } from "./tokens";
@@ -110,6 +111,8 @@ export interface IListIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
 
 export default class ListRepresentationIndex implements IRepresentationIndex {
@@ -117,6 +120,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   private _index : IListIndex;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
   protected _periodStart : number;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 
   /**
    * @param {Object} index
@@ -126,8 +131,9 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     const { periodStart,
             representationBaseURLs,
             representationId,
-            representationBitrate } = context;
-
+            representationBitrate,
+            isEMSGWhitelisted } = context;
+    this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._periodStart = periodStart;
     const presentationTimeOffset =
       index.presentationTimeOffset != null ? index.presentationTimeOffset :
@@ -160,7 +166,12 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    return getInitSegment(this._index);
+    const initSegment = getInitSegment(this._index);
+    if (initSegment.privateInfos === undefined) {
+      initSegment.privateInfos = {};
+    }
+    initSegment.privateInfos.isEMSGWhitelisted = this._isEMSGWhitelisted;
+    return initSegment;
   }
 
   /**
@@ -182,16 +193,19 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
       const range = list[i].mediaRange;
       const mediaURLs = list[i].mediaURLs;
       const time = i * durationInSeconds + this._periodStart;
-      const args = { id: String(i),
-                     time,
-                     isInit: false,
-                     range,
-                     duration: durationInSeconds,
-                     timescale: 1 as const,
-                     end: time + durationInSeconds,
-                     mediaURLs,
-                     timestampOffset: -(index.indexTimeOffset / timescale) };
-      segments.push(args);
+      const segment =
+        { id: String(i),
+          time,
+          isInit: false,
+          range,
+          duration: durationInSeconds,
+          timescale: 1 as const,
+          end: time + durationInSeconds,
+          mediaURLs,
+          timestampOffset: -(index.indexTimeOffset / timescale),
+          privateInfos: { isEMSGWhitelisted:
+                            this._isEMSGWhitelisted } };
+      segments.push(segment);
       i++;
     }
     return segments;

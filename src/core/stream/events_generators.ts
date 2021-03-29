@@ -96,7 +96,7 @@ const EVENTS = {
 
   needsManifestRefresh() : IStreamNeedsManifestRefresh {
     return { type : "needs-manifest-refresh",
-             value :  undefined };
+             value : undefined };
   },
 
   manifestMightBeOufOfSync() : IStreamManifestMightBeOutOfSync {
