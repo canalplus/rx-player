@@ -585,16 +585,17 @@ Each event contains :
 The supported inband event types are :
 - "emsg" : The emsg (Event message box) provides inband signaling for generic
   or MPEG-DASH specific events.
-One ISOBMFF media segment may contain one or several boxes. The parsed event contains :
-  - schemeIdUri (``String``)
-  - value (``String``)
-  - timescale (``Number``)
-  - presentationTimeDelta (``Number``)
-  - eventDuration (``Number``)
-  - id (``Number``)
-  - messageData (``Uint8Array``)
+  One ISOBMFF media segment may contain one or several boxes. The parsed event
+  contains :
+    - schemeIdUri (``String``)
+    - value (``String``)
+    - timescale (``Number``)
+    - presentationTimeDelta (``Number``)
+    - eventDuration (``Number``)
+    - id (``Number``)
+    - messageData (``Uint8Array``)
 
-These attributes are documented into the ISOBMFF specification.
+  These attributes are documented in the ISOBMFF specification.
 
 <a name="events-streamEvent"></a>
 ### streamEvent ################################################################
