@@ -20,6 +20,7 @@ import {
   getSegmentsFromSidx,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
+import { parseEmsgBoxes } from "../../parsers/containers/isobmff/utils";
 import {
   getSegmentsFromCues,
   getTimeCodeScale,
@@ -34,6 +35,7 @@ import {
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import getEventsOutOfEMSGs from "./get_events_out_of_emsgs";
 
 /**
  * @param {Object} config
@@ -49,7 +51,7 @@ export default function generateAudioVideoSegmentParser(
                                                  ArrayBuffer |
                                                  null >
   ) : IAudioVideoParserObservable {
-    const { period, representation, segment } = content;
+    const { period, representation, segment, manifest } = content;
     const { data, isChunked } = response;
     const appendWindow : [number, number | undefined] = [ period.start, period.end ];
 
@@ -78,6 +80,32 @@ export default function generateAudioVideoSegmentParser(
                                                         segment,
                                                         initTimescale);
       const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+
+      if (!isWEBM) {
+        const parsedEMSGs = parseEmsgBoxes(chunkData);
+        if (parsedEMSGs !== undefined) {
+          const whitelistedEMSGs = parsedEMSGs.filter((evt) => {
+            if (segment.privateInfos === undefined ||
+                segment.privateInfos.isEMSGWhitelisted === undefined) {
+              return false;
+            }
+            return segment.privateInfos.isEMSGWhitelisted(evt);
+          });
+          const events = getEventsOutOfEMSGs(whitelistedEMSGs,
+                                             manifest.publishTime);
+          if (events !== undefined) {
+            const { needsManifestRefresh, inbandEvents } = events;
+            return observableOf({ type: "parsed-segment",
+                                  value: { chunkData,
+                                           chunkInfos,
+                                           chunkOffset,
+                                           appendWindow,
+                                           inbandEvents,
+                                           needsManifestRefresh } });
+          }
+        }
+      }
+
       return observableOf({ type: "parsed-segment",
                             value: { chunkData,
                                      chunkInfos,

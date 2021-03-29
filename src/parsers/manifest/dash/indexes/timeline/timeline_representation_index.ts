@@ -25,6 +25,7 @@ import {
   ISegment,
   Representation,
 } from "../../../../../manifest";
+import { IEMSG } from "../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../utils/clear_timeline_from_position";
 import {
   checkDiscontinuity,
@@ -164,6 +165,8 @@ export interface ITimelineIndexContextArgument {
    * Use with moderation.
    */
   unsafelyBaseOnPreviousRepresentation : Representation | null;
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
 
 export interface ILastSegmentInformation {
@@ -209,6 +212,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   private _unsafelyBaseOnPreviousIndex : TimelineRepresentationIndex | null;
 
+  /* Function that tells if an EMSG is whitelisted by the manifest */
+  private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
+
   /**
    * @param {Object} index
    * @param {Object} context
@@ -224,7 +230,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
             representationId,
             representationBitrate,
             periodStart,
-            periodEnd } = context;
+            periodEnd,
+            isEMSGWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
@@ -236,6 +243,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
 
+    this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._lastUpdate = context.receivedTime == null ?
                                  performance.now() :
                                  context.receivedTime;
@@ -282,7 +290,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    return getInitSegment(this._index);
+    return getInitSegment(this._index, this._isEMSGWhitelisted);
   }
 
   /**
@@ -310,6 +318,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                                      indexTimeOffset },
                                    from,
                                    duration,
+                                   this._isEMSGWhitelisted,
                                    this._scaledPeriodEnd);
   }
 

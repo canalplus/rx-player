@@ -79,6 +79,7 @@ import {
   IStreamNeedsManifestRefresh,
   IStreamStatusEvent,
   IStreamTerminatingEvent,
+  IInbandEventsEvent,
 } from "../types";
 import getBufferStatus from "./get_buffer_status";
 import getSegmentPriority from "./get_segment_priority";
@@ -487,6 +488,8 @@ export default function RepresentationStream<T>({
   ) : Observable<IStreamEventAddedSegment<T> |
                  ISegmentFetcherWarning |
                  IEncryptionDataEncounteredEvent |
+                 IInbandEventsEvent |
+                 IStreamNeedsManifestRefresh |
                  IStreamManifestMightBeOutOfSync>
   {
     switch (evt.type) {
@@ -525,13 +528,24 @@ export default function RepresentationStream<T>({
 
       case "parsed-segment":
         const initSegmentData = initSegmentObject?.initializationData ?? null;
-        return pushMediaSegment({ clock$,
-                                  content,
-                                  initSegmentData,
-                                  parsedSegment: evt.value,
-                                  segment: evt.segment,
-                                  segmentBuffer });
-
+        const { inbandEvents,
+                needsManifestRefresh } = evt.value;
+        const manifestRefresh$ =  needsManifestRefresh === true ?
+          observableOf(EVENTS.needsManifestRefresh()) :
+          EMPTY;
+        const inbandEvents$ = inbandEvents !== undefined &&
+                              inbandEvents.length > 0 ?
+          observableOf({ type: "inband-events" as const,
+                         value: inbandEvents }) :
+          EMPTY;
+        return observableConcat(manifestRefresh$,
+                                inbandEvents$,
+                                pushMediaSegment({ clock$,
+                                                   content,
+                                                   initSegmentData,
+                                                   parsedSegment: evt.value,
+                                                   segment: evt.segment,
+                                                   segmentBuffer }));
       case "end-of-segment": {
         const { segment } = evt.value;
         return segmentBuffer.endOfSegment(objectAssign({ segment }, content))
