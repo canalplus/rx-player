@@ -28,7 +28,6 @@ import {
   mergeMapTo,
   share,
   take,
-  tap,
 } from "rxjs/operators";
 import {
   clearElementSrc,
@@ -43,6 +42,7 @@ import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
 import throwOnMediaError from "./throw_on_media_error";
 import tryBeginningPlayback from "./try_beginning_playback";
+import tryInitialSeek from "./try_initial_seek";
 import {
   IDirectfileEvent,
   IInitClockTick,
@@ -184,15 +184,8 @@ export default function initializeDirectfileContent({
     }));
 
   const initialSeek$ = clock$.pipe(
-    filter((tick) => tick.readyState > 0 || tick.event === "loadedmetadata"),
+    filter((tick) => tryInitialSeek(tick, mediaElement, initialTime)),
     take(1),
-    tap(() => {
-      const startTime = initialTime();
-      if (mediaElement.currentTime !== startTime) {
-        log.info("Init: Set initial time", startTime);
-        setCurrentTime(startTime);
-      }
-    }),
     ignoreElements());
 
   return observableMerge(loadedEvent$,

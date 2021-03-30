@@ -156,6 +156,9 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
     await sleep(10);
 
+    if (xhrMock.getLockedXHR().length > 1) {
+      console.log("!!!!!!!!!", JSON.stringify(xhrMock.getLockedXHR()));
+    }
     expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
     await xhrMock.flush();
     await sleep(10);

@@ -26,12 +26,12 @@ import {
   tap,
   shareReplay,
 } from "rxjs/operators";
-import log from "../../log";
 import Manifest from "../../manifest";
 import { IStreamOrchestratorClockTick } from "../stream";
 import tryBeginningPlayback, {
   ILoadEvents,
 } from "./try_beginning_playback";
+import tryInitialSeek from "./try_initial_seek";
 import { IInitClockTick } from "./types";
 
 /** Arguments for the `initialSeekAndPlay` function. */
@@ -95,8 +95,7 @@ export default function initialSeekAndPlay(
   /**
    * Emit loading-related events.
    * As its own ReplaySubject to avoid polluting the more general clock$
-   * Observable.
-   */
+   * Observable. */
   const loaded$ = new ReplaySubject<ILoadEvents>(1);
 
   /**
@@ -117,26 +116,14 @@ export default function initialSeekAndPlay(
    */
   const clock$ = observableCombineLatest([initClock$, speed$]).pipe(
     map(([tick, speed]) => {
-      /**
-       * When this value is `false`, the `startTime` should be considered as
-       * the current position instead of the clock tick's `position` property.
-       * This is because that clock tick was triggered before the initial seek
-       * was done.
-       */
-      const isTickPositionRight = isSeekDone;
-
-      // perform initial seek, if ready and not already done
-      if (!isSeekDone && (tick.readyState > 0 || tick.event === "loadedmetadata")) {
-        if (mediaElement.currentTime !== startTime) {
-          log.info("Init: Set initial time", startTime);
-          setCurrentTime(startTime);
-        }
-        isSeekDone = true;
+      /** True if the tick's position is at the right value */
+      let isRightPosition = true;
+      if (!isSeekDone) {
+        isRightPosition = tick.position === startTime;
+        isSeekDone = tryInitialSeek(tick, mediaElement, startTime);
       }
-      const liveGap = !manifest.isLive ? Infinity :
-                      isTickPositionRight  ?
-                        manifest.getMaximumPosition() - tick.position :
-                        manifest.getMaximumPosition() - startTime;
+      const liveGap = manifest.isLive ? manifest.getMaximumPosition() - tick.position :
+                                        Infinity;
       return {
         position: tick.position,
         getCurrentTime: tick.getCurrentTime,
@@ -154,8 +141,8 @@ export default function initialSeekAndPlay(
         // initial position, the currentTime will most probably be 0 where the
         // effective starting position will be _startTime_.
         // Thus we initially set a wantedTimeOffset equal to startTime.
-        wantedTimeOffset: isTickPositionRight ? 0 :
-                                                startTime,
+        wantedTimeOffset: isRightPosition ? 0 :
+                                            startTime - tick.position,
       };
     }));
 
