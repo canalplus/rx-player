@@ -487,27 +487,36 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   /**
    * Look in the Manifest for Representations linked to the given key ID,
    * and mark them as being impossible to decrypt.
-   * Then trigger a "blacklist-update" event to notify everyone of the changes
-   * performed.
-   * @param {Array.<ArrayBuffer>} keyIDs
+   * Then trigger a "decipherabilityUpdate" event to notify everyone of the
+   * changes performed.
+   * @param {Object} keyUpdates
    */
-  public addUndecipherableKIDs(keyIDs : Uint8Array[]) : void {
+  public updateDeciperabilitiesBasedOnKeyIds(
+    { whitelistedKeyIds,
+      blacklistedKeyIDs } : { whitelistedKeyIds : Uint8Array[];
+                              blacklistedKeyIDs : Uint8Array[]; }
+  ) : void {
     const updates = updateDeciperability(this, (representation) => {
       if (representation.decipherable === false ||
           representation.contentProtections === undefined)
       {
-        return true;
+        return representation.decipherable;
       }
       const contentKIDs = representation.contentProtections.keyIds;
       for (let i = 0; i < contentKIDs.length; i++) {
         const elt = contentKIDs[i];
-        for (let j = 0; j < keyIDs.length; j++) {
-          if (areArraysOfNumbersEqual(keyIDs[j], elt.keyId)) {
+        for (let j = 0; j < blacklistedKeyIDs.length; j++) {
+          if (areArraysOfNumbersEqual(blacklistedKeyIDs[j], elt.keyId)) {
             return false;
           }
         }
+        for (let j = 0; j < whitelistedKeyIds.length; j++) {
+          if (areArraysOfNumbersEqual(whitelistedKeyIds[j], elt.keyId)) {
+            return true;
+          }
+        }
       }
-      return true;
+      return representation.decipherable;
     });
 
     if (updates.length > 0) {
@@ -519,16 +528,14 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * Look in the Manifest for Representations linked to the given content
    * protection initialization data and mark them as being impossible to
    * decrypt.
-   * Then trigger a "blacklist-update" event to notify everyone of the changes
-   * performed.
-   * @param {Array.<ArrayBuffer>} keyIDs
+   * Then trigger a "decipherabilityUpdate" event to notify everyone of the
+   * changes performed.
+   * @param {Object} initData
    */
-  public addUndecipherableProtectionData(
-    initData : IInitializationDataInfo
-  ) : void {
+  public addUndecipherableProtectionData(initData : IInitializationDataInfo) : void {
     const updates = updateDeciperability(this, (representation) => {
       if (representation.decipherable === false) {
-        return true;
+        return false;
       }
       const segmentProtections = representation.contentProtections?.initData ?? [];
       for (let i = 0; i < segmentProtections.length; i++) {
@@ -548,7 +555,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
           }
         }
       }
-      return true;
+      return representation.decipherable;
     });
 
     if (updates.length > 0) {
@@ -751,17 +758,19 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 }
 
 /**
- * Update decipherability based on a predicate given.
- * Do nothing for a Representation when the predicate returns false, mark as
- * undecipherable when the predicate returns false. Returns every updates in
- * an array.
+ * Update `decipherable` property of every `Representation` found in the
+ * Manifest based on the result of a `isDecipherable` callback:
+ *   - When that callback returns `true`, update `decipherable` to `true`
+ *   - When that callback returns `false`, update `decipherable` to `false`
+ *   - When that callback returns `undefined`, update `decipherable` to
+ *     `undefined`
  * @param {Manifest} manifest
- * @param {Function} predicate
+ * @param {Function} isDecipherable
  * @returns {Array.<Object>}
  */
 function updateDeciperability(
   manifest : Manifest,
-  predicate : (rep : Representation) => boolean
+  isDecipherable : (rep : Representation) => boolean | undefined
 ) : IDecipherabilityUpdateElement[] {
   const updates : IDecipherabilityUpdateElement[] = [];
   for (let i = 0; i < manifest.periods.length; i++) {
@@ -772,9 +781,10 @@ function updateDeciperability(
       const representations = adaptation.representations;
       for (let k = 0; k < representations.length; k++) {
         const representation = representations[k];
-        if (!predicate(representation)) {
+        const result = isDecipherable(representation);
+        if (result !== representation.decipherable) {
           updates.push({ manifest, period, adaptation, representation });
-          representation.decipherable = false;
+          representation.decipherable = result;
         }
       }
     }

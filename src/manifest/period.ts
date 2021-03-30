@@ -175,7 +175,7 @@ export default class Period {
   getPlayableAdaptations(type? : IAdaptationType) : Adaptation[] {
     if (type === undefined) {
       return this.getAdaptations().filter(ada => {
-        return ada.isSupported && ada.decipherable !== false;
+        return ada.getPlayableRepresentations().length > 0;
       });
     }
     const adaptationsForType = this.adaptations[type];
@@ -183,7 +183,7 @@ export default class Period {
       return [];
     }
     return adaptationsForType.filter(ada => {
-      return ada.isSupported && ada.decipherable !== false;
+      return ada.getPlayableRepresentations().length > 0;
     });
   }
 }

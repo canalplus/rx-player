@@ -197,7 +197,7 @@ export default function AdaptationStream<T>({
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
   const { estimator$, requestFeedback$, streamFeedback$ } =
-    createRepresentationEstimator(adaptation, abrManager, clock$);
+    createRepresentationEstimator(content, abrManager, clock$);
 
   /** Allows the `RepresentationStream` to easily fetch media segments. */
   const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type,

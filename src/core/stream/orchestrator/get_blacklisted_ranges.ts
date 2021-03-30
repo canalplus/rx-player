@@ -36,6 +36,9 @@ export default function getBlacklistedRanges(
                      period : Period;
                      representation : Representation; }>
 ) : IRange[] {
+  if (contents.length === 0) {
+    return [];
+  }
   segmentBuffer.synchronizeInventory();
   const accumulator : IRange[] = [];
   const inventory = segmentBuffer.getInventory();
