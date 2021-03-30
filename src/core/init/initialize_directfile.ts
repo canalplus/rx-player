@@ -100,6 +100,7 @@ export interface IDirectFileOptions { autoPlay : boolean;
                                       keySystems : IKeySystemOption[];
                                       mediaElement : HTMLMediaElement;
                                       speed$ : Observable<number>;
+                                      setCurrentTime: (nb: number) => void;
                                       startAt? : IInitialTimeOptions;
                                       url? : string; }
 
@@ -114,6 +115,7 @@ export default function initializeDirectfileContent({
   keySystems,
   mediaElement,
   speed$,
+  setCurrentTime,
   startAt,
   url,
 } : IDirectFileOptions) : Observable<IDirectfileEvent> {
@@ -188,7 +190,7 @@ export default function initializeDirectfileContent({
       const startTime = initialTime();
       if (mediaElement.currentTime !== startTime) {
         log.info("Init: Set initial time", startTime);
-        mediaElement.currentTime = startTime;
+        setCurrentTime(startTime);
       }
     }),
     ignoreElements());

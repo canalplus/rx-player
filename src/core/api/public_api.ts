@@ -738,11 +738,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                            initialAudioTrack: defaultAudioTrack,
                            initialTextTrack: defaultTextTrack };
 
-    const videoElement = this.videoElement;
 
+    const videoElement = this.videoElement;
     /** Global "clock" used for content playback */
-    const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile,
-                                               lowLatencyMode });
+    const { setCurrentTime, clock$ } = createClock(videoElement, {
+      withMediaSource: !isDirectFile,
+      lowLatencyMode,
+    });
 
     /** Emit playback events. */
     let playback$ : ConnectableObservable<IInitEvent>;
@@ -884,6 +886,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     mediaElement: videoElement,
                                                     minimumManifestUpdateInterval,
                                                     segmentFetcherCreator,
+                                                    setCurrentTime,
                                                     speed$: this._priv_speed$,
                                                     startAt,
                                                     textTrackOptions })
@@ -962,6 +965,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                              mediaElement: videoElement,
                                              speed$: this._priv_speed$,
                                              startAt,
+                                             setCurrentTime,
                                              url })
           .pipe(takeUntil(stopContent$));
 

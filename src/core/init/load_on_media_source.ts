@@ -71,6 +71,8 @@ export interface IMediaSourceLoaderArguments {
    * Replay the last value on subscription.
    */
   speed$ : Observable<number>;
+  /** Perform an internal seek */
+  setCurrentTime: (nb: number) => void;
 }
 
 /**
@@ -86,7 +88,8 @@ export default function createMediaSourceLoader(
     speed$,
     bufferOptions,
     abrManager,
-    segmentFetcherCreator } : IMediaSourceLoaderArguments
+    segmentFetcherCreator,
+    setCurrentTime } : IMediaSourceLoaderArguments
 ) : (mediaSource : MediaSource, initialTime : number, autoPlay : boolean) =>
   Observable<IMediaSourceLoaderEvent> {
   /**
@@ -120,6 +123,7 @@ export default function createMediaSourceLoader(
                                                          clock$,
                                                          { autoPlay,
                                                            manifest,
+                                                           setCurrentTime,
                                                            speed$,
                                                            startTime: initialTime });
 
@@ -183,7 +187,8 @@ export default function createMediaSourceLoader(
     const stallAvoider$ = StallAvoider(clock$,
                                        mediaElement,
                                        manifest,
-                                       discontinuityUpdate$);
+                                       discontinuityUpdate$,
+                                       setCurrentTime);
 
     const loadedEvent$ = loaded$
       .pipe(mergeMap((evt) => {

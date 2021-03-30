@@ -44,6 +44,8 @@ export interface IInitialSeekAndPlayArguments {
   speed$ : Observable<number>;
   /** The initial time you want to seek to. */
   startTime : number;
+  /** Perform an internal seek. */
+  setCurrentTime: (nb: number) => void;
 }
 
 /**
@@ -74,7 +76,8 @@ export default function initialSeekAndPlay(
   { autoPlay,
     manifest,
     speed$,
-    startTime } : IInitialSeekAndPlayArguments
+    startTime,
+    setCurrentTime } : IInitialSeekAndPlayArguments
 ) : {
     clock$: Observable<IStreamOrchestratorClockTick>;
     loaded$ : Observable<ILoadEvents>;
@@ -126,7 +129,7 @@ export default function initialSeekAndPlay(
       if (!isSeekDone && (tick.readyState > 0 || tick.event === "loadedmetadata")) {
         if (mediaElement.currentTime !== startTime) {
           log.info("Init: Set initial time", startTime);
-          mediaElement.currentTime = startTime;
+          setCurrentTime(startTime);
         }
         isSeekDone = true;
       }
