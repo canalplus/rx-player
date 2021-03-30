@@ -73,14 +73,14 @@ export default function initMediaKeys(
         mediaElement.mediaKeys !== undefined &&
         mediaKeys !== mediaElement.mediaKeys;
 
-      const disableOldMediaKeys$ = shouldDisableOldMediaKeys ?
-        disableMediaKeys(mediaElement) :
-        observableOf(null);
-
-      log.debug("EME: Disabling old MediaKeys");
+      let disableOldMediaKeys$ : Observable<unknown> = observableOf(null);
+      if (shouldDisableOldMediaKeys) {
+        log.debug("EME: Disabling old MediaKeys");
+        disableOldMediaKeys$ = disableMediaKeys(mediaElement);
+      }
       return disableOldMediaKeys$.pipe(
         mergeMap(() => {
-          log.debug("EME: Disabled old MediaKeys. Waiting to attach new MediaKeys");
+          log.debug("EME: Attaching current MediaKeys");
           return attachMediaKeys$.pipe(
             mergeMap(() => {
               const stateToAttatch = { loadedSessionsStore: stores.loadedSessionsStore,
