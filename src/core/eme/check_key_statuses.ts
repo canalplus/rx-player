@@ -55,7 +55,7 @@ export interface IKeyStatusesCheckingOptions {
  * will be checked.
  * @param {Object} options
  * @param {String} keySystem - The configuration keySystem used for deciphering
- * @returns {Array} - Warnings to send, whitelisted and blacklisted key ids.
+ * @returns {Object} - Warnings to send, whitelisted and blacklisted key ids.
  */
 export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,

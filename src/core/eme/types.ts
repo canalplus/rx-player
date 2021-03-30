@@ -46,6 +46,10 @@ export interface IInitializationDataInfo {
     /**
      * Hex encoded system id, which identifies the key system.
      * https://dashif.org/identifiers/content_protection/
+     *
+     * If `undefined`, we don't know the system id for that initialization data.
+     * In that case, the initialization data might even be a concatenation of
+     * the initialization data from multiple system ids.
      */
     systemId: string | undefined;
     /**
