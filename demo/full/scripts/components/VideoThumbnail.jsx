@@ -48,7 +48,9 @@ class VideoThumbnail extends React.Component {
       displaySpinner : true,
     };
     this.lastSetTime = undefined;
-    this._videoElement = undefined;
+    if (this.props.videoThumbnailsData === null) {
+      this.props.player.dispatch("ATTACH_VIDEO_THUMBNAIL_LOADER");
+    }
   }
 
   correctImagePosition() {
@@ -112,37 +114,33 @@ class VideoThumbnail extends React.Component {
   }
 
   componentDidMount() {
-    this.correctImagePosition();
-    if (this._videoElement !== undefined) {
-      this.props.player.dispatch("ATTACH_VIDEO_THUMBNAIL_LOADER", this._videoElement);
+    if (this.props.videoThumbnailsData !== null && this.element !== undefined) {
+      this.element.appendChild(this.props.videoThumbnailsData.videoElement);
     }
+    this.correctImagePosition();
   }
 
   componentDidUpdate() {
+    if (this.props.videoThumbnailsData !== null && this.element !== undefined) {
+      this.element.appendChild(this.props.videoThumbnailsData.videoElement);
+    }
     this.correctImagePosition();
   }
 
   componentWillUnmount() {
-    const { player, attachedVideoThumbnailLoader } = this.props;
-    const videoThumbnailLoader = attachedVideoThumbnailLoader;
     this.hideSpinner();
-    if (videoThumbnailLoader) {
-      videoThumbnailLoader.dispose();
-      player.dispatch("REMOVE_VIDEO_THUMBNAIL_LOADER");
-    }
-    this._videoElement = undefined;
     this.isMounted = false;
   }
 
   render() {
     const { style, divSpinnerStyle, spinnerStyle } = this.state;
 
-    const videoThumbnailLoader = this.props.attachedVideoThumbnailLoader;
+    const thumbnailsData = this.props.videoThumbnailsData;
 
     const { time } = this.props;
     const roundedTime = Math.round(time);
 
-    if (videoThumbnailLoader && this.lastSetTime !== roundedTime) {
+    if (thumbnailsData !== null && this.lastSetTime !== roundedTime) {
       this.startSpinnerTimeoutIfNotAlreadyStarted();
 
       if (this._loadThumbnailTimeout !== null) {
@@ -153,7 +151,7 @@ class VideoThumbnail extends React.Component {
       // when the user quickly moves its pointer or whatever is calling this
       this._loadThumbnailTimeout = setTimeout(() => {
         this._loadThumbnailTimeout = null;
-        videoThumbnailLoader.setTime(roundedTime)
+        thumbnailsData.videoThumbnailLoader.setTime(roundedTime)
           .then(() => {
             if (time !== this.props.time || !this.isMounted) {
               return;
@@ -184,11 +182,6 @@ class VideoThumbnail extends React.Component {
           </div> :
           null
       }
-      <video ref={(videoElement) => {
-        if (videoElement !== null) {
-          this._videoElement = videoElement;
-        }
-      }}></video>
     </div>;
 
     return (
@@ -199,6 +192,6 @@ class VideoThumbnail extends React.Component {
 
 export default React.memo(withModulesState({
   player: {
-    attachedVideoThumbnailLoader: "attachedVideoThumbnailLoader"
+    videoThumbnailsData: "videoThumbnailsData"
   },
 })(VideoThumbnail));
