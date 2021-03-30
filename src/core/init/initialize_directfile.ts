@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import {
   EMPTY,
   merge as observableMerge,
@@ -40,9 +45,8 @@ import { IKeySystemOption } from "../eme";
 import createEMEManager from "./create_eme_manager";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
+import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import throwOnMediaError from "./throw_on_media_error";
-import tryBeginningPlayback from "./try_beginning_playback";
-import tryInitialSeek from "./try_initial_seek";
 import {
   IDirectfileEvent,
   IInitClockTick,
@@ -133,6 +137,12 @@ export default function initializeDirectfileContent({
   const initialTime = () => getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Init: Initial time calculated:", initialTime);
 
+  const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
+                                                      mediaElement,
+                                                      startTime: initialTime,
+                                                      mustAutoPlay: autoPlay,
+                                                      isDirectfile: true });
+
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
   const emeManager$ = linkURL$.pipe(
@@ -167,7 +177,7 @@ export default function initializeDirectfileContent({
       return evt.type === "eme-disabled" || evt.type === "attached-media-keys";
     }),
     take(1),
-    mergeMapTo(tryBeginningPlayback(clock$, mediaElement, autoPlay, true)),
+    mergeMapTo(load$),
     mergeMap((evt) => {
       if (evt === "autoplay-blocked") {
         const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
@@ -183,10 +193,7 @@ export default function initializeDirectfileContent({
       return observableOf(EVENTS.loaded(null));
     }));
 
-  const initialSeek$ = clock$.pipe(
-    filter((tick) => tryInitialSeek(tick, mediaElement, initialTime)),
-    take(1),
-    ignoreElements());
+  const initialSeek$ = seek$.pipe(ignoreElements());
 
   return observableMerge(loadedEvent$,
                          initialSeek$,

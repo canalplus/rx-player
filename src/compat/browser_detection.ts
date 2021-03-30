@@ -42,9 +42,6 @@ const isFirefox : boolean = !isNode &&
 const isSamsungBrowser : boolean = !isNode &&
                                    /SamsungBrowser/.test(navigator.userAgent);
 
-const isTizen : boolean = !isNode &&
-                          /Tizen/.test(navigator.userAgent);
-
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 const isSafari : boolean =
@@ -68,5 +65,4 @@ export {
   isSafari,
   isSafariMobile,
   isSamsungBrowser,
-  isTizen,
 };
