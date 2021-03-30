@@ -122,6 +122,7 @@ export default function createMediaSourceLoader(
                                                         mediaElement,
                                                         startTime: initialTime,
                                                         mustAutoPlay: autoPlay,
+                                                        setCurrentTime,
                                                         isDirectfile: false });
 
     const initialPlay$ = load$.pipe(filter((evt) => evt !== "not-loaded-metadata"));

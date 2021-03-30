@@ -141,6 +141,7 @@ export default function initializeDirectfileContent({
                                                       mediaElement,
                                                       startTime: initialTime,
                                                       mustAutoPlay: autoPlay,
+                                                      setCurrentTime,
                                                       isDirectfile: true });
 
   // Create EME Manager, an observable which will manage every EME-related
