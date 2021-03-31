@@ -123,8 +123,8 @@ module.exports = {
     minimizer: shouldMinify ? [new TerserPlugin()] : [],
   },
   performance: {
-    maxEntrypointSize: shouldMinify ? 450000 : 2000000,
-    maxAssetSize: shouldMinify ? 450000 : 2000000,
+    maxEntrypointSize: shouldMinify ? 500000 : 2500000,
+    maxAssetSize: shouldMinify ? 500000 : 2500000,
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
