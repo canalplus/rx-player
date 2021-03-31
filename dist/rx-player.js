@@ -199,9 +199,9 @@ module.exports = __webpack_require__(5666);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "DQ": () => (/* binding */ HTMLElement_),
 /* harmony export */   "JJ": () => (/* binding */ MediaSource_),
+/* harmony export */   "cX": () => (/* binding */ READY_STATES),
 /* harmony export */   "w": () => (/* binding */ VTTCue_)
 /* harmony export */ });
-/* unused harmony export READY_STATES */
 /* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1946);
 /* harmony import */ var _is_node__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2203);
 /**
@@ -1671,6 +1671,7 @@ __webpack_require__.d(__webpack_exports__, {
   "Xe": () => (/* binding */ onKeyError$),
   "GJ": () => (/* binding */ onKeyMessage$),
   "eX": () => (/* binding */ onKeyStatusesChange$),
+  "K4": () => (/* binding */ onLoadedMetadata$),
   "yj": () => (/* binding */ onPictureInPictureEvent$),
   "Qt": () => (/* binding */ onPlayPause$),
   "gg": () => (/* binding */ onRemoveSourceBuffers$),
@@ -1682,7 +1683,7 @@ __webpack_require__.d(__webpack_exports__, {
   "$x": () => (/* binding */ videoWidth$)
 });
 
-// UNUSED EXPORTS: onLoadedMetadata$, onTimeUpdate$
+// UNUSED EXPORTS: onTimeUpdate$
 
 // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 3 modules
 var Observable = __webpack_require__(4379);
@@ -8746,243 +8747,6 @@ function createEMEManager(mediaElement, keySystems, contentProtections$) {
 
 /***/ }),
 
-/***/ 7247:
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  "Z": () => (/* binding */ emitLoadedEventWhenReady)
-});
-
-// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-var of = __webpack_require__(8170);
-// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/concat.js
-var concat = __webpack_require__(9795);
-// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/mapTo.js
-var mapTo = __webpack_require__(5602);
-// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/catchError.js
-var catchError = __webpack_require__(486);
-// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/filter.js
-var filter = __webpack_require__(6008);
-// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/take.js
-var take = __webpack_require__(1015);
-// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/mergeMap.js
-var mergeMap = __webpack_require__(7746);
-// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/defer.js
-var defer = __webpack_require__(1410);
-// EXTERNAL MODULE: ./src/utils/cast_to_observable.ts
-var cast_to_observable = __webpack_require__(8117);
-// EXTERNAL MODULE: ./src/utils/rx-try_catch.ts
-var rx_try_catch = __webpack_require__(5561);
-;// CONCATENATED MODULE: ./src/compat/play.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-/**
- * Call play on the media element on subscription and return the response as an
- * observable.
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
-
-function play$(mediaElement) {
-  return (0,defer/* defer */.P)(function () {
-    return (// mediaElement.play is not always a Promise. In the improbable case it
-      // throws, I prefer still to catch to return the error wrapped in an
-      // Observable
-      (0,rx_try_catch/* default */.Z)(function () {
-        return (0,cast_to_observable/* default */.Z)(mediaElement.play());
-      }, undefined)
-    );
-  });
-}
-// EXTERNAL MODULE: ./src/compat/browser_detection.ts
-var browser_detection = __webpack_require__(3666);
-;// CONCATENATED MODULE: ./src/compat/should_wait_for_data_before_loaded.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * On some browsers, the ready state might never go above `1` when autoplay is
- * blocked. On these cases, for now, we just advertise the content as "loaded".
- * We might go into BUFFERING just after that state, but that's a small price to
- * pay.
- * @param {Boolean} isDirectfile
- * @returns {Boolean}
- */
-
-function shouldWaitForDataBeforeLoaded(isDirectfile, mustPlayInline) {
-  if (isDirectfile && browser_detection/* isSafariMobile */.SB) {
-    return mustPlayInline;
-  }
-
-  return true;
-}
-;// CONCATENATED MODULE: ./src/compat/should_validate_metadata.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Returns true if the metadata received after a "loadedmetadata" event has
- * to be validated in the current browser (which means that we do not trust
- * this event on these browsers).
- * @returns {boolean}
- */
-
-function shouldValidateMetadata() {
-  return browser_detection/* isSamsungBrowser */.op;
-}
-// EXTERNAL MODULE: ./src/log.ts + 1 modules
-var log = __webpack_require__(3887);
-;// CONCATENATED MODULE: ./src/core/init/emit_loaded_event.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-/**
- * Try to play content then handle autoplay errors.
- * @param {HTMLMediaElement} - mediaElement
- * @returns {Observable}
- */
-
-function tryToPlay$(mediaElement) {
-  return play$(mediaElement).pipe((0,mapTo/* mapTo */.h)("autoplay"), (0,catchError/* catchError */.K)(function (error) {
-    if (error instanceof Error && error.name === "NotAllowedError") {
-      // auto-play was probably prevented.
-      log/* default.warn */.Z.warn("Init: Media element can't play." + " It may be due to browser auto-play policies.");
-      return (0,of.of)("autoplay-blocked");
-    } else {
-      throw error;
-    }
-  }));
-}
-/**
- * Listen to the `initClock$` to know when the autoPlay action can be triggered.
- * Emit either one of these values:
- *   - "autoplay": The content is loaded and autoplay has been performed
- *   - "loaded": The constent is loaded without autoplay, as asked
- *   - "autoplay-blocked": The content is loaded but autoplay could not be
- *     performed due to browser restrictions.
- *   - "not-loaded-metadata"
- * @param {Observable} initClock$
- * @param {HTMLMediaElement} mediaElement
- * @param {boolean} autoPlay
- * @param {boolean} isDirectfile
- * @returns {Observable}
- */
-
-
-function emitLoadedEventWhenReady(initClock$, mediaElement, autoPlay, isDirectfile) {
-  /**
-   * Observable which will try to apply the autoplay setting then announced the
-   * content as loaded (or as "autoplay-blocked").
-   */
-  var beginPlayback$ = initClock$.pipe((0,filter/* filter */.h)(function (tick) {
-    var seeking = tick.seeking,
-        stalled = tick.stalled,
-        readyState = tick.readyState,
-        currentRange = tick.currentRange;
-
-    if (seeking || stalled !== null) {
-      return false;
-    }
-
-    if (!shouldWaitForDataBeforeLoaded(isDirectfile, mediaElement.hasAttribute("playsinline"))) {
-      return readyState >= 1 && mediaElement.duration > 0;
-    }
-
-    if (readyState >= 4 || readyState === 3 && currentRange !== null) {
-      return shouldValidateMetadata() ? mediaElement.duration > 0 : true;
-    }
-
-    return false;
-  }), (0,take/* take */.q)(1), (0,mergeMap/* mergeMap */.zg)(function () {
-    if (!autoPlay) {
-      if (mediaElement.autoplay) {
-        log/* default.warn */.Z.warn("Init: autoplay is enabled on HTML media element. " + "Media will play as soon as possible.");
-      }
-
-      return (0,of.of)("loaded");
-    }
-
-    return tryToPlay$(mediaElement);
-  }));
-
-  if (!shouldValidateMetadata()) {
-    return beginPlayback$;
-  }
-
-  return initClock$.pipe((0,filter/* filter */.h)(function (tick) {
-    return tick.readyState >= 1;
-  }), (0,mergeMap/* mergeMap */.zg)(function () {
-    if (mediaElement.duration === 0) {
-      return (0,concat/* concat */.z)((0,of.of)("not-loaded-metadata"), beginPlayback$);
-    }
-
-    return beginPlayback$;
-  }));
-}
-
-/***/ }),
-
 /***/ 8343:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
@@ -9143,6 +8907,314 @@ var INIT_EVENTS = {
 
 /***/ }),
 
+/***/ 2795:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "Z": () => (/* binding */ seekAndLoadOnMediaEvents)
+});
+
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/concat.js
+var concat = __webpack_require__(9795);
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
+var of = __webpack_require__(8170);
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/filter.js
+var filter = __webpack_require__(6008);
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/take.js
+var take = __webpack_require__(1015);
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/mapTo.js
+var mapTo = __webpack_require__(5602);
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/catchError.js
+var catchError = __webpack_require__(486);
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/tap.js
+var tap = __webpack_require__(3068);
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/shareReplay.js
+var shareReplay = __webpack_require__(7006);
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/mergeMap.js
+var mergeMap = __webpack_require__(7746);
+// EXTERNAL MODULE: ./src/compat/browser_detection.ts
+var browser_detection = __webpack_require__(3666);
+;// CONCATENATED MODULE: ./src/compat/should_wait_for_data_before_loaded.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * On some browsers, the ready state might never go above `1` when autoplay is
+ * blocked. On these cases, for now, we just advertise the content as "loaded".
+ * We might go into BUFFERING just after that state, but that's a small price to
+ * pay.
+ * @param {Boolean} isDirectfile
+ * @returns {Boolean}
+ */
+
+function shouldWaitForDataBeforeLoaded(isDirectfile, mustPlayInline) {
+  if (isDirectfile && browser_detection/* isSafariMobile */.SB) {
+    return mustPlayInline;
+  }
+
+  return true;
+}
+;// CONCATENATED MODULE: ./src/compat/should_validate_metadata.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Returns true if the metadata received after a "loadedmetadata" event has
+ * to be validated in the current browser (which means that we do not trust
+ * this event on these browsers).
+ * @returns {boolean}
+ */
+
+function shouldValidateMetadata() {
+  return browser_detection/* isSamsungBrowser */.op;
+}
+// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/defer.js
+var defer = __webpack_require__(1410);
+// EXTERNAL MODULE: ./src/utils/cast_to_observable.ts
+var cast_to_observable = __webpack_require__(8117);
+// EXTERNAL MODULE: ./src/utils/rx-try_catch.ts
+var rx_try_catch = __webpack_require__(5561);
+;// CONCATENATED MODULE: ./src/compat/play.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+/**
+ * Call play on the media element on subscription and return the response as an
+ * observable.
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+
+function play$(mediaElement) {
+  return (0,defer/* defer */.P)(function () {
+    return (// mediaElement.play is not always a Promise. In the improbable case it
+      // throws, I prefer still to catch to return the error wrapped in an
+      // Observable
+      (0,rx_try_catch/* default */.Z)(function () {
+        return (0,cast_to_observable/* default */.Z)(mediaElement.play());
+      }, undefined)
+    );
+  });
+}
+// EXTERNAL MODULE: ./src/compat/browser_compatibility_types.ts
+var browser_compatibility_types = __webpack_require__(3774);
+// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 4 modules
+var event_listeners = __webpack_require__(1473);
+;// CONCATENATED MODULE: ./src/compat/when_loaded_metadata.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+/**
+ * Returns an observable emitting a single time, as soon as a seek is possible
+ * (the metadata are loaded).
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+
+function whenLoadedMetadata$(mediaElement) {
+  if (mediaElement.readyState >= browser_compatibility_types/* READY_STATES.HAVE_METADATA */.cX.HAVE_METADATA) {
+    return (0,of.of)(null);
+  } else {
+    return (0,event_listeners/* onLoadedMetadata$ */.K4)(mediaElement).pipe((0,take/* take */.q)(1));
+  }
+}
+// EXTERNAL MODULE: ./src/log.ts + 1 modules
+var log = __webpack_require__(3887);
+;// CONCATENATED MODULE: ./src/core/init/initial_seek_and_play.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+/**
+ * Emit once a "can-play" message as soon as the clock$ announce that the content
+ * can begin to be played.
+ *
+ * Warn you if the metadata is not yet loaded metadata by emitting a
+ * "not-loaded-metadata" message first.
+ * @param {Observable} clock$
+ * @returns {Observable}
+ */
+
+function canPlay(clock$, mediaElement, isDirectfile) {
+  var isLoaded$ = clock$.pipe((0,filter/* filter */.h)(function (tick) {
+    var seeking = tick.seeking,
+        stalled = tick.stalled,
+        readyState = tick.readyState,
+        currentRange = tick.currentRange;
+
+    if (seeking || stalled !== null) {
+      return false;
+    }
+
+    if (!shouldWaitForDataBeforeLoaded(isDirectfile, mediaElement.hasAttribute("playsinline"))) {
+      return readyState >= 1 && mediaElement.duration > 0;
+    }
+
+    if (readyState >= 4 || readyState === 3 && currentRange !== null) {
+      return shouldValidateMetadata() ? mediaElement.duration > 0 : true;
+    }
+
+    return false;
+  }), (0,take/* take */.q)(1), (0,mapTo/* mapTo */.h)("can-play"));
+
+  if (shouldValidateMetadata() && mediaElement.duration === 0) {
+    return (0,concat/* concat */.z)((0,of.of)("not-loaded-metadata"), isLoaded$);
+  }
+
+  return isLoaded$;
+}
+/**
+ * Try to play content then handle autoplay errors.
+ * @param {HTMLMediaElement} - mediaElement
+ * @returns {Observable}
+ */
+
+
+function autoPlay$(mediaElement) {
+  return play$(mediaElement).pipe((0,mapTo/* mapTo */.h)("autoplay"), (0,catchError/* catchError */.K)(function (error) {
+    if (error instanceof Error && error.name === "NotAllowedError") {
+      // auto-play was probably prevented.
+      log/* default.warn */.Z.warn("Init: Media element can't play." + " It may be due to browser auto-play policies.");
+      return (0,of.of)("autoplay-blocked");
+    } else {
+      throw error;
+    }
+  }));
+}
+/**
+ * Returns two Observables:
+ *
+ *   - seek$: when subscribed, will seek to the wanted started time as soon as
+ *     it can. Emit and complete when done.
+ *
+ *   - load$: when subscribed, will play if and only if the `mustAutoPlay`
+ *     option is set as soon as it can. Emit and complete when done.
+ *     When this observable emits, it also means that the content is `loaded`
+ *     and can begin to play the current content.
+ *
+ * @param {Object} args
+ * @returns {Object}
+ */
+
+
+function seekAndLoadOnMediaEvents(_ref) {
+  var clock$ = _ref.clock$,
+      mediaElement = _ref.mediaElement,
+      startTime = _ref.startTime,
+      mustAutoPlay = _ref.mustAutoPlay,
+      setCurrentTime = _ref.setCurrentTime,
+      isDirectfile = _ref.isDirectfile;
+  var seek$ = whenLoadedMetadata$(mediaElement).pipe((0,take/* take */.q)(1), (0,tap/* tap */.b)(function () {
+    log/* default.info */.Z.info("Init: Set initial time", startTime);
+    var initialTime = typeof startTime === "function" ? startTime() : startTime;
+    setCurrentTime(initialTime);
+  }), (0,shareReplay/* shareReplay */.d)({
+    refCount: true
+  }));
+  var load$ = seek$.pipe((0,mergeMap/* mergeMap */.zg)(function () {
+    return canPlay(clock$, mediaElement, isDirectfile).pipe((0,tap/* tap */.b)(function () {
+      return log/* default.info */.Z.info("Init: Can begin to play content");
+    }), (0,mergeMap/* mergeMap */.zg)(function (evt) {
+      if (evt === "can-play") {
+        if (!mustAutoPlay) {
+          if (mediaElement.autoplay) {
+            log/* default.warn */.Z.warn("Init: autoplay is enabled on HTML media element. " + "Media will play as soon as possible.");
+          }
+
+          return (0,of.of)("loaded");
+        }
+
+        return autoPlay$(mediaElement);
+      }
+
+      return (0,of.of)(evt);
+    }));
+  }), (0,shareReplay/* shareReplay */.d)({
+    refCount: true
+  }));
+  return {
+    seek$: seek$,
+    load$: load$
+  };
+}
+
+/***/ }),
+
 /***/ 8969:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
@@ -9173,8 +9245,6 @@ var filter = __webpack_require__(6008);
 var take = __webpack_require__(1015);
 // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/mergeMapTo.js
 var mergeMapTo = __webpack_require__(3756);
-// EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/tap.js
-var tap = __webpack_require__(3068);
 // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 3 modules
 var Observable = __webpack_require__(4379);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
@@ -9226,10 +9296,10 @@ var media_error = __webpack_require__(3714);
 var defer_subscriptions = __webpack_require__(8025);
 // EXTERNAL MODULE: ./src/core/init/create_eme_manager.ts + 1 modules
 var create_eme_manager = __webpack_require__(4507);
-// EXTERNAL MODULE: ./src/core/init/emit_loaded_event.ts + 3 modules
-var emit_loaded_event = __webpack_require__(7247);
 // EXTERNAL MODULE: ./src/core/init/events_generators.ts
 var events_generators = __webpack_require__(8343);
+// EXTERNAL MODULE: ./src/core/init/initial_seek_and_play.ts + 4 modules
+var initial_seek_and_play = __webpack_require__(2795);
 // EXTERNAL MODULE: ./src/core/init/throw_on_media_error.ts
 var throw_on_media_error = __webpack_require__(2447);
 // EXTERNAL MODULE: ./src/core/init/update_playback_rate.ts
@@ -9249,6 +9319,11 @@ var update_playback_rate = __webpack_require__(2983);
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ */
+
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
  */
 
 
@@ -9335,8 +9410,20 @@ function initializeDirectfileContent(_ref) {
     return getDirectFileInitialTime(mediaElement, startAt);
   };
 
-  log/* default.debug */.Z.debug("Init: Initial time calculated:", initialTime); // Create EME Manager, an observable which will manage every EME-related
+  log/* default.debug */.Z.debug("Init: Initial time calculated:", initialTime);
+
+  var _seekAndLoadOnMediaEv = (0,initial_seek_and_play/* default */.Z)({
+    clock$: clock$,
+    mediaElement: mediaElement,
+    startTime: initialTime,
+    mustAutoPlay: autoPlay,
+    setCurrentTime: setCurrentTime,
+    isDirectfile: true
+  }),
+      seek$ = _seekAndLoadOnMediaEv.seek$,
+      load$ = _seekAndLoadOnMediaEv.load$; // Create EME Manager, an observable which will manage every EME-related
   // issue.
+
 
   var emeManager$ = linkURL$.pipe((0,mergeMap/* mergeMap */.zg)(function () {
     return (0,create_eme_manager/* default */.Z)(mediaElement, keySystems, empty/* EMPTY */.E);
@@ -9362,7 +9449,7 @@ function initializeDirectfileContent(_ref) {
     }
 
     return evt.type === "eme-disabled" || evt.type === "attached-media-keys";
-  }), (0,take/* take */.q)(1), (0,mergeMapTo/* mergeMapTo */.j)((0,emit_loaded_event/* default */.Z)(clock$, mediaElement, autoPlay, true)), (0,mergeMap/* mergeMap */.zg)(function (evt) {
+  }), (0,take/* take */.q)(1), (0,mergeMapTo/* mergeMapTo */.j)(load$), (0,mergeMap/* mergeMap */.zg)(function (evt) {
     if (evt === "autoplay-blocked") {
       var error = new media_error/* default */.Z("MEDIA_ERR_BLOCKED_AUTOPLAY", "Cannot trigger auto-play automatically: " + "your browser does not allow it.");
       return (0,of.of)(events_generators/* default.warning */.Z.warning(error), events_generators/* default.loaded */.Z.loaded(null));
@@ -9374,16 +9461,7 @@ function initializeDirectfileContent(_ref) {
 
     return (0,of.of)(events_generators/* default.loaded */.Z.loaded(null));
   }));
-  var initialSeek$ = clock$.pipe((0,filter/* filter */.h)(function (tick) {
-    return tick.readyState > 0 || tick.event === "loadedmetadata";
-  }), (0,take/* take */.q)(1), (0,tap/* tap */.b)(function () {
-    var startTime = initialTime();
-
-    if (mediaElement.currentTime !== startTime) {
-      log/* default.info */.Z.info("Init: Set initial time", startTime);
-      setCurrentTime(startTime);
-    }
-  }), (0,ignoreElements/* ignoreElements */.l)());
+  var initialSeek$ = seek$.pipe((0,ignoreElements/* ignoreElements */.l)());
   return (0,merge/* merge */.T)(loadedEvent$, initialSeek$, emeManager$, mediaError$, playbackRate$, stalled$);
 }
 
@@ -9489,7 +9567,7 @@ function throwOnMediaError(mediaElement) {
  *
  * @param {HTMLMediaElement} mediaElement
  * @param {Observable} speed$ - emit speed set by the user
- * @param {Observable} clock$ - Emit current stalled status.
+ * @param {Observable} clock$ - Current playback conditions
  * @param {Object} options - Contains the following properties:
  *   - pauseWhenStalled {Boolean|undefined} - true if the player
  *     stalling should lead to a pause until it un-stalls. True by default.
@@ -52740,6 +52818,70 @@ function StreamOrchestrator(content, clock$, abrManager, segmentBuffersStore, se
 
 
 /* harmony default export */ const stream = (orchestrator);
+;// CONCATENATED MODULE: ./src/core/init/create_stream_clock.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * Create clock Observable for the `Stream` part of the code.
+ * @param {Observable} initClock$
+ * @param {Object} streamClockArgument
+ * @returns {Observable}
+ */
+
+function createStreamClock(initClock$, _ref) {
+  var autoPlay = _ref.autoPlay,
+      initialPlay$ = _ref.initialPlay$,
+      initialSeek$ = _ref.initialSeek$,
+      manifest = _ref.manifest,
+      speed$ = _ref.speed$,
+      startTime = _ref.startTime;
+  var initialPlayPerformed = false;
+  var initialSeekPerformed = false;
+  var updateIsPaused$ = initialPlay$.pipe((0,tap/* tap */.b)(function () {
+    initialPlayPerformed = true;
+  }), (0,ignoreElements/* ignoreElements */.l)());
+  var updateTimeOffset$ = initialSeek$.pipe((0,tap/* tap */.b)(function () {
+    initialSeekPerformed = true;
+  }), (0,ignoreElements/* ignoreElements */.l)());
+  var clock$ = (0,combineLatest/* combineLatest */.aj)([initClock$, speed$]).pipe((0,map/* map */.U)(function (_ref2) {
+    var tick = _ref2[0],
+        speed = _ref2[1];
+    var isLive = manifest.isLive;
+    return {
+      position: tick.position,
+      getCurrentTime: tick.getCurrentTime,
+      duration: tick.duration,
+      isPaused: initialPlayPerformed ? tick.paused : !autoPlay,
+      liveGap: isLive ? manifest.getMaximumPosition() - tick.position : Infinity,
+      readyState: tick.readyState,
+      speed: speed,
+      stalled: tick.stalled,
+      // wantedTimeOffset is an offset to add to the timing's current time to have
+      // the "real" wanted position.
+      // For now, this is seen when the media element has not yet seeked to its
+      // initial position, the currentTime will most probably be 0 where the
+      // effective starting position will be _startTime_.
+      // Thus we initially set a wantedTimeOffset equal to startTime.
+      wantedTimeOffset: initialSeekPerformed ? 0 : startTime - tick.position
+    };
+  }));
+  return (0,merge/* merge */.T)(updateIsPaused$, updateTimeOffset$, clock$);
+}
 ;// CONCATENATED MODULE: ./src/core/init/duration_updater.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -52951,136 +53093,8 @@ function maintainEndOfStream(mediaSource) {
     return triggerEndOfStream(mediaSource);
   }));
 }
-// EXTERNAL MODULE: ./src/core/init/emit_loaded_event.ts + 3 modules
-var emit_loaded_event = __webpack_require__(7247);
-;// CONCATENATED MODULE: ./src/core/init/initial_seek_and_play.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-/**
- * When the HTMLMediaElement is ready, perform if needed:
- *  - the initial seek
- *  - the initial autoplay operation
- *
- * Returns the following Observables:
- *
- *   - `clock$`: The central observable performing both the seek and autoPlay.
- *     Also returns an updated clock's tick (which includes information such as
- *     the position offset until the seek is taken into account or the last
- *     wanted playback speed).
- *
- *   - `loaded$`: An observable emitting events specifically related to the
- *     loading status. Will always emit its last value on subscription.
- *
- *     @see ILoadEvents for more information.
- *
- * @param {HTMLMediaElement} mediaElement
- * @param {Observable} initClock$
- * @param {Object} streamClockArgument
- * @returns {Observable}
- */
-
-function initialSeekAndPlay(mediaElement, initClock$, _ref) {
-  var autoPlay = _ref.autoPlay,
-      manifest = _ref.manifest,
-      speed$ = _ref.speed$,
-      startTime = _ref.startTime,
-      setCurrentTime = _ref.setCurrentTime;
-
-  /**
-   * `true` once the content is considered "loaded".
-   * This means it can begin to play.
-   */
-  var isLoaded = false;
-  /** `true` once the seek to a protential initial position has been performed. */
-
-  var isSeekDone = false;
-  /**
-   * Emit loading-related events.
-   * As its own ReplaySubject to avoid polluting the more general clock$
-   * Observable.
-   */
-
-  var loaded$ = new ReplaySubject/* ReplaySubject */.t(1);
-  /**
-   * Silent Observable (does not emit anything) which performs autoPlay if
-   * needed and which emits through `loaded$` the current loading status.
-   * Completes when done.
-   */
-
-  var load$ = (0,emit_loaded_event/* default */.Z)(initClock$, mediaElement, autoPlay, false).pipe((0,tap/* tap */.b)(function (evt) {
-    isLoaded = true;
-    loaded$.next(evt);
-  }), (0,ignoreElements/* ignoreElements */.l)());
-  /**
-   * Observable trying to perform the initial seek and emitting updated clock
-   * ticks.
-   */
-
-  var clock$ = (0,combineLatest/* combineLatest */.aj)([initClock$, speed$]).pipe((0,map/* map */.U)(function (_ref2) {
-    var tick = _ref2[0],
-        speed = _ref2[1];
-
-    /**
-     * When this value is `false`, the `startTime` should be considered as
-     * the current position instead of the clock tick's `position` property.
-     * This is because that clock tick was triggered before the initial seek
-     * was done.
-     */
-    var isTickPositionRight = isSeekDone; // perform initial seek, if ready and not already done
-
-    if (!isSeekDone && (tick.readyState > 0 || tick.event === "loadedmetadata")) {
-      if (mediaElement.currentTime !== startTime) {
-        log/* default.info */.Z.info("Init: Set initial time", startTime);
-        setCurrentTime(startTime);
-      }
-
-      isSeekDone = true;
-    }
-
-    var liveGap = !manifest.isLive ? Infinity : isTickPositionRight ? manifest.getMaximumPosition() - tick.position : manifest.getMaximumPosition() - startTime;
-    return {
-      position: tick.position,
-      getCurrentTime: tick.getCurrentTime,
-      duration: tick.duration,
-      isPaused: isLoaded ? tick.paused : !autoPlay,
-      liveGap: liveGap,
-      readyState: tick.readyState,
-      speed: speed,
-      stalled: tick.stalled,
-      // wantedTimeOffset is an offset to add to the timing's current time to have
-      // the "real" wanted position.
-      // For now, this is seen when the media element has not yet seeked to its
-      // initial position, the currentTime will most probably be 0 where the
-      // effective starting position will be _startTime_.
-      // Thus we initially set a wantedTimeOffset equal to startTime.
-      wantedTimeOffset: isTickPositionRight ? 0 : startTime
-    };
-  }));
-  return {
-    loaded$: loaded$,
-    clock$: (0,merge/* merge */.T)(load$, clock$).pipe((0,shareReplay/* shareReplay */.d)({
-      bufferSize: 1,
-      refCount: true
-    }))
-  };
-}
+// EXTERNAL MODULE: ./src/core/init/initial_seek_and_play.ts + 4 modules
+var initial_seek_and_play = __webpack_require__(2795);
 ;// CONCATENATED MODULE: ./src/compat/is_playback_stuck.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -53810,6 +53824,7 @@ var update_playback_rate = __webpack_require__(2983);
 
 
 
+
 /**
  * Returns a function allowing to load or reload the content in arguments into
  * a single or multiple MediaSources.
@@ -53850,22 +53865,31 @@ function createMediaSourceLoader(_ref) {
 
     var segmentBuffersStore = new segment_buffers(mediaElement, mediaSource);
 
-    var _initialSeekAndPlay = initialSeekAndPlay(mediaElement, clock$, {
-      autoPlay: autoPlay,
-      manifest: manifest,
+    var _seekAndLoadOnMediaEv = (0,initial_seek_and_play/* default */.Z)({
+      clock$: clock$,
+      mediaElement: mediaElement,
+      startTime: initialTime,
+      mustAutoPlay: autoPlay,
       setCurrentTime: setCurrentTime,
-      speed$: speed$,
-      startTime: initialTime
+      isDirectfile: false
     }),
-        loaded$ = _initialSeekAndPlay.loaded$,
-        updatedClock$ = _initialSeekAndPlay.clock$;
+        seek$ = _seekAndLoadOnMediaEv.seek$,
+        load$ = _seekAndLoadOnMediaEv.load$;
 
-    var isLoaded$ = loaded$.pipe((0,filter/* filter */.h)(function (evt) {
+    var initialPlay$ = load$.pipe((0,filter/* filter */.h)(function (evt) {
       return evt !== "not-loaded-metadata";
     }));
-    var streamEvents$ = isLoaded$.pipe((0,mergeMap/* mergeMap */.zg)(function () {
+    var streamEvents$ = initialPlay$.pipe((0,mergeMap/* mergeMap */.zg)(function () {
       return init_stream_events_emitter(manifest, mediaElement, clock$);
     }));
+    var streamClock$ = createStreamClock(clock$, {
+      autoPlay: autoPlay,
+      initialPlay$: initialPlay$,
+      initialSeek$: seek$,
+      manifest: manifest,
+      speed$: speed$,
+      startTime: initialTime
+    });
     /** Cancel endOfStream calls when streams become active again. */
 
     var cancelEndOfStream$ = new Subject/* Subject */.xQ();
@@ -53876,7 +53900,7 @@ function createMediaSourceLoader(_ref) {
     var streams$ = stream({
       manifest: manifest,
       initialPeriod: initialPeriod
-    }, updatedClock$, abrManager, segmentBuffersStore, segmentFetcherCreator, bufferOptions).pipe((0,mergeMap/* mergeMap */.zg)(function (evt) {
+    }, streamClock$, abrManager, segmentBuffersStore, segmentFetcherCreator, bufferOptions).pipe((0,mergeMap/* mergeMap */.zg)(function (evt) {
       switch (evt.type) {
         case "end-of-stream":
           log/* default.debug */.Z.debug("Init: end-of-stream order received.");
@@ -53920,7 +53944,7 @@ function createMediaSourceLoader(_ref) {
      */
 
     var stallAvoider$ = StallAvoider(clock$, mediaElement, manifest, discontinuityUpdate$, setCurrentTime);
-    var loadedEvent$ = loaded$.pipe((0,mergeMap/* mergeMap */.zg)(function (evt) {
+    var loadedEvent$ = load$.pipe((0,mergeMap/* mergeMap */.zg)(function (evt) {
       if (evt === "autoplay-blocked") {
         var _error = new media_error/* default */.Z("MEDIA_ERR_BLOCKED_AUTOPLAY", "Cannot trigger auto-play automatically: " + "your browser does not allow it.");
 
