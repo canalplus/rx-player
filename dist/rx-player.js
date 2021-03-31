@@ -8481,21 +8481,53 @@ function EMEManager(mediaElement, keySystemsConfigs, contentProtections$) {
       var generateRequest$ = sessionEvt.type !== "created-session" ? empty/* EMPTY */.E : generateKeyRequest(mediaKeySession, initializationData.type, concatInitData).pipe((0,catchError/* catchError */.K)(function (error) {
         throw new encrypted_media_error/* default */.Z("KEY_GENERATE_REQUEST_ERROR", error instanceof Error ? error.toString() : "Unknown error");
       }), (0,ignoreElements/* ignoreElements */.l)());
-      return (0,merge/* merge */.T)(SessionEventsListener(mediaKeySession, options, mediaKeySystemAccess.keySystem, initializationData), generateRequest$).pipe((0,tap/* tap */.b)(function (evt) {
+      return (0,merge/* merge */.T)(SessionEventsListener(mediaKeySession, options, mediaKeySystemAccess.keySystem, initializationData), generateRequest$).pipe((0,map/* map */.U)(function (evt) {
         if (evt.type !== "keys-update") {
-          return;
+          return evt;
+        } // We want to add the current key ids in the blacklist if it is
+        // not already there.
+        //
+        // We only do that when `singleLicensePer` is set to something
+        // else than the default `"init-data"` because this logic:
+        //   1. might result in a quality fallback, which is a v3.x.x
+        //      breaking change if some APIs (like `singleLicensePer`)
+        //      aren't used.
+        //   2. Rely on the EME spec regarding key statuses being well
+        //      implemented on all supported devices, which we're not
+        //      sure yet. Because in any other `singleLicensePer`, we
+        //      need a good implementation anyway, it doesn't matter
+        //      there.
+
+
+        var expectedKeyIds = initializationData.keyIds;
+
+        if (expectedKeyIds !== undefined && options.singleLicensePer !== "init-data") {
+          var missingKeyIds = expectedKeyIds.filter(function (expected) {
+            return !evt.value.whitelistedKeyIds.some(function (whitelisted) {
+              return (0,are_arrays_of_numbers_equal/* default */.Z)(whitelisted, expected);
+            }) && !evt.value.blacklistedKeyIDs.some(function (blacklisted) {
+              return (0,are_arrays_of_numbers_equal/* default */.Z)(blacklisted, expected);
+            });
+          });
+
+          if (missingKeyIds.length > 0) {
+            var _evt$value$blackliste;
+
+            (_evt$value$blackliste = evt.value.blacklistedKeyIDs).push.apply(_evt$value$blackliste, missingKeyIds);
+          }
         }
 
         lastKeyUpdate$.next(evt.value);
 
         if (evt.value.whitelistedKeyIds.length === 0 && evt.value.blacklistedKeyIDs.length === 0 || sessionType === "temporary" || stores.persistentSessionsStore === null || isSessionPersisted) {
-          return;
+          return evt;
         }
 
         var persistentSessionsStore = stores.persistentSessionsStore;
         cleanOldStoredPersistentInfo(persistentSessionsStore, EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
         persistentSessionsStore.add(initializationData, mediaKeySession);
         isSessionPersisted = true;
+        return evt;
       }), (0,catchError/* catchError */.K)(function (err) {
         if (!(err instanceof BlacklistedSessionError)) {
           throw err;
@@ -51200,9 +51232,9 @@ function createRepresentationEstimator(_ref, abrManager, clock$) {
   var streamFeedback$ = new Subject/* Subject */.xQ();
   var requestFeedback$ = new Subject/* Subject */.xQ();
   var abrEvents$ = (0,merge/* merge */.T)(streamFeedback$, requestFeedback$);
-  var estimator$ = (0,concat/* concat */.z)((0,of.of)(null), // Emit directly a first time on subscription
-  (0,event_emitter/* fromEvent */.R)(manifest, "decipherabilityUpdate") // then each time this event is triggered
-  ).pipe((0,map/* map */.U)(function () {
+  var estimator$ = (0,merge/* merge */.T)( // subscribe "first" (hack as it is a merge here) to event
+  (0,event_emitter/* fromEvent */.R)(manifest, "decipherabilityUpdate"), // Emit directly a first time on subscription (after subscribing to event)
+  (0,of.of)(null)).pipe((0,map/* map */.U)(function () {
     /** Representations for which a `RepresentationStream` can be created. */
     var playableRepresentations = adaptation.getPlayableRepresentations();
 
@@ -52640,15 +52672,15 @@ function StreamOrchestrator(content, clock$, abrManager, segmentBuffersStore, se
 
     var handleDecipherabilityUpdate$ = (0,event_emitter/* fromEvent */.R)(manifest, "decipherabilityUpdate").pipe((0,mergeMap/* mergeMap */.zg)(function (updates) {
       var segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
-      var hasType = updates.some(function (update) {
+      var ofCurrentType = updates.filter(function (update) {
         return update.adaptation.type === bufferType;
       });
 
-      if (!hasType || segmentBufferStatus.type !== "initialized") {
+      if (ofCurrentType.length === 0 || segmentBufferStatus.type !== "initialized") {
         return empty/* EMPTY */.E; // no need to stop the current Streams.
       }
 
-      var undecipherableUpdates = updates.filter(function (update) {
+      var undecipherableUpdates = ofCurrentType.filter(function (update) {
         return update.representation.decipherable === false;
       });
       var segmentBuffer = segmentBufferStatus.value;
