@@ -117,6 +117,15 @@ module.exports = {
     libraryTarget: "umd",
     libraryExport: "default",
     filename: shouldMinify ? "rx-player.min.js" : "rx-player.js",
+    environment: {
+      arrowFunction: false,
+      bigIntLiteral: false,
+      const: false,
+      destructuring: false,
+      dynamicImport: false,
+      forOf: false,
+      module: false,
+    },
   },
   optimization: {
     minimize: shouldMinify,
