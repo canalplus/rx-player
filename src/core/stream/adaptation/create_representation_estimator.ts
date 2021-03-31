@@ -15,7 +15,6 @@
  */
 
 import {
-  concat as observableConcat,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -89,9 +88,11 @@ export default function createRepresentationEstimator(
                                        IABRRequestEndEvent>();
   const abrEvents$ = observableMerge(streamFeedback$, requestFeedback$);
 
-  const estimator$ = observableConcat(
-    observableOf(null), // Emit directly a first time on subscription
-    fromEvent(manifest, "decipherabilityUpdate") // then each time this event is triggered
+  const estimator$ = observableMerge(
+    // subscribe "first" (hack as it is a merge here) to event
+    fromEvent(manifest, "decipherabilityUpdate"),
+    // Emit directly a first time on subscription (after subscribing to event)
+    observableOf(null)
   ).pipe(
     map(() : Representation[] => {
       /** Representations for which a `RepresentationStream` can be created. */
