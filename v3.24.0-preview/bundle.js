@@ -72423,9 +72423,33 @@ function EMEManager(mediaElement, keySystemsConfigs, contentProtections$) {
                         "Unknown error");
                 }), (0,ignoreElements/* ignoreElements */.l)());
             return (0,merge/* merge */.T)(SessionEventsListener(mediaKeySession, options, mediaKeySystemAccess.keySystem, initializationData), generateRequest$)
-                .pipe((0,tap/* tap */.b)((evt) => {
+                .pipe((0,map/* map */.U)((evt) => {
                 if (evt.type !== "keys-update") {
-                    return;
+                    return evt;
+                }
+                // We want to add the current key ids in the blacklist if it is
+                // not already there.
+                //
+                // We only do that when `singleLicensePer` is set to something
+                // else than the default `"init-data"` because this logic:
+                //   1. might result in a quality fallback, which is a v3.x.x
+                //      breaking change if some APIs (like `singleLicensePer`)
+                //      aren't used.
+                //   2. Rely on the EME spec regarding key statuses being well
+                //      implemented on all supported devices, which we're not
+                //      sure yet. Because in any other `singleLicensePer`, we
+                //      need a good implementation anyway, it doesn't matter
+                //      there.
+                const expectedKeyIds = initializationData.keyIds;
+                if (expectedKeyIds !== undefined &&
+                    options.singleLicensePer !== "init-data") {
+                    const missingKeyIds = expectedKeyIds.filter(expected => {
+                        return (!evt.value.whitelistedKeyIds.some(whitelisted => (0,are_arrays_of_numbers_equal/* default */.Z)(whitelisted, expected)) &&
+                            !evt.value.blacklistedKeyIDs.some(blacklisted => (0,are_arrays_of_numbers_equal/* default */.Z)(blacklisted, expected)));
+                    });
+                    if (missingKeyIds.length > 0) {
+                        evt.value.blacklistedKeyIDs.push(...missingKeyIds);
+                    }
                 }
                 lastKeyUpdate$.next(evt.value);
                 if ((evt.value.whitelistedKeyIds.length === 0 &&
@@ -72433,12 +72457,13 @@ function EMEManager(mediaElement, keySystemsConfigs, contentProtections$) {
                     sessionType === "temporary" ||
                     stores.persistentSessionsStore === null ||
                     isSessionPersisted) {
-                    return;
+                    return evt;
                 }
                 const { persistentSessionsStore } = stores;
                 cleanOldStoredPersistentInfo(persistentSessionsStore, EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
                 persistentSessionsStore.add(initializationData, mediaKeySession);
                 isSessionPersisted = true;
+                return evt;
             }), (0,catchError/* catchError */.K)(err => {
                 if (!(err instanceof BlacklistedSessionError)) {
                     throw err;
@@ -106187,9 +106212,11 @@ function createRepresentationEstimator({ manifest, adaptation }, abrManager, clo
     const streamFeedback$ = new Subject/* Subject */.xQ();
     const requestFeedback$ = new Subject/* Subject */.xQ();
     const abrEvents$ = (0,merge/* merge */.T)(streamFeedback$, requestFeedback$);
-    const estimator$ = (0,concat/* concat */.z)((0,of.of)(null), // Emit directly a first time on subscription
-    (0,event_emitter/* fromEvent */.R)(manifest, "decipherabilityUpdate") // then each time this event is triggered
-    ).pipe((0,map/* map */.U)(() => {
+    const estimator$ = (0,merge/* merge */.T)(
+    // subscribe "first" (hack as it is a merge here) to event
+    (0,event_emitter/* fromEvent */.R)(manifest, "decipherabilityUpdate"), 
+    // Emit directly a first time on subscription (after subscribing to event)
+    (0,of.of)(null)).pipe((0,map/* map */.U)(() => {
         /** Representations for which a `RepresentationStream` can be created. */
         const playableRepresentations = adaptation.getPlayableRepresentations();
         if (playableRepresentations.length <= 0) {
@@ -107365,11 +107392,12 @@ function StreamOrchestrator(content, clock$, abrManager, segmentBuffersStore, se
         const handleDecipherabilityUpdate$ = (0,event_emitter/* fromEvent */.R)(manifest, "decipherabilityUpdate")
             .pipe((0,mergeMap/* mergeMap */.zg)((updates) => {
             const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
-            const hasType = updates.some(update => update.adaptation.type === bufferType);
-            if (!hasType || segmentBufferStatus.type !== "initialized") {
+            const ofCurrentType = updates
+                .filter(update => update.adaptation.type === bufferType);
+            if (ofCurrentType.length === 0 || segmentBufferStatus.type !== "initialized") {
                 return empty/* EMPTY */.E; // no need to stop the current Streams.
             }
-            const undecipherableUpdates = updates.filter(update => update.representation.decipherable === false);
+            const undecipherableUpdates = ofCurrentType.filter(update => update.representation.decipherable === false);
             const segmentBuffer = segmentBufferStatus.value;
             const rangesToClean = getBlacklistedRanges(segmentBuffer, undecipherableUpdates);
             if (rangesToClean.length === 0) {
@@ -113947,7 +113975,7 @@ var withModulesState = function withModulesState(modulesState) {
         });
       };
 
-      _proto.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
+      _proto.UNSAFE_componentWillReceiveProps = function UNSAFE_componentWillReceiveProps(nextProps) {
         var _this3 = this;
 
         modulesProps.forEach(function (moduleProp) {
@@ -116517,13 +116545,15 @@ var ContentList = /*#__PURE__*/function (_React$Component) {
 
     var generateDRMButtons = function generateDRMButtons() {
       return DRM_TYPES.map(function (type) {
-        return /*#__PURE__*/react.createElement(components_Button, {
+        return /*#__PURE__*/react.createElement("span", {
+          key: type
+        }, /*#__PURE__*/react.createElement(components_Button, {
           className: "choice-input-button drm-button" + (chosenDRMType === type ? " selected" : ""),
           onClick: function onClick() {
             return onDRMTypeClick(type);
           },
           value: type
-        });
+        }));
       });
     };
 
@@ -117634,7 +117664,7 @@ var ChartsManager = /*#__PURE__*/function (_React$Component) {
     }, /*#__PURE__*/react.createElement("div", {
       className: "chart-checkbox"
     }, "Buffer content chart", /*#__PURE__*/react.createElement("label", {
-      "class": "switch"
+      className: "switch"
     }, /*#__PURE__*/react.createElement("input", {
       name: "displayBufferContentChart",
       type: "checkbox",
@@ -117642,7 +117672,7 @@ var ChartsManager = /*#__PURE__*/function (_React$Component) {
       checked: this.state.displayBufferContentChart,
       onChange: onBufferContentCheckBoxChange
     }), /*#__PURE__*/react.createElement("span", {
-      "class": "slider round"
+      className: "slider round"
     }))), displayBufferContentChart ? /*#__PURE__*/react.createElement(BufferContent, {
       player: player
     }) : null), /*#__PURE__*/react.createElement("div", {
@@ -117650,7 +117680,7 @@ var ChartsManager = /*#__PURE__*/function (_React$Component) {
     }, /*#__PURE__*/react.createElement("div", {
       className: "chart-checkbox"
     }, "Buffer size chart", /*#__PURE__*/react.createElement("label", {
-      "class": "switch"
+      className: "switch"
     }, /*#__PURE__*/react.createElement("input", {
       "aria-label": "Display/Hide chart about the buffer's size",
       name: "displayBufferSizeChart",
@@ -117658,7 +117688,7 @@ var ChartsManager = /*#__PURE__*/function (_React$Component) {
       checked: this.state.displayBufferSizeChart,
       onChange: onBufferSizeCheckBoxChange
     }), /*#__PURE__*/react.createElement("span", {
-      "class": "slider round"
+      className: "slider round"
     }))), displayBufferSizeChart ? /*#__PURE__*/react.createElement(BufferSize, {
       module: this.bufferSizeChart
     }) : null));
@@ -126136,7 +126166,7 @@ function Player_Player() {
 
 function MainComponent() {
   return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("div", {
-    "class": "nav-header"
+    className: "nav-header"
   }, /*#__PURE__*/react.createElement("section", {
     className: "title-wrapper"
   }, /*#__PURE__*/react.createElement("h1", {
