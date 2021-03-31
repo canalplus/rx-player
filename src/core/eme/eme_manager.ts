@@ -282,10 +282,41 @@ export default function EMEManager(
                                                        initializationData),
                                  generateRequest$)
             .pipe(
-              tap((evt) => {
+              map((evt) => {
                 if (evt.type !== "keys-update") {
-                  return;
+                  return evt;
                 }
+
+                // We want to add the current key ids in the blacklist if it is
+                // not already there.
+                //
+                // We only do that when `singleLicensePer` is set to something
+                // else than the default `"init-data"` because this logic:
+                //   1. might result in a quality fallback, which is a v3.x.x
+                //      breaking change if some APIs (like `singleLicensePer`)
+                //      aren't used.
+                //   2. Rely on the EME spec regarding key statuses being well
+                //      implemented on all supported devices, which we're not
+                //      sure yet. Because in any other `singleLicensePer`, we
+                //      need a good implementation anyway, it doesn't matter
+                //      there.
+                const expectedKeyIds = initializationData.keyIds;
+                if (expectedKeyIds !== undefined &&
+                    options.singleLicensePer !== "init-data")
+                {
+                  const missingKeyIds = expectedKeyIds.filter(expected => {
+                    return (
+                      !evt.value.whitelistedKeyIds.some(whitelisted =>
+                        areArraysOfNumbersEqual(whitelisted, expected)) &&
+                      !evt.value.blacklistedKeyIDs.some(blacklisted =>
+                        areArraysOfNumbersEqual(blacklisted, expected))
+                    );
+                  });
+                  if (missingKeyIds.length > 0) {
+                    evt.value.blacklistedKeyIDs.push(...missingKeyIds) ;
+                  }
+                }
+
                 lastKeyUpdate$.next(evt.value);
 
                 if ((evt.value.whitelistedKeyIds.length === 0 &&
@@ -294,7 +325,7 @@ export default function EMEManager(
                     stores.persistentSessionsStore === null ||
                     isSessionPersisted)
                 {
-                  return;
+                  return evt;
                 }
                 const { persistentSessionsStore } = stores;
                 cleanOldStoredPersistentInfo(
@@ -302,6 +333,8 @@ export default function EMEManager(
                   EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
                 persistentSessionsStore.add(initializationData, mediaKeySession);
                 isSessionPersisted = true;
+
+                return evt;
               }),
               catchError(err => {
                 if (!(err instanceof BlacklistedSessionError)) {
