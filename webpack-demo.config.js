@@ -79,7 +79,7 @@ module.exports = {
       "__DEV__": true,
       "__LOGGER_LEVEL__": "\"INFO\"",
       "process.env": {
-        NODE_ENV: JSON.stringify("production"),
+        NODE_ENV: JSON.stringify(isDevMode ? "development" : "production"),
       },
       "__FEATURES__": {
         BIF_PARSER: true,
