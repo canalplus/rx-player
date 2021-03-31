@@ -303,11 +303,12 @@ export default function StreamOrchestrator(
     const handleDecipherabilityUpdate$ = fromEvent(manifest, "decipherabilityUpdate")
       .pipe(mergeMap((updates) => {
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
-        const hasType = updates.some(update => update.adaptation.type === bufferType);
-        if (!hasType || segmentBufferStatus.type !== "initialized") {
+        const ofCurrentType = updates
+          .filter(update => update.adaptation.type === bufferType);
+        if (ofCurrentType.length === 0 || segmentBufferStatus.type !== "initialized") {
           return EMPTY; // no need to stop the current Streams.
         }
-        const undecipherableUpdates = updates.filter(update =>
+        const undecipherableUpdates = ofCurrentType.filter(update =>
           update.representation.decipherable === false);
         const segmentBuffer = segmentBufferStatus.value;
         const rangesToClean = getBlacklistedRanges(segmentBuffer, undecipherableUpdates);
