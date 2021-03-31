@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import {
   EMPTY,
   merge as observableMerge,
@@ -28,7 +33,6 @@ import {
   mergeMapTo,
   share,
   take,
-  tap,
 } from "rxjs/operators";
 import {
   clearElementSrc,
@@ -39,9 +43,9 @@ import log from "../../log";
 import deferSubscriptions from "../../utils/defer_subscriptions";
 import { IKeySystemOption } from "../eme";
 import createEMEManager from "./create_eme_manager";
-import emitLoadedEventWhenReady from "./emit_loaded_event";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
+import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IDirectfileEvent,
@@ -133,6 +137,13 @@ export default function initializeDirectfileContent({
   const initialTime = () => getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Init: Initial time calculated:", initialTime);
 
+  const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
+                                                      mediaElement,
+                                                      startTime: initialTime,
+                                                      mustAutoPlay: autoPlay,
+                                                      setCurrentTime,
+                                                      isDirectfile: true });
+
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
   const emeManager$ = linkURL$.pipe(
@@ -167,7 +178,7 @@ export default function initializeDirectfileContent({
       return evt.type === "eme-disabled" || evt.type === "attached-media-keys";
     }),
     take(1),
-    mergeMapTo(emitLoadedEventWhenReady(clock$, mediaElement, autoPlay, true)),
+    mergeMapTo(load$),
     mergeMap((evt) => {
       if (evt === "autoplay-blocked") {
         const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
@@ -183,17 +194,7 @@ export default function initializeDirectfileContent({
       return observableOf(EVENTS.loaded(null));
     }));
 
-  const initialSeek$ = clock$.pipe(
-    filter((tick) => tick.readyState > 0 || tick.event === "loadedmetadata"),
-    take(1),
-    tap(() => {
-      const startTime = initialTime();
-      if (mediaElement.currentTime !== startTime) {
-        log.info("Init: Set initial time", startTime);
-        setCurrentTime(startTime);
-      }
-    }),
-    ignoreElements());
+  const initialSeek$ = seek$.pipe(ignoreElements());
 
   return observableMerge(loadedEvent$,
                          initialSeek$,
