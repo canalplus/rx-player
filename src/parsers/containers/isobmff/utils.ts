@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import assert from "../../../utils/assert";
 import {
   be2toi,
@@ -434,6 +435,13 @@ function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
     if (emsg === null) {
       break;
     }
+
+    const version = emsg[0];
+    if (version !== 0) {
+      log.warn("ISOBMFF: EMSG version " + version.toString() + " not supported.");
+      break;
+    }
+
     const length = emsg.length;
     offset += length;
 
