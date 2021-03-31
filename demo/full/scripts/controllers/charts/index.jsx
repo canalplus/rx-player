@@ -51,7 +51,7 @@ class ChartsManager extends React.Component {
         <div className="player-box">
           <div className="chart-checkbox" >
             Buffer content chart
-            <label class="switch">
+            <label className="switch">
               <input
                 name="displayBufferContentChart"
                 type="checkbox"
@@ -59,7 +59,7 @@ class ChartsManager extends React.Component {
                 checked={this.state.displayBufferContentChart}
                 onChange={onBufferContentCheckBoxChange}
               />
-              <span class="slider round"></span>
+              <span className="slider round"></span>
             </label>
           </div>
           { displayBufferContentChart ?
@@ -70,7 +70,7 @@ class ChartsManager extends React.Component {
         <div className="player-box">
           <div className="chart-checkbox" >
             Buffer size chart
-            <label class="switch">
+            <label className="switch">
               <input
                 aria-label="Display/Hide chart about the buffer's size"
                 name="displayBufferSizeChart"
@@ -78,7 +78,7 @@ class ChartsManager extends React.Component {
                 checked={this.state.displayBufferSizeChart}
                 onChange={onBufferSizeCheckBoxChange}
               />
-              <span class="slider round"></span>
+              <span className="slider round"></span>
             </label>
           </div>
           { displayBufferSizeChart ?

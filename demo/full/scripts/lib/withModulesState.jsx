@@ -88,7 +88,7 @@ const withModulesState = (modulesState) => (Comp) => {
       });
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
       modulesProps.forEach(moduleProp => {
         if (!nextProps[moduleProp]) {
           if (modulesSubscriptions[moduleProp]) {

@@ -5,7 +5,7 @@ import Player from "./Player.jsx";
 function MainComponent() {
   return (
     <div>
-      <div class="nav-header">
+      <div className="nav-header">
         <section className="title-wrapper">
           <h1 className="title">
             <a href="https://github.com/canalplus/rx-player">
