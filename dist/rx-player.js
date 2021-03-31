@@ -15661,8 +15661,9 @@ function getPsshSystemID(buff, initialDataOffset) {
 /* harmony export */   "s9": function() { return /* binding */ parseEmsgBoxes; }
 /* harmony export */ });
 /* unused harmony export patchPssh */
+/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3887);
 /* harmony import */ var _utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6968);
-/* harmony import */ var _utils_string_parsing__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3635);
+/* harmony import */ var _utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3635);
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2689);
 /* harmony import */ var _get_box__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2297);
 /* harmony import */ var _read__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6807);
@@ -15681,6 +15682,7 @@ function getPsshSystemID(buff, initialDataOffset) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 
@@ -16109,17 +16111,24 @@ function parseEmsgBoxes(buffer) {
       break;
     }
 
+    var version = emsg[0];
+
+    if (version !== 0) {
+      _log__WEBPACK_IMPORTED_MODULE_4__/* .default.warn */ .Z.warn("ISOBMFF: EMSG version " + version.toString() + " not supported.");
+      break;
+    }
+
     var length = emsg.length;
     offset += length;
     var position = 4; // skip version + flags
 
-    var _readNullTerminatedSt = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_4__/* .readNullTerminatedString */ .DM)(emsg, position),
+    var _readNullTerminatedSt = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__/* .readNullTerminatedString */ .DM)(emsg, position),
         schemeIdEnd = _readNullTerminatedSt.end,
         schemeIdUri = _readNullTerminatedSt.string;
 
     position = schemeIdEnd; // skip schemeIdUri
 
-    var _readNullTerminatedSt2 = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_4__/* .readNullTerminatedString */ .DM)(emsg, position),
+    var _readNullTerminatedSt2 = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__/* .readNullTerminatedString */ .DM)(emsg, position),
         valueEnd = _readNullTerminatedSt2.end,
         value = _readNullTerminatedSt2.string;
 
