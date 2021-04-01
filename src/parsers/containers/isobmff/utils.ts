@@ -436,46 +436,45 @@ function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
       break;
     }
 
-    const version = emsg[0];
-    if (version !== 0) {
-      log.warn("ISOBMFF: EMSG version " + version.toString() + " not supported.");
-      break;
-    }
-
     const length = emsg.length;
     offset += length;
 
-    let position = 4; // skip version + flags
+    const version = emsg[0];
+    if (version !== 0) {
+      log.warn("ISOBMFF: EMSG version " + version.toString() + " not supported.");
+    } else {
+      let position = 4; // skip version + flags
 
-    const { end: schemeIdEnd, string: schemeIdUri } =
-      readNullTerminatedString(emsg, position);
-    position = schemeIdEnd; // skip schemeIdUri
+      const { end: schemeIdEnd, string: schemeIdUri } =
+        readNullTerminatedString(emsg, position);
+      position = schemeIdEnd; // skip schemeIdUri
 
-    const { end: valueEnd, string: value } = readNullTerminatedString(emsg, position);
-    position = valueEnd; // skip value
+      const { end: valueEnd, string: value } = readNullTerminatedString(emsg, position);
+      position = valueEnd; // skip value
 
-    const timescale = be4toi(emsg, position);
-    position += 4; // skip timescale
+      const timescale = be4toi(emsg, position);
+      position += 4; // skip timescale
 
-    const presentationTimeDelta = be4toi(emsg, position);
-    position += 4; // skip presentationTimeDelta
+      const presentationTimeDelta = be4toi(emsg, position);
+      position += 4; // skip presentationTimeDelta
 
-    const eventDuration = be4toi(emsg, position);
-    position += 4; // skip eventDuration
+      const eventDuration = be4toi(emsg, position);
+      position += 4; // skip eventDuration
 
-    const id = be4toi(emsg, position);
-    position += 4; // skip id
+      const id = be4toi(emsg, position);
+      position += 4; // skip id
 
-    const messageData = emsg.subarray(position, length);
+      const messageData = emsg.subarray(position, length);
 
-    const emsgData = { schemeIdUri,
-                       value,
-                       timescale,
-                       presentationTimeDelta,
-                       eventDuration,
-                       id,
-                       messageData };
-    emsgs.push(emsgData);
+      const emsgData = { schemeIdUri,
+                         value,
+                         timescale,
+                         presentationTimeDelta,
+                         eventDuration,
+                         id,
+                         messageData };
+      emsgs.push(emsgData);
+    }
   }
   if (emsgs.length === 0) {
     return undefined;
