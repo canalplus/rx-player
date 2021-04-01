@@ -317,14 +317,22 @@ useful depending on your needs):
   - __licenseStorage__ (``Object|undefined``): Required only if
     ``persistentLicense`` has been set to ``true``.
 
-    This is an object containing two functions ``load`` and ``save``:
-      - ``save``: takes into argument an ``Array.<Object>`` which will contain
-        information on all the DRM sessions the RxPlayer currently needs to
-        save.
+    This is an object containing the following properties:
+      - `save` (`Function`): function which takes into argument an
+        `Array.<Object>` which will contain information on all the DRM
+        sessions the RxPlayer currently needs to save.
         No return value is needed.
 
-      - ``load``: takes no argument and returns the last stored
-        ``Array.<Object>`` (the last one given to ``save``).
+      - `load` (`Function`): Function which takes no argument and returns the
+        last stored `Array.<Object>` (the last one given to `save`).
+
+      - `disableRetroCompatibility` (`boolean`): If set to `true` the RxPlayer
+        might not be able to load licenses persisted through an older RxPlayer
+        version. This will allow to unlock some optimizations, for example to
+        allow a faster loading of the current content.
+
+        We recommend setting that option to `true` if retrieving persisted
+        licenses through older versions are not that important to you.
 
   - __fallbackOn__ (`Object|undefined`): This advanced option allows to fallback on
     other Representations (a.k.a.) when one of them has its decription key refused.
@@ -371,6 +379,42 @@ useful depending on your needs):
 
     If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the
     same content needs to be re-decrypted.
+
+  - __singleLicensePer__ (``string|undefined``): Allows to use optimally a
+    single license for multiple decryption keys.
+
+    Can be set to the following values:
+
+      - `"init-data"`: This is the default value.
+        Under that behavior, the RxPlayer will try to fetch a new license any
+        time it encounters an unknown encryption initialization data in the
+        current content.
+
+        This usually means that a license will be fetched any time a new
+        decryption key is encountered, which is the most sensible thing to
+        do in most cases.
+
+      - `"content"`: Only fetch a single license for the whole content, even
+        if the content has multiple keys.
+
+        Under that behavior, only a single license will be fetched, with a
+        "challenge" generated from the first encryption initialization data
+        encountered.
+
+        Not only that, all Representations (qualities) whose key was not present
+        in the license will be fallbacked from, meaning that they won't be
+        played anymore.
+
+        _Note that while fallbacking, it is possible that the player goes into
+        the `"RELOADING"` state (during which the video will disappear and many
+        APIs will become unavailable). More information about the `"RELOADING"`
+        state can be found in [the player states documentation](./states)._
+
+        You can set this option as an optimization (to only perform a single
+        license requests instead of many while playing contents encrypted with
+        multiple keys) but only if the corresponding optimizations have also
+        been performed on the side of the license server (to return a license
+        for every keys even if one for a single key was asked for).
 
   - __disableMediaKeysAttachmentLock__ (``Boolean|undefined``): In regular
     conditions, we might want to wait for the media element to have decryption

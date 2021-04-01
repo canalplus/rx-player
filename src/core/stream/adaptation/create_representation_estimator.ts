@@ -17,10 +17,20 @@
 import {
   merge as observableMerge,
   Observable,
+  of as observableOf,
   Subject,
 } from "rxjs";
+import {
+  distinctUntilChanged,
+  map,
+  switchMap,
+} from "rxjs/operators";
 import { MediaError } from "../../../errors";
-import { Adaptation } from "../../../manifest";
+import Manifest, {
+  Adaptation,
+  Representation,
+} from "../../../manifest";
+import { fromEvent } from "../../../utils/event_emitter";
 import ABRManager, {
   IABREstimate,
   IABRManagerClockTick,
@@ -52,13 +62,14 @@ import {
  * information on what data is expected. The idea is to provide as much data as
  * possible so the estimation is as adapted as possible.
  *
- * @param {Object} adaptation
+ * @param {Object} content
  * @param {Object} abrManager
  * @param {Observable} clock$
  * @returns {Object}
  */
 export default function createRepresentationEstimator(
-  adaptation : Adaptation,
+  { manifest, adaptation } : { manifest : Manifest;
+                               adaptation : Adaptation; },
   abrManager : ABRManager,
   clock$ : Observable<IABRManagerClockTick>
 ) : { estimator$ : Observable<IABREstimate>;
@@ -77,19 +88,37 @@ export default function createRepresentationEstimator(
                                        IABRRequestEndEvent>();
   const abrEvents$ = observableMerge(streamFeedback$, requestFeedback$);
 
-  /** Representations for which a `RepresentationStream` can be created. */
-  const playableRepresentations = adaptation.getPlayableRepresentations();
-  if (playableRepresentations.length <= 0) {
-    const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
-                                    "No Representation in the chosen " +
-                                    "Adaptation can be played");
-    throw noRepErr;
-  }
+  const estimator$ = observableMerge(
+    // subscribe "first" (hack as it is a merge here) to event
+    fromEvent(manifest, "decipherabilityUpdate"),
+    // Emit directly a first time on subscription (after subscribing to event)
+    observableOf(null)
+  ).pipe(
+    map(() : Representation[] => {
+      /** Representations for which a `RepresentationStream` can be created. */
+      const playableRepresentations = adaptation.getPlayableRepresentations();
+      if (playableRepresentations.length <= 0) {
+        const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
+                                        "No Representation in the chosen " +
+                                        adaptation.type + " Adaptation can be played");
+        throw noRepErr;
+      }
+      return playableRepresentations;
+    }),
+    distinctUntilChanged((prevRepr, newRepr) => {
+      if (prevRepr.length !== newRepr.length) {
+        return false;
+      }
+      for (let i = 0; i < newRepr.length; i++) {
+        if (prevRepr[i].id !== newRepr[i].id) {
+          return false;
+        }
+      }
+      return true;
+    }),
+    switchMap((playableRepresentations) =>
+      abrManager.get$(adaptation.type, playableRepresentations, clock$, abrEvents$)));
 
-  const estimator$ = abrManager.get$(adaptation.type,
-                                     playableRepresentations,
-                                     clock$,
-                                     abrEvents$);
   return { estimator$,
            streamFeedback$,
            requestFeedback$ };

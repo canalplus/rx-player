@@ -292,7 +292,7 @@ export default class TrackChoiceManager {
     adaptation$ : Subject<Adaptation|null>
   ) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    const adaptations = period.getPlayableAdaptations(bufferType);
+    const adaptations = period.getSupportedAdaptations(bufferType);
     if (periodItem != null) {
       if (periodItem[bufferType] != null) {
         log.warn(`TrackChoiceManager: ${bufferType} already added for period`, period);
@@ -367,7 +367,7 @@ export default class TrackChoiceManager {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
-    const audioAdaptations = period.getPlayableAdaptations("audio");
+    const audioAdaptations = period.getSupportedAdaptations("audio");
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
     if (chosenAudioAdaptation === null) {
@@ -403,7 +403,7 @@ export default class TrackChoiceManager {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
-    const textAdaptations = period.getPlayableAdaptations("text");
+    const textAdaptations = period.getSupportedAdaptations("text");
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (chosenTextAdaptation === null) {
       // If the Period was previously without text, keep it that way
@@ -437,7 +437,7 @@ export default class TrackChoiceManager {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
-    const videoAdaptations = period.getPlayableAdaptations("video");
+    const videoAdaptations = period.getSupportedAdaptations("video");
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
     if (chosenVideoAdaptation === null) {
@@ -837,7 +837,7 @@ export default class TrackChoiceManager {
 
       const { period,
               audio: audioItem } = periodItem;
-      const audioAdaptations = period.getPlayableAdaptations("audio");
+      const audioAdaptations = period.getSupportedAdaptations("audio");
       const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
       if (chosenAudioAdaptation === null ||
@@ -891,7 +891,7 @@ export default class TrackChoiceManager {
 
       const { period,
               text: textItem } = periodItem;
-      const textAdaptations = period.getPlayableAdaptations("text");
+      const textAdaptations = period.getSupportedAdaptations("text");
       const chosenTextAdaptation = this._textChoiceMemory.get(period);
 
       if (chosenTextAdaptation === null ||
@@ -942,7 +942,7 @@ export default class TrackChoiceManager {
       }
 
       const { period, video: videoItem } = periodItem;
-      const videoAdaptations = period.getPlayableAdaptations("video");
+      const videoAdaptations = period.getSupportedAdaptations("video");
       const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
       if (chosenVideoAdaptation === null ||

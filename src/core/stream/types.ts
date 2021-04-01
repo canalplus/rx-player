@@ -22,6 +22,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
+import { IEMSG } from "../../parsers/containers/isobmff";
 import { IContentProtection } from "../eme";
 import { IBufferType } from "../segment_buffers";
 
@@ -138,7 +139,7 @@ export interface IStreamEventAddedSegment<T> {
  */
 export interface IStreamNeedsManifestRefresh {
   type : "needs-manifest-refresh";
-  value : undefined;
+  value: undefined;
 }
 
 /**
@@ -157,6 +158,17 @@ export interface IEncryptionDataEncounteredEvent {
   type : "encryption-data-encountered";
   value : IContentProtection;
 }
+
+/** Structure describing an "inband" event, as found in a media segment. */
+export interface IInbandEvent {
+  /** Type when the event was foud inside a "emsg` ISOBMFF box */
+  type: "emsg";
+  /** Value when the event was foud inside a "emsg` ISOBMFF box */
+  value: IEMSG;
+}
+
+export interface IInbandEventsEvent { type : "inband-events";
+                                      value : IInbandEvent[]; }
 
 /**
  * Event sent when a `RepresentationStream` is terminating:
@@ -389,7 +401,8 @@ export type IRepresentationStreamEvent<T> = IStreamStatusEvent |
                                             IStreamManifestMightBeOutOfSync |
                                             IStreamTerminatingEvent |
                                             IStreamNeedsManifestRefresh |
-                                            IStreamWarningEvent;
+                                            IStreamWarningEvent |
+                                            IInbandEventsEvent;
 
 /** Event sent by an `AdaptationStream`. */
 export type IAdaptationStreamEvent<T> = IBitrateEstimationChangeEvent |
@@ -404,7 +417,8 @@ export type IAdaptationStreamEvent<T> = IBitrateEstimationChangeEvent |
                                         IEncryptionDataEncounteredEvent |
                                         IStreamManifestMightBeOutOfSync |
                                         IStreamNeedsManifestRefresh |
-                                        IStreamWarningEvent;
+                                        IStreamWarningEvent |
+                                        IInbandEventsEvent;
 
 /** Event sent by a `PeriodStream`. */
 export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
@@ -425,7 +439,8 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
                                  IEncryptionDataEncounteredEvent |
                                  IStreamManifestMightBeOutOfSync |
                                  IStreamNeedsManifestRefresh |
-                                 IStreamWarningEvent;
+                                 IStreamWarningEvent |
+                                 IInbandEventsEvent;
 
 /** Event coming from function(s) managing multiple PeriodStreams. */
 export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
@@ -451,7 +466,8 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
                                           IEncryptionDataEncounteredEvent |
                                           IStreamManifestMightBeOutOfSync |
                                           IStreamNeedsManifestRefresh |
-                                          IStreamWarningEvent;
+                                          IStreamWarningEvent |
+                                          IInbandEventsEvent;
 
 /** Every event sent by the `StreamOrchestrator`. */
 export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
@@ -480,4 +496,5 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
                                        IEncryptionDataEncounteredEvent |
                                        IStreamManifestMightBeOutOfSync |
                                        IStreamNeedsManifestRefresh |
-                                       IStreamWarningEvent;
+                                       IStreamWarningEvent |
+                                       IInbandEventsEvent;

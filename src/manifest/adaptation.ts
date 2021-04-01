@@ -110,13 +110,6 @@ export default class Adaptation {
    */
   public manuallyAdded? : boolean;
 
-  /**
-   * `false` if from all Representation from this Adaptation, none is decipherable.
-   * `true` if at least one is known to be decipherable.
-   * `undefined` if this is not known for at least a single Representation.
-   */
-  public decipherable? : boolean;
-
   /** `true` if at least one Representation is in a supported codec. `false` otherwise. */
   public isSupported : boolean;
 
@@ -169,7 +162,6 @@ export default class Adaptation {
 
     const argsRepresentations = parsedAdaptation.representations;
     const representations : Representation[] = [];
-    let decipherable : boolean | undefined = false;
     let isSupported : boolean = false;
     for (let i = 0; i < argsRepresentations.length; i++) {
       const representation = new Representation(argsRepresentations[i],
@@ -186,9 +178,6 @@ export default class Adaptation {
                                isSignInterpreted: this.isSignInterpreted });
       if (shouldAdd) {
         representations.push(representation);
-        if (decipherable === false && representation.decipherable !== false) {
-          decipherable = representation.decipherable;
-        }
         if (!isSupported && representation.isSupported) {
           isSupported = true;
         }
@@ -197,7 +186,6 @@ export default class Adaptation {
     representations.sort((a, b) => a.bitrate - b.bitrate);
     this.representations = representations;
 
-    this.decipherable = decipherable;
     this.isSupported = isSupported;
 
     // for manuallyAdded adaptations (not in the manifest)

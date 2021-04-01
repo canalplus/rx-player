@@ -83,8 +83,7 @@ export default class LoadedSessionsStore {
    * Returns the stored MediaKeySession information related to the
    * given initDataType and initData if found.
    * Returns `null` if no such MediaKeySession is stored.
-   * @param {Uint8Array} initData
-   * @param {string|undefined} initDataType
+   * @param {Object} initializationData
    * @returns {Object|null}
    */
   public get(initializationData : IInitializationDataInfo) : IStoredSessionData | null {
@@ -99,11 +98,10 @@ export default class LoadedSessionsStore {
    * its internal storage, as returned by the `getAll` method.
    *
    * This can be used for example to tell when a previously-stored
-   * MediaKeySession is re-used to then be able to implement a caching
+   * initialization data is re-used to then be able to implement a caching
    * replacement algorithm based on the least-recently-used values by just
    * evicting the first values returned by `getAll`.
-   * @param {Uint8Array} initData
-   * @param {string|undefined} initDataType
+   * @param {Object} initializationData
    * @returns {Object|null}
    */
   public getAndReuse(
@@ -116,10 +114,29 @@ export default class LoadedSessionsStore {
   }
 
   /**
+   * Moves the corresponding MediaKeySession to the end of its internal storage,
+   * as returned by the `getAll` method.
+   *
+   * This can be used to signal that a previously-stored initialization data is
+   * re-used to then be able to implement a caching replacement algorithm based
+   * on the least-recently-used values by just evicting the first values
+   * returned by `getAll`.
+   *
+   * Returns `true` if the corresponding session was found in the store, `false`
+   * otherwise.
+   * @param {Object} initializationData
+   * @returns {boolean}
+   */
+  public reuse(
+    initializationData : IInitializationDataInfo
+  ) : boolean {
+    return this._storage.getAndReuse(initializationData) !== undefined;
+  }
+
+  /**
    * Create a new MediaKeySession and store it in this store.
    * @throws {EncryptedMediaError}
-   * @param {Uint8Array} initData
-   * @param {string|undefined} initDataType
+   * @param {Object} initializationData
    * @param {string} sessionType
    * @returns {MediaKeySession}
    */
@@ -159,8 +176,7 @@ export default class LoadedSessionsStore {
    * Close a MediaKeySession corresponding to an initialization data and remove
    * its related stored information from the LoadedSessionsStore.
    * Emit when done.
-   * @param {Uint8Array} initData
-   * @param {string|undefined} initDataType
+   * @param {Object} initializationData
    * @returns {Observable}
    */
   public closeSession(

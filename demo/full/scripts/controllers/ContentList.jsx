@@ -598,12 +598,14 @@ class ContentList extends React.Component {
 
     const generateDRMButtons = () => {
       return DRM_TYPES.map(type =>
-        <Button
-          className={"choice-input-button drm-button" +
-            (chosenDRMType === type ? " selected" : "")}
-          onClick={() => onDRMTypeClick(type)}
-          value={type}
-        />);
+        <span key={type}>
+          <Button
+            className={"choice-input-button drm-button" +
+              (chosenDRMType === type ? " selected" : "")}
+            onClick={() => onDRMTypeClick(type)}
+            value={type}
+          />
+        </span>);
     };
 
     const onClickGenerateLink = () => {

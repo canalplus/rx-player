@@ -299,17 +299,30 @@ export default function StreamOrchestrator(
       })
     );
 
+    // Free the buffer of undecipherable data
     const handleDecipherabilityUpdate$ = fromEvent(manifest, "decipherabilityUpdate")
       .pipe(mergeMap((updates) => {
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
-        const hasType = updates.some(update => update.adaptation.type === bufferType);
-        if (!hasType || segmentBufferStatus.type !== "initialized") {
+        const ofCurrentType = updates
+          .filter(update => update.adaptation.type === bufferType);
+        if (ofCurrentType.length === 0 || segmentBufferStatus.type !== "initialized") {
           return EMPTY; // no need to stop the current Streams.
         }
+        const undecipherableUpdates = ofCurrentType.filter(update =>
+          update.representation.decipherable === false);
         const segmentBuffer = segmentBufferStatus.value;
-        const rangesToClean = getBlacklistedRanges(segmentBuffer, updates);
+        const rangesToClean = getBlacklistedRanges(segmentBuffer, undecipherableUpdates);
+        if (rangesToClean.length === 0) {
+          // Nothing to clean => no buffer to flush.
+          return EMPTY;
+        }
+
+        // We have to remove the undecipherable media data and then ask the
+        // current media element to be "flushed"
+
         enableOutOfBoundsCheck = false;
         destroyStreams$.next();
+
         return observableConcat(
           ...rangesToClean.map(({ start, end }) =>
             segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),

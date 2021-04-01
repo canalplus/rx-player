@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import assert from "../../../utils/assert";
 import {
   be2toi,
@@ -24,7 +25,10 @@ import {
   itobe4,
   itobe8,
 } from "../../../utils/byte_parsing";
-import { hexToBytes } from "../../../utils/string_parsing";
+import {
+  hexToBytes,
+  readNullTerminatedString,
+} from "../../../utils/string_parsing";
 import { MAX_32_BIT_INT } from "./constants";
 import { createBox } from "./create_box";
 import { getPlayReadyKIDFromPrivateData } from "./drm";
@@ -33,6 +37,7 @@ import {
   getBoxOffsets,
 } from "./get_box";
 import {
+  getEMSG,
   getMDIA,
   getTRAF,
 } from "./read";
@@ -43,6 +48,21 @@ export interface IISOBMFFPSSHInfo {
   systemId : string;
   /** Additional data contained in the PSSH Box. */
   privateData : Uint8Array;
+}
+
+/**
+ * Inband event data when the data was contained inside an ISOBMFF box.
+ * The value and their name corresponds to the same one than in the
+ * corresponding ISOBMFF specification.
+ */
+export interface IEMSG {
+  schemeIdUri: string;
+  value: string;
+  timescale: number;
+  presentationTimeDelta: number;
+  eventDuration: number;
+  id: number;
+  messageData: Uint8Array;
 }
 
 /** Segment information from a parsed sidx. */
@@ -409,6 +429,66 @@ function updateBoxLength(buf : Uint8Array) : Uint8Array {
   }
 }
 
+/**
+ * Parse EMSG boxes from ISOBMFF data.
+ * @param {Uint8Array} buf
+ * @returns {Array.<Object> | undefined}
+ */
+function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
+  const emsgs: IEMSG[] = [];
+  let offset = 0;
+  while (offset < buffer.length) {
+    const emsg = getEMSG(buffer, offset);
+    if (emsg === null) {
+      break;
+    }
+
+    const length = emsg.length;
+    offset += length;
+
+    const version = emsg[0];
+    if (version !== 0) {
+      log.warn("ISOBMFF: EMSG version " + version.toString() + " not supported.");
+    } else {
+      let position = 4; // skip version + flags
+
+      const { end: schemeIdEnd, string: schemeIdUri } =
+        readNullTerminatedString(emsg, position);
+      position = schemeIdEnd; // skip schemeIdUri
+
+      const { end: valueEnd, string: value } = readNullTerminatedString(emsg, position);
+      position = valueEnd; // skip value
+
+      const timescale = be4toi(emsg, position);
+      position += 4; // skip timescale
+
+      const presentationTimeDelta = be4toi(emsg, position);
+      position += 4; // skip presentationTimeDelta
+
+      const eventDuration = be4toi(emsg, position);
+      position += 4; // skip eventDuration
+
+      const id = be4toi(emsg, position);
+      position += 4; // skip id
+
+      const messageData = emsg.subarray(position, length);
+
+      const emsgData = { schemeIdUri,
+                         value,
+                         timescale,
+                         presentationTimeDelta,
+                         eventDuration,
+                         id,
+                         messageData };
+      emsgs.push(emsgData);
+    }
+  }
+  if (emsgs.length === 0) {
+    return undefined;
+  }
+  return emsgs;
+}
+
 export {
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
@@ -417,4 +497,5 @@ export {
   getSegmentsFromSidx,
   patchPssh,
   updateBoxLength,
+  parseEmsgBoxes,
 };

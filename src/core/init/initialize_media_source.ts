@@ -327,9 +327,8 @@ export default function InitializeOnMediaSource(
 
       const setUndecipherableRepresentations$ = emeManager$.pipe(
         tap((evt) => {
-          if (evt.type === "blacklist-keys") {
-            log.info("Init: blacklisting Representations based on keyIDs");
-            manifest.addUndecipherableKIDs(evt.value);
+          if (evt.type === "keys-update") {
+            manifest.updateDeciperabilitiesBasedOnKeyIds(evt.value);
           } else if (evt.type === "blacklist-protection-data") {
             log.info("Init: blacklisting Representations based on protection data.");
             manifest.addUndecipherableProtectionData(evt.value);

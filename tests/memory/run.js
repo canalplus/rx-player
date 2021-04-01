@@ -1,7 +1,9 @@
 /* eslint-env node */
 
 const path = require("path");
-const Server = require("karma").Server;
+const karma = require("karma");
+const parseConfig = karma.config.parseConfig;
+const Server = karma.Server;
 const TestContentServer = require("../contents/server");
 const webpackConfig = require("../../webpack-tests.config.js");
 
@@ -72,11 +74,20 @@ const karmaConf = {
 };
 
 const testContentServer = TestContentServer(3000);
-const server = new Server(karmaConf, function(exitCode) {
-  testContentServer.close();
-  process.exit(exitCode);
+parseConfig(
+  null,
+  karmaConf,
+  { promiseConfig: true, throwErrors: true }
+).then((parsedConfig) => {
+  const server = new Server(parsedConfig, function(exitCode) {
+    testContentServer.close();
+    process.exit(exitCode);
+  });
+  server.start();
+}, (rejectReason) => {
+  /* eslint-disable-next-line no-console */
+  console.error("Karma config rejected:", rejectReason);
 });
-server.start();
 
 /**
  * Display through `console.log` an helping message relative to how to run this

@@ -20,6 +20,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import { IEMSG } from "../../parsers/containers/isobmff";
 import {
   ILocalIndexSegment,
   ILocalManifestInitSegmentLoader,
@@ -117,6 +118,7 @@ export interface IPrivateInfos {
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
   localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
   localManifestSegment? : ILocalManifestSegmentPrivateInfos;
+  isEMSGWhitelisted? : (evt: IEMSG) => boolean;
 }
 
 /** Represent a single Segment from a Representation. */

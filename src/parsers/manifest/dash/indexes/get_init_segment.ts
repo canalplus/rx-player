@@ -15,19 +15,26 @@
  */
 
 import { ISegment } from "../../../../manifest";
+import { IEMSG } from "../../../containers/isobmff";
 
 /**
  * Construct init segment for the given index.
  * @param {Object} index
+ * @param {function} isEMSGWhitelisted
  * @returns {Object}
  */
 export default function getInitSegment(
   index: { timescale: number;
            initialization?: { mediaURLs: string[] | null; range?: [number, number] };
            indexRange?: [number, number];
-           indexTimeOffset : number; }
+           indexTimeOffset : number; },
+  isEMSGWhitelisted?: (inbandEvent: IEMSG) => boolean
 ) : ISegment {
   const { initialization } = index;
+  let privateInfos;
+  if (isEMSGWhitelisted !== undefined) {
+    privateInfos = { isEMSGWhitelisted };
+  }
   return { id: "init",
            isInit: true,
            time: 0,
@@ -38,5 +45,6 @@ export default function getInitSegment(
                                            undefined,
            indexRange: index.indexRange,
            mediaURLs: initialization?.mediaURLs ?? null,
+           privateInfos,
            timestampOffset: -(index.indexTimeOffset / index.timescale) };
 }

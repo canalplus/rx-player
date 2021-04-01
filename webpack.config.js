@@ -117,14 +117,23 @@ module.exports = {
     libraryTarget: "umd",
     libraryExport: "default",
     filename: shouldMinify ? "rx-player.min.js" : "rx-player.js",
+    environment: {
+      arrowFunction: false,
+      bigIntLiteral: false,
+      const: false,
+      destructuring: false,
+      dynamicImport: false,
+      forOf: false,
+      module: false,
+    },
   },
   optimization: {
     minimize: shouldMinify,
     minimizer: shouldMinify ? [new TerserPlugin()] : [],
   },
   performance: {
-    maxEntrypointSize: shouldMinify ? 450000 : 2000000,
-    maxAssetSize: shouldMinify ? 450000 : 2000000,
+    maxEntrypointSize: shouldMinify ? 500000 : 2500000,
+    maxAssetSize: shouldMinify ? 500000 : 2500000,
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
