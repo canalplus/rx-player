@@ -50,13 +50,20 @@ export interface IISOBMFFPSSHInfo {
   privateData : Uint8Array;
 }
 
-export interface IEMSG { schemeIdUri: string;
-                         value: string;
-                         timescale: number;
-                         presentationTimeDelta: number;
-                         eventDuration: number;
-                         id: number;
-                         messageData: Uint8Array; }
+/**
+ * Inband event data when the data was contained inside an ISOBMFF box.
+ * The value and their name corresponds to the same one than in the
+ * corresponding ISOBMFF specification.
+ */
+export interface IEMSG {
+  schemeIdUri: string;
+  value: string;
+  timescale: number;
+  presentationTimeDelta: number;
+  eventDuration: number;
+  id: number;
+  messageData: Uint8Array;
+}
 
 /** Segment information from a parsed sidx. */
 export interface ISidxSegment {

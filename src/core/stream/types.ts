@@ -159,8 +159,13 @@ export interface IEncryptionDataEncounteredEvent {
   value : IContentProtection;
 }
 
-export interface IInbandEvent { type: "emsg";
-                                value: IEMSG; }
+/** Structure describing an "inband" event, as found in a media segment. */
+export interface IInbandEvent {
+  /** Type when the event was foud inside a "emsg` ISOBMFF box */
+  type: "emsg";
+  /** Value when the event was foud inside a "emsg` ISOBMFF box */
+  value: IEMSG;
+}
 
 export interface IInbandEventsEvent { type : "inband-events";
                                       value : IInbandEvent[]; }
