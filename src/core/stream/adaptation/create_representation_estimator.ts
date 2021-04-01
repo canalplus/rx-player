@@ -100,7 +100,7 @@ export default function createRepresentationEstimator(
       if (playableRepresentations.length <= 0) {
         const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
                                         "No Representation in the chosen " +
-                                        "Adaptation can be played");
+                                        adaptation.type + " Adaptation can be played");
         throw noRepErr;
       }
       return playableRepresentations;
