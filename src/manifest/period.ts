@@ -172,10 +172,16 @@ export default class Period {
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
   }
 
-  getPlayableAdaptations(type? : IAdaptationType) : Adaptation[] {
+  /**
+   * Returns Adaptations that contain Representations in supported codecs.
+   * @param {string|undefined} type - If set filter on a specific Adaptation's
+   * type. Will return for all types if `undefined`.
+   * @returns {Array.<Adaptation>}
+   */
+  getSupportedAdaptations(type? : IAdaptationType) : Adaptation[] {
     if (type === undefined) {
       return this.getAdaptations().filter(ada => {
-        return ada.getPlayableRepresentations().length > 0;
+        return ada.isSupported;
       });
     }
     const adaptationsForType = this.adaptations[type];
@@ -183,7 +189,7 @@ export default class Period {
       return [];
     }
     return adaptationsForType.filter(ada => {
-      return ada.getPlayableRepresentations().length > 0;
+      return ada.isSupported;
     });
   }
 }
