@@ -14054,12 +14054,19 @@ var Period = /*#__PURE__*/function () {
       var id = _ref.id;
       return wantedId === id;
     });
-  };
+  }
+  /**
+   * Returns Adaptations that contain Representations in supported codecs.
+   * @param {string|undefined} type - If set filter on a specific Adaptation's
+   * type. Will return for all types if `undefined`.
+   * @returns {Array.<Adaptation>}
+   */
+  ;
 
-  _proto.getPlayableAdaptations = function getPlayableAdaptations(type) {
+  _proto.getSupportedAdaptations = function getSupportedAdaptations(type) {
     if (type === undefined) {
       return this.getAdaptations().filter(function (ada) {
-        return ada.getPlayableRepresentations().length > 0;
+        return ada.isSupported;
       });
     }
 
@@ -14070,7 +14077,7 @@ var Period = /*#__PURE__*/function () {
     }
 
     return adaptationsForType.filter(function (ada) {
-      return ada.getPlayableRepresentations().length > 0;
+      return ada.isSupported;
     });
   };
 
@@ -51206,7 +51213,7 @@ function createRepresentationEstimator(_ref, abrManager, clock$) {
     var playableRepresentations = adaptation.getPlayableRepresentations();
 
     if (playableRepresentations.length <= 0) {
-      var noRepErr = new media_error/* default */.Z("NO_PLAYABLE_REPRESENTATION", "No Representation in the chosen " + "Adaptation can be played");
+      var noRepErr = new media_error/* default */.Z("NO_PLAYABLE_REPRESENTATION", "No Representation in the chosen " + adaptation.type + " Adaptation can be played");
       throw noRepErr;
     }
 
@@ -55658,7 +55665,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
 
   _proto.addPeriod = function addPeriod(bufferType, period, adaptation$) {
     var periodItem = getPeriodItem(this._periods, period);
-    var adaptations = period.getPlayableAdaptations(bufferType);
+    var adaptations = period.getSupportedAdaptations(bufferType);
 
     if (periodItem != null) {
       if (periodItem[bufferType] != null) {
@@ -55746,7 +55753,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
-    var audioAdaptations = period.getPlayableAdaptations("audio");
+    var audioAdaptations = period.getSupportedAdaptations("audio");
 
     var chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
@@ -55782,7 +55789,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
-    var textAdaptations = period.getPlayableAdaptations("text");
+    var textAdaptations = period.getSupportedAdaptations("text");
 
     var chosenTextAdaptation = this._textChoiceMemory.get(period);
 
@@ -55818,7 +55825,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
-    var videoAdaptations = period.getPlayableAdaptations("video");
+    var videoAdaptations = period.getSupportedAdaptations("video");
 
     var chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
@@ -56268,7 +56275,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
 
       var period = periodItem.period,
           audioItem = periodItem.audio;
-      var audioAdaptations = period.getPlayableAdaptations("audio");
+      var audioAdaptations = period.getSupportedAdaptations("audio");
 
       var chosenAudioAdaptation = _this._audioChoiceMemory.get(period);
 
@@ -56321,7 +56328,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
 
       var period = periodItem.period,
           textItem = periodItem.text;
-      var textAdaptations = period.getPlayableAdaptations("text");
+      var textAdaptations = period.getSupportedAdaptations("text");
 
       var chosenTextAdaptation = _this2._textChoiceMemory.get(period);
 
@@ -56373,7 +56380,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
 
       var period = periodItem.period,
           videoItem = periodItem.video;
-      var videoAdaptations = period.getPlayableAdaptations("video");
+      var videoAdaptations = period.getSupportedAdaptations("video");
 
       var chosenVideoAdaptation = _this3._videoChoiceMemory.get(period);
 
