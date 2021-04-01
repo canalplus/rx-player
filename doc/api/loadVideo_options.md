@@ -317,14 +317,22 @@ useful depending on your needs):
   - __licenseStorage__ (``Object|undefined``): Required only if
     ``persistentLicense`` has been set to ``true``.
 
-    This is an object containing two functions ``load`` and ``save``:
-      - ``save``: takes into argument an ``Array.<Object>`` which will contain
-        information on all the DRM sessions the RxPlayer currently needs to
-        save.
+    This is an object containing the following properties:
+      - `save` (`Function`): function which takes into argument an
+        `Array.<Object>` which will contain information on all the DRM
+        sessions the RxPlayer currently needs to save.
         No return value is needed.
 
-      - ``load``: takes no argument and returns the last stored
-        ``Array.<Object>`` (the last one given to ``save``).
+      - `load` (`Function`): Function which takes no argument and returns the
+        last stored `Array.<Object>` (the last one given to `save`).
+
+      - `disableRetroCompatibility` (`boolean`): If set to `true` the RxPlayer
+        might not be able to load licenses persisted through an older RxPlayer
+        version. This will allow to unlock some optimizations, for example to
+        allow a faster loading of the current content.
+
+        We recommend setting that option to `true` if retrieving persisted
+        licenses through older versions are not that important to you.
 
   - __fallbackOn__ (`Object|undefined`): This advanced option allows to fallback on
     other Representations (a.k.a.) when one of them has its decription key refused.
