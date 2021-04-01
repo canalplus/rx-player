@@ -3546,7 +3546,7 @@ function shouldFavourCustomSafariEME() {
    * one.
    * @type {Number}
    */
-  EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 50,
+  EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 15,
 
   /**
    * When playing contents with a persistent license, we will usually store some

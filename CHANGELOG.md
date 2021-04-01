@@ -36,6 +36,7 @@
   - DRM: Wait up to 100 milliseconds after a persistent MediaKeySession has been loaded to wait for possibly late `keyStatuses` updates [#928]
   - DRM: Only store persistent MediaKeySession once at least one key is known [#926]
   - DRM: Reconsider Representations that have been fallbacked from if they become decipherable [#905]
+  - DRM: Lower the maximum size of the MediaKeySession cache from 50 to 15 to improve compatibility, even more now that license with multiple keys are properly handled
   - Doc: Move architecture documentation closer to the code it documents [#764, #900]
   - Doc: add "Quick links" to the top of the API documentation [#909]
 
