@@ -1,0 +1,446 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Deprecated APIs - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Deprecated%20APIs">Deprecated APIs</a></p>
+<ul>
+<li><a href="#chapter-Fullscreen%20APIs">Fullscreen APIs</a></li>
+<li><a href="#chapter-Image%20(BIF)%20APIs">Image (BIF) APIs</a></li>
+<li><a href="#chapter-RxPlayer%20Methods">RxPlayer Methods</a>
+<ul>
+<li><a href="#subchapter-getManifest">getManifest</a></li>
+<li><a href="#subchapter-getCurrentAdaptations">getCurrentAdaptations</a></li>
+<li><a href="#subchapter-getCurrentRepresentations">getCurrentRepresentations</a></li>
+<li><a href="#subchapter-getNativeTextTrack">getNativeTextTrack</a></li>
+<li><a href="#subchapter-isFullscreen">isFullscreen</a></li>
+<li><a href="#subchapter-setFullscreen">setFullscreen</a></li>
+<li><a href="#subchapter-exitFullscreen">exitFullscreen</a></li>
+<li><a href="#subchapter-getImageTrackData">getImageTrackData</a></li>
+</ul>
+</li>
+<li><a href="#chapter-RxPlayer%20Events">RxPlayer Events</a>
+<ul>
+<li><a href="#subchapter-nativeTextTracksChange">nativeTextTracksChange</a></li>
+<li><a href="#subchapter-fullscreenChange">fullscreenChange</a></li>
+<li><a href="#subchapter-imageTrackUpdate">imageTrackUpdate</a></li>
+</ul>
+</li>
+<li><a href="#chapter-loadVideo%20options">loadVideo options</a>
+<ul>
+<li><a href="#subchapter-defaultAudioTrack">defaultAudioTrack</a></li>
+<li><a href="#subchapter-defaultTextTrack">defaultTextTrack</a></li>
+<li><a href="#subchapter-supplementaryTextTracks">supplementaryTextTracks</a></li>
+<li><a href="#subchapter-supplementaryImageTracks">supplementaryImageTracks</a></li>
+<li><a href="#subchapter-hideNativeSubtitle">hideNativeSubtitle</a></li>
+</ul>
+</li>
+<li><a href="#chapter-RxPlayer%20constructor%20options">RxPlayer constructor options</a>
+<ul>
+<li><a href="#subchapter-throttleWhenHidden">throttleWhenHidden</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Other%20properties">Other properties</a>
+<ul>
+<li><a href="#subchapter-Manifest">Manifest</a></li>
+<li><a href="#subchapter-Smooth">Smooth</a></li>
+<li><a href="#subchapter-NetworkError">NetworkError</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Deprecated%20APIs"></a></p>
+<h1>Deprecated APIs</h1>
+<p>This documentation lists APIs deprecated in the v3.x.x.</p>
+<p>As we guarantee API compatibility in the v3.x.x, those API won’t disappear until
+we switch to a v4.x.x version.</p>
+<p>You will find here which APIs are deprecated, why, and depending on the
+concerned API, how to replace it.</p>
+<p><a name="fullscreen-apis"></a>
+<a name="chapter-Fullscreen%20APIs"></a></p>
+<h2>Fullscreen APIs</h2>
+<p>All fullscreen APIs have been deprecated, namely:</p>
+<ul>
+<li>the <code>isFullscreen</code> method</li>
+<li>the <code>setFullscreen</code> method</li>
+<li>the <code>exitFullscreen</code> method</li>
+<li>the <code>fullscreenChange</code> event</li>
+</ul>
+<p>This is because of several things:</p>
+<ul>
+<li>
+<p>fullscreen management has now become a lot more complex with features such
+as advanced subtitles management, were the text track HTMLElement is
+controlled by the application.</p>
+</li>
+<li>
+<p>most application developpers also wants to put their own controls into
+fullscreen mode. Those APIs only put the media element into fullscreen mode
+and not any other element. This can be misleading.</p>
+</li>
+</ul>
+<p>The fullscreen logic should now be entirely on the application-side. Replacement
+code is provided for each of those APIs below.</p>
+<p><a name="bif-apis"></a>
+<a name="chapter-Image%20(BIF)%20APIs"></a></p>
+<h2>Image (BIF) APIs</h2>
+<p>The following properties methods and events have been deprecated:</p>
+<ul>
+<li>the <code>imageTrackUpdate</code> event</li>
+<li>the <code>getImageTrackData</code> method</li>
+<li>the <code>supplementaryImageTracks</code> loadVideo option</li>
+</ul>
+<p>This is because most code linked to image management will be moved outside the
+RxPlayer. Doing that will both be more flexible for users and much easier to
+maintain for us (albeit with a small time of transition for the application).</p>
+<p>You can replace those API by this new exported function:
+<a href="parseBifThumbnails.html">parseBifThumbnails</a>.</p>
+<p>To give more details about why those APIs have been deprecated, there are
+multiple reasons:</p>
+<ol>
+<li>How it should be specified for live contents of for multi-Period DASH
+contents is not clear enough.</li>
+<li>Integrating it in the RxPlayer’s API means that it had to take multiple
+choices that we prefer to let to the application: whether to retry the
+request if the it fails or if it is unavailable, whether to do the request
+at all for users with a low bitrate…</li>
+<li>The task of displaying those thumbnails is ultimately on the UI-side (the
+part that know where the user wants to seek)</li>
+<li>The biggest part of the code related to it was a simple BIF parser, that
+can easily be re-implemented by any application.</li>
+</ol>
+<p><a name="chapter-RxPlayer%20Methods"></a></p>
+<h2>RxPlayer Methods</h2>
+<p>The following RxPlayer methods are deprecated.</p>
+<p><a name="subchapter-getManifest"></a></p>
+<h3>getManifest</h3>
+<p><code>getManifest</code> returns our internal representation we have of a given “manifest”
+document.</p>
+<p>Though it was first exposed to allow users to have access to more precize
+information on the current content, this method also limited us on the possible
+evolutions we could do, as changing what this function returns would mean
+breaking the API.</p>
+<p>We also realized that that method was not used for now by the implementation we
+know of.</p>
+<p>For now, we decided we will simply remove that API in the next major version. If
+that’s a problem for you, please open an issue.</p>
+<p><a name="subchapter-getCurrentAdaptations"></a></p>
+<h3>getCurrentAdaptations</h3>
+<p><code>getCurrentAdaptations</code> returns an object describing each tracks available for
+the current Period in the current content.</p>
+<p>Like <code>getManifest</code>, we found that this API was not much used and limited us on
+the possible evolutions we can do on the RxPlayer.</p>
+<p>Again like <code>getManifest</code>, we plan to remove that API completely without
+replacing it.
+If that’s a problem for you, please open an issue.</p>
+<p><a name="subchapter-getCurrentRepresentations"></a></p>
+<h3>getCurrentRepresentations</h3>
+<p><code>getCurrentRepresentations</code> returns an object describing each “qualities”
+available in the current chosen tracks.</p>
+<p>Exactly like <code>getCurrentAdaptations</code> and <code>getManifest</code>, we found that this API:</p>
+<ul>
+<li>was not used as far as we know</li>
+<li>limited the evolutions we could do on the RxPlayer’s code without breaking
+the API.</li>
+</ul>
+<p>We thus plan to remove that API completely without replacing it.
+If that’s a problem for you, please open an issue.</p>
+<p><a name="subchapter-getNativeTextTrack"></a></p>
+<h3>getNativeTextTrack</h3>
+<p><code>getNativeTextTrack</code> returned the first <code>TextTrack</code> element attached to the
+media element or <code>null </code> if it did not exist.</p>
+<p>This API was originally created to allow users to manipulate the <code>TextTrack</code>
+element themselves. For example, to “catch” cues as they appear and display them
+differently.</p>
+<p>What changed is that we now have two text track modes:</p>
+<ul>
+<li><code>html</code>, which allow advanced subtitle management</li>
+<li><code>native</code>, the old mode, which display subtitles natively through a
+<code>TextTrack</code> element.</li>
+</ul>
+<p>This API will only return an element for  the <code>native</code> mode, but none for the
+<code>html</code> mode because its element is not attached to the media element.</p>
+<p>We heavily insist on people wanting advanced usecases to use the <code>html</code> mode, as
+many formatting options do not work in <code>native</code> mode.</p>
+<p>As we considered that <code>getNativeTextTrack</code> API was more confusing than it was
+helpful in our current API, we decided to deprecate it. Do not hesitate to open
+an issue if you use this API.</p>
+<p><a name="subchapter-isFullscreen"></a></p>
+<h3>isFullscreen</h3>
+<p><code>isFullscreen</code> has been deprecated as it is part of our Fullscreen APIs, see
+<a href="#fullscreen-apis">the related chapter</a> for more information.</p>
+<p><code>isFullscreen</code> just checked that ANY element was fullscreen. As such, it can
+easily be replace for the majority of browsers with the following code:</p>
+<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">isFullscreen</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">return</span> !!(
+    <span class="hljs-built_in">document</span>.fullscreenElement ||
+    <span class="hljs-built_in">document</span>.mozFullScreenElement ||
+    <span class="hljs-built_in">document</span>.webkitFullscreenElement ||
+    <span class="hljs-built_in">document</span>.msFullscreenElement
+  );
+}
+</code></pre>
+<p><a name="subchapter-setFullscreen"></a></p>
+<h3>setFullscreen</h3>
+<p><code>setFullscreen</code> has been deprecated as it is part of our Fullscreen APIs, see
+<a href="#fullscreen-apis">the related chapter</a> for more information.</p>
+<p><code>setFullscreen</code> allowed to set the media element in fullscreen mode (or exit
+fullscreen mode, if <code>false</code> was given as argument).</p>
+<p>If you want to just put the media element on fullscreen mode, you can use the
+following code:</p>
+<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">setFullscreen</span>(<span class="hljs-params">goFull</span>) </span>{
+  <span class="hljs-keyword">if</span> (goFull === <span class="hljs-string">"false"</span>) {
+    exitFullscreen();
+    <span class="hljs-keyword">return</span>;
+  }
+  <span class="hljs-keyword">if</span> (isFullscreen()) { <span class="hljs-comment">// see code above</span>
+    <span class="hljs-keyword">return</span>;
+  }
+
+  <span class="hljs-keyword">const</span> mediaElement = player.getVideoElement();
+  <span class="hljs-keyword">if</span> (!mediaElement) {
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">"No media element"</span>);
+  }
+  <span class="hljs-keyword">if</span> (mediaElement.requestFullscreen) {
+    mediaElement.requestFullscreen();
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (mediaElement.msRequestFullscreen) {
+    mediaElement.msRequestFullscreen();
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (mediaElement.mozRequestFullScreen) {
+    mediaElement.mozRequestFullScreen();
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (mediaElement.webkitRequestFullscreen) {
+    mediaElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+  }
+}
+</code></pre>
+<p>Please consider however that this function will only put the media element in
+full screen mode, without the eventual controls and HTML text tracks you might
+also want to set in fullscreen. The code is easily adaptable however to put
+your own element into fullscreen mode instead.</p>
+<p><a name="subchapter-exitFullscreen"></a></p>
+<h3>exitFullscreen</h3>
+<p><code>exitFullscreen</code> has been deprecated as it is part of our Fullscreen APIs, see
+<a href="#fullscreen-apis">the related chapter</a> for more information.</p>
+<p><code>exitFullscreen</code> just <code>exited</code> any element put in fullscreen mode. As such,
+its code can easily be replaced by:</p>
+<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">exitFullscreen</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">if</span> (isFullscreen()) {
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">document</span>.exitFullscreen) {
+      <span class="hljs-built_in">document</span>.exitFullscreen();
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">document</span>.msExitFullscreen) {
+      <span class="hljs-built_in">document</span>.msExitFullscreen();
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">document</span>.mozCancelFullScreen) {
+      <span class="hljs-built_in">document</span>.mozCancelFullScreen();
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">document</span>.webkitExitFullscreen) {
+      <span class="hljs-built_in">document</span>.webkitExitFullscreen();
+    }
+  }
+}
+</code></pre>
+<p><a name="subchapter-getImageTrackData"></a></p>
+<h3>getImageTrackData</h3>
+<p><code>getImageTrackData</code> has been deprecated like most API related to BIF thumbnail
+parsing.
+You can read <a href="#bif-apis">the related chapter</a> for more information.</p>
+<p>You can replace this API by using the
+<a href="parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
+<p><a name="chapter-RxPlayer%20Events"></a></p>
+<h2>RxPlayer Events</h2>
+<p>The following RxPlayer events has been deprecated.</p>
+<p><a name="subchapter-nativeTextTracksChange"></a></p>
+<h3>nativeTextTracksChange</h3>
+<p><code>nativeTextTracksChange</code> events are deprecated. Which means they probably
+won’t be sent in a <code>v4.x.x</code> version.</p>
+<p>The reasons are basically the same than for the <code>getNativeTextTracks</code> method.
+It should not be needed anymore as most advanced needs should be better answered
+by an <code>html</code> text track mode.</p>
+<p><a name="subchapter-fullscreenChange"></a></p>
+<h3>fullscreenChange</h3>
+<p><code>fullscreenChange</code> events have been deprecated as it is part of our Fullscreen
+APIs, see <a href="#fullscreen-apis">the related chapter</a> for more information.</p>
+<p>The <code>fullscreenChange</code> event was sent when the media element got in or out of
+fullscreen mode, with agg boolean as a payload:</p>
+<ul>
+<li>if <code>true</code>, the element entered fullscreen mode</li>
+<li>if <code>false</code>, the element exited fullscreen mode</li>
+</ul>
+<p>This behavior can easily be recreated through the following code:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> mediaElement = player.getVideoElement();
+mediaElement.addEventListener(<span class="hljs-string">"fullscreenChange"</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">if</span> (isFullscreen()) { <span class="hljs-comment">// see isFullscreen implementation above</span>
+    <span class="hljs-comment">// do things</span>
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-comment">// do other things</span>
+  }
+});
+</code></pre>
+<p><a name="subchapter-imageTrackUpdate"></a></p>
+<h3>imageTrackUpdate</h3>
+<p><code>imageTrackUpdate</code> events have been deprecated like most API related to BIF
+thumbnail parsing.
+You can read <a href="#bif-apis">the related chapter</a> for more information.</p>
+<p>You can replace this API by using the
+<a href="parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
+<p><a name="chapter-loadVideo%20options"></a></p>
+<h2>loadVideo options</h2>
+<p>The following loadVideo options are deprecated.</p>
+<p><a name="subchapter-defaultAudioTrack"></a></p>
+<h3>defaultAudioTrack</h3>
+<p><a href="loadVideo_options.html#prop-preferredAudioTracks">The <code>preferredAudioTracks</code> loadVideo
+option</a> is now the preferred
+(no pun intended) solution to set the default audio track.
+This new option allows to handle much more complex use cases and can even be
+updated at any time through <a href="index.html#meth-setPreferredAudioTracks">the <code>setPreferredAudioTracks</code>
+method</a>.</p>
+<h4>How to replace that option</h4>
+<p>It is very easy to replace <code>defaultAudioTrack</code> by <code>preferredAudioTracks</code>.</p>
+<p>For example, if you want to have a default french audio language, you probably
+previously did:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: myURL,
+  <span class="hljs-attr">transport</span>: myTransport,
+
+  <span class="hljs-attr">defaultAudioTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-comment">// or just `defaultAudioTrack: "fra"`, both are equivalent</span>
+})
+</code></pre>
+<p>Now you will have to set it through an array either when creating a new
+RxPlayer:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">preferredAudioTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }],
+})
+</code></pre>
+<p>Or at any time, through the <code>setPreferredAudioTracks</code> method:</p>
+<pre><code class="language-js">player.setPreferredAudioTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }]);
+</code></pre>
+<p><a name="subchapter-defaultTextTrack"></a></p>
+<h3>defaultTextTrack</h3>
+<p><code>defaultTextTrack</code> is replaced by <a href="loadVideo_options.html#prop-preferredTextTracks">the <code>preferredTextTracks</code> constructor
+option</a> for the same reason
+than <code>defaultAudioTrack</code>.</p>
+<h4>How to replace that option</h4>
+<p>It is very easy to replace <code>defaultTextTrack</code> by <code>preferredTextTracks</code>.</p>
+<p>For example, if you want to have a default swedish subtitle language, you
+probably previously did:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: myURL,
+  <span class="hljs-attr">transport</span>: myTransport,
+
+  <span class="hljs-attr">defaultTextTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">"swe"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-comment">// or just `defaultTextTrack: "swe"`, both are equivalent</span>
+})
+</code></pre>
+<p>Now you will have to set it through an array either when creating a new
+RxPlayer:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">preferredTextTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">"swe"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }],
+})
+</code></pre>
+<p>Or at any time, through the <code>setPreferredTextTracks</code> method:</p>
+<pre><code class="language-js">player.setPreferredTextTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }]);
+</code></pre>
+<p><a name="subchapter-supplementaryTextTracks"></a></p>
+<h3>supplementaryTextTracks</h3>
+<p>The <code>supplementaryTextTracks</code> has been deprecated for multiple reasons:</p>
+<ol>
+<li>
+<p>The main reason is that the behavior of this API is not defined for
+multi-Period DASH contents (nor for MetaPlaylist contents): Should we only
+add the subtitles for the first Period or should it be for every Period?
+How to define a different subtitles track for the first and for the second
+Period?</p>
+<p>Adding an external tool much less coupled to the RxPlayer move those
+questions entirely to the application, which should know more than us what
+to do in those different cases.</p>
+</li>
+<li>
+<p>Its API was a little arcane because we had to make it compatible with every
+possible type of contents (i.e. DASH, Smooth, MetaPlaylist etc.) out there.</p>
+</li>
+<li>
+<p>It did not work for Directfile contents yet. Although we could have made it
+compatible with them, we thought that this was the occasion to define a
+better API to replace it.</p>
+</li>
+<li>
+<p>Its behavior was more complex that you would initially think of. For
+example, we could have to re-download multiple times the same subtitles
+file if manual garbage collecting was enabled.</p>
+</li>
+<li>
+<p>All usages of that API that we know of were for Smooth or DASH VoD contents
+which sadly just omitted those subtitles tracks in their Manifest. The true
+“clean” way to fix the problem in that case is to do it at the source: the
+content.
+In this case, fixing it on the player-side should only be a temporary
+work-around (don’t be scared, we still have an API replacement).</p>
+</li>
+</ol>
+<p>The new <code>TextTrackRenderer</code> tool which replace it is much more straightforward.
+As an external tool which just reads and renders already-downloaded text
+subtitles, its API and the extent of what it does should be much more simple.</p>
+<p>It’s also compatible with any type of contents, even when playing through an
+other player.</p>
+<h4>How to replace that option</h4>
+<p>Every <code>supplementaryTextTracks</code> feature can be replaced by the
+<code>TextTrackRenderer</code> tool.
+Please bear in mind however that they are two completely different APIs, doing
+the transition might take some time.</p>
+<p>The <code>TextTrackRenderer</code> tool is documented <a href="TextTrackRenderer.html">here</a>.</p>
+<p><a name="subchapter-supplementaryImageTracks"></a></p>
+<h3>supplementaryImageTracks</h3>
+<p>The <code>supplementaryImageTracks</code> events have been deprecated like most API related
+to BIF thumbnail parsing.
+You can read <a href="#bif-apis">the related chapter</a> for more information.</p>
+<p>You can replace this API by using the
+<a href="parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
+<p><a name="subchapter-hideNativeSubtitle"></a></p>
+<h3>hideNativeSubtitle</h3>
+<p>The <code>hideNativeSubtitle</code> option is deprecated and won’t be replaced.</p>
+<p>This is because it was added at a time when our text track API was much less
+advanced. Some applications wanted to handle subtitles themselves and thus hid
+the true “native” subtitles to display them themselves in a better way.</p>
+<p>However, this API seems to not be used anymore. Please open an issue if you need
+it.</p>
+<p><a name="chapter-RxPlayer%20constructor%20options"></a></p>
+<h2>RxPlayer constructor options</h2>
+<p>The following RxPlayer constructor options are deprecated.</p>
+<p><a name="subchapter-throttleWhenHidden"></a></p>
+<h3>throttleWhenHidden</h3>
+<p><code>throttleWhenHidden</code>has been deprecated as video visibility relies only on
+page visibility API and document hiddenness.</p>
+<p>A video should be visible if the Picture-In-Picture mode is activated, even
+if the <code>hidden</code> attribute of <code>document</code> is set to <code>true</code>.</p>
+<p><code>throttleVideoBitrateWhenHidden</code> relies on both and can be used like this :</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> rxPlayer = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-comment">// ... RxPlayer options</span>
+  <span class="hljs-comment">// throttleWhenHidden: true [deprecated]</span>
+  <span class="hljs-attr">throttleVideoBitrateWhenHidden</span>: <span class="hljs-literal">true</span>,
+});
+</code></pre>
+<p><a name="chapter-Other%20properties"></a></p>
+<h2>Other properties</h2>
+<p>Some very specific properties from various methods are deprecated.
+You will find them here.</p>
+<p><a name="subchapter-Manifest"></a></p>
+<h3>Manifest</h3>
+<p>The <code>adaptations</code> property returned by the <code>Manifest</code> object you can obtain
+through the <code>getManifest</code> call is deprecated.</p>
+<p>This corresponds to the <code>adaptations</code> property of the first element in the
+<code>periods</code> object from the same <code>Manifest</code> object, so it’s very easy to
+replace:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> manifest = player.getManifest();
+
+<span class="hljs-keyword">if</span> (manifest &amp;&amp; manifest.periods.length) {
+  <span class="hljs-built_in">console</span>.log(manifest.adaptations === manifest.periods[<span class="hljs-number">0</span>].adaptations); <span class="hljs-comment">// true</span>
+}
+</code></pre>
+<p><a name="subchapter-Smooth"></a></p>
+<h3>Smooth</h3>
+<p>Setting a <code>*.wsx</code>, a <code>*.ism</code> or a <code>*.isml</code> URL as an <code>url</code> property in
+<code>loadVideo</code> is now deprecated when we’re talking about a Smooth Streaming
+content.</p>
+<p>We recommend to only set a Manifest URL in that property when the transport is
+equal to <code>smooth</code>.</p>
+<p><a name="subchapter-NetworkError"></a></p>
+<h3>NetworkError</h3>
+<p>The <code>xhr</code> property from a <code>NetworkError</code> is deprecated.</p>
+<p>This is to prepare the support of low-latency streaming, with
+<a href="https://mpeg.chiariglione.org/standards/mpeg-a/common-media-application-format">CMAF</a>,
+where the <code>fetch</code> API has to be used instead of an <code>XMLHttpRequest</code>.</p>
+<p>We recommend to not rely on this property anymore. You still should have access
+to the <code>status</code> and <code>url</code> properties.</p>
+</body></html></div></div></div></body>

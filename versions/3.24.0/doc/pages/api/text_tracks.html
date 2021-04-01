@@ -1,0 +1,155 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Text tracks - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Text%20tracks">Text tracks</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Supported%20text%20track%20formats">Supported text track formats</a></li>
+<li><a href="#chapter-Text%20tracks%20indicated%20in%20a%20manifest">Text tracks indicated in a manifest</a>
+<ul>
+<li><a href="#subchapter-In%20DASH">In DASH</a></li>
+<li><a href="#subchapter-In%20Microsoft%20Smooth%20Streaming">In Microsoft Smooth Streaming</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Text%20tracks%20added%20manually">Text tracks added manually</a></li>
+<li><a href="#chapter-Text%20track%20display%20modes">Text track display modes</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Text%20tracks"></a></p>
+<h1>Text tracks</h1>
+<p><a name="overview"></a>
+<a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The rx-player allows to display text tracks - such as subtitles or closed
+captions - directly over your content:</p>
+<p><img src="./assets/text_track_example.png" alt="Example of a textrack on acontent" title="Example of a textrack"></p>
+<p>Adding text tracks to contents can be done by two means:</p>
+<ul>
+<li>by using a <a href="../terms.html#manifest">Manifest</a> declaring those text tracks</li>
+<li>by manually adding text track(s) when you call the <code>loadVideo</code> API</li>
+</ul>
+<p>You can then choose the right track through the different text track-related
+API, all documented in the <a href="index.html">general API documentation</a>.</p>
+<p><a name="supported"></a>
+<a name="chapter-Supported%20text%20track%20formats"></a></p>
+<h2>Supported text track formats</h2>
+<p>The rx-player supports the following formats:</p>
+<ul>
+<li>TTML (TTML1, EBU-TT and IMSC1)</li>
+<li>WebVTT</li>
+<li>SAMI</li>
+<li>SRT</li>
+<li>TTML embedded in an MP4 file</li>
+<li>WebVTT embedded in an MP4 file</li>
+</ul>
+<p><a name="manifest"></a>
+<a name="chapter-Text%20tracks%20indicated%20in%20a%20manifest"></a></p>
+<h2>Text tracks indicated in a manifest</h2>
+<p>Each streaming technology supported by the Manifest defines a way to add text
+track directly in their Manifests files.</p>
+<p>This chapter explains what is supported by the RxPlayer.</p>
+<p><a name="manifest-dash"></a>
+<a name="subchapter-In%20DASH"></a></p>
+<h3>In DASH</h3>
+<p>In DASH, text tracks are defined by <code>AdaptationSet</code> elements, which have a
+<code>contentType</code> attribute equal to <code>text</code>.</p>
+<p>Those <code>AdaptationSet</code> can also define a <code>lang</code>, <code>codecs</code> and <code>mimeType</code>,
+which are then exploited by the RxPlayer.</p>
+<hr>
+<p>The <code>lang</code> attribute is used to know the language the track is in.</p>
+<p>The RxPlayer understands the following standards:</p>
+<ul>
+<li>ISO 639-1 (2 letters)</li>
+<li>ISO 639-2 (3 letters)</li>
+<li>ISO 639-3 (3 letters)</li>
+</ul>
+<p>More complex combined formats are also understood, as long as it begins by one
+of the understood standards, followed by a dash (“-”).</p>
+<p>For example “en-US” is translated into just “en”, and then inferred to be
+english.</p>
+<hr>
+<p>The <code>mimeType</code> attribute is used to know in which format the track is in.</p>
+<p>The RxPlayer understands the following ones:</p>
+<ul>
+<li><code>application/ttml+xml</code>: TTML in plain text</li>
+<li><code>text/vtt</code>: WebVTT in plain text</li>
+<li><code>application/x-sami</code>: SAMI in plain text</li>
+<li><code>application/mp4</code>: Text track embedded in an MP4 container.</li>
+<li><code>text/plain</code>: Generic plain text mimeType</li>
+</ul>
+<p>For the last two, the <code>codecs</code> attribute of the <code>AdaptationSet</code> will be
+exploited to know the exact format.</p>
+<hr>
+<p>The rx-player uses the <code>codecs</code> attribute for text tracks in only two cases:</p>
+<ul>
+<li>the <code>mimeType</code> is equal to <code>application/mp4</code></li>
+<li>the <code>mimeType</code> is equal to <code>text/plain</code></li>
+</ul>
+<p>For the first case, both WebVTT and TTML can be embedded in an MP4 file. To know
+which one we’re dealing with, the <code>codecs</code> attribute should be equal to:</p>
+<ul>
+<li><code>stpp</code> for TTML</li>
+<li><code>wvtt</code> for WebVTT</li>
+</ul>
+<p>For the second case (<code>"text/plain"</code>), this is specifically to support plain
+SubRip (SRT) subtitles. To use them you need to set <code>codecs</code> simply to
+<code>srt</code>.</p>
+<hr>
+<p>To know if we’re dealing with a closed caption text track, the RxPlayer uses the
+<a href="https://www.dvb.org/resources/public/standards/a168_dvb-dash.pdf">DVB-DASH specification</a>.</p>
+<p>That is, an <code>AdaptationSet</code> is inferred to be a closed caption for the hard of
+hearing, if it contains an <code>Accessibility</code> descriptor with the following
+attributes:</p>
+<ul>
+<li><code>SchemeIdUri</code> set to <code>urn:tva:metadata:cs:AudioPurposeCS:2007</code></li>
+<li><code>value</code> set to <code>2</code></li>
+</ul>
+<p><a name="manifest-smooth"></a>
+<a name="subchapter-In%20Microsoft%20Smooth%20Streaming"></a></p>
+<h3>In Microsoft Smooth Streaming</h3>
+<p>In Smooth Manifests, a <code>StreamIndex</code> is inferred to be for a text track if its
+<code>Type</code> attribute is equal to <code>text</code>.</p>
+<hr>
+<p>The <code>FourCC</code> attribute is used to infer the format of the text track. Only
+<code>TTML</code> is understood, and is translated to be a TTML track embedded in an MP4
+container.</p>
+<p>Adding support for other formats is very simple, open an issue if you want us to
+add a standardized FourCC code for another supported format.</p>
+<hr>
+<p>The <code>Language</code> is used to know the language the track is in. The rules are the
+same than for DASH:</p>
+<p>The rx-player understand the following standards:</p>
+<ul>
+<li>ISO 639-1 (2 letters)</li>
+<li>ISO 639-2 (3 letters)</li>
+<li>ISO 639-3 (3 letters)
+More complex combined formats are also understood, as long as it begins by one
+of the understood standards, followed by a dash (“-”).</li>
+</ul>
+<p>For example “en-US” is translated into just “en”, and then inferred to be
+english.</p>
+<hr>
+<p>The <code>Subtype</code> attribute is used to know if the language is a closed caption or
+not.</p>
+<p>At the moment, the RxPlayer infers the track to be a closed caption only if its
+value is <code>DESC</code>.</p>
+<p><a name="manual"></a>
+<a name="chapter-Text%20tracks%20added%20manually"></a></p>
+<h2>Text tracks added manually</h2>
+<p>It is also possible to add a supplementary text track dynamically, by using the
+<code>TextTrackRenderer</code> tool. You can read its documentation
+<a href="TextTrackRenderer.html">here</a>.</p>
+<p><a name="modes"></a>
+<a name="chapter-Text%20track%20display%20modes"></a></p>
+<h2>Text track display modes</h2>
+<p>There is two ways the text track can be displayed:</p>
+<ul>
+<li>
+<p><code>"native"</code>: The text track is displayed in <code>&lt;track&gt;</code> elements, which are
+directly in the linked <code>videoElement</code>.</p>
+</li>
+<li>
+<p><code>"html"</code>: The text track is displayed in a separate <code>&lt;div&gt;</code> element.</p>
+</li>
+</ul>
+<p>The second ones allows for a better track stylisation. The distinction between
+those two is pretty simple and is explained
+<a href="loadVideo_options.html#prop-textTrackMode">here</a>, in the <a href="loadVideo_options.html">loadVideo options
+documentation</a>.</p>
+</body></html></div></div></div></body>

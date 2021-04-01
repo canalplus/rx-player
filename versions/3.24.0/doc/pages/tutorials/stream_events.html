@@ -1,0 +1,289 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Tutorial: Listening to stream events - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Tutorial:%20Listening%20to%20stream%20events">Tutorial: Listening to stream events</a></p>
+<ul>
+<li><a href="#chapter-Event%20Formats%20understood%20by%20the%20RxPlayer">Event Formats understood by the RxPlayer</a>
+<ul>
+<li><a href="#subchapter-DASH%20EventStream%20elements">DASH EventStream elements</a></li>
+</ul>
+</li>
+<li><a href="#chapter-How%20to%20listen%20to%20stream%20events">How to listen to stream events</a></li>
+<li><a href="#chapter-The%20event%20format">The event format</a>
+<ul>
+<li><a href="#subchapter-DASH%20EventStream%20elements-bis">DASH EventStream elements</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Listening%20when%20an%20event%20has%20ended">Listening when an event has ended</a></li>
+<li><a href="#chapter-Example">Example</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Tutorial:%20Listening%20to%20stream%20events"></a></p>
+<h1>Tutorial: Listening to stream events</h1>
+<p>Some contents contain events a player will need to send at a particular point
+in time. We call those in the RxPlayer “stream events”.</p>
+<p>For example, stream events are often used jointly with ad-insertion, to allow a
+player to notify when an user begin to see a particular ad.</p>
+<p>Stream events are not only restrained to ad-related usages though. Any event
+you want to synchronize with the played content can be inserted.</p>
+<p><a name="chapter-Event%20Formats%20understood%20by%20the%20RxPlayer"></a></p>
+<h2>Event Formats understood by the RxPlayer</h2>
+<p><a name="subchapter-DASH%20EventStream%20elements"></a></p>
+<h3>DASH EventStream elements</h3>
+<p>For now, the RxPlayer only make use of DASH’ EventStream elements.</p>
+<p>Such elements are defined in a DASH MPD in the concerned <code>Period</code>.
+Here is an example of such element in an MPD:</p>
+<pre><code class="language-xml"><span class="hljs-meta">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">MPD</span>
+  <span class="hljs-attr">xmlns:xsi</span>=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"urn:mpeg:dash:schema:mpd:2011"</span>
+  <span class="hljs-attr">xsi:schemaLocation</span>=<span class="hljs-string">"urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd"</span>
+  <span class="hljs-attr">type</span>=<span class="hljs-string">"dynamic"</span>
+  <span class="hljs-attr">minimumUpdatePeriod</span>=<span class="hljs-string">"PT2S"</span>
+  <span class="hljs-attr">timeShiftBufferDepth</span>=<span class="hljs-string">"PT30M"</span>
+  <span class="hljs-attr">availabilityStartTime</span>=<span class="hljs-string">"2011-12-25T12:30:00"</span>
+  <span class="hljs-attr">minBufferTime</span>=<span class="hljs-string">"PT4S"</span>
+  <span class="hljs-attr">profiles</span>=<span class="hljs-string">"urn:mpeg:dash:profile:isoff-live:2011"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">Period</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"1"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">EventStream</span> <span class="hljs-attr">schemeIdUri</span>=<span class="hljs-string">"urn:uuid:XYZY"</span> <span class="hljs-attr">timescale</span>=<span class="hljs-string">"1000"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"call"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"0"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"0"</span>&gt;</span>
+          1 800 10101010
+        <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"20000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"1"</span>&gt;</span>
+          1 800 10101011
+        <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"40000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"2"</span>&gt;</span>
+          1 800 10101012
+        <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"60000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"3"</span>&gt;</span>
+          1 800 10101013
+        <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">EventStream</span>&gt;</span>
+      <span class="hljs-comment">&lt;!-- ... --&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">Period</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">MPD</span>&gt;</span>
+</code></pre>
+<p>Here the <code>&lt;EventStream /&gt;</code> elements and its <code>&lt;Event /&gt;</code> children elements will
+be parsed by the RxPlayer.</p>
+<p>Each <code>&lt;Event /&gt;</code> element can then be sent through a single RxPlayer events.</p>
+<p><a name="chapter-How%20to%20listen%20to%20stream%20events"></a></p>
+<h2>How to listen to stream events</h2>
+<p>The RxPlayer notify of such events through the usual RxPlayer events.</p>
+<p><em>As a reminder (or if you didn’t know), the RxPlayer can send a multitude of
+<a href="../api/player_events.html">events</a> that can be listened to by the usage of the
+<a href="../api/index.html#meth-addEventListener">addEventListener method</a>.</em></p>
+<p>The events related to stream events are:</p>
+<ul>
+<li>
+<p><code>"streamEvent"</code>: an event has just been reached.</p>
+</li>
+<li>
+<p><code>"streamEventSkip"</code>: an event has been skipped over. This usually means
+that a player seek operation resulted in the corresponds event being
+“missed”.</p>
+</li>
+</ul>
+<p>In any case, the corresponding event will be attached as a payload.</p>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-comment">// listen to "streamEvent" events</span>
+rxPlayer.addEventListener(<span class="hljs-string">"streamEvent"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"An event has been reached:"</span>, evt);
+});
+
+<span class="hljs-comment">// listen to "streamEventSkip" events</span>
+rxPlayer.addEventListener(<span class="hljs-string">"streamEventSkip"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"We just 'skipped' an event:"</span>, evt);
+});
+</code></pre>
+<p><a name="chapter-The%20event%20format"></a></p>
+<h2>The event format</h2>
+<p>Whether you’re listening to the <code>"streamEvent"</code> or the <code>"streamEventSkip"</code>
+event, you will receive an object containing the corresponding event
+information.</p>
+<p>Here is an example of such events:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// start time of the event, in seconds.</span>
+             <span class="hljs-comment">//</span>
+             <span class="hljs-comment">// It is always defined, as a number.</span>
+             <span class="hljs-comment">//</span>
+             <span class="hljs-comment">// A start at `10` here means that the event began when the player</span>
+             <span class="hljs-comment">// reached the position at 10 seconds.</span>
+
+  <span class="hljs-attr">end</span>: <span class="hljs-number">25</span>, <span class="hljs-comment">// Optional end time of the event, in seconds.</span>
+           <span class="hljs-comment">//</span>
+           <span class="hljs-comment">// It can be undefined or unset for events without any duration.</span>
+           <span class="hljs-comment">// A end at `25` here indicates that this event only last from the</span>
+           <span class="hljs-comment">// position at 10 seconds (the `start`) to the position at 25</span>
+           <span class="hljs-comment">// seconds, or an event with a duration of 15 seconds.</span>
+           <span class="hljs-comment">//</span>
+           <span class="hljs-comment">// If `end` is defined, you can be notified when the end of this</span>
+           <span class="hljs-comment">// event is reached by adding an `onExit` callback to that event</span>
+           <span class="hljs-comment">// (continue reading this tutorial for more information).</span>
+
+  <span class="hljs-attr">data</span>: { <span class="hljs-comment">// The event's data itself.</span>
+
+    <span class="hljs-attr">type</span>: EVENT_TYPE, <span class="hljs-comment">// String describing the source of the event.</span>
+
+    <span class="hljs-attr">value</span>: EVENT_VALUE, <span class="hljs-comment">// This property's format and content depends on the</span>
+                        <span class="hljs-comment">// `type` property. For example, when the type property</span>
+                        <span class="hljs-comment">// is set to "dash-event-stream", this value will be the</span>
+                        <span class="hljs-comment">// &lt;Event /&gt; element corresponding to that DASH event.</span>
+  }
+}
+</code></pre>
+<p>As written in this example, the underlying format of the event itself will
+depend on the source of the event. For example, an event generated from a DASH’s
+<code>&lt;EventStream /&gt;</code> won’t be in the same format that an event generated from a
+MP4’s <code>emsg</code> box.</p>
+<p>You can know which current format is used by checking the value of the
+<code>data.type</code> property.</p>
+<p>For now, we only have one format: DASH EventStream elements, which will have a
+<code>data.type</code> property equal to <code>"dash-event-stream"</code>.</p>
+<p><a name="subchapter-DASH%20EventStream%20elements-bis"></a></p>
+<h3>DASH EventStream elements</h3>
+<p>A DASH EventStream’s event will be parsed under the following format:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// As usual, the event start time in seconds</span>
+
+  <span class="hljs-attr">end</span>: <span class="hljs-number">15</span>, <span class="hljs-comment">// optional end position of the event, in seconds.</span>
+           <span class="hljs-comment">// Can be not set or set to `undefined` for events without a duration</span>
+
+  <span class="hljs-attr">data</span>: {
+
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"dash-event-stream"</span>, <span class="hljs-comment">// Type corresponding to a DASH's EventStream's</span>
+                               <span class="hljs-comment">// Event element</span>
+
+    <span class="hljs-attr">value</span>: {
+      <span class="hljs-attr">schemeIdUri</span>: SCHEME_ID_URI,
+      <span class="hljs-attr">element</span>: EVENT_ELEMENT,
+      <span class="hljs-attr">timescale</span>: EVENT_TIMESCALE,
+    }
+  }
+}
+</code></pre>
+<p>Where:</p>
+<ul>
+<li>
+<p><code>SCHEME_ID_URI</code> will be the value of the corresponding EventStream’s
+<code>schemeIdUri</code> attribute</p>
+</li>
+<li>
+<p><code>EVENT_ELEMENT</code> will be the corresponding <code>&lt;Event /&gt;</code> element in the MPD.</p>
+</li>
+<li>
+<p><code>EVENT_TIMESCALE</code> will be the value of the corresponding EventStream’s
+<code>timescale</code> attribute.
+This indicates a way to convert some time information on an
+<code>EVENT_ELEMENT</code> into seconds (by dividing the value by <code>timescale</code>),
+though it can usually safely be ignored.</p>
+</li>
+</ul>
+<p>For example for the following EventStream:</p>
+<pre><code class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">EventStream</span> <span class="hljs-attr">schemeIdUri</span>=<span class="hljs-string">"urn:uuid:XYZY"</span> <span class="hljs-attr">timescale</span>=<span class="hljs-string">"1000"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"call"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"0"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"0"</span>&gt;</span>1 800 10101010<span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"40000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"1"</span>&gt;</span>1 800 10101012<span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"60000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"2"</span>&gt;</span>1 800 10101013<span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">EventStream</span>&gt;</span>
+</code></pre>
+<p>The RxPlayer will define those three events (note: I used custom syntax here to
+include a readable <code>document</code> format):</p>
+<pre><code class="language-jsx"><span class="hljs-comment">// The first event:</span>
+{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">0</span>,
+  <span class="hljs-attr">end</span>: <span class="hljs-number">10</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"dash-event-stream"</span>,
+    <span class="hljs-attr">value</span>: {
+      <span class="hljs-attr">schemeIdUri</span>: <span class="hljs-string">"urn::uuid::XYZY"</span>,
+      <span class="hljs-attr">element</span>: <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"0"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"0"</span>&gt;</span>
+                 1 800 10101010
+               <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span></span>,
+      timescale: <span class="hljs-number">1000</span>,
+    }
+  }
+}
+
+<span class="hljs-comment">// The second event:</span>
+{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">40</span>,
+  <span class="hljs-attr">end</span>: <span class="hljs-number">50</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"dash-event-stream"</span>,
+    <span class="hljs-attr">value</span>: {
+      <span class="hljs-attr">schemeIdUri</span>: <span class="hljs-string">"urn::uuid::XYZY"</span>,
+      <span class="hljs-attr">element</span>: <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"40000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"1"</span>&gt;</span>
+                 1 800 10101012
+               <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span></span>,
+      timescale: <span class="hljs-number">1000</span>,
+    }
+  }
+}
+
+<span class="hljs-comment">// The third event:</span>
+{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">60</span>,
+  <span class="hljs-attr">end</span>: <span class="hljs-number">70</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"dash-event-stream"</span>,
+    <span class="hljs-attr">value</span>: {
+      <span class="hljs-attr">schemeIdUri</span>: <span class="hljs-string">"urn::uuid::XYZY"</span>,
+      <span class="hljs-attr">element</span>: <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"60000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"2"</span>&gt;</span>
+                 1 800 10101013
+               <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span></span>,
+      timescale: <span class="hljs-number">1000</span>,
+    }
+  }
+}
+</code></pre>
+<p><a name="chapter-Listening%20when%20an%20event%20has%20ended"></a></p>
+<h2>Listening when an event has ended</h2>
+<p>Some stream events have a <code>end</code> property, you could thus need to know when an
+event that the RxPlayer reached is now ended.</p>
+<p>Thankfully, we planned this need in the API of the RxPlayer.</p>
+<p>Any event with a set <code>end</code> can be added an <code>onExit</code> callback. This callback will
+be called once the event has ended.</p>
+<p>So for example you can write:</p>
+<pre><code class="language-js">rxPlayer.addEventListener(<span class="hljs-string">"streamEvent"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"An event has been reached:"</span>, evt);
+  <span class="hljs-keyword">if</span> (evt.end !== <span class="hljs-literal">undefined</span>) {
+    evt.onExit = <span class="hljs-function">() =&gt;</span> {
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"An event has been exited:"</span>, evt);
+    }  ;
+  }
+});
+</code></pre>
+<p>When defined, that <code>onExit</code> callback will be called once the RxPlayer either
+reaches the end position of the event or seek outside of the scope of this
+event.</p>
+<p>Please note however that even if an event has an <code>end</code> property, it is possible
+that the <code>onExit</code> callback will never be called. For example, the user could
+stop the content while an event was “active” (we do not trigger <code>onExit</code>
+callbacks in that case) or the corresponding <code>&lt;Event /&gt;</code> could “disappear” from
+the MPD once it has been refreshed.</p>
+<p><a name="chapter-Example"></a></p>
+<h2>Example</h2>
+<p>To end this tutorial, lets define a complete example:</p>
+<pre><code class="language-js">rxPlayer.addEventListener(<span class="hljs-string">"streamEvent"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"An event has been reached:"</span>, evt);
+
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"This is an event of type:"</span>, evt.data.type)
+  <span class="hljs-keyword">if</span> (evt.data.type === <span class="hljs-string">"dash-event-stream"</span>) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"This is a DASH EventStream's Event element."</span>);
+
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"schemeIdUri:"</span>, evt.data.schemeIdUri);
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"&lt;Event /&gt; element:"</span>, evt.data.element);
+  }
+
+  <span class="hljs-keyword">if</span> (evt.end !== <span class="hljs-literal">undefined</span>) {
+    evt.onExit = <span class="hljs-function">() =&gt;</span> {
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"An event has been exited:"</span>, evt);
+    };
+  }
+});
+
+rxPlayer.addEventListener(<span class="hljs-string">"streamEventSkip"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"We just 'skipped' an event:"</span>, evt);
+
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"This was an event of type:"</span>, evt.data.type)
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+</body></html></div></div></div></body>

@@ -1,0 +1,179 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Playing Low-Latency contents - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Playing%20Low-Latency%20contents">Playing Low-Latency contents</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-How%20to%20play%20a%20low%20latency%20content">How to play a low latency content</a>
+<ul>
+<li><a href="#subchapter-lowLatencyMode%20option">lowLatencyMode option</a></li>
+<li><a href="#subchapter-Playing%20even%20closer%20to%20the%20live%20edge!">Playing even closer to the live edge!</a></li>
+<li><a href="#subchapter-Note%20about%20time%20synchronization">Note about time synchronization</a></li>
+<li><a href="#subchapter-Note%20about%20rebuffering%20and%20other%20delay-creating%20situations">Note about rebuffering and other delay-creating situations</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Playing%20Low-Latency%20contents"></a></p>
+<h1>Playing Low-Latency contents</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The RxPlayer can play DASH contents specifically crafted to be played with a
+low latency (read close to the live edge) through a technology called something
+along the lines of “Chunked-encoded CMAF and Chunked transfer encoding”.</p>
+<p>Such contents are backward-compatible DASH contents (meaning they can be played
+in a regular non-low-latency way) which serves CMAF segment with an HTTP 1.1
+transfer mechanism called “Chunked transfer encoding”.</p>
+<p>To vulgarize, such segments are divided into multiple chunks which can be
+requested while the whole segment is still being encoded - through Chunked
+transfer encoding HTTP requests.</p>
+<p>If you want more information on this technology, the best for us is probably to
+redirect you to the multiple resources you can probably find with your favorite
+search engine!</p>
+<p><a name="chapter-How%20to%20play%20a%20low%20latency%20content"></a></p>
+<h2>How to play a low latency content</h2>
+<p><a name="subchapter-lowLatencyMode%20option"></a></p>
+<h3>lowLatencyMode option</h3>
+<p>To play a low-latency DASH content with - well - a low latency, you will need
+to set the <code>lowLatencyMode</code> <code>loadVideo</code> option.</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: <span class="hljs-string">"https://www.example.com/low-latency-content.mpd"</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
+  <span class="hljs-attr">lowLatencyMode</span>: <span class="hljs-literal">true</span>,
+})
+</code></pre>
+<p>When set, this option will perform multiple optimizations specific to
+low-latency contents. For live contents:</p>
+<ul>
+<li>
+<p>it will by default play much closer to the live edge</p>
+</li>
+<li>
+<p>it will begin to play faster and seek in non-buffered parts faster</p>
+</li>
+<li>
+<p>it will do safer choices when choosing the right video / audio quality (to
+avoid the higher chances of rebuffering)</p>
+</li>
+<li>
+<p>the delay we use when retrying a failed segment or manifest request will be
+lower</p>
+</li>
+<li>
+<p>and multiple other minor optimizations</p>
+</li>
+</ul>
+<p>Note that you can also set the <code>lowLatencyMode</code> mode for VoD (non-live)
+contents.
+In that case, the main advantage would be to be able to play and seek faster as
+long as the content is compatible (again, with CMAF and Chunked Transfer
+Encoding).</p>
+<p><a name="subchapter-Playing%20even%20closer%20to%20the%20live%20edge!"></a></p>
+<h3>Playing even closer to the live edge!</h3>
+<p>By default, we set a distance of 3.5 seconds relative to the live edge when we
+start a low latency content.</p>
+<p>We found that value to be just at the right boundary between rebuffering risks,
+and delay to the live edge.</p>
+<p>However, you can still provide a lower distance through the <code>startAt</code>
+<code>loadVideo</code> option (documented <a href="loadVideo_options.html#prop-startAt">here</a>):</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: <span class="hljs-string">"https://www.example.com/content.mpd"</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
+  <span class="hljs-attr">lowLatencyMode</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">startAt</span>: { <span class="hljs-attr">fromLastPosition</span>: <span class="hljs-number">2</span> }, <span class="hljs-comment">// Play 2 seconds from the live edge instead</span>
+                                    <span class="hljs-comment">// (beware of much more frequent rebuffering</span>
+                                    <span class="hljs-comment">// risks)</span>
+})
+</code></pre>
+<p><a name="note-time-sync"></a>
+<a name="subchapter-Note%20about%20time%20synchronization"></a></p>
+<h3>Note about time synchronization</h3>
+<p>In most cases, DASH low-latency contents rely on time synchronization between
+the server and the client without providing a synchronization mechanism.</p>
+<p>This means that, on poorly configurated client (with bad clock settings), you
+could lose latency or worse: obtain playback issues.</p>
+<p>To work around that problem, the RxPlayer allows you to provide a
+synchronization mechanism to loadVideo. This is done through the
+<code>serverSyncInfos</code> <code>transportOptions</code>. Which itself is a <code>loadVideo</code> option.</p>
+<p>TL;DR You can look at the <a href="loadVideo_options.html#prop-transportOptions">API
+documentation</a> for a quick
+explanation of what to put in it.</p>
+<hr>
+<p>Here how it works:</p>
+<p>Imagine you have an URL allowing you to know the UTC time on the server’s side.
+Let’s call it <code>serverTimeURL</code>.</p>
+<p>Now you can have the server’s time at a particular point in time (!). The
+problem is that time continously changes: a time synchronization mechanism will
+have to be aware of how much time passed since the last request to obtain that
+time.</p>
+<p>We could asks for the client’s timestamp - obtained thanks to the <code>Date.now()</code>
+API - at the time of the request.
+This would allow us to know how much time have passed since that event by
+calling <code>Date.now()</code> again in the future and calculating the difference.
+The problem however is that <code>Date.now()</code> will instantly change if the user
+updates its system clock. If that happens, we will lose the ability to know how
+much time has elapsed since the request.</p>
+<p>To workaround this issue, we can use instead <code>performance.now()</code>, which does not
+rely on the system’s clock.
+However, we are still left with two other issues:</p>
+<ol>
+<li>
+<p><code>performance.now()</code> comparisons are useful only if both values were
+obtained in the same JS worker.
+So we have to make sure each <code>performance.now()</code> call is done in the same
+worker.</p>
+</li>
+<li>
+<p><code>performance.now()</code> doesn’t integrate the notion of leap seconds whereas
+unix time (the server’s time) does. This could mean small time
+de-synchronization when leap seconds are added or substracted.</p>
+</li>
+</ol>
+<p>We however consider those last two problems minor when compared to
+<code>Date.now()</code>'s problem (which is the fact that it “breaks” if the system clock
+is updated). If you would prefer to provide <code>Date.now()</code> anyway, you can open
+an issue and we will think about a possible implementation.</p>
+<p>So we now have two values:</p>
+<ul>
+<li><code>serverTimestamp</code> (<code>number</code>): Unix timestamp of the server at a given
+point in time.</li>
+<li><code>clientTime</code> (<code>number</code>): Value of the <code>performance.now()</code> API at the
+time the <code>serverTimestamp</code> value was true. Please note that if your page
+contains multiple worker, the <code>performance.now()</code> call should be done on
+the same worker than the one in which loadVideo is called.</li>
+</ul>
+<p>Those two values can be combined in the <code>serverSyncInfos</code> option like this:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> timeResponse = <span class="hljs-keyword">await</span> fetch(serverTimeURL);
+<span class="hljs-keyword">const</span> serverTimestamp = <span class="hljs-keyword">await</span> timeResponse.text();
+<span class="hljs-keyword">const</span> clientTime = performance.now();
+<span class="hljs-keyword">const</span> serverSyncInfos = { serverTimestamp, clientTime };
+rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: { serverSyncInfos }
+})
+</code></pre>
+<p><a name="subchapter-Note%20about%20rebuffering%20and%20other%20delay-creating%20situations"></a></p>
+<h3>Note about rebuffering and other delay-creating situations</h3>
+<p>When playing in low latency mode, it is still possible to rebuffer or pause the
+content, which could lead the user to being far from the live edge.</p>
+<p>As several applications could want several workaround to that possible issue
+(like updating the speed, seeking or just signaling the delay to the user), we
+choose to let that happen by default with the RxPlayer.</p>
+<p>As an example, ou demo page choose the following strategy for now:</p>
+<ul>
+<li>
+<p>When falling between 6 to 15 seconds behind the live edge, the playback rate
+is updated proportionally to our delay until we reach 3 seconds behind the
+live edge.</p>
+</li>
+<li>
+<p>When falling to 15 seconds behind the live edge or more, we will simply seek
+to 3 seconds behind the live edge.</p>
+</li>
+<li>
+<p>When seeking manually or pausing, this logic is disabled (with the
+possibility to re-enable it).</p>
+</li>
+</ul>
+<p>The live edge is obtainable through the <code>rxPlayer.getMaximumPosition()</code> API,
+the current position thanks to the <code>rxPlayer.getPosition()</code> API. The distance to
+the live edge is thus easily computable:</p>
+<pre><code class="language-js">rxPlayer.getMaximumPosition() - rxPlayer.getPosition()
+</code></pre>
+</body></html></div></div></div></body>
