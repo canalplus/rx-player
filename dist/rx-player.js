@@ -16118,52 +16118,51 @@ function parseEmsgBoxes(buffer) {
       break;
     }
 
+    var length = emsg.length;
+    offset += length;
     var version = emsg[0];
 
     if (version !== 0) {
       _log__WEBPACK_IMPORTED_MODULE_4__/* .default.warn */ .Z.warn("ISOBMFF: EMSG version " + version.toString() + " not supported.");
-      break;
+    } else {
+      var position = 4; // skip version + flags
+
+      var _readNullTerminatedSt = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__/* .readNullTerminatedString */ .DM)(emsg, position),
+          schemeIdEnd = _readNullTerminatedSt.end,
+          schemeIdUri = _readNullTerminatedSt.string;
+
+      position = schemeIdEnd; // skip schemeIdUri
+
+      var _readNullTerminatedSt2 = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__/* .readNullTerminatedString */ .DM)(emsg, position),
+          valueEnd = _readNullTerminatedSt2.end,
+          value = _readNullTerminatedSt2.string;
+
+      position = valueEnd; // skip value
+
+      var timescale = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(emsg, position);
+      position += 4; // skip timescale
+
+      var presentationTimeDelta = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(emsg, position);
+      position += 4; // skip presentationTimeDelta
+
+      var eventDuration = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(emsg, position);
+      position += 4; // skip eventDuration
+
+      var id = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(emsg, position);
+      position += 4; // skip id
+
+      var messageData = emsg.subarray(position, length);
+      var emsgData = {
+        schemeIdUri: schemeIdUri,
+        value: value,
+        timescale: timescale,
+        presentationTimeDelta: presentationTimeDelta,
+        eventDuration: eventDuration,
+        id: id,
+        messageData: messageData
+      };
+      emsgs.push(emsgData);
     }
-
-    var length = emsg.length;
-    offset += length;
-    var position = 4; // skip version + flags
-
-    var _readNullTerminatedSt = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__/* .readNullTerminatedString */ .DM)(emsg, position),
-        schemeIdEnd = _readNullTerminatedSt.end,
-        schemeIdUri = _readNullTerminatedSt.string;
-
-    position = schemeIdEnd; // skip schemeIdUri
-
-    var _readNullTerminatedSt2 = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__/* .readNullTerminatedString */ .DM)(emsg, position),
-        valueEnd = _readNullTerminatedSt2.end,
-        value = _readNullTerminatedSt2.string;
-
-    position = valueEnd; // skip value
-
-    var timescale = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(emsg, position);
-    position += 4; // skip timescale
-
-    var presentationTimeDelta = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(emsg, position);
-    position += 4; // skip presentationTimeDelta
-
-    var eventDuration = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(emsg, position);
-    position += 4; // skip eventDuration
-
-    var id = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(emsg, position);
-    position += 4; // skip id
-
-    var messageData = emsg.subarray(position, length);
-    var emsgData = {
-      schemeIdUri: schemeIdUri,
-      value: value,
-      timescale: timescale,
-      presentationTimeDelta: presentationTimeDelta,
-      eventDuration: eventDuration,
-      id: id,
-      messageData: messageData
-    };
-    emsgs.push(emsgData);
   }
 
   if (emsgs.length === 0) {
