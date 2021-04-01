@@ -68285,7 +68285,7 @@ function shouldFavourCustomSafariEME() {
      * one.
      * @type {Number}
      */
-    EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 50,
+    EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 15,
     /**
      * When playing contents with a persistent license, we will usually store some
      * information related to that MediaKeySession, to be able to play it at a
@@ -77267,10 +77267,16 @@ class Period {
     getAdaptation(wantedId) {
         return (0,array_find/* default */.Z)(this.getAdaptations(), ({ id }) => wantedId === id);
     }
-    getPlayableAdaptations(type) {
+    /**
+     * Returns Adaptations that contain Representations in supported codecs.
+     * @param {string|undefined} type - If set filter on a specific Adaptation's
+     * type. Will return for all types if `undefined`.
+     * @returns {Array.<Adaptation>}
+     */
+    getSupportedAdaptations(type) {
         if (type === undefined) {
             return this.getAdaptations().filter(ada => {
-                return ada.getPlayableRepresentations().length > 0;
+                return ada.isSupported;
             });
         }
         const adaptationsForType = this.adaptations[type];
@@ -77278,7 +77284,7 @@ class Period {
             return [];
         }
         return adaptationsForType.filter(ada => {
-            return ada.getPlayableRepresentations().length > 0;
+            return ada.isSupported;
         });
     }
 }
@@ -78609,8 +78615,9 @@ function getPsshSystemID(buff, initialDataOffset) {
 /* harmony export */   "s9": () => (/* binding */ parseEmsgBoxes)
 /* harmony export */ });
 /* unused harmony export patchPssh */
+/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6077);
 /* harmony import */ var _utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(97308);
-/* harmony import */ var _utils_string_parsing__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(26332);
+/* harmony import */ var _utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(26332);
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(63133);
 /* harmony import */ var _get_box__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(65489);
 /* harmony import */ var _read__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(69903);
@@ -78629,6 +78636,7 @@ function getPsshSystemID(buff, initialDataOffset) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 
@@ -78964,12 +78972,17 @@ function parseEmsgBoxes(buffer) {
         if (emsg === null) {
             break;
         }
+        const version = emsg[0];
+        if (version !== 0) {
+            _log__WEBPACK_IMPORTED_MODULE_4__/* .default.warn */ .Z.warn("ISOBMFF: EMSG version " + version.toString() + " not supported.");
+            break;
+        }
         const length = emsg.length;
         offset += length;
         let position = 4; // skip version + flags
-        const { end: schemeIdEnd, string: schemeIdUri } = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_4__/* .readNullTerminatedString */ .DM)(emsg, position);
+        const { end: schemeIdEnd, string: schemeIdUri } = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__/* .readNullTerminatedString */ .DM)(emsg, position);
         position = schemeIdEnd; // skip schemeIdUri
-        const { end: valueEnd, string: value } = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_4__/* .readNullTerminatedString */ .DM)(emsg, position);
+        const { end: valueEnd, string: value } = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_5__/* .readNullTerminatedString */ .DM)(emsg, position);
         position = valueEnd; // skip value
         const timescale = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(emsg, position);
         position += 4; // skip timescale
@@ -106221,7 +106234,7 @@ function createRepresentationEstimator({ manifest, adaptation }, abrManager, clo
         const playableRepresentations = adaptation.getPlayableRepresentations();
         if (playableRepresentations.length <= 0) {
             const noRepErr = new media_error/* default */.Z("NO_PLAYABLE_REPRESENTATION", "No Representation in the chosen " +
-                "Adaptation can be played");
+                adaptation.type + " Adaptation can be played");
             throw noRepErr;
         }
         return playableRepresentations;
@@ -110069,7 +110082,7 @@ class TrackChoiceManager {
      */
     addPeriod(bufferType, period, adaptation$) {
         const periodItem = getPeriodItem(this._periods, period);
-        const adaptations = period.getPlayableAdaptations(bufferType);
+        const adaptations = period.getSupportedAdaptations(bufferType);
         if (periodItem != null) {
             if (periodItem[bufferType] != null) {
                 log/* default.warn */.Z.warn(`TrackChoiceManager: ${bufferType} already added for period`, period);
@@ -110136,7 +110149,7 @@ class TrackChoiceManager {
         if (audioInfos == null || periodItem == null) {
             throw new Error("TrackChoiceManager: Given Period not found.");
         }
-        const audioAdaptations = period.getPlayableAdaptations("audio");
+        const audioAdaptations = period.getSupportedAdaptations("audio");
         const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
         if (chosenAudioAdaptation === null) {
             // If the Period was previously without audio, keep it that way
@@ -110168,7 +110181,7 @@ class TrackChoiceManager {
         if (textInfos == null || periodItem == null) {
             throw new Error("TrackChoiceManager: Given Period not found.");
         }
-        const textAdaptations = period.getPlayableAdaptations("text");
+        const textAdaptations = period.getSupportedAdaptations("text");
         const chosenTextAdaptation = this._textChoiceMemory.get(period);
         if (chosenTextAdaptation === null) {
             // If the Period was previously without text, keep it that way
@@ -110200,7 +110213,7 @@ class TrackChoiceManager {
         if (videoInfos == null || periodItem == null) {
             throw new Error("TrackChoiceManager: Given Period not found.");
         }
-        const videoAdaptations = period.getPlayableAdaptations("video");
+        const videoAdaptations = period.getSupportedAdaptations("video");
         const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
         if (chosenVideoAdaptation === null) {
             // If the Period was previously without video, keep it that way
@@ -110557,7 +110570,7 @@ class TrackChoiceManager {
                 return;
             }
             const { period, audio: audioItem } = periodItem;
-            const audioAdaptations = period.getPlayableAdaptations("audio");
+            const audioAdaptations = period.getSupportedAdaptations("audio");
             const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
             if (chosenAudioAdaptation === null ||
                 (chosenAudioAdaptation !== undefined &&
@@ -110597,7 +110610,7 @@ class TrackChoiceManager {
                 return;
             }
             const { period, text: textItem } = periodItem;
-            const textAdaptations = period.getPlayableAdaptations("text");
+            const textAdaptations = period.getSupportedAdaptations("text");
             const chosenTextAdaptation = this._textChoiceMemory.get(period);
             if (chosenTextAdaptation === null ||
                 (chosenTextAdaptation !== undefined &&
@@ -110636,7 +110649,7 @@ class TrackChoiceManager {
                 return;
             }
             const { period, video: videoItem } = periodItem;
-            const videoAdaptations = period.getPlayableAdaptations("video");
+            const videoAdaptations = period.getSupportedAdaptations("video");
             const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
             if (chosenVideoAdaptation === null ||
                 (chosenVideoAdaptation !== undefined &&
