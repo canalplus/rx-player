@@ -16,6 +16,7 @@
 
 import {
   combineLatest as observableCombineLatest,
+  defer as observableDefer,
   EMPTY,
   from as observableFrom,
   Observable,
@@ -26,9 +27,7 @@ import {
   mergeMap,
 } from "rxjs/operators";
 import log from "../../log";
-import observablifyCancellablePromise from "../../utils/observablify_promise";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
-import TaskCanceller from "../../utils/task_canceller";
 import { SegmentBuffer } from "./implementations";
 
 export interface IGarbageCollectorArgument {
@@ -153,12 +152,10 @@ function clearBuffer(
 
   collectBufferBehind();
   collectBufferAhead();
+  log.debug("GC: cleaning ranges from SegmentBuffer", cleanedupRanges);
   const clean$ = observableFrom(
     cleanedupRanges.map((range) => {
-      log.debug("GC: cleaning range from SegmentBuffer", range);
-      const canceller = new TaskCanceller();
-      return observablifyCancellablePromise(canceller, () =>
-        segmentBuffer.removeBuffer(range.start, range.end, canceller.signal));
+      return observableDefer(() => segmentBuffer.removeBuffer(range.start, range.end));
     })
   ).pipe(concatAll(), ignoreElements());
 

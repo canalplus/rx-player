@@ -20,7 +20,6 @@ import {
   Period,
   Representation,
 } from "../../../manifest";
-import { CancellationSignal } from "../../../utils/task_canceller";
 import SegmentInventory, {
   IBufferedChunk,
   IInsertedChunkInfos,
@@ -91,7 +90,7 @@ export abstract class SegmentBuffer<T> {
    *
    * Once all chunks of a single Segment have been given to `pushChunk`, you
    * should call `endOfSegment` to indicate that the whole Segment has been
-   * pushed.
+   * given to `pushChunk`.
    *
    * Depending on the type of data appended, the pushed chunk might rely on an
    * initialization segment, given through the `data.initSegment` property.
@@ -109,27 +108,20 @@ export abstract class SegmentBuffer<T> {
    * You can also only push an initialization segment by setting the
    * `data.chunk` argument to null.
    *
-   * @param {Object} infos
-   * @param {CancellationSignal} cancellationSignal
-   * @returns {Promise}
+   * @param {Object} infos - Information and data on the chunk you want to push.
+   * @returns {Promise} - Resolves when this push operation finished.
+   * Rejects on error.
    */
-  public abstract pushChunk(
-    infos : IPushChunkInfos<T>,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void>;
+  public abstract pushChunk(infos : IPushChunkInfos<T>) : Promise<void>;
 
   /**
    * Remove buffered data (added to the same FIFO queue than `pushChunk`).
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
-   * @param {CancellationSignal} cancellationSignal
-   * @returns {Promise}
+   * @returns {Promise} - Resolves when this remove operation finished.
+   * Rejects on error.
    */
-  public abstract removeBuffer(
-    start : number,
-    end : number,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void>;
+  public abstract removeBuffer(start : number, end : number) : Promise<void>;
 
   /**
    * Indicate that every chunks from a Segment has been given to pushChunk so
@@ -138,13 +130,10 @@ export abstract class SegmentBuffer<T> {
    * The returned Promise will resolve once the whole segment has been pushed
    * and this indication is acknowledged.
    * @param {Object} infos
-   * @param {CancellationSignal} cancellationSignal
-   * @returns {Promise}
+   * @returns {Promise} - Resolves when this operation finished.
+   * This Promise should never reject.
    */
-  public abstract endOfSegment(
-    infos : IEndOfSegmentInfos,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void>;
+  public abstract endOfSegment(infos : IEndOfSegmentInfos) : Promise<void>;
 
   /**
    * Returns the currently buffered data, in a TimeRanges object.

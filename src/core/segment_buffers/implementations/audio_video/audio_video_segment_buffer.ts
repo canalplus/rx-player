@@ -24,12 +24,7 @@ import areArraysOfNumbersEqual from "../../../../utils/are_arrays_of_numbers_equ
 import assertUnreachable from "../../../../utils/assert_unreachable";
 import { toUint8Array } from "../../../../utils/byte_parsing";
 import hashBuffer from "../../../../utils/hash_buffer";
-import noop from "../../../../utils/noop";
 import objectAssign from "../../../../utils/object_assign";
-import {
-  CancellationError,
-  CancellationSignal,
-} from "../../../../utils/task_canceller";
 import { IInsertedChunkInfos } from "../../segment_inventory";
 import {
   IEndOfSegmentInfos,
@@ -198,85 +193,49 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer<BufferSource>
   }
 
   /**
-   * Push a chunk of the media segment given to the attached SourceBuffer, in a
-   * FIFO queue.
-   *
-   * Once all chunks of a single Segment have been given to `pushChunk`, you
-   * should call `endOfSegment` to indicate that the whole Segment has been
-   * pushed.
-   *
-   * Depending on the type of data appended, the pushed chunk might rely on an
-   * initialization segment, given through the `data.initSegment` property.
-   *
-   * Such initialization segment will be first pushed to the SourceBuffer if the
-   * last pushed segment was associated to another initialization segment.
-   * This detection rely on the initialization segment's reference so you need
-   * to avoid mutating in-place a initialization segment given to that function
-   * (to avoid having two different values which have the same reference).
-   *
-   * If you don't need any initialization segment to push the wanted chunk, you
-   * can just set `data.initSegment` to `null`.
-   *
-   * You can also only push an initialization segment by setting the
-   * `data.chunk` argument to null.
-   *
    * @param {Object} infos
-   * @param {CancellationSignal} cancellationSignal
    * @returns {Promise}
    */
-  public pushChunk(
-    infos : IPushChunkInfos<BufferSource>,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void> {
+  public pushChunk(infos : IPushChunkInfos<BufferSource>) : Promise<void> {
     log.debug("AVSB: receiving order to push data to the SourceBuffer",
               this.bufferType,
               infos);
     return this._addToQueue({ type: SegmentBufferOperation.Push,
-                              value: infos },
-                            cancellationSignal);
+                              value: infos });
   }
 
   /**
    * Remove buffered data (added to the same FIFO queue than `pushChunk`).
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
-   * @param {CancellationSignal} cancellationSignal
    * @returns {Promise}
    */
-  public removeBuffer(
-    start : number,
-    end : number,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void> {
+  public removeBuffer(start : number, end : number) : Promise<void> {
     log.debug("AVSB: receiving order to remove data from the SourceBuffer",
               this.bufferType,
               start,
               end);
     return this._addToQueue({ type: SegmentBufferOperation.Remove,
-                              value: { start, end } },
-                            cancellationSignal);
+                              value: { start, end } });
   }
 
   /**
    * Indicate that every chunks from a Segment has been given to pushChunk so
    * far.
-   * This will update our internal Segment inventory accordingly.
+   * This will update our the linked `SegmentInventory` accordingly.
+   *
    * The returned Promise will resolve once the whole segment has been pushed
    * and this indication is acknowledged.
+   * The returned Promise should not reject.
    * @param {Object} infos
-   * @param {CancellationSignal} cancellationSignal
    * @returns {Promise}
    */
-  public endOfSegment(
-    infos : IEndOfSegmentInfos,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void> {
+  public endOfSegment(infos : IEndOfSegmentInfos) : Promise<void> {
     log.debug("AVSB: receiving order for validating end of segment",
               this.bufferType,
               infos.segment);
     return this._addToQueue({ type: SegmentBufferOperation.EndOfSegment,
-                              value: infos },
-                            cancellationSignal);
+                              value: infos });
   }
 
   /**
@@ -322,14 +281,16 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer<BufferSource>
   public dispose() : void {
     this._cleanUp();
     if (this._pendingTask !== null) {
-      this._pendingTask.reject(new CancellationError());
+      const err = new Error("The AudioVideoSegmentBuffer has been disposed");
+      this._pendingTask.reject(err);
       this._pendingTask = null;
     }
 
     while (this._queue.length > 0) {
       const nextElement = this._queue.shift();
       if (nextElement !== undefined) {
-        nextElement.reject(new CancellationError());
+        const err = new Error("The AudioVideoSegmentBuffer has been disposed");
+        nextElement.reject(err);
       }
     }
 
@@ -367,41 +328,13 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer<BufferSource>
    * @param {CancellationSignal} cancellationSignal
    * @returns {Promise}
    */
-  private _addToQueue(
-    operation : ISBOperation<BufferSource>,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void> {
-    return new Promise((res, rej) => {
+  private _addToQueue(operation : ISBOperation<BufferSource>) : Promise<void> {
+    return new Promise((resolve, reject) => {
       const shouldRestartQueue = this._queue.length === 0 &&
                                  this._pendingTask === null;
 
-      const queueItem : IAVSBQueueItem = { ...operation, resolve: noop, reject: noop };
-
-      /** Callback called when/if this operation is cancelled */
-      const onCancellation = (error : CancellationError) => {
-        // Remove the corresponding element from the AudioVideoSegmentBuffer's
-        // queue.
-        // If the operation was a pending task, it should still continue to not
-        // let the AudioVideoSegmentBuffer in a weird state.
-        const index = this._queue.indexOf(queueItem);
-        if (index >= 0) {
-          this._queue.splice(index, 1);
-        }
-        rej(error);
-      };
-
-      queueItem.resolve = () => {
-        cancellationSignal.removeListener(onCancellation);
-        res();
-      };
-      queueItem.reject = (err : unknown) => {
-        cancellationSignal.removeListener(onCancellation);
-        rej(err);
-      };
+      const queueItem : IAVSBQueueItem = { ...operation, resolve, reject };
       this._queue.push(queueItem);
-
-      cancellationSignal.addListener(onCancellation);
-
       if (shouldRestartQueue) {
         this._flush();
       }

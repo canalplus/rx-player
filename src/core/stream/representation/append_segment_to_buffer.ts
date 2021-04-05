@@ -43,12 +43,10 @@ export default async function appendSegmentToBuffer<T>(
   cancellationSignal : CancellationSignal
 ) : Promise<void> {
   try {
-    await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
+    await segmentBuffer.pushChunk(dataInfos);
   } catch (appendError) {
-    if (TaskCanceller.isCancellationError(appendError)) {
-      throw appendError;
-    } else if (!(appendError instanceof Error) ||
-               appendError.name !== "QuotaExceededError")
+    if (!(appendError instanceof Error) ||
+        appendError.name !== "QuotaExceededError")
     {
       const reason = appendError instanceof Error ?
         appendError.toString() :
@@ -60,7 +58,7 @@ export default async function appendSegmentToBuffer<T>(
       // TODO Refacto the clock so that ugly hack is not needed anymore
       const { getCurrentTime } = await clock$.pipe(take(1)).toPromise();
       await forceGarbageCollection(getCurrentTime, segmentBuffer, cancellationSignal);
-      await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
+      await segmentBuffer.pushChunk(dataInfos);
     } catch (forcedGCError) {
       if (TaskCanceller.isCancellationError(forcedGCError)) {
         throw forcedGCError;
