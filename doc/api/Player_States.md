@@ -91,13 +91,7 @@ The player will not play until it gets out of this state.
 ### The ENDED state
 
 The player reached the end of the content.
-
-If the `stopAtEnd` [player option](./Creating_a_Player.md) has been set to
-`true` or not set, the player will immediately stop the content. In that case,
-the `ENDED` state can be considered like the `STOPPED` state - in terms of what
-you can do.
-
-Else, it should now be paused at the last frame if a video content is available
+It should now be paused at the last frame if a video content is available
 at this time and this state acts like what you can expect from HTML5 playback:
 
 - when seeking when the content is ended, you will be paused (even if you

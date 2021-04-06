@@ -53,6 +53,5 @@ export default React.memo(withModulesState({
     isPaused: "isPaused",
     isContentLoaded: "isContentLoaded",
     hasEnded: "hasEnded",
-    stopAtEnd: "stopAtEnd",
   },
 })(PlayPauseButton));

@@ -55,7 +55,6 @@ const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
         DEFAULT_MAX_BUFFER_AHEAD,
         DEFAULT_MAX_BUFFER_BEHIND,
         DEFAULT_SHOW_NATIVE_SUBTITLE,
-        DEFAULT_STOP_AT_END,
         DEFAULT_TEXT_TRACK_MODE,
         DEFAULT_THROTTLE_WHEN_HIDDEN,
         DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
@@ -210,8 +209,7 @@ export interface IConstructorOptions { maxBufferAhead? : number;
                                        minAudioBitrate? : number;
                                        minVideoBitrate? : number;
                                        maxAudioBitrate? : number;
-                                       maxVideoBitrate? : number;
-                                       stopAtEnd? : boolean; }
+                                       maxVideoBitrate? : number; }
 
 /** Options of the RxPlayer's constructor once parsed. */
 export interface IParsedConstructorOptions {
@@ -234,7 +232,6 @@ export interface IParsedConstructorOptions {
   minVideoBitrate : number;
   maxAudioBitrate : number;
   maxVideoBitrate : number;
-  stopAtEnd : boolean;
 }
 
 /** Every options that can be given to the RxPlayer's `loadVideo` method. */
@@ -506,9 +503,6 @@ function parseConstructorOptions(
     }
   }
 
-  const stopAtEnd = isNullOrUndefined(options.stopAtEnd) ? DEFAULT_STOP_AT_END :
-                                                           !!options.stopAtEnd;
-
   return { maxBufferAhead,
            maxBufferBehind,
            limitVideoWidth,
@@ -524,8 +518,7 @@ function parseConstructorOptions(
            minAudioBitrate,
            minVideoBitrate,
            maxAudioBitrate,
-           maxVideoBitrate,
-           stopAtEnd };
+           maxVideoBitrate };
 }
 
 /**
