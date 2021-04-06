@@ -160,18 +160,6 @@ export default {
   DEFAULT_SHOW_NATIVE_SUBTITLE: true,
 
   /**
-   * If set to true, the player will by default stop immediately and unload the
-   * content on reaching the end of the media.
-   *
-   * If set to false, it will not unload nor stop by default, leaving the user
-   * free to seek in the already-loaded content.
-   *
-   * Set to `true` for legacy reasons.
-   * @type {Boolean}
-   */
-  DEFAULT_STOP_AT_END: true,
-
-  /**
    * Default buffer goal in seconds.
    * Once enough content has been downloaded to fill the buffer up to
    * ``current position + DEFAULT_WANTED_BUFFER_AHEAD", we will stop downloading

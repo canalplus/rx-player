@@ -89,7 +89,6 @@ describe("API - parseConstructorOptions", () => {
     minVideoBitrate: DEFAULT_MIN_BITRATES.video,
     maxAudioBitrate: DEFAULT_MAX_BITRATES.audio,
     maxVideoBitrate: DEFAULT_MAX_BITRATES.video,
-    stopAtEnd: true,
     preferredAudioTracks: [],
     preferredTextTracks: [],
     preferredVideoTracks: [],
@@ -378,17 +377,6 @@ describe("API - parseConstructorOptions", () => {
       .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
                          "Its value, \"9999\", is inferior to the set " +
                          "minAudioBitrate, \"10000\""));
-  });
-
-  it("should authorize setting a stopAtEnd option", () => {
-    expect(parseConstructorOptions({ stopAtEnd: false })).toEqual({
-      ...defaultConstructorOptions,
-      stopAtEnd: false,
-    });
-    expect(parseConstructorOptions({ stopAtEnd: true })).toEqual({
-      ...defaultConstructorOptions,
-      stopAtEnd: true,
-    });
   });
 
   it("should authorize setting a preferredAudioTracks option", () => {

@@ -19,7 +19,6 @@
     - [maxBufferBehind](#prop-maxBufferBehind)
     - [limitVideoWidth](#prop-limitVideoWidth)
     - [throttleVideoBitrateWhenHidden](#prop-throttleVideoBitrateWhenHidden)
-    - [stopAtEnd](#prop-stopAtEnd)
     - [throttleWhenHidden (deprecated)](#prop-throttleWhenHidden)
 
 
@@ -732,29 +731,6 @@ const player = Player({
 - On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
 feature or window is enabled. Thus we can't rely on document hiddenness
 attributes, as the video may be visible, through the PIP window.
-
-<a name="prop-stopAtEnd"></a>
-### stopAtEnd ##################################################################
-
-_type_: ``Boolean``
-
-_defaults_: ``true``
-
-By default, the player automatically _unload_ the content once it reaches its
-end (the player goes to the ``"ENDED"`` state).
-
-In that case, the only way to play the content again is to (re-)call the
-``loadVideo`` API, which will trigger another download of the
-[Manifest](../terms.md#manifest) and segments.
-
-If you want to be able to seek back in the content after it ended, you may want
-to deactivate this behavior. To do so, set ``stopAtEnd`` to ``false``.
-
-```js
-const player = Player({
-  stopAtEnd: false
-});
-```
 
 
 <a name="prop-throttleWhenHidden"></a>

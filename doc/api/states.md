@@ -99,13 +99,7 @@ The player will not play until it gets out of this state.
 ### The ENDED state ############################################################
 
 The player reached the end of the content.
-
-If the `stopAtEnd` [player option](./player_options.md) has been set to
-`true` or not set, the player will immediately stop the content. In that case,
-the `ENDED` state can be considered like the `STOPPED` state - in terms of what
-you can do.
-
-Else, it should now be paused at the last frame if a video content is available
+It should now be paused at the last frame if a video content is available
 at this time and this state acts like what you can expect from HTML5 playback:
 
   - when seeking when the content is ended, you will be paused (even if you
@@ -284,36 +278,22 @@ From `SEEKING`:
         [player event](./player_events.md).
 
 
-From `ENDED` if the `stopAtEnd` [player option](./player_options.md) has been
-set to `true` or not set:
+From `ENDED`:
 
-  - `STOPPED`: Only state transition possible here. Happens if either:
+  - `STOPPED`: Happens if either:
       - You stopped the current through the [stop](./index.md#meth-stop) method.
       - You are loading a new content.
 
-
-From `ENDED` if the `stopAtEnd` [player option](./player_options.md) has been
-set to `false`:
+  - `PAUSED`: A user seeked back to an already-bufferred part of the content, in
+    which the player might not go through the `SEEKING` state and stay in pause
+    on that position, regardless of the state before `ENDED`.
 
   - `PLAYING`: The user replays the video by calling `rxPlayer.play()` usually
     restarting the content from the start.
 
-  - `PAUSED`: A user seeked into a part of the content already-downloaded.
-    The content is paused after the seek, regardless of if you were paused
-    before reaching the `ENDED` state.
-
   - `SEEKING`: A user seeked in the content.
 
   - `RELOADING`: The content needs to be reloaded.
-
-  - `STOPPED`: Either:
-      - You stopped the current through the [stop](./index.md#meth-stop) method.
-      - You are loading a new content.
-      - An error happened which made it impossible to play the content.
-        The corresponding [error](./errors.md) can be found either through the
-        [`getError` method](./index.md#meth-getError) method or through the
-        [`playerStateChange`](./player_events.md#events-playerStateChange)
-        [player event](./player_events.md).
 
 
 From `RELOADING`:
