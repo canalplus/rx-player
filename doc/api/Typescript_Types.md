@@ -42,10 +42,7 @@ import { IConstructorOptions } from "rx-player/types";
 
 function generateConstructorOptions() : IConstructorOptions {
   const videoElement = document.querySelector("video");
-  return {
-    stopAtEnd: false,
-    videoElement,
-  };
+  return { videoElement };
 }
 
 const options = generateConstructorOptions();
