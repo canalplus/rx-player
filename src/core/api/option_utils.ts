@@ -98,7 +98,6 @@ export interface IParsedConstructorOptions {
   minVideoBitrate : number;
   maxAudioBitrate : number;
   maxVideoBitrate : number;
-  stopAtEnd : boolean;
 }
 
 /**
@@ -189,7 +188,6 @@ function parseConstructorOptions(
           DEFAULT_MAX_BUFFER_AHEAD,
           DEFAULT_MAX_BUFFER_BEHIND,
           DEFAULT_MAX_VIDEO_BUFFER_SIZE,
-          DEFAULT_STOP_AT_END,
           DEFAULT_THROTTLE_WHEN_HIDDEN,
           DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
           DEFAULT_WANTED_BUFFER_AHEAD } = config.getCurrent();
@@ -368,9 +366,6 @@ function parseConstructorOptions(
     }
   }
 
-  const stopAtEnd = isNullOrUndefined(options.stopAtEnd) ? DEFAULT_STOP_AT_END :
-                                                           !!options.stopAtEnd;
-
   return { maxBufferAhead,
            maxBufferBehind,
            limitVideoWidth,
@@ -387,8 +382,7 @@ function parseConstructorOptions(
            minAudioBitrate,
            minVideoBitrate,
            maxAudioBitrate,
-           maxVideoBitrate,
-           stopAtEnd };
+           maxVideoBitrate };
 }
 
 /**
