@@ -60,7 +60,6 @@ export interface IConstructorOptions {
   minVideoBitrate? : number;
   maxAudioBitrate? : number;
   maxVideoBitrate? : number;
-  stopAtEnd? : boolean;
 }
 
 /** Every options that can be given to the RxPlayer's `loadVideo` method. */

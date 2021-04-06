@@ -9,7 +9,6 @@ const defaultOptionsValues = {
   maxAudioBr: Infinity,
   limitVideoWidth: false,
   throttleVideoBitrateWhenHidden: false,
-  stopAtEnd: false,
   segmentRetry: 4,
   manifestRetry: 4,
   offlineRetry: Infinity,

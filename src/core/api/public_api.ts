@@ -363,9 +363,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     [P in keyof IPublicAPIEvent]? : IPublicAPIEvent[P];
   };
 
-  /** Determines whether or not the player should stop at the end of video playback. */
-  private readonly _priv_stopAtEnd : boolean;
-
   /** Information about last content being played. */
   private _priv_lastContentPlaybackInfos : { options?: IParsedLoadVideoOptions;
                                              manifest?: Manifest;
@@ -421,8 +418,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
-            maxVideoBufferSize,
-            stopAtEnd } = parseConstructorOptions(options);
+            maxVideoBufferSize } = parseConstructorOptions(options);
     const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
@@ -506,8 +502,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_contentInfos = null;
 
     this._priv_contentEventsMemory = {};
-
-    this._priv_stopAtEnd = stopAtEnd;
 
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
@@ -1035,16 +1029,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     playerState$
       .pipe(takeUntil(stoppedContent$))
       .subscribe(x => this._priv_setPlayerState(x));
-
-    const endedEvent$ = observation$.pipe(filter(o => {
-      return o.event === "ended";
-    }));
-    (this._priv_stopAtEnd ? endedEvent$ :
-                            EMPTY)
-      .pipe(takeUntil(stoppedContent$))
-      .subscribe(() => {
-        currentContentCanceller.cancel();
-      });
 
     // Link playback events to the corresponding callbacks
     playback$.subscribe({
