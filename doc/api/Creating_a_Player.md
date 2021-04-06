@@ -739,28 +739,6 @@ This option will have no effect for contents loaded :
 
 </div>
 
-### stopAtEnd
-
-_type_: `Boolean`
-
-_defaults_: `true`
-
-By default, the player automatically _unload_ the content once it reaches its
-end (the player goes to the `"ENDED"` state).
-
-In that case, the only way to play the content again is to (re-)call the
-`loadVideo` API, which will trigger another download of the
-[Manifest](../Getting_Started/Glossary.md#manifest) and segments.
-
-If you want to be able to seek back in the content after it ended, you may want
-to deactivate this behavior. To do so, set `stopAtEnd` to `false`.
-
-```js
-const player = Player({
-  stopAtEnd: false,
-});
-```
-
 
 ### throttleWhenHidden
 

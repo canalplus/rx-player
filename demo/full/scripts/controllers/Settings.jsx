@@ -25,7 +25,6 @@ function Settings({
     maxVideoBufferSize,
     minAudioBitrate,
     minVideoBitrate,
-    stopAtEnd,
     throttleVideoBitrateWhenHidden,
     wantedBufferAhead,
   } = playerOptions;
@@ -64,15 +63,6 @@ function Settings({
       });
     });
   }, [updateLoadVideoOptions]);
-
-  const onStopAtEndChange = useCallback((stopAtEnd) => {
-    updatePlayerOptions((prevOptions) => {
-      if (stopAtEnd === prevOptions.stopAtEnd) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { stopAtEnd });
-    });
-  }, [updatePlayerOptions]);
 
   const onInitialVideoBitrateChange = useCallback((initialVideoBitrate)  => {
     updatePlayerOptions((prevOptions) => {
@@ -311,8 +301,6 @@ function Settings({
             onManualBitrateSwitchingModeChange={
               onManualBitrateSwitchingModeChange
             }
-            stopAtEnd={stopAtEnd}
-            onStopAtEndChange={onStopAtEndChange}
           />
         </Option>
         <Option title="Video adaptive settings">

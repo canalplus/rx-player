@@ -10,7 +10,6 @@ const defaultOptionsValues = {
     maxVideoBufferSize: Infinity,
     minAudioBitrate: 0,
     minVideoBitrate: 0,
-    stopAtEnd: false,
     throttleVideoBitrateWhenHidden: false,
     wantedBufferAhead: 30,
   },
