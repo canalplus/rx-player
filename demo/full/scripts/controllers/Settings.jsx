@@ -35,7 +35,6 @@ class Settings extends React.Component {
       maxBufferBehind,
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
-      stopAtEnd,
       autoPlay,
       audioTrackSwitchingMode,
       manualBrSwitchingMode,
@@ -59,7 +58,6 @@ class Settings extends React.Component {
         maxBufferBehind: parseFloat(maxBufferBehind),
         limitVideoWidth,
         throttleVideoBitrateWhenHidden,
-        stopAtEnd,
       },
       loadVideoOpts: {
         autoPlay,
@@ -108,9 +106,6 @@ class Settings extends React.Component {
       throttleVideoBitrateWhenHidden: getCheckBoxValue(evt.target),
     });
 
-  onStopAtEndClick = (evt) =>
-    this.setState({ stopAtEnd: getCheckBoxValue(evt.target) });
-
   onSegmentRetryInput = (value) =>
     this.setState({ segmentRetry: value });
 
@@ -153,7 +148,6 @@ class Settings extends React.Component {
       maxAudioBr,
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
-      stopAtEnd,
       segmentRetry,
       manifestRetry,
       offlineRetry,
@@ -217,8 +211,6 @@ class Settings extends React.Component {
               manualBrSwitchingMode={manualBrSwitchingMode}
               onAutoPlayClick={this.onAutoPlayClick}
               onManualBrSwitchingModeChange={this.onManualBrSwitchingModeChange}
-              stopAtEnd={stopAtEnd}
-              onStopAtEndClick={this.onStopAtEndClick}
             />
           </Option>
           <Option title="Video adaptive settings">
