@@ -11,8 +11,6 @@ function TrackSwitch({
   autoPlay,
   onManualBrSwitchingModeChange,
   manualBrSwitchingMode,
-  stopAtEnd,
-  onStopAtEndClick,
 }) {
   return (
     <Fragment>
@@ -37,17 +35,6 @@ function TrackSwitch({
         >
           Manual bitrate switching mode
         </Select>
-      </li>
-      <li>
-        <Checkbox
-          className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
-          name="stopAtEnd"
-          ariaLabel="Stop at end option"
-          checked={stopAtEnd}
-          onChange={onStopAtEndClick}
-        >
-          Stop At End
-        </Checkbox>
       </li>
     </Fragment>
   );

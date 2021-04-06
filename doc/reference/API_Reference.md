@@ -67,9 +67,6 @@ properties, methods, events and so on.
     Limit the maximum video bitrate when the current video is hidden to the
     user.
 
-  - [`stopAtEnd`](../api/Creating_a_Player.md#stopatend):
-    Stop automatically when the end of a content is reached.
-
   - [`throttleWhenHidden`](../api/Creating_a_Player.md#throttlewhenhidden):
     [Deprecated] Limit the maximum video bitrate when the current video is
     hidden to the user.
