@@ -11,15 +11,11 @@ function TrackSwitch({
   manualBitrateSwitchingMode,
   onAutoPlayChange,
   onManualBitrateSwitchingModeChange,
-  onStopAtEndChange,
-  stopAtEnd,
 }: {
   autoPlay: boolean;
   manualBitrateSwitchingMode: string;
   onAutoPlayChange: (val: boolean) => void;
   onManualBitrateSwitchingModeChange: (val: string) => void;
-  onStopAtEndChange: (val: boolean) => void;
-  stopAtEnd: boolean;
 }): JSX.Element {
   let manualBitrateSwitchingModeDesc;
   switch (manualBitrateSwitchingMode) {
@@ -75,22 +71,6 @@ function TrackSwitch({
         </Select>
         <span className="option-desc">
           {manualBitrateSwitchingModeDesc}
-        </span>
-      </li>
-      <li>
-        <Checkbox
-          className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
-          name="stopAtEnd"
-          ariaLabel="Stop at end option"
-          checked={stopAtEnd}
-          onChange={onStopAtEndChange}
-        >
-          Stop At End
-        </Checkbox>
-        <span className="option-desc">
-          {stopAtEnd ?
-            "Automatically stop when reaching the end of the content." :
-            "Don't stop when reaching the end of the content."}
         </span>
       </li>
     </>
