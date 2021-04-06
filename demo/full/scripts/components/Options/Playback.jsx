@@ -11,8 +11,6 @@ function TrackSwitch({
   autoPlay,
   onManualBrSwitchingModeChange,
   manualBrSwitchingMode,
-  stopAtEnd,
-  onStopAtEndClick,
 }) {
   let manualBitrateSwitchingModeDesc;
   switch (manualBrSwitchingMode) {
@@ -59,22 +57,6 @@ function TrackSwitch({
         </Select>
         <span className="option-desc">
           {manualBitrateSwitchingModeDesc}
-        </span>
-      </li>
-      <li>
-        <Checkbox
-          className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
-          name="stopAtEnd"
-          ariaLabel="Stop at end option"
-          checked={stopAtEnd}
-          onChange={onStopAtEndClick}
-        >
-          Stop At End
-        </Checkbox>
-        <span className="option-desc">
-          {stopAtEnd ?
-            "Automatically stop when reaching the end of the content." :
-            "Don't stop when reaching the end of the content."}
         </span>
       </li>
     </Fragment>
