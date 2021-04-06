@@ -270,9 +270,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     [P in keyof IPublicAPIEvent]? : IPublicAPIEvent[P];
   };
 
-  /** Determines whether or not the player should stop at the end of video playback. */
-  private readonly _priv_stopAtEnd : boolean;
-
   /**
    * Information that can be relied on once `reload` is called.
    * It should refer to the last content being played.
@@ -353,8 +350,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
-            maxVideoBufferSize,
-            stopAtEnd } = parseConstructorOptions(options);
+            maxVideoBufferSize } = parseConstructorOptions(options);
     const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
@@ -460,8 +456,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_contentInfos = null;
 
     this._priv_contentEventsMemory = {};
-
-    this._priv_stopAtEnd = stopAtEnd;
 
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
@@ -950,12 +944,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                        () => this.trigger("seeking", null),
                        () => this.trigger("seeked", null),
                        seekEventsCanceller.signal);
-      }
-
-      // Previous call could have performed all kind of side-effects, thus,
-      // we re-check the current state associated to the RxPlayer
-      if (this.state === PLAYER_STATES.ENDED && this._priv_stopAtEnd) {
-        currentContentCanceller.cancel();
       }
     }, { emitCurrentValue: true, clearSignal: currentContentCanceller.signal });
 
