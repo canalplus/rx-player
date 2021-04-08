@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import { getMDHDTimescale } from "../../parsers/containers/isobmff";
 import {
   strToUtf8,
@@ -23,7 +26,9 @@ import {
 import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserArguments,
-  ITextParserObservable,
+  ISegmentParserInitSegment,
+  ISegmentParserSegment,
+  ITextTrackSegmentData,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
@@ -43,7 +48,9 @@ function parseISOBMFFEmbeddedTextTrack(
     initTimescale } : ISegmentParserArguments< Uint8Array |
                                                ArrayBuffer |
                                                string >
-) : ITextParserObservable {
+) : Observable<ISegmentParserInitSegment<null> |
+               ISegmentParserSegment<ITextTrackSegmentData>>
+{
   const { period, segment } = content;
   const { data, isChunked } = response;
 
@@ -83,7 +90,9 @@ function parsePlainTextTrack(
     content } : ISegmentParserArguments< Uint8Array |
                                          ArrayBuffer |
                                          string >
-) : ITextParserObservable {
+) : Observable<ISegmentParserInitSegment<null> |
+               ISegmentParserSegment<ITextTrackSegmentData>>
+{
   const { period, segment } = content;
   if (segment.isInit) {
     return observableOf({ type: "parsed-init-segment",
@@ -122,7 +131,9 @@ export default function textTrackParser(
                                       ArrayBuffer |
                                       string |
                                       null >
-) : ITextParserObservable {
+) : Observable<ISegmentParserInitSegment<null> |
+               ISegmentParserSegment<ITextTrackSegmentData>>
+{
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   if (data === null) { // No data, just return empty infos

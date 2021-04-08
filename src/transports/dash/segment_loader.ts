@@ -26,10 +26,10 @@ import warnOnce from "../../utils/warn_once";
 import {
   CustomSegmentLoader,
   ILoaderProgressEvent,
+  ISegmentLoader,
   ISegmentLoaderArguments,
   ISegmentLoaderDataLoadedEvent,
   ISegmentLoaderEvent,
-  ITransportAudioVideoSegmentLoader,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
@@ -85,7 +85,7 @@ export default function generateSegmentLoader(
     checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
                                      segmentLoader? : CustomSegmentLoader;
                                      checkMediaSegmentIntegrity? : boolean; }
-) : ITransportAudioVideoSegmentLoader {
+) : ISegmentLoader< Uint8Array | ArrayBuffer | null > {
   return checkMediaSegmentIntegrity !== true ? segmentLoader :
                                                addSegmentIntegrityChecks(segmentLoader);
 

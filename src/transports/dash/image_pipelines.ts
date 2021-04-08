@@ -22,10 +22,12 @@ import features from "../../features";
 import request from "../../utils/request";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  IImageParserObservable,
+  IImageTrackSegmentData,
   ISegmentLoaderArguments,
   ISegmentLoaderEvent,
   ISegmentParserArguments,
+  ISegmentParserInitSegment,
+  ISegmentParserSegment,
 } from "../types";
 
 /**
@@ -52,7 +54,9 @@ export function imageLoader(
 export function imageParser(
   { response,
     content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-) : IImageParserObservable {
+) : Observable<ISegmentParserInitSegment<null> |
+               ISegmentParserSegment<IImageTrackSegmentData>>
+{
   const { segment, period } = content;
   const { data, isChunked } = response;
 

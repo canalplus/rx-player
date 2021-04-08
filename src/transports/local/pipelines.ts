@@ -29,7 +29,8 @@ import {
   IManifestLoaderArguments,
   IManifestLoaderEvent,
   IManifestParserArguments,
-  IManifestParserObservable,
+  IManifestParserResponseEvent,
+  IManifestParserWarningEvent,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
@@ -66,7 +67,7 @@ export default function getLocalManifestPipelines(
 
     parser(
       { response } : IManifestParserArguments
-    ) : IManifestParserObservable {
+    ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
       const manifestData = response.responseData;
       if (typeof manifestData !== "object") {
         throw new Error("Wrong format for the manifest data");

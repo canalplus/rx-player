@@ -31,7 +31,119 @@ import { IBifThumbnail } from "../parsers/images/bif";
 import { ILocalManifest } from "../parsers/manifest/local";
 import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
 
-// ---- Loader arguments ----
+/**
+ * Interface returned by any transport implementation.
+ * @param {Object} options - Options allowing to configure the transport's
+ * behavior.
+ * @returns {Object} - The "transport pipelines". Those are all APIs for this
+ * transport implementation.
+ */
+export type ITransportFunction = (options : ITransportOptions) =>
+  ITransportPipelines;
+
+/**
+ * Every API implemented for a transport implementation, allowing to load and
+ * parse the Manifest or any segment.
+ */
+export interface ITransportPipelines {
+  /** Functions allowing to load an parse the Manifest for this transport. */
+  manifest : ITransportManifestPipeline;
+  /** Functions allowing to load an parse audio segments. */
+  audio : ISegmentPipeline<Uint8Array | ArrayBuffer | null,
+                           Uint8Array | ArrayBuffer | null,
+                           Uint8Array | ArrayBuffer | null>;
+  /** Functions allowing to load an parse video segments. */
+  video : ISegmentPipeline<Uint8Array | ArrayBuffer | null,
+                           Uint8Array | ArrayBuffer | null,
+                           Uint8Array | ArrayBuffer | null>;
+  /** Functions allowing to load an parse text (e.g. subtitles) segments. */
+  text : ISegmentPipeline<Uint8Array | ArrayBuffer | string | null,
+                          null,
+                          ITextTrackSegmentData>;
+  /** Functions allowing to load an parse image (e.g. thumbnails) segments. */
+  image : ISegmentPipeline<Uint8Array | ArrayBuffer | null,
+                           null,
+                           IImageTrackSegmentData>;
+}
+
+/** Functions allowing to load and parse the Manifest. */
+export interface ITransportManifestPipeline { resolver? : IManifestResolverFunction;
+                                              loader : IManifestLoaderFunction;
+                                              parser : IManifestParserFunction; }
+
+/**
+ * @deprecated
+ * "Resolves the Manifest's URL, to obtain its true URL.
+ * This is a deprecated function which corresponds to an old use case at
+ * Canal+ where the URL of the Manifest first need to be parsed from a .wsx
+ * file.
+ * Thankfully this API should not be used anymore, though to not break
+ * compatibility, we have to keep it until a v4.x.x release.
+ *
+ * @param {Object} x - Object containing the URL used to obtain the real URL of
+ * the Manifest.
+ * @returns {Observable.<Object>}
+ */
+export type IManifestResolverFunction =
+  (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
+
+/**
+ * "Loader" of the Manifest pipeline, allowing to request a Manifest so it can
+ * later be parsed by the `parseManifest` function.
+ *
+ * @param {Object} x - Object containing the URL of the Manifest we want to
+ * load.
+ * @returns {Observable.<Object>}
+ */
+export type IManifestLoaderFunction =
+  (x : IManifestLoaderArguments) => Observable<IManifestLoaderEvent>;
+
+/**
+ * "Parser" of the Manifest pipeline, allowing to parse a loaded Manifest so
+ * it can be exploited by the rest of the RxPlayer's logic.
+ *
+ * @param {Object} x
+ * @returns {Observable.<Object>}
+ */
+export type IManifestParserFunction = (
+  x : IManifestParserArguments
+) => Observable< IManifestParserResponseEvent |
+                 IManifestParserWarningEvent>;
+
+/** Functions allowing to load and parse segments of any type. */
+export interface ISegmentPipeline<
+  LoadedFormat,
+  ParsedInitDataFormat,
+  ParsedMediaDataFormat,
+> {
+  loader : ISegmentLoader<LoadedFormat>;
+  parser : ISegmentParser<LoadedFormat,
+                          ParsedInitDataFormat,
+                          ParsedMediaDataFormat>;
+}
+
+/**
+ * Segment loader function, allowing to load a segment of any type.
+ * @param {Object} x
+ * @returns {Observable.<Object>}
+ */
+export type ISegmentLoader<LoadedFormat> = (
+  x : ISegmentLoaderArguments
+) => Observable<ISegmentLoaderEvent<LoadedFormat>>;
+
+/**
+ * Segment parser function, allowing to parse a segment of any type.
+ * @param {Object} x
+ * @returns {Observable.<Object>}
+ */
+export type ISegmentParser<
+  LoadedFormat,
+  ParsedInitDataFormat,
+  ParsedMediaDataFormat
+> = (
+  x : ISegmentParserArguments< LoadedFormat >
+) => Observable<ISegmentParserInitSegment<ParsedInitDataFormat>  |
+                ISegmentParserSegment<ParsedMediaDataFormat>>;
 
 /** Arguments for the loader of the manifest pipeline. */
 export interface IManifestLoaderArguments {
@@ -62,8 +174,6 @@ export interface ISegmentLoaderArguments {
    */
   url : string | null;
 }
-
-// ---- Loader response ----
 
 /** Payload of a "data-loaded" event. */
 export interface ILoaderDataLoadedValue<T> {
@@ -205,8 +315,6 @@ export type ISegmentLoaderEvent<T> = ILoaderProgressEvent |
                                      ISegmentLoaderDataLoadedEvent<T> |
                                      ISegmentLoaderDataCreatedEvent<T>;
 
-// ---- Parser arguments ----
-
 /** Arguments given to the `parser` function of the Manifest pipeline. */
 export interface IManifestParserArguments {
   /** Response obtained from the loader. */
@@ -275,8 +383,6 @@ export interface ISegmentParserArguments<T> {
   };
 }
 
-// ---- Parser response ----
-
 /** Event emitted when a Manifest object has been parsed. */
 export interface IManifestParserResponseEvent {
   type : "parsed";
@@ -301,13 +407,6 @@ export interface IManifestParserWarningEvent {
   /** Error describing the minor parsing error encountered. */
   value : Error;
 }
-
-/** Events emitted by the Manifest parser. */
-export type IManifestParserEvent = IManifestParserResponseEvent |
-                                   IManifestParserWarningEvent;
-
-/** Observable returned by the Manifest parser. */
-export type IManifestParserObservable = Observable<IManifestParserEvent>;
 
 /**
  * Time information for a single segment.
@@ -398,9 +497,6 @@ export type ISegmentParserResponse<T> =
   ISegmentParserSegment<T>;
 
 // format under which audio / video data / initialization data is decodable
-export type IAudioVideoTrackSegmentData = Uint8Array |
-                                          ArrayBuffer;
-
 /** Text track segment data, once parsed. */
 export interface ITextTrackSegmentData {
   /** The text track data, in the format indicated in `type`. */
@@ -419,133 +515,19 @@ export interface ITextTrackSegmentData {
   end? : number;
 }
 
-// format under which image data is decodable
+/** Format under which image data is decodable by the RxPlayer. */
 export interface IImageTrackSegmentData {
-  data : IBifThumbnail[]; // image track data, in the given type
-  end : number; // end time time until which the segment apply
-  start : number; // start time from which the segment apply
-  timescale : number; // timescale to convert the start and end into seconds
-  type : string; // the type of the data (example: "bif")
+  /** Exploitable image track data. */
+  data : IBifThumbnail[];
+  /** End time time until which the segment apply, in the timescale given. */
+  end : number;
+  /** Start time time from which the segment apply, in the timescale given. */
+  start : number;
+  /** Timescale to convert the `start` and `end` properties into seconds. */
+  timescale : number;
+  /** The format the data is in (example: "bif"). */
+  type : "bif";
 }
-
-// Response from an audio / video segment parser when parsing an init segment
-export type IAudioVideoParserInitSegmentResponse =
-  ISegmentParserInitSegment< IAudioVideoTrackSegmentData >;
-
-// Response from an audio / video segment parser when parsing a regular segment
-export type IAudioVideoParserSegmentResponse =
-  ISegmentParserSegment< IAudioVideoTrackSegmentData >;
-
-// Response object returned by the audio's / video's segment parser
-export type IAudioVideoParserResponse = IAudioVideoParserInitSegmentResponse |
-                                        IAudioVideoParserSegmentResponse;
-
-// Response from a text segment parser when parsing an init segment
-export type ITextParserInitSegmentResponse = ISegmentParserInitSegment< null >;
-
-// Response from a text segment parser when parsing a regular segment
-export type ITextParserSegmentResponse =
-  ISegmentParserSegment< ITextTrackSegmentData >;
-
-// Response object returned by the text's segment parser
-export type ITextParserResponse = ITextParserInitSegmentResponse |
-                                  ITextParserSegmentResponse;
-
-// Response from a image segment parser when parsing an init segment
-export type IImageParserInitSegmentResponse = ISegmentParserInitSegment< null >;
-
-// Response from a image segment parser when parsing a regular segment
-export type IImageParserSegmentResponse =
-  ISegmentParserSegment< IImageTrackSegmentData >;
-
-// Response object returned by the image's segment parser
-export type IImageParserResponse = IImageParserInitSegmentResponse |
-                                   IImageParserSegmentResponse;
-
-export type IAudioVideoParserObservable = Observable<IAudioVideoParserResponse>;
-export type ITextParserObservable = Observable<ITextParserResponse>;
-export type IImageParserObservable = Observable<IImageParserResponse>;
-
-/**
- * "Resolve" URL of the Manifest.
- *
- * This is just here for legacy reasons. It should not be implemented anymore.
- * TODO Remove resolver
- */
-export type IManifestResolverFunction =
-  (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
-
-export type IManifestLoaderFunction =
-  (x : IManifestLoaderArguments) => Observable<IManifestLoaderEvent>;
-
-export type IManifestParserFunction =
-  (x : IManifestParserArguments) => IManifestParserObservable;
-
-// TODO Remove resolver
-export interface ITransportManifestPipeline { resolver? : IManifestResolverFunction;
-                                              loader : IManifestLoaderFunction;
-                                              parser : IManifestParserFunction; }
-
-export type ITransportAudioVideoSegmentLoader =
-  (x : ISegmentLoaderArguments) => Observable<ISegmentLoaderEvent< Uint8Array |
-                                                                   ArrayBuffer |
-                                                                   null >>;
-export type ITransportAudioVideoSegmentParser =
-  (x : ISegmentParserArguments< Uint8Array |
-                                ArrayBuffer |
-                                null >) => IAudioVideoParserObservable;
-
-export interface ITransportAudioVideoSegmentPipeline {
-  loader : ITransportAudioVideoSegmentLoader;
-  parser : ITransportAudioVideoSegmentParser;
-}
-
-// Note: The segment's data can be null for init segments
-export type ITransportTextSegmentLoader =
-  (x : ISegmentLoaderArguments) => Observable< ISegmentLoaderEvent< Uint8Array |
-                                                                    ArrayBuffer |
-                                                                    string |
-                                                                    null >>;
-
-export type ITransportTextSegmentParser =
-  (x : ISegmentParserArguments< Uint8Array |
-                                ArrayBuffer |
-                                string |
-                                null >) => ITextParserObservable;
-
-export interface ITransportTextSegmentPipeline {
-  loader : ITransportTextSegmentLoader;
-  parser : ITransportTextSegmentParser;
-}
-
-export type ITransportImageSegmentLoader =
-  // Note: The segment's data can be null for init segments
-  (x : ISegmentLoaderArguments) => Observable< ISegmentLoaderEvent< Uint8Array |
-                                                                    ArrayBuffer |
-                                                                    null >>;
-
-export type ITransportImageSegmentParser =
-  (x : ISegmentParserArguments< Uint8Array |
-                                ArrayBuffer |
-                                null >) => IImageParserObservable;
-
-export interface ITransportImageSegmentPipeline {
-  loader : ITransportImageSegmentLoader;
-  parser : ITransportImageSegmentParser;
-}
-
-export type ITransportSegmentPipeline = ITransportAudioVideoSegmentPipeline |
-                                        ITransportTextSegmentPipeline |
-                                        ITransportImageSegmentPipeline;
-
-export type ITransportPipeline = ITransportManifestPipeline |
-                                 ITransportSegmentPipeline;
-
-export interface ITransportPipelines { manifest : ITransportManifestPipeline;
-                                       audio : ITransportAudioVideoSegmentPipeline;
-                                       video : ITransportAudioVideoSegmentPipeline;
-                                       text : ITransportTextSegmentPipeline;
-                                       image : ITransportImageSegmentPipeline; }
 
 interface IServerSyncInfos { serverTimestamp : number;
                              clientTime : number; }
@@ -567,9 +549,6 @@ export interface ITransportOptions {
 
   __priv_patchLastSegmentInSidx? : boolean;
 }
-
-export type ITransportFunction = (options : ITransportOptions) =>
-                                   ITransportPipelines;
 
 export type CustomSegmentLoader = (
   // first argument: infos on the segment

@@ -34,7 +34,8 @@ import request from "../../utils/request";
 import {
   ILoaderDataLoadedValue,
   IManifestParserArguments,
-  IManifestParserObservable,
+  IManifestParserResponseEvent,
+  IManifestParserWarningEvent,
   ITransportOptions,
 } from "../types";
 import returnParsedManifest from "../utils/return_parsed_manifest";
@@ -59,7 +60,9 @@ function requestStringResource(
  */
 export default function generateManifestParser(
   options : ITransportOptions
-) : (x : IManifestParserArguments) => IManifestParserObservable {
+) : (x : IManifestParserArguments) => Observable<IManifestParserWarningEvent |
+                                                 IManifestParserResponseEvent>
+{
   const { aggressiveMode,
           referenceDateTime } = options;
   const serverTimeOffset = options.serverSyncInfos !== undefined ?
@@ -67,7 +70,7 @@ export default function generateManifestParser(
     undefined;
   return function manifestParser(
     args : IManifestParserArguments
-  ) : IManifestParserObservable {
+  ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
     const { response, scheduleRequest } = args;
     const argClockOffset = args.externalClockOffset;
     const loaderURL = args.url;
@@ -91,7 +94,7 @@ export default function generateManifestParser(
 
     function loadExternalResources(
       parserResponse : IMPDParserResponse
-    ) : IManifestParserObservable {
+    ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
       if (parserResponse.type === "done") {
         const { warnings, parsed } = parserResponse.value;
         const warningEvents = warnings.map(warning => ({ type: "warning" as const,

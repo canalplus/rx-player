@@ -21,8 +21,9 @@ import {
 } from "rxjs";
 import Manifest from "../../manifest";
 import {
-  IManifestParserEvent,
-} from "../../transports";
+  IManifestParserResponseEvent,
+  IManifestParserWarningEvent,
+} from "../types";
 
 /**
  * As a Manifest instance is obtained, emit the right `warning` events
@@ -35,7 +36,7 @@ import {
 export default function returnParsedManifest(
   manifest : Manifest,
   url? : string
-) : Observable<IManifestParserEvent> {
+) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
   const warningEvts$ = observableOf(...manifest.parsingErrors.map(error => ({
     type: "warning" as const,
     value: error,

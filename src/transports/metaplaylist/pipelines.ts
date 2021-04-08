@@ -42,18 +42,18 @@ import deferSubscriptions from "../../utils/defer_subscriptions";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
 import {
-  IAudioVideoParserObservable,
   IChunkTimeInfo,
-  IImageParserObservable,
+  IImageTrackSegmentData,
   ILoaderDataLoadedValue,
   IManifestParserArguments,
-  IManifestParserObservable,
   IManifestParserResponseEvent,
   IManifestParserWarningEvent,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
+  ISegmentParserInitSegment,
   ISegmentParserParsedSegment,
-  ITextParserObservable,
+  ISegmentParserSegment,
+  ITextTrackSegmentData,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
@@ -177,7 +177,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
         scheduleRequest,
         unsafeMode,
         externalClockOffset } : IManifestParserArguments
-    ) : IManifestParserObservable {
+    ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
       const url = response.url === undefined ? loaderURL :
                                                response.url;
       const { responseData } = response;
@@ -189,37 +189,36 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
       function handleParsedResult(
         parsedResult : IMPLParserResponse<IParsedManifest>
-      ) : IManifestParserObservable {
+      ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
         if (parsedResult.type === "done") {
           const manifest = new Manifest(parsedResult.value, options);
           return observableOf({ type: "parsed",
                                 value: { manifest } });
         }
 
-        const loaders$ : IManifestParserObservable[] =
-          parsedResult.value.ressources.map((ressource) => {
-            const transport = getTransportPipelines(transports,
-                                                    ressource.transportType,
-                                                    otherTransportOptions);
-            const request$ = scheduleRequest(() =>
-              transport.manifest.loader({ url : ressource.url }).pipe(
-                filter(
-                  (e): e is { type : "data-loaded";
-                              value : ILoaderDataLoadedValue<Document | string>; } =>
-                    e.type === "data-loaded"
-                ),
-                map((e) : ILoaderDataLoadedValue< Document | string > => e.value)
-              ));
+        const loaders$ = parsedResult.value.ressources.map((ressource) => {
+          const transport = getTransportPipelines(transports,
+                                                  ressource.transportType,
+                                                  otherTransportOptions);
+          const request$ = scheduleRequest(() =>
+            transport.manifest.loader({ url : ressource.url }).pipe(
+              filter(
+                (e): e is { type : "data-loaded";
+                            value : ILoaderDataLoadedValue<Document | string>; } =>
+                  e.type === "data-loaded"
+              ),
+              map((e) : ILoaderDataLoadedValue< Document | string > => e.value)
+            ));
 
-            return request$.pipe(mergeMap((responseValue) => {
-              return transport.manifest.parser({ response: responseValue,
-                                                 url: ressource.url,
-                                                 scheduleRequest,
-                                                 previousManifest,
-                                                 unsafeMode,
-                                                 externalClockOffset });
-            })).pipe(deferSubscriptions(), share());
-          });
+          return request$.pipe(mergeMap((responseValue) => {
+            return transport.manifest.parser({ response: responseValue,
+                                               url: ressource.url,
+                                               scheduleRequest,
+                                               previousManifest,
+                                               unsafeMode,
+                                               externalClockOffset });
+          })).pipe(deferSubscriptions(), share());
+        });
 
         const warnings$ : Array<Observable<IManifestParserWarningEvent>> =
           loaders$.map(loader =>
@@ -307,7 +306,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : IAudioVideoParserObservable {
+    ) : Observable<ISegmentParserSegment<ArrayBuffer | Uint8Array | null>  |
+                   ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null>>
+    {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
@@ -334,7 +335,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : IAudioVideoParserObservable {
+    ) : Observable<ISegmentParserSegment<ArrayBuffer | Uint8Array | null>  |
+                   ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null>>
+    {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
@@ -359,9 +362,11 @@ export default function(options : ITransportOptions): ITransportPipelines {
       return text.loader(getLoaderArguments(segment, url));
     },
 
-    parser: (
+    parser(
       args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>
-    ) : ITextParserObservable => {
+    ) : Observable<ISegmentParserInitSegment<null> |
+                   ISegmentParserSegment<ITextTrackSegmentData>>
+    {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
@@ -388,7 +393,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
-    ) : IImageParserObservable {
+    ) : Observable<ISegmentParserInitSegment<null>  |
+                   ISegmentParserSegment<IImageTrackSegmentData>>
+    {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);

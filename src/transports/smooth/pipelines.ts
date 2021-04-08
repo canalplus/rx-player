@@ -39,16 +39,18 @@ import {
 } from "../../utils/string_parsing";
 import warnOnce from "../../utils/warn_once";
 import {
-  IAudioVideoParserObservable,
   IChunkTimeInfo,
-  IImageParserObservable,
+  IImageTrackSegmentData,
   IManifestLoaderArguments,
   IManifestParserArguments,
-  IManifestParserObservable,
+  IManifestParserResponseEvent,
+  IManifestParserWarningEvent,
   ISegmentLoaderArguments,
   ISegmentLoaderEvent,
   ISegmentParserArguments,
-  ITextParserObservable,
+  ISegmentParserInitSegment,
+  ISegmentParserSegment,
+  ITextTrackSegmentData,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
@@ -137,7 +139,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
 
     parser(
       { response, url: reqURL } : IManifestParserArguments
-    ) : IManifestParserObservable {
+    ) : Observable<IManifestParserWarningEvent |
+                   IManifestParserResponseEvent> {
       const url = response.url === undefined ? reqURL :
                                                response.url;
       const data = typeof response.responseData === "string" ?
@@ -176,7 +179,9 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       response,
       initTimescale,
     } : ISegmentParserArguments< ArrayBuffer | Uint8Array | null >
-    ) : IAudioVideoParserObservable {
+    ) : Observable<ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null>  |
+                   ISegmentParserSegment<ArrayBuffer | Uint8Array | null>>
+    {
       const { segment, adaptation, manifest } = content;
       const { data, isChunked } = response;
       if (data === null) {
@@ -264,7 +269,9 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       response,
       initTimescale,
     } : ISegmentParserArguments<string|ArrayBuffer|Uint8Array|null>
-    ) : ITextParserObservable {
+    ) : Observable<ISegmentParserInitSegment<null>  |
+                   ISegmentParserSegment<ITextTrackSegmentData>>
+    {
       const { manifest, adaptation, representation, segment } = content;
       const { language } = adaptation;
       const isMP4 = isMP4EmbeddedTrack(representation);
@@ -414,7 +421,9 @@ export default function(options : ITransportOptions) : ITransportPipelines {
 
     parser(
       { response, content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : IImageParserObservable {
+    ) : Observable<ISegmentParserInitSegment<null>  |
+                   ISegmentParserSegment<IImageTrackSegmentData>>
+    {
       const { data, isChunked } = response;
 
       if (content.segment.isInit) { // image init segment has no use

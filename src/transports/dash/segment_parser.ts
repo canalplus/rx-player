@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
@@ -29,9 +32,9 @@ import { BaseRepresentationIndex } from "../../parsers/manifest/dash";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  IAudioVideoParserObservable,
   ISegmentParserArguments,
-  ITransportAudioVideoSegmentParser,
+  ISegmentParserInitSegment,
+  ISegmentParserSegment,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
@@ -43,14 +46,15 @@ import getEventsOutOfEMSGs from "./get_events_out_of_emsgs";
  */
 export default function generateAudioVideoSegmentParser(
   { __priv_patchLastSegmentInSidx } : { __priv_patchLastSegmentInSidx? : boolean }
-) : ITransportAudioVideoSegmentParser {
+) {
   return function audioVideoSegmentParser(
     { content,
       response,
       initTimescale } : ISegmentParserArguments< Uint8Array |
                                                  ArrayBuffer |
                                                  null >
-  ) : IAudioVideoParserObservable {
+  ) : Observable<ISegmentParserInitSegment<Uint8Array | ArrayBuffer | null> |
+                 ISegmentParserSegment< Uint8Array | ArrayBuffer | null>> {
     const { period, representation, segment, manifest } = content;
     const { data, isChunked } = response;
     const appendWindow : [number, number | undefined] = [ period.start, period.end ];

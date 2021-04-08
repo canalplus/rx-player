@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import {
   getMDHDTimescale,
   takePSSHOut,
@@ -23,7 +26,8 @@ import { getTimeCodeScale } from "../../parsers/containers/matroska";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  IAudioVideoParserObservable,
+  ISegmentParserSegment,
+  ISegmentParserInitSegment,
   ISegmentParserArguments,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
@@ -34,7 +38,9 @@ export default function segmentParser({
   response,
   initTimescale,
 } : ISegmentParserArguments<ArrayBuffer | Uint8Array | null>
-) : IAudioVideoParserObservable {
+) : Observable<ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null> |
+               ISegmentParserSegment<ArrayBuffer | Uint8Array | null>>
+{
   const { period, segment, representation } = content;
   const { data } = response;
   const appendWindow : [ number, number | undefined ] = [ period.start, period.end ];

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
@@ -27,8 +30,9 @@ import {
 import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserArguments,
-  ITextParserObservable,
-  ITransportTextSegmentParser,
+  ISegmentParserInitSegment,
+  ISegmentParserSegment,
+  ITextTrackSegmentData,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
@@ -49,7 +53,9 @@ function parseISOBMFFEmbeddedTextTrack(
                                                ArrayBuffer |
                                                string >,
   __priv_patchLastSegmentInSidx? : boolean
-) : ITextParserObservable {
+) : Observable<ISegmentParserInitSegment<null> |
+               ISegmentParserSegment<ITextTrackSegmentData>>
+{
   const { period, representation, segment } = content;
   const { isInit, indexRange } = segment;
   const { data, isChunked } = response;
@@ -117,7 +123,9 @@ function parsePlainTextTrack(
     content } : ISegmentParserArguments< Uint8Array |
                                          ArrayBuffer |
                                          string >
-) : ITextParserObservable {
+) : Observable<ISegmentParserInitSegment<null> |
+               ISegmentParserSegment<ITextTrackSegmentData>>
+{
   const { period, segment } = content;
   const { timestampOffset = 0 } = segment;
   if (segment.isInit) {
@@ -150,7 +158,7 @@ function parsePlainTextTrack(
  */
 export default function generateTextTrackParser(
   { __priv_patchLastSegmentInSidx } : { __priv_patchLastSegmentInSidx? : boolean }
-) : ITransportTextSegmentParser {
+) {
   /**
    * Parse TextTrack data.
    * @param {Object} infos
@@ -163,7 +171,9 @@ export default function generateTextTrackParser(
                                                  ArrayBuffer |
                                                  string |
                                                  null >
-  ) : ITextParserObservable {
+  ) : Observable<ISegmentParserInitSegment<null> |
+                 ISegmentParserSegment<ITextTrackSegmentData>>
+  {
     const { period, representation, segment } = content;
     const { timestampOffset = 0 } = segment;
     const { data, isChunked } = response;

@@ -16,9 +16,7 @@
 
 import { tap } from "rxjs/operators";
 import {
-  ITransportAudioVideoSegmentLoader,
-  ITransportImageSegmentLoader,
-  ITransportTextSegmentLoader,
+  ISegmentLoader,
 } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
@@ -31,21 +29,14 @@ import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
  * @returns {Function}
  */
 export default function addSegmentIntegrityChecks(
-  segmentLoader : ITransportAudioVideoSegmentLoader
-) : ITransportAudioVideoSegmentLoader;
+  segmentLoader : ISegmentLoader<ArrayBuffer | Uint8Array | null>
+) : ISegmentLoader<ArrayBuffer | Uint8Array | null>;
 export default function addSegmentIntegrityChecks(
-  segmentLoader : ITransportTextSegmentLoader
-) : ITransportTextSegmentLoader;
+  segmentLoader : ISegmentLoader<ArrayBuffer | Uint8Array | string | null>
+) : ISegmentLoader< ArrayBuffer | Uint8Array | string | null>;
 export default function addSegmentIntegrityChecks(
-  segmentLoader : ITransportImageSegmentLoader
-) : ITransportImageSegmentLoader;
-export default function addSegmentIntegrityChecks(
-  segmentLoader : ITransportAudioVideoSegmentLoader |
-                  ITransportTextSegmentLoader |
-                  ITransportImageSegmentLoader
-) : ITransportAudioVideoSegmentLoader |
-    ITransportTextSegmentLoader |
-    ITransportImageSegmentLoader
+  segmentLoader : ISegmentLoader< ArrayBuffer | Uint8Array | string | null >
+) : ISegmentLoader< ArrayBuffer | Uint8Array | string | null >
 {
   return (content) => segmentLoader(content).pipe(tap((res) => {
     if ((res.type === "data-loaded" || res.type === "data-chunk") &&
