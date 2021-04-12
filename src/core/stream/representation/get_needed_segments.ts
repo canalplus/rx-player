@@ -24,6 +24,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";
 import { IBufferedChunk } from "../../segment_buffers";
 
@@ -71,6 +72,11 @@ export interface IGetNeededSegmentsArguments {
    * re-requested.
    */
   bufferedSegments : IBufferedChunk[];
+  /**
+   * Tells if current period is finished and is the last. It can be used to know
+   * if playback should be ended if playback time outreach period's end.
+   */
+  isFinishedLastPeriod : boolean;
 }
 
 /**
@@ -96,11 +102,25 @@ export default function getNeededSegments({
   neededRange,
   segmentsBeingPushed,
   bufferedSegments,
+  isFinishedLastPeriod,
 } : IGetNeededSegmentsArguments) : ISegment[] {
   const { representation } = content;
-
-  const availableSegmentsForRange = representation.index
-    .getSegments(neededRange.start, neededRange.end - neededRange.start);
+  const contentEndTime = isFinishedLastPeriod ? representation.index.getLastPosition() :
+                                                undefined;
+  let segments: ISegment[];
+  if (!isNullOrUndefined(contentEndTime) &&
+      currentPlaybackTime >= contentEndTime) {
+    const lastSegments = representation.index.getSegments(contentEndTime - 10, 10);
+    const lastSegment = lastSegments[lastSegments.length - 1];
+    if (lastSegment === undefined) {
+      segments = [];
+    } else {
+      segments = [lastSegment];
+    }
+  } else {
+    segments = representation.index
+      .getSegments(neededRange.start, neededRange.end - neededRange.start);
+  }
 
   // Remove from `bufferedSegments` any segments we would prefer to replace:
   //   - segments in the wrong track / bad quality
@@ -119,7 +139,7 @@ export default function getNeededSegments({
              !isEndGarbageCollected(currentSeg, nextSeg, neededRange.end);
     });
 
-  const segmentsToDownload = availableSegmentsForRange.filter(segment => {
+  const segmentsToDownload = segments.filter(segment => {
     const contentObject = objectAssign({ segment }, content);
 
     // First, check that the segment is not already being pushed

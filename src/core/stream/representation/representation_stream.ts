@@ -249,6 +249,9 @@ export default function RepresentationStream<T>({
   const { bufferGoal$, drmSystemId, fastSwitchThreshold$ } = options;
   const bufferType = adaptation.type;
   const initSegment = representation.index.getInitSegment();
+  const isFinishedLastPeriod =
+    period === manifest.periods[manifest.periods.length - 1] &&
+    representation.index.isFinished();
 
   /**
    * Saved initialization segment state for this representation.
@@ -294,7 +297,8 @@ export default function RepresentationStream<T>({
                                      tick,
                                      fastSwitchThreshold,
                                      bufferGoal,
-                                     segmentBuffer);
+                                     segmentBuffer,
+                                     isFinishedLastPeriod);
       const { neededSegments } = status;
 
       // Add initialization segment if required

@@ -16,6 +16,7 @@
 
 import {
   BehaviorSubject,
+  combineLatest as observableCombineLatest,
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
@@ -25,12 +26,14 @@ import {
   Subject,
 } from "rxjs";
 import {
+  delay,
   exhaustMap,
   filter,
   ignoreElements,
   map,
   mergeMap,
   share,
+  shareReplay,
   take,
   takeUntil,
   tap,
@@ -274,6 +277,11 @@ export default function StreamOrchestrator(
         null
       >(({ position, wantedTimeOffset }) => {
         const time = wantedTimeOffset + position;
+        const lastPeriodEnd =
+          manifest.periods[manifest.periods.length - 1].end;
+        if (lastPeriodEnd !== undefined && time > lastPeriodEnd) {
+          return manifest.periods[manifest.periods.length - 1];
+        }
         if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
           return null;
         }
@@ -382,45 +390,13 @@ export default function StreamOrchestrator(
     destroy$ : Observable<void>
   ) : Observable<IMultiplePeriodStreamsEvent> {
     log.info("SO: Creating new Stream for", bufferType, basePeriod);
-
+    debugger;
     // Emits the Period of the next Period Stream when it can be created.
     const createNextPeriodStream$ = new Subject<Period>();
 
     // Emits when the Streams for the next Periods should be destroyed, if
     // created.
     const destroyNextStreams$ = new Subject<void>();
-
-    // Emits when the current position goes over the end of the current Stream.
-    const endOfCurrentStream$ = clock$
-      .pipe(filter(({ position, wantedTimeOffset }) =>
-        basePeriod.end != null &&
-                    (position + wantedTimeOffset) >= basePeriod.end));
-
-    // Create Period Stream for the next Period.
-    const nextPeriodStream$ = createNextPeriodStream$
-      .pipe(exhaustMap((nextPeriod) =>
-        manageConsecutivePeriodStreams(bufferType, nextPeriod, destroyNextStreams$)
-      ));
-
-    // Allows to destroy each created Stream, from the newest to the oldest,
-    // once destroy$ emits.
-    const destroyAll$ = destroy$.pipe(
-      take(1),
-      tap(() => {
-        // first complete createNextStream$ to allow completion of the
-        // nextPeriodStream$ observable once every further Streams have been
-        // cleared.
-        createNextPeriodStream$.complete();
-
-        // emit destruction signal to the next Stream first
-        destroyNextStreams$.next();
-        destroyNextStreams$.complete(); // we do not need it anymore
-      }),
-      share() // share side-effects
-    );
-
-    // Will emit when the current Stream should be destroyed.
-    const killCurrentStream$ = observableMerge(endOfCurrentStream$, destroyAll$);
 
     const periodStream$ = PeriodStream({ abrManager,
                                          bufferType,
@@ -450,8 +426,53 @@ export default function StreamOrchestrator(
         }
         return observableOf(evt);
       }),
-      share()
+      shareReplay()
     );
+
+    const isLastPeriod =
+      basePeriod === manifest.periods[manifest.periods.length - 1];
+
+    const stopPeriodStream$ = !isLastPeriod ?
+      clock$.pipe(filter(({ position, wantedTimeOffset }) =>
+        basePeriod.end !== undefined &&
+                    (position + wantedTimeOffset) >= basePeriod.end)) :
+      observableCombineLatest([clock$, periodStream$]).pipe(
+        filter(([{ position, wantedTimeOffset }, evt]) => {
+          return basePeriod.end !== undefined &&
+                 (position + wantedTimeOffset) >= basePeriod.end &&
+                 evt.type === "complete-stream";
+        }),
+        // XXX TODO get rid of that delay
+        // it is used because the last streamComplete event must be emitted first
+        // before periodStream completes
+        delay(0)
+      );
+
+    // Create Period Stream for the next Period.
+    const nextPeriodStream$ = createNextPeriodStream$
+      .pipe(exhaustMap((nextPeriod) =>
+        manageConsecutivePeriodStreams(bufferType, nextPeriod, destroyNextStreams$)
+      ));
+
+    // Allows to destroy each created Stream, from the newest to the oldest,
+    // once destroy$ emits.
+    const destroyAll$ = destroy$.pipe(
+      take(1),
+      tap(() => {
+        // first complete createNextStream$ to allow completion of the
+        // nextPeriodStream$ observable once every further Streams have been
+        // cleared.
+        createNextPeriodStream$.complete();
+
+        // emit destruction signal to the next Stream first
+        destroyNextStreams$.next();
+        destroyNextStreams$.complete(); // we do not need it anymore
+      }),
+      share() // share side-effects
+    );
+
+    // Will emit when the current Stream should be destroyed.
+    const killCurrentStream$ = observableMerge(stopPeriodStream$, destroyAll$);
 
     // Stream for the current Period.
     const currentStream$ : Observable<IMultiplePeriodStreamsEvent> =

@@ -88,7 +88,8 @@ export default function getBufferStatus(
            getCurrentTime() : number; },
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
-  segmentBuffer : SegmentBuffer<unknown>
+  segmentBuffer : SegmentBuffer<unknown>,
+  isFinishedLastPeriod : boolean
 ) : IBufferStatus {
   const { period, representation } = content;
   segmentBuffer.synchronizeInventory();
@@ -122,7 +123,8 @@ export default function getBufferStatus(
                                              fastSwitchThreshold,
                                              neededRange,
                                              bufferedSegments,
-                                             segmentsBeingPushed })
+                                             segmentsBeingPushed,
+                                             isFinishedLastPeriod })
     .map((segment) => ({ priority: getSegmentPriority(segment.time, tick),
                          segment }));
 
@@ -150,14 +152,18 @@ export default function getBufferStatus(
       // tells us it has finished generating new segments, we're done.
       hasFinishedLoading = representation.index.isFinished();
     } else {
-      // We have a declared end. Check that our range went until the last
-      // position available in the index. If that's the case and we're left
-      // with no segments after filtering them, it means we already have
-      // downloaded the last segments and have nothing left to do: full.
       const endOfRange = period.end !== undefined ? Math.min(period.end,
                                                              lastPosition) :
                                                     lastPosition;
+      const lastSegments = representation.index.getSegments(lastPosition - 10, 10);
+      const lastSegment = lastSegments[lastSegments.length - 1];
+      if (lastSegment === undefined) {
+        hasFinishedLoading = false;
+      }
+      const hasBufferedLastIndexSegment =
+        bufferedSegments.some((bs) => bs.infos.segment.id === lastSegment.id);
       hasFinishedLoading = neededRange.end >= endOfRange &&
+                           (!isFinishedLastPeriod || hasBufferedLastIndexSegment) &&
                            representation.index.isFinished();
     }
   }

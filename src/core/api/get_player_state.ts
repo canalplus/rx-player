@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-
-const { FORCED_ENDED_THRESHOLD } = config;
-
 export type IPlayerState = "STOPPED" |
                            "LOADED" |
                            "LOADING" |
@@ -63,18 +59,6 @@ export default function getLoadedContentState(
   }
 
   if (stalledStatus !== null) {
-    // On some old browsers (e.g. Chrome 54), the browser does not
-    // emit an 'ended' event in some conditions. Detect if we
-    // reached the end by comparing the current position and the
-    // duration instead.
-    const gapBetweenDurationAndCurrentTime = Math.abs(mediaElement.duration -
-                                                      mediaElement.currentTime);
-    if (FORCED_ENDED_THRESHOLD != null &&
-        gapBetweenDurationAndCurrentTime < FORCED_ENDED_THRESHOLD
-    ) {
-      return PLAYER_STATES.ENDED;
-    }
-
     return stalledStatus.reason === "seeking" ? PLAYER_STATES.SEEKING :
                                                 PLAYER_STATES.BUFFERING;
   }
