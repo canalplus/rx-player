@@ -225,8 +225,9 @@ class LogDisplayer extends React.Component {
   render() {
     const { logs } = this.state;
 
-    const logTexts = logs.map(({ text, date}) =>
+    const logTexts = logs.map(({ text, date }, i) =>
       <LogElement
+        key={i}
         text={text}
         date={date}
       />);
