@@ -20,24 +20,19 @@ import DashWasmParser, {
 } from "../../parsers/manifest/dash/wasm-parser";
 import dash from "../../transports/dash";
 
-function createDashWasmParser(
-  opts : IDashWasmParserOptions
-) : { initialize() : Promise<void>;
-      _addFeature(features : IFeaturesObject) : void; }
-{
-  const dashWasmParser = new DashWasmParser(opts);
-  return {
-    initialize() : Promise<void> {
-      return dashWasmParser.initialize();
-    },
-    _addFeature(features : IFeaturesObject) : void {
-      if (!features.transports.hasOwnProperty("dash")) {
-        features.transports.dash = dash;
-      }
-      features.dashParsers.wasm = dashWasmParser;
-    },
-  };
-}
+const dashWasmParser = new DashWasmParser();
+const dashWasmFeature = {
+  _addFeature(features : IFeaturesObject) : void {
+    if (!features.transports.hasOwnProperty("dash")) {
+      features.transports.dash = dash;
+    }
+    features.dashParsers.wasm = dashWasmParser;
+  },
 
-export { createDashWasmParser };
-export default createDashWasmParser;
+  initialize(opts : IDashWasmParserOptions) : Promise<void> {
+    return dashWasmParser.initialize(opts);
+  },
+};
+
+export { dashWasmFeature as DASH_WASM };
+export default dashWasmFeature;
