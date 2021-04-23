@@ -18,7 +18,7 @@
 
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import DASHFeature from "../../../transports/dash";
-import createDashWashParser from "../dash_wasm";
+import dashWasmFeature from "../dash_wasm";
 
 jest.mock("../../../transports/dash", () => ({
   __esModule: true as const,
@@ -30,11 +30,11 @@ describe("Features list - DASH WASM Parser", () => {
     const initializeSpy = jest.spyOn(DashWasmParser.prototype, "initialize")
       .mockImplementation(jest.fn());
 
-    const DASH_WASM = createDashWashParser({ wasmUrl: "blank" });
+    const DASH_WASM = dashWasmFeature;
     expect(initializeSpy).not.toHaveBeenCalled();
 
     /* eslint-disable @typescript-eslint/no-floating-promises */
-    DASH_WASM.initialize();
+    DASH_WASM.initialize({ wasmUrl: "blank" });
     /* eslint-enable @typescript-eslint/no-floating-promises */
 
     expect(initializeSpy).toHaveBeenCalledTimes(1);

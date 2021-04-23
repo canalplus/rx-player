@@ -96,8 +96,6 @@ export default class DashWasmParser {
    * `null` when no WebAssembly instance is created.
    */
   private _linearMemory : WebAssembly.Memory | null;
-  /** Url for the DASH-WASM WebAssembly file. */
-  private _wasmUrl : string;
 
   /**
    * `true` if we're currently parsing a MPD.
@@ -114,7 +112,7 @@ export default class DashWasmParser {
    * Create a new `DashWasmParser`.
    * @param {object} opts
    */
-  constructor(opts : IDashWasmParserOptions) {
+  constructor() {
     this._parsersStack = new ParsersStack();
     this._instance = null;
     this._mpdData = null;
@@ -122,7 +120,6 @@ export default class DashWasmParser {
     this.status = "uninitialized";
     this._initProm = null;
     this._warnings = [];
-    this._wasmUrl = opts.wasmUrl;
     this._isParsing = false;
   }
 
@@ -142,7 +139,7 @@ export default class DashWasmParser {
            PPromise.reject("No initialization performed yet.");
   }
 
-  public async initialize() : Promise<void> {
+  public async initialize(opts : IDashWasmParserOptions) : Promise<void> {
     if (this.status !== "uninitialized") {
       return PPromise.reject(new Error("DashWasmParser already initialized."));
     } else if (!this.isCompatible()) {
@@ -174,7 +171,7 @@ export default class DashWasmParser {
       },
     };
 
-    const fetchedWasm = fetch(this._wasmUrl);
+    const fetchedWasm = fetch(opts.wasmUrl);
 
     const streamingProm = typeof WebAssembly.instantiateStreaming === "function" ?
       WebAssembly.instantiateStreaming(fetchedWasm, imports) :
