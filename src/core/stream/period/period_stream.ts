@@ -212,16 +212,22 @@ export default function PeriodStream({
             return reloadAfterSwitch(period, clock$, relativePosAfterSwitch);
           }
 
-          const cleanBuffer$ = strategy.type === "clean-buffer" ?
-            observableConcat(...strategy.value.map(({ start, end }) =>
-              segmentBuffer.removeBuffer(start, end))
-            ).pipe(ignoreElements()) : EMPTY;
+          const needsBufferFlush$ = strategy.type === "flush-buffer"
+            ? observableOf(EVENTS.needsBufferFlush())
+            : EMPTY;
+
+          const cleanBuffer$ =
+            strategy.type === "clean-buffer" || strategy.type === "flush-buffer" ?
+              observableConcat(...strategy.value.map(({ start, end }) =>
+                segmentBuffer.removeBuffer(start, end))
+              ).pipe(ignoreElements()) : EMPTY;
 
           const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
           const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
 
           return segmentBuffersStore.waitForUsableBuffers().pipe(mergeMap(() => {
             return observableConcat(cleanBuffer$,
+                                    needsBufferFlush$,
                                     observableMerge(adaptationStream$,
                                                     bufferGarbageCollector$));
           }));

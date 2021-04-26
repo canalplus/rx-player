@@ -396,6 +396,9 @@ export default function InitializeOnMediaSource(
               case "encryption-data-encountered":
                 protectedSegments$.next(evt.value);
                 return null;
+              case "needs-buffer-flush":
+                setCurrentTime(mediaElement.currentTime + 0.001);
+                return null;
             }
             return evt;
           }, null));

@@ -80,11 +80,10 @@ export default {
    * Strategy to adopt when manually switching of audio adaptation.
    * Can be either:
    *    - "seamless": transitions are smooth but could be not immediate.
-   *    - "direct": that strategy will be "smart", if the mimetype and the codec,
-   *    change, we will perform a hard reload of the media source, however, if it
-   *    doesn't change, we will just perform a small flush by removing buffered range,
-   *    and perform, a small seek on the media element.
-   *    Transitions are faster, but we could see appear a reloading or seeking state.
+   *    - "direct": that strategy will perform a very small seek that result
+   *    most of the time by a flush of the current buffered data, by doing
+   *    that we allow quicker transition between audio track, but we could
+   *    see appear a RELOADING or a SEEKING state.
    */
   DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as "seamless" |
                                                     "direct",

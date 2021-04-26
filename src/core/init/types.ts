@@ -112,6 +112,9 @@ export interface IWarningEvent { type : "warning";
 export interface IReloadingMediaSourceEvent { type: "reloading-media-source";
                                               value: undefined; }
 
+export interface INeedsBufferFlush { type: "needs-buffer-flush";
+                                     value: undefined; }
+
 /** Event sent after the player stalled, leading to buffering. */
 export interface IStalledEvent { type : "stalled";
                                  value : IStalledStatus; }
@@ -146,6 +149,7 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
                                       ICompletedStreamEvent |
                                       IPeriodStreamReadyEvent |
                                       INeedsMediaSourceReload |
+                                      INeedsBufferFlush |
                                       IAdaptationChangeEvent |
                                       IBitrateEstimationChangeEvent |
                                       INeedsDecipherabilityFlush |
@@ -160,6 +164,7 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
 export type IInitEvent = IManifestReadyEvent |
                          IManifestUpdateEvent |
                          IReloadingMediaSourceEvent |
+                         INeedsBufferFlush |
                          IDecipherabilityUpdateEvent |
                          IWarningEvent |
                          IEMEDisabledEvent |

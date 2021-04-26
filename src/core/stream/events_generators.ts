@@ -23,6 +23,7 @@ import {
   Representation,
 } from "../../manifest";
 import { IContentProtection } from "../eme";
+import { INeedsBufferFlush } from "../init";
 import { IBufferType } from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
@@ -121,6 +122,10 @@ const EVENTS = {
              value: { position : reloadAt,
                       autoPlay : reloadOnPause,
                       period } };
+  },
+
+  needsBufferFlush(): INeedsBufferFlush {
+    return { type: "needs-buffer-flush", value: undefined };
   },
 
   needsDecipherabilityFlush(
