@@ -654,6 +654,7 @@ class ContentList extends React.Component {
               (isCustomContent || isLocalContent) ?
                 ([
                   <Button
+                    key={0}
                     className={"choice-input-button content-button enter-name-button" +
                       (!hasURL ? " disabled" : "")}
                     ariaLabel="Save or update custom content"
@@ -664,6 +665,7 @@ class ContentList extends React.Component {
                       (isSavingOrUpdating ? "Saving..." : "Store content")}
                   />,
                   <GenerateLinkButton
+                    key={1}
                     enabled={displayGeneratedLink}
                     onClick={onClickGenerateLink} />,
                 ]) :
