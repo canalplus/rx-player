@@ -31,7 +31,7 @@ import {
   ISegmentParserArguments,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
-import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import inferSegmentContainer from "../utils/infer_segment_container";
 
 export default function segmentParser({
   content,
@@ -41,7 +41,7 @@ export default function segmentParser({
 ) : Observable<ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null> |
                ISegmentParserSegment<ArrayBuffer | Uint8Array | null>>
 {
-  const { period, segment, representation } = content;
+  const { period, adaptation, representation, segment } = content;
   const { data } = response;
   const appendWindow : [ number, number | undefined ] = [ period.start, period.end ];
 
@@ -61,9 +61,12 @@ export default function segmentParser({
   }
 
   const chunkData = new Uint8Array(data);
-  const isWEBM = isWEBMEmbeddedTrack(representation);
+  const containerType = inferSegmentContainer(adaptation.type, representation);
+
+  // TODO take a look to check if this is an ISOBMFF/webm?
+  const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
   let protectionDataUpdate = false;
-  if (!isWEBM) {
+  if (seemsToBeMP4) {
     const psshInfo = takePSSHOut(chunkData);
     if (psshInfo.length > 0) {
       protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
@@ -71,8 +74,9 @@ export default function segmentParser({
   }
 
   if (segment.isInit) {
-    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
-                               getMDHDTimescale(chunkData);
+    const timescale = containerType === "webm" ? getTimeCodeScale(chunkData, 0) :
+                                                 // assume ISOBMFF-compliance
+                                                 getMDHDTimescale(chunkData);
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: chunkData,
                                    initTimescale: isNullOrUndefined(timescale) ?
@@ -81,11 +85,11 @@ export default function segmentParser({
                                    protectionDataUpdate } });
   }
 
-  const chunkInfos = isWEBM ? null : // TODO extract from webm
-                              getISOBMFFTimingInfos(chunkData,
-                                                    false,
-                                                    segment,
-                                                    initTimescale);
+  const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData,
+                                                          false,
+                                                          segment,
+                                                          initTimescale) :
+                                    null; // TODO extract time info from webm
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
   return observableOf({ type: "parsed-segment",
                         value: { chunkData,

@@ -35,7 +35,7 @@ import {
   ITextTrackSegmentData,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
-import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
+import inferSegmentContainer from "../utils/infer_segment_container";
 import {
   getISOBMFFEmbeddedTextTrackData,
   getPlainTextTrackData,
@@ -176,7 +176,7 @@ export default function generateTextTrackParser(
   ) : Observable<ISegmentParserInitSegment<null> |
                  ISegmentParserSegment<ITextTrackSegmentData>>
   {
-    const { period, representation, segment } = content;
+    const { period, adaptation, representation, segment } = content;
     const { timestampOffset = 0 } = segment;
     const { data, isChunked } = response;
     if (data === null) { // No data, just return empty infos
@@ -194,8 +194,13 @@ export default function generateTextTrackParser(
                                      protectionDataUpdate: false } });
     }
 
-    const isMP4 = isMP4EmbeddedTextTrack(representation);
-    if (isMP4) {
+    const containerType = inferSegmentContainer(adaptation.type, representation);
+
+    // TODO take a look to check if this is an ISOBMFF/webm when undefined?
+    if (containerType === "webm") {
+      // TODO Handle webm containers
+      throw new Error("Text tracks with a WEBM container are not yet handled.");
+    } else if (containerType === "mp4") {
       return parseISOBMFFEmbeddedTextTrack({ response: { data, isChunked },
                                              content,
                                              initTimescale },
