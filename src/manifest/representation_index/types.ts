@@ -125,7 +125,23 @@ export interface IPrivateInfos {
 export interface ISegment {
   /** ID of the Segment. Should be unique for this Representation. */
   id : string;
-  /** If true, this Segment contains initialization data. */
+  /**
+   * If true, this segment is an initialization segment with no decodable data.
+   *
+   * Those types of segment contain no decodable data and are only there for
+   * initialization purposes, such as giving initial infos to the decoder on
+   * subsequent media segments that will be pushed.
+   *
+   * Note that if `isInit` is false, it only means that the segment contains
+   * decodable media, it can also contain important initialization information.
+   *
+   * Also, a segment which would contain both all initialization data and the
+   * decodable data would have `isInit` set to `false` as it is not purely an
+   * initialization segment.
+   *
+   * Segments which are not purely an initialization segments are called "media
+   * segments" in the code.
+   */
   isInit : boolean;
   /** URLs where this segment is available. From the most to least prioritary. */
   mediaURLs : string[]|null;
@@ -158,7 +174,7 @@ export interface ISegment {
    * Manifest says and what the content really is might make that time not
    * exact.
    *
-   * `0` for initialization segments without media data.
+   * `0` for initialization segments.
    */
   time : number;
   /**
@@ -167,7 +183,7 @@ export interface ISegment {
    * Manifest says and what the content really is might make that time not
    * exact.
    *
-   * `0` for initialization segments without media data.
+   * `0` for initialization segments.
    */
   end : number;
   /**
@@ -176,7 +192,7 @@ export interface ISegment {
    * Manifest says and what the content really is might make that time not
    * exact.
    *
-   * `0` for initialization segments without media data.
+   * `0` for initialization segments.
    */
   duration : number;
   /**
@@ -194,6 +210,8 @@ export interface IRepresentationIndex {
   /**
    * Returns Segment object for the initialization segment, allowing to do the
    * Init Segment request.
+   *
+   * `null` if there's no initialization segment.
    * @returns {Object}
    */
   getInitSegment() : ISegment|null;

@@ -56,25 +56,23 @@ export default function segmentParser({
                           value: { chunkData: null,
                                    chunkInfos: null,
                                    chunkOffset: 0,
-                                   appendWindow } });
+                                   appendWindow,
+                                   protectionDataUpdate: false  } });
   }
 
   const chunkData = new Uint8Array(data);
   const isWEBM = isWEBMEmbeddedTrack(representation);
+  let protectionDataUpdate = false;
+  if (isWEBM) {
+    const psshInfo = takePSSHOut(chunkData);
+    if (psshInfo.length > 0) {
+      protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
+    }
+  }
 
   if (segment.isInit) {
-    let protectionDataUpdate = false;
-    let timescale;
-    if (isWEBM) {
-      timescale = getTimeCodeScale(chunkData, 0);
-    } else {
-      // assume ISOBMFF-compliance
-      timescale = getMDHDTimescale(chunkData);
-      const psshInfo = takePSSHOut(chunkData);
-      if (psshInfo.length > 0) {
-        protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
-      }
-    }
+    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
+                               getMDHDTimescale(chunkData);
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: chunkData,
                                    initTimescale: isNullOrUndefined(timescale) ?
@@ -93,5 +91,6 @@ export default function segmentParser({
                         value: { chunkData,
                                  chunkInfos,
                                  chunkOffset,
-                                 appendWindow } });
+                                 appendWindow,
+                                 protectionDataUpdate: false } });
 }

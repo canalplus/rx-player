@@ -507,7 +507,7 @@ export default function RepresentationStream<T>({
             return EMPTY; // else, ignore.
           }));
 
-      case "parsed-init-segment":
+      case "parsed-init-segment": {
         initSegmentObject = evt.value;
 
         // Now that the initialization segment has been parsed - which may have
@@ -525,20 +525,33 @@ export default function RepresentationStream<T>({
                                              segmentData: evt.value.initializationData,
                                              segmentBuffer });
         return observableMerge(initEncEvt$, pushEvent$);
+      }
 
-      case "parsed-segment":
+      case "parsed-segment": {
         const initSegmentData = initSegmentObject?.initializationData ?? null;
         const { inbandEvents,
                 needsManifestRefresh } = evt.value;
-        const manifestRefresh$ =  needsManifestRefresh === true ?
+
+        // TODO better handle use cases like key rotation by not always grouping
+        // every protection data together? To check.
+        const segmentEncryptionEvent = evt.value.protectionDataUpdate &&
+                                       !hasSentEncryptionData ?
+          observableOf(...representation.getAllEncryptionData().map(p =>
+            EVENTS.encryptionDataEncountered(p))) :
+          EMPTY;
+
+        const manifestRefresh$ = needsManifestRefresh === true ?
           observableOf(EVENTS.needsManifestRefresh()) :
           EMPTY;
+
         const inbandEvents$ = inbandEvents !== undefined &&
                               inbandEvents.length > 0 ?
           observableOf({ type: "inband-events" as const,
                          value: inbandEvents }) :
           EMPTY;
-        return observableConcat(manifestRefresh$,
+
+        return observableConcat(segmentEncryptionEvent,
+                                manifestRefresh$,
                                 inbandEvents$,
                                 pushMediaSegment({ clock$,
                                                    content,
@@ -546,6 +559,7 @@ export default function RepresentationStream<T>({
                                                    parsedSegment: evt.value,
                                                    segment: evt.segment,
                                                    segmentBuffer }));
+      }
       case "end-of-segment": {
         const { segment } = evt.value;
         return segmentBuffer.endOfSegment(objectAssign({ segment }, content))

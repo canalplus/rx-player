@@ -168,7 +168,6 @@ export default function parseRepresentationIndex(
         duration: Number.MAX_VALUE,
         timescale: 1,
         startNumber: 0,
-        initialization: { media: "" },
         media: "",
       }, context);
     }

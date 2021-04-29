@@ -31,7 +31,8 @@ import {
 import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
-  ISegmentParserResponse,
+  ISegmentParserInitSegment,
+  ISegmentParserSegment,
   ITransportPipelines,
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
@@ -67,7 +68,8 @@ export type ISegmentFetcherWarning = ISegmentLoaderWarning;
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
   /** Parse the downloaded chunk. */
-  parse : (initTimescale? : number) => Observable<ISegmentParserResponse<T>>;
+  parse : (initTimescale? : number) => Observable<ISegmentParserInitSegment<T> |
+                                                  ISegmentParserSegment<T>>;
 }
 
 /**
@@ -206,7 +208,8 @@ export default function createSegmentFetcher<T>(
            * @param {Object} [initTimescale]
            * @returns {Observable}
            */
-          parse(initTimescale? : number) : Observable<ISegmentParserResponse<T>> {
+          parse(initTimescale? : number) : Observable<ISegmentParserInitSegment<T> |
+                                                      ISegmentParserSegment<T>> {
             const response = { data: evt.value.responseData, isChunked };
             /* eslint-disable @typescript-eslint/no-unsafe-call */
             /* eslint-disable @typescript-eslint/no-unsafe-member-access */

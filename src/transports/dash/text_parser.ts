@@ -110,7 +110,8 @@ function parseISOBMFFEmbeddedTextTrack(
                         value: { chunkData,
                                  chunkInfos,
                                  chunkOffset,
-                                 appendWindow: [period.start, period.end] } });
+                                 appendWindow: [period.start, period.end],
+                                 protectionDataUpdate: false } });
 }
 
 /**
@@ -149,7 +150,8 @@ function parsePlainTextTrack(
                         value: { chunkData,
                                  chunkInfos: null,
                                  chunkOffset: timestampOffset,
-                                 appendWindow: [period.start, period.end] } });
+                                 appendWindow: [period.start, period.end],
+                                 protectionDataUpdate: false } });
 }
 
 /**
@@ -188,7 +190,8 @@ export default function generateTextTrackParser(
                             value: { chunkData: null,
                                      chunkInfos: null,
                                      chunkOffset: timestampOffset,
-                                     appendWindow: [period.start, period.end] } });
+                                     appendWindow: [period.start, period.end],
+                                     protectionDataUpdate: false } });
     }
 
     const isMP4 = isMP4EmbeddedTextTrack(representation);
