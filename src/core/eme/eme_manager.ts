@@ -65,7 +65,7 @@ import {
 } from "./types";
 import InitDataStore from "./utils/init_data_store";
 
-const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS,
+const { EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS,
         EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION } = config;
 const { onEncrypted$ } = events;
 
@@ -232,7 +232,7 @@ export default function EMEManager(
 
       const maxSessionCacheSize = typeof options.maxSessionCacheSize === "number" ?
         options.maxSessionCacheSize :
-        EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
+        EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
       return getSession(initializationData,
                         stores,
                         wantedSessionType,
