@@ -15,15 +15,10 @@
  */
 
 import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   getMDHDTimescale,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserSegment,
@@ -38,8 +33,8 @@ export default function segmentParser({
   response,
   initTimescale,
 } : ISegmentParserArguments<ArrayBuffer | Uint8Array | null>
-) : Observable<ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null> |
-               ISegmentParserSegment<ArrayBuffer | Uint8Array | null>>
+) : ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null> |
+    ISegmentParserSegment<ArrayBuffer | Uint8Array | null>
 {
   const { period, adaptation, representation, segment } = content;
   const { data } = response;
@@ -47,17 +42,17 @@ export default function segmentParser({
 
   if (data === null) {
     if (segment.isInit) {
-      return observableOf({ type: "parsed-init-segment",
-                            value: { initializationData: null,
-                                     protectionDataUpdate: false,
-                                     initTimescale: undefined } });
+      return { type: "parsed-init-segment",
+               value: { initializationData: null,
+                        protectionDataUpdate: false,
+                        initTimescale: undefined } };
     }
-    return observableOf({ type: "parsed-segment",
-                          value: { chunkData: null,
-                                   chunkInfos: null,
-                                   chunkOffset: 0,
-                                   appendWindow,
-                                   protectionDataUpdate: false  } });
+    return { type: "parsed-segment",
+             value: { chunkData: null,
+                      chunkInfos: null,
+                      chunkOffset: 0,
+                      protectionDataUpdate: false,
+                      appendWindow } };
   }
 
   const chunkData = new Uint8Array(data);
@@ -77,12 +72,10 @@ export default function segmentParser({
     const timescale = containerType === "webm" ? getTimeCodeScale(chunkData, 0) :
                                                  // assume ISOBMFF-compliance
                                                  getMDHDTimescale(chunkData);
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: chunkData,
-                                   initTimescale: isNullOrUndefined(timescale) ?
-                                     undefined :
-                                     timescale,
-                                   protectionDataUpdate } });
+    return { type: "parsed-init-segment",
+             value: { initializationData: chunkData,
+                      initTimescale: timescale ?? undefined,
+                      protectionDataUpdate } };
   }
 
   const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData,
@@ -91,10 +84,10 @@ export default function segmentParser({
                                                           initTimescale) :
                                     null; // TODO extract time info from webm
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData,
-                                 chunkInfos,
-                                 chunkOffset,
-                                 appendWindow,
-                                 protectionDataUpdate: false } });
+  return { type: "parsed-segment",
+           value: { chunkData,
+                    chunkInfos,
+                    chunkOffset,
+                    protectionDataUpdate: false,
+                    appendWindow } };
 }
