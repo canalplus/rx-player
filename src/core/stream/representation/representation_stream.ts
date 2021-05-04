@@ -38,7 +38,6 @@ import {
 import {
   finalize,
   ignoreElements,
-  map,
   mergeMap,
   share,
   startWith,
@@ -57,7 +56,7 @@ import Manifest, {
 } from "../../../manifest";
 import {
   ISegmentParserInitSegment,
-  ISegmentParserParsedInitSegment,
+  ISegmentParserInitSegmentPayload,
   ISegmentParserSegment,
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
@@ -254,7 +253,7 @@ export default function RepresentationStream<T>({
    * Saved initialization segment state for this representation.
    * `null` if the initialization segment hasn't been loaded yet.
    */
-  let initSegmentObject : ISegmentParserParsedInitSegment<T> | null =
+  let initSegmentObject : ISegmentParserInitSegmentPayload<T> | null =
     initSegment === null ? { initializationData: null,
                              protectionDataUpdate: false,
                              initTimescale: undefined } :
@@ -461,9 +460,8 @@ export default function RepresentationStream<T>({
 
               case "chunk":
                 const initTimescale = initSegmentObject?.initTimescale;
-                return evt.parse(initTimescale).pipe(map(parserResponse => {
-                  return objectAssign({ segment }, parserResponse);
-                }));
+                const parsed = evt.parse(initTimescale);
+                return observableOf(objectAssign({ segment }, parsed));
 
               case "ended":
                 return requestNextSegment$;

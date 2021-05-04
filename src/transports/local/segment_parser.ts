@@ -15,10 +15,6 @@
  */
 
 import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   getMDHDTimescale,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
@@ -38,8 +34,8 @@ export default function segmentParser({
   response,
   initTimescale,
 } : ISegmentParserArguments<ArrayBuffer | Uint8Array | null>
-) : Observable<ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null> |
-               ISegmentParserSegment<ArrayBuffer | Uint8Array | null>>
+) : ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null> |
+    ISegmentParserSegment<ArrayBuffer | Uint8Array | null>
 {
   const { period, segment, representation } = content;
   const { data } = response;
@@ -47,16 +43,16 @@ export default function segmentParser({
 
   if (data === null) {
     if (segment.isInit) {
-      return observableOf({ type: "parsed-init-segment",
-                            value: { initializationData: null,
-                                     protectionDataUpdate: false,
-                                     initTimescale: undefined } });
+      return { type: "parsed-init-segment",
+               value: { initializationData: null,
+                        protectionDataUpdate: false,
+                        initTimescale: undefined } };
     }
-    return observableOf({ type: "parsed-segment",
-                          value: { chunkData: null,
-                                   chunkInfos: null,
-                                   chunkOffset: 0,
-                                   appendWindow } });
+    return { type: "parsed-segment",
+             value: { chunkData: null,
+                      chunkInfos: null,
+                      chunkOffset: 0,
+                      appendWindow } };
   }
 
   const chunkData = new Uint8Array(data);
@@ -75,12 +71,12 @@ export default function segmentParser({
         protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
       }
     }
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: chunkData,
-                                   initTimescale: isNullOrUndefined(timescale) ?
-                                     undefined :
-                                     timescale,
-                                   protectionDataUpdate } });
+    return { type: "parsed-init-segment",
+             value: { initializationData: chunkData,
+                      initTimescale: isNullOrUndefined(timescale) ?
+                        undefined :
+                        timescale,
+                      protectionDataUpdate } };
   }
 
   const chunkInfos = isWEBM ? null : // TODO extract from webm
@@ -89,9 +85,9 @@ export default function segmentParser({
                                                     segment,
                                                     initTimescale);
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData,
-                                 chunkInfos,
-                                 chunkOffset,
-                                 appendWindow } });
+  return { type: "parsed-segment",
+           value: { chunkData,
+                    chunkInfos,
+                    chunkOffset,
+                    appendWindow } };
 }
