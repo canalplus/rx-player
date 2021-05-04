@@ -142,8 +142,8 @@ export type ISegmentParser<
   ParsedMediaDataFormat
 > = (
   x : ISegmentParserArguments< LoadedFormat >
-) => Observable<ISegmentParserInitSegment<ParsedInitDataFormat>  |
-                ISegmentParserSegment<ParsedMediaDataFormat>>;
+) => ISegmentParserInitSegment<ParsedInitDataFormat>  |
+     ISegmentParserSegment<ParsedMediaDataFormat>;
 
 /** Arguments for the loader of the manifest pipeline. */
 export interface IManifestLoaderArguments {
@@ -426,7 +426,7 @@ export interface IChunkTimeInfo {
 }
 
 /** Payload sent when an initialization segment has been parsed. */
-export interface ISegmentParserParsedInitSegment<T> {
+export interface ISegmentParserInitSegmentPayload<T> {
   /**
    * Initialization segment that can be directly pushed to the corresponding
    * buffer.
@@ -452,7 +452,7 @@ export interface ISegmentParserParsedInitSegment<T> {
 }
 
 // Format of a parsed regular (non-initialization) segment
-export interface ISegmentParserParsedSegment<T> {
+export interface ISegmentParserSegmentPayload<T> {
   chunkData : T | null; // Data to decode
   chunkInfos : IChunkTimeInfo | null; // Time information about the segment
   chunkOffset : number; // time offset, in seconds, to add to the absolute
@@ -482,19 +482,14 @@ export interface ISegmentParserParsedSegment<T> {
 // What a segment parser returns when parsing an init segment
 export interface ISegmentParserInitSegment<T> {
   type : "parsed-init-segment";
-  value : ISegmentParserParsedInitSegment<T>;
+  value : ISegmentParserInitSegmentPayload<T>;
 }
 
 // What a segment parser returns when parsing a regular (non-init) segment
 export interface ISegmentParserSegment<T> {
   type : "parsed-segment";
-  value : ISegmentParserParsedSegment<T>;
+  value : ISegmentParserSegmentPayload<T>;
 }
-
-// generic segment parser response
-export type ISegmentParserResponse<T> =
-  ISegmentParserInitSegment<T> |
-  ISegmentParserSegment<T>;
 
 // format under which audio / video data / initialization data is decodable
 /** Text track segment data, once parsed. */

@@ -51,8 +51,8 @@ import {
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentParserInitSegment,
-  ISegmentParserParsedSegment,
   ISegmentParserSegment,
+  ISegmentParserSegmentPayload,
   ITextTrackSegmentData,
   ITransportOptions,
   ITransportPipelines,
@@ -262,7 +262,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
   function offsetTimeInfos(
     contentOffset : number,
     contentEnd : number | undefined,
-    segmentResponse : ISegmentParserParsedSegment<unknown>
+    segmentResponse : ISegmentParserSegmentPayload<unknown>
   ) : { chunkInfos : IChunkTimeInfo | null;
         chunkOffset : number;
         appendWindow : [ number | undefined, number | undefined ]; } {
@@ -306,24 +306,22 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : Observable<ISegmentParserSegment<ArrayBuffer | Uint8Array | null>  |
-                   ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null>>
+    ) : ISegmentParserSegment<ArrayBuffer | Uint8Array | null>  |
+        ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null>
     {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { audio } = getTransportPipelinesFromSegment(segment);
+      const parsed = audio.parser(getParserArguments(args, segment));
+      if (parsed.type === "parsed-init-segment") {
+        return parsed;
+      }
+      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed.value);
+      // TODO check why this is unsafe for TypeScript
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return audio.parser(getParserArguments(args, segment))
-        .pipe(map(res => {
-          if (res.type === "parsed-init-segment") {
-            return res;
-          }
-          const timeInfos = offsetTimeInfos(contentStart, contentEnd, res.value);
-         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-          return objectAssign({ type: "parsed-segment",
-                                value: objectAssign({}, res.value, timeInfos) });
-        }));
+      return objectAssign({ type: "parsed-segment",
+                            value: objectAssign({}, parsed.value, timeInfos) });
     },
   };
 
@@ -335,24 +333,22 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : Observable<ISegmentParserSegment<ArrayBuffer | Uint8Array | null>  |
-                   ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null>>
+    ) : ISegmentParserSegment<ArrayBuffer | Uint8Array | null>  |
+        ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null>
     {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { video } = getTransportPipelinesFromSegment(segment);
+      const parsed = video.parser(getParserArguments(args, segment));
+      if (parsed.type === "parsed-init-segment") {
+        return parsed;
+      }
+      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed.value);
+      // TODO check why this is unsafe for TypeScript
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return video.parser(getParserArguments(args, segment))
-        .pipe(map(res => {
-          if (res.type === "parsed-init-segment") {
-            return res;
-          }
-          const timeInfos = offsetTimeInfos(contentStart, contentEnd, res.value);
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-          return objectAssign({ type: "parsed-segment",
-                                value: objectAssign({}, res.value, timeInfos) });
-        }));
+      return objectAssign({ type: "parsed-segment",
+                            value: objectAssign({}, parsed.value, timeInfos) });
     },
   };
 
@@ -364,24 +360,22 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>
-    ) : Observable<ISegmentParserInitSegment<null> |
-                   ISegmentParserSegment<ITextTrackSegmentData>>
+    ) : ISegmentParserInitSegment<null> |
+        ISegmentParserSegment<ITextTrackSegmentData>
     {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { text } = getTransportPipelinesFromSegment(segment);
+      const parsed = text.parser(getParserArguments(args, segment));
+      if (parsed.type === "parsed-init-segment") {
+        return parsed;
+      }
+      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed.value);
+      // TODO check why this is unsafe for TypeScript
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return text.parser(getParserArguments(args, segment))
-        .pipe(map(res => {
-          if (res.type === "parsed-init-segment") {
-            return res;
-          }
-          const timeInfos = offsetTimeInfos(contentStart, contentEnd, res.value);
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-          return objectAssign({ type: "parsed-segment",
-                                value: objectAssign({}, res.value, timeInfos) });
-        }));
+      return objectAssign({ type: "parsed-segment",
+                            value: objectAssign({}, parsed.value, timeInfos) });
     },
   };
 
@@ -393,24 +387,23 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
-    ) : Observable<ISegmentParserInitSegment<null>  |
-                   ISegmentParserSegment<IImageTrackSegmentData>>
+    ) : ISegmentParserInitSegment<null>  |
+        ISegmentParserSegment<IImageTrackSegmentData>
     {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { image } = getTransportPipelinesFromSegment(segment);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return image.parser(getParserArguments(args, segment))
-        .pipe(map(res => {
-          if (res.type === "parsed-init-segment") {
-            return res;
-          }
-          const timeInfos = offsetTimeInfos(contentStart, contentEnd, res.value);
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-          return objectAssign({ type: "parsed-segment",
-                                value: objectAssign({}, res.value, timeInfos) });
-        }));
+      const parsed = image.parser(getParserArguments(args, segment));
+      if (parsed.type === "parsed-init-segment") {
+        return parsed;
+      }
+      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed.value);
+      // TODO check why this is unsafe for TypeScript
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return objectAssign({ type: "parsed-segment",
+                            value: objectAssign({}, parsed.value, timeInfos) });
     },
   };
 
