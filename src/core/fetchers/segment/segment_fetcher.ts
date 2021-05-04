@@ -21,7 +21,6 @@ import {
   Subject,
 } from "rxjs";
 import {
-  catchError,
   filter,
   finalize,
   mergeMap,
@@ -67,9 +66,19 @@ export type ISegmentFetcherWarning = ISegmentLoaderWarning;
  */
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
-  /** Parse the downloaded chunk. */
-  parse : (initTimescale? : number) => Observable<ISegmentParserInitSegment<T> |
-                                                  ISegmentParserSegment<T>>;
+  /**
+   * Parse the downloaded chunk.
+   *
+   * Take in argument the timescale value that might have been obtained by
+   * parsing an initialization segment from the same Representation.
+   * Can be left to `undefined` if unknown or inexistant, segment parsers should
+   * be resilient and still work without that information.
+   *
+   * @param {number} initTimescale
+   * @returns {Object}
+   */
+  parse(initTimescale? : number) : ISegmentParserInitSegment<T> |
+                                   ISegmentParserSegment<T>;
 }
 
 /**
@@ -208,20 +217,21 @@ export default function createSegmentFetcher<T>(
            * @param {Object} [initTimescale]
            * @returns {Observable}
            */
-          parse(initTimescale? : number) : Observable<ISegmentParserInitSegment<T> |
-                                                      ISegmentParserSegment<T>> {
+          parse(initTimescale? : number) : ISegmentParserInitSegment<T> |
+                                           ISegmentParserSegment<T> {
             const response = { data: evt.value.responseData, isChunked };
-            /* eslint-disable @typescript-eslint/no-unsafe-call */
-            /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-            /* eslint-disable @typescript-eslint/no-unsafe-return */
-            return segmentParser({ response, initTimescale, content })
-            /* eslint-enable @typescript-eslint/no-unsafe-call */
-            /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-            /* eslint-enable @typescript-eslint/no-unsafe-return */
-              .pipe(catchError((error: unknown) => {
-                throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
-                                           defaultReason: "Unknown parsing error" });
-              }));
+            try {
+              /* eslint-disable @typescript-eslint/no-unsafe-call */
+              /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+              /* eslint-disable @typescript-eslint/no-unsafe-return */
+              return segmentParser({ response, initTimescale, content });
+              /* eslint-enable @typescript-eslint/no-unsafe-call */
+              /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+              /* eslint-enable @typescript-eslint/no-unsafe-return */
+            } catch (error : unknown) {
+              throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
+                                         defaultReason: "Unknown parsing error" });
+            }
           },
         };
 

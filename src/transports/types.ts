@@ -142,8 +142,8 @@ export type ISegmentParser<
   ParsedMediaDataFormat
 > = (
   x : ISegmentParserArguments< LoadedFormat >
-) => Observable<ISegmentParserInitSegment<ParsedInitDataFormat>  |
-                ISegmentParserSegment<ParsedMediaDataFormat>>;
+) => ISegmentParserInitSegment<ParsedInitDataFormat>  |
+     ISegmentParserSegment<ParsedMediaDataFormat>;
 
 /** Arguments for the loader of the manifest pipeline. */
 export interface IManifestLoaderArguments {
@@ -427,7 +427,7 @@ export interface IChunkTimeInfo {
 }
 
 /** Payload sent when an initialization segment has been parsed. */
-export interface ISegmentParserParsedInitSegment<T> {
+export interface ISegmentParserInitSegmentPayload<T> {
   /**
    * Initialization segment that can be directly pushed to the corresponding
    * buffer.
@@ -453,7 +453,7 @@ export interface ISegmentParserParsedInitSegment<T> {
 }
 
 /** Payload sent when an media segment has been parsed. */
-export interface ISegmentParserParsedSegment<T> {
+export interface ISegmentParserSegmentPayload<T> {
   /** Data to decode. */
   chunkData : T | null;
   /** Time information about the segment. */
@@ -504,7 +504,7 @@ export interface ISegmentParserParsedSegment<T> {
  */
 export interface ISegmentParserInitSegment<T> {
   type : "parsed-init-segment";
-  value : ISegmentParserParsedInitSegment<T>;
+  value : ISegmentParserInitSegmentPayload<T>;
 }
 
 /**
@@ -513,7 +513,7 @@ export interface ISegmentParserInitSegment<T> {
  */
 export interface ISegmentParserSegment<T> {
   type : "parsed-segment";
-  value : ISegmentParserParsedSegment<T>;
+  value : ISegmentParserSegmentPayload<T>;
 }
 
 // format under which audio / video data / initialization data is decodable

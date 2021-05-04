@@ -55,17 +55,17 @@ export function imageLoader(
 export function imageParser(
   { response,
     content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-) : Observable<ISegmentParserInitSegment<null> |
-               ISegmentParserSegment<IImageTrackSegmentData>>
+) : ISegmentParserInitSegment<null> |
+    ISegmentParserSegment<IImageTrackSegmentData>
 {
   const { segment, period } = content;
   const { data, isChunked } = response;
 
   if (content.segment.isInit) { // image init segment has no use
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: null,
-                                   protectionDataUpdate: false,
-                                   initTimescale: undefined } });
+    return { type: "parsed-init-segment",
+             value: { initializationData: null,
+                      protectionDataUpdate: false,
+                      initTimescale: undefined } };
   }
 
   if (isChunked) {
@@ -76,27 +76,26 @@ export function imageParser(
 
   // TODO image Parsing should be more on the buffer side, no?
   if (data === null || features.imageParser === null) {
-    return observableOf({ type: "parsed-segment",
-                          value: { chunkData: null,
-                                   chunkInfos: { duration: segment.duration,
-                                                 time: segment.time },
-                                   chunkOffset,
-                                   appendWindow: [period.start, period.end],
-                                   protectionDataUpdate: false } });
+    return { type: "parsed-segment",
+             value: { chunkData: null,
+                      chunkInfos: { duration: segment.duration,
+                                    time: segment.time },
+                      chunkOffset,
+                      appendWindow: [period.start, period.end],
+                      protectionDataUpdate: false } };
   }
 
   const bifObject = features.imageParser(new Uint8Array(data));
   const thumbsData = bifObject.thumbs;
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData: { data: thumbsData,
-                                              start: 0,
-                                              end: Number.MAX_VALUE,
-                                              timescale: 1,
-                                              type: "bif" },
-                                 chunkInfos: { time: 0,
-                                               duration: Number.MAX_VALUE,
-                                               timescale: bifObject.timescale },
-                                 chunkOffset,
-                                 appendWindow: [period.start, period.end],
-                                 protectionDataUpdate: false } });
+  return { type: "parsed-segment",
+           value: { chunkData: { data: thumbsData,
+                                 start: 0,
+                                 end: Number.MAX_VALUE,
+                                 timescale: 1,
+                                 type: "bif" },
+                    chunkInfos: { time: 0,
+                                  duration: Number.MAX_VALUE },
+                    chunkOffset,
+                    protectionDataUpdate: false,
+                    appendWindow: [period.start, period.end] } };
 }
