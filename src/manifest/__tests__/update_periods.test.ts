@@ -243,18 +243,25 @@ describe("updatePeriods", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [ { id: "p1", start: 50, end: 60 },
-                         { id: "p2", start: 60 } ] as any;
-    const newPeriods = [ { id: "p2", start: 60 } ] as any;
+                         { id: "p2",
+                           start: 60,
+                           end: undefined,
+                           /* eslint-disable */
+                           getContentStart: function getContentStart() { return this.start }, } ] as any;
+    const newPeriods = [ { id: "p2",
+                           start: 60,
+                           getContentStart: function getContentStart() { return this.start } } ] as any;
 
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            { id: "p2", start: 60 },
-                                                            { id: "p2", start: 60 },
-                                                            MANIFEST_UPDATE_TYPE.Partial);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      oldPeriods[1],
+      newPeriods[0],
+      MANIFEST_UPDATE_TYPE.Partial);
   });
 
   // Case 2 :
@@ -267,9 +274,19 @@ describe("updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ { id: "p2", start: 60 } ] as any;
-    const newPeriods = [ { id: "p2", start: 60, end: 80 },
-                         { id: "p3", start: 80 } ] as any;
+    const newPeriods = [ { id: "p2",
+                           start: 60,
+                           end: 80,
+                           getContentStart: function getContentStart() { return this.start } },
+                         { id: "p3",
+                           start: 80,
+                           getContentStart: function getContentStart() { return this.start } } ] as any;
+    const oldPeriods = [ {
+      id: "p2",
+      start: 60,
+      end: undefined,
+      /* eslint-disable */
+      getContentStart: function getContentStart() { return this.start }, } ] as any;
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
@@ -277,10 +294,11 @@ describe("updatePeriods", () => {
     expect(oldPeriods[1].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
     expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(1,
-                               { id: "p2", start: 60 },
-                               { id: "p2", start: 60, end: 80 },
-                               MANIFEST_UPDATE_TYPE.Partial);
+      .toHaveBeenNthCalledWith(
+        1,
+        oldPeriods[0],
+        newPeriods[0],
+        MANIFEST_UPDATE_TYPE.Partial);
   });
 
   // Case 3 :
@@ -293,8 +311,17 @@ describe("updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
-    const newPeriods = [ { id: "p3", start: 70, end: 80 } ] as any;
+    const oldPeriods = [ {
+      id: "p1",
+      start: 50,
+      end: 60,
+      /* eslint-disable */
+      getContentStart: function getContentStart() { return this.start },
+      getContentEnd: function getContentEnd() { return this.end } } ] as any;
+    const newPeriods = [ { id: "p3",
+                           start: 70,
+                           end: 80,
+                           getContentStart: function getContentStart() { return this.start } } ] as any;
     const updatePeriods = require("../update_periods").updatePeriods;
 
     let error = null;
@@ -324,13 +351,23 @@ describe("updatePeriods", () => {
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [ { id: "p0", start: 50, end: 60 },
-                         { id: "p1", start: 60, end: 70 },
-                         { id: "p2", start: 70 } ] as any;
-    const newPeriods = [ { id: "p1", start: 60, end: 65  },
-                         { id: "a", start: 65, end: 68  },
-                         { id: "b", start: 68, end: 70 },
-                         { id: "p2", start: 70, end: 80  },
-                         { id: "p3", start: 80 } ] as any;
+      { id: "p1",
+        start: 60,
+        end: 70,
+        /* eslint-disable */
+        getContentStart: function getContentStart() { return this.start },
+        getContentEnd: function getContentEnd() { return this.end } },
+      { id: "p2",
+        start: 70,
+        end: undefined,
+        /* eslint-disable */
+        getContentStart: function getContentStart() { return this.start },
+        getContentEnd: function getContentEnd() { return this.end } } ] as any;
+    const newPeriods = [ { id: "p1", start: 60, end: 65, getContentStart: function getContentStart() { return this.start }  },
+                         { id: "a", start: 65, end: 68, getContentStart: function getContentStart() { return this.start }  },
+                         { id: "b", start: 68, end: 70, getContentStart: function getContentStart() { return this.start }  },
+                         { id: "p2", start: 70, end: 80, getContentStart: function getContentStart() { return this.start }  },
+                         { id: "p3", start: 80, getContentStart: function getContentStart() { return this.start } } ] as any;
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(6);
@@ -343,10 +380,11 @@ describe("updatePeriods", () => {
     expect(oldPeriods[5].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
     expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(1,
-                               { id: "p1", start: 60, end: 70 },
-                               { id: "p1", start: 60, end: 65  },
-                               MANIFEST_UPDATE_TYPE.Partial);
+      .toHaveBeenNthCalledWith(
+        1,
+        oldPeriods[1],
+        newPeriods[0],
+        MANIFEST_UPDATE_TYPE.Partial);
   });
 
   // Case 5 :
@@ -357,9 +395,14 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ { id: "p2", start: 70 } ] as any;
-    const newPeriods = [ { id: "p1", start: 50, end: 70 },
-                         { id: "p2", start: 70 } ] as any;
+    const oldPeriods = [ {
+      id: "p2",
+      start: 70,
+      /* eslint-disable */
+      getContentStart: function getContentStart() { return this.start },
+      getContentEnd: function getContentEnd() { return this.end; } } ] as any;
+    const newPeriods = [ { id: "p1", start: 50, end: 70, getContentStart: function getContentStart() { return this.start }  },
+                         { id: "p2", start: 70, getContentStart: function getContentStart() { return this.start }  } ] as any;
 
     const updatePeriods = require("../update_periods").updatePeriods;
 
@@ -426,9 +469,18 @@ describe("updatePeriods", () => {
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
     const updatePeriods = require("../update_periods").updatePeriods;
-    const oldPeriods = [ { id: "p0", start: 50, end: 60 },
-                         { id: "p1", start: 60, end: 70 } ] as any;
-    const newPeriods = [ { id: "p3", start: 80 } ] as any;
+    const oldPeriods = [ { id: "p0",
+                           start: 50,
+                           end: 60,
+                           getContentStart: function getContentStart() { return this.start } },
+                         { id: "p1",
+                           start: 60,
+                           end: 70,
+                           getContentStart: function getContentStart() { return this.start } } ] as any;
+    const newPeriods = [ { id: "p3",
+                           start: 80,
+                           end: undefined,
+                           getContentStart: function getContentStart() { return this.start } } ] as any;
 
     let error = null;
     try {
@@ -459,8 +511,14 @@ describe("updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
-    const newPeriods = [ { id: "p2", start: 60, end: 80 } ] as any;
+    const oldPeriods = [ { id: "p1",
+                           start: 50,
+                           end: 60,
+                           getContentStart: function getContentStart() { return this.start } } ] as any;
+    const newPeriods = [ { id: "p2",
+                           start: 60,
+                           end: 80,
+                           getContentStart: function getContentStart() { return this.start } } ] as any;
     const updatePeriods = require("../update_periods").updatePeriods;
 
     updatePeriods(oldPeriods, newPeriods);
@@ -482,8 +540,14 @@ describe("updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
-    const newPeriods = [ { id: "px", start: 50, end: 70 } ] as any;
+    const oldPeriods = [ { id: "p1",
+                           start: 50,
+                           end: 60,
+                           getContentStart: function () { return this.start } } ] as any;
+    const newPeriods = [ { id: "px",
+                           start: 50,
+                           end: 70,
+                           getContentStart: function () { return this.start } } ] as any;
     const updatePeriods = require("../update_periods").updatePeriods;
 
     let error = null;
@@ -512,12 +576,28 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ { id: "p0", start: 50, end: 60 },
-                         { id: "p1", start: 60, end: 70 },
-                         { id: "p2", start: 70 } ] as any;
-    const newPeriods = [ { id: "p1", start: 60, end: 65  },
-                         { id: "p2", start: 65, end: 80  },
-                         { id: "p3", start: 80 } ] as any;
+    const oldPeriods = [ { id: "p0",
+                           start: 50,
+                           end: 60,
+                           getContentStart: function () { return this.start } },
+                         { id: "p1",
+                           start: 60,
+                           end: 70,
+                           getContentStart: function () { return this.start } },
+                         { id: "p2",
+                           start: 70,
+                           getContentStart: function () { return this.start } } ] as any;
+    const newPeriods = [ { id: "p1",
+                           start: 60,
+                           end: 65,
+                           getContentStart: function () { return this.start }  },
+                         { id: "p2",
+                           start: 65,
+                           end: 80,
+                           getContentStart: function () { return this.start }  },
+                         { id: "p3",
+                           start: 80,
+                           getContentStart: function () { return this.start } } ] as any;
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(4);
@@ -528,15 +608,17 @@ describe("updatePeriods", () => {
     expect(oldPeriods[3].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
     expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(1,
-                               { id: "p1", start: 60, end: 70 },
-                               { id: "p1", start: 60, end: 65  },
-                               MANIFEST_UPDATE_TYPE.Partial);
+      .toHaveBeenNthCalledWith(
+        1,
+        oldPeriods[1],
+        newPeriods[0],
+        MANIFEST_UPDATE_TYPE.Partial);
     expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(2,
-                               { id: "p2", start: 70 },
-                               { id: "p2", start: 65, end: 80  },
-                               MANIFEST_UPDATE_TYPE.Full);
+      .toHaveBeenNthCalledWith(
+        2,
+        oldPeriods[2],
+        newPeriods[1],
+        MANIFEST_UPDATE_TYPE.Full);
   });
 
   // Case 12 :
@@ -581,13 +663,33 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ { id: "p0", start: 50, end: 60 },
-                         { id: "p1", start: 60, end: 70 },
-                         { id: "p2", start: 70, end: 80 },
-                         { id: "p3", start: 80, end: 90 },
-                         { id: "p4", start: 90 } ] as any;
-    const newPeriods = [ { id: "p1", start: 60, end: 70  },
-                         { id: "p3", start: 80, end: 90 } ] as any;
+    const oldPeriods = [ { id: "p0",
+                           start: 50,
+                           end: 60,
+                           getContentStart: function() { return this.start } },
+                         { id: "p1",
+                           start: 60,
+                           end: 70,
+                           getContentStart: function() { return this.start } },
+                         { id: "p2",
+                           start: 70,
+                           end: 80,
+                           getContentStart: function() { return this.start } },
+                         { id: "p3",
+                           start: 80,
+                           end: 90,
+                           getContentStart: function() { return this.start } },
+                         { id: "p4",
+                           start: 90,
+                           getContentStart: function() { return this.start } } ] as any;
+    const newPeriods = [ { id: "p1",
+                           start: 60,
+                           end: 70,
+                           getContentStart: function() { return this.start }  },
+                         { id: "p3",
+                           start: 80,
+                           end: 90,
+                           getContentStart: function() { return this.start } } ] as any;
     const updatePeriods = require("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(3);
@@ -598,13 +700,13 @@ describe("updatePeriods", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(1,
-                               { id: "p1", start: 60, end: 70 },
-                               { id: "p1", start: 60, end: 70  },
+                               oldPeriods[1], // p1
+                               newPeriods[0],
                                MANIFEST_UPDATE_TYPE.Partial);
     expect(fakeUpdatePeriodInPlace)
       .toHaveBeenNthCalledWith(2,
-                               { id: "p3", start: 80, end: 90 },
-                               { id: "p3", start: 80, end: 90 },
+                               oldPeriods[2], // p3
+                               newPeriods[1],
                                MANIFEST_UPDATE_TYPE.Full);
   });
 });

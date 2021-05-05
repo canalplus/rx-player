@@ -506,17 +506,20 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        getContentStart: () => 72,
+                        getContentEnd: () => undefined };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        getContentStart: () => 72,
+                        getContentEnd: () => undefined };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 72 };
     const period = new Period(args as any);
-    expect(period.start).toEqual(72);
-    expect(period.duration).toEqual(undefined);
-    expect(period.end).toEqual(undefined);
+    expect(period.getContentStart()).toEqual(72);
+    expect(period.getContentEnd()).toEqual(undefined);
   });
 
   it("should set a given duration", () => {
@@ -531,17 +534,20 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        getContentStart: () => 0,
+                        getContentEnd: () => 12 };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        getContentStart: () => 0,
+                        getContentEnd: () => 12 };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0, duration: 12 };
     const period = new Period(args as any);
-    expect(period.start).toEqual(0);
-    expect(period.duration).toEqual(12);
-    expect(period.end).toEqual(12);
+    expect(period.getContentStart()).toEqual(0);
+    expect(period.getContentEnd()).toEqual(12);
   });
 
   it("should infer the end from the start and the duration", () => {
@@ -556,17 +562,20 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        getContentStart: () => 50,
+                        getContentEnd: () => 62 };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        getContentStart: () => 50,
+                        getContentEnd: () => 62 };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 50, duration: 12 };
     const period = new Period(args as any);
-    expect(period.start).toEqual(50);
-    expect(period.duration).toEqual(12);
-    expect(period.end).toEqual(62);
+    expect(period.getContentStart()).toEqual(50);
+    expect(period.getContentEnd()).toEqual(62);
   });
 
   it("should return every Adaptations combined with `getAdaptations`", () => {

@@ -222,8 +222,10 @@ export default function launchTestsForContent(manifestInfos) {
           const period = manifest.periods[periodIndex];
 
           expect(period.start).to.equal(periodInfos.start);
-          expect(period.duration).to.equal(periodInfos.duration);
           expect(period.end).to
+            .equal(periodInfos.start + periodInfos.duration);
+          expect(period.getContentStart()).to.equal(periodInfos.start);
+          expect(period.getContentEnd()).to
             .equal(periodInfos.start + periodInfos.duration);
 
           const allAdaptationInfos = periodInfos.adaptations;

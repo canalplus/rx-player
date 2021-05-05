@@ -166,7 +166,6 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       start: 5,
       end: 15,
-      duration: 10,
       adaptations: { video: [oldVideoAdaptation1,
                              oldVideoAdaptation2],
                      audio: [oldAudioAdaptation] },
@@ -174,6 +173,12 @@ describe("Manifest - updatePeriodInPlace", () => {
         return [oldVideoAdaptation1,
                 oldVideoAdaptation2,
                 oldAudioAdaptation];
+      },
+      getContentStart() {
+        return this.start;
+      },
+      getContentEnd() {
+        return this.end;
       },
     };
     const newVideoAdaptation1 = { parsingErrors: [],
@@ -191,7 +196,6 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       start: 500,
       end: 520,
-      duration: 20,
       adaptations: { video: [newVideoAdaptation1,
                              newVideoAdaptation2],
                      audio: [newAudioAdaptation] },
@@ -199,6 +203,12 @@ describe("Manifest - updatePeriodInPlace", () => {
         return [ newVideoAdaptation1,
                  newVideoAdaptation2,
                  newAudioAdaptation ];
+      },
+      getContentStart() {
+        return this.start;
+      },
+      getContentEnd() {
+        return this.end;
       },
     };
 
@@ -208,9 +218,8 @@ describe("Manifest - updatePeriodInPlace", () => {
 
     updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
 
-    expect(oldPeriod.start).toEqual(500);
-    expect(oldPeriod.end).toEqual(520);
-    expect(oldPeriod.duration).toEqual(20);
+    expect(oldPeriod.getContentStart()).toEqual(500);
+    expect(oldPeriod.getContentEnd()).toEqual(520);
     expect(oldPeriodAdaptationsSpy).toHaveBeenCalledTimes(1);
 
     expect(oldVideoRepresentation1ReplaceSpy).toHaveBeenCalledTimes(1);
@@ -233,9 +242,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(oldAudioRepresentationReplaceSpy)
       .toHaveBeenCalledWith(newAudioRepresentation.index);
 
-    expect(newPeriod.start).toEqual(500);
-    expect(newPeriod.end).toEqual(520);
-    expect(newPeriod.duration).toEqual(20);
+    expect(newPeriod.getContentStart()).toEqual(500);
+    expect(newPeriod.getContentEnd()).toEqual(520);
     expect(newPeriodAdaptationsSpy).toHaveBeenCalledTimes(1);
 
     expect(newVideoRepresentation1ReplaceSpy).not.toHaveBeenCalled();
@@ -277,7 +285,6 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       start: 5,
       end: 15,
-      duration: 10,
       adaptations: { video: [oldVideoAdaptation1,
                              oldVideoAdaptation2],
                      audio: [oldAudioAdaptation] },
@@ -285,6 +292,12 @@ describe("Manifest - updatePeriodInPlace", () => {
         return [oldVideoAdaptation1,
                 oldVideoAdaptation2,
                 oldAudioAdaptation];
+      },
+      getContentStart() {
+        return this.start;
+      },
+      getContentEnd() {
+        return this.end;
       },
     };
     const newVideoAdaptation1 = { parsingErrors: [],
@@ -302,7 +315,6 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       start: 500,
       end: 520,
-      duration: 20,
       adaptations: { video: [newVideoAdaptation1,
                              newVideoAdaptation2],
                      audio: [newAudioAdaptation] },
@@ -310,6 +322,12 @@ describe("Manifest - updatePeriodInPlace", () => {
         return [ newVideoAdaptation1,
                  newVideoAdaptation2,
                  newAudioAdaptation ];
+      },
+      getContentStart() {
+        return this.start;
+      },
+      getContentEnd() {
+        return this.end;
       },
     };
 
@@ -319,9 +337,8 @@ describe("Manifest - updatePeriodInPlace", () => {
 
     updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Partial);
 
-    expect(oldPeriod.start).toEqual(500);
-    expect(oldPeriod.end).toEqual(520);
-    expect(oldPeriod.duration).toEqual(20);
+    expect(oldPeriod.getContentStart()).toEqual(500);
+    expect(oldPeriod.getContentEnd()).toEqual(520);
     expect(oldPeriodAdaptationsSpy).toHaveBeenCalledTimes(1);
 
     expect(oldVideoRepresentation1UpdateSpy).toHaveBeenCalledTimes(1);
@@ -344,9 +361,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(oldAudioRepresentationUpdateSpy)
       .toHaveBeenCalledWith(newAudioRepresentation.index);
 
-    expect(newPeriod.start).toEqual(500);
-    expect(newPeriod.end).toEqual(520);
-    expect(newPeriod.duration).toEqual(20);
+    expect(newPeriod.getContentStart()).toEqual(500);
+    expect(newPeriod.getContentEnd()).toEqual(520);
     expect(newPeriodAdaptationsSpy).toHaveBeenCalledTimes(1);
 
     expect(newVideoRepresentation1UpdateSpy).not.toHaveBeenCalled();
