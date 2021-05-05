@@ -56,7 +56,7 @@ describe("core - eme - global tests - server certificate", () => {
   });
 
   /* eslint-disable max-len */
-  it.only("should set the serverCertificate only after the MediaKeys is attached", (done) => {
+  it("should set the serverCertificate only after the MediaKeys is attached", (done) => {
   /* eslint-enable max-len */
 
     // == mocks ==
