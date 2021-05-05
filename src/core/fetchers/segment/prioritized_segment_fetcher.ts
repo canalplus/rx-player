@@ -40,19 +40,23 @@ export interface ISegmentFetcherInterruptedEvent { type : "interrupted" }
 export interface IEndedTaskEvent { type : "ended" }
 
 /** Event sent by a `IPrioritizedSegmentFetcher`. */
-export type IPrioritizedSegmentFetcherEvent<T> = ISegmentFetcherEvent<T> |
-                                                 ISegmentFetcherInterruptedEvent |
-                                                 IEndedTaskEvent;
+export type IPrioritizedSegmentFetcherEvent<SegmentDataType> =
+  ISegmentFetcherEvent<SegmentDataType> |
+  ISegmentFetcherInterruptedEvent |
+  IEndedTaskEvent;
 
 /** Oject returned by `applyPrioritizerToSegmentFetcher`. */
-export interface IPrioritizedSegmentFetcher<T> {
+export interface IPrioritizedSegmentFetcher<SegmentDataType> {
   /** Create a new request for a segment with a given priority. */
   createRequest : (content : ISegmentLoaderContent,
-                   priority? : number) => Observable<IPrioritizedSegmentFetcherEvent<T>>;
+                   priority? : number) =>
+    Observable<IPrioritizedSegmentFetcherEvent<SegmentDataType>>;
 
   /** Update priority of a request created through `createRequest`. */
-  updatePriority : (observable : Observable<IPrioritizedSegmentFetcherEvent<T>>,
-                    priority : number) => void;
+  updatePriority : (
+    observable : Observable<IPrioritizedSegmentFetcherEvent<SegmentDataType>>,
+    priority : number
+  ) => void;
 }
 
 /**
@@ -65,18 +69,19 @@ export interface IPrioritizedSegmentFetcher<T> {
  * @param {Object} fetcher
  * @returns {Object}
  */
-export default function applyPrioritizerToSegmentFetcher<T>(
-  prioritizer : ObservablePrioritizer<IPrioritizedSegmentFetcherEvent<T>>,
-  fetcher : ISegmentFetcher<T>
-) : IPrioritizedSegmentFetcher<T> {
+export default function applyPrioritizerToSegmentFetcher<SegmentDataType>(
+  prioritizer : ObservablePrioritizer<IPrioritizedSegmentFetcherEvent<SegmentDataType>>,
+  fetcher : ISegmentFetcher<SegmentDataType>
+) : IPrioritizedSegmentFetcher<SegmentDataType> {
   /**
    * The Observables returned by `createRequest` are not exactly the same than
    * the one created by the `ObservablePrioritizer`. Because we still have to
    * keep a handle on that value.
    */
-  const taskHandlers =
-    new WeakMap<Observable<IPrioritizedSegmentFetcherEvent<T>>,
-                           Observable<ITaskEvent<IPrioritizedSegmentFetcherEvent<T>>>>();
+  const taskHandlers = new WeakMap<
+    Observable<IPrioritizedSegmentFetcherEvent<SegmentDataType>>,
+    Observable<ITaskEvent<IPrioritizedSegmentFetcherEvent<SegmentDataType>>>
+  >();
   return {
     /**
      * Create a Segment request with a given priority.
@@ -88,7 +93,7 @@ export default function applyPrioritizerToSegmentFetcher<T>(
     createRequest(
       content : ISegmentLoaderContent,
       priority : number = 0
-    ) : Observable<IPrioritizedSegmentFetcherEvent<T>> {
+    ) : Observable<IPrioritizedSegmentFetcherEvent<SegmentDataType>> {
       const task = prioritizer.create(fetcher(content), priority);
       const flattenTask = task.pipe(
         map((evt) => {
@@ -107,7 +112,7 @@ export default function applyPrioritizerToSegmentFetcher<T>(
      * @param {Number} priority - The new priority value.
      */
     updatePriority(
-      observable : Observable<IPrioritizedSegmentFetcherEvent<T>>,
+      observable : Observable<IPrioritizedSegmentFetcherEvent<SegmentDataType>>,
       priority : number
     ) : void {
       const correspondingTask = taskHandlers.get(observable);

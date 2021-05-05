@@ -119,7 +119,7 @@ export interface ITerminationOrder {
 }
 
 /** Arguments to give to the RepresentationStream. */
-export interface IRepresentationStreamArguments<T> {
+export interface IRepresentationStreamArguments<SegmentDataType> {
   /** Periodically emits the current playback conditions. */
   clock$ : Observable<IRepresentationStreamClockTick>;
   /** The context of the Representation you want to load. */
@@ -128,9 +128,9 @@ export interface IRepresentationStreamArguments<T> {
              period : Period;
              representation : Representation; };
   /** The `SegmentBuffer` on which segments will be pushed. */
-  segmentBuffer : SegmentBuffer<T>;
+  segmentBuffer : SegmentBuffer<SegmentDataType>;
   /** Interface used to load new segments. */
-  segmentFetcher : IPrioritizedSegmentFetcher<T>;
+  segmentFetcher : IPrioritizedSegmentFetcher<SegmentDataType>;
   /**
    * Observable emitting when the RepresentationStream should "terminate".
    *
@@ -218,7 +218,7 @@ export default function RepresentationStream<T>({
    * Saved initialization segment state for this representation.
    * `null` if the initialization segment hasn't been loaded yet.
    */
-  let initSegmentObject : ISegmentParserParsedInitSegment<T> | null =
+  let initSegmentObject : ISegmentParserParsedInitSegment<T | null> | null =
     initSegment === null ? { segmentType: "init",
                              initializationData: null,
                              protectionDataUpdate: false,

@@ -70,8 +70,7 @@ export interface ISegmentLoaderData<T> { type : "data";
  * ISegmentLoaderChunkComplete event is received.
  */
 export interface ISegmentLoaderChunk { type : "chunk";
-                                       value : { responseData : null |
-                                                                ArrayBuffer |
+                                       value : { responseData : ArrayBuffer |
                                                                 Uint8Array; }; }
 
 /** The data has been entirely sent through "chunk" events. */

@@ -15,6 +15,7 @@
  */
 
 import { getMDHDTimescale } from "../../parsers/containers/isobmff";
+import assert from "../../utils/assert";
 import {
   strToUtf8,
   utf8ToStr,
@@ -45,10 +46,14 @@ function parseISOBMFFEmbeddedTextTrack(
                                                ArrayBuffer |
                                                string >
 ) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData>
+    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
   const { data, isChunked } = response;
+
+  // Should already have been taken care of
+  // TODO better use TypeScript here?
+  assert(data !== null);
 
   const chunkBytes = typeof data === "string" ? strToUtf8(data) :
                      data instanceof Uint8Array ? data :
@@ -88,7 +93,7 @@ function parsePlainTextTrack(
                                          ArrayBuffer |
                                          string >
 ) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData>
+    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
   if (segment.isInit) {
@@ -101,6 +106,10 @@ function parsePlainTextTrack(
   const { data, isChunked } = response;
   let textTrackData : string;
   if (typeof data !== "string") {
+    // Should already have been taken care of
+    // TODO better use TypeScript here?
+    assert(data !== null);
+
     const bytesData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
     textTrackData = utf8ToStr(bytesData);
@@ -130,7 +139,7 @@ export default function textTrackParser(
                                       string |
                                       null >
 ) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData>
+    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, adaptation, representation, segment } = content;
   const { data, isChunked } = response;

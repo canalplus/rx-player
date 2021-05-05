@@ -304,7 +304,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     },
 
     parser(
-      args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
+      args : ISegmentParserArguments<Uint8Array | ArrayBuffer | null>
     ) : ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>  |
         ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null>
     {
@@ -328,7 +328,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     },
 
     parser(
-      args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
+      args : ISegmentParserArguments<Uint8Array | ArrayBuffer | null>
     ) : ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>  |
         ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null>
     {
@@ -352,9 +352,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
     },
 
     parser(
-      args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>
-    ) : ISegmentParserParsedInitSegment<null> |
-        ISegmentParserParsedSegment<ITextTrackSegmentData>
+      args: ISegmentParserArguments< ArrayBuffer | string | Uint8Array | null>
+    ) : ISegmentParserParsedInitSegment<ITextTrackSegmentData | null> |
+        ISegmentParserParsedSegment<ITextTrackSegmentData | null>
     {
       const { content } = args;
       const { segment } = content;
@@ -376,9 +376,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
     },
 
     parser(
-      args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
-    ) : ISegmentParserParsedInitSegment<null>  |
-        ISegmentParserParsedSegment<IImageTrackSegmentData>
+      args : ISegmentParserArguments<ArrayBuffer | Uint8Array | null>
+    ) : ISegmentParserParsedInitSegment<IImageTrackSegmentData | null>  |
+        ISegmentParserParsedSegment<IImageTrackSegmentData | null>
     {
       const { content } = args;
       const { segment } = content;

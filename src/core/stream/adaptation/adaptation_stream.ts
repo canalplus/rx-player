@@ -109,7 +109,7 @@ export interface IAdaptationStreamArguments<T> {
   /** SourceBuffer wrapper - needed to push media segments. */
   segmentBuffer : SegmentBuffer<T>;
   /** Module used to fetch the wanted media segments. */
-  segmentFetcherCreator : SegmentFetcherCreator<any>;
+  segmentFetcherCreator : SegmentFetcherCreator;
   /**
    * "Buffer goal" wanted, or the ideal amount of time ahead of the current
    * position in the current SegmentBuffer. When this amount has been reached

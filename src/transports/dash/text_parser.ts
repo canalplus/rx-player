@@ -19,6 +19,7 @@ import {
   getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
 import { BaseRepresentationIndex } from "../../parsers/manifest/dash";
+import assert from "../../utils/assert";
 import {
   strToUtf8,
   utf8ToStr,
@@ -50,11 +51,15 @@ function parseISOBMFFEmbeddedTextTrack(
                                                string >,
   __priv_patchLastSegmentInSidx? : boolean
 ) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData>
+    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, representation, segment } = content;
   const { isInit, indexRange } = segment;
   const { data, isChunked } = response;
+
+  // Should already have been taken care of
+  // TODO better use TypeScript here?
+  assert(data !== null);
 
   const chunkBytes = typeof data === "string"   ? strToUtf8(data) :
                      data instanceof Uint8Array ? data :
@@ -121,7 +126,7 @@ function parsePlainTextTrack(
                                          ArrayBuffer |
                                          string >
 ) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData>
+    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
   const { timestampOffset = 0 } = segment;
@@ -135,6 +140,11 @@ function parsePlainTextTrack(
   const { data, isChunked } = response;
   let textTrackData : string;
   if (typeof data !== "string") {
+
+    // Should already have been taken care of
+    // TODO better use TypeScript here?
+    assert(data !== null);
+
     const bytesData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
     textTrackData = utf8ToStr(bytesData);
@@ -170,7 +180,7 @@ export default function generateTextTrackParser(
                                                  string |
                                                  null >
   ) : ISegmentParserParsedInitSegment<null> |
-      ISegmentParserParsedSegment<ITextTrackSegmentData>
+      ISegmentParserParsedSegment<ITextTrackSegmentData | null>
   {
     const { period, adaptation, representation, segment } = content;
     const { timestampOffset = 0 } = segment;
