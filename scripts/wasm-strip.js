@@ -53,7 +53,6 @@ const CUSTOM_SECTION_ID = 0;
 
 run();
 
-/** Do everything. */
 async function run() {
 
   let fileName, tmpName;
