@@ -149,7 +149,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * A Period contains information about the content available for a specific
    * period of time.
    */
-  public readonly periods : Period[];
+  public periods : Period[];
 
   /**
    * When that promise resolves, the whole Manifest needs to be requested again
@@ -235,75 +235,25 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public clockOffset : number | undefined;
 
   /**
-   * Data allowing to calculate the minimum and maximum seekable positions at
-   * any given time.
+   * Some dynamic contents have the concept of a "window depth" (or "buffer
+   * depth") which allows to set a minimum position for all reachable
+   * segments, in function of the maximum reachable position.
+   *
+   * This is justified by the fact that a server might want to remove older
+   * segments when new ones become available, to free storage size.
+   *
+   * If this value is set to a number, it is the amount of time in seconds
+   * that needs to be substracted from the current maximum seekable position,
+   * to obtain the minimum seekable position.
+   * As such, this value evolves at the same rate than the maximum position
+   * does (if it does at all).
+   *
+   * If set to `null`, this content has no concept of a "window depth".
    */
-  private _timeBounds : {
-    /**
-     * The minimum time, in seconds, that was available the last time the
-     * Manifest was fetched.
-     *
-     * `undefined` if that value is unknown.
-     *
-     * Together with `timeshiftDepth` and the `maximumTimeData` object, this
-     * value allows to compute at any time the minimum seekable time:
-     *
-     *   - if `timeshiftDepth` is not set, the minimum seekable time is a
-     *     constant that corresponds to this value.
-     *
-     *    - if `timeshiftDepth` is set, `absoluteMinimumTime` will act as the
-     *      absolute minimum seekable time we can never seek below, even when
-     *      `timeshiftDepth` indicates a possible lower position.
-     *      This becomes useful for example when playing live contents which -
-     *      despite having a large window depth - just begun and as such only
-     *      have a few segment available for now.
-     *      Here, `absoluteMinimumTime` would be the start time of the initial
-     *      segment, and `timeshiftDepth` would be the whole depth that will
-     *      become available once enough segments have been generated.
-     */
-    absoluteMinimumTime? : number;
-    /**
-     * Some dynamic contents have the concept of a "window depth" (or "buffer
-     * depth") which allows to set a minimum position for all reachable
-     * segments, in function of the maximum reachable position.
-     *
-     * This is justified by the fact that a server might want to remove older
-     * segments when new ones become available, to free storage size.
-     *
-     * If this value is set to a number, it is the amount of time in seconds
-     * that needs to be substracted from the current maximum seekable position,
-     * to obtain the minimum seekable position.
-     * As such, this value evolves at the same rate than the maximum position
-     * does (if it does at all).
-     *
-     * If set to `null`, this content has no concept of a "window depth".
-     */
-    timeshiftDepth : number | null;
-    /** Data allowing to calculate the maximum position at any given time. */
-    maximumTimeData : {
-      /** Maximum seekable time in milliseconds calculated at `time`. */
-      value : number;
-      /**
-       * `Performance.now()` output at the time `value` was calculated.
-       * This can be used to retrieve the maximum position from `value` when it
-       * linearly evolves over time (see `isLinear` property).
-       */
-      time : number;
-      /**
-       * Whether the maximum seekable position evolves linearly over time.
-       *
-       * If set to `false`, `value` indicates the constant maximum position.
-       *
-       * If set to `true`, the maximum seekable time continuously increase at
-       * the same rate than the time since `time` does.
-       * For example, a `value` of 50000 (50 seconds) will indicate a maximum time
-       * of 51 seconds after 1 second have passed, of 56 seconds after 6 seconds
-       * have passed (we know how many seconds have passed since the initial
-       * calculation of value by checking the `time` property) etc.
-       */
-      isLinear: boolean;
-    };
-  };
+  private _timeShiftBufferDepth: number | null;
+
+  private _mediaPresentationDuration : number | undefined;
+
 
   /**
    * Construct a Manifest instance from a parsed Manifest object (as returned by
@@ -341,7 +291,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                        this.periods[0].adaptations;
     /* eslint-enable import/no-deprecated */
 
-    this._timeBounds = parsedManifest.timeBounds;
+    this._timeShiftBufferDepth = parsedManifest.timeShiftBufferDepth;
+    this._mediaPresentationDuration = parsedManifest.mediaPresentationDuration;
     this.isDynamic = parsedManifest.isDynamic;
     this.isLive = parsedManifest.isLive;
     this.uris = parsedManifest.uris === undefined ? [] :
@@ -454,21 +405,19 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMinimumPosition() : number {
-    const windowData = this._timeBounds;
-    if (windowData.timeshiftDepth === null) {
-      return windowData.absoluteMinimumTime ?? 0;
+    const firstPeriod = this.periods[0];
+    if (firstPeriod === undefined) {
+      // no content
+      return 0;
     }
-
-    const { maximumTimeData } = windowData;
-    let maximumTime : number;
-    if (!windowData.maximumTimeData.isLinear) {
-      maximumTime = maximumTimeData.value;
-    } else {
-      const timeDiff = performance.now() - maximumTimeData.time;
-      maximumTime = maximumTimeData.value + timeDiff / 1000;
-    }
-    const theoricalMinimum = maximumTime - windowData.timeshiftDepth;
-    return Math.max(windowData.absoluteMinimumTime ?? 0, theoricalMinimum);
+    const firstPosition = firstPeriod.getContentStart();
+    const firstPeriodStart = firstPeriod.start;
+    const boundedMinimum = this.isLive && this._timeShiftBufferDepth !== null ?
+      this.getMaximumPosition() - this._timeShiftBufferDepth :
+      undefined;
+    return Math.max(firstPosition ?? 0,
+                    firstPeriodStart,
+                    boundedMinimum ?? 0);
   }
 
   /**
@@ -476,12 +425,45 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMaximumPosition() : number {
-    const { maximumTimeData } = this._timeBounds;
-    if (!maximumTimeData.isLinear) {
-      return maximumTimeData.value;
+    const getDefaultLiveMaximumPosition = () => {
+      if (this.clockOffset === undefined) {
+        return (Date.now() / 1000) -
+               (this.availabilityStartTime ?? 0);
+      }
+      const serverTime = performance.now() + this.clockOffset;
+      return (serverTime / 1000) - (this.availabilityStartTime ?? 0);
+    };
+
+    const getLastIndexPosition = () => {
+      if (this.periods.length === 0) {
+        return undefined;
+      }
+      for (let i = this.periods.length - 1; i >= 0; i--) {
+        const period = this.periods[i];
+        const lastPosition = period.getContentEnd();
+        if (lastPosition === undefined) {
+          return undefined;
+        }
+        if (lastPosition === null) {
+          break;
+        }
+        return lastPosition;
+      }
+      return null;
+    };
+
+    const lastPosition = getLastIndexPosition();
+
+    if (!this.isDynamic) {
+      const lastPeriod = this.periods[this.periods.length - 1];
+      const lastPeriodTheoriticalEnd = lastPeriod?.end;
+      return Math.min(lastPosition ?? Infinity,
+                      lastPeriodTheoriticalEnd ?? Infinity,
+                      this._mediaPresentationDuration ?? Infinity);
     }
-    const timeDiff = performance.now() - maximumTimeData.time;
-    return maximumTimeData.value + timeDiff / 1000;
+
+    return Math.min(lastPosition ?? Infinity,
+                    getDefaultLiveMaximumPosition());
   }
 
   /**
@@ -720,13 +702,13 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
     this.publishTime = newManifest.publishTime;
+    this.clockOffset = newManifest.clockOffset;
 
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
-      this._timeBounds = newManifest._timeBounds;
+      this._timeShiftBufferDepth = newManifest._timeShiftBufferDepth;
       this.uris = newManifest.uris;
       replacePeriods(this.periods, newManifest.periods);
     } else {
-      this._timeBounds.maximumTimeData = newManifest._timeBounds.maximumTimeData;
       this.updateUrl = newManifest.uris[0];
       updatePeriods(this.periods, newManifest.periods);
 

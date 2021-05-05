@@ -23,6 +23,7 @@ import {
   IParsedPeriod,
 } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
+import isNullOrUndefined from "../utils/is_null_or_undefined";
 import objectValues from "../utils/object_values";
 import Adaptation, {
   IRepresentationFilter,
@@ -46,12 +47,6 @@ export default class Period {
 
   /** Absolute start time of the Period, in seconds. */
   public start : number;
-
-  /**
-   * Duration of this Period, in seconds.
-   * `undefined` for still-running Periods.
-   */
-  public duration? : number;
 
   /**
    * Absolute end time of the Period, in seconds.
@@ -126,11 +121,10 @@ export default class Period {
                            "No supported audio and video tracks.");
     }
 
-    this.duration = args.duration;
     this.start = args.start;
 
-    if (this.duration != null && this.start != null) {
-      this.end = this.start + this.duration;
+    if (args.duration !== undefined) {
+      this.end = this.start + args.duration;
     }
     this.streamEvents = args.streamEvents === undefined ?
       [] :
@@ -191,5 +185,103 @@ export default class Period {
     return adaptationsForType.filter(ada => {
       return ada.isSupported;
     });
+  }
+
+  /**
+   * Get the last position where there shall be content
+   * on the period, whatever is the chosen adaptation
+   * @returns {null | undefined | number}
+   */
+  getContentEnd(): null | undefined | number {
+    let maximumPositionFromAdaptations: null | number = null;
+    const { video, audio } = this.adaptations;
+    if (video !== undefined) {
+      for (let i = 0; i < video.length; i++) {
+        const videoAdaptation = video[i];
+        const lastPosition = videoAdaptation.getContentEnd();
+        if (lastPosition === undefined) {
+          return undefined;
+        }
+        if (lastPosition === null) {
+          break;
+        }
+        if (isNullOrUndefined(maximumPositionFromAdaptations) ||
+            lastPosition < maximumPositionFromAdaptations) {
+          maximumPositionFromAdaptations = lastPosition;
+        }
+      }
+    }
+    if (audio !== undefined) {
+      for (let i = 0; i < audio.length; i++) {
+        const audioAdaptation = audio[i];
+        const lastPosition = audioAdaptation.getContentEnd();
+        if (lastPosition === undefined) {
+          return undefined;
+        }
+        if (lastPosition === null) {
+          break;
+        }
+        if (isNullOrUndefined(maximumPositionFromAdaptations) ||
+            lastPosition < maximumPositionFromAdaptations) {
+          maximumPositionFromAdaptations = lastPosition;
+        }
+      }
+    }
+    if (maximumPositionFromAdaptations === null) {
+      return null;
+    }
+    if (this.end === undefined) {
+      return maximumPositionFromAdaptations;
+    }
+    return Math.min(maximumPositionFromAdaptations, this.end);
+  }
+
+  /**
+   * Get the first position where there shall be content
+   * on the period, whatever is the chosen adaptation
+   * @returns {number | null}
+   */
+  getContentStart(): number | null | undefined {
+    let minimumPositionFromAdaptations: null | number = null;
+    const { video, audio } = this.adaptations;
+    if (video !== undefined) {
+      for (let i = 0; i < video.length; i++) {
+        const videoAdaptation = video[i];
+        const firstPosition = videoAdaptation.getContentStart();
+        if (firstPosition === undefined) {
+          return undefined;
+        }
+        if (firstPosition === null) {
+          break;
+        }
+        if (isNullOrUndefined(minimumPositionFromAdaptations) ||
+            firstPosition > minimumPositionFromAdaptations) {
+          minimumPositionFromAdaptations = firstPosition;
+        }
+      }
+    }
+    if (audio !== undefined) {
+      for (let i = 0; i < audio.length; i++) {
+        const audioAdaptation = audio[i];
+        const firstPosition = audioAdaptation.getContentStart();
+        if (firstPosition === undefined) {
+          return undefined;
+        }
+        if (firstPosition === null) {
+          break;
+        }
+        if (isNullOrUndefined(minimumPositionFromAdaptations) ||
+            firstPosition > minimumPositionFromAdaptations) {
+          minimumPositionFromAdaptations = firstPosition;
+        }
+      }
+    }
+    if (minimumPositionFromAdaptations === null) {
+      return null;
+    }
+    if (this.start === undefined) {
+      return minimumPositionFromAdaptations;
+    }
+    return Math.max(minimumPositionFromAdaptations, this.start);
   }
 }

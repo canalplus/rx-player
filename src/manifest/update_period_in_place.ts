@@ -31,7 +31,6 @@ export default function updatePeriodInPlace(oldPeriod : Period,
 {
   oldPeriod.start = newPeriod.start;
   oldPeriod.end = newPeriod.end;
-  oldPeriod.duration = newPeriod.duration;
 
   const oldAdaptations = oldPeriod.getAdaptations();
   const newAdaptations = newPeriod.getAdaptations();

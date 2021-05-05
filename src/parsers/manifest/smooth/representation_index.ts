@@ -43,7 +43,7 @@ interface ITimelineIndex { presentationTimeOffset? : number;
                            timeline : IIndexSegment[];
                            startNumber? : number;
                            isLive : boolean;
-                           timeShiftBufferDepth? : number;
+                           timeShiftBufferDepth : number | null;
                            manifestReceivedTime? : number; }
 
 /**
@@ -528,7 +528,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     const lastPositionEstimate = timeSinceLastRealUpdate +
                                  this._initialScaledLastPosition / index.timescale;
 
-    if (timeShiftBufferDepth != null) {
+    if (timeShiftBufferDepth !== null) {
       const minimumPosition = (lastPositionEstimate - timeShiftBufferDepth) *
                               index.timescale;
       clearTimelineFromPosition(index.timeline, minimumPosition);

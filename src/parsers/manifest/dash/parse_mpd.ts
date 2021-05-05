@@ -15,7 +15,6 @@
  */
 
 import config from "../../../config";
-import log from "../../../log";
 import Manifest from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import { normalizeBaseURL } from "../../../utils/resolve_url";
@@ -24,7 +23,6 @@ import { IParsedManifest } from "../types";
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
-import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -255,9 +253,6 @@ function parseCompleteIntermediateRepresentation(
   const mediaPresentationDuration = rootAttributes.duration;
 
   let lifetime : number | undefined;
-  let minimumTime : number | undefined;
-  let timeshiftDepth : number | null = null;
-  let maximumTimeData : { isLinear : boolean; value : number; time : number };
 
   if (rootAttributes.minimumUpdatePeriod !== undefined &&
       rootAttributes.minimumUpdatePeriod >= 0)
@@ -267,71 +262,17 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.minimumUpdatePeriod;
   }
 
-  const [contentStart, contentEnd] = getMinimumAndMaximumPosition(parsedPeriods);
-  const now = performance.now();
-
-  if (!isDynamic) {
-    minimumTime = contentStart !== undefined            ? contentStart :
-                  parsedPeriods[0]?.start !== undefined ? parsedPeriods[0].start :
-                                                          0;
-    let maximumTime : number | undefined;
-    if (contentEnd !== undefined) {
-      maximumTime = contentEnd;
-    } else if (mediaPresentationDuration !== undefined) {
-      maximumTime = mediaPresentationDuration;
-    } else if (parsedPeriods[parsedPeriods.length - 1] !== undefined) {
-      const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
-      maximumTime = lastPeriod.end ??
-                    (lastPeriod.duration !== undefined ?
-                      lastPeriod.start + lastPeriod.duration :
-                      undefined);
-    }
-
-    maximumTimeData = { isLinear: false,
-                        value: maximumTime ?? Infinity,
-                        time: now };
-  } else {
-    minimumTime = contentStart;
-    timeshiftDepth = timeShiftBufferDepth ?? null;
-    let maximumTime : number;
-    if (contentEnd !== undefined) {
-      maximumTime = contentEnd;
-    } else {
-      const ast = availabilityStartTime ?? 0;
-      const { externalClockOffset } = args;
-      if (externalClockOffset === undefined) {
-        log.warn("DASH Parser: use system clock to define maximum position");
-        maximumTime = (Date.now() / 1000) - ast;
-      } else {
-        const serverTime = performance.now() + externalClockOffset;
-        maximumTime = (serverTime / 1000) - ast;
-      }
-    }
-    maximumTimeData = { isLinear: true,
-                        value: maximumTime,
-                        time: now };
-
-    // if the minimum calculated time is even below the buffer depth, perhaps we
-    // can go even lower in terms of depth
-    if (timeshiftDepth !== null && minimumTime !== undefined &&
-        maximumTime - minimumTime > timeshiftDepth)
-    {
-      timeshiftDepth = maximumTime - minimumTime;
-    }
-  }
-
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
     isDynamic,
     isLive: isDynamic,
+    mediaPresentationDuration,
     periods: parsedPeriods,
     publishTime: rootAttributes.publishTime,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,
     transportType: "dash",
-    timeBounds: { absoluteMinimumTime: minimumTime,
-                  timeshiftDepth,
-                  maximumTimeData },
+    timeShiftBufferDepth: timeShiftBufferDepth ?? null,
     lifetime,
     uris: args.url == null ?
       rootChildren.locations : [args.url, ...rootChildren.locations],

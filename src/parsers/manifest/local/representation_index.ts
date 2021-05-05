@@ -28,10 +28,18 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   private _index : ILocalIndex;
   private _representationId : string;
   private _isFinished : boolean;
-  constructor(index : ILocalIndex, representationId : string, isFinished : boolean) {
+  private _minimumTime : number | undefined;
+  private _maximumTime : number;
+  constructor(index : ILocalIndex,
+              representationId : string,
+              isFinished : boolean,
+              minimumPosition: number | undefined,
+              maximumPosition: number) {
     this._index = index;
     this._representationId = representationId;
     this._isFinished = isFinished;
+    this._minimumTime = minimumPosition;
+    this._maximumTime = maximumPosition;
   }
 
   /**
@@ -99,7 +107,10 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       return undefined;
     }
     const firstSegment = this._index.segments[0];
-    return firstSegment.time;
+    if (this._minimumTime === undefined) {
+      return firstSegment.time;
+    }
+    return Math.max(firstSegment.time, this._minimumTime);
   }
 
   /**
@@ -110,7 +121,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       return undefined;
     }
     const lastSegment = this._index.segments[this._index.segments.length - 1];
-    return lastSegment.time;
+    return Math.min(lastSegment.time, this._maximumTime);
   }
 
   /**

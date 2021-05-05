@@ -233,4 +233,58 @@ export default class Adaptation {
   getRepresentation(wantedId : number|string) : Representation|undefined {
     return arrayFind(this.representations, ({ id }) => wantedId === id);
   }
+
+  /**
+   * Get last position where content may be founded, according to the
+   * representation indexes.
+   * The function will return the end position if and only if every
+   * representation has a finished index and a defined end.
+   * @returns {undefined | number}
+   */
+  getContentEnd(): null | undefined | number {
+    let maximumPosition = null;
+    const len = this.representations.length;
+    for (let i = 0; i < len; i++) {
+      const representation = this.representations[i];
+      const lastPosition = representation.index.getLastPosition();
+      if (lastPosition === undefined) {
+        return undefined;
+      }
+      if (lastPosition === null) {
+        continue;
+      }
+      if (isNullOrUndefined(maximumPosition) ||
+          lastPosition < maximumPosition) {
+        maximumPosition = lastPosition;
+      }
+    }
+    return maximumPosition;
+  }
+
+/**
+ * Get first position where content may be founded, according to the
+ * representation indexes.
+ * The function will return the start position if and only if every
+ * representation has a finished index and a defined start.
+ * @returns {undefined | number}
+ */
+  getContentStart(): null | undefined | number {
+    let minimumPosition = null;
+    const len = this.representations.length;
+    for (let i = 0; i < len; i++) {
+      const representation = this.representations[i];
+      const firstPosition = representation.index.getFirstPosition();
+      if (firstPosition === undefined) {
+        return undefined;
+      }
+      if (firstPosition === null) {
+        continue;
+      }
+      if (isNullOrUndefined(minimumPosition) ||
+          firstPosition > minimumPosition) {
+        minimumPosition = firstPosition;
+      }
+    }
+    return minimumPosition;
+  }
 }

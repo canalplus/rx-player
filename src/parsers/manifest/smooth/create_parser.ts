@@ -63,7 +63,7 @@ interface IAdaptationParserArguments { root : Element;
                                        timescale : number;
                                        protections : IContentProtectionSmooth[];
                                        isLive : boolean;
-                                       timeShiftBufferDepth? : number;
+                                       timeShiftBufferDepth : number | null;
                                        manifestReceivedTime? : number; }
 
 type IAdaptationType = "audio" |
@@ -495,7 +495,7 @@ function createSmoothStreamingParser(
 
     const isLive = parseBoolean(root.getAttribute("IsLive"));
 
-    let timeShiftBufferDepth : number|undefined;
+    let timeShiftBufferDepth : number|null = null;
     if (isLive) {
       const dvrWindowLength = root.getAttribute("DVRWindowLength");
       if (dvrWindowLength != null &&
@@ -531,8 +531,6 @@ function createSmoothStreamingParser(
     let suggestedPresentationDelay : number|undefined;
     let availabilityStartTime : number|undefined;
     let minimumTime : number | undefined;
-    let timeshiftDepth : number | null = null;
-    let maximumTimeData : { isLinear : boolean; value : number; time : number };
 
     const firstVideoAdaptation = adaptations.video !== undefined ?
       adaptations.video[0] :
@@ -596,32 +594,25 @@ function createSmoothStreamingParser(
     const duration = (manifestDuration != null && +manifestDuration !== 0) ?
       (+manifestDuration / timescale) : undefined;
 
+    let maximumTime;
     if (isLive) {
       suggestedPresentationDelay = parserOptions.suggestedPresentationDelay;
       availabilityStartTime = referenceDateTime;
 
       minimumTime = firstTimeReference ?? availabilityStartTime;
-      const maximumTime = lastTimeReference != null ?
+      maximumTime = lastTimeReference !== undefined ?
         lastTimeReference :
         (Date.now() / 1000 - availabilityStartTime);
-      maximumTimeData = { isLinear: true,
-                          value: maximumTime,
-                          time: performance.now() };
-      timeshiftDepth = timeShiftBufferDepth ?? null;
     } else {
       minimumTime = firstTimeReference ?? 0;
-      const maximumTime = lastTimeReference !== undefined ? lastTimeReference :
-                          duration !== undefined ? minimumTime + duration :
-                                                   Infinity;
-      maximumTimeData = { isLinear: false,
-                          value: maximumTime,
-                          time: performance.now() };
+      maximumTime = lastTimeReference !== undefined ? lastTimeReference :
+                    duration !== undefined ? minimumTime + duration :
+                                             Infinity;
     }
 
     const periodStart = isLive ? 0 :
                                  minimumTime;
-    const periodEnd = isLive ? undefined :
-                               maximumTimeData.value;
+    const periodEnd = isLive ? undefined : maximumTime;
     const manifest = {
       availabilityStartTime: availabilityStartTime === undefined ?
         0 :
@@ -629,9 +620,8 @@ function createSmoothStreamingParser(
       clockOffset: serverTimeOffset,
       isLive,
       isDynamic: isLive,
-      timeBounds: { absoluteMinimumTime: minimumTime,
-                    timeshiftDepth,
-                    maximumTimeData },
+      timeShiftBufferDepth,
+      mediaPresentationDuration: duration,
       periods: [{ adaptations,
                   duration: periodEnd !== undefined ?
                     periodEnd - periodStart : duration,

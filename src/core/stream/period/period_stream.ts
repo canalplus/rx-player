@@ -159,7 +159,7 @@ export default function PeriodStream({
       if (adaptation === null) { // Current type is disabled for that Period
         log.info(`Stream: Set no ${bufferType} Adaptation`, period);
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
-        let cleanBuffer$ : Observable<unknown>;
+        let cleanBuffer$ : Observable<unknown> = observableOf(null);
 
         if (segmentBufferStatus.type === "initialized") {
           log.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
@@ -168,13 +168,10 @@ export default function PeriodStream({
           }
           cleanBuffer$ = segmentBufferStatus.value
             .removeBuffer(period.start,
-                          period.end == null ? Infinity :
-                                               period.end);
-        } else {
-          if (segmentBufferStatus.type === "uninitialized") {
-            segmentBuffersStore.disableSegmentBuffer(bufferType);
-          }
-          cleanBuffer$ = observableOf(null);
+                          period.end === undefined ? Infinity :
+                                                     period.end);
+        } else if (segmentBufferStatus.type === "uninitialized") {
+          segmentBuffersStore.disableSegmentBuffer(bufferType);
         }
 
         return observableConcat<IPeriodStreamEvent>(

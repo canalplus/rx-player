@@ -47,23 +47,18 @@ export default function parseLocalManifest(
                     " is not compatible with the current version of the RxPlayer");
   }
   const periodIdGenerator = idGenerator();
-  const { minimumPosition,
-          maximumPosition,
-          isFinished } = localManifest;
   const parsedPeriods = localManifest.periods
     .map(period => parsePeriod(period, { periodIdGenerator,
-                                         isFinished }));
+                                         localManifest }));
   return { availabilityStartTime: 0,
            expired: localManifest.expired,
            transportType: "local",
            isDynamic: !localManifest.isFinished,
            isLive: false,
            uris: [],
-           timeBounds: { absoluteMinimumTime: minimumPosition ?? 0,
-                         timeshiftDepth: null,
-                         maximumTimeData: { isLinear: false,
-                                            value: maximumPosition,
-                                            time: performance.now() } },
+           timeShiftBufferDepth: null,
+           mediaPresentationDuration:
+             !localManifest.isFinished ? undefined : localManifest.maximumPosition,
            periods: parsedPeriods };
 }
 
@@ -76,10 +71,10 @@ function parsePeriod(
   period : ILocalPeriod,
   ctxt : { periodIdGenerator : () => string; /* Generate next Period's id */
            /** If true, the local Manifest has been fully downloaded. */
-           isFinished : boolean; }
+           localManifest : ILocalManifest; }
 ) : IParsedPeriod {
-  const { isFinished } = ctxt;
   const adaptationIdGenerator = idGenerator();
+  const { localManifest } = ctxt;
   return {
     id: "period-" + ctxt.periodIdGenerator(),
 
@@ -95,7 +90,7 @@ function parsePeriod(
           acc[type] = adaps;
         }
         adaps.push(parseAdaptation(ada, { adaptationIdGenerator,
-                                          isFinished }));
+                                          localManifest }));
         return acc;
       }, {}),
   };
@@ -110,9 +105,9 @@ function parseAdaptation(
   adaptation : ILocalAdaptation,
   ctxt : { adaptationIdGenerator : () => string; /* Generate next Adaptation's id */
            /** If true, the local Manifest has been fully downloaded. */
-           isFinished : boolean; }
+           localManifest : ILocalManifest; }
 ) : IParsedAdaptation {
-  const { isFinished } = ctxt;
+  const { localManifest } = ctxt;
   const representationIdGenerator = idGenerator();
   return {
     id: "adaptation-" + ctxt.adaptationIdGenerator(),
@@ -122,7 +117,7 @@ function parseAdaptation(
     language: adaptation.language,
     representations: adaptation.representations.map((representation) =>
       parseRepresentation(representation, { representationIdGenerator,
-                                            isFinished })),
+                                            localManifest })),
   };
 }
 
@@ -134,9 +129,9 @@ function parseRepresentation(
   representation : ILocalRepresentation,
   ctxt : { representationIdGenerator : () => string;
            /** If true, the local Manifest has been fully downloaded. */
-           isFinished : boolean; }
+           localManifest : ILocalManifest; }
 ) : IParsedRepresentation {
-  const { isFinished } = ctxt;
+  const { isFinished, minimumPosition, maximumPosition } = ctxt.localManifest;
   const id = "representation-" + ctxt.representationIdGenerator();
   const contentProtections = representation.contentProtections === undefined ?
     undefined :
@@ -147,7 +142,11 @@ function parseRepresentation(
            width: representation.width,
            codecs: representation.codecs,
            mimeType: representation.mimeType,
-           index: new LocalRepresentationIndex(representation.index, id, isFinished),
+           index: new LocalRepresentationIndex(representation.index,
+                                               id,
+                                               isFinished,
+                                               minimumPosition,
+                                               maximumPosition),
            contentProtections };
 }
 

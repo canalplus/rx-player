@@ -157,10 +157,9 @@ function createManifest(
   const generateAdaptationID = idGenerator();
   const generateRepresentationID = idGenerator();
   const { contents } = mplData;
-  const minimumTime = contents.length > 0 ? contents[0].startTime :
-                                            0;
-  const maximumTime = contents.length > 0 ? contents[contents.length - 1].endTime :
-                                            0;
+  const mediaPresentationDuration =
+    contents.length > 0 ? contents[contents.length - 1].endTime :
+                          0;
   const isDynamic = mplData.dynamic === true;
 
   let firstStart: number|null = null;
@@ -177,7 +176,8 @@ function createManifest(
     if (currentManifest.periods.length <= 0) {
       continue;
     }
-    const contentOffset = content.startTime - currentManifest.periods[0].start;
+    const contentOffset = content.startTime -
+                          currentManifest.periods[0].start;
     const contentEnd = content.endTime;
 
     const manifestPeriods = [];
@@ -271,7 +271,6 @@ function createManifest(
       const newPeriod : IParsedPeriod = {
         id: formatId(currentManifest.id) + "_" + formatId(currentPeriod.id),
         adaptations,
-        duration: currentPeriod.duration,
         start: contentOffset + currentPeriod.start,
       };
       manifestPeriods.push(newPeriod);
@@ -292,7 +291,6 @@ function createManifest(
     periods.push(...manifestPeriods);
   }
 
-  const time = performance.now();
   const manifest = { availabilityStartTime: 0,
                      clockOffset,
                      suggestedPresentationDelay: 10,
@@ -300,13 +298,10 @@ function createManifest(
                      transportType: "metaplaylist",
                      isLive: isDynamic,
                      isDynamic,
+                     mediaPresentationDuration,
                      uris: url == null ? [] :
                                          [url],
-                     timeBounds: { minimumTime,
-                                   timeshiftDepth: null,
-                                   maximumTimeData: { isLinear: false,
-                                                      value: maximumTime,
-                                                      time } },
+                     timeShiftBufferDepth: null,
                      lifetime: mplData.pollInterval };
 
   return manifest;
