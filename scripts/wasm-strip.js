@@ -314,9 +314,6 @@ function readULeb128(dv, offset) {
     }
     currShift += 7;
     currOffset += 1;
-    if (currShift > 21) {
-      process.exit(1);
-    }
   }
   throw new Error("Error: EOF in parsed integer");
 }
