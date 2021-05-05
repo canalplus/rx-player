@@ -30,8 +30,8 @@ import {
 import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
-  ISegmentParserInitSegment,
-  ISegmentParserSegment,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
   ITransportPipelines,
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
@@ -77,8 +77,8 @@ export interface ISegmentFetcherChunkEvent<T> {
    * @param {number} initTimescale
    * @returns {Object}
    */
-  parse(initTimescale? : number) : ISegmentParserInitSegment<T> |
-                                   ISegmentParserSegment<T>;
+  parse(initTimescale? : number) : ISegmentParserParsedInitSegment<T> |
+                                   ISegmentParserParsedSegment<T>;
 }
 
 /**
@@ -217,8 +217,8 @@ export default function createSegmentFetcher<T>(
            * @param {Object} [initTimescale]
            * @returns {Observable}
            */
-          parse(initTimescale? : number) : ISegmentParserInitSegment<T> |
-                                           ISegmentParserSegment<T> {
+          parse(initTimescale? : number) : ISegmentParserParsedInitSegment<T> |
+                                           ISegmentParserParsedSegment<T> {
             const response = { data: evt.value.responseData, isChunked };
             try {
               /* eslint-disable @typescript-eslint/no-unsafe-call */

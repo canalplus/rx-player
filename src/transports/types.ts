@@ -142,8 +142,21 @@ export type ISegmentParser<
   ParsedMediaDataFormat
 > = (
   x : ISegmentParserArguments< LoadedFormat >
-) => ISegmentParserInitSegment<ParsedInitDataFormat>  |
-     ISegmentParserSegment<ParsedMediaDataFormat>;
+) =>
+  /**
+   * The parsed data.
+   *
+   * Can be of two types:
+   *   - `ISegmentParserParsedInitSegment`: When the parsed segment was an
+   *     initialization segment.
+   *     Such segments only serve to initialize the decoder and do not contain
+   *     any decodable media data.
+   *   - `ISegmentParserParsedSegment`: When the parsed segment was a media
+   *     segment.
+   *     Such segments generally contain decodable media data.
+   */
+  ISegmentParserParsedInitSegment<ParsedInitDataFormat> |
+  ISegmentParserParsedSegment<ParsedMediaDataFormat>;
 
 /** Arguments for the loader of the manifest pipeline. */
 export interface IManifestLoaderArguments {
@@ -426,13 +439,14 @@ export interface IChunkTimeInfo {
   time : number;
 }
 
-/** Payload sent when an initialization segment has been parsed. */
-export interface ISegmentParserInitSegmentPayload<T> {
+/** Result returned by a segment parser when it parsed an initialization segment. */
+export interface ISegmentParserParsedInitSegment<DataType> {
+  segmentType : "init";
   /**
    * Initialization segment that can be directly pushed to the corresponding
    * buffer.
    */
-  initializationData : T | null;
+  initializationData : DataType | null;
   /**
    * Timescale metadata found inside this initialization segment.
    * That timescale might be useful when parsing further merdia segments.
@@ -452,34 +466,45 @@ export interface ISegmentParserInitSegmentPayload<T> {
   protectionDataUpdate : boolean;
 }
 
-/** Payload sent when an media segment has been parsed. */
-export interface ISegmentParserSegmentPayload<T> {
-  /** Data to decode. */
-  chunkData : T | null;
-  /** Time information about the segment. */
+/**
+ * Result returned by a segment parser when it parsed a media segment (not an
+ * initialization segment).
+ */
+export interface ISegmentParserParsedSegment<DataType> {
+  segmentType : "media";
+  /** Parsed chunk of data that can be decoded. */
+  chunkData : DataType | null;
+  /** Time information on this parsed chunk. */
   chunkInfos : IChunkTimeInfo | null;
   /**
-   * Time offset, in seconds, to add to the absolute timed data defined in
+   * time offset, in seconds, to add to the absolute timed data defined in
    * `chunkData` to obtain the "real" wanted effective time.
    *
    * For example:
-   *   If `chunkData` announce that the segment begins at 32 seconds, and
-   *   `chunkOffset` equals to `4`, then the segment should really begin at 36
-   *   seconds (32 + 4).
+   *   If `chunkData` announces (when parsed by the demuxer or decoder) that the
+   *   segment begins at 32 seconds, and `chunkOffset` equals to `4`, then the
+   *   segment should really begin at 36 seconds (32 + 4).
    *
    * Note that `chunkInfos` needs not to be offseted as it should already
    * contain the correct time information.
    */
   chunkOffset : number;
   /**
-   * Start and end windows at which this segment applies (part of the segment
-   * respectively before and after that time will be ignored).
+   * start and end windows for the segment (part of the chunk respectively
+   * before and after that time will be ignored).
+   * `undefined` when their is no such limitation.
    */
   appendWindow : [ number | undefined,
                    number | undefined ];
-  /** Inband events parsed from segment data. */
-  inbandEvents? : IInbandEvent[];
-  /** Tells if the result of the parsing shows that the manifest should be refreshed */
+  /**
+   * If set and not empty, then "events" have been encountered in this parsed
+   * chunks.
+   */
+  inbandEvents? : IInbandEvent[]; // Inband events parsed from segment data
+  /**
+   * If set to `true`, then parsing this chunk revealed that the current
+   * Manifest instance needs to be refreshed.
+   */
   needsManifestRefresh?: boolean;
   /**
    * If set to `true`, some protection information has been found in this
@@ -495,28 +520,6 @@ export interface ISegmentParserSegmentPayload<T> {
   protectionDataUpdate : boolean;
 }
 
-/**
- * What a segment parser returns when parsing an initialization segment.
- *
- * Those types of segment contain no decodable data and are only there for
- * initialization purposes, such as giving initial infos to the decoder on
- * subsequent media segments that will be pushed.
- */
-export interface ISegmentParserInitSegment<T> {
-  type : "parsed-init-segment";
-  value : ISegmentParserInitSegmentPayload<T>;
-}
-
-/**
- * What a segment parser returns when parsing a media segment.
- * Those types of segment contain decodable data.
- */
-export interface ISegmentParserSegment<T> {
-  type : "parsed-segment";
-  value : ISegmentParserSegmentPayload<T>;
-}
-
-// format under which audio / video data / initialization data is decodable
 /** Text track segment data, once parsed. */
 export interface ITextTrackSegmentData {
   /** The text track data, in the format indicated in `type`. */
