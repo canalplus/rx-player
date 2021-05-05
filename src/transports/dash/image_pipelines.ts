@@ -26,8 +26,8 @@ import {
   ISegmentLoaderArguments,
   ISegmentLoaderEvent,
   ISegmentParserArguments,
-  ISegmentParserInitSegment,
-  ISegmentParserSegment,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
 } from "../types";
 
 /**
@@ -54,17 +54,17 @@ export function imageLoader(
 export function imageParser(
   { response,
     content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-) : ISegmentParserInitSegment<null> |
-    ISegmentParserSegment<IImageTrackSegmentData>
+) : ISegmentParserParsedInitSegment<null> |
+    ISegmentParserParsedSegment<IImageTrackSegmentData>
 {
   const { segment, period } = content;
   const { data, isChunked } = response;
 
   if (content.segment.isInit) { // image init segment has no use
-    return { type: "parsed-init-segment",
-             value: { initializationData: null,
-                      protectionDataUpdate: false,
-                      initTimescale: undefined } };
+    return { segmentType: "init",
+             initializationData: null,
+             protectionDataUpdate: false,
+             initTimescale: undefined };
   }
 
   if (isChunked) {
@@ -75,24 +75,24 @@ export function imageParser(
 
   // TODO image Parsing should be more on the buffer side, no?
   if (data === null || features.imageParser === null) {
-    return { type: "parsed-segment",
-             value: { chunkData: null,
-                      chunkInfos: { duration: segment.duration,
-                                    time: segment.time },
-                      chunkOffset,
-                      appendWindow: [period.start, period.end] } };
+    return { segmentType: "media",
+             chunkData: null,
+             chunkInfos: { duration: segment.duration,
+                           time: segment.time },
+             chunkOffset,
+             appendWindow: [period.start, period.end] };
   }
 
   const bifObject = features.imageParser(new Uint8Array(data));
   const thumbsData = bifObject.thumbs;
-  return { type: "parsed-segment",
-           value: { chunkData: { data: thumbsData,
-                                 start: 0,
-                                 end: Number.MAX_VALUE,
-                                 timescale: 1,
-                                 type: "bif" },
-                    chunkInfos: { time: 0,
-                                  duration: Number.MAX_VALUE },
-                    chunkOffset,
-                    appendWindow: [period.start, period.end] } };
+  return { segmentType: "media",
+           chunkData: { data: thumbsData,
+                        start: 0,
+                        end: Number.MAX_VALUE,
+                        timescale: 1,
+                        type: "bif" },
+           chunkInfos: { time: 0,
+                         duration: Number.MAX_VALUE },
+           chunkOffset,
+           appendWindow: [period.start, period.end] };
 }
