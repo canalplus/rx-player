@@ -35,8 +35,8 @@ export default function addSegmentIntegrityChecks(
   segmentLoader : ISegmentLoader<ArrayBuffer | Uint8Array | string | null>
 ) : ISegmentLoader< ArrayBuffer | Uint8Array | string | null>;
 export default function addSegmentIntegrityChecks(
-  segmentLoader : ISegmentLoader< ArrayBuffer | Uint8Array | string | null >
-) : ISegmentLoader< ArrayBuffer | Uint8Array | string | null >
+  segmentLoader : ISegmentLoader<ArrayBuffer | Uint8Array | string | null>
+) : ISegmentLoader<ArrayBuffer | Uint8Array | string | null>
 {
   return (content) => segmentLoader(content).pipe(tap((res) => {
     if ((res.type === "data-loaded" || res.type === "data-chunk") &&
