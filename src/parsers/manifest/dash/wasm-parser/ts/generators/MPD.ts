@@ -120,7 +120,7 @@ export function generateMPDAttrParser(
         const publishTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
         mpdAttrs.publishTime = new Date(publishTime).getTime() / 1000;
         break;
-      case AttributeName.Duration:
+      case AttributeName.MediaPresentationDuration:
         dataView = new DataView(linearMemory.buffer);
         mpdAttrs.duration = dataView.getFloat64(ptr, true);
         break;
