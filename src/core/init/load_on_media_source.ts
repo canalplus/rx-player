@@ -66,7 +66,7 @@ export interface IMediaSourceLoaderArguments {
   /** Media Element on which the content will be played. */
   mediaElement : HTMLMediaElement;
   /** Module to facilitate segment fetching. */
-  segmentFetcherCreator : SegmentFetcherCreator<any>;
+  segmentFetcherCreator : SegmentFetcherCreator;
   /**
    * Observable emitting the wanted playback rate as it changes.
    * Replay the last value on subscription.

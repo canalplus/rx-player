@@ -87,7 +87,7 @@ export interface IPeriodStreamArguments {
   content : { manifest : Manifest;
               period : Period; };
   garbageCollectors : WeakMapMemory<SegmentBuffer<unknown>, Observable<never>>;
-  segmentFetcherCreator : SegmentFetcherCreator<any>;
+  segmentFetcherCreator : SegmentFetcherCreator;
   segmentBuffersStore : SegmentBuffersStore;
   options: IPeriodStreamOptions;
   wantedBufferAhead$ : BehaviorSubject<number>;

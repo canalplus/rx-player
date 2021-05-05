@@ -32,7 +32,7 @@ import { ISegment } from "../../../manifest";
 import {
   ISegmentParserParsedInitSegment,
   ISegmentParserParsedSegment,
-  ITransportPipelines,
+  ISegmentPipeline,
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
 import assertUnreachable from "../../../utils/assert_unreachable";
@@ -64,7 +64,7 @@ export type ISegmentFetcherWarning = ISegmentLoaderWarning;
  * Event sent when a new "chunk" of the segment is available.
  * A segment can contain n chunk(s) for n >= 0.
  */
-export interface ISegmentFetcherChunkEvent<T> {
+export interface ISegmentFetcherChunkEvent<SegmentDataType> {
   type : "chunk";
   /**
    * Parse the downloaded chunk.
@@ -77,8 +77,8 @@ export interface ISegmentFetcherChunkEvent<T> {
    * @param {number} initTimescale
    * @returns {Object}
    */
-  parse(initTimescale? : number) : ISegmentParserParsedInitSegment<T> |
-                                   ISegmentParserParsedSegment<T>;
+  parse(initTimescale? : number) : ISegmentParserParsedInitSegment<SegmentDataType> |
+                                   ISegmentParserParsedSegment<SegmentDataType>;
 }
 
 /**
@@ -88,12 +88,13 @@ export interface ISegmentFetcherChunkEvent<T> {
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete" }
 
 /** Event sent by the SegmentFetcher when fetching a segment. */
-export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
-                                      ISegmentFetcherChunkEvent<T> |
-                                      ISegmentFetcherWarning;
+export type ISegmentFetcherEvent<SegmentDataType> =
+  ISegmentFetcherChunkCompleteEvent |
+  ISegmentFetcherChunkEvent<SegmentDataType> |
+  ISegmentFetcherWarning;
 
-export type ISegmentFetcher<T> = (content : ISegmentLoaderContent) =>
-                                   Observable<ISegmentFetcherEvent<T>>;
+export type ISegmentFetcher<SegmentDataType> = (content : ISegmentLoaderContent) =>
+  Observable<ISegmentFetcherEvent<SegmentDataType>>;
 
 const generateRequestID = idGenerator();
 
@@ -105,23 +106,23 @@ const generateRequestID = idGenerator();
  * @param {Object} options
  * @returns {Function}
  */
-export default function createSegmentFetcher<T>(
+export default function createSegmentFetcher<
+  LoadedFormat,
+  SegmentDataType
+>(
   bufferType : IBufferType,
-  transport : ITransportPipelines,
+  segmentPipeline : ISegmentPipeline<LoadedFormat, SegmentDataType>,
   requests$ : Subject<IABRMetricsEvent |
                       IABRRequestBeginEvent |
                       IABRRequestProgressEvent |
                       IABRRequestEndEvent>,
   options : IBackoffOptions
-) : ISegmentFetcher<T> {
+) : ISegmentFetcher<SegmentDataType> {
   const cache = arrayIncludes(["audio", "video"], bufferType) ?
     new InitializationSegmentCache<any>() :
     undefined;
-  const segmentLoader = createSegmentLoader<any>(transport[bufferType].loader,
-                                                 cache,
-                                                 options);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const segmentParser = transport[bufferType].parser as any; // deal with it
+  const segmentLoader = createSegmentLoader(segmentPipeline.loader, cache, options);
+  const segmentParser = segmentPipeline.parser;
 
   /**
    * Process the segmentLoader observable to adapt it to the the rest of the
@@ -134,7 +135,7 @@ export default function createSegmentFetcher<T>(
    */
   return function fetchSegment(
     content : ISegmentLoaderContent
-  ) : Observable<ISegmentFetcherEvent<T>> {
+  ) : Observable<ISegmentFetcherEvent<SegmentDataType>> {
     const id = generateRequestID();
     let requestBeginSent = false;
     return segmentLoader(content).pipe(
@@ -185,7 +186,7 @@ export default function createSegmentFetcher<T>(
 
       filter((e) : e is ISegmentLoaderChunk |
                         ISegmentLoaderChunkComplete |
-                        ISegmentLoaderData<T> |
+                        ISegmentLoaderData<LoadedFormat> |
                         ISegmentFetcherWarning => {
         switch (e.type) {
           case "warning":
@@ -217,17 +218,13 @@ export default function createSegmentFetcher<T>(
            * @param {Object} [initTimescale]
            * @returns {Observable}
            */
-          parse(initTimescale? : number) : ISegmentParserParsedInitSegment<T> |
-                                           ISegmentParserParsedSegment<T> {
+          parse(initTimescale? : number) :
+            ISegmentParserParsedInitSegment<SegmentDataType> |
+            ISegmentParserParsedSegment<SegmentDataType>
+          {
             const response = { data: evt.value.responseData, isChunked };
             try {
-              /* eslint-disable @typescript-eslint/no-unsafe-call */
-              /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-              /* eslint-disable @typescript-eslint/no-unsafe-return */
               return segmentParser({ response, initTimescale, content });
-              /* eslint-enable @typescript-eslint/no-unsafe-call */
-              /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-              /* eslint-enable @typescript-eslint/no-unsafe-return */
             } catch (error : unknown) {
               throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
                                          defaultReason: "Unknown parsing error" });
