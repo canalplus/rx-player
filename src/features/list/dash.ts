@@ -23,7 +23,7 @@ import { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addDASHFeature(features : IFeaturesObject) : void {
-  if (!features.transports.hasOwnProperty("dash")) {
+  if (features.transports.dash === undefined) {
     features.transports.dash = dash;
   }
   features.dashParsers.js = dashJsParser;

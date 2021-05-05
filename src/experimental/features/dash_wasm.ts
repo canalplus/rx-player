@@ -23,7 +23,7 @@ import dash from "../../transports/dash";
 const dashWasmParser = new DashWasmParser();
 const dashWasmFeature = {
   _addFeature(features : IFeaturesObject) : void {
-    if (!features.transports.hasOwnProperty("dash")) {
+    if (features.transports.dash === undefined) {
       features.transports.dash = dash;
     }
     features.dashParsers.wasm = dashWasmParser;
