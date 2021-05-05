@@ -64,7 +64,7 @@ export function generateSegmentBaseAttrParser(
 
       case AttributeName.PresentationTimeOffset: {
         const dataView = new DataView(linearMemory.buffer);
-        segmentBaseAttrs.timescale =
+        segmentBaseAttrs.presentationTimeOffset =
           dataView.getFloat64(ptr, true);
         break;
       }
