@@ -56,7 +56,7 @@ export function imageParser(
   { response,
     content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
 ) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<IImageTrackSegmentData>
+    ISegmentParserParsedSegment<IImageTrackSegmentData | null>
 {
   const { segment, period } = content;
   const { data, isChunked } = response;

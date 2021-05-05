@@ -50,20 +50,16 @@ export interface ITransportPipelines {
   manifest : ITransportManifestPipeline;
   /** Functions allowing to load an parse audio segments. */
   audio : ISegmentPipeline<Uint8Array | ArrayBuffer | null,
-                           Uint8Array | ArrayBuffer | null,
                            Uint8Array | ArrayBuffer | null>;
   /** Functions allowing to load an parse video segments. */
   video : ISegmentPipeline<Uint8Array | ArrayBuffer | null,
-                           Uint8Array | ArrayBuffer | null,
                            Uint8Array | ArrayBuffer | null>;
   /** Functions allowing to load an parse text (e.g. subtitles) segments. */
   text : ISegmentPipeline<Uint8Array | ArrayBuffer | string | null,
-                          null,
-                          ITextTrackSegmentData>;
+                          ITextTrackSegmentData | null>;
   /** Functions allowing to load an parse image (e.g. thumbnails) segments. */
   image : ISegmentPipeline<Uint8Array | ArrayBuffer | null,
-                           null,
-                           IImageTrackSegmentData>;
+                           IImageTrackSegmentData | null>;
 }
 
 /** Functions allowing to load and parse the Manifest. */
@@ -113,13 +109,11 @@ export type IManifestParserFunction = (
 /** Functions allowing to load and parse segments of any type. */
 export interface ISegmentPipeline<
   LoadedFormat,
-  ParsedInitDataFormat,
-  ParsedMediaDataFormat,
+  ParsedSegmentDataFormat,
 > {
   loader : ISegmentLoader<LoadedFormat>;
   parser : ISegmentParser<LoadedFormat,
-                          ParsedInitDataFormat,
-                          ParsedMediaDataFormat>;
+                          ParsedSegmentDataFormat>;
 }
 
 /**
@@ -138,8 +132,7 @@ export type ISegmentLoader<LoadedFormat> = (
  */
 export type ISegmentParser<
   LoadedFormat,
-  ParsedInitDataFormat,
-  ParsedMediaDataFormat
+  ParsedSegmentDataFormat
 > = (
   x : ISegmentParserArguments< LoadedFormat >
 ) =>
@@ -155,8 +148,8 @@ export type ISegmentParser<
    *     segment.
    *     Such segments generally contain decodable media data.
    */
-  ISegmentParserParsedInitSegment<ParsedInitDataFormat> |
-  ISegmentParserParsedSegment<ParsedMediaDataFormat>;
+  ISegmentParserParsedInitSegment<ParsedSegmentDataFormat> |
+  ISegmentParserParsedSegment<ParsedSegmentDataFormat>;
 
 /** Arguments for the loader of the manifest pipeline. */
 export interface IManifestLoaderArguments {
@@ -234,8 +227,10 @@ export interface IManifestLoaderDataLoadedEvent {
 }
 
 /** Event emitted by a segment loader when the data has been fully loaded. */
-export interface ISegmentLoaderDataLoadedEvent<T> { type : "data-loaded";
-                                                    value : ILoaderDataLoadedValue<T>; }
+export interface ISegmentLoaderDataLoadedEvent<T> {
+  type : "data-loaded";
+  value : ILoaderDataLoadedValue<T>;
+}
 
 /**
  * Event emitted by a segment loader when the data is available without needing
@@ -244,8 +239,10 @@ export interface ISegmentLoaderDataLoadedEvent<T> { type : "data-loaded";
  * Such data are for example directly generated from already-available data,
  * such as properties of a Manifest.
  */
-export interface ISegmentLoaderDataCreatedEvent<T> { type : "data-created";
-                                                     value : { responseData : T }; }
+export interface ISegmentLoaderDataCreatedEvent<T> {
+  type : "data-created";
+  value : { responseData : T };
+}
 
 /**
  * Event emitted by a segment loader when new information on a pending request
@@ -363,8 +360,13 @@ export interface IManifestParserArguments {
 export interface ISegmentParserArguments<T> {
   /** Attributes of the corresponding loader's response. */
   response : {
-    /** The loaded data. */
-    data: T;
+    /**
+     * The loaded data.
+     *
+     * Possibly in Uint8Array or ArrayBuffer form if chunked (see `isChunked`
+     * property) or loaded through custom loaders.
+     */
+    data: T | Uint8Array | ArrayBuffer;
     /**
      * If `true`,`data` is only a "chunk" of the whole segment (which potentially
      * will contain multiple chunks).
@@ -446,7 +448,7 @@ export interface ISegmentParserParsedInitSegment<DataType> {
    * Initialization segment that can be directly pushed to the corresponding
    * buffer.
    */
-  initializationData : DataType | null;
+  initializationData : DataType;
   /**
    * Timescale metadata found inside this initialization segment.
    * That timescale might be useful when parsing further merdia segments.
@@ -473,7 +475,7 @@ export interface ISegmentParserParsedInitSegment<DataType> {
 export interface ISegmentParserParsedSegment<DataType> {
   segmentType : "media";
   /** Parsed chunk of data that can be decoded. */
-  chunkData : DataType | null;
+  chunkData : DataType;
   /** Time information on this parsed chunk. */
   chunkInfos : IChunkTimeInfo | null;
   /**
