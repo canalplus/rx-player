@@ -27,7 +27,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
-import { ISegmentParserSegmentPayload } from "../../../transports";
+import { ISegmentParserParsedSegment } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
@@ -56,7 +56,7 @@ export default function pushMediaSegment<T>(
                                    period : Period;
                                    representation : Representation; };
                         initSegmentData : T | null;
-                        parsedSegment : ISegmentParserSegmentPayload<T>;
+                        parsedSegment : ISegmentParserParsedSegment<T>;
                         segment : ISegment;
                         segmentBuffer : SegmentBuffer<T>; }
 ) : Observable< IStreamEventAddedSegment<T> > {

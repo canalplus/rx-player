@@ -50,9 +50,8 @@ import {
   IManifestParserWarningEvent,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
-  ISegmentParserInitSegment,
-  ISegmentParserSegment,
-  ISegmentParserSegmentPayload,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
   ITextTrackSegmentData,
   ITransportOptions,
   ITransportPipelines,
@@ -262,7 +261,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
   function offsetTimeInfos(
     contentOffset : number,
     contentEnd : number | undefined,
-    segmentResponse : ISegmentParserSegmentPayload<unknown>
+    segmentResponse : ISegmentParserParsedSegment<unknown>
   ) : { chunkInfos : IChunkTimeInfo | null;
         chunkOffset : number;
         appendWindow : [ number | undefined, number | undefined ]; } {
@@ -306,22 +305,19 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ISegmentParserSegment<ArrayBuffer | Uint8Array | null>  |
-        ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null>
+    ) : ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>  |
+        ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null>
     {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { audio } = getTransportPipelinesFromSegment(segment);
       const parsed = audio.parser(getParserArguments(args, segment));
-      if (parsed.type === "parsed-init-segment") {
+      if (parsed.segmentType === "init") {
         return parsed;
       }
-      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed.value);
-      // TODO check why this is unsafe for TypeScript
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return objectAssign({ type: "parsed-segment",
-                            value: objectAssign({}, parsed.value, timeInfos) });
+      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed);
+      return objectAssign({}, parsed, timeInfos);
     },
   };
 
@@ -333,22 +329,19 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ISegmentParserSegment<ArrayBuffer | Uint8Array | null>  |
-        ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null>
+    ) : ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>  |
+        ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null>
     {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { video } = getTransportPipelinesFromSegment(segment);
       const parsed = video.parser(getParserArguments(args, segment));
-      if (parsed.type === "parsed-init-segment") {
+      if (parsed.segmentType === "init") {
         return parsed;
       }
-      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed.value);
-      // TODO check why this is unsafe for TypeScript
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return objectAssign({ type: "parsed-segment",
-                            value: objectAssign({}, parsed.value, timeInfos) });
+      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed);
+      return objectAssign({}, parsed, timeInfos);
     },
   };
 
@@ -360,22 +353,19 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>
-    ) : ISegmentParserInitSegment<null> |
-        ISegmentParserSegment<ITextTrackSegmentData>
+    ) : ISegmentParserParsedInitSegment<null> |
+        ISegmentParserParsedSegment<ITextTrackSegmentData>
     {
       const { content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { text } = getTransportPipelinesFromSegment(segment);
       const parsed = text.parser(getParserArguments(args, segment));
-      if (parsed.type === "parsed-init-segment") {
+      if (parsed.segmentType === "init") {
         return parsed;
       }
-      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed.value);
-      // TODO check why this is unsafe for TypeScript
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return objectAssign({ type: "parsed-segment",
-                            value: objectAssign({}, parsed.value, timeInfos) });
+      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed);
+      return objectAssign({}, parsed, timeInfos);
     },
   };
 
@@ -387,8 +377,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
-    ) : ISegmentParserInitSegment<null>  |
-        ISegmentParserSegment<IImageTrackSegmentData>
+    ) : ISegmentParserParsedInitSegment<null>  |
+        ISegmentParserParsedSegment<IImageTrackSegmentData>
     {
       const { content } = args;
       const { segment } = content;
@@ -396,14 +386,11 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { image } = getTransportPipelinesFromSegment(segment);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       const parsed = image.parser(getParserArguments(args, segment));
-      if (parsed.type === "parsed-init-segment") {
+      if (parsed.segmentType === "init") {
         return parsed;
       }
-      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed.value);
-      // TODO check why this is unsafe for TypeScript
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return objectAssign({ type: "parsed-segment",
-                            value: objectAssign({}, parsed.value, timeInfos) });
+      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed);
+      return objectAssign({}, parsed, timeInfos);
     },
   };
 

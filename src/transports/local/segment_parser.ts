@@ -21,8 +21,8 @@ import {
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  ISegmentParserSegment,
-  ISegmentParserInitSegment,
+  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitSegment,
   ISegmentParserArguments,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
@@ -33,8 +33,8 @@ export default function segmentParser({
   response,
   initTimescale,
 } : ISegmentParserArguments<ArrayBuffer | Uint8Array | null>
-) : ISegmentParserInitSegment<ArrayBuffer | Uint8Array | null> |
-    ISegmentParserSegment<ArrayBuffer | Uint8Array | null>
+) : ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null> |
+    ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>
 {
   const { period, adaptation, representation, segment } = content;
   const { data } = response;
@@ -42,17 +42,17 @@ export default function segmentParser({
 
   if (data === null) {
     if (segment.isInit) {
-      return { type: "parsed-init-segment",
-               value: { initializationData: null,
-                        protectionDataUpdate: false,
-                        initTimescale: undefined } };
+      return { segmentType: "init",
+               initializationData: null,
+               protectionDataUpdate: false,
+               initTimescale: undefined };
     }
-    return { type: "parsed-segment",
-             value: { chunkData: null,
-                      chunkInfos: null,
-                      chunkOffset: 0,
-                      protectionDataUpdate: false,
-                      appendWindow } };
+    return { segmentType: "media",
+             chunkData: null,
+             chunkInfos: null,
+             chunkOffset: 0,
+             protectionDataUpdate: false,
+             appendWindow };
   }
 
   const chunkData = new Uint8Array(data);
@@ -72,10 +72,10 @@ export default function segmentParser({
     const timescale = containerType === "webm" ? getTimeCodeScale(chunkData, 0) :
                                                  // assume ISOBMFF-compliance
                                                  getMDHDTimescale(chunkData);
-    return { type: "parsed-init-segment",
-             value: { initializationData: chunkData,
-                      initTimescale: timescale ?? undefined,
-                      protectionDataUpdate } };
+    return { segmentType: "init",
+             initializationData: chunkData,
+             initTimescale: timescale ?? undefined,
+             protectionDataUpdate };
   }
 
   const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData,
@@ -84,10 +84,10 @@ export default function segmentParser({
                                                           initTimescale) :
                                     null; // TODO extract time info from webm
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-  return { type: "parsed-segment",
-           value: { chunkData,
-                    chunkInfos,
-                    chunkOffset,
-                    protectionDataUpdate: false,
-                    appendWindow } };
+  return { segmentType: "media",
+           chunkData,
+           chunkInfos,
+           chunkOffset,
+           protectionDataUpdate: false,
+           appendWindow };
 }
