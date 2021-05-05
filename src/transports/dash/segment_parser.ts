@@ -29,8 +29,8 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserArguments,
-  ISegmentParserInitSegment,
-  ISegmentParserSegment,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
@@ -49,24 +49,24 @@ export default function generateAudioVideoSegmentParser(
       initTimescale } : ISegmentParserArguments< Uint8Array |
                                                  ArrayBuffer |
                                                  null >
-  ) : ISegmentParserInitSegment<Uint8Array | ArrayBuffer | null> |
-      ISegmentParserSegment< Uint8Array | ArrayBuffer | null> {
+  ) : ISegmentParserParsedInitSegment<Uint8Array | ArrayBuffer | null> |
+      ISegmentParserParsedSegment< Uint8Array | ArrayBuffer | null> {
     const { period, representation, segment, manifest } = content;
     const { data, isChunked } = response;
     const appendWindow : [number, number | undefined] = [ period.start, period.end ];
 
     if (data === null) {
       if (segment.isInit) {
-        return { type: "parsed-init-segment" as const,
-                 value: { initializationData: null,
-                          protectionDataUpdate: false,
-                          initTimescale: undefined } };
+        return { segmentType: "init" as const,
+                 initializationData: null,
+                 protectionDataUpdate: false,
+                 initTimescale: undefined };
       }
-      return { type: "parsed-segment" as const,
-               value: { chunkData: null,
-                        chunkInfos: null,
-                        chunkOffset: 0,
-                        appendWindow } };
+      return { segmentType: "media" as const,
+               chunkData: null,
+               chunkInfos: null,
+               chunkOffset: 0,
+               appendWindow };
     }
 
     const chunkData = data instanceof Uint8Array ? data :
@@ -95,22 +95,22 @@ export default function generateAudioVideoSegmentParser(
                                              manifest.publishTime);
           if (events !== undefined) {
             const { needsManifestRefresh, inbandEvents } = events;
-            return { type: "parsed-segment",
-                     value: { chunkData,
-                              chunkInfos,
-                              chunkOffset,
-                              appendWindow,
-                              inbandEvents,
-                              needsManifestRefresh } };
+            return { segmentType: "media",
+                     chunkData,
+                     chunkInfos,
+                     chunkOffset,
+                     appendWindow,
+                     inbandEvents,
+                     needsManifestRefresh };
           }
         }
       }
 
-      return { type: "parsed-segment",
-               value: { chunkData,
-                        chunkInfos,
-                        chunkOffset,
-                        appendWindow } };
+      return { segmentType: "media",
+               chunkData,
+               chunkInfos,
+               chunkOffset,
+               appendWindow };
     }
     // we're handling an initialization segment
     const { indexRange } = segment;
@@ -161,9 +161,9 @@ export default function generateAudioVideoSegmentParser(
       }
     }
 
-    return { type: "parsed-init-segment",
-             value: { initializationData: chunkData,
-                      protectionDataUpdate,
-                      initTimescale: parsedTimescale } };
+    return { segmentType: "init",
+             initializationData: chunkData,
+             protectionDataUpdate,
+             initTimescale: parsedTimescale };
   };
 }
