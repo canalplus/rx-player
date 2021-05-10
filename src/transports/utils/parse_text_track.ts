@@ -155,12 +155,20 @@ export function getPlainTextTrackData(
   if (segment.isInit) {
     return null;
   }
+
+  let start;
+  let end;
   if (isChunked) {
     log.warn("Transport: Unavailable time data for current text track.");
+  } else {
+    start = segment.time;
+    end = segment.time + segment.duration;
   }
 
   const type = getPlainTextTrackFormat(representation);
   return { data: textTrackData,
            type,
-           language: adaptation.language };
+           language: adaptation.language,
+           start,
+           end };
 }
