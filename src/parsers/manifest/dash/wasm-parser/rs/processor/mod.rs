@@ -58,8 +58,8 @@ impl MPDProcessor {
                 Err(e) => ParsingError::from(e).report_err(),
                 _ => (),
             }
+            self.reader_buf.clear();
         }
-        self.reader_buf.clear();
     }
 
     /// "Process" an XLink, which is an externalized sub-part of an MPD (usually
