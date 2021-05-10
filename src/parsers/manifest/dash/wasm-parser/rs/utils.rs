@@ -161,10 +161,10 @@ fn read_next_float(
     while i < value.len() && value[i] >= b'0' && value[i] <= b'9' {
         i += 1;
     }
-    // UNSAFE: We already checked that this string represents a valid integer
+    // UNSAFE: We already checked that this string represents a valid float
     let val_str = unsafe {
         std::str::from_utf8_unchecked(&value[base_offset..i])
     };
     let val_f64 = val_str.parse::<f64>()?;
-    Ok((val_f64 as f64, i))
+    Ok((val_f64, i))
 }
