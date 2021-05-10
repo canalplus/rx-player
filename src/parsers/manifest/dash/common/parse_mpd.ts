@@ -128,6 +128,7 @@ export default function parseMpdIr(
   hasLoadedClock? : boolean,
   xlinkInfos : IXLinkInfos = new WeakMap()
 ) : IIrParserResponse {
+  console.warn(mpdIR);
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
   if (args.externalClockOffset == null) {

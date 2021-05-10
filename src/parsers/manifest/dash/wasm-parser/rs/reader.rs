@@ -10,7 +10,7 @@ impl Read for MPDReader {
         // Hopefully, the JavaScript-side should just put data maximum until
         // `buf.len()`.
         unsafe {
-            actual_size = super::readNext((*buf).as_ptr(), buf.len() as i32);
+            actual_size = super::readNext((*buf).as_ptr(), buf.len());
         }
         Ok(actual_size as usize)
     }

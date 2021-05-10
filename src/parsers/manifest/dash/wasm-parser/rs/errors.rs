@@ -12,7 +12,7 @@ impl ParsingError {
     /// Call JS-side callback with this ParsingError in argument to report an
     /// error.
     pub fn report_err(&self) {
-        let len = self.0.len() as i32;
+        let len = self.0.len();
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
         unsafe {
