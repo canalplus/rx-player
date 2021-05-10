@@ -47,7 +47,7 @@ extern "C" {
     /// WebAssembly's linear memory.
     ///
     /// * `len` - Length of the data - starting at `ptr` - in bytes.
-    fn onAttribute(attr_name : AttributeName, ptr : *const u8, len : i32);
+    fn onAttribute(attr_name : AttributeName, ptr : *const u8, len : usize);
 
     /// JS callback for other specific operations, for example logging and warnings.
     ///
@@ -59,7 +59,7 @@ extern "C" {
     /// WebAssembly's linear memory.
     ///
     /// * `len` - Length of the data - starting at `ptr` - in bytes.
-    fn onCustomEvent(evt_type : CustomEventType, ptr: *const u8, len : i32);
+    fn onCustomEvent(evt_type : CustomEventType, ptr: *const u8, len : usize);
 
     /// JS callback allowing to read data from the MPD, which is stored in the
     /// JS-side.
@@ -75,7 +75,7 @@ extern "C" {
     /// * `size` - Optimal length of data that is wanted, in bytes.
     /// Less data (but not more) can be read. The true read length is returned
     /// by this function.
-    fn readNext(ptr : *const u8,  size : i32) -> i32;
+    fn readNext(ptr : *const u8,  size : usize) -> usize;
 }
 
 #[no_mangle]

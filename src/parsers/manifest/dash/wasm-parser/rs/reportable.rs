@@ -84,7 +84,7 @@ impl ReportableAttribute for &[SegmentObject] {
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
         unsafe {
-            let len = (self.len() * mem::size_of::<SegmentObject>()) as i32;
+            let len = self.len() * mem::size_of::<SegmentObject>();
             onAttribute(attr_name, self.as_ptr() as *const u8, len);
         }
     }
@@ -97,6 +97,6 @@ impl<'a> ReportableAttribute for std::borrow::Cow<'a, [u8]> {
 
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
-        unsafe { onAttribute(attr_name, self.as_ptr(), self.len() as i32); };
+        unsafe { onAttribute(attr_name, self.as_ptr(), self.len()); };
     }
 }
