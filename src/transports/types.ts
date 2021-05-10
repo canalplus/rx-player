@@ -108,12 +108,12 @@ export type IManifestParserFunction = (
 
 /** Functions allowing to load and parse segments of any type. */
 export interface ISegmentPipeline<
-  LoadedFormat,
-  ParsedSegmentDataFormat,
+  TLoadedFormat,
+  TParsedSegmentDataFormat,
 > {
-  loader : ISegmentLoader<LoadedFormat>;
-  parser : ISegmentParser<LoadedFormat,
-                          ParsedSegmentDataFormat>;
+  loader : ISegmentLoader<TLoadedFormat>;
+  parser : ISegmentParser<TLoadedFormat,
+                          TParsedSegmentDataFormat>;
 }
 
 /**
@@ -121,9 +121,9 @@ export interface ISegmentPipeline<
  * @param {Object} x
  * @returns {Observable.<Object>}
  */
-export type ISegmentLoader<LoadedFormat> = (
+export type ISegmentLoader<TLoadedFormat> = (
   x : ISegmentLoaderArguments
-) => Observable<ISegmentLoaderEvent<LoadedFormat>>;
+) => Observable<ISegmentLoaderEvent<TLoadedFormat>>;
 
 /**
  * Segment parser function, allowing to parse a segment of any type.
@@ -131,10 +131,10 @@ export type ISegmentLoader<LoadedFormat> = (
  * @returns {Observable.<Object>}
  */
 export type ISegmentParser<
-  LoadedFormat,
-  ParsedSegmentDataFormat
+  TLoadedFormat,
+  TParsedSegmentDataFormat
 > = (
-  x : ISegmentParserArguments< LoadedFormat >
+  x : ISegmentParserArguments< TLoadedFormat >
 ) =>
   /**
    * The parsed data.
@@ -148,8 +148,8 @@ export type ISegmentParser<
    *     segment.
    *     Such segments generally contain decodable media data.
    */
-  ISegmentParserParsedInitSegment<ParsedSegmentDataFormat> |
-  ISegmentParserParsedSegment<ParsedSegmentDataFormat>;
+  ISegmentParserParsedInitSegment<TParsedSegmentDataFormat> |
+  ISegmentParserParsedSegment<TParsedSegmentDataFormat>;
 
 /** Arguments for the loader of the manifest pipeline. */
 export interface IManifestLoaderArguments {

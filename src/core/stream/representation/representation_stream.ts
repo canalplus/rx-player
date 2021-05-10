@@ -119,7 +119,7 @@ export interface ITerminationOrder {
 }
 
 /** Arguments to give to the RepresentationStream. */
-export interface IRepresentationStreamArguments<SegmentDataType> {
+export interface IRepresentationStreamArguments<TSegmentDataType> {
   /** Periodically emits the current playback conditions. */
   clock$ : Observable<IRepresentationStreamClockTick>;
   /** The context of the Representation you want to load. */
@@ -128,9 +128,9 @@ export interface IRepresentationStreamArguments<SegmentDataType> {
              period : Period;
              representation : Representation; };
   /** The `SegmentBuffer` on which segments will be pushed. */
-  segmentBuffer : SegmentBuffer<SegmentDataType>;
+  segmentBuffer : SegmentBuffer<TSegmentDataType>;
   /** Interface used to load new segments. */
-  segmentFetcher : IPrioritizedSegmentFetcher<SegmentDataType>;
+  segmentFetcher : IPrioritizedSegmentFetcher<TSegmentDataType>;
   /**
    * Observable emitting when the RepresentationStream should "terminate".
    *
