@@ -64,7 +64,7 @@ export type ISegmentFetcherWarning = ISegmentLoaderWarning;
  * Event sent when a new "chunk" of the segment is available.
  * A segment can contain n chunk(s) for n >= 0.
  */
-export interface ISegmentFetcherChunkEvent<SegmentDataType> {
+export interface ISegmentFetcherChunkEvent<TSegmentDataType> {
   type : "chunk";
   /**
    * Parse the downloaded chunk.
@@ -77,8 +77,8 @@ export interface ISegmentFetcherChunkEvent<SegmentDataType> {
    * @param {number} initTimescale
    * @returns {Object}
    */
-  parse(initTimescale? : number) : ISegmentParserParsedInitSegment<SegmentDataType> |
-                                   ISegmentParserParsedSegment<SegmentDataType>;
+  parse(initTimescale? : number) : ISegmentParserParsedInitSegment<TSegmentDataType> |
+                                   ISegmentParserParsedSegment<TSegmentDataType>;
 }
 
 /**
@@ -88,13 +88,13 @@ export interface ISegmentFetcherChunkEvent<SegmentDataType> {
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete" }
 
 /** Event sent by the SegmentFetcher when fetching a segment. */
-export type ISegmentFetcherEvent<SegmentDataType> =
+export type ISegmentFetcherEvent<TSegmentDataType> =
   ISegmentFetcherChunkCompleteEvent |
-  ISegmentFetcherChunkEvent<SegmentDataType> |
+  ISegmentFetcherChunkEvent<TSegmentDataType> |
   ISegmentFetcherWarning;
 
-export type ISegmentFetcher<SegmentDataType> = (content : ISegmentLoaderContent) =>
-  Observable<ISegmentFetcherEvent<SegmentDataType>>;
+export type ISegmentFetcher<TSegmentDataType> = (content : ISegmentLoaderContent) =>
+  Observable<ISegmentFetcherEvent<TSegmentDataType>>;
 
 const generateRequestID = idGenerator();
 
@@ -108,16 +108,16 @@ const generateRequestID = idGenerator();
  */
 export default function createSegmentFetcher<
   LoadedFormat,
-  SegmentDataType
+  TSegmentDataType
 >(
   bufferType : IBufferType,
-  segmentPipeline : ISegmentPipeline<LoadedFormat, SegmentDataType>,
+  segmentPipeline : ISegmentPipeline<LoadedFormat, TSegmentDataType>,
   requests$ : Subject<IABRMetricsEvent |
                       IABRRequestBeginEvent |
                       IABRRequestProgressEvent |
                       IABRRequestEndEvent>,
   options : IBackoffOptions
-) : ISegmentFetcher<SegmentDataType> {
+) : ISegmentFetcher<TSegmentDataType> {
   const cache = arrayIncludes(["audio", "video"], bufferType) ?
     new InitializationSegmentCache<any>() :
     undefined;
@@ -135,7 +135,7 @@ export default function createSegmentFetcher<
    */
   return function fetchSegment(
     content : ISegmentLoaderContent
-  ) : Observable<ISegmentFetcherEvent<SegmentDataType>> {
+  ) : Observable<ISegmentFetcherEvent<TSegmentDataType>> {
     const id = generateRequestID();
     let requestBeginSent = false;
     return segmentLoader(content).pipe(
@@ -219,8 +219,8 @@ export default function createSegmentFetcher<
            * @returns {Observable}
            */
           parse(initTimescale? : number) :
-            ISegmentParserParsedInitSegment<SegmentDataType> |
-            ISegmentParserParsedSegment<SegmentDataType>
+            ISegmentParserParsedInitSegment<TSegmentDataType> |
+            ISegmentParserParsedSegment<TSegmentDataType>
           {
             const response = { data: evt.value.responseData, isChunked };
             try {
