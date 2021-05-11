@@ -73,7 +73,7 @@ describe("core - eme - global tests - server certificate", () => {
     let eventsReceived = 0;
     const initDataSubject = new Subject<IContentProtection>();
     const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;
@@ -142,7 +142,7 @@ describe("core - eme - global tests - server certificate", () => {
     let eventsReceived = 0;
     const initDataSubject = new Subject<IContentProtection>();
     const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;
@@ -222,7 +222,7 @@ describe("core - eme - global tests - server certificate", () => {
     let eventsReceived = 0;
     const initDataSubject = new Subject<IContentProtection>();
     const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;
@@ -307,7 +307,7 @@ describe("core - eme - global tests - server certificate", () => {
     let eventsReceived = 0;
     const initDataSubject = new Subject<IContentProtection>();
     const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;

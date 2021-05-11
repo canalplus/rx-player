@@ -115,7 +115,7 @@ describe("core - eme - global tests - media key system access", () => {
   /* eslint-enable max-len */
     mockCompat({});
     const EMEManager = require("../../eme_manager").default;
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
     EMEManager(videoElt, ksConfig, EMPTY)
       .pipe(takeUntil(kill$))
       .subscribe((evt : any) => {
@@ -136,7 +136,7 @@ describe("core - eme - global tests - media key system access", () => {
 
     // == test ==
     let eventsReceived = 0;
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
     const EMEManager = require("../../eme_manager").default;
     EMEManager(videoElt, ksConfig, EMPTY)
       .pipe(takeUntil(kill$), take(1))
@@ -164,7 +164,7 @@ describe("core - eme - global tests - media key system access", () => {
 
     // == test ==
     let eventsReceived = 0;
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
     const EMEManager = require("../../eme_manager").default;
     EMEManager(videoElt, ksConfig, EMPTY)
       .pipe(takeUntil(kill$))
@@ -198,7 +198,7 @@ describe("core - eme - global tests - media key system access", () => {
 
     // == test ==
     let eventsReceived = 0;
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
     const EMEManager = require("../../eme_manager").default;
     EMEManager(videoElt, ksConfig, EMPTY)
       .pipe(takeUntil(kill$))
@@ -241,7 +241,7 @@ describe("core - eme - global tests - media key system access", () => {
 
     // == test ==
     let eventsReceived = 0;
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
     const EMEManager = require("../../eme_manager").default;
     EMEManager(mediaElement, ksConfig, new Subject())
       .pipe(takeUntil(kill$))
