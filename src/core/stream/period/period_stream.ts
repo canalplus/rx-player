@@ -18,6 +18,7 @@ import {
   BehaviorSubject,
   concat as observableConcat,
   EMPTY,
+  from as observableFrom,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -41,9 +42,7 @@ import Manifest, {
   Period,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
-import observablifyCancellablePromise from "../../../utils/observablify_promise";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
-import TaskCanceller from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
 import { IStalledStatus } from "../../api";
@@ -168,12 +167,10 @@ export default function PeriodStream({
           if (SegmentBuffersStore.isNative(bufferType)) {
             return reloadAfterSwitch(period, clock$, relativePosAfterSwitch);
           }
-          const canceller = new TaskCanceller();
-          cleanBuffer$ = observablifyCancellablePromise(canceller, () =>
+          cleanBuffer$ = observableFrom(
             segmentBufferStatus.value.removeBuffer(period.start,
                                                    period.end == null ? Infinity :
-                                                                        period.end,
-                                                   canceller.signal));
+                                                                        period.end));
         } else {
           if (segmentBufferStatus.type === "uninitialized") {
             segmentBuffersStore.disableSegmentBuffer(bufferType);
@@ -216,9 +213,7 @@ export default function PeriodStream({
           const cleanBuffer$ = strategy.type !== "clean-buffer" ?
             EMPTY :
             observableConcat(...strategy.value.map(({ start, end }) => {
-              const canceller = new TaskCanceller();
-              return observablifyCancellablePromise(canceller, () =>
-                segmentBuffer.removeBuffer(start, end, canceller.signal));
+              return observableFrom(segmentBuffer.removeBuffer(start, end));
             })).pipe(ignoreElements());
 
           const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);

@@ -29,6 +29,7 @@ import {
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
+  from as observableFrom,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -485,8 +486,7 @@ export default function RepresentationStream<SegmentDataType>({
         const { segment } = evt;
         const canceller = new TaskCanceller();
         return observablifyCancellablePromise(canceller, () =>
-          segmentBuffer.endOfSegment(objectAssign({ segment }, content),
-                                     canceller.signal)
+          segmentBuffer.endOfSegment(objectAssign({ segment }, content))
         ).pipe(ignoreElements());
       }
 
@@ -522,17 +522,24 @@ export default function RepresentationStream<SegmentDataType>({
         observableOf(...allEncryptionData.map(p =>
           EVENTS.encryptionDataEncountered(p))) :
         EMPTY;
-      const pushEvent$ = pushInitSegment({ clock$,
-                                           content,
-                                           segment: evt.segment,
-                                           segmentData: parsed.initializationData,
-                                           segmentBuffer });
-      return observableMerge(initEncEvt$, pushEvent$);
+      const pushInit$ = parsed.initializationData === null ?
+        EMPTY :
+        observableFrom(pushInitSegment({ clock$,
+                                         content,
+                                         segmentData: parsed.initializationData,
+                                         segment: evt.segment,
+                                         segmentBuffer }));
+      return observableMerge(initEncEvt$, pushInit$);
 
     } else {
       const initSegmentData = initSegmentObject?.initializationData ?? null;
       const { inbandEvents,
-              needsManifestRefresh } = parsed;
+              needsManifestRefresh,
+              chunkData,
+              chunkInfos,
+              chunkOffset,
+              appendWindow } = parsed;
+
       const manifestRefresh$ =  needsManifestRefresh === true ?
         observableOf(EVENTS.needsManifestRefresh()) :
         EMPTY;
@@ -541,14 +548,22 @@ export default function RepresentationStream<SegmentDataType>({
         observableOf({ type: "inband-events" as const,
                        value: inbandEvents }) :
         EMPTY;
+
+      const pushSegment$ = chunkData === null ?
+        EMPTY :
+        observableFrom(pushMediaSegment({ clock$,
+                                          content,
+                                          initSegmentData,
+                                          parsedSegment: { chunkData,
+                                                           chunkInfos,
+                                                           chunkOffset,
+                                                           appendWindow },
+                                          segment: evt.segment,
+                                          segmentBuffer }));
+
       return observableConcat(manifestRefresh$,
                               inbandEvents$,
-                              pushMediaSegment({ clock$,
-                                                 content,
-                                                 initSegmentData,
-                                                 parsedSegment: parsed,
-                                                 segment: evt.segment,
-                                                 segmentBuffer }));
+                              pushSegment$);
     }
   }
 }

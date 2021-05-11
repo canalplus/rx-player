@@ -18,7 +18,6 @@ import PPromise from "pinkie";
 import config from "../../../config";
 import log from "../../../log";
 import { getInnerAndOuterTimeRanges } from "../../../utils/ranges";
-import { CancellationSignal } from "../../../utils/task_canceller";
 import { SegmentBuffer } from "../../segment_buffers";
 
 const GC_GAP_CALM = config.BUFFER_GC_GAPS.CALM;
@@ -36,8 +35,7 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
  */
 export default async function forceGarbageCollection(
   getCurrentTime : () => number,
-  bufferingQueue : SegmentBuffer<unknown>,
-  cancellationSignal : CancellationSignal
+  bufferingQueue : SegmentBuffer<unknown>
 ) : PPromise<void> {
   const currentTime = getCurrentTime();
   log.warn("Stream: Running garbage collector");
@@ -52,7 +50,7 @@ export default async function forceGarbageCollection(
   log.debug("Stream: GC cleaning", cleanedupRanges);
   for (let i  = 0; i < cleanedupRanges.length; i++) {
     const { start, end } = cleanedupRanges[i];
-    await bufferingQueue.removeBuffer(start, end, cancellationSignal);
+    await bufferingQueue.removeBuffer(start, end);
   }
 }
 

@@ -17,9 +17,6 @@
 import { Observable } from "rxjs";
 import { take } from "rxjs/operators";
 import { MediaError } from "../../../errors";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
 import {
   IPushChunkInfos,
   SegmentBuffer,
@@ -39,8 +36,7 @@ import forceGarbageCollection from "./force_garbage_collection";
 export default async function appendSegmentToBuffer<T>(
   clock$ : Observable<{ getCurrentTime : () => number }>,
   segmentBuffer : SegmentBuffer<T>,
-  dataInfos : IPushChunkInfos<T>,
-  cancellationSignal : CancellationSignal
+  dataInfos : IPushChunkInfos<T>
 ) : Promise<void> {
   try {
     await segmentBuffer.pushChunk(dataInfos);
@@ -57,12 +53,9 @@ export default async function appendSegmentToBuffer<T>(
     try {
       // TODO Refacto the clock so that ugly hack is not needed anymore
       const { getCurrentTime } = await clock$.pipe(take(1)).toPromise();
-      await forceGarbageCollection(getCurrentTime, segmentBuffer, cancellationSignal);
+      await forceGarbageCollection(getCurrentTime, segmentBuffer);
       await segmentBuffer.pushChunk(dataInfos);
     } catch (forcedGCError) {
-      if (TaskCanceller.isCancellationError(forcedGCError)) {
-        throw forcedGCError;
-      }
       const reason = forcedGCError instanceof Error ? forcedGCError.toString() :
                                                       "Could not clean the buffer";
       throw new MediaError("BUFFER_FULL_ERROR", reason);

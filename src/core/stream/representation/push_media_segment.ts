@@ -22,9 +22,8 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
-import { ISegmentParserParsedSegment } from "../../../transports";
+import { IChunkTimeInfo } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
-import TaskCanceller from "../../../utils/task_canceller";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
@@ -40,7 +39,7 @@ const { APPEND_WINDOW_SECURITIES } = config;
  * @param {Object} args
  * @returns {Observable}
  */
-export default function pushMediaSegment<T>(
+export default async function pushMediaSegment<SegmentDataType>(
   { clock$,
     content,
     initSegmentData,
@@ -51,68 +50,57 @@ export default function pushMediaSegment<T>(
                                    manifest : Manifest;
                                    period : Period;
                                    representation : Representation; };
-                        initSegmentData : T | null;
-                        parsedSegment : ISegmentParserParsedSegment<T>;
+                        initSegmentData : SegmentDataType | null;
+                        parsedSegment : {
+                          chunkData : SegmentDataType;
+                          chunkInfos : IChunkTimeInfo | null;
+                          chunkOffset : number;
+                          appendWindow : [ number | undefined,
+                                           number | undefined ];
+                        };
                         segment : ISegment;
-                        segmentBuffer : SegmentBuffer<T>; }
-) : Observable< IStreamEventAddedSegment<T> > {
-  return new Observable((obs) => {
-    if (parsedSegment.chunkData === null) {
-      return obs.complete();
-    }
-    const { chunkData,
-            chunkInfos,
-            chunkOffset,
-            appendWindow } = parsedSegment;
-    const codec = content.representation.getMimeTypeString();
+                        segmentBuffer : SegmentBuffer<SegmentDataType>; }
+) : Promise< IStreamEventAddedSegment<SegmentDataType > > {
+  const { chunkData,
+          chunkInfos,
+          chunkOffset,
+          appendWindow } = parsedSegment;
+  const codec = content.representation.getMimeTypeString();
 
-    // Cutting exactly at the start or end of the appendWindow can lead to
-    // cases of infinite rebuffering due to how browser handle such windows.
-    // To work-around that, we add a small offset before and after those.
-    const safeAppendWindow : [ number | undefined, number | undefined ] = [
-      appendWindow[0] !== undefined ?
-        Math.max(0, appendWindow[0] - APPEND_WINDOW_SECURITIES.START) :
-        undefined,
-      appendWindow[1] !== undefined ?
-        appendWindow[1] + APPEND_WINDOW_SECURITIES.END :
-        undefined,
-    ];
+  // Cutting exactly at the start or end of the appendWindow can lead to
+  // cases of infinite rebuffering due to how browser handle such windows.
+  // To work-around that, we add a small offset before and after those.
+  const safeAppendWindow : [ number | undefined, number | undefined ] = [
+    appendWindow[0] !== undefined ?
+      Math.max(0, appendWindow[0] - APPEND_WINDOW_SECURITIES.START) :
+      undefined,
+    appendWindow[1] !== undefined ?
+      appendWindow[1] + APPEND_WINDOW_SECURITIES.END :
+      undefined,
+  ];
 
-    const data = { initSegment: initSegmentData,
-                   chunk: chunkData,
-                   timestampOffset: chunkOffset,
-                   appendWindow: safeAppendWindow,
-                   codec };
+  const data = { initSegment: initSegmentData,
+                 chunk: chunkData,
+                 timestampOffset: chunkOffset,
+                 appendWindow: safeAppendWindow,
+                 codec };
 
-    let estimatedStart = chunkInfos?.time ?? segment.time;
-    const estimatedDuration = chunkInfos?.duration ?? segment.duration;
-    let estimatedEnd = estimatedStart + estimatedDuration;
-    if (safeAppendWindow[0] !== undefined) {
-      estimatedStart = Math.max(estimatedStart, safeAppendWindow[0]);
-    }
-    if (safeAppendWindow[1] !== undefined) {
-      estimatedEnd = Math.min(estimatedEnd, safeAppendWindow[1]);
-    }
+  let estimatedStart = chunkInfos?.time ?? segment.time;
+  const estimatedDuration = chunkInfos?.duration ?? segment.duration;
+  let estimatedEnd = estimatedStart + estimatedDuration;
+  if (safeAppendWindow[0] !== undefined) {
+    estimatedStart = Math.max(estimatedStart, safeAppendWindow[0]);
+  }
+  if (safeAppendWindow[1] !== undefined) {
+    estimatedEnd = Math.min(estimatedEnd, safeAppendWindow[1]);
+  }
 
-    const inventoryInfos = objectAssign({ segment,
-                                          start: estimatedStart,
-                                          end: estimatedEnd },
-                                        content);
+  const inventoryInfos = objectAssign({ segment,
+                                        start: estimatedStart,
+                                        end: estimatedEnd },
+                                      content);
 
-    const canceller = new TaskCanceller();
-    appendSegmentToBuffer(clock$,
-                          segmentBuffer,
-                          { data, inventoryInfos },
-                          canceller.signal)
-      .then(() => {
-        const buffered = segmentBuffer.getBufferedRanges();
-        obs.next(EVENTS.addedSegment(content, segment, buffered, chunkData));
-        obs.complete();
-      }, (e) => {
-        obs.error(e);
-      });
-    return () => {
-      canceller.cancel();
-    };
-  });
+  await appendSegmentToBuffer(clock$, segmentBuffer, { data, inventoryInfos });
+  const buffered = segmentBuffer.getBufferedRanges();
+  return EVENTS.addedSegment(content, segment, buffered, chunkData);
 }
