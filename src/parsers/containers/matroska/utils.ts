@@ -28,7 +28,6 @@ const CUE_CLUSTER_POSITIONS_ID = 0xF1;
 
 export interface ICuesSegment { time : number;
                                 duration : number;
-                                count : 0;
                                 timescale : number;
                                 range : [number, number]; }
 
@@ -203,7 +202,6 @@ export function getSegmentsFromCues(
     if (i === rawInfos.length - 1) {
       segments.push({
         time: currentSegment.time,
-        count: 0,
         timescale,
         duration: i === 0 ? duration :
                             duration - currentSegment.time,
@@ -212,7 +210,6 @@ export function getSegmentsFromCues(
     } else {
       segments.push({
         time: currentSegment.time,
-        count: 0,
         timescale,
         duration: rawInfos[i + 1].time - currentSegment.time,
         range: [currentSegment.rangeStart, rawInfos[i + 1].rangeStart - 1],

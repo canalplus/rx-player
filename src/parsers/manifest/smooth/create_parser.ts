@@ -352,9 +352,6 @@ function createSmoothStreamingParser(
         media: replaceRepresentationSmoothTokens(path,
                                                  qualityLevel.bitrate,
                                                  qualityLevel.customAttributes),
-        isLive,
-        timeShiftBufferDepth,
-        manifestReceivedTime,
       };
       const mimeType = isNonEmptyString(qualityLevel.mimeType) ?
         qualityLevel.mimeType :
@@ -399,7 +396,9 @@ function createSmoothStreamingParser(
         parserOptions.aggressiveMode;
       const reprIndex = new RepresentationIndex(repIndex, { aggressiveMode,
                                                             isLive,
-                                                            segmentPrivateInfos });
+                                                            manifestReceivedTime,
+                                                            segmentPrivateInfos,
+                                                            timeShiftBufferDepth });
       const representation : IParsedRepresentation = objectAssign({},
                                                                   qualityLevel,
                                                                   { index: reprIndex,

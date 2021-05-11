@@ -161,6 +161,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * `true` if the list of segments is already known.
    * `false` if the initialization segment should be loaded (and the segments
    * added) first.
+   * @see isInitialized method
    */
   private _isInitialized : boolean;
 
@@ -234,14 +235,23 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @param {Number} _up
-   * @param {Number} _to
+   * Get the list of segments that are currently available from the `from`
+   * position, in seconds, ending `dur` seconds after that position.
+   *
+   * Note that if not already done, you might need to "initialize" the
+   * `BaseRepresentationIndex` first so that the list of available segments
+   * is known.
+   *
+   * @see isInitialized for more information on `BaseRepresentationIndex`
+   * initialization.
+   * @param {Number} from
+   * @param {Number} dur
    * @returns {Array.<Object>}
    */
-  getSegments(_up : number, _to : number) : ISegment[] {
+  getSegments(from : number, dur : number) : ISegment[] {
     return getSegmentsFromTimeline(this._index,
-                                   _up,
-                                   _to,
+                                   from,
+                                   dur,
                                    this._isEMSGWhitelisted,
                                    this._scaledPeriodEnd);
   }
@@ -299,6 +309,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * `BaseRepresentationIndex` should just already all be generated.
+   * Return `true` as a default value here.
    * @returns {boolean}
    */
   areSegmentsChronologicallyGenerated() : true {
@@ -306,25 +318,28 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @param {Array.<Object>} nextSegments
+   * No segment in a `BaseRepresentationIndex` are known initially.
+   * It is only defined generally in an "index segment" that will thus need to
+   * be first loaded and parsed.
+   * Until then, this `BaseRepresentationIndex` is considered as `uninitialized`
+   * (@see isInitialized).
+   *
+   * Once that those information are available, the present
+   * `BaseRepresentationIndex` can be "initialized" by adding that parsed
+   * segment information through this method.
+   * @param {Array.<Object>} indexSegments
    * @returns {Array.<Object>}
    */
-  _addSegments(nextSegments : Array<{ time : number;
-                                      duration : number;
-                                      timescale : number;
-                                      count? : number;
-                                      range? : [number, number]; }>
-  ) : void {
-    for (let i = 0; i < nextSegments.length; i++) {
-      _addSegmentInfos(this._index, nextSegments[i]);
+  initializeIndex(indexSegments : IAddedIndexSegment[]) : void {
+    for (let i = 0; i < indexSegments.length; i++) {
+      _addSegmentInfos(this._index, indexSegments[i]);
     }
-    if (!this._isInitialized && this._index.timeline.length > 0) {
-      this._isInitialized = true;
-    }
+    this._isInitialized = true;
   }
 
   /**
-   * Returns true as SegmentBase does not get updated.
+   * Returns `false` as a `BaseRepresentationIndex` should not be dynamic and as
+   * such segments should never fall out-of-sync.
    * @returns {Boolean}
    */
   canBeOutOfSyncError() : false {
@@ -332,7 +347,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Returns true as SegmentBase does not get updated.
+   * Returns `true` as SegmentBase are not dynamic and as such no new segment
+   * should become available in the future.
    * @returns {Boolean}
    */
   isFinished() : true {
@@ -340,6 +356,16 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * No segment in a `BaseRepresentationIndex` are known initially.
+   * It is only defined generally in an "index segment" that will thus need to
+   * be first loaded and parsed.
+   *
+   * Once the index segment or equivalent has been parsed, the `initializeIndex`
+   * method have to be called with the corresponding segment information so the
+   * `BaseRepresentationIndex` can be considered as "initialized" (and so this
+   * method can return `true`).
+   * Until then this method will return `false` and segments linked to that
+   * Representation may be missing.
    * @returns {Boolean}
    */
   isInitialized() : boolean {
@@ -347,13 +373,36 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Replace in-place this `BaseRepresentationIndex` information by the
+   * information from another one.
    * @param {Object} newIndex
    */
   _replace(newIndex : BaseRepresentationIndex) : void {
     this._index = newIndex._index;
+    this._isInitialized = newIndex._isInitialized;
+    this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
+    this._isEMSGWhitelisted = newIndex._isEMSGWhitelisted;
   }
 
   _update() : void {
     log.error("Base RepresentationIndex: Cannot update a SegmentList");
   }
+}
+
+/**
+ * Format of a segment received through the `initialize` method, allowing  to
+ * add segments to a BaseRepresentationIndex.
+ */
+export interface IAddedIndexSegment {
+  /** This segment start time, timescaled. */
+  time : number;
+  /** This segment difference between its end and start time, timescaled. */
+  duration : number;
+  /** Dividing `time` or `duration` with this value allows to obtain seconds. */
+  timescale : number;
+  /**
+   * Start and ending bytes (included) for the segment in the whole ISOBMFF
+   * buffer.
+   */
+  range : [number, number];
 }

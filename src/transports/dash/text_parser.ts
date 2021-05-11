@@ -90,7 +90,7 @@ function parseISOBMFFEmbeddedTextTrack(
         sidxSegments !== null &&
         sidxSegments.length > 0)
     {
-      representation.index._addSegments(sidxSegments);
+      representation.index.initializeIndex(sidxSegments);
     }
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: null,

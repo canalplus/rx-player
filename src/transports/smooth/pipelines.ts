@@ -88,8 +88,8 @@ function addNextSegments(
     if (representation.index instanceof SmoothRepresentationIndex &&
         dlSegment?.privateInfos?.smoothMediaSegment !== undefined)
     {
-      representation.index._addSegments(nextSegments,
-                                        dlSegment.privateInfos.smoothMediaSegment);
+      representation.index.addNewSegments(nextSegments,
+                                          dlSegment.privateInfos.smoothMediaSegment);
     } else {
       log.warn("Smooth Parser: should only encounter SmoothRepresentationIndex");
     }
