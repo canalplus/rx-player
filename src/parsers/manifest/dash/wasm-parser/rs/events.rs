@@ -279,7 +279,7 @@ impl TagName {
 }
 
 use crate::reportable::ReportableAttribute;
-use crate::utils::*;
+use crate::utils;
 
 impl AttributeName {
     #[inline(always)]
@@ -303,7 +303,7 @@ impl AttributeName {
         self,
         attr : &quick_xml::events::attributes::Attribute
     ) {
-        match parse_f64(&attr.value) {
+        match utils::parse_f64(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
@@ -313,7 +313,7 @@ impl AttributeName {
         self,
         attr : &quick_xml::events::attributes::Attribute
     ) {
-        match parse_iso_8601_duration(&attr.value) {
+        match utils::parse_iso_8601_duration(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
@@ -323,7 +323,7 @@ impl AttributeName {
         self,
         attr : &quick_xml::events::attributes::Attribute
     ) {
-        match parse_u64(&attr.value) {
+        match utils::parse_u64(&attr.value) {
             Ok(val) => self.report(val as f64),
             Err(error) => error.report_err(),
         }
@@ -333,7 +333,7 @@ impl AttributeName {
         self,
         attr : &quick_xml::events::attributes::Attribute
     ) {
-        match parse_u64_or_bool(&attr.value) {
+        match utils::parse_u64_or_bool(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
@@ -343,7 +343,7 @@ impl AttributeName {
         self,
         attr : &quick_xml::events::attributes::Attribute
     ) {
-        match parse_bool(&attr.value) {
+        match utils::parse_bool(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
@@ -353,7 +353,7 @@ impl AttributeName {
         self,
         attr : &quick_xml::events::attributes::Attribute
     ) {
-        match parse_byte_range(&attr.value) {
+        match utils::parse_byte_range(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
