@@ -8,7 +8,7 @@ export default ({ state }, { maxSize }) => {
         data.splice(0, (data.length + 1) - maxSize);
       }
       data.push({
-        date: Date.now(),
+        date: performance.now(),
         value: val,
       });
 
