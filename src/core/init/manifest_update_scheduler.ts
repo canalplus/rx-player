@@ -113,37 +113,57 @@ export default function manifestUpdateScheduler({
           response.parse(options)),
         share()));
 
-  // The Manifest always keeps the same Manifest
+  // The Manifest always keeps the same reference
   const { manifest } = initialManifest;
 
   /** Number of consecutive times the parsing has been done in `unsafeMode`. */
   let consecutiveUnsafeMode = 0;
-  function handleManifestRefresh$(
-    manifestInfos: { manifest: Manifest;
-                     sendingTime?: number;
-                     receivedTime? : number;
-                     parsingTime? : number;
-                     updatingTime? : number; }): Observable<IWarningEvent> {
-    const { sendingTime,
-            parsingTime,
-            updatingTime } = manifestInfos;
 
+  return observableDefer(() => handleManifestRefresh$(initialManifest));
+
+  /**
+   * Performs Manifest refresh (recursively) when it judges it is time to do so.
+   * @param {Object} manifestRequestInfos - Various information linked to the
+   * Manifest loading and parsing operations.
+   * @returns {Observable} - Observable which will automatically refresh the
+   * Manifest on subscription. Can also emit warnings when minor errors are
+   * encountered.
+   */
+  function handleManifestRefresh$(
+    { sendingTime, parsingTime, updatingTime } : { sendingTime?: number;
+                                                   parsingTime? : number;
+                                                   updatingTime? : number; }
+  ) : Observable<IWarningEvent> {
     /**
-     * Total time taken to fully update the last Manifest.
+     * Total time taken to fully update the last Manifest, in milliseconds.
      * Note: this time also includes possible requests done by the parsers.
      */
     const totalUpdateTime = parsingTime !== undefined ?
       parsingTime + (updatingTime ?? 0) :
       undefined;
 
-    // Only perform parsing in `unsafeMode` when the last full parsing took a
-    // lot of time and do not go higher than the maximum consecutive time.
+    /**
+     * "unsafeMode" is a mode where we unlock advanced Manifest parsing
+     * optimizations with the added risk to lose some information.
+     * `unsafeModeEnabled` is set to `true` when the `unsafeMode` is enabled.
+     *
+     * Only perform parsing in `unsafeMode` when the last full parsing took a
+     * lot of time and do not go higher than the maximum consecutive time.
+     */
     const unsafeModeEnabled = consecutiveUnsafeMode > 0 ?
       consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE :
       totalUpdateTime !== undefined ?
         (totalUpdateTime >= MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE) :
         false;
 
+    /** Time elapsed since the beginning of the Manifest request, in milliseconds. */
+    const timeSinceRequest = sendingTime === undefined ? 0 :
+                                                         performance.now() - sendingTime;
+
+    /** Minimum update delay we should not go below, in milliseconds. */
+    const minInterval = Math.max(minimumManifestUpdateInterval - timeSinceRequest, 0);
+
+    /** Emit when the RxPlayer determined that a refresh should be done. */
     const internalRefresh$ = scheduleRefresh$
       .pipe(mergeMap(({ completeRefresh, delay, canUseUnsafeMode }) => {
         const unsafeMode = canUseUnsafeMode && unsafeModeEnabled;
@@ -153,46 +173,16 @@ export default function manifestUpdateScheduler({
           .pipe(mapTo({ completeRefresh, unsafeMode }));
       }));
 
-    const timeSinceRequest = sendingTime === undefined ? 0 :
-                                                         performance.now() - sendingTime;
-    const minInterval = Math.max(minimumManifestUpdateInterval - timeSinceRequest, 0);
-
-    let autoRefresh$;
-    if (manifest.lifetime === undefined || manifest.lifetime < 0) {
-      autoRefresh$ = EMPTY;
-    } else {
-      let autoRefreshInterval = manifest.lifetime * 1000 - timeSinceRequest;
-      if (totalUpdateTime !== undefined) {
-        if (manifest.lifetime < 3 && totalUpdateTime >= 100) {
-          const defaultDelay = (3 - manifest.lifetime) * 1000 + autoRefreshInterval;
-          const newInterval =
-            Math.max(defaultDelay,
-                     Math.max(autoRefreshInterval, 0) + totalUpdateTime);
-          log.info("MUS: Manifest update rythm is too frequent. Postponing next request.",
-                   autoRefreshInterval,
-                   newInterval);
-          autoRefreshInterval = newInterval;
-        } else if (totalUpdateTime >= (manifest.lifetime * 1000) / 10) {
-          const newInterval = Math.max(autoRefreshInterval, 0) + totalUpdateTime;
-          log.info("MUS: Manifest took too long to parse. Postponing next request",
-                   autoRefreshInterval,
-                   newInterval);
-          autoRefreshInterval = newInterval;
-        }
-      }
-      autoRefresh$ = observableTimer(Math.max(autoRefreshInterval, minInterval))
-        .pipe(mapTo({ completeRefresh: false, unsafeMode: unsafeModeEnabled }));
-    }
-
+    /** Emit when the Manifest tells us that it has "expired". */
     const expired$ = manifest.expired === null ?
       EMPTY :
       observableTimer(minInterval)
         .pipe(mergeMapTo(observableFrom(manifest.expired)),
               mapTo({ completeRefresh: true, unsafeMode: unsafeModeEnabled }));
 
-    // Emit when the manifest should be refreshed. Either when:
-    //   - A Stream asks for it to be refreshed
-    //   - its lifetime expired.
+    /** Emit when the Manifest should normally be refreshed. */
+    const autoRefresh$ = createAutoRefreshObservable();
+
     return observableMerge(autoRefresh$, internalRefresh$, expired$).pipe(
       take(1),
       mergeMap(({ completeRefresh,
@@ -204,9 +194,70 @@ export default function manifestUpdateScheduler({
         }
         return handleManifestRefresh$(evt);
       }));
-  }
 
-  return observableDefer(() => handleManifestRefresh$(initialManifest));
+    /**
+     * Create an Observable that will emit when the Manifest needs to be
+     * refreshed according to the Manifest's internal properties (parsing
+     * time is also taken into account in this operation to avoid refreshing too
+     * often).
+     * @returns {Observable}
+     */
+    function createAutoRefreshObservable() : Observable<{
+      completeRefresh: boolean;
+      unsafeMode: boolean;
+    }> {
+      if (manifest.lifetime === undefined || manifest.lifetime < 0) {
+        return EMPTY;
+      }
+
+      /** Regular refresh delay as asked by the Manifest. */
+      const regularRefreshDelay = manifest.lifetime * 1000 - timeSinceRequest;
+
+      /** Actually choosen delay to refresh the Manifest. */
+      let actualRefreshInterval : number;
+
+      if (totalUpdateTime === undefined) {
+        actualRefreshInterval = regularRefreshDelay;
+      } else if (manifest.lifetime < 3 && totalUpdateTime >= 100) {
+        // If Manifest update is very frequent and we take time to update it,
+        // postpone it according to the maximum value between:
+        actualRefreshInterval = Math.max(
+          // Take 3 seconds as a default safe value for a base interval.
+          3000 - timeSinceRequest,
+
+          // Add update time to the original interval.
+          Math.max(regularRefreshDelay, 0) + totalUpdateTime,
+
+          // Limit the postponment to a very high value relative to
+          // `regularRefreshDelay`.
+          // This avoid perpetually postponing a Manifest update when
+          // performance seems to have been abysmal one time.
+          regularRefreshDelay * 6);
+        log.info("MUS: Manifest update rythm is too frequent. Postponing next request.",
+                 regularRefreshDelay,
+                 actualRefreshInterval);
+      } else if (totalUpdateTime >= (manifest.lifetime * 1000) / 10) {
+        // If Manifest updating time is very long relative to its lifetime,
+        // postpone it:
+        actualRefreshInterval = Math.max(
+          // Just add the update time to the original waiting time
+          Math.max(regularRefreshDelay, 0) + totalUpdateTime,
+
+          // Limit the postponment to a very high value relative to
+          // `regularRefreshDelay`.
+          // This avoid perpetually postponing a Manifest update when
+          // performance seems to have been abysmal one time.
+          regularRefreshDelay * 6);
+        log.info("MUS: Manifest took too long to parse. Postponing next request",
+                 actualRefreshInterval,
+                 actualRefreshInterval);
+      } else {
+        actualRefreshInterval = regularRefreshDelay;
+      }
+      return observableTimer(Math.max(actualRefreshInterval, minInterval))
+        .pipe(mapTo({ completeRefresh: false, unsafeMode: unsafeModeEnabled }));
+    }
+  }
 
   /**
    * Refresh the Manifest.
