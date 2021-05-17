@@ -1,5 +1,5 @@
 use crate::errors::{ ParsingError, Result };
-use crate::utils::parse_u64;
+use crate::utils;
 
 /// Represents a parsed <S> node, itself in a <SegmentTimeline> node from an
 /// MPD.
@@ -49,14 +49,15 @@ impl SegmentObject {
                     let key = attr.key;
                     match key {
                         b"t" => {
-                            segment_obj.start = parse_u64(&attr.value)? as f64;
+                            segment_obj.start = utils::parse_u64(&attr.value)? as f64;
                             has_t = true;
                         },
                         b"d" => {
-                            segment_obj.duration = parse_u64(&attr.value)? as f64;
+                            segment_obj.duration = utils::parse_u64(&attr.value)? as f64;
                         },
                         b"r" => {
-                            segment_obj.repeat_count = parse_u64(&attr.value)? as f64;
+                            // Note i64 instead of u64 as r can be equal to "-1"
+                            segment_obj.repeat_count = utils::parse_i64(&attr.value)? as f64;
                         },
                         _ => {},
                     }
