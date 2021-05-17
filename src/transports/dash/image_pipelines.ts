@@ -31,12 +31,12 @@ import {
 } from "../types";
 
 /**
+ * Loads an image segment.
  * @param {Object} args
  * @returns {Observable}
  */
 export function imageLoader(
-  { segment,
-    url } : ISegmentLoaderArguments
+  { segment, url } : ISegmentLoaderArguments
 ) : Observable< ISegmentLoaderEvent< ArrayBuffer | null > > {
   if (segment.isInit || url === null) {
     return observableOf({ type: "data-created" as const,
@@ -48,8 +48,9 @@ export function imageLoader(
 }
 
 /**
+ * Parses an image segment.
  * @param {Object} args
- * @returns {Observable}
+ * @returns {Object}
  */
 export function imageParser(
   { response,

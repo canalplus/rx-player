@@ -62,7 +62,6 @@ function manifestNeedsToBeRefreshed(emsgs: IEMSG[],
  * Get wrapped inband events and manifest refresh event from
  * parsed ISOBMFF EMSG boxes.
  * @param {Array.<Object>} parsedEMSGs
- * @param {Object} segment
  * @param {undefined | number} manifestPublishTime
  * @returns {Object}
  */
