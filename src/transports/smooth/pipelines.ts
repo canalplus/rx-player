@@ -273,7 +273,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       initTimescale,
     } : ISegmentParserArguments<string|ArrayBuffer|Uint8Array|null>
     ) : ISegmentParserParsedInitSegment<null>  |
-        ISegmentParserParsedSegment<ITextTrackSegmentData>
+        ISegmentParserParsedSegment<ITextTrackSegmentData | null>
     {
       const { manifest, adaptation, representation, segment } = content;
       const { language } = adaptation;
@@ -427,7 +427,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     parser(
       { response, content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : ISegmentParserParsedInitSegment<null> |
-        ISegmentParserParsedSegment<IImageTrackSegmentData>
+        ISegmentParserParsedSegment<IImageTrackSegmentData | null>
     {
       const { data, isChunked } = response;
 

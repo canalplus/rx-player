@@ -126,7 +126,7 @@ export interface IInitializeArguments {
   /** Limit the frequency of Manifest updates. */
   minimumManifestUpdateInterval : number;
   /** Interface allowing to load segments */
-  segmentFetcherCreator : SegmentFetcherCreator<any>;
+  segmentFetcherCreator : SegmentFetcherCreator;
   /** Perform an internal seek */
   setCurrentTime: (time: number) => void;
   /** Emit the playback rate (speed) set by the user. */
