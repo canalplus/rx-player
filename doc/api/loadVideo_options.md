@@ -748,7 +748,7 @@ considered stable:
     });
     ```
 
-  - __initialManifest__ (`string|Document|Object`):
+  - __initialManifest__ (`string|Document|Object|ArrayBuffer`):
 
     Manifest that will be initially used (before any potential Manifest
     refresh).
