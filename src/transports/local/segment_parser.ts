@@ -63,7 +63,7 @@ export default function segmentParser({
   const chunkData = new Uint8Array(data);
   const isWEBM = isWEBMEmbeddedTrack(representation);
   let protectionDataUpdate = false;
-  if (isWEBM) {
+  if (!isWEBM) {
     const psshInfo = takePSSHOut(chunkData);
     if (psshInfo.length > 0) {
       protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
