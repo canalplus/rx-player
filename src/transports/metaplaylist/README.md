@@ -1,7 +1,7 @@
 # MetaPlaylist #################################################################
 
-The MetaPlaylist is a specific kind of transport: a playlist of different
-Manifest.
+The MetaPlaylist is a specific kind of transport: a playlist of multiple
+Manifests.
 
 
 ## How the original Manifest files are considered ##############################

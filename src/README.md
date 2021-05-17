@@ -43,7 +43,7 @@ To better understand the player's architecture, you can find below a
  decryption                      | ~  playback and                                    | ~
                                  | ~  create/connect                                  | ~
                                  | ~  modules                                         | ~
-Stream (src/core/stream)         | ~                                                  | ~
+Stream (./core/stream)           | ~                                                  | ~
 +--------------------------------|-~-----------------------------+                    | ~
 |                                V ~                             |                    | ~
 |  Create the right         +-------------------------------+    |                    | ~
