@@ -82,11 +82,14 @@ directory) by calling `npm run lint:tests`.
 <a name="code-types"></a>
 ### Types ######################################################################
 
+#### General TypeScript rules ##################################################
+
 We try to be as strict as possible with types:
 
   - the `any` type should be avoided
 
-  - the `as` keyword should also be avoided as much as possible.
+  - the `as` TypeScript keyword, used for type casting, should also be avoided
+    as much as possible.
 
   - the `is` keyword is fine in some situations, but simpler solutions should be
     preferred.
@@ -94,8 +97,70 @@ We try to be as strict as possible with types:
 This is to be sure we can detect as much as possible type errors automatically
 with TypeScript.
 
-Also, created TypeScript's `type` and `interface` should all be named beginning
-with the letter I, for easier identification purposes.
+### `type` and `interface` typing
+
+TypeScript's `type` and `interface` should all be named beginning with the
+letter `I`, for easier identification purposes\*:
+```
+interface IMyObject {
+  someKey: string;
+}
+
+type IStringOrNumber = string |
+                       number;
+```
+
+\*We know that this rule is a controversial subject amongst TypeScript
+developpers, yet we still decide to enforce it for now.
+
+#### Generic parameters typing #################################################
+
+Generic parameters are usually named in order `T` (for the first generic
+parameter), then `U` (if there's two), then `V` (if there's three):
+
+Examples:
+```
+type IMyGenericType<T> = Array<T>;
+
+type IMyGenericType2<T, U> = Promise<T> |
+                             U;
+
+function mergeThree<T, U, V>(
+  arg1: T,
+  arg2: U,
+  arg3: V
+) : T & U & V {
+  return Object.assign({}, arg1, arg2, arg3);
+}
+```
+
+Some exceptions exist like for things like key-values couples, which can be named
+respectively `K` and `V`:
+```
+type IMyMap<K, V> = Map<K, V>;
+```
+
+This is a general convention for generic parameters inherited from Java, and
+re-used by TypeScript, and it helps identifying which type is a generic
+parameter vs which type is a real type (no prefix) vs which type is a type
+definition (prefixed by `I`).
+
+If what they correspond to is not obvious (and if there's more than one, it
+might well be), you're encouraged to add a more verbose and clear name, that you
+should prefix by `T`:
+```
+function loadResource<TResourceFormat>(
+  url : string
+) : Promise<TResourceFormat> {
+  // ...
+}
+```
+
+However note that typing rules for generic parameters is a very minor
+consideration and may not always need to be respected depending on the code it
+is applied on.
+In the end, it will be up to the RxPlayer's maintainers to decide that those
+rules should be enforced or not on a given code.
 
 
 <a name="code-forbidden"></a>

@@ -780,7 +780,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     maxRetryOffline: offlineRetry });
 
       /** Interface used to download segments. */
-      const segmentFetcherCreator = new SegmentFetcherCreator<any>(
+      const segmentFetcherCreator = new SegmentFetcherCreator(
         transportPipelines,
         { lowLatencyMode,
           maxRetryOffline: offlineRetry,
