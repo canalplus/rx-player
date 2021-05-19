@@ -154,9 +154,9 @@ export interface ISmoothRepresentationIndexContextInformation {
    * if `true`, the `SmoothRepresentationIndex` will return segments even if
    * we're not sure they had time to be generated on the server side.
    *
-   * This is a somewhat ugly option, only here for very specific Canal+
-   * use-cases for now (most of all for Peer-to-Peer efficiency), scheduled to
-   * be removed in a next major version.
+   * TODO(Paul B.) This is a somewhat ugly option, only here for very specific
+   * Canal+ use-cases for now (most of all for Peer-to-Peer efficiency),
+   * scheduled to be removed in a next major version.
    */
   aggressiveMode : boolean;
   /**
@@ -625,8 +625,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Add new segments to a `SmoothRepresentationIndex`, usually parsed from a
-   * tftf ISOBMFF box.
+   * Add new segments to a `SmoothRepresentationIndex`.
    * @param {Array.<Object>} nextSegments - The segment information parsed.
    * @param {Object} segment - Information on the segment which contained that
    * new segment information.
