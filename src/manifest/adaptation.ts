@@ -112,6 +112,9 @@ export default class Adaptation {
   /** `true` if at least one Representation is in a supported codec. `false` otherwise. */
   public isSupported : boolean;
 
+  /** Tells if the track is a trick mode track. */
+  public isTrickMode? : boolean;
+
   /**
    * Array containing every errors that happened when the Adaptation has been
    * created, in the order they have happened.
@@ -133,6 +136,7 @@ export default class Adaptation {
     const { representationFilter, isManuallyAdded } = options;
     this.parsingErrors = [];
     this.id = parsedAdaptation.id;
+    this.isTrickMode = parsedAdaptation.isTrickMode;
 
     if (!isSupportedAdaptationType(parsedAdaptation.type)) {
       log.info("Manifest: Not supported adaptation type", parsedAdaptation.type);
