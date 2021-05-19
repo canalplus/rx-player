@@ -164,13 +164,15 @@ export interface IParsedAdaptation {
    * video with sign language.
    */
   isSignInterpreted? : boolean;
+  /** Tells if the track is a trick mode track. */
+  isTrickMode? : boolean;
   /**
    * Language the `Adaptation` is in.
    * Not set if unknown or if it makes no sense for the current track.
    */
   language?: string;
   /**
-   * Trickmode tracks attached to the adaptation.
+   * TrickMode tracks attached to the adaptation.
    */
   trickModeTracks?: IParsedAdaptation[];
 }

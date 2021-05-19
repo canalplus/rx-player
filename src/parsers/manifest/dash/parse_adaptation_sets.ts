@@ -189,7 +189,7 @@ function getAdaptationID(
     idString += "-si";
   }
   if (isTrickModeTrack) {
-    idString += "-trickmode";
+    idString += "-trickMode";
   }
   if (isNonEmptyString(adaptation.attributes.contentType)) {
     idString += `-${adaptation.attributes.contentType}`;
@@ -410,7 +410,8 @@ export default function parseAdaptationSets(
       const parsedAdaptationSet : IParsedAdaptation =
         { id: adaptationID,
           representations,
-          type };
+          type,
+          isTrickMode: isTrickModeTrack };
       if (adaptation.attributes.language != null) {
         parsedAdaptationSet.language = adaptation.attributes.language;
       }
