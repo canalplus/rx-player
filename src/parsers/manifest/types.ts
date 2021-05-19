@@ -15,6 +15,7 @@
  */
 
 import { IRepresentationIndex } from "../../manifest";
+import { IHDRInformation } from "../../manifest/types";
 import { IParsedStreamEventData } from "./dash/node_parsers/EventStream";
 
 export interface IManifestStreamEvent { start: number;
@@ -110,6 +111,10 @@ export interface IParsedRepresentation {
    * Not set if unknown or if it makes no sense (e.g. for audio).
    */
   width?: number;
+  /**
+   * Information about the HDR characteristic of a content.
+   */
+  hdrInfo?: IHDRInformation;
 }
 
 /** Every possible types an Adaptation can have. */
@@ -296,3 +301,4 @@ export interface IParsedManifest {
   /** URIs where the manifest can be refreshed by order of importance. */
   uris?: string[];
 }
+
