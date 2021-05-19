@@ -16,12 +16,14 @@
 
 import log from "../../../log";
 import { Adaptation } from "../../../manifest";
+import { IHDRInformation } from "../../../manifest/types";
 import arrayFind from "../../../utils/array_find";
 import objectAssign from "../../../utils/object_assign";
 import {
   IContentProtections,
   IParsedRepresentation,
 } from "../types";
+import { getWEBMHDRInformation } from "./get_hdr_information";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
   IAdaptationSetIntermediateRepresentation,
@@ -71,6 +73,8 @@ export interface IAdaptationInfos {
   end? : number;
   /** Whether the Manifest can evolve with time. */
   isDynamic : boolean;
+  /** Manifest DASH profiles used for signalling some features */
+  manifestProfiles?: string;
   /**
    * Parent parsed SegmentTemplate elements.
    * Sorted by provenance from higher level (e.g. Period) to lower-lever (e.g.
@@ -95,6 +99,39 @@ export interface IAdaptationInfos {
    * Use with moderation.
    */
   unsafelyBaseOnPreviousAdaptation : Adaptation | null;
+}
+
+/**
+ * Extract HDR information from manifest and codecs.
+ * @param {Object}
+ * @returns {Object | undefined}
+ */
+function getHDRInformation(
+  { adaptationProfiles,
+    manifestProfiles,
+    codecs,
+  }: { adaptationProfiles?: string;
+       manifestProfiles?: string;
+       codecs?: string; }
+): undefined | IHDRInformation {
+  const profiles = (adaptationProfiles ?? "") + (manifestProfiles ?? "");
+  if (codecs === undefined) {
+    return undefined;
+  }
+  if (
+    profiles.indexOf(
+      "http://dashif.org/guidelines/dash-if-uhd#hevc-hdr-pq10") !== -1
+  ) {
+    if (codecs === "hvc1.2.4.L153.B0" ||
+        codecs === "hev1.2.4.L153.B0") {
+      return { colorDepth: 10,
+               eotf: "pq",
+               colorSpace: "rec2020" };
+    }
+  }
+  if (/^vp(08|09|10)/.exec(codecs)) {
+    return getWEBMHDRInformation(codecs);
+  }
 }
 
 /**
@@ -243,6 +280,11 @@ export default function parseRepresentations(
         parsedRepresentation.contentProtections = contentProtections;
       }
     }
+
+    parsedRepresentation.hdrInfo =
+      getHDRInformation({ adaptationProfiles: adaptation.attributes.profiles,
+                          manifestProfiles: adaptationInfos.manifestProfiles,
+                          codecs });
 
     parsedRepresentations.push(parsedRepresentation);
   }
