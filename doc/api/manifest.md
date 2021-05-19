@@ -345,6 +345,13 @@ _type_: ``string|undefined``
 The represesentation frame rate for this Representation. It defines either the
 number of frames per second as an integer (24), or as a ratio (24000 / 1000).
 
+#### hdrInfo
+
+_type_: ``Object|undefined``
+
+Information about the hdr characteristics of the track.
+(see [HDR support documentation](./hdr.md#hdrinfo))
+
 <a name="representation-index"></a>
 ## Structure of a RepresentationIndex Object ###################################
 

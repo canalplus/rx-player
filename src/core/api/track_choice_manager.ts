@@ -26,6 +26,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
+import { IHDRInformation } from "../../manifest/types";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import normalizeLanguage from "../../utils/languages";
@@ -86,7 +87,8 @@ interface ITMVideoRepresentation { id : string|number;
                                    width? : number;
                                    height? : number;
                                    codec? : string;
-                                   frameRate? : string; }
+                                   frameRate? : string;
+                                   hdrInfo?: IHDRInformation; }
 
 /** Video track returned by the TrackChoiceManager. */
 export interface ITMVideoTrack { id : number|string;
@@ -1245,9 +1247,9 @@ function getPeriodItem(
  * @returns {Object}
  */
 function parseVideoRepresentation(
-  { id, bitrate, frameRate, width, height, codec } : Representation
+  { id, bitrate, frameRate, width, height, codec, hdrInfo } : Representation
 ) : ITMVideoRepresentation {
-  return { id, bitrate, frameRate, width, height, codec };
+  return { id, bitrate, frameRate, width, height, codec, hdrInfo };
 }
 
 /**

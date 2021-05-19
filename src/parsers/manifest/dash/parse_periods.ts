@@ -55,6 +55,7 @@ export interface IPeriodsContextInfos {
   clockOffset? : number;
   duration? : number;
   isDynamic : boolean;
+  manifestProfiles?: string;
   /**
    * Time (in terms of `performance.now`) at which the XML file containing this
    * Period was received.
@@ -140,6 +141,7 @@ export default function parsePeriods(
                           manifestBoundsCalculator,
                           end: periodEnd,
                           isDynamic,
+                          manifestProfiles: contextInfos.manifestProfiles,
                           receivedTime,
                           segmentTemplate: periodIR.children.segmentTemplate,
                           start: periodStart,

@@ -357,6 +357,10 @@ properties:
 
     - ``frameRate`` (``string|undefined``): The video framerate.
 
+    - ``hdrInfo`` (``Object|undefined``) Information about the hdr
+      characteristics of the track.
+      (see [HDR support documentation](./hdr.md#hdrinfo))
+
 A `null` payload means that video track has been disabled.
 
 This event only concerns the currently-playing Period.
