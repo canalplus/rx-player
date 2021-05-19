@@ -138,9 +138,8 @@ export default function request<T>(
                                                   options.timeout,
   };
 
-  const { onProgress, cancelSignal } = options;
-
   return new Promise((resolve, reject) => {
+    const { onProgress, cancelSignal } = options;
     const { url,
             headers,
             responseType,
@@ -169,16 +168,32 @@ export default function request<T>(
 
     const sendingTime = performance.now();
 
+    // Handle request cancellation
+    let deregisterCancellationListener : (() => void) | null = null;
+    if (cancelSignal !== undefined) {
+      deregisterCancellationListener = cancelSignal
+        .register(function abortRequest(err : CancellationError) {
+          if (!isNullOrUndefined(xhr) && xhr.readyState !== 4) {
+            xhr.abort();
+          }
+          reject(err);
+        });
+
+      if (cancelSignal.isCancelled) {
+        return;
+      }
+    }
+
     xhr.onerror = function onXHRError() {
-      if (cancelSignal !== undefined) {
-        cancelSignal.removeListener(abortRequest);
+      if (deregisterCancellationListener !== null) {
+        deregisterCancellationListener();
       }
       reject(new RequestError(url, xhr.status, "ERROR_EVENT", xhr));
     };
 
     xhr.ontimeout = function onXHRTimeout() {
-      if (cancelSignal !== undefined) {
-        cancelSignal.removeListener(abortRequest);
+      if (deregisterCancellationListener !== null) {
+        deregisterCancellationListener();
       }
       reject(new RequestError(url, xhr.status, "TIMEOUT", xhr));
     };
@@ -197,8 +212,8 @@ export default function request<T>(
 
     xhr.onload = function onXHRLoad(event : ProgressEvent) {
       if (xhr.readyState === 4) {
-        if (cancelSignal !== undefined) {
-          cancelSignal.removeListener(abortRequest);
+        if (deregisterCancellationListener !== null) {
+          deregisterCancellationListener();
         }
         if (xhr.status >= 200 && xhr.status < 300) {
           const receivedTime = performance.now();
@@ -242,20 +257,7 @@ export default function request<T>(
       }
     };
 
-    if (cancelSignal !== undefined) {
-      if (cancelSignal.isCancelled) {
-        return;
-      }
-      cancelSignal.addListener(abortRequest);
-    }
     xhr.send();
-
-    function abortRequest(err : CancellationError) {
-      if (!isNullOrUndefined(xhr) && xhr.readyState !== 4) {
-        xhr.abort();
-      }
-      reject(err);
-    }
   });
 }
 

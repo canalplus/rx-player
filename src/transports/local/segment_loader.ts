@@ -50,7 +50,7 @@ function loadInitSegment(
     }) => {
       hasFinished = true;
       if (!cancelSignal.isCancelled) {
-        cancelSignal.removeListener(abortLoader);
+        cancelSignal.deregister(abortLoader);
         res({ resultType: "segment-loaded",
               resultData: { responseData: _args.data,
                             size: _args.size,
@@ -65,14 +65,14 @@ function loadInitSegment(
     const reject = (err? : Error) => {
       hasFinished = true;
       if (!cancelSignal.isCancelled) {
-        cancelSignal.removeListener(abortLoader);
+        cancelSignal.deregister(abortLoader);
         rej(err);
       }
     };
 
     const abort = customSegmentLoader({ resolve, reject });
 
-    cancelSignal.addListener(abortLoader);
+    cancelSignal.register(abortLoader);
     /**
      * The logic to run when this loader is cancelled while pending.
      * @param {Error} err
@@ -109,7 +109,7 @@ function loadSegment(
       size? : number;
       duration? : number;
     }) => {
-      cancelSignal.removeListener(abortLoader);
+      cancelSignal.deregister(abortLoader);
       hasFinished = true;
       if (!cancelSignal.isCancelled) {
         res({ resultType: "segment-loaded",
@@ -124,7 +124,7 @@ function loadSegment(
      * @param {*} err - The corresponding error encountered
      */
     const reject = (err? : Error) => {
-      cancelSignal.removeListener(abortLoader);
+      cancelSignal.deregister(abortLoader);
       hasFinished = true;
       if (!cancelSignal.isCancelled) {
         rej(err);
@@ -133,7 +133,7 @@ function loadSegment(
 
     const abort = customSegmentLoader(segment, { resolve, reject });
 
-    cancelSignal.addListener(abortLoader);
+    cancelSignal.register(abortLoader);
     /**
      * The logic to run when this loader is cancelled while pending.
      * @param {Error} err

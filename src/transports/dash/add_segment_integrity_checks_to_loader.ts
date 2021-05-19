@@ -35,11 +35,11 @@ export default function addSegmentIntegrityChecks<T>(
     return new Promise((res, rej) => {
 
       const canceller = new TaskCanceller();
-      function onCheckCancellation(err : CancellationError) {
-        canceller.cancel();
-        rej(err);
-      }
-      initialCancelSignal.addListener(onCheckCancellation);
+      const unregisterCancelLstnr = initialCancelSignal
+        .register(function onCheckCancellation(err : CancellationError) {
+          canceller.cancel();
+          rej(err);
+        });
 
       /**
        * If the data's seems to be corrupted, cancel the loading task and reject
@@ -55,7 +55,7 @@ export default function addSegmentIntegrityChecks<T>(
         try {
           checkISOBMFFIntegrity(new Uint8Array(data), content.segment.isInit);
         } catch (err) {
-          initialCancelSignal.removeListener(onCheckCancellation);
+          unregisterCancelLstnr();
           canceller.cancel();
           rej(err);
         }
@@ -73,7 +73,7 @@ export default function addSegmentIntegrityChecks<T>(
         if (canceller.isUsed) {
           return;
         }
-        initialCancelSignal.removeListener(onCheckCancellation);
+        unregisterCancelLstnr();
 
         if (info.resultType === "segment-loaded") {
           cancelAndRejectOnBadIntegrity(info.resultData.responseData);
@@ -83,7 +83,7 @@ export default function addSegmentIntegrityChecks<T>(
       }, (error : unknown) => {
         // The segmentLoader's cancellations cases are all handled here
         if (!TaskCanceller.isCancellationError(error)) {
-          initialCancelSignal.removeListener(onCheckCancellation);
+          unregisterCancelLstnr();
           rej(error);
         }
       });

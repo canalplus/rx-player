@@ -17,11 +17,11 @@
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import log from "../../../log";
-import { ISegmentLoaderContent } from "./create_segment_loader";
 import ObservablePrioritizer, { ITaskEvent } from "./prioritizer";
 import {
   ISegmentFetcher,
   ISegmentFetcherEvent,
+  ISegmentLoaderContent,
 } from "./segment_fetcher";
 
 /**

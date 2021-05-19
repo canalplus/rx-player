@@ -41,37 +41,76 @@ import noop from "./noop";
  * ```js
  * function runAsyncTask(cancellationSignal) {
  *  // Let's say this function returns a Promise (this is not mandatory however)
- *  return Promise((res, rej) => {
+ *  return Promise((resolve, reject) => {
  *    // In this example, we'll even catch the case where an asynchronous task
  *    // was already cancelled before being called.
  *    // This ensure that no code will run if that's the case.
  *    if (cancellationSignal.isCancelled) {
  *      // Here we're rejecting the CancellationError to notify the caller that
  *      // this error was due to the task being aborted.
- *      rej(cancellationSignal.cancellationError);
+ *      reject(cancellationSignal.cancellationError);
  *      return;
  *    }
  *
- *    // perform asynchronous task...
+ *    // Example:
+ *    // performing asynchronous task and registering callbacks on success/failure.
+ *    const myCancellableTask = doSomeAsyncTasks()
+ *      .onFinished(onTaskFinished);
+ *      .onFailed(onTaskFailed);
  *
  *    // Run a callback when/if the corresponding `TaskCanceller` was triggered.
  *    // Run immediately if the TaskCanceller was already triggered.
- *    cancellationSignal.addListener(onCancellation);
+ *    const deregisterSignal = cancellationSignal.register(onCancellation);
  *
+ *    // Callback called on cancellation (if this task was cancelled while the
+ *    // cancellationSignal's listener is still registered).
+ *    // The `error` in argument is linked to that cancellation. It is usually
+ *    // expected that the same Error instance is used when rejecting Promises.
  *    function onCancellation(error : CancellationError) {
- *      // abort asynchronous task (if not already finished)...
+ *      // abort asynchronous task
+ *      myCancellableTask.cancel();
  *
  *      // In this example, reject the current pending Promise
- *      rej(CancellationError);
+ *      reject(CancellationError);
+ *    }
+ *
+ *    // Callback called after the asynchronous task has finished with success.
+ *    function onTaskFinished() {
+ *      // Stop listening to the cancellationSignal
+ *      deregisterSignal();
+ *
+ *      // Resolve the Promise
+ *      resolve();
+ *    }
+ *
+ *    // Callback called after the asynchronous task has finished with failure.
+ *    function onTaskFailed(someError : Error) {
+ *      // Stop listening to the cancellationSignal
+ *      deregisterSignal();
+ *
+ *      // Resolve the Promise
+ *      reject(error);
  *    }
  *  });
  * }
  * ```
  *
- * The code asking for cancellation can trigger a cancellation at any time (even
- * before the signal was given):
+ * The code asking for cancellation can then trigger a cancellation at any time
+ * (even before the signal was given) and listen to possible CancellationErrors
+ * to know when it was cancelled.
  * ```js
- * canceller.cancel();
+ * const canceller = new TaskCanceller();
+ *
+ * runAsyncTask(canceller.signal)
+ *   .then(() => { console.log("Task succeeded!"); )
+ *   .catch((err) => {
+ *      if (TaskCanceller.isCancellationError(err)) {
+ *        console.log("Task cancelled!");
+ *      } else {
+ *        console.log("Task failed:", err);
+ *      }
+ *   });
+ * canceller.cancel(); // Cancel the task, calling registered callbacks
  * ```
  * @class TaskCanceller
  */
@@ -191,19 +230,28 @@ export class CancellationSignal {
    * task was aborted.
    * You can use this error to notify callers that the task has been aborted,
    * for example through a rejected Promise.
+   *
+   * @return {Function} - Removes that cancellation listener. You can call this
+   * once the current task has ended without cancellation.
    */
-  public addListener(fn : (error : CancellationError) => void) : void {
+  public register(fn : ICancellationListener) : () => void {
     if (this.isCancelled) {
       assert(this.cancellationError !== null);
       fn(this.cancellationError);
     }
     this._listeners.push(fn);
+    return () => this.deregister(fn);
   }
 
   /**
+   * De-register a function registered through the `register` function.
+   * Do nothing if that function wasn't registered.
+   *
+   * You can call this method when using the return value of `register` is not
+   * practical.
    * @param {Function} fn
    */
-  public removeListener(fn : (error : CancellationError) => void) : void {
+  public deregister(fn : ICancellationListener) : void {
     if (this.isCancelled) {
       return;
     }
@@ -215,6 +263,12 @@ export class CancellationSignal {
     }
   }
 }
+
+/**
+ * Helper type allowing a `CancellationSignal` to register to a cancellation asked
+ * by a `TaskCanceller`.
+ */
+export type ICancellationListener = (error : CancellationError) => void;
 
 /**
  * Error created when a task is cancelled through the TaskCanceller.
@@ -238,12 +292,6 @@ export class CancellationError extends Error {
     this.message = "This task was cancelled.";
   }
 }
-
-/**
- * Helper type allowing a `CancellationSignal` to listen to a cancellation asked
- * by a `TaskCanceller`.
- */
-type ICancellationListener = (error : CancellationError) => void;
 
 /**
  * Helper function allowing communication between a `TaskCanceller` and a

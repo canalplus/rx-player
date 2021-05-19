@@ -60,7 +60,7 @@ export default function callCustomManifestLoader(
         if (hasFallbacked || cancelSignal.isCancelled) {
           return;
         }
-        cancelSignal.removeListener(abortCustomLoader);
+        cancelSignal.deregister(abortCustomLoader);
         const receivedTime =
           _args.receivingTime !== undefined ? _args.receivingTime - timeAPIsDelta :
                                               undefined;
@@ -82,7 +82,7 @@ export default function callCustomManifestLoader(
       const reject = (err : unknown) : void => {
         hasFinished = true;
         if (!hasFallbacked && !cancelSignal.isCancelled) {
-          cancelSignal.removeListener(abortCustomLoader);
+          cancelSignal.deregister(abortCustomLoader);
           rej(err);
         }
       };
@@ -94,7 +94,7 @@ export default function callCustomManifestLoader(
       const fallback = () => {
         hasFallbacked = true;
         if (!cancelSignal.isCancelled) {
-          cancelSignal.removeListener(abortCustomLoader);
+          cancelSignal.deregister(abortCustomLoader);
           fallbackManifestLoader(url, cancelSignal).then(res, rej);
         }
       };
@@ -102,7 +102,8 @@ export default function callCustomManifestLoader(
       const callbacks = { reject, resolve, fallback };
       const abort = customManifestLoader(url, callbacks);
 
-      cancelSignal.addListener(abortCustomLoader);
+      cancelSignal.register(abortCustomLoader);
+
       /**
        * The logic to run when the custom loader is cancelled while pending.
        * @param {Error} err

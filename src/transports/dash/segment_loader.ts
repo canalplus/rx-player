@@ -145,7 +145,7 @@ export default function generateSegmentLoader(
         if (hasFallbacked || cancelSignal.isCancelled) {
           return;
         }
-        cancelSignal.removeListener(abortCustomLoader);
+        cancelSignal.deregister(abortCustomLoader);
         res({ resultType: "segment-loaded",
               resultData: { responseData: _args.data,
                             size: _args.size,
@@ -161,7 +161,7 @@ export default function generateSegmentLoader(
         if (hasFallbacked || cancelSignal.isCancelled) {
           return;
         }
-        cancelSignal.removeListener(abortCustomLoader);
+        cancelSignal.deregister(abortCustomLoader);
         rej(err);
       };
 
@@ -184,7 +184,7 @@ export default function generateSegmentLoader(
        */
       const fallback = () => {
         hasFallbacked = true;
-        cancelSignal.removeListener(abortCustomLoader);
+        cancelSignal.deregister(abortCustomLoader);
         regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal)
           .then(res, rej);
       };
@@ -192,7 +192,7 @@ export default function generateSegmentLoader(
       const customCallbacks = { reject, resolve, progress, fallback };
       const abort = customSegmentLoader(args, customCallbacks);
 
-      cancelSignal.addListener(abortCustomLoader);
+      cancelSignal.register(abortCustomLoader);
 
       /**
        * The logic to run when the custom loader is cancelled while pending.

@@ -170,10 +170,11 @@ export default class ManifestFetcher {
                                            IManifestFetcherWarningEvent>
   {
     return new Observable((obs) => {
-      /** `true` if the loading pipeline is already completely executed. */
-      let hasFinished = false;
       const pipelines = this._pipelines;
       const requestUrl = url ?? this._manifestUrl;
+
+      /** `true` if the loading pipeline is already completely executed. */
+      let hasFinishedLoading = false;
 
       /** Allows to cancel the loading operation. */
       const canceller = new TaskCanceller();
@@ -188,10 +189,7 @@ export default class ManifestFetcher {
 
       loadingPromise
         .then(response => {
-          if (canceller.isUsed) {
-            return;
-          }
-          hasFinished = true;
+          hasFinishedLoading = true;
           obs.next({
             type: "response",
             parse: (parserOptions : IManifestFetcherParserOptions) => {
@@ -202,14 +200,15 @@ export default class ManifestFetcher {
         })
         .catch((err : unknown) => {
           if (canceller.isUsed) {
+            // Cancellation has already been handled by RxJS
             return;
           }
-          hasFinished = true;
+          hasFinishedLoading = true;
           obs.error(errorSelector(err));
         });
 
       return () => {
-        if (!hasFinished) {
+        if (!hasFinishedLoading) {
           canceller.cancel();
         }
       };
@@ -366,7 +365,6 @@ export default class ManifestFetcher {
   }
 
   /**
-   * XXX TODO Renaming IBackoffSettings?
    * Construct "backoff settings" that can be used with a range of functions
    * allowing to perform multiple request attempts
    * @param {Function} onRetry

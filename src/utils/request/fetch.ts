@@ -113,12 +113,11 @@ export default function fetchRequest(
     abortFetch();
   }, requestTimeout);
 
-  options.cancelSignal.addListener(abortRequest);
-
-  function abortRequest(err : CancellationError) {
-    cancellation = err;
-    abortFetch();
-  }
+  const deregisterCancelLstnr = options.cancelSignal
+    .register(function abortRequest(err : CancellationError) {
+      cancellation = err;
+      abortFetch();
+    });
 
   return fetch(options.url,
                { headers,
@@ -168,7 +167,7 @@ export default function fetchRequest(
         options.onData(dataInfo);
         return readBufferAndSendEvents();
       } else if (data.done) {
-        options.cancelSignal.removeListener(abortRequest);
+        deregisterCancelLstnr();
         const receivedTime = performance.now();
         const duration = receivedTime - sendingTime;
         return { duration,
@@ -184,7 +183,7 @@ export default function fetchRequest(
     if (cancellation !== null) {
       throw cancellation;
     }
-    options.cancelSignal.removeListener(abortRequest);
+    deregisterCancelLstnr();
     if (timeouted) {
       log.warn("Fetch: Request timeouted.");
       throw new RequestError(options.url, 0, NetworkErrorTypes.TIMEOUT);

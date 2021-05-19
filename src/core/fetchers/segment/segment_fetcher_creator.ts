@@ -24,12 +24,12 @@ import {
   IABRRequestProgressEvent,
 } from "../../abr";
 import { IBufferType } from "../../segment_buffers";
-import getSegmentBackoffOptions from "./get_segment_backoff_options";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
 import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
+  getSegmentFetcherOptions,
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
@@ -127,7 +127,7 @@ export default class SegmentFetcherCreator {
                         IABRRequestEndEvent |
                         IABRMetricsEvent>
   ) : IPrioritizedSegmentFetcher<any> {
-    const backoffOptions = getSegmentBackoffOptions(bufferType, this._backoffOptions);
+    const backoffOptions = getSegmentFetcherOptions(bufferType, this._backoffOptions);
     const pipelines = this._transport[bufferType];
 
     // Types are very complicated here as they are per-type of buffer.

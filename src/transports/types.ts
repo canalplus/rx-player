@@ -188,7 +188,7 @@ export interface ISegmentPipeline<
  *
  * When cancelled, this loader should stop any pending operation (such as an
  * HTTP request) and the Promise returned should reject immediately with a
- * `CancellationError`.
+ * `CancellationError`, generated through this CancellationSignal object.
  * @param {Object} callbacks - Callbacks called on various loader events.
  * @returns {Promise.<Object>} - Promise resolving when it has finished loading
  * the segment.

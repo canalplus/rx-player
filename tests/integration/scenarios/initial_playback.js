@@ -221,16 +221,16 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
       url: manifestInfos.url,
     });
 
-    await sleep(1);
+    await sleep(10);
     expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(10);
     expect(xhrMock.getLockedXHR().length).to.equal(2); // init segments
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(10);
     expect(xhrMock.getLockedXHR().length).to.equal(2); // first two segments
     await xhrMock.flush(); // first two segments
-    await sleep(1);
+    await sleep(10);
     expect(xhrMock.getLockedXHR().length).to.equal(0); // nada
     expect(player.getVideoLoadedTime()).to.be.above(4);
     expect(player.getVideoLoadedTime()).to.be.below(5);

@@ -181,7 +181,7 @@ const generateSegmentLoader = ({
           return;
         }
 
-        cancelSignal.removeListener(abortCustomLoader);
+        cancelSignal.deregister(abortCustomLoader);
         hasFinished = true;
         const isMP4 = isMP4EmbeddedTrack(content.representation);
         if (!isMP4 || checkMediaSegmentIntegrity !== true) {
@@ -207,7 +207,7 @@ const generateSegmentLoader = ({
       const reject = (err : unknown) => {
         hasFinished = true;
         if (!hasFallbacked && !cancelSignal.isCancelled) {
-          cancelSignal.removeListener(abortCustomLoader);
+          cancelSignal.deregister(abortCustomLoader);
           rej(err);
         }
       };
@@ -226,7 +226,7 @@ const generateSegmentLoader = ({
 
       const fallback = () => {
         hasFallbacked = true;
-        cancelSignal.removeListener(abortCustomLoader);
+        cancelSignal.deregister(abortCustomLoader);
         regularSegmentLoader(url,
                              content,
                              callbacks,
@@ -238,7 +238,7 @@ const generateSegmentLoader = ({
       const customCallbacks = { reject, resolve, fallback, progress };
       const abort = customSegmentLoader(args, customCallbacks);
 
-      cancelSignal.addListener(abortCustomLoader);
+      cancelSignal.register(abortCustomLoader);
 
       /**
        * The logic to run when the custom loader is cancelled while pending.
