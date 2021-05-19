@@ -23,7 +23,10 @@ import {
 } from "../parsers/manifest";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import { IRepresentationIndex } from "./representation_index";
-import { IAdaptationType } from "./types";
+import {
+  IAdaptationType,
+  IHDRInformation,
+} from "./types";
 
 /**
  * Normalized Representation structure.
@@ -77,6 +80,11 @@ class Representation {
   public contentProtections? : IContentProtections;
 
   /**
+   * If the track is HDR, give the characteristics of the content
+   */
+  public hdrInfo?: IHDRInformation;
+
+  /**
    * Whether we are able to decrypt this Representation / unable to decrypt it or
    * if we don't know yet:
    *   - if `true`, it means that we know we were able to decrypt this
@@ -98,15 +106,15 @@ class Representation {
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
 
-    if (args.height != null) {
+    if (args.height !== undefined) {
       this.height = args.height;
     }
 
-    if (args.width != null) {
+    if (args.width !== undefined) {
       this.width = args.width;
     }
 
-    if (args.mimeType != null) {
+    if (args.mimeType !== undefined) {
       this.mimeType = args.mimeType;
     }
 
@@ -114,8 +122,12 @@ class Representation {
       this.contentProtections = args.contentProtections;
     }
 
-    if (args.frameRate != null) {
+    if (args.frameRate !== undefined) {
       this.frameRate = args.frameRate;
+    }
+
+    if (args.hdrInfo !== undefined) {
+      this.hdrInfo = args.hdrInfo;
     }
 
     this.index = args.index;
