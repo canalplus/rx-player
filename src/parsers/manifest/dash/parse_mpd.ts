@@ -247,6 +247,7 @@ function parseCompleteIntermediateRepresentation(
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
+                          manifestProfiles: mpdIR.attributes.profiles,
                           receivedTime: args.manifestReceivedTime,
                           timeShiftBufferDepth,
                           unsafelyBaseOnPreviousManifest,

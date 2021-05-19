@@ -51,6 +51,8 @@ export interface IAdaptationSetsContextInfos {
   end? : number;
   /** Whether the Manifest can evolve with time. */
   isDynamic : boolean;
+  /** Manifest DASH profiles used for signaling some features */
+  manifestProfiles?: string;
   /**
    * Time (in terms of `performance.now`) at which the XML file containing
    * this AdaptationSet was received.
@@ -310,6 +312,7 @@ export default function parseAdaptationSets(
       manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
       end: periodInfos.end,
       isDynamic: periodInfos.isDynamic,
+      manifestProfiles: periodInfos.manifestProfiles,
       parentSegmentTemplates,
       receivedTime: periodInfos.receivedTime,
       start: periodInfos.start,
