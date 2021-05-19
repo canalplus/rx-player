@@ -1197,6 +1197,10 @@ return an object with the following properties:
 
     - ``frameRate`` (``string|undefined``): The video frame rate.
 
+    - ``hdrInfo`` (``Object|undefined``) Information about the hdr
+      characteristics of the track.
+      (see [HDR support documentation](./hdr.md#hdrinfo))
+
   - ``signInterpreted`` (``Boolean|undefined``): If set to `true`, the track is
     known to contain an interpretation in sign language.
     If set to `false`, the track is known to not contain that type of content.
@@ -1376,6 +1380,10 @@ Each of the objects in the returned array have the following properties:
       in, as announced in the corresponding Manifest.
 
     - ``frameRate`` (``string|undefined``): The video framerate.
+
+    - ``hdrInfo`` (``Object|undefined``) Information about the hdr
+      characteristics of the track.
+      (see [HDR support documentation](./hdr.md#hdrinfo))
 
   - ``signInterpreted`` (``Boolean|undefined``): If set to `true`, the track is
     known to contain an interpretation in sign language.
