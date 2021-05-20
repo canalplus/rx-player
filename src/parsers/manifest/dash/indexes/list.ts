@@ -212,17 +212,18 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Returns true if, based on the arguments, the index should be refreshed.
-   * (If we should re-fetch the manifest)
+   * Returns whether the Manifest should be refreshed based on the
+   * `ListRepresentationIndex`'s state and the time range the player is
+   * currently considering.
    * @param {Number} _fromTime
-   * @param {Number} toTime
+   * @param {Number} _toTime
    * @returns {Boolean}
    */
-  shouldRefresh(_fromTime : number, toTime : number) : boolean {
-    const { timescale, duration, list } = this._index;
-    const scaledTo = toTime * timescale;
-    const i = Math.floor(scaledTo / duration);
-    return i < 0 || i >= list.length;
+  shouldRefresh(_fromTime : number, _toTime : number) : boolean {
+    // DASH Manifests are usually refreshed through other means, i.e. thanks to
+    // the `minimumUpdatePeriod` attribute.
+    // Moreover, SegmentList are usually only found in static MPDs.
+    return false;
   }
 
   /**
