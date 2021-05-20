@@ -49,7 +49,6 @@ export interface ISmoothInitSegmentPrivateInfos {
 /**
  * Supplementary information specific to Smooth media segments (that is, every
  * segments but the initialization segment).
- * Contains every information needed to generate a media segment.
  */
 export interface ISmoothSegmentPrivateInfos {
   /**
