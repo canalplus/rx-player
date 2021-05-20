@@ -27,7 +27,6 @@ import {
 // eslint-disable-next-line max-len
 import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import inferAdaptationType from "./infer_adaptation_type";
-import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
   IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
@@ -41,12 +40,17 @@ import resolveBaseURLs from "./resolve_base_urls";
 export interface IAdaptationSetsContextInfos {
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
+  /** Define the start of a dynamic manifest timeline */
+  availabilityStartTime: number;
   /** availabilityTimeOffset of the concerned period. */
   availabilityTimeOffset: number;
   /** Eventual URLs from which every relative URL will be based on. */
   baseURLs : string[];
-  /** Allows to obtain the first available position of a content. */
-  manifestBoundsCalculator : ManifestBoundsCalculator;
+  /**
+   * Offset, in milliseconds, the client's clock (in terms of `performance.now`)
+   * has relatively to the server's
+   */
+  clockOffset? : number;
   /* End time of the current period, in seconds. */
   end? : number;
   /** Whether the Manifest can evolve with time. */
@@ -306,8 +310,9 @@ export default function parseAdaptationSets(
     const adaptationInfos : IAdaptationInfos = {
       aggressiveMode: periodInfos.aggressiveMode,
       availabilityTimeOffset,
+      availabilityStartTime: periodInfos.availabilityStartTime,
       baseURLs: resolveBaseURLs(periodInfos.baseURLs, adaptationChildren.baseURLs),
-      manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
+      clockOffset: periodInfos.clockOffset,
       end: periodInfos.end,
       isDynamic: periodInfos.isDynamic,
       parentSegmentTemplates,

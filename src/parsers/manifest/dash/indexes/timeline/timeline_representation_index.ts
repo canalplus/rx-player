@@ -36,7 +36,6 @@ import {
 } from "../../../utils/index_helpers";
 import isSegmentStillAvailable from "../../../utils/is_segment_still_available";
 import updateSegmentTimeline from "../../../utils/update_segment_timeline";
-import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
 import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
 import isPeriodFulfilled from "../is_period_fulfilled";
@@ -137,8 +136,13 @@ export interface ITimelineIndexIndexArgument {
 
 /** Aditional context needed by a SegmentTimeline RepresentationIndex. */
 export interface ITimelineIndexContextArgument {
-  /** Allows to obtain the minimum and maximum positions of a content. */
-  manifestBoundsCalculator : ManifestBoundsCalculator;
+  /** Define the start of a dynamic manifest timeline */
+  availabilityStartTime: number;
+  /**
+   * Offset, in milliseconds, the client's clock (in terms of `performance.now`)
+   * has relatively to the server's
+   */
+  clockOffset?: number;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
   periodStart : number;
   /** End of the period concerned by this RepresentationIndex, in seconds. */
@@ -156,6 +160,8 @@ export interface ITimelineIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
+  /** Depth of the buffer for the whole content, in seconds. */
+  timeShiftBufferDepth?: number;
   /**
    * The parser should take this previous version of the
    * `TimelineRepresentationIndex` - which was from the same Representation
@@ -167,6 +173,7 @@ export interface ITimelineIndexContextArgument {
   unsafelyBaseOnPreviousRepresentation : Representation | null;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
+  minimumUpdatePeriod?: number;
 }
 
 export interface ILastSegmentInformation {
@@ -178,6 +185,9 @@ export interface ILastSegmentInformation {
 }
 
 export default class TimelineRepresentationIndex implements IRepresentationIndex {
+  /** Define the start of a dynamic manifest timeline */
+  private _availabilityStartTime: number;
+
   /** Underlying structure to retrieve segment information. */
   protected _index : ITimelineIndex;
 
@@ -193,8 +203,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /** Whether this RepresentationIndex can change over time. */
   private _isDynamic : boolean;
 
-  /** Retrieve the maximum and minimum position of the whole content. */
-  private _manifestBoundsCalculator : ManifestBoundsCalculator;
+  /** */
+  private _minimumUpdatePeriod?: number;
+
+  private _clockOffset?: number;
+
+  /** Depth of the buffer for the whole content, in seconds. */
+  private _timeShiftBufferDepth?: number;
 
   /**
    * Lazily get the S elements from this timeline.
@@ -224,14 +239,21 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     timelineParser : () => HTMLCollection,
     context : ITimelineIndexContextArgument
   ) {
-    const { manifestBoundsCalculator,
+    const { availabilityStartTime,
+            clockOffset,
+            minimumUpdatePeriod,
             isDynamic,
             representationBaseURLs,
             representationId,
             representationBitrate,
+            timeShiftBufferDepth,
             periodStart,
             periodEnd,
             isEMSGWhitelisted } = context;
+
+    this._availabilityStartTime = availabilityStartTime;
+    this._clockOffset = clockOffset;
+    this._timeShiftBufferDepth = timeShiftBufferDepth;
     const timescale = index.timescale ?? 1;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
@@ -241,13 +263,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const scaledStart = periodStart * timescale;
     const indexTimeOffset = presentationTimeOffset - scaledStart;
 
-    this._manifestBoundsCalculator = manifestBoundsCalculator;
 
     this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._lastUpdate = context.receivedTime == null ?
                                  performance.now() :
                                  context.receivedTime;
 
+    this._minimumUpdatePeriod = minimumUpdatePeriod;
     this._unsafelyBaseOnPreviousIndex = null;
     if (context.unsafelyBaseOnPreviousRepresentation !== null &&
         context.unsafelyBaseOnPreviousRepresentation.index
@@ -353,7 +375,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
   /**
    * Returns the ending time, in seconds, of the last segment currently
-   * available.
+   * available. If the manifest seems to have expired, return an assumption
+   * of what could be the last position.
    * Returns null if nothing is in the index
    * @returns {Number|null}
    */
@@ -364,8 +387,20 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
     const lastTime = TimelineRepresentationIndex.getIndexEnd(this._index.timeline,
                                                              this._scaledPeriodStart);
-    return lastTime === null ? null :
-                               fromIndexTime(lastTime, this._index);
+    if (lastTime === null) {
+      return null;
+    }
+    const lastPositionAtManifestUpdate = fromIndexTime(lastTime, this._index);
+    if (this._minimumUpdatePeriod === undefined) {
+      return lastPositionAtManifestUpdate;
+    }
+    const manifestExpirationTime = this._lastUpdate + this._minimumUpdatePeriod;
+    const now = performance.now();
+    if (now <= manifestExpirationTime) {
+      return lastPositionAtManifestUpdate;
+    }
+    const elapsedTimeSinceManifestExpiration = now - manifestExpirationTime;
+    return lastPositionAtManifestUpdate + elapsedTimeSinceManifestExpiration;
   }
 
   /**
@@ -438,7 +473,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
-    this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
   }
 
   /**
@@ -500,9 +534,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-    const firstPosition = this._manifestBoundsCalculator.estimateMinimumBound();
-    if (firstPosition == null) {
-      return; // we don't know yet
+    const firstPosition = this._estimateMinimumTime();
+    if (firstPosition === null) {
+      this._index.timeline = [];
+      return;
     }
     const scaledFirstPosition = toIndexTime(firstPosition, this._index);
     clearTimelineFromPosition(this._index.timeline, scaledFirstPosition);
@@ -573,5 +608,62 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                                                  prevTimeline,
                                                  this._scaledPeriodStart);
 
+  }
+
+ /**
+  * Try to guess the "last position", which is the last position
+  * available in the manifest in seconds, and the "position time", the time
+  * (`performance.now()`) in which the last position was collected.
+  *
+  * These values allows to retrieve at any time in the future the new last
+  * position, by substracting the position time to the last position, and
+  * adding to it the new value returned by `performance.now`.
+  *
+  * The last position and position time are returned by this function if and only if
+  * it would indicate a last position superior to the `minimumTime` given.
+  *
+  * This last part allows for example to detect which Period is likely to be the
+  * "current" one in multi-periods contents. By giving the Period's start as a
+  * `minimumTime`, you ensure that you will get a value only if the current time
+  * is in that period.
+  *
+  * This is useful as guessing the live time from the clock can be seen as a last
+  * resort. By detecting that the current time is before the currently considered
+  * Period, we can just parse and look at the previous Period. If we can guess
+  * the live time more directly from that previous one, we might be better off
+  * than just using the clock.
+  */
+  private _estimateMinimumTime(): number | null {
+    if (!this._isDynamic || this._timeShiftBufferDepth === undefined) {
+      return 0;
+    }
+    const maximumBound = this._estimateLiveEdge();
+    if (maximumBound === null) {
+      return null;
+    }
+    const minimumBound = maximumBound - this._timeShiftBufferDepth;
+    return minimumBound;
+  }
+
+  private _estimateLiveEdge(): number | null {
+    const periodStart = this._scaledPeriodStart + this._index.indexTimeOffset;
+    if (this._clockOffset !== undefined) {
+      const lastPosition = this._clockOffset / 1000 -
+        this._availabilityStartTime;
+      const positionTime = performance.now() / 1000;
+      const timeInSec = positionTime + lastPosition;
+      if (timeInSec >= periodStart) {
+        return timeInSec;
+      }
+    } else {
+      const now = Date.now() / 1000;
+      if (now >= periodStart) {
+        // log.warn("DASH Parser: no clock synchronization mechanism found." +
+        //          " Using the system clock instead.");
+        const lastPosition = now - this._availabilityStartTime;
+        return lastPosition;
+      }
+    }
+    return null;
   }
 }

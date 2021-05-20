@@ -412,12 +412,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
     const firstPosition = firstPeriod.getContentStart();
     const firstPeriodStart = firstPeriod.start;
-    const boundedMinimum = this.isLive && this._timeShiftBufferDepth !== null ?
-      this.getMaximumPosition() - this._timeShiftBufferDepth :
-      undefined;
     return Math.max(firstPosition ?? 0,
-                    firstPeriodStart,
-                    boundedMinimum ?? 0);
+                    firstPeriodStart);
   }
 
   /**
@@ -425,27 +421,15 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMaximumPosition() : number {
-    const getDefaultLiveMaximumPosition = () => {
-      if (this.clockOffset === undefined) {
-        return (Date.now() / 1000) -
-               (this.availabilityStartTime ?? 0);
-      }
-      const serverTime = performance.now() + this.clockOffset;
-      return (serverTime / 1000) - (this.availabilityStartTime ?? 0);
-    };
-
     const getLastIndexPosition = () => {
       if (this.periods.length === 0) {
-        return undefined;
+        return null;
       }
       for (let i = this.periods.length - 1; i >= 0; i--) {
         const period = this.periods[i];
         const lastPosition = period.getContentEnd();
-        if (lastPosition === undefined) {
-          return undefined;
-        }
         if (lastPosition === null) {
-          break;
+          continue;
         }
         return lastPosition;
       }
@@ -454,16 +438,20 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
     const lastPosition = getLastIndexPosition();
 
-    if (!this.isDynamic) {
-      const lastPeriod = this.periods[this.periods.length - 1];
-      const lastPeriodTheoriticalEnd = lastPeriod?.end;
-      return Math.min(lastPosition ?? Infinity,
-                      lastPeriodTheoriticalEnd ?? Infinity,
-                      this._mediaPresentationDuration ?? Infinity);
+    /**
+     * TODO: Here, it means that one of the track has no content. So, we consider
+     * that no content exits on the manifest. We should logically return null
+     * here but we can't break the API.
+     */
+    if (lastPosition === null) { // no content !
+      return 0;
     }
 
-    return Math.min(lastPosition ?? Infinity,
-                    getDefaultLiveMaximumPosition());
+    const lastPeriod = this.periods[this.periods.length - 1];
+    const lastPeriodTheoriticalEnd = lastPeriod?.end;
+    return Math.min(lastPosition,
+                    lastPeriodTheoriticalEnd ?? Infinity,
+                    this._mediaPresentationDuration ?? Infinity);
   }
 
   /**

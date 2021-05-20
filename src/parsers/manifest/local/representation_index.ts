@@ -100,11 +100,11 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @returns {Number|undefined}
+   * @returns {Number|null}
    */
-  getFirstPosition() : number|undefined {
+  getFirstPosition() : number|null {
     if (this._index.segments.length === 0) {
-      return undefined;
+      return null;
     }
     const firstSegment = this._index.segments[0];
     if (this._minimumTime === undefined) {
@@ -114,11 +114,11 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @returns {Number|undefined}
+   * @returns {Number|null}
    */
-  getLastPosition() : number|undefined {
+  getLastPosition() : number|null {
     if (this._index.segments.length === 0) {
-      return undefined;
+      return null;
     }
     const lastSegment = this._index.segments[this._index.segments.length - 1];
     return Math.min(lastSegment.time, this._maximumTime);

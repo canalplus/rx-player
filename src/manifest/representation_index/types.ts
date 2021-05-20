@@ -223,19 +223,17 @@ export interface IRepresentationIndex {
    * Returns the starting time, in seconds, of the earliest segment currently
    * available in this index.
    * Returns `null` if nothing is in the index
-   * Returns `undefined` if we cannot know this value.
    * @returns {Number|null}
    */
-  getFirstPosition() : number | null | undefined;
+  getFirstPosition() : number | null;
 
   /**
    * Returns the ending time, in seconds, of the last segment currently
    * available in this index.
    * Returns `null` if nothing is in the index
-   * Returns `undefined` if we cannot know this value.
-   * @returns {Number|null|undefined}
+   * @returns {Number|null}
    */
-  getLastPosition() : number | null | undefined;
+  getLastPosition() : number | null;
 
   /**
    * Returns `true` if a Segment returned by this index is still considered

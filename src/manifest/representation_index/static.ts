@@ -63,18 +63,18 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Returns first position in index.
-   * @returns {undefined}
+   * @returns {number}
    */
-  getFirstPosition() : undefined {
-    return ;
+  getFirstPosition() : number {
+    return 0;
   }
 
   /**
    * Returns last position in index.
-   * @returns {undefined}
+   * @returns {number}
    */
-  getLastPosition() : undefined {
-    return ;
+  getLastPosition() : number {
+    return Number.MAX_VALUE;
   }
 
   /**

@@ -239,19 +239,16 @@ export default class Adaptation {
    * representation indexes.
    * The function will return the end position if and only if every
    * representation has a finished index and a defined end.
-   * @returns {undefined | number}
+   * @returns {null | number}
    */
-  getContentEnd(): null | undefined | number {
+  getContentEnd(): null | number {
     let maximumPosition = null;
     const len = this.representations.length;
     for (let i = 0; i < len; i++) {
       const representation = this.representations[i];
       const lastPosition = representation.index.getLastPosition();
-      if (lastPosition === undefined) {
-        return undefined;
-      }
       if (lastPosition === null) {
-        continue;
+        return null;
       }
       if (isNullOrUndefined(maximumPosition) ||
           lastPosition < maximumPosition) {
@@ -266,17 +263,14 @@ export default class Adaptation {
  * representation indexes.
  * The function will return the start position if and only if every
  * representation has a finished index and a defined start.
- * @returns {undefined | number}
+ * @returns {null | number}
  */
-  getContentStart(): null | undefined | number {
+  getContentStart(): null | number {
     let minimumPosition = null;
     const len = this.representations.length;
     for (let i = 0; i < len; i++) {
       const representation = this.representations[i];
       const firstPosition = representation.index.getFirstPosition();
-      if (firstPosition === undefined) {
-        return undefined;
-      }
       if (firstPosition === null) {
         continue;
       }

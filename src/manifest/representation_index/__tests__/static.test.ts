@@ -37,12 +37,12 @@ describe("manifest - StaticRepresentationIndex", () => {
 
   it("should return no first position", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getFirstPosition()).toBe(undefined);
+    expect(staticRI.getFirstPosition()).toBe(0);
   });
 
   it("should return no last position", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getLastPosition()).toBe(undefined);
+    expect(staticRI.getLastPosition()).toBe(Number.MAX_VALUE);
   });
 
   it("should never be refreshed", () => {

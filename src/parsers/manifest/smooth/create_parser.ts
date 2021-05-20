@@ -530,7 +530,6 @@ function createSmoothStreamingParser(
 
     let suggestedPresentationDelay : number|undefined;
     let availabilityStartTime : number|undefined;
-    let minimumTime : number | undefined;
 
     const firstVideoAdaptation = adaptations.video !== undefined ?
       adaptations.video[0] :
@@ -553,11 +552,11 @@ function createSmoothStreamingParser(
           const lastVideoTimeReference =
             firstVideoRepresentation.index.getLastPosition();
 
-          if (firstVideoTimeReference != null) {
+          if (firstVideoTimeReference !== null) {
             firstTimeReferences.push(firstVideoTimeReference);
           }
 
-          if (lastVideoTimeReference != null) {
+          if (lastVideoTimeReference !== null) {
             lastTimeReferences.push(lastVideoTimeReference);
           }
         }
@@ -571,11 +570,11 @@ function createSmoothStreamingParser(
           const lastAudioTimeReference =
             firstAudioRepresentation.index.getLastPosition();
 
-          if (firstAudioTimeReference != null) {
+          if (firstAudioTimeReference !== null) {
             firstTimeReferences.push(firstAudioTimeReference);
           }
 
-          if (lastAudioTimeReference != null) {
+          if (lastAudioTimeReference !== null) {
             lastTimeReferences.push(lastAudioTimeReference);
           }
         }
@@ -594,25 +593,20 @@ function createSmoothStreamingParser(
     const duration = (manifestDuration != null && +manifestDuration !== 0) ?
       (+manifestDuration / timescale) : undefined;
 
-    let maximumTime;
+    let periodStart;
+    let periodEnd;
     if (isLive) {
       suggestedPresentationDelay = parserOptions.suggestedPresentationDelay;
       availabilityStartTime = referenceDateTime;
 
-      minimumTime = firstTimeReference ?? availabilityStartTime;
-      maximumTime = lastTimeReference !== undefined ?
-        lastTimeReference :
-        (Date.now() / 1000 - availabilityStartTime);
+      periodStart = 0;
     } else {
-      minimumTime = firstTimeReference ?? 0;
-      maximumTime = lastTimeReference !== undefined ? lastTimeReference :
-                    duration !== undefined ? minimumTime + duration :
-                                             Infinity;
+      periodStart = firstTimeReference ?? 0;
+      periodEnd = lastTimeReference !== undefined ? lastTimeReference :
+                  duration !== undefined ? periodStart + duration :
+                                           Infinity;
     }
 
-    const periodStart = isLive ? 0 :
-                                 minimumTime;
-    const periodEnd = isLive ? undefined : maximumTime;
     const manifest = {
       availabilityStartTime: availabilityStartTime === undefined ?
         0 :

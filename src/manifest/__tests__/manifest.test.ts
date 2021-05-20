@@ -22,7 +22,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
-describe("Manifest - Manifest", () => {
+describe.only("Manifest - Manifest", () => {
   const fakeLogger = { warn: jest.fn(() => undefined),
                        info: jest.fn(() => undefined) };
   const fakeGenerateNewId = jest.fn(() => "fakeId");
@@ -58,7 +58,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(undefined);
-    expect(manifest.getMaximumPosition()).toEqual(10);
+    expect(manifest.getMaximumPosition()).toEqual(0);
     expect(manifest.getMinimumPosition()).toEqual(0);
     expect(manifest.parsingErrors).toEqual([]);
     expect(manifest.periods).toEqual([]);
@@ -258,7 +258,7 @@ describe("Manifest - Manifest", () => {
       return 8;
     };
     const fakeGetContentEnd1 = function() {
-      return;
+      return 10;
     };
 
     const fakePeriod = jest.fn((period) => {
@@ -413,7 +413,7 @@ describe("Manifest - Manifest", () => {
                                                     default: fakeUpdatePeriodInPlace }));
 
     const oldManifestArgs = { availabilityStartTime: 5,
-                              mediaPresentationDuration: 20,
+                              mediaPresentationDuration: 40,
                               id: "man",
                               isDynamic: false,
                               isLive: false,
@@ -461,7 +461,6 @@ describe("Manifest - Manifest", () => {
                                 lifetime: 14,
                                 parsingErrors: [new Error("c"), new Error("d")],
                                 suggestedPresentationDelay: 100,
-                                _timeShiftBufferDepth: 5,
                                 periods: [newPeriod1, newPeriod2],
                                 uris: ["url3", "url4"] };
 
@@ -473,7 +472,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isLive).toEqual(true);
     expect(manifest.lifetime).toEqual(14);
     expect(manifest.parsingErrors).toEqual([new Error("c"), new Error("d")]);
-    expect(manifest.getMinimumPosition()).toEqual(40 - 5);
+    expect(manifest.getMinimumPosition()).toEqual(4);
     expect(manifest.getMaximumPosition()).toEqual(40);
     expect(manifest.suggestedPresentationDelay).toEqual(100);
     expect(manifest.uris).toEqual(["url3", "url4"]);

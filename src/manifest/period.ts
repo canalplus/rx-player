@@ -188,22 +188,19 @@ export default class Period {
   }
 
   /**
-   * Get the last position where there shall be content
-   * on the period, whatever is the chosen adaptation
-   * @returns {null | undefined | number}
+   * Get the last position where there shall be content on the period, whatever
+   * is the chosen adaptation
+   * @returns {null | number}
    */
-  getContentEnd(): null | undefined | number {
+  getContentEnd(): null | number {
     let maximumPositionFromAdaptations: null | number = null;
     const { video, audio } = this.adaptations;
     if (video !== undefined) {
       for (let i = 0; i < video.length; i++) {
         const videoAdaptation = video[i];
         const lastPosition = videoAdaptation.getContentEnd();
-        if (lastPosition === undefined) {
-          return undefined;
-        }
         if (lastPosition === null) {
-          break;
+          return null;
         }
         if (isNullOrUndefined(maximumPositionFromAdaptations) ||
             lastPosition < maximumPositionFromAdaptations) {
@@ -215,11 +212,8 @@ export default class Period {
       for (let i = 0; i < audio.length; i++) {
         const audioAdaptation = audio[i];
         const lastPosition = audioAdaptation.getContentEnd();
-        if (lastPosition === undefined) {
-          return undefined;
-        }
         if (lastPosition === null) {
-          break;
+          return null;
         }
         if (isNullOrUndefined(maximumPositionFromAdaptations) ||
             lastPosition < maximumPositionFromAdaptations) {
@@ -237,22 +231,19 @@ export default class Period {
   }
 
   /**
-   * Get the first position where there shall be content
-   * on the period, whatever is the chosen adaptation
+   * Get the first position where there shall be content on the period, whatever
+   * is the chosen adaptation
    * @returns {number | null}
    */
-  getContentStart(): number | null | undefined {
+  getContentStart(): number | null {
     let minimumPositionFromAdaptations: null | number = null;
     const { video, audio } = this.adaptations;
     if (video !== undefined) {
       for (let i = 0; i < video.length; i++) {
         const videoAdaptation = video[i];
         const firstPosition = videoAdaptation.getContentStart();
-        if (firstPosition === undefined) {
-          return undefined;
-        }
         if (firstPosition === null) {
-          break;
+          return null;
         }
         if (isNullOrUndefined(minimumPositionFromAdaptations) ||
             firstPosition > minimumPositionFromAdaptations) {
@@ -264,11 +255,8 @@ export default class Period {
       for (let i = 0; i < audio.length; i++) {
         const audioAdaptation = audio[i];
         const firstPosition = audioAdaptation.getContentStart();
-        if (firstPosition === undefined) {
-          return undefined;
-        }
         if (firstPosition === null) {
-          break;
+          return null;
         }
         if (isNullOrUndefined(minimumPositionFromAdaptations) ||
             firstPosition > minimumPositionFromAdaptations) {

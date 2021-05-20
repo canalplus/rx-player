@@ -112,10 +112,10 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * `undefined` if we do not know this value.
    * @return {Number|undefined}
    */
-  public getFirstPosition(): number|undefined {
+  public getFirstPosition(): number | null {
     const wrappedFirstPosition = this._wrappedIndex.getFirstPosition();
-    return wrappedFirstPosition != null ? wrappedFirstPosition + this._timeOffset :
-                                          undefined;
+    return wrappedFirstPosition !== null ? wrappedFirstPosition + this._timeOffset :
+                                           null;
   }
 
   /**
@@ -123,10 +123,10 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * `undefined` if we do not know this value.
    * @return {Number|undefined}
    */
-  public getLastPosition(): number|undefined {
+  public getLastPosition(): number | null {
     const wrappedLastPosition = this._wrappedIndex.getLastPosition();
-    return wrappedLastPosition != null ? wrappedLastPosition + this._timeOffset :
-                                         undefined;
+    return wrappedLastPosition !== null ? wrappedLastPosition + this._timeOffset :
+                                          null;
   }
 
   /**

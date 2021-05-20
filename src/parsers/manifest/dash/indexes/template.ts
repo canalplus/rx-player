@@ -20,7 +20,6 @@ import {
   ISegment,
 } from "../../../../manifest";
 import { IEMSG } from "../../../containers/isobmff";
-import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import isPeriodFulfilled from "./is_period_fulfilled";
 import {
@@ -111,10 +110,15 @@ export interface ITemplateIndexIndexArgument {
 /** Aditional context needed by a SegmentTemplate RepresentationIndex. */
 export interface ITemplateIndexContextArgument {
   aggressiveMode : boolean;
+  /** Define the start of a dynamic manifest timeline */
+  availabilityStartTime : number;
   /** Minimum availabilityTimeOffset concerning the segments of this Representation. */
   availabilityTimeOffset : number;
-  /** Allows to obtain the minimum and maximum positions of a content. */
-  manifestBoundsCalculator : ManifestBoundsCalculator;
+  /**
+   * Offset, in milliseconds, the client's clock (in terms of `performance.now`)
+   * has relatively to the server's
+   */
+  clockOffset? : number;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
   periodStart : number;
   /** End of the period concerned by this RepresentationIndex, in seconds. */
@@ -127,6 +131,8 @@ export interface ITemplateIndexContextArgument {
   representationId? : string;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number;
+  /** Depth of the buffer for the whole content, in seconds. */
+  timeShiftBufferDepth?: number;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
@@ -144,18 +150,20 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * requested in advance.
    */
   private _aggressiveMode : boolean;
-  /** Retrieve the maximum and minimum position of the whole content. */
-  private _manifestBoundsCalculator : ManifestBoundsCalculator;
   /** Absolute start of the Period, in seconds. */
   private _periodStart : number;
   /** Difference between the end time of the Period and its start time, in timescale. */
   private _scaledPeriodEnd? : number;
   /** Minimum availabilityTimeOffset concerning the segments of this Representation. */
   private _availabilityTimeOffset? : number;
+  private _availabilityStartTime: number;
+  private _clockOffset?: number;
   /** Whether the corresponding Manifest can be updated and changed. */
   private _isDynamic : boolean;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   private _isEMSGWhitelisted : (inbandEvent: IEMSG) => boolean;
+  /** Depth of the buffer for the whole content, in seconds. */
+  private _timeShiftBufferDepth? : number;
 
   /**
    * @param {Object} index
@@ -167,10 +175,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   ) {
     const { aggressiveMode,
             availabilityTimeOffset,
-            manifestBoundsCalculator,
+            availabilityStartTime,
+            clockOffset,
             isDynamic,
             periodEnd,
             periodStart,
+            timeShiftBufferDepth,
             representationBaseURLs,
             representationId,
             representationBitrate,
@@ -178,8 +188,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const timescale = index.timescale ?? 1;
 
     this._availabilityTimeOffset = availabilityTimeOffset;
-
-    this._manifestBoundsCalculator = manifestBoundsCalculator;
+    this._availabilityStartTime = availabilityStartTime;
+    this._timeShiftBufferDepth = timeShiftBufferDepth;
+    this._clockOffset = clockOffset;
     this._aggressiveMode = aggressiveMode;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
                                      index.presentationTimeOffset :
@@ -307,10 +318,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns first possible position in the index, in seconds.
    * @returns {number|null|undefined}
    */
-  getFirstPosition() : number | null | undefined {
+  getFirstPosition() : number | null {
     const firstSegmentStart = this._getFirstSegmentStart();
-    if (firstSegmentStart == null) {
-      return firstSegmentStart; // return undefined or null
+    if (firstSegmentStart === null) {
+      return null;
     }
     return (firstSegmentStart / this._index.timescale) + this._periodStart;
   }
@@ -319,13 +330,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns last possible position in the index, in seconds.
    * @returns {number|null}
    */
-  getLastPosition() : number|null|undefined {
+  getLastPosition() : number | null {
     const lastSegmentStart = this._getLastSegmentStart();
-    if (lastSegmentStart == null) {
-      // In that case (null or undefined), getLastPosition should reflect
-      // the result of getLastSegmentStart, as the meaning is the same for
-      // the two functions. So, we return the result of the latter.
-      return lastSegmentStart;
+    if (lastSegmentStart === null) {
+      return null;
     }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
     return (lastSegmentEnd / this._index.timescale) + this._periodStart;
@@ -423,7 +431,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._isDynamic = newIndex._isDynamic;
     this._periodStart = newIndex._periodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
-    this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
   }
 
   /**
@@ -440,7 +447,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * relatively to the start of the Period.
    * @returns {number | null | undefined}
    */
-  private _getFirstSegmentStart() : number | null | undefined {
+  private _getFirstSegmentStart() : number | null {
     if (!this._isDynamic) {
       return 0; // it is the start of the Period
     }
@@ -450,8 +457,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       // /!\ The scaled max position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      const maximumBound = this._manifestBoundsCalculator.estimateMaximumBound();
-      if (maximumBound !== undefined && maximumBound < this._periodStart) {
+      const maximumBound = this._estimateLiveEdge();
+      if (maximumBound !== null && maximumBound < this._periodStart) {
         // Maximum position is before this period.
         // No segment is yet available here
         return null;
@@ -459,9 +466,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
 
     const { duration, timescale } = this._index;
-    const firstPosition = this._manifestBoundsCalculator.estimateMinimumBound();
-    if (firstPosition === undefined) {
-      return undefined;
+    const firstPosition = this._estimateMinimumTime();
+    if (firstPosition === null) {
+      return null;
     }
 
     const segmentTime = firstPosition > this._periodStart ?
@@ -477,13 +484,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns null if live time is before current period.
    * @returns {number|null|undefined}
    */
-  private _getLastSegmentStart() : number | null | undefined {
+  private _getLastSegmentStart() : number | null {
     const { duration, timescale } = this._index;
 
     if (this._isDynamic) {
-      const lastPos = this._manifestBoundsCalculator.estimateMaximumBound();
-      if (lastPos === undefined) {
-        return undefined;
+      const lastPos = this._estimateLiveEdge();
+      if (lastPos === null) {
+        return null;
       }
       const agressiveModeOffset = this._aggressiveMode ? (duration / timescale) :
                                                          0;
@@ -533,5 +540,61 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       }
       return (numberIndexedToZero - 1) * duration;
     }
+  }
+
+  private _estimateMinimumTime(): number | null {
+    if (!this._isDynamic || this._timeShiftBufferDepth === undefined) {
+      return 0;
+    }
+    const maximumBound = this._estimateLiveEdge();
+    if (maximumBound === null) {
+      return null;
+    }
+    const minimumBound = maximumBound - this._timeShiftBufferDepth;
+    return minimumBound;
+  }
+
+ /**
+  * Try to guess the "last position", which is the last position
+  * available in the manifest in seconds, and the "position time", the time
+  * (`performance.now()`) in which the last position was collected.
+  *
+  * These values allows to retrieve at any time in the future the new last
+  * position, by substracting the position time to the last position, and
+  * adding to it the new value returned by `performance.now`.
+  *
+  * The last position and position time are returned by this function if and only if
+  * it would indicate a last position superior to the `minimumTime` given.
+  *
+  * This last part allows for example to detect which Period is likely to be the
+  * "current" one in multi-periods contents. By giving the Period's start as a
+  * `minimumTime`, you ensure that you will get a value only if the current time
+  * is in that period.
+  *
+  * This is useful as guessing the live time from the clock can be seen as a last
+  * resort. By detecting that the current time is before the currently considered
+  * Period, we can just parse and look at the previous Period. If we can guess
+  * the live time more directly from that previous one, we might be better off
+  * than just using the clock.
+  */
+  private _estimateLiveEdge(): number | null {
+    if (this._clockOffset !== undefined) {
+      const lastPosition = this._clockOffset / 1000 -
+        this._availabilityStartTime;
+      const positionTime = performance.now() / 1000;
+      const timeInSec = positionTime + lastPosition;
+      if (timeInSec >= this._periodStart) {
+        return timeInSec;
+      }
+    } else {
+      const now = Date.now() / 1000;
+      if (now >= this._periodStart) {
+        // log.warn("DASH Parser: no clock synchronization mechanism found." +
+        //          " Using the system clock instead.");
+        const lastPosition = now - this._availabilityStartTime;
+        return lastPosition;
+      }
+    }
+    return null;
   }
 }

@@ -346,9 +346,9 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   /**
    * Returns last position available in the index.
    * @param {Object} index
-   * @returns {Number}
+   * @returns {Number|null}
    */
-  getLastPosition() : number|undefined {
+  getLastPosition() : number|null {
     this._refreshTimeline();
     const index = this._index;
 
@@ -370,7 +370,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
         }
       }
     }
-    return undefined;
+    return null;
   }
 
   /**

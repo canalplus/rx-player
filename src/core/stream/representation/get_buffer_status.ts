@@ -139,15 +139,7 @@ export default function getBufferStatus(
   {
     hasFinishedLoading = false;
   } else {
-    if (lastPosition === undefined) {
-      // We do not know the end of this index.
-      // If we reached the end of the period, check that all segments are
-      // available.
-      const contentEnd = period.getContentEnd();
-      hasFinishedLoading = (contentEnd === null ||
-                            neededRange.end >= (contentEnd ?? period.end)) &&
-                           representation.index.isFinished();
-    } else if (lastPosition === null) {
+    if (lastPosition === null) {
       // There is no available segment in the index currently. If the index
       // tells us it has finished generating new segments, we're done.
       hasFinishedLoading = representation.index.isFinished();

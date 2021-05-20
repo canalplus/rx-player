@@ -22,7 +22,6 @@ import {
   IContentProtections,
   IParsedRepresentation,
 } from "../types";
-import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
   IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
@@ -61,12 +60,17 @@ function combineInbandEventStreams(
 export interface IAdaptationInfos {
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
+  /** Define the start of a dynamic manifest timeline */
+  availabilityStartTime: number;
   /** availability time offset of the concerned Adaptation. */
   availabilityTimeOffset: number;
   /** Eventual URLs from which every relative URL will be based on. */
   baseURLs : string[];
-  /** Allows to obtain the first/last available position of a dynamic content. */
-  manifestBoundsCalculator : ManifestBoundsCalculator;
+  /**
+   * Offset, in milliseconds, the client's clock (in terms of `performance.now`)
+   * has relatively to the server's
+   */
+  clockOffset?: number;
   /** End time of the current period, in seconds. */
   end? : number;
   /** Whether the Manifest can evolve with time. */
