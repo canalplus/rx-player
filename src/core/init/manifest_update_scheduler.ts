@@ -220,31 +220,33 @@ export default function manifestUpdateScheduler({
         actualRefreshInterval = regularRefreshDelay;
       } else if (manifest.lifetime < 3 && totalUpdateTime >= 100) {
         // If Manifest update is very frequent and we take time to update it,
-        // postpone it according to the maximum value between:
-        actualRefreshInterval = Math.max(
-          // Take 3 seconds as a default safe value for a base interval.
-          3000 - timeSinceRequest,
+        // postpone it.
+        actualRefreshInterval = Math.min(
+          Math.max(
+            // Take 3 seconds as a default safe value for a base interval.
+            3000 - timeSinceRequest,
+            // Add update time to the original interval.
+            Math.max(regularRefreshDelay, 0) + totalUpdateTime
+          ),
 
-          // Add update time to the original interval.
-          Math.max(regularRefreshDelay, 0) + totalUpdateTime,
-
-          // Limit the postponment to a very high value relative to
-          // `regularRefreshDelay`.
+          // Limit the postponment's higher bound to a very high value relative
+          // to `regularRefreshDelay`.
           // This avoid perpetually postponing a Manifest update when
           // performance seems to have been abysmal one time.
-          regularRefreshDelay * 6);
+          regularRefreshDelay * 6
+        );
         log.info("MUS: Manifest update rythm is too frequent. Postponing next request.",
                  regularRefreshDelay,
                  actualRefreshInterval);
       } else if (totalUpdateTime >= (manifest.lifetime * 1000) / 10) {
         // If Manifest updating time is very long relative to its lifetime,
         // postpone it:
-        actualRefreshInterval = Math.max(
+        actualRefreshInterval = Math.min(
           // Just add the update time to the original waiting time
           Math.max(regularRefreshDelay, 0) + totalUpdateTime,
 
-          // Limit the postponment to a very high value relative to
-          // `regularRefreshDelay`.
+          // Limit the postponment's higher bound to a very high value relative
+          // to `regularRefreshDelay`.
           // This avoid perpetually postponing a Manifest update when
           // performance seems to have been abysmal one time.
           regularRefreshDelay * 6);
