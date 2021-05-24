@@ -70,12 +70,21 @@ export default function generateAudioVideoSegmentParser(
                             value: { chunkData: null,
                                      chunkInfos: null,
                                      chunkOffset: 0,
-                                     appendWindow } });
+                                     appendWindow,
+                                     protectionDataUpdate: false } });
     }
 
     const chunkData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
     const isWEBM = isWEBMEmbeddedTrack(representation);
+
+    let protectionDataUpdate = false;
+    if (!isWEBM) {
+      const psshInfo = takePSSHOut(chunkData);
+      if (psshInfo.length > 0) {
+        protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
+      }
+    }
 
     if (!segment.isInit) {
       const chunkInfos = isWEBM ? null : // TODO extract time info from webm
@@ -105,7 +114,8 @@ export default function generateAudioVideoSegmentParser(
                                            chunkOffset,
                                            appendWindow,
                                            inbandEvents,
-                                           needsManifestRefresh } });
+                                           needsManifestRefresh,
+                                           protectionDataUpdate } });
           }
         }
       }
@@ -114,7 +124,8 @@ export default function generateAudioVideoSegmentParser(
                             value: { chunkData,
                                      chunkInfos,
                                      chunkOffset,
-                                     appendWindow } });
+                                     appendWindow,
+                                     protectionDataUpdate } });
     }
     // we're handling an initialization segment
     const { indexRange } = segment;
@@ -156,14 +167,6 @@ export default function generateAudioVideoSegmentParser(
                                getMDHDTimescale(chunkData);
     const parsedTimescale = isNullOrUndefined(timescale) ? undefined :
                                                            timescale;
-
-    let protectionDataUpdate = false;
-    if (!isWEBM) {
-      const psshInfo = takePSSHOut(chunkData);
-      if (psshInfo.length > 0) {
-        protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
-      }
-    }
 
     return observableOf({ type: "parsed-init-segment",
                           value: { initializationData: chunkData,

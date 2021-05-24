@@ -81,7 +81,8 @@ export function imageParser(
                                    chunkInfos: { duration: segment.duration,
                                                  time: segment.time },
                                    chunkOffset,
-                                   appendWindow: [period.start, period.end] } });
+                                   appendWindow: [period.start, period.end],
+                                   protectionDataUpdate: false } });
   }
 
   const bifObject = features.imageParser(new Uint8Array(data));
@@ -96,5 +97,6 @@ export function imageParser(
                                                duration: Number.MAX_VALUE,
                                                timescale: bifObject.timescale },
                                  chunkOffset,
-                                 appendWindow: [period.start, period.end] } });
+                                 appendWindow: [period.start, period.end],
+                                 protectionDataUpdate: false } });
 }

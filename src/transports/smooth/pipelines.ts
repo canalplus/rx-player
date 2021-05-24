@@ -195,7 +195,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                               value: { chunkData: null,
                                        chunkInfos: null,
                                        chunkOffset: 0,
-                                       appendWindow: [undefined, undefined] } });
+                                       appendWindow: [undefined, undefined],
+                                       protectionDataUpdate: false } });
       }
 
       const responseBuffer = data instanceof Uint8Array ? data :
@@ -233,7 +234,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                             value: { chunkData,
                                      chunkInfos,
                                      chunkOffset: 0,
-                                     appendWindow: [undefined, undefined] } });
+                                     appendWindow: [undefined, undefined],
+                                     protectionDataUpdate: false } });
     },
   };
 
@@ -288,7 +290,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                               value: { chunkData: null,
                                        chunkInfos: null,
                                        chunkOffset: 0,
-                                       appendWindow: [undefined, undefined] } });
+                                       appendWindow: [undefined, undefined],
+                                       protectionDataUpdate: false } });
       }
 
       let nextSegments;
@@ -399,7 +402,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                                   language },
                                      chunkInfos,
                                      chunkOffset,
-                                     appendWindow: [undefined, undefined] } });
+                                     appendWindow: [undefined, undefined],
+                                     protectionDataUpdate: false } });
     },
   };
 
@@ -443,7 +447,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                               value: { chunkData: null,
                                        chunkInfos: null,
                                        chunkOffset: 0,
-                                       appendWindow: [undefined, undefined] } });
+                                       appendWindow: [undefined, undefined],
+                                       protectionDataUpdate: false } });
       }
 
       const bifObject = features.imageParser(new Uint8Array(data));

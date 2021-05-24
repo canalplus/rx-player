@@ -225,7 +225,7 @@ export default {
                 mimeType: "text/vtt",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "s-en.webvtt"],
+                    mediaURLs: null,
                   },
                   segments: [
                     {
@@ -250,7 +250,7 @@ export default {
                 mimeType: "text/vtt",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "s-el.webvtt"],
+                    mediaURLs: null,
                   },
                   segments: [
                     {
@@ -275,7 +275,7 @@ export default {
                 mimeType: "text/vtt",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "s-fr.webvtt"],
+                    mediaURLs: null,
                   },
                   segments: [
                     {
@@ -300,7 +300,7 @@ export default {
                 mimeType: "text/vtt",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "s-pt-BR.webvtt"],
+                    mediaURLs: null,
                   },
                   segments: [
                     {

@@ -226,6 +226,9 @@ class Representation {
    * Returns `false` if none has been added (e.g. because it was already known).
    *
    * /!\ Mutates the current Representation
+   *
+   * TODO better handle use cases like key rotation by not always grouping
+   * every protection data together? To check.
    * @param {string} initDataArr
    * @param {string} systemId
    * @param {Uint8Array} data
