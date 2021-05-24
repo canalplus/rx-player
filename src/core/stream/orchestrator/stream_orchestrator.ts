@@ -62,6 +62,7 @@ import {
   IMultiplePeriodStreamsEvent,
   IPeriodStreamEvent,
   IStreamOrchestratorEvent,
+  IStreamWarningEvent,
 } from "../types";
 import ActivePeriodEmitter from "./active_period_emitter";
 import areStreamsComplete from "./are_streams_complete";
@@ -140,7 +141,9 @@ export default function StreamOrchestrator(
   // trigger warnings when the wanted time is before or after the manifest's
   // segments
   const outOfManifest$ = clock$.pipe(
-    filterMap(({ position, wantedTimeOffset }) => {
+    filterMap<IStreamOrchestratorClockTick, IStreamWarningEvent, null>((
+      { position, wantedTimeOffset }
+    ) => {
       const offsetedPosition = wantedTimeOffset + position;
       if (offsetedPosition < manifest.getMinimumPosition()) {
         const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",

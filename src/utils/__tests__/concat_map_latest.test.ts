@@ -161,10 +161,10 @@ describe("utils - concatMapLatest", () => {
     const obs2$ = observableOf(4, 5);
     const obs3$ = observableOf(6, 7, 8, 9);
 
-    observableOf<[number, Observable<number>]>(
-      [0, obs1$],
-      [1, obs2$],
-      [2, obs3$]
+    observableOf(
+      [0, obs1$] as [number, Observable<number>],
+      [1, obs2$] as [number, Observable<number>],
+      [2, obs3$] as [number, Observable<number>]
     ).pipe(
       concatMapLatest(([wantedCounter, obs$], counter) => {
         itemProcessed++;

@@ -72,7 +72,7 @@ describe("core - eme - global tests - init data", () => {
     let eventsReceived = 0;
     const initDataSubject = new Subject<IContentProtection>();
     const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;
@@ -124,7 +124,7 @@ describe("core - eme - global tests - init data", () => {
     const initDataSubject = new Subject<IContentProtection>();
     let eventsReceived = 0;
     const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;
@@ -198,7 +198,7 @@ describe("core - eme - global tests - init data", () => {
     let eventsReceived = 0;
     const initData1 = new Uint8Array([54, 55, 75]);
     const initData2 = new Uint8Array([87, 32]);
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;
@@ -292,7 +292,7 @@ describe("core - eme - global tests - init data", () => {
     let eventsReceived = 0;
     const initData1 = new Uint8Array([54, 55, 75]);
     const initData2 = new Uint8Array([87, 32]);
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;
@@ -380,7 +380,7 @@ describe("core - eme - global tests - init data", () => {
     const initDataEvent = { type: "cenc",
                             values: [ { systemId: "15",
                                         data: initData } ] };
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;
@@ -439,7 +439,7 @@ describe("core - eme - global tests - init data", () => {
     const initDataEvent = { type: "cenc",
                             values: [ { systemId: "15",
                                         data: initData } ] };
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     // == test ==
     const EMEManager = require("../../eme_manager").default;
@@ -523,7 +523,7 @@ describe("core - eme - global tests - init data", () => {
     const initDataEvent2 = { type: "cenc",
                              values: [ { systemId: "15",
                                          data: initData2 } ] };
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     function checkEncryptedEventReceived(
       evt : any,
@@ -641,7 +641,7 @@ describe("core - eme - global tests - init data", () => {
     const initDataEvent4 = { type: "cenc2",
                              values: [ { systemId: "15",
                                          data: initData2 } ] };
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     function checkEncryptedEventReceived(
       evt : any,
@@ -754,7 +754,7 @@ describe("core - eme - global tests - init data", () => {
     const initDataEvent4 = { type: "cenc2",
                              values: [ { systemId: "15",
                                          data: initData2 } ] };
-    const kill$ = new Subject();
+    const kill$ = new Subject<void>();
 
     function checkEncryptedEventReceived(
       evt : any,

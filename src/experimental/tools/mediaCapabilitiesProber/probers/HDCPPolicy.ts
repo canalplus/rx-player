@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { lastValueFrom } from "rxjs";
 import { requestMediaKeySystemAccess } from "../../../../compat";
 import PPromise from "../../../../utils/promise";
 import {
@@ -60,7 +61,7 @@ export default function probeHDCPPolicy(
     }],
   };
 
-  return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise(PPromise)
+  return lastValueFrom(requestMediaKeySystemAccess(keySystem, [drmConfig]))
     .then((mediaKeysSystemAccess) => {
       return mediaKeysSystemAccess.createMediaKeys().then((mediaKeys) => {
         if (!("getStatusForPolicy" in mediaKeys)) {

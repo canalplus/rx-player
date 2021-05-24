@@ -142,7 +142,10 @@ export default function PeriodStream({
   // `null` when no Adaptation is chosen (e.g. no subtitles)
   const adaptation$ = new ReplaySubject<Adaptation|null>(1);
   return adaptation$.pipe(
-    switchMap((adaptation, switchNb) => {
+    switchMap((
+      adaptation : Adaptation | null,
+      switchNb : number
+    ) : Observable<IPeriodStreamEvent> => {
       /**
        * If this is not the first Adaptation choice, we might want to apply a
        * delta to the current position so we can re-play back some media in the
@@ -177,7 +180,7 @@ export default function PeriodStream({
           cleanBuffer$ = observableOf(null);
         }
 
-        return observableConcat<IPeriodStreamEvent>(
+        return observableConcat(
           cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
           createEmptyStream(clock$, wantedBufferAhead$, bufferType, { period })
         );
@@ -224,7 +227,7 @@ export default function PeriodStream({
           }));
         }));
 
-      return observableConcat<IPeriodStreamEvent>(
+      return observableConcat(
         observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
         newStream$
       );
@@ -268,7 +271,7 @@ export default function PeriodStream({
             defaultCode: "NONE",
             defaultReason: "Unknown `AdaptationStream` error",
           });
-          return observableConcat<IAdaptationStreamEvent<T>|IStreamWarningEvent>(
+          return observableConcat(
             observableOf(EVENTS.warning(formattedError)),
             createEmptyStream(clock$, wantedBufferAhead$, bufferType, { period })
           );
