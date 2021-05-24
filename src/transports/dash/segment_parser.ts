@@ -160,7 +160,7 @@ export default function generateAudioVideoSegmentParser(
         nextSegments !== null &&
         nextSegments.length > 0)
     {
-      representation.index._addSegments(nextSegments);
+      representation.index.initializeIndex(nextSegments);
     }
 
     const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :

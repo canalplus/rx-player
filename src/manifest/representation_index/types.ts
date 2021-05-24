@@ -287,6 +287,11 @@ export interface IRepresentationIndex {
    * If that's the case, return the next available position where a segment
    * should be available.
    * If that's not the case, return `null`.
+   * @param {number} time - The time to check if it's in a discontinuity, in
+   * seconds.
+   * @returns {number | null} - If `null`, no discontinuity is encountered at
+   * `time`. If this is a number instead, there is one and that number is the
+   * position for which a segment is available in seconds.
    */
   checkDiscontinuity(time : number) : number | null;
 
@@ -341,6 +346,11 @@ export interface IRepresentationIndex {
    * initialization has been loaded. In those case, it should return `false`
    * until the corresponding segment list is known, at which point it can return
    * `true`.
+   *
+   * You can use any ad-hoc mean you want to "initialize" an index.
+   * This is usually done by adding supplementary methods (like one named
+   * `initialize`) to that `RepresentationIndex` and calling it directly in the
+   * segment parsing code.
    * @returns {boolean}
    */
   isInitialized() : boolean;
@@ -353,6 +363,9 @@ export interface IRepresentationIndex {
 
   /**
    * Update the current index with a new, partial, version.
+   * Unlike `replace`, this method do not completely overwrite the information
+   * about this index's segments, it should mainly add new information about new
+   * announced segments.
    * @param {Object} newIndex
    */
   _update(newIndex : IRepresentationIndex) : void;

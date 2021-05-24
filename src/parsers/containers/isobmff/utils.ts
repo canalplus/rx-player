@@ -71,11 +71,6 @@ export interface ISidxSegment {
   time : number;
   /** This segment difference between its end and start time, timescaled. */
   duration : number;
-  /**
-   * Amount of time this segment repeats, always , always 0.
-   * TODO Remove.
-   */
-  count : 0;
   /** Dividing `time` or `duration` with this value allows to obtain seconds. */
   timescale : number;
   /**
@@ -163,7 +158,6 @@ function getSegmentsFromSidx(
 
     segments.push({ time,
                     duration,
-                    count: 0,
                     timescale,
                     range: [offset, offset + refSize - 1] });
 
