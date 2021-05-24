@@ -1157,6 +1157,10 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
+.canvas-buffer-size-container {
+  margin: 5px;
+}
+
 .canvas-buffer-size {
   position: relative;
   top: 0px;

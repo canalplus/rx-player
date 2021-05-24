@@ -99,7 +99,7 @@ function BufferSizeChart({ module }) {
   }, [module]);
 
   return (
-    <div>
+    <div className="canvas-buffer-size-container">
       <canvas
         className="canvas-buffer-size"
         ref={canvasEl}
@@ -150,7 +150,7 @@ function BufferSizeChart({ module }) {
       for (let i = 0; i <= NUMBER_GRID_LINES_HEIGHT; i++) {
         const height = stepHeight * i + HEIGHT_MARGIN_TOP;
         canvasCtx.moveTo(0, height);
-        canvasCtx.font = "15px mono";
+        canvasCtx.font = "14px Arial";
         const currStepVal = (stepVal * (NUMBER_GRID_LINES_HEIGHT - i))
           .toFixed(1);
         canvasCtx.fillText(`${currStepVal} s`, 0, height - 5);
