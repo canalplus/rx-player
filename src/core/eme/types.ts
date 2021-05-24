@@ -543,6 +543,11 @@ export interface IKeySystemOption {
 
   singleLicensePer? : "content" |
                       "init-data";
+  /**
+   * Maximum number of `MediaKeySession` that should be created on the same
+   * MediaKeys.
+   */
+  maxSessionCacheSize? : number;
   /** Callback called when one of the key's status change. */
   onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
                                                  ICustomMediaKeySession)

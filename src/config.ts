@@ -976,13 +976,17 @@ export default {
   DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0: 3,
 
   /**
-   * Max simultaneous MediaKeySessions that will be kept as a cache to avoid
-   * doing superfluous license requests.
+   * Default value for the maximum number of simultaneous MediaKeySessions that
+   * will be kept in a cache (linked to the MediaKeys instance) to avoid doing
+   * superfluous license requests.
+   *
    * If this number is reached, any new session creation will close the oldest
    * one.
+   * Another value can be configured through the API, in which case this default
+   * will be overwritten.
    * @type {Number}
    */
-  EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 15,
+  EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 15,
 
   /**
    * When playing contents with a persistent license, we will usually store some
