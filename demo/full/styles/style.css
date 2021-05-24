@@ -1140,6 +1140,7 @@ input:checked + .slider:before {
   margin: 15px 5px;
   padding: 5px;
 }
+
 .canvas-buffer-graph-container {
   position: relative;
   margin: 0px 5px 5px 5px;
@@ -1148,6 +1149,19 @@ input:checked + .slider:before {
 }
 
 .canvas-buffer-graph {
+  position: relative;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.canvas-buffer-size-container {
+  margin: 5px;
+}
+
+.canvas-buffer-size {
   position: relative;
   top: 0px;
   left: 0px;

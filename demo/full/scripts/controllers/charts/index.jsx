@@ -2,6 +2,7 @@ import React from "react";
 import { createModule } from "../../lib/vespertine.js";
 import ChartDataModule from "../../modules/ChartData.js";
 import BufferContentChart from "./BufferContent.jsx";
+import BufferSizeChart from "./BufferSize.jsx";
 
 const BUFFER_GAP_REFRESH_TIME = 500;
 const MAX_BUFFER_SIZE_LENGTH = 2000;
@@ -9,7 +10,8 @@ const MAX_BUFFER_SIZE_LENGTH = 2000;
 class ChartsManager extends React.Component {
   constructor(...args) {
     super(...args);
-    this.state = { displayBufferContentChart: false };
+    this.state = { displayBufferContentChart: false,
+                   displayBufferSizeChart: false };
     const { player } = this.props;
 
     this.bufferSizeChart = createModule(ChartDataModule,
@@ -27,7 +29,8 @@ class ChartsManager extends React.Component {
   }
 
   render() {
-    const { displayBufferContentChart } = this.state;
+    const { displayBufferSizeChart,
+            displayBufferContentChart } = this.state;
     const { player } = this.props;
 
     const onBufferContentCheckBoxChange = (e) => {
@@ -35,6 +38,13 @@ class ChartsManager extends React.Component {
       const value = target.type === "checkbox" ?
         target.checked : target.value;
       this.setState({ displayBufferContentChart: value });
+    };
+    const onBufferSizeCheckBoxChange = (e) => {
+      const target = e.target;
+      const value = target.type === "checkbox" ?
+        target.checked : target.value;
+
+      this.setState({ displayBufferSizeChart: value });
     };
     return (
       <div className="player-charts">
@@ -55,6 +65,25 @@ class ChartsManager extends React.Component {
           { displayBufferContentChart ?
             <BufferContentChart
               player={player}
+            /> : null }
+        </div>
+        <div className="player-box">
+          <div className="chart-checkbox" >
+            Buffer size chart
+            <label className="switch">
+              <input
+                aria-label="Display/Hide chart about the buffer's size"
+                name="displayBufferSizeChart"
+                type="checkbox"
+                checked={this.state.displayBufferSizeChart}
+                onChange={onBufferSizeCheckBoxChange}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
+          { displayBufferSizeChart ?
+            <BufferSizeChart
+              module={this.bufferSizeChart}
             /> : null }
         </div>
       </div>
