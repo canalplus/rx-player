@@ -1567,7 +1567,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (positionWanted === undefined) {
       throw new Error("invalid time given");
     }
-    this.videoElement.currentTime = positionWanted;
+    let seekAt = positionWanted;
+    if (manifest !== null && !manifest.isLive) {
+      const maximumTime = manifest.getMaximumPosition();
+      seekAt = maximumTime !== undefined ? Math.min(positionWanted,
+                                                    maximumTime - 0.001) :
+                                           positionWanted;
+    }
+    this.videoElement.currentTime = seekAt;
     return positionWanted;
   }
 
