@@ -402,6 +402,18 @@ const onTextTrackChanges$ =
 const onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
 
 /**
+ * @param {MediaSource} mediaSource
+ * @returns {Observable}
+ */
+const onSourceClose$ = compatibleListener(["sourceclose", "webkitsourceclose"]);
+
+/**
+ * @param {MediaSource} mediaSource
+ * @returns {Observable}
+ */
+const onSourceEnded$ = compatibleListener(["sourceended", "webkitsourceended"]);
+
+/**
  * @param {SourceBuffer} sourceBuffer
  * @returns {Observable}
  */
@@ -458,6 +470,8 @@ export {
   onTimeUpdate$,
   onFullscreenChange$,
   onSourceOpen$,
+  onSourceClose$,
+  onSourceEnded$,
   onUpdate$,
   onRemoveSourceBuffers$,
   onEncrypted$,
