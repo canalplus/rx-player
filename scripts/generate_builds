@@ -189,10 +189,15 @@ export default TextTrackRenderer;" > tools/TextTrackRenderer.d.ts
 echo "creating experimental build..."
 rm -rf experimental
 mkdir -p experimental/tools
+mkdir -p experimental/tools/VideoThumbnailLoader
 echo "${copyright_text}
 export * from \"../../dist/_esm5.processed/experimental/tools/index.js\";" > experimental/tools/index.js
 echo "${copyright_text}
 export * from \"../../dist/_esm5.processed/experimental/tools/index\";" > experimental/tools/index.d.ts
+echo "${copyright_text}
+export * from \"../../dist/_esm5.processed/experimental/tools/VideoThumbnailLoader/index.js\";" > experimental/tools/VideoThumbnailLoader/index.js
+echo "${copyright_text}
+export * from \"../../dist/_esm5.processed/experimental/tools/VideoThumbnailLoader/index\";" > experimental/tools/VideoThumbnailLoader/index.d.ts
 
 mkdir -p experimental/features
 echo "${copyright_text}
