@@ -252,6 +252,14 @@ _type_: ``Boolean|undefined``
 This property only makes sense for text Adaptations. In this case, if ``true``
 it means that the text track has added hints for the hard of hearing.
 
+#### isTrickMode
+
+_type_ : ``Boolean|undefined``
+
+This property only makes sense for video Adaptations. In this case, if ``true``
+it means that the video track is a trick mode track that will be played only
+if the user start the trick mode on the respective main adaptation.
+
 #### representations
 
 _type_: ``Array.<Representation>``
