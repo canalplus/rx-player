@@ -11,6 +11,9 @@ import { linkPlayerEventsToState } from "./events.js";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import $handleCatchUpMode from "./catchUp";
+import VideoThumbnailLoader, {
+  DASH_LOADER
+} from "../../../../../src/experimental/tools/VideoThumbnailLoader";
 
 const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   const player = new RxPlayer({
@@ -66,6 +69,9 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     videoTrackId: undefined,
     volume: player.getVolume(),
     wallClockDiff: undefined,
+    manifest: undefined,
+    videoTrackHasTrickMode: false,
+    attachedVideoThumbnailLoader: undefined,
   });
 
   linkPlayerEventsToState(player, state, $destroy);
@@ -79,6 +85,16 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   $destroy.subscribe(() => player.dispose());
 
   return {
+    ATTACH_VIDEO_THUMBNAIL_LOADER: (thumbnailVideoElement) => {
+      const vtl = new VideoThumbnailLoader(thumbnailVideoElement, player);
+      vtl.addLoader(DASH_LOADER);
+      state.set({ attachedVideoThumbnailLoader: vtl });
+    },
+
+    REMOVE_VIDEO_THUMBNAIL_LOADER: () => {
+      state.set({ attachedVideoThumbnailLoader: undefined });
+    },
+
     SET_VOLUME: (volume) => {
       player.setVolume(volume);
     },

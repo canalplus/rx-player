@@ -5,21 +5,20 @@ import React, {
 } from "react";
 
 /**
- * React Component which Displays an Image tip centered and on top of the
+ * React Component which Displays an Image thumbnail centered and on top of the
  * position wanted.
  *
- * Takes 3 props:
+ * Takes 2 parameters:
  *   - {Blob|string} Image - The image blob to display
- *   - {string} [className=""] - An optional className for the image
  *   - {Number} xPosition - The position on the horizontal axis where you
  *     want the image to be centered to.
  *
- * @class ImageTip
+ * @function ImageThumbnail
+ * @param {Object}
  */
-function ImageTip({
+function ImageThumbnail({
   image,
   xPosition,
-  className,
 }) {
   const wrapperEl = useRef(null);
   const [ imageUrl, setImageUrl ] = useState("");
@@ -39,15 +38,15 @@ function ImageTip({
   }, [xPosition]);
   return (
     <div
-      className="image-tip-wrapper"
+      className="thumbnail-wrapper"
       ref={wrapperEl}
     >
       <img
-        className={"image-tip " + className}
+        className={"thumbnail"}
         src={imageUrl}
       />
     </div>
   );
 }
 
-export default React.memo(ImageTip);
+export default React.memo(ImageThumbnail);

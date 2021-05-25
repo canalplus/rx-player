@@ -34,6 +34,12 @@ export default [
     "live": false,
   },
   {
+    "name": "DASH-IF - Trickmode",
+    "url": "http://dash.akamaized.net/dash264/TestCases/9b/qualcomm/1/MultiRate.mpd",
+    "transport": "dash",
+    "live": false,
+  },
+  {
     "name": "DASH-IF - Multi-Subtitles",
     "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
     "transport": "dash",

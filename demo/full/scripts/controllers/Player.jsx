@@ -24,6 +24,7 @@ function Player() {
   const [displaySpinner, setDisplaySpinner] = useState(false);
   const [displaySettings, setDisplaySettings] = useState(false);
   const [isStopped, setIsStopped] = useState(false);
+  const [enableVideoThumbnails, setEnableVideoThumbnails] = useState(false);
 
   const videoElement = useRef(null);
   const textTrackElement = useRef(null);
@@ -46,7 +47,8 @@ function Player() {
                    "isBuffering",
                    "isLoading",
                    "isReloading",
-                   "isStopped")
+                   "isStopped",
+                   "videoTrackHasTrickMode")
       .pipe(takeUntil($destroySubject))
       .subscribe(([
         newAutoPlayBlocked,
@@ -55,6 +57,7 @@ function Player() {
         isLoading,
         isReloading,
         newIsStopped,
+        videoTrackHasTrickMode,
       ]) => {
         setAutoPlayBlocked(newAutoPlayBlocked);
         setIsStopped(newIsStopped);
@@ -73,6 +76,9 @@ function Player() {
             displaySpinnerTimeout = 0;
           }
           setDisplaySpinner(false);
+        }
+        if (enableVideoThumbnails !== videoTrackHasTrickMode) {
+          setEnableVideoThumbnails(videoTrackHasTrickMode);
         }
       });
 
@@ -179,6 +185,7 @@ function Player() {
                 videoElement={playerWrapperElement.current}
                 toggleSettings={toggleSettings}
                 stopVideo={stopVideo}
+                enableVideoThumbnails={enableVideoThumbnails}
               /> : null
           }
         </div>

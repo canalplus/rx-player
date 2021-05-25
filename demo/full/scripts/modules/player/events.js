@@ -64,6 +64,16 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         maximumPosition: player.getMaximumPosition(),
         liveGap: player.getMaximumPosition() - player.getPosition(),
         playbackPosition: player.getPlaybackRate(),
+        manifest: player.getManifest(),
+        videoTrackHasTrickMode: (() => {
+          const adaptations = player.getCurrentAdaptations();
+          if (adaptations === null ||
+              adaptations.video === undefined ||
+              adaptations.video.trickModeTracks === undefined) {
+            return false;
+          }
+          return true;
+        })()
       };
     }),
     takeUntil($destroy)
