@@ -154,14 +154,17 @@ export default class XHRMock {
    * Perform every locked requests and resolve once every one of them have
    * finished (either aborted, on error or finished succesfully).
    * Keep the lock on, if one.
+   * @param {number} count
    * @returns {Promise}
    */
-  flush() {
-    const queue = this._sendingQueue.slice();
-    this._sendingQueue.length = 0;
+  flush(nbrOfRequests) {
+    const len = this._sendingQueue.length;
     const proms = [];
-    for (let i = 0; i < queue.length; i++) {
-      const { xhr, data } = queue[i];
+    const nbrOfRequestsToFlush = nbrOfRequests !== undefined ?
+      Math.min(len, nbrOfRequests) : len;
+    const nbrOfRequestThatStays = len - nbrOfRequestsToFlush;
+    while (this._sendingQueue.length > nbrOfRequestThatStays) {
+      const { xhr, data } = this._sendingQueue.pop();
       this.__xhrSend(xhr, data);
       proms.push(xhr._finished);
     }
