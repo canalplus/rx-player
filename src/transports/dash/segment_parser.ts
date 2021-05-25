@@ -37,7 +37,7 @@ import {
   ISegmentParserSegment,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
-import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import inferSegmentContainer from "../utils/infer_segment_container";
 import getEventsOutOfEMSGs from "./get_events_out_of_emsgs";
 
 /**
@@ -55,7 +55,7 @@ export default function generateAudioVideoSegmentParser(
                                                  null >
   ) : Observable<ISegmentParserInitSegment<Uint8Array | ArrayBuffer | null> |
                  ISegmentParserSegment< Uint8Array | ArrayBuffer | null>> {
-    const { period, representation, segment, manifest } = content;
+    const { period, adaptation, representation, segment, manifest } = content;
     const { data, isChunked } = response;
     const appendWindow : [number, number | undefined] = [ period.start, period.end ];
 
@@ -76,10 +76,14 @@ export default function generateAudioVideoSegmentParser(
 
     const chunkData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
-    const isWEBM = isWEBMEmbeddedTrack(representation);
+
+    const containerType = inferSegmentContainer(adaptation.type, representation);
+
+    // TODO take a look to check if this is an ISOBMFF/webm?
+    const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
 
     let protectionDataUpdate = false;
-    if (!isWEBM) {
+    if (seemsToBeMP4) {
       const psshInfo = takePSSHOut(chunkData);
       if (psshInfo.length > 0) {
         protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
@@ -87,14 +91,14 @@ export default function generateAudioVideoSegmentParser(
     }
 
     if (!segment.isInit) {
-      const chunkInfos = isWEBM ? null : // TODO extract time info from webm
-                                  getISOBMFFTimingInfos(chunkData,
-                                                        isChunked,
-                                                        segment,
-                                                        initTimescale);
+      const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData,
+                                                              isChunked,
+                                                              segment,
+                                                              initTimescale) :
+                                        null; // TODO extract time info from webm
       const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
 
-      if (!isWEBM) {
+      if (seemsToBeMP4) {
         const parsedEMSGs = parseEmsgBoxes(chunkData);
         if (parsedEMSGs !== undefined) {
           const whitelistedEMSGs = parsedEMSGs.filter((evt) => {
@@ -130,10 +134,10 @@ export default function generateAudioVideoSegmentParser(
     // we're handling an initialization segment
     const { indexRange } = segment;
 
-    let nextSegments;
-    if (isWEBM) {
+    let nextSegments = null;
+    if (containerType === "webm") {
       nextSegments = getSegmentsFromCues(chunkData, 0);
-    } else {
+    } else if (seemsToBeMP4) {
       nextSegments = getSegmentsFromSidx(chunkData, Array.isArray(indexRange) ?
                                                       indexRange[0] :
                                                       0);
@@ -163,8 +167,10 @@ export default function generateAudioVideoSegmentParser(
       representation.index.initializeIndex(nextSegments);
     }
 
-    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
-                               getMDHDTimescale(chunkData);
+    const timescale = seemsToBeMP4             ? getMDHDTimescale(chunkData) :
+                      containerType === "webm" ? getTimeCodeScale(chunkData, 0) :
+                                                 undefined;
+
     const parsedTimescale = isNullOrUndefined(timescale) ? undefined :
                                                            timescale;
 

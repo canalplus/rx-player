@@ -32,7 +32,7 @@ import {
   ISegmentLoaderEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
-import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import inferSegmentContainer from "../utils/infer_segment_container";
 import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
@@ -56,8 +56,8 @@ function regularSegmentLoader(
     return initSegmentLoader(url, args);
   }
 
-  const isWEBM = isWEBMEmbeddedTrack(args.representation);
-  if (lowLatencyMode && !isWEBM) {
+  const containerType = inferSegmentContainer(args.adaptation.type, args.representation);
+  if (lowLatencyMode && (containerType === "mp4" || containerType === undefined)) {
     if (fetchIsSupported()) {
       return lowLatencySegmentLoader(url, args);
     } else {

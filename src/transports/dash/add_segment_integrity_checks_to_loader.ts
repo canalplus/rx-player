@@ -19,7 +19,7 @@ import {
   ISegmentLoader,
 } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
-import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import inferSegmentContainer from "../utils/infer_segment_container";
 
 /**
  * Add multiple checks on the response given by the `segmentLoader` in argument.
@@ -42,7 +42,8 @@ export default function addSegmentIntegrityChecks(
     if ((res.type === "data-loaded" || res.type === "data-chunk") &&
         res.value.responseData !== null &&
         typeof res.value.responseData !== "string" &&
-        !isWEBMEmbeddedTrack(content.representation))
+        inferSegmentContainer(content.adaptation.type,
+                              content.representation) === "mp4")
     {
       checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
                             content.segment.isInit);

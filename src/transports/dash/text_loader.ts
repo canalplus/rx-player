@@ -27,7 +27,7 @@ import {
   ISegmentLoaderEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
-import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
+import inferSegmentContainer from "../utils/infer_segment_container";
 import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
@@ -67,8 +67,10 @@ export default function generateTextTrackLoader(
       return initSegmentLoader(url, args);
     }
 
-    const isMP4Embedded = isMP4EmbeddedTextTrack(args.representation);
-    if (lowLatencyMode && isMP4Embedded) {
+    const containerType = inferSegmentContainer(args.adaptation.type,
+                                                args.representation);
+    const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
+    if (lowLatencyMode && seemsToBeMP4) {
       if (fetchIsSupported()) {
         return lowLatencySegmentLoader(url, args);
       } else {
@@ -78,7 +80,7 @@ export default function generateTextTrackLoader(
     }
 
     // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
-    const responseType = isMP4Embedded ?  "arraybuffer" :
+    const responseType = seemsToBeMP4 ?  "arraybuffer" :
                                           "text";
     return request<ArrayBuffer|string>({ url,
                                          responseType,
