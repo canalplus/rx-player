@@ -293,6 +293,10 @@ function createManifest(
   }
 
   const time = performance.now();
+  const isLastPeriodKnown = !isDynamic ||
+                            mplData.pollInterval === undefined &&
+                            (manifests.length <= 0 ||
+                             manifests[manifests.length - 1].isLastPeriodKnown === true);
   const manifest = { availabilityStartTime: 0,
                      clockOffset,
                      suggestedPresentationDelay: 10,
@@ -300,6 +304,7 @@ function createManifest(
                      transportType: "metaplaylist",
                      isLive: isDynamic,
                      isDynamic,
+                     isLastPeriodKnown,
                      uris: url == null ? [] :
                                          [url],
                      timeBounds: { minimumTime,

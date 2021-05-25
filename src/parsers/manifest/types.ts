@@ -209,6 +209,11 @@ export interface IParsedManifest {
    * its "live edge".
    */
   isLive : boolean;
+  /**
+   * If true, no more periods will be added after the last manifest period.
+   * The attribute is undefined if there is no way to know if the last period is known.
+   */
+  isLastPeriodKnown? : boolean;
   /** Periods contained in this manifest. */
   periods: IParsedPeriod[];
   /**

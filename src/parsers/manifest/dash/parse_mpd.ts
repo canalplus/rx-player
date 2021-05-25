@@ -320,11 +320,18 @@ function parseCompleteIntermediateRepresentation(
     }
   }
 
+  const isLastPeriodKnown =
+    !isDynamic ||
+    (mpdIR.attributes.minimumUpdatePeriod === undefined &&
+     (parsedPeriods[parsedPeriods.length - 1]?.end !== undefined ||
+      mpdIR.attributes.duration !== undefined));
+
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
     isDynamic,
     isLive: isDynamic,
+    isLastPeriodKnown,
     periods: parsedPeriods,
     publishTime: rootAttributes.publishTime,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,

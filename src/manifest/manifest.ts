@@ -178,6 +178,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public isLive : boolean;
 
+  /**
+   * If true, no more periods will be added after the last manifest period.
+   * The attribute is undefined if there is no way to know if the last period is known.
+   */
+  public isLastPeriodKnown? : boolean;
+
   /*
    * Every URI linking to that Manifest.
    * They can be used for refreshing the Manifest.
@@ -344,6 +350,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this._timeBounds = parsedManifest.timeBounds;
     this.isDynamic = parsedManifest.isDynamic;
     this.isLive = parsedManifest.isLive;
+    this.isLastPeriodKnown = parsedManifest.isLastPeriodKnown;
     this.uris = parsedManifest.uris === undefined ? [] :
                                                     parsedManifest.uris;
 
@@ -715,6 +722,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.expired = newManifest.expired;
     this.isDynamic = newManifest.isDynamic;
     this.isLive = newManifest.isLive;
+    this.isLastPeriodKnown = newManifest.isLastPeriodKnown;
     this.lifetime = newManifest.lifetime;
     this.parsingErrors = newManifest.parsingErrors;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
