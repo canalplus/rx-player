@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-import createMetaplaylist from "./createMetaplaylist";
-import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
-import parseBifThumbnails from "./parseBIFThumbnails";
-import VideoThumbnailLoader from "./VideoThumbnailLoader";
-
+import VideoThumbnailLoader, {
+  DASH_LOADER,
+  MPL_LOADER,
+} from "./thumbnail_loader";
 export {
-  createMetaplaylist,
-  mediaCapabilitiesProber,
-  parseBifThumbnails,
-  VideoThumbnailLoader,
+  DASH_LOADER,
+  MPL_LOADER,
 };
+export default VideoThumbnailLoader;

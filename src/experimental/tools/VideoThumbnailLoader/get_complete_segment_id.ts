@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-import createMetaplaylist from "./createMetaplaylist";
-import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
-import parseBifThumbnails from "./parseBIFThumbnails";
-import VideoThumbnailLoader from "./VideoThumbnailLoader";
+import { ISegment } from "../../../manifest";
+import { IContentInfos } from "./types";
 
-export {
-  createMetaplaylist,
-  mediaCapabilitiesProber,
-  parseBifThumbnails,
-  VideoThumbnailLoader,
-};
+/**
+ * Build a segment id that may be unique in a given content.
+ * @param {Object} contentInfo
+ * @param {Object} segment
+ * @returns {string}
+ */
+export default function getCompleteSegmentId(contentInfo: IContentInfos,
+                                             segment: ISegment): string {
+  const { manifest, period, adaptation, representation } = contentInfo;
+  return manifest.id +
+         period.id +
+         adaptation.id +
+         representation.id.toString() +
+         segment.id;
+}
