@@ -16,6 +16,7 @@
 
 import {
   BehaviorSubject,
+  combineLatest,
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
@@ -25,12 +26,14 @@ import {
   Subject,
 } from "rxjs";
 import {
+  distinctUntilChanged,
   exhaustMap,
   filter,
   ignoreElements,
   map,
   mergeMap,
   share,
+  startWith,
   take,
   takeUntil,
   tap,
@@ -175,12 +178,21 @@ export default function StreamOrchestrator(
       return EVENTS.activePeriodChanged(period);
     }));
 
+  const isLastPeriodKnown$ = fromEvent(manifest, "manifestUpdate").pipe(
+    map(() => manifest.isLastPeriodKnown),
+    startWith(manifest.isLastPeriodKnown),
+    distinctUntilChanged()
+  );
+
   // Emits an "end-of-stream" event once every PeriodStream are complete.
   // Emits a 'resume-stream" when it's not
-  const endOfStream$ = areStreamsComplete(...streamsArray)
-    .pipe(map((areComplete) =>
-      areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
-    ));
+  const endOfStream$ = combineLatest([areStreamsComplete(...streamsArray),
+                                      isLastPeriodKnown$])
+    .pipe(map(([areComplete, isLastPeriodKnown]) => (areComplete &&
+                                                     isLastPeriodKnown === true)),
+          distinctUntilChanged(),
+          map((emitEndOfStream) =>
+            emitEndOfStream ? EVENTS.endOfStream() : EVENTS.resumeStream()));
 
   return observableMerge(...streamsArray,
                          activePeriodChanged$,
