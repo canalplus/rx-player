@@ -274,21 +274,29 @@ function parseCompleteIntermediateRepresentation(
     minimumTime = contentStart !== undefined            ? contentStart :
                   parsedPeriods[0]?.start !== undefined ? parsedPeriods[0].start :
                                                           0;
-    let maximumTime : number | undefined;
-    if (contentEnd !== undefined) {
-      maximumTime = contentEnd;
-    } else if (mediaPresentationDuration !== undefined) {
+    let maximumTime = Infinity;
+    if (mediaPresentationDuration !== undefined &&
+        mediaPresentationDuration < maximumTime) {
       maximumTime = mediaPresentationDuration;
-    } else if (parsedPeriods[parsedPeriods.length - 1] !== undefined) {
+    }
+    if (parsedPeriods[parsedPeriods.length - 1] !== undefined) {
       const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
-      maximumTime = lastPeriod.end ??
-                    (lastPeriod.duration !== undefined ?
-                      lastPeriod.start + lastPeriod.duration :
-                      undefined);
+      const lastPeriodEnd = lastPeriod.end ??
+                            (lastPeriod.duration !== undefined ?
+                              lastPeriod.start + lastPeriod.duration :
+                              undefined);
+      if (lastPeriodEnd !== undefined &&
+          lastPeriodEnd < maximumTime) {
+        maximumTime = lastPeriodEnd;
+      }
+    }
+    if (contentEnd !== undefined &&
+        contentEnd < maximumTime) {
+      maximumTime = contentEnd;
     }
 
     maximumTimeData = { isLinear: false,
-                        value: maximumTime ?? Infinity,
+                        value: maximumTime,
                         time: now };
   } else {
     minimumTime = contentStart;
