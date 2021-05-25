@@ -57,6 +57,8 @@
     - [getPreferredTextTracks](#meth-getPreferredTextTracks)
     - [setPreferredVideoTracks](#meth-setPreferredVideoTracks)
     - [getPreferredVideoTracks](#meth-getPreferredVideoTracks)
+    - [startTrickMode](#meth-startTrickMode)
+    - [stopTrickMode](#meth-stopTrickMode)
  - [Bitrate selection](#meth-group-bitrate-selection)
     - [getAvailableVideoBitrates](#meth-getAvailableVideoBitrates)
     - [getAvailableAudioBitrates](#meth-getAvailableAudioBitrates)
@@ -2119,6 +2121,65 @@ if it was called.
 
 It will return an empty Array if none of those two APIs were used until now.
 
+
+<a name="meth-startTrickMode"></a>
+### startTrickMode #############################################################
+
+--
+
+__syntax__: `player.startTrickMode(2)`
+
+__arguments__:
+
+  - _number_ (`Trick mode speed`): 
+
+--
+
+This API only makes senses when playing a content with a video track enabled
+that contains a trick mode track. It will throw if no specific trick mode track
+is attached to it.
+
+The trick mode allows to play content fast-forward in an efficient way, by
+exploiting trick mode tracks : on these specific tracks, video content is often
+encoded with a very low framerate because the content is not intended to be
+played at regular framerate and because the chunks must be faster to load for
+the client.
+
+
+<a name="meth-stopTrickMode"></a>
+### stopTrickMode ##############################################################
+
+--
+
+__syntax__: `player.stopTrickMode()`
+
+--
+
+This API only makes senses when playing a content with a video track enabled
+that contains a trick mode track. It may be called only when trick mode is
+enabled.
+
+Stops the trick mode and return to a regular content playback.
+
+
+<a name="meth-isTrickModeEnabled"></a>
+### isTrickModeEnabled #########################################################
+
+--
+
+__syntax__: `const isTrickModeEnabled = player.isTrickModeEnabled()`
+
+__return value__: ``Boolean``
+
+--
+
+It tells if the trick mode is currently enabled for the content playback :
+
+The trick mode allows to play content fast-forward in an efficient way, by
+exploiting trick mode tracks : on these specific tracks, video content is often
+encoded with a very low framerate because the content is not intended to be
+played at regular framerate and because the chunks must be faster to load for
+the client.
 
 
 <a name="meth-group-bitrate-selection"></a>
