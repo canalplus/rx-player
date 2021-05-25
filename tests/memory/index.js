@@ -1,5 +1,8 @@
 import { expect } from "chai";
 import RxPlayer from "../../src";
+import VideoThumbnailLoader, {
+  DASH_LOADER
+} from "../../src/experimental/tools/videoThumbnailLoader";
 import { manifestInfos } from "../contents/DASH_static_SegmentTimeline";
 import textTrackInfos from "../contents/texttracks";
 import imageInfos from "../contents/imagetracks";
@@ -112,5 +115,63 @@ describe("Memory tests", () => {
       | Difference (B)         | ${heapDifference}
     `);
     expect(heapDifference).to.be.below(10e6);
+  });
+
+  it("should not have a sensible memory leak after 100 setTime calls of VideoThumbnailLoader", async function() {
+    if (window.performance == null ||
+        window.performance.memory == null ||
+        window.gc == null)
+    {
+      // eslint-disable-next-line no-console
+      console.warn("API not available. Skipping test.");
+      return;
+    }
+    this.timeout(5 * 60 * 1000);
+    player = new RxPlayer({ initialVideoBitrate: Infinity,
+                            initialaudiobitrate: Infinity,
+                            preferredtexttracks: [{ language: "fra",
+                                                    closedcaption: true }] });
+    const vtlVideoElement = document.createElement("video");
+    const videoThumbnailLoader =
+      new VideoThumbnailLoader(vtlVideoElement, player);
+
+    window.gc();
+    const initialMemory = window.performance.memory;
+
+    player.loadVideo({ url: manifestInfos.url,
+                       transport: manifestInfos.transport,
+                       autoPlay: true });
+    await waitForLoadedStateAfterLoadVideo(player);
+    const manifest = player.getManifest();
+    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
+    expect(refToVideoAdaptation).not.to.equal(undefined);
+    manifest.periods[0].adaptations.video[0].trickModeTracks =
+      [refToVideoAdaptation];
+    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
+      .not.to.equal(undefined);
+
+    videoThumbnailLoader.addLoader(DASH_LOADER);
+
+    for (let c = 0; c < 100; c++) {
+      await videoThumbnailLoader.setTime(c);
+    }
+
+    player.stop();
+    videoThumbnailLoader.dispose();
+    await sleep(1000);
+    window.gc();
+    await sleep(500);
+    const newMemory = window.performance.memory;
+    const heapDifference = newMemory.usedJSHeapSize -
+                           initialMemory.usedJSHeapSize;
+
+    // eslint-disable-next-line no-console
+    console.log(`
+      ===========================================================
+      | Current heap usage (B) | ${newMemory.usedJSHeapSize}
+      | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
+      | Difference (B)         | ${heapDifference}
+    `);
+    expect(heapDifference).to.be.below(1e6);
   });
 });
