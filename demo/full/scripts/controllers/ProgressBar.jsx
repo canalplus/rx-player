@@ -1,19 +1,24 @@
 import React from "react";
+import ImageThumbnail from "../components/ImageThumbnail";
 import ProgressbarComponent from "../components/ProgressBar.jsx";
-import ImageTip from "../components/ImageTip.jsx";
 import ToolTip from "../components/ToolTip.jsx";
+import VideoThumbnail from "../components/VideoThumbnail";
 import withModulesState from "../lib/withModulesState.jsx";
 
 class Progressbar extends React.Component {
   constructor(...args) {
     super(...args);
+
+    this.thumbnailsElement = [];
+    this.subscription = null;
     this.state = {
       timeIndicatorVisible: false,
       timeIndicatorPosition: 0,
       timeIndicatorText: "",
-      imageTipVisible: false,
-      imageTipPosition: 0,
+      thumbnailIsVisible: false,
+      tipPosition: 0,
       image: null,
+      imageTime: null,
     };
   }
 
@@ -46,14 +51,25 @@ class Progressbar extends React.Component {
                     timeIndicatorText: "" });
   }
 
-  showImageTip(ts, clientX) {
+  showVideoTumbnail(ts, clientX) {
+    const timestampToMs = ts;
+    this.setState({
+      thumbnailIsVisible: true,
+      tipPosition: clientX,
+      imageTime: timestampToMs,
+    });
+  }
+
+  showImageThumbnail(ts, clientX) {
     const { images } = this.props;
     if (!images || !images.length) {
       return;
     }
+
     const timestampToMs = ts * 1000;
     const imageIndex = images.findIndex(i =>
-      i && i.ts > timestampToMs);
+      i && i.ts > timestampToMs
+    );
     const image = imageIndex === -1 ?
       images[images.length - 1] :
       images[imageIndex - 1];
@@ -61,28 +77,38 @@ class Progressbar extends React.Component {
       return;
     }
     this.setState({
-      imageTipVisible: true,
-      imageTipPosition: clientX,
+      thumbnailIsVisible: true,
+      tipPosition: clientX,
       image: image.data,
     });
   }
 
-  hideImageTip() {
+  showThumbnail(ts, clientX, enableVideoThumbnails) {
+    if (enableVideoThumbnails) {
+      this.showVideoTumbnail(ts, clientX);
+    } else {
+      this.showImageThumbnail(ts, clientX);
+    }
+  }
+
+  hideTumbnail() {
     this.setState({
-      imageTipVisible: false,
-      imageTipPosition: 0,
+      thumbnailIsVisible: false,
+      tipPosition: 0,
+      imageTime: null,
       image: null,
     });
   }
 
   render() {
     const {
-      imageTipVisible,
-      imageTipPosition,
+      thumbnailIsVisible,
+      tipPosition,
       image,
       timeIndicatorVisible,
       timeIndicatorPosition,
       timeIndicatorText,
+      imageTime,
     } = this.state;
     const {
       currentTime,
@@ -92,21 +118,18 @@ class Progressbar extends React.Component {
       isLive,
       bufferGap,
       player,
-      onSeek,
+      enableVideoThumbnails,
     } = this.props;
-    const seek = position => {
-      onSeek();
-      player.dispatch("SEEK", position);
-    };
+    const seek = position => player.dispatch("SEEK", position);
     const hideToolTips = () => {
       this.hideTimeIndicator();
-      this.hideImageTip();
+      this.hideTumbnail();
     };
     const onMouseMove = (position, event) => {
       const wallClockDiff = player.get("wallClockDiff");
       const wallClockTime = position + wallClockDiff;
       this.showTimeIndicator(wallClockTime, event.clientX, isLive);
-      this.showImageTip(position, event.clientX);
+      this.showThumbnail(position, event.clientX, enableVideoThumbnails);
     };
 
     const toolTipOffset = this.wrapperElement ?
@@ -120,6 +143,7 @@ class Progressbar extends React.Component {
       );
     }
 
+    const xThumbnailPosition = tipPosition - toolTipOffset;
     return (
       <div
         className="progress-bar-parent"
@@ -135,12 +159,17 @@ class Progressbar extends React.Component {
             /> : null
         }
         {
-          imageTipVisible ?
-            <ImageTip
-              className="progress-tip"
-              image={image}
-              xPosition={imageTipPosition - toolTipOffset}
-            /> : null
+          !thumbnailIsVisible ? null :
+            enableVideoThumbnails ?
+              <VideoThumbnail
+                xPosition={xThumbnailPosition}
+                time={imageTime}
+                player={player}
+              /> :
+              <ImageThumbnail
+                image={image}
+                xPosition={xThumbnailPosition}
+              />
         }
         <ProgressbarComponent
           seek={seek}
