@@ -94,7 +94,6 @@ pub enum TagName {
 
 #[derive(PartialEq, Clone, Copy)]
 #[repr(C)]
-#[no_mangle]
 pub enum AttributeName {
     /// Describes the "id" attribute that can be found in many, many elements.
     ///
@@ -161,9 +160,6 @@ pub enum AttributeName {
     // SegmentTemplate
     StartNumber = 20, // f64
 
-    // SegmentBase
-    SegmentBaseSegment = 21, // SegmentBaseSegment
-
     // SegmentTemplate + SegmentBase
     AvailabilityTimeComplete = 22, // u8 (bool)
     IndexRangeExact = 23, // u8 (bool)
@@ -171,9 +167,6 @@ pub enum AttributeName {
 
     // EventStream
     EventPresentationTime = 25, // f64
-
-    // EventStreamElt
-    Element = 26, // String (XML)
 
     // SegmentTemplate + SegmentBase + EventStream + EventStreamElt
     TimeScale = 27, // f64
@@ -206,9 +199,6 @@ pub enum AttributeName {
 
     // BaseURL + SegmentTemplate
     AvailabilityTimeOffset = 43, // f64
-
-    // BaseURL
-    BaseUrlValue = 44, // String
 
     // Period
     Start = 45, // f64

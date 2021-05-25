@@ -15,7 +15,6 @@ use events::*;
 use processor::MPDProcessor;
 use reader::MPDReader;
 
-#[no_mangle]
 extern "C" {
     /// JS callback called each time a new known tag is encountered in the MPD.
     ///
