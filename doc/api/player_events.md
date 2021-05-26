@@ -367,10 +367,10 @@ properties:
     to be played at regular framerate and because the chunks must be faster to
     load for sthe client.
 
-  - ``hasTrickModeTrack`` (``Boolean``): If set to `true`, it is
-    possible to exploit an attached trick mode track when changing playback
-    rate (by enabling the trick mode track when using the
-    [setPlaybackRate](#setPlaybackRate) API)
+  - ``trickModeTracks`` (``Object | undefined``): Trick mode video tracks
+    attached to the video track. It is undefined if no available tracks. When
+    changing the playback rate with [setPlaybackRate](#setPlaybackRate), the
+    RxPlayer will switch to the first of these tracks, if it is defined.
 
 A `null` payload means that video track has been disabled.
 

@@ -1373,32 +1373,33 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   setPlaybackRate(rate : number, enableTrickModeTrack?: boolean) : void {
     this._priv_speed$.next(rate);
-    if (enableTrickModeTrack !== undefined) {
-      if (enableTrickModeTrack) {
-        if (this._priv_trackChoiceManager === null ||
+    if (enableTrickModeTrack === undefined) {
+      return;
+    }
+    if (enableTrickModeTrack) {
+      if (this._priv_trackChoiceManager === null ||
           isNullOrUndefined(this._priv_contentInfos) ||
           this._priv_contentInfos.currentPeriod === null) {
-          log.warn("API: Can't set trickMode track when no content loaded.");
-          return;
-        }
-        if (this._priv_trackChoiceManager.trickModeTrackEnabled) {
-          return;
-        }
-        this._priv_trackChoiceManager
-          .enableVideoTrickModeTrack(this._priv_contentInfos.currentPeriod);
-      } else {
-        if (this._priv_trackChoiceManager === null ||
-          isNullOrUndefined(this._priv_contentInfos) ||
-          this._priv_contentInfos.currentPeriod === null) {
-          log.warn("API: Can't unset trickMode track when no content loaded.");
-          return;
-        }
-        if (!this._priv_trackChoiceManager.trickModeTrackEnabled) {
-          return;
-        }
-        this._priv_trackChoiceManager
-          .disableVideoTrickModeTrack(this._priv_contentInfos.currentPeriod);
+        log.warn("API: Can't set trickMode track when no content loaded.");
+        return;
       }
+      if (this._priv_trackChoiceManager.trickModeTrackEnabled) {
+        return;
+      }
+      this._priv_trackChoiceManager
+        .enableVideoTrickModeTrack(this._priv_contentInfos.currentPeriod);
+    } else {
+      if (this._priv_trackChoiceManager === null ||
+          isNullOrUndefined(this._priv_contentInfos) ||
+          this._priv_contentInfos.currentPeriod === null) {
+        log.warn("API: Can't unset trickMode track when no content loaded.");
+        return;
+      }
+      if (!this._priv_trackChoiceManager.trickModeTrackEnabled) {
+        return;
+      }
+      this._priv_trackChoiceManager
+        .disableVideoTrickModeTrack(this._priv_contentInfos.currentPeriod);
     }
   }
 

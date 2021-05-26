@@ -95,7 +95,7 @@ interface ITMVideoRepresentation { id : string|number;
 export interface ITMVideoTrack { id : number|string;
                                  signInterpreted?: boolean;
                                  isTrickModeTrack: boolean;
-                                 hasTrickModeTrack: boolean;
+                                 trickModeTracks?: ITMVideoTrack[];
                                  representations: ITMVideoRepresentation[]; }
 
 /** Audio track from a list of audio tracks returned by the TrackChoiceManager. */
@@ -722,23 +722,25 @@ export default class TrackChoiceManager {
     if (chosenVideoAdaptation == null) {
       return null;
     }
+    const trickModeTracks = chosenVideoAdaptation.trickModeTracks !== undefined ?
+      chosenVideoAdaptation.trickModeTracks.map((trickModeAdaptation) => {
+        return {
+          id: trickModeAdaptation.id,
+          representations: trickModeAdaptation.representations
+            .map(parseVideoRepresentation),
+          isTrickModeTrack: trickModeAdaptation.isTrickModeTrack === true,
+          trickModeTracks: undefined,
+        };
+      }) : undefined;
     const videoTrack: ITMVideoTrack = {
       id: chosenVideoAdaptation.id,
       representations: chosenVideoAdaptation.representations
         .map(parseVideoRepresentation),
       isTrickModeTrack: chosenVideoAdaptation.isTrickModeTrack === true,
-      hasTrickModeTrack: chosenVideoAdaptation.trickModeTracks !== undefined &&
-                         chosenVideoAdaptation.trickModeTracks.length > 0,
+      trickModeTracks,
     };
     if (chosenVideoAdaptation.isSignInterpreted === true) {
       videoTrack.signInterpreted = true;
-    }
-    if (chosenVideoAdaptation.isTrickModeTrack === true) {
-      videoTrack.isTrickModeTrack = true;
-    }
-    if (chosenVideoAdaptation.trickModeTracks !== undefined &&
-        chosenVideoAdaptation.trickModeTracks.length) {
-      videoTrack.hasTrickModeTrack = true;
     }
     return videoTrack;
   }
@@ -825,16 +827,24 @@ export default class TrackChoiceManager {
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
     const currentId = chosenVideoAdaptation != null ? chosenVideoAdaptation.id :
                                                       null;
-
     return videoInfos.adaptations
       .map((adaptation) => {
+        const trickModeTracks = adaptation.trickModeTracks !== undefined ?
+        adaptation.trickModeTracks.map((trickModeAdaptation) => {
+          return {
+            id: trickModeAdaptation.id,
+            representations: trickModeAdaptation.representations
+              .map(parseVideoRepresentation),
+            isTrickModeTrack: trickModeAdaptation.isTrickModeTrack === true,
+            trickModeTracks: undefined,
+          };
+        }) : undefined;
         const formatted: ITMVideoTrackListItem = {
           id: adaptation.id,
           active: currentId === null ? false :
                                        currentId === adaptation.id,
           isTrickModeTrack: adaptation.isTrickModeTrack === true,
-          hasTrickModeTrack: adaptation.trickModeTracks !== undefined &&
-                             adaptation.trickModeTracks.length > 0,
+          trickModeTracks,
           representations: adaptation.representations.map(parseVideoRepresentation),
         };
         if (adaptation.isSignInterpreted === true) {
