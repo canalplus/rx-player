@@ -14,7 +14,7 @@ import withModulesState from "../lib/withModulesState";
 class VideoThumbnail extends React.Component {
   constructor(...args) {
     super(...args);
-    this.isMounted = true;
+    this._isMounted = true;
 
     /**
      * Timeout before loading a thumbnail, to avoid triggering to many requests
@@ -32,14 +32,14 @@ class VideoThumbnail extends React.Component {
     this.state = {
       style: {},
       divSpinnerStyle: {
-        "background-color": "gray",
+        "backgroundColor": "gray",
         "position": "absolute",
         "width": "100%",
         "height": "100%",
         "opacity": "50%",
         "display": "flex",
-        "justify-content": "center",
-        "align-items": "center",
+        "justifyContent": "center",
+        "alignItems": "center",
       },
       spinnerStyle: {
         "width": "50%",
@@ -129,7 +129,7 @@ class VideoThumbnail extends React.Component {
 
   componentWillUnmount() {
     this.hideSpinner();
-    this.isMounted = false;
+    this._isMounted = false;
   }
 
   render() {
@@ -153,13 +153,13 @@ class VideoThumbnail extends React.Component {
         this._loadThumbnailTimeout = null;
         thumbnailsData.videoThumbnailLoader.setTime(roundedTime)
           .then(() => {
-            if (time !== this.props.time || !this.isMounted) {
+            if (time !== this.props.time || !this._isMounted) {
               return;
             }
             this.hideSpinner();
           })
           .catch(() => {
-            if (time !== this.props.time || !this.isMounted) {
+            if (time !== this.props.time || !this._isMounted) {
               return;
             }
             this.hideSpinner();
