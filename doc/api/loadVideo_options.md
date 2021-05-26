@@ -59,31 +59,57 @@ This property is mandatory.
 
 Can be either:
 
-  - ``"dash"`` - for DASH contents
+  - **`"dash"` - for DASH contents.**
 
-  - ``"smooth"`` - for Microsoft Smooth Streaming contents
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least either one of the following features to be able
+    to play DASH contents:
+      - the `DASH` feature (rely on a generally-sufficient JavaScript parser)
+      - the `DASH_WASM` experimental feature (backed by a WebAssembly parser,
+        more efficient when handling very large MPDs).
+        More information in the [`DASH_WASM` experimental feature
+        documentation](./dash_wasm_parser.md).
+      - or both (which will use the latter only when available)
 
-  - ``"directfile"`` - for loading a video in _DirectFile_ mode, which allows to
-    directly play media files (example: ``.mp4`` or ``.webm`` files) without
+  - **`"smooth"` - for Microsoft Smooth Streaming contents**
+
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `SMOOTH` feature to be able to play Smooth
+    contents.
+
+  - **`"directfile"` - for loading a video in _DirectFile_ mode, which allows to
+    directly play media files** (example: ``.mp4`` or ``.webm`` files) without
     using a transport protocol. With that option, you can even play HLS
     contents on multiple browsers (mainly safari and iOS browsers).
+
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `DIRECTFILE` feature to be able to play those
+    contents.
 
     :warning: In that mode, multiple APIs won't have any effect.
     This is documented in the documentation of each concerned method, option or
     event in the API.
 
-  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams, which are
+  - **`"metaplaylist"` for [MetaPlaylist](./metaplaylist.md) streams**, which are
     a concatenation of multiple smooth and DASH contents
 
-  - `"local"` for [local manifests](./local_manifest.md), which allows to play
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `METAPLAYLIST` experimental feature to be able
+    to play those contents.
+
+  - **`"local"` for [local manifests](./local_manifest.md)**, which allows to play
     downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
+
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `LOCAL_MANIFEST` experimental feature to be
+    able to play those contents.
 
 Example:
 ```js
 // play some dash content
 rxPlayer.loadVideo({
   transport: "dash",
-  url: https://www.example.com/dash.mpd
+  url: "https://www.example.com/dash.mpd"
 })
 ```
 
@@ -116,7 +142,7 @@ Example:
 ```js
 // play some dash content
 rxPlayer.loadVideo({
-  url: https://www.example.com/dash.mpd,
+  url: "https://www.example.com/dash.mpd",
   transport: "dash"
 })
 ```
