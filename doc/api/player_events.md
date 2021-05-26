@@ -30,7 +30,6 @@
     - [inbandEvents](#events-inbandEvents)
     - [streamEvent](events-streamEvent)
     - [streamEventSkip](events-streamEventSkip)
-    - [trickModeEnabled](events-trickModeEnabled)
  - [Deprecated](#events-deprecated)
     - [imageTrackUpdate (deprecated)](#events-imageTrackUpdate)
     - [fullscreenChange (deprecated)](#events-fullscreenChange)
@@ -362,6 +361,17 @@ properties:
       characteristics of the track.
       (see [HDR support documentation](./hdr.md#hdrinfo))
 
+  - ``isTrickModeTrack`` (``Boolean``): If set to `true`, the track is
+    a trick mode track. The trick mode track proposes video content that is
+    often encoded with a very low framerate because the content is not intended
+    to be played at regular framerate and because the chunks must be faster to
+    load for sthe client.
+
+  - ``hasTrickModeTrack`` (``Boolean``): If set to `true`, it is
+    possible to exploit an attached trick mode track when changing playback
+    rate (by enabling the trick mode track when using the
+    [setPlaybackRate](#setPlaybackRate) API)
+
 A `null` payload means that video track has been disabled.
 
 This event only concerns the currently-playing Period.
@@ -687,38 +697,6 @@ tutorial](../tutorials/stream_events.md).
 Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
 was not entered, and will thus not be exited.
-
-<a name="events-trickModeStart"></a>
-### trickModeStart #############################################################
-
-_payload type_: ``undefined``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
-Event triggered when the trick mode starts. It means that it will be triggered
-when the trick mode is enabled by the user.
-
-<a name="events-trickModeStop"></a>
-### trickModeStop ##############################################################
-
-_payload type_: ``undefined``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
-Event triggered when the trick mode stops. It means that it will be triggered
-when the trick mode is disabled by the user. Also, it can be emitted when
-changing track and trick mode is enabled, but no trick mode track exists on the
-wanted track.
 
 <a name="events-deprecated"></a>
 ## Deprecated ##################################################################
