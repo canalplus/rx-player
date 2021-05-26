@@ -411,7 +411,7 @@ export default function parseAdaptationSets(
         { id: adaptationID,
           representations,
           type,
-          isTrickMode: isTrickModeTrack };
+          isTrickModeTrack };
       if (adaptation.attributes.language != null) {
         parsedAdaptationSet.language = adaptation.attributes.language;
       }

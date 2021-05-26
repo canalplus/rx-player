@@ -222,8 +222,6 @@ interface IPublicAPIEvent {
   streamEvent : IStreamEvent;
   streamEventSkip : IStreamEvent;
   inbandEvents : IInbandEvent[];
-  trickModeStart : undefined;
-  trickModeStop : undefined;
 }
 
 /**
@@ -276,16 +274,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Used instead of videoElement.playbackRate to allow more flexibility.
    */
   private readonly _priv_speed$ : BehaviorSubject<number>;
-
-  /**
-   * Record speed choices made by the user or the RxPlayer :
-   * - normal : speed set for content playback
-   * - trickMode : speed set for trickMode track playback
-   */
-  private _priv_speedChoices : {
-    normal: number;
-    trickMode: number;
-  };
 
   /** Store buffer-related options used needed when initializing a content. */
   private readonly _priv_bufferOptions : {
@@ -558,9 +546,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       .subscribe((x : TextTrack[]) => this._priv_onNativeTextTracksNext(x));
 
     this._priv_playing$ = new ReplaySubject(1);
-    this._priv_speedChoices = { normal: videoElement.playbackRate,
-                                trickMode: videoElement.playbackRate };
-    this._priv_speed$ = new BehaviorSubject(this._priv_speedChoices.normal);
+    this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
     this._priv_contentLock$ = new BehaviorSubject<boolean>(false);
 
     this._priv_bufferOptions = {
@@ -766,7 +752,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /** Emit playback events. */
     let playback$ : ConnectableObservableLike<IInitEvent>;
 
-    this._priv_speed$.next(this._priv_speedChoices.normal);
     const speed$ = this._priv_speed$.pipe(distinctUntilChanged());
 
     if (!isDirectFile) {
@@ -1384,12 +1369,36 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Update the playback rate of the video.
    * @param {Number} rate
+   * @param {Boolean|undefined} enableTrickModeTrack
    */
-  setPlaybackRate(rate : number) : void {
-    this._priv_speedChoices.normal = rate;
-    if (this._priv_trackChoiceManager === null ||
-        !this._priv_trackChoiceManager.trickModeEnabled) {
-      this._priv_speed$.next(this._priv_speedChoices.normal);
+  setPlaybackRate(rate : number, enableTrickModeTrack?: boolean) : void {
+    this._priv_speed$.next(rate);
+    if (enableTrickModeTrack !== undefined) {
+      if (enableTrickModeTrack) {
+        if (this._priv_trackChoiceManager === null ||
+          isNullOrUndefined(this._priv_contentInfos) ||
+          this._priv_contentInfos.currentPeriod === null) {
+          log.warn("API: Can't set trickMode track when no content loaded.");
+          return;
+        }
+        if (this._priv_trackChoiceManager.trickModeTrackEnabled) {
+          return;
+        }
+        this._priv_trackChoiceManager
+          .enableVideoTrickModeTrack(this._priv_contentInfos.currentPeriod);
+      } else {
+        if (this._priv_trackChoiceManager === null ||
+          isNullOrUndefined(this._priv_contentInfos) ||
+          this._priv_contentInfos.currentPeriod === null) {
+          log.warn("API: Can't unset trickMode track when no content loaded.");
+          return;
+        }
+        if (!this._priv_trackChoiceManager.trickModeTrackEnabled) {
+          return;
+        }
+        this._priv_trackChoiceManager
+          .disableVideoTrickModeTrack(this._priv_contentInfos.currentPeriod);
+      }
     }
   }
 
@@ -2174,53 +2183,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 
-  /**
-   * Start the playback trick mode :
-   * Select and set the trickMode track for current video track.
-   * Modify the trickMode playback rate.
-   * @param {number} playbackRate
-   */
-  startTrickMode(playbackRate: number): void {
-    if (this._priv_trackChoiceManager === null ||
-        isNullOrUndefined(this._priv_contentInfos) ||
-        this._priv_contentInfos.currentPeriod === null) {
-      throw new Error("API: Can't set trickMode when no content loaded.");
-    }
-    this._priv_speedChoices.trickMode = playbackRate;
-    if (this._priv_trackChoiceManager.trickModeEnabled) {
-      this._priv_speed$.next(this._priv_speedChoices.trickMode);
-      return;
-    }
-    this._priv_trackChoiceManager
-      .setVideoTrickMode(this._priv_contentInfos.currentPeriod);
-  }
-
-  /**
-   * Disable the trickMode.
-   * Select and reset the main video track.
-   */
-  stopTrickMode(): void {
-    if (this._priv_trackChoiceManager === null ||
-      isNullOrUndefined(this._priv_contentInfos) ||
-      this._priv_contentInfos.currentPeriod === null) {
-      throw new Error("API: Can't set trickMode when no content loaded.");
-    }
-    if (!this._priv_trackChoiceManager.trickModeEnabled) {
-      return;
-    }
-    this._priv_trackChoiceManager
-      .unsetVideoTrickMode(this._priv_contentInfos.currentPeriod);
-  }
-
-  /**
-   * @returns {Boolean}
-   */
-  isTrickModeEnabled(): boolean {
-    if (this._priv_trackChoiceManager === null) {
-      return false;
-    }
-    return this._priv_trackChoiceManager.trickModeEnabled;
-  }
 
   /**
    * @returns {Array.<Object>|null}
@@ -2497,15 +2459,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { initialAudioTrack, initialTextTrack } = contentInfos;
     this._priv_trackChoiceManager = new TrackChoiceManager();
-    this._priv_trackChoiceManager.onTrickModeEnabledChange = (isTrickModeEnabled) => {
-      if (isTrickModeEnabled) {
-        this.trigger("trickModeStart", undefined);
-        this._priv_speed$.next(this._priv_speedChoices.trickMode);
-      } else {
-        this.trigger("trickModeStop", undefined);
-        this._priv_speed$.next(this._priv_speedChoices.normal);
-      }
-    };
 
     const preferredAudioTracks = initialAudioTrack === undefined ?
       this._priv_preferredAudioTracks :

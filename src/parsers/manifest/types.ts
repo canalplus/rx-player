@@ -165,7 +165,7 @@ export interface IParsedAdaptation {
    */
   isSignInterpreted? : boolean;
   /** Tells if the track is a trick mode track. */
-  isTrickMode? : boolean;
+  isTrickModeTrack? : boolean;
   /**
    * Language the `Adaptation` is in.
    * Not set if unknown or if it makes no sense for the current track.

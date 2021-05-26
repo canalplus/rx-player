@@ -62,6 +62,8 @@ describe("API - MediaElementTrackChoiceManager", () => {
     expect(chosenVideoTrack).toEqual({
       id: "gen_video_nolang_1",
       representations: [],
+      isTrickModeTrack: false,
+      hasTrickModeTrack: false,
     });
     expect(chosenTextTrack).toEqual({
       id: "gen_text_fr_1",

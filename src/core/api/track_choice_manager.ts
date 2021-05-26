@@ -94,6 +94,8 @@ interface ITMVideoRepresentation { id : string|number;
 /** Video track returned by the TrackChoiceManager. */
 export interface ITMVideoTrack { id : number|string;
                                  signInterpreted?: boolean;
+                                 isTrickModeTrack: boolean;
+                                 hasTrickModeTrack: boolean;
                                  representations: ITMVideoRepresentation[]; }
 
 /** Audio track from a list of audio tracks returned by the TrackChoiceManager. */
@@ -220,10 +222,7 @@ export default class TrackChoiceManager {
   private _videoChoiceMemory : WeakMap<Period, Adaptation|null>;
 
   /** Tells if trick mode has been enabled by the RxPlayer user */
-  public trickModeEnabled: boolean;
-
-  /** Callback used to warn about trick mode changes */
-  public onTrickModeEnabledChange?: (trickModeEnabled: boolean) => void;
+  public trickModeTrackEnabled: boolean;
 
   constructor() {
     this._periods = new SortedList((a, b) => a.period.start - b.period.start);
@@ -235,7 +234,7 @@ export default class TrackChoiceManager {
     this._preferredAudioTracks = [];
     this._preferredTextTracks = [];
     this._preferredVideoTracks = [];
-    this.trickModeEnabled = false;
+    this.trickModeTrackEnabled = false;
   }
 
   /**
@@ -555,7 +554,7 @@ export default class TrackChoiceManager {
   /**
    * @param {Object} period
    */
-  public unsetVideoTrickMode(period: Period): void {
+  public disableVideoTrickModeTrack(period: Period): void {
     const periodItem = getPeriodItem(this._periods, period);
     const videoInfos = periodItem != null ? periodItem.video :
                                             null;
@@ -575,7 +574,7 @@ export default class TrackChoiceManager {
   /**
    * @param {Object} period
    */
-  public setVideoTrickMode(period : Period) : void {
+  public enableVideoTrickModeTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const videoInfos = periodItem != null ? periodItem.video :
                                             null;
@@ -727,9 +726,19 @@ export default class TrackChoiceManager {
       id: chosenVideoAdaptation.id,
       representations: chosenVideoAdaptation.representations
         .map(parseVideoRepresentation),
+      isTrickModeTrack: chosenVideoAdaptation.isTrickModeTrack === true,
+      hasTrickModeTrack: chosenVideoAdaptation.trickModeTracks !== undefined &&
+                         chosenVideoAdaptation.trickModeTracks.length > 0,
     };
     if (chosenVideoAdaptation.isSignInterpreted === true) {
       videoTrack.signInterpreted = true;
+    }
+    if (chosenVideoAdaptation.isTrickModeTrack === true) {
+      videoTrack.isTrickModeTrack = true;
+    }
+    if (chosenVideoAdaptation.trickModeTracks !== undefined &&
+        chosenVideoAdaptation.trickModeTracks.length) {
+      videoTrack.hasTrickModeTrack = true;
     }
     return videoTrack;
   }
@@ -823,6 +832,9 @@ export default class TrackChoiceManager {
           id: adaptation.id,
           active: currentId === null ? false :
                                        currentId === adaptation.id,
+          isTrickModeTrack: adaptation.isTrickModeTrack === true,
+          hasTrickModeTrack: adaptation.trickModeTracks !== undefined &&
+                             adaptation.trickModeTracks.length > 0,
           representations: adaptation.representations.map(parseVideoRepresentation),
         };
         if (adaptation.isSignInterpreted === true) {
@@ -1034,16 +1046,13 @@ export default class TrackChoiceManager {
       adaptation$.next(null);
       return;
     }
-    const trickModeEnabled = switchTrickModeTo ?? this.trickModeEnabled;
-    if (trickModeEnabled) {
+    const trickModeTrackEnabled = switchTrickModeTo ?? this.trickModeTrackEnabled;
+    if (trickModeTrackEnabled) {
       if (adaptation.trickModeTracks !== undefined &&
           adaptation.trickModeTracks[0] !== undefined) {
         adaptation$.next(adaptation.trickModeTracks[0]);
-        if (!this.trickModeEnabled) {
-          this.trickModeEnabled = true;
-          if (this.onTrickModeEnabledChange) {
-            this.onTrickModeEnabledChange(this.trickModeEnabled);
-          }
+        if (!this.trickModeTrackEnabled) {
+          this.trickModeTrackEnabled = true;
         }
         return;
       } else {
@@ -1052,11 +1061,8 @@ export default class TrackChoiceManager {
       }
     }
     adaptation$.next(adaptation);
-    if (this.trickModeEnabled) {
-      this.trickModeEnabled = false;
-      if (this.onTrickModeEnabledChange) {
-        this.onTrickModeEnabledChange(false);
-      }
+    if (this.trickModeTrackEnabled) {
+      this.trickModeTrackEnabled = false;
     }
   }
 }
