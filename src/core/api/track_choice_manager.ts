@@ -722,27 +722,47 @@ export default class TrackChoiceManager {
     if (chosenVideoAdaptation == null) {
       return null;
     }
-    const trickModeTracks = chosenVideoAdaptation.trickModeTracks !== undefined ?
-      chosenVideoAdaptation.trickModeTracks.map((trickModeAdaptation) => {
-        return {
-          id: trickModeAdaptation.id,
-          representations: trickModeAdaptation.representations
-            .map(parseVideoRepresentation),
-          isTrickModeTrack: trickModeAdaptation.isTrickModeTrack === true,
-          trickModeTracks: undefined,
-        };
-      }) : undefined;
-    const videoTrack: ITMVideoTrack = {
-      id: chosenVideoAdaptation.id,
-      representations: chosenVideoAdaptation.representations
-        .map(parseVideoRepresentation),
-      isTrickModeTrack: chosenVideoAdaptation.isTrickModeTrack === true,
-      trickModeTracks,
-    };
-    if (chosenVideoAdaptation.isSignInterpreted === true) {
-      videoTrack.signInterpreted = true;
+    let currentId: string | undefined;
+    const firstTrickModeTrack = chosenVideoAdaptation.trickModeTracks !== undefined ?
+      chosenVideoAdaptation.trickModeTracks[0] :
+      undefined;
+    if (this.trickModeTrackEnabled && firstTrickModeTrack !== undefined) {
+      currentId = firstTrickModeTrack.id;
+      const trickModevideoTrack: ITMVideoTrack = {
+        id: firstTrickModeTrack.id,
+        representations: firstTrickModeTrack.representations
+          .map(parseVideoRepresentation),
+        isTrickModeTrack: firstTrickModeTrack.isTrickModeTrack === true,
+      };
+      if (firstTrickModeTrack.isSignInterpreted === true) {
+        trickModevideoTrack.signInterpreted = true;
+      }
+      return trickModevideoTrack;
+    } else {
+      currentId = chosenVideoAdaptation.id;
+      const trickModeTracks = chosenVideoAdaptation.trickModeTracks !== undefined ?
+        chosenVideoAdaptation.trickModeTracks.map((trickModeAdaptation) => {
+          return {
+            id: trickModeAdaptation.id,
+            representations: trickModeAdaptation.representations
+              .map(parseVideoRepresentation),
+            isTrickModeTrack: trickModeAdaptation.isTrickModeTrack === true,
+            trickModeTracks: undefined,
+            active: currentId === null ? false : currentId === trickModeAdaptation.id,
+          };
+        }) : undefined;
+      const videoTrack: ITMVideoTrack = {
+        id: chosenVideoAdaptation.id,
+        representations: chosenVideoAdaptation.representations
+          .map(parseVideoRepresentation),
+        isTrickModeTrack: chosenVideoAdaptation.isTrickModeTrack === true,
+        trickModeTracks,
+      };
+      if (chosenVideoAdaptation.isSignInterpreted === true) {
+        videoTrack.signInterpreted = true;
+      }
+      return videoTrack;
     }
-    return videoTrack;
   }
 
   /**
@@ -825,20 +845,31 @@ export default class TrackChoiceManager {
     }
 
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
-    const currentId = chosenVideoAdaptation != null ? chosenVideoAdaptation.id :
-                                                      null;
+    let currentId: string | undefined;
+    if (!isNullOrUndefined(chosenVideoAdaptation)) {
+      const firstTrickModeTrack = chosenVideoAdaptation.trickModeTracks !== undefined ?
+        chosenVideoAdaptation.trickModeTracks[0] :
+        undefined;
+      if (this.trickModeTrackEnabled && firstTrickModeTrack !== undefined) {
+        currentId = firstTrickModeTrack.id;
+      } else {
+        currentId = chosenVideoAdaptation.id;
+      }
+    }
     return videoInfos.adaptations
       .map((adaptation) => {
         const trickModeTracks = adaptation.trickModeTracks !== undefined ?
-        adaptation.trickModeTracks.map((trickModeAdaptation) => {
-          return {
-            id: trickModeAdaptation.id,
-            representations: trickModeAdaptation.representations
-              .map(parseVideoRepresentation),
-            isTrickModeTrack: trickModeAdaptation.isTrickModeTrack === true,
-            trickModeTracks: undefined,
-          };
-        }) : undefined;
+          adaptation.trickModeTracks.map((trickModeAdaptation) => {
+            return {
+              id: trickModeAdaptation.id,
+              representations: trickModeAdaptation.representations
+                .map(parseVideoRepresentation),
+              isTrickModeTrack: trickModeAdaptation.isTrickModeTrack === true,
+              trickModeTracks: undefined,
+              active: currentId === null ? false :
+                                           currentId === trickModeAdaptation.id,
+            };
+          }) : undefined;
         const formatted: ITMVideoTrackListItem = {
           id: adaptation.id,
           active: currentId === null ? false :
