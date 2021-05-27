@@ -110,7 +110,7 @@ function BufferSizeChart({ module }) {
   );
 
   function onNewData(data) {
-    clearAndResizeCanvas(canvasCtx, canvasEl.current, currentMaxSize);
+    clearAndResizeCanvas(canvasCtx);
     if (data.length === 0) {
       return;
     }
