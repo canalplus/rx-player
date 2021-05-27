@@ -367,7 +367,7 @@ properties:
     to be played at regular framerate and because the chunks must be faster to
     load for sthe client.
 
-  - ``trickModeTracks`` (``Object | undefined``): Trick mode video tracks
+  - ``trickModeTracks`` (``Array.<Object> | undefined``): Trick mode video tracks
     attached to the video track. It is undefined if no available tracks. When
     changing the playback rate with [setPlaybackRate](#setPlaybackRate), the
     RxPlayer will switch to the first of these tracks, if it is defined.

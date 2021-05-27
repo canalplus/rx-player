@@ -94,7 +94,7 @@ interface ITMVideoRepresentation { id : string|number;
 /** Video track returned by the TrackChoiceManager. */
 export interface ITMVideoTrack { id : number|string;
                                  signInterpreted?: boolean;
-                                 isTrickModeTrack: boolean;
+                                 isTrickModeTrack?: boolean;
                                  trickModeTracks?: ITMVideoTrack[];
                                  representations: ITMVideoRepresentation[]; }
 
@@ -722,12 +722,10 @@ export default class TrackChoiceManager {
     if (chosenVideoAdaptation == null) {
       return null;
     }
-    let currentId: string | undefined;
     const firstTrickModeTrack = chosenVideoAdaptation.trickModeTracks !== undefined ?
       chosenVideoAdaptation.trickModeTracks[0] :
       undefined;
     if (this.trickModeTrackEnabled && firstTrickModeTrack !== undefined) {
-      currentId = firstTrickModeTrack.id;
       const trickModevideoTrack: ITMVideoTrack = {
         id: firstTrickModeTrack.id,
         representations: firstTrickModeTrack.representations
@@ -739,7 +737,6 @@ export default class TrackChoiceManager {
       }
       return trickModevideoTrack;
     } else {
-      currentId = chosenVideoAdaptation.id;
       const trickModeTracks = chosenVideoAdaptation.trickModeTracks !== undefined ?
         chosenVideoAdaptation.trickModeTracks.map((trickModeAdaptation) => {
           return {
@@ -748,7 +745,6 @@ export default class TrackChoiceManager {
               .map(parseVideoRepresentation),
             isTrickModeTrack: trickModeAdaptation.isTrickModeTrack === true,
             trickModeTracks: undefined,
-            active: currentId === null ? false : currentId === trickModeAdaptation.id,
           };
         }) : undefined;
       const videoTrack: ITMVideoTrack = {
@@ -864,8 +860,6 @@ export default class TrackChoiceManager {
               id: trickModeAdaptation.id,
               representations: trickModeAdaptation.representations
                 .map(parseVideoRepresentation),
-              isTrickModeTrack: trickModeAdaptation.isTrickModeTrack === true,
-              trickModeTracks: undefined,
               active: currentId === null ? false :
                                            currentId === trickModeAdaptation.id,
             };
@@ -874,7 +868,6 @@ export default class TrackChoiceManager {
           id: adaptation.id,
           active: currentId === null ? false :
                                        currentId === adaptation.id,
-          isTrickModeTrack: adaptation.isTrickModeTrack === true,
           trickModeTracks,
           representations: adaptation.representations.map(parseVideoRepresentation),
         };
