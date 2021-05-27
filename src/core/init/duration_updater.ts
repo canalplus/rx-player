@@ -18,6 +18,7 @@ import {
   combineLatest as observableCombineLatest,
   EMPTY,
   fromEvent as observableFromEvent,
+  interval as observableInterval,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -123,7 +124,8 @@ function sourceBuffersAreNotUpdating$(
     updatingSourceBuffers$.push(
       observableMerge(
         observableFromEvent(sourceBuffer, "updatestart").pipe(mapTo(true)),
-        observableFromEvent(sourceBuffer, "update").pipe(mapTo(false))
+        observableFromEvent(sourceBuffer, "update").pipe(mapTo(false)),
+        observableInterval(500).pipe(mapTo(sourceBuffer.updating))
       ).pipe(
         startWith(sourceBuffer.updating),
         distinctUntilChanged()
