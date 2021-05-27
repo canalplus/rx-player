@@ -1223,9 +1223,11 @@ return an object with the following properties:
     load for sthe client.
 
   - ``trickModeTracks`` (``Object | undefined``): Trick mode video tracks
-    attached to the video track. It is undefined if no available tracks. When
-    changing the playback rate with [setPlaybackRate](#setPlaybackRate), the
-    RxPlayer will switch to the first of these tracks, if it is defined.
+    attached to the video track. It contains the same properties that a video
+    track, exepct the trickModeTracks property. It is undefined if no available
+    tracks. When changing the playback rate with
+    [setPlaybackRate](#setPlaybackRate), the RxPlayer will switch to the first
+    of these tracks, if it is defined.
 
 ``undefined`` if no video content has been loaded yet or if its information is
 unknown.
@@ -1410,16 +1412,12 @@ Each of the objects in the returned array have the following properties:
     If not set or set to undefined we don't know whether that video track
     contains an interpretation in sign language.
 
-  - ``isTrickModeTrack`` (``Boolean``): If set to `true`, the track is
-    a trick mode track. The trick mode track proposes video content that is
-    often encoded with a very low framerate because the content is not intended
-    to be played at regular framerate and because the chunks must be faster to
-    load for sthe client.
-
   - ``trickModeTracks`` (``Object | undefined``): Trick mode video tracks
-    attached to the video track. It is undefined if no available tracks. When
-    changing the playback rate with [setPlaybackRate](#setPlaybackRate), the
-    RxPlayer will switch to the first of these tracks, if it is defined.
+    attached to the video track. It contains the same properties that a video
+    track, exepct the trickModeTracks property. It is undefined if no available
+    tracks. When changing the playback rate with
+    [setPlaybackRate](#setPlaybackRate), the RxPlayer will switch to the first
+    of these tracks, if it is defined.
 
 --
 
