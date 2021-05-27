@@ -160,7 +160,7 @@ const createModule = (module, payload) => {
         )
     );
 
-    return observableCombineLatest(...observables);
+    return observableCombineLatest(observables);
   };
 
   const moduleArgs = {

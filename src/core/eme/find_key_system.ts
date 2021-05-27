@@ -326,13 +326,13 @@ export default function getMediaKeySystemAccess(
                                               "No key system compatible with your " +
                                               "wanted configuration has been found " +
                                               "in the current browser.");
-        return observableThrow(error);
+        return observableThrow(() => error);
       }
 
       if (requestMediaKeySystemAccess == null) {
         const error = Error("requestMediaKeySystemAccess is not " +
                             "implemented in your browser.");
-        return observableThrow(error);
+        return observableThrow(() => error);
       }
 
       const { keyName, keyType, keySystemOptions } = keySystemsType[index];

@@ -169,7 +169,7 @@ export default function EMEManager(
                     "but the current content is not known. Throwing.");
           const { sessionError } = blacklistError;
           sessionError.fatal = true;
-          return throwError(sessionError);
+          return throwError(() => sessionError);
         }
         log.warn("EME: The current session has already been blacklisted. " +
                  "Blacklisting content.");

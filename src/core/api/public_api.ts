@@ -23,7 +23,7 @@ import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
-  ConnectableObservable,
+  connectable,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -32,6 +32,8 @@ import {
   Subject,
   Subscription,
 } from "rxjs";
+// RxJS forgot to make that one more accessible it seems
+import { ConnectableObservableLike } from "rxjs/internal/observable/connectable";
 import {
   distinctUntilChanged,
   filter,
@@ -39,7 +41,6 @@ import {
   mapTo,
   mergeMap,
   mergeMapTo,
-  publish,
   share,
   shareReplay,
   skipWhile,
@@ -749,7 +750,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     });
 
     /** Emit playback events. */
-    let playback$ : ConnectableObservable<IInitEvent>;
+    let playback$ : ConnectableObservableLike<IInitEvent>;
 
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
@@ -894,7 +895,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     textTrackOptions })
         .pipe(takeUntil(stopContent$));
 
-      playback$ = publish<IInitEvent>()(init$);
+      playback$ = connectable(init$, { connector: () => new Subject(),
+                                       resetOnDisconnect: false });
     } else {
       // Stop previous content and reset its state
       this.stop();
@@ -971,7 +973,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                              url })
           .pipe(takeUntil(stopContent$));
 
-      playback$ = publish<IInitEvent>()(directfileInit$);
+      playback$ = connectable(directfileInit$, { connector: () => new Subject(),
+                                                 resetOnDisconnect: false });
     }
 
     /** Emit an object when the player "stalls" and null when it un-stalls */
@@ -1057,12 +1060,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // Link `_priv_onPlayPauseNext` Observable to "play"/"pause" events
     onPlayPause$(videoElement)
       .pipe(takeUntil(stopContent$))
-      .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"), noop);
+      .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"));
 
     // Link "positionUpdate" events to the clock
     clock$
       .pipe(takeUntil(stopContent$))
-      .subscribe(x => this._priv_triggerPositionUpdate(x), noop);
+      .subscribe(x => this._priv_triggerPositionUpdate(x));
 
     // Link "seeking" and "seeked" events (once the content is loaded)
     loaded$.pipe(
@@ -1076,7 +1079,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // Handle state updates
     playerState$
       .pipe(takeUntil(stopContent$))
-      .subscribe(x => this._priv_setPlayerState(x), noop);
+      .subscribe(x => this._priv_setPlayerState(x));
 
     (this._priv_stopAtEnd ? onEnded$(videoElement) :
                             EMPTY)
@@ -1088,11 +1091,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
 
     // Link playback events to the corresponding callbacks
-    playback$.subscribe(
-      (x) => this._priv_onPlaybackEvent(x),
-      (err : Error) => this._priv_onPlaybackError(err),
-      () => this._priv_onPlaybackFinished()
-    );
+    playback$.subscribe({
+      next: (x) => this._priv_onPlaybackEvent(x),
+      error: (err : Error) => this._priv_onPlaybackError(err),
+      complete: () => this._priv_onPlaybackFinished(),
+    });
 
     // initialize the content only when the lock is inactive
     this._priv_contentLock$

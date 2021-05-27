@@ -32,13 +32,14 @@ describe("utils - deferSubscriptions", () => {
                                                deferSubscriptions(),
                                                share());
 
-    myObservableDeferred.subscribe(
-      x => { logs += `1:${x}-`; },
-      () => { /* noop */ },
-      () => {
+    myObservableDeferred.subscribe({
+      next: x => { logs += `1:${x}-`; },
+      error: () => { /* noop */ },
+      complete: () => {
         expect(logs).toEqual("1:S-2:S-1:A-2:A-3:A-4:A-");
         done();
-      });
+      },
+    });
     myObservableDeferred.subscribe(x => { logs += `2:${x}-`; });
 
     setTimeout(() => {

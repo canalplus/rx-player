@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable, throwError } from "rxjs";
+import {
+  Observable,
+  throwError,
+} from "rxjs";
 import { map } from "rxjs/operators";
 import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
@@ -76,7 +79,7 @@ function getDurationFromManifest(url: string,
   if (transport !== "dash" &&
       transport !== "smooth" &&
       transport !== "metaplaylist") {
-    return throwError(new Error("createMetaplaylist: Unknown transport type."));
+    return throwError(() => new Error("createMetaplaylist: Unknown transport type."));
   }
 
   if (transport === "dash" || transport === "smooth") {
