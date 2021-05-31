@@ -17,6 +17,8 @@
 /**
  * Error due to an abnormal assertion fails.
  *
+ * This should be an internal error which is later transformed into a documented
+ * (as part of the API) Error instance before being emitted to the application.
  * @class AssertionError
  * @extends Error
  */
