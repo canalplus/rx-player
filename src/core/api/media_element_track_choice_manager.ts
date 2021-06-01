@@ -151,9 +151,7 @@ function createTextTracks(
 function createVideoTracks(
   videoTracks: ICompatVideoTrackList
 ): Array<{ track: { id: string;
-                    representations: Representation[];
-                    isTrickModeTrack: boolean;
-                    trickModeTracks: undefined; };
+                    representations: Representation[]; };
            nativeTrack: ICompatVideoTrack; }> {
   const newVideoTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
@@ -168,9 +166,7 @@ function createVideoTracks(
                occurences.toString();
     languagesOccurences[language] = occurences + 1;
     newVideoTracks.push({ track: { id,
-                                   representations: [] as Representation[],
-                                   isTrickModeTrack: false,
-                                   trickModeTracks: undefined },
+                                   representations: [] as Representation[] },
                           nativeTrack: videoTrack });
   }
   return newVideoTracks;
@@ -486,9 +482,7 @@ export default class MediaElementTrackChoiceManager
     return this._videoTracks.map(({ track, nativeTrack }) => {
       return { id: track.id,
                representations: track.representations,
-               active: nativeTrack.selected,
-               isTrickModeTrack: false,
-               trickModeTracks: undefined };
+               active: nativeTrack.selected };
     });
   }
 

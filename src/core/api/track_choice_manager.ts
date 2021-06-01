@@ -29,7 +29,6 @@ import {
 import { IHDRInformation } from "../../manifest/types";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
 import SortedList from "../../utils/sorted_list";
 import takeFirstSet from "../../utils/take_first_set";
@@ -219,12 +218,33 @@ export default class TrackChoiceManager {
   private _textChoiceMemory : WeakMap<Period, Adaptation|null>;
 
   /** Memorization of the previously-chosen video Adaptation for each Period. */
-  private _videoChoiceMemory : WeakMap<Period, Adaptation|null>;
+  private _videoChoiceMemory : WeakMap<
+    Period,
+    {
+      /**
+       * The "root" Adaptation (if a trickmode track was chosen, this is the
+       * Adaptation the trickmode track is linked to, and not the trickmode
+       * track itself).
+       */
+      rootAdaptation : Adaptation;
+      /**
+       * The chosen Adaptation itself (may be different from `rootAdaptation`
+       * when a trickmode track is chosen, in which case `rootAdaptation` is
+       * the Adaptation the trickmode track is linked to and `adaptation` is the
+       * trickmode track).
+       */
+      adaptation : Adaptation;
+    } |
+    /** Set to `null` when no video track was chosen. */
+    null
+  >;
 
   /** Tells if trick mode has been enabled by the RxPlayer user */
   public trickModeTrackEnabled: boolean;
 
-  constructor() {
+  constructor(
+    args : { preferTrickModeTracks: boolean }
+  ) {
     this._periods = new SortedList((a, b) => a.period.start - b.period.start);
 
     this._audioChoiceMemory = new WeakMap();
@@ -234,7 +254,7 @@ export default class TrackChoiceManager {
     this._preferredAudioTracks = [];
     this._preferredTextTracks = [];
     this._preferredVideoTracks = [];
-    this.trickModeTrackEnabled = false;
+    this.trickModeTrackEnabled = args.preferTrickModeTracks;
   }
 
   /**
@@ -447,21 +467,36 @@ export default class TrackChoiceManager {
     }
 
     const videoAdaptations = period.getSupportedAdaptations("video");
-    const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
-    if (chosenVideoAdaptation === null) {
-      // If the Period was previously without video, keep it that way
-      this._setVideoTrack(videoInfos.adaptation$, null);
-    } else if (chosenVideoAdaptation === undefined ||
-               !arrayIncludes(videoAdaptations, chosenVideoAdaptation)
-    ) {
-      const preferredVideoTracks = this._preferredVideoTracks;
-      const optimalAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations,
-                                                                preferredVideoTracks);
-      this._videoChoiceMemory.set(period, optimalAdaptation);
-      this._setVideoTrack(videoInfos.adaptation$, optimalAdaptation);
+
+    const prevVideoAdaptation = this._videoChoiceMemory.get(period);
+    let newRootAdaptation : Adaptation | null;
+
+    if (prevVideoAdaptation === null) {
+      newRootAdaptation = null;
+    } else if (prevVideoAdaptation !== undefined &&
+               arrayIncludes(videoAdaptations, prevVideoAdaptation.rootAdaptation))
+    {
+      // still exists, re-select it
+      newRootAdaptation = prevVideoAdaptation.rootAdaptation;
     } else {
-      this._setVideoTrack(videoInfos.adaptation$, chosenVideoAdaptation); // set last one
+      // If that Adaptation does not exist (e.g. no choice has been made or it
+      // is not in the Manifest anymore), look at preferences
+      const preferredVideoTracks = this._preferredVideoTracks;
+      newRootAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations,
+                                                          preferredVideoTracks);
     }
+
+    if (newRootAdaptation === null) {
+      this._videoChoiceMemory.set(period, null);
+      videoInfos.adaptation$.next(null);
+      return;
+    }
+
+    const newVideoAdaptation = getRightVideoTrack(newRootAdaptation,
+                                                  this.trickModeTrackEnabled);
+    this._videoChoiceMemory.set(period, { rootAdaptation: newRootAdaptation,
+                                          adaptation: newVideoAdaptation });
+    videoInfos.adaptation$.next(newVideoAdaptation);
   }
 
   /**
@@ -536,59 +571,18 @@ export default class TrackChoiceManager {
       throw new Error("LanguageManager: Given Period not found.");
     }
 
-    const wantedAdaptation = arrayFind(videoInfos.adaptations,
-                                       ({ id }) => id === wantedId);
+    const wantedRootAdaptation = arrayFind(videoInfos.adaptations,
+                                           ({ id }) => id === wantedId);
 
-    if (wantedAdaptation === undefined) {
-      throw new Error("Video Track not found.");
-    }
-    const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
-    if (chosenVideoAdaptation === wantedAdaptation) {
-      return;
-    }
-
-    this._videoChoiceMemory.set(period, wantedAdaptation);
-    this._setVideoTrack(videoInfos.adaptation$, wantedAdaptation);
-  }
-
-  /**
-   * @param {Object} period
-   */
-  public disableVideoTrickModeTrack(period: Period): void {
-    const periodItem = getPeriodItem(this._periods, period);
-    const videoInfos = periodItem != null ? periodItem.video :
-                                            null;
-    if (videoInfos == null) {
-      throw new Error("LanguageManager: Given Period not found.");
-    }
-
-    const videoAdaptation = this._videoChoiceMemory.get(period);
-
-    if (isNullOrUndefined(videoAdaptation)) {
+    if (wantedRootAdaptation === undefined) {
       throw new Error("Video Track not found.");
     }
 
-    this._setVideoTrack(videoInfos.adaptation$, videoAdaptation, false);
-  }
-
-  /**
-   * @param {Object} period
-   */
-  public enableVideoTrickModeTrack(period : Period) : void {
-    const periodItem = getPeriodItem(this._periods, period);
-    const videoInfos = periodItem != null ? periodItem.video :
-                                            null;
-    if (videoInfos == null) {
-      throw new Error("LanguageManager: Given Period not found.");
-    }
-
-    const videoAdaptation = this._videoChoiceMemory.get(period);
-
-    if (isNullOrUndefined(videoAdaptation)) {
-      throw new Error("Video Track not found.");
-    }
-
-    this._setVideoTrack(videoInfos.adaptation$, videoAdaptation, true);
+    const newVideoAdaptation = getRightVideoTrack(wantedRootAdaptation,
+                                                  this.trickModeTrackEnabled);
+    this._videoChoiceMemory.set(period, { rootAdaptation: wantedRootAdaptation,
+                                          adaptation: newVideoAdaptation });
+    videoInfos.adaptation$.next(newVideoAdaptation);
   }
 
   /**
@@ -630,7 +624,30 @@ export default class TrackChoiceManager {
       return;
     }
     this._videoChoiceMemory.set(period, null);
-    this._setVideoTrack(videoInfos.adaptation$, null);
+    videoInfos.adaptation$.next(null);
+  }
+
+  /**
+   * @param {Object} period
+   */
+  public disableVideoTrickModeTracks(): void {
+    this.trickModeTrackEnabled = false;
+    this._resetChosenVideoTracks();
+  }
+
+  /**
+   * @param {Object} period
+   */
+  public enableVideoTrickModeTracks() : void {
+    this.trickModeTrackEnabled = true;
+    this._resetChosenVideoTracks();
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  public isTrickModeEnabled() : boolean {
+    return this.trickModeTrackEnabled;
   }
 
   /**
@@ -719,46 +736,39 @@ export default class TrackChoiceManager {
     }
 
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
-    if (chosenVideoAdaptation == null) {
+    if (chosenVideoAdaptation === undefined) {
+      return null; // not set yet
+    }
+
+    if (chosenVideoAdaptation === null) {
       return null;
     }
-    const firstTrickModeTrack = chosenVideoAdaptation.trickModeTracks !== undefined ?
-      chosenVideoAdaptation.trickModeTracks[0] :
+    const currAdaptation = chosenVideoAdaptation.adaptation;
+
+    const trickModeTracks = currAdaptation.trickModeTracks !== undefined ?
+      currAdaptation.trickModeTracks.map((trickModeAdaptation) => {
+        return {
+          id: trickModeAdaptation.id,
+          representations: trickModeAdaptation.representations
+            .map(parseVideoRepresentation),
+        };
+      }) :
       undefined;
-    if (this.trickModeTrackEnabled && firstTrickModeTrack !== undefined) {
-      const trickModevideoTrack: ITMVideoTrack = {
-        id: firstTrickModeTrack.id,
-        representations: firstTrickModeTrack.representations
-          .map(parseVideoRepresentation),
-        isTrickModeTrack: firstTrickModeTrack.isTrickModeTrack === true,
-      };
-      if (firstTrickModeTrack.isSignInterpreted === true) {
-        trickModevideoTrack.signInterpreted = true;
-      }
-      return trickModevideoTrack;
-    } else {
-      const trickModeTracks = chosenVideoAdaptation.trickModeTracks !== undefined ?
-        chosenVideoAdaptation.trickModeTracks.map((trickModeAdaptation) => {
-          return {
-            id: trickModeAdaptation.id,
-            representations: trickModeAdaptation.representations
-              .map(parseVideoRepresentation),
-            isTrickModeTrack: trickModeAdaptation.isTrickModeTrack === true,
-            trickModeTracks: undefined,
-          };
-        }) : undefined;
-      const videoTrack: ITMVideoTrack = {
-        id: chosenVideoAdaptation.id,
-        representations: chosenVideoAdaptation.representations
-          .map(parseVideoRepresentation),
-        isTrickModeTrack: chosenVideoAdaptation.isTrickModeTrack === true,
-        trickModeTracks,
-      };
-      if (chosenVideoAdaptation.isSignInterpreted === true) {
-        videoTrack.signInterpreted = true;
-      }
-      return videoTrack;
+
+    const videoTrack: ITMVideoTrack = {
+      id: currAdaptation.id,
+      representations: currAdaptation.representations.map(parseVideoRepresentation),
+    };
+    if (currAdaptation.isSignInterpreted === true) {
+      videoTrack.signInterpreted = true;
     }
+    if (currAdaptation.isTrickModeTrack === true) {
+      videoTrack.isTrickModeTrack = true;
+    }
+    if (trickModeTracks !== undefined) {
+      videoTrack.trickModeTracks = trickModeTracks;
+    }
+    return videoTrack;
   }
 
   /**
@@ -841,17 +851,10 @@ export default class TrackChoiceManager {
     }
 
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
-    let currentId: string | undefined;
-    if (!isNullOrUndefined(chosenVideoAdaptation)) {
-      const firstTrickModeTrack = chosenVideoAdaptation.trickModeTracks !== undefined ?
-        chosenVideoAdaptation.trickModeTracks[0] :
-        undefined;
-      if (this.trickModeTrackEnabled && firstTrickModeTrack !== undefined) {
-        currentId = firstTrickModeTrack.id;
-      } else {
-        currentId = chosenVideoAdaptation.id;
-      }
-    }
+    const currentId = chosenVideoAdaptation === undefined ?
+      undefined :
+      chosenVideoAdaptation?.adaptation.id ?? undefined;
+
     return videoInfos.adaptations
       .map((adaptation) => {
         const trickModeTracks = adaptation.trickModeTracks !== undefined ?
@@ -863,16 +866,20 @@ export default class TrackChoiceManager {
               active: currentId === null ? false :
                                            currentId === trickModeAdaptation.id,
             };
-          }) : undefined;
+          }) :
+          undefined;
+
         const formatted: ITMVideoTrackListItem = {
           id: adaptation.id,
           active: currentId === null ? false :
                                        currentId === adaptation.id,
-          trickModeTracks,
           representations: adaptation.representations.map(parseVideoRepresentation),
         };
         if (adaptation.isSignInterpreted === true) {
           formatted.signInterpreted = true;
+        }
+        if (trickModeTracks !== undefined) {
+          formatted.trickModeTracks = trickModeTracks;
         }
         return formatted;
       });
@@ -1040,64 +1047,57 @@ export default class TrackChoiceManager {
       const videoAdaptations = period.getSupportedAdaptations("video");
       const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
-      if (chosenVideoAdaptation === null ||
-          (
-            chosenVideoAdaptation !== undefined &&
-            arrayIncludes(videoAdaptations, chosenVideoAdaptation)
-          )
-      ) {
-        // Already best video for this Period, check next one
+      if (chosenVideoAdaptation === null) {
+        // No video track for that one, so nothing to change.
         recursiveUpdateVideoTrack(index + 1);
         return;
+      } else if (chosenVideoAdaptation !== undefined &&
+                 arrayIncludes(videoAdaptations,
+                               chosenVideoAdaptation.rootAdaptation))
+      {
+        // The right root Adaptation is selected and is still available.
+        // Check if the selected Adaptation is still right
+        const wantedVideoAdaptation = getRightVideoTrack(
+          chosenVideoAdaptation.rootAdaptation,
+          this.trickModeTrackEnabled
+        );
+        if (wantedVideoAdaptation.id === chosenVideoAdaptation.adaptation.id) {
+          // We're good, continue.
+          recursiveUpdateVideoTrack(index + 1);
+          return;
+        } else {
+          // select the right track
+          this._videoChoiceMemory.set(period, {
+            rootAdaptation: chosenVideoAdaptation.rootAdaptation,
+            adaptation: wantedVideoAdaptation,
+          });
+          videoItem.adaptation$.next(wantedVideoAdaptation);
+
+          // previous "next" call could have changed everything, start over
+          return recursiveUpdateVideoTrack(0);
+        }
       }
 
       const optimalAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations,
                                                                 preferredVideoTracks);
+      if (optimalAdaptation === null) {
+        this._videoChoiceMemory.set(period, null);
+        videoItem.adaptation$.next(null);
+        // previous "next" call could have changed everything, start over
+        return recursiveUpdateVideoTrack(0);
+      }
 
-      this._videoChoiceMemory.set(period, optimalAdaptation);
-      videoItem.adaptation$.next(optimalAdaptation);
+      const newVideoAdaptation = getRightVideoTrack(optimalAdaptation,
+                                                    this.trickModeTrackEnabled);
+      this._videoChoiceMemory.set(period, { rootAdaptation: optimalAdaptation,
+                                            adaptation: newVideoAdaptation });
+      videoItem.adaptation$.next(newVideoAdaptation);
 
       // previous "next" call could have changed everything, start over
-      recursiveUpdateVideoTrack(0);
+      return recursiveUpdateVideoTrack(0);
     };
 
     recursiveUpdateVideoTrack(0);
-  }
-
-  /**
-   * Emit the right adaptation.
-   * If the trick mode is enabled, select the trick mode track if it
-   * exists. If it does not exists, then disable the trick mode before
-   * switching adaptation.
-   * Select the main given adaptation if trick mode is disabled.
-   * @param {Object} adaptation$
-   * @param {Object | null} adaptation
-   */
-  private _setVideoTrack(adaptation$: Subject<Adaptation | null>,
-                         adaptation: Adaptation | null,
-                         switchTrickModeTo?: boolean): void {
-    if (adaptation === null) {
-      adaptation$.next(null);
-      return;
-    }
-    const trickModeTrackEnabled = switchTrickModeTo ?? this.trickModeTrackEnabled;
-    if (trickModeTrackEnabled) {
-      if (adaptation.trickModeTracks !== undefined &&
-          adaptation.trickModeTracks[0] !== undefined) {
-        adaptation$.next(adaptation.trickModeTracks[0]);
-        if (!this.trickModeTrackEnabled) {
-          this.trickModeTrackEnabled = true;
-        }
-        return;
-      } else {
-        log.warn("TrackChoiceManager: No trickMode for video track. " +
-                 "Playing video track instead.");
-      }
-    }
-    adaptation$.next(adaptation);
-    if (this.trickModeTrackEnabled) {
-      this.trickModeTrackEnabled = false;
-    }
   }
 }
 
@@ -1390,4 +1390,16 @@ function parseAudioRepresentation(
   { id, bitrate, codec } : Representation
 )  : ITMAudioRepresentation {
   return { id, bitrate, codec };
+}
+
+function getRightVideoTrack(
+  adaptation : Adaptation,
+  isTrickModeEnabled : boolean
+) : Adaptation {
+  if (isTrickModeEnabled &&
+      adaptation.trickModeTracks?.[0] !== undefined)
+  {
+    return adaptation.trickModeTracks[0];
+  }
+  return adaptation;
 }

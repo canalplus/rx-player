@@ -390,6 +390,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** List of favorite video tracks, in preference order. */
   private _priv_preferredVideoTracks : IVideoTrackPreference[];
 
+  /** If `true` trickMode video tracks will be chosen if available. */
+  private _priv_preferTrickModeTracks : boolean;
+
   /**
    * TrackChoiceManager instance linked to the current content.
    * `null` if no content has been loaded or if the current content loaded
@@ -547,6 +550,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_playing$ = new ReplaySubject(1);
     this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
+    this._priv_preferTrickModeTracks = false;
     this._priv_contentLock$ = new BehaviorSubject<boolean>(false);
 
     this._priv_bufferOptions = {
@@ -1232,6 +1236,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Returns `true` if trickmode playback is active (usually through the usage
+   * of the `setPlaybackRate` method), which means that the RxPlayer selects
+   * "trickmode" video tracks in priority.
+   * @returns {Boolean}
+   */
+  areTrickModeTracksEnabled(): boolean {
+    return this._priv_preferTrickModeTracks;
+  }
+
+  /**
    * Returns the url of the content's manifest
    * @returns {string|undefined} - Current URL. `undefined` if not known or no
    * URL yet.
@@ -1359,7 +1373,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns the current speed at which the video plays.
+   * Returns the current playback rate at which the video plays.
    * @returns {Number}
    */
   getPlaybackRate() : number {
@@ -1368,38 +1382,81 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Update the playback rate of the video.
+   *
+   * This method's effect is persisted from content to content, and can be
+   * called even when no content is playing (it will still have an effect for
+   * the next contents).
+   *
+   * If you want to reverse effects provoked by `setPlaybackRate` before playing
+   * another content, you will have to call `setPlaybackRate` first with the
+   * default settings you want to set.
+   *
+   * As an example, to reset the speed to "normal" (x1) speed and to disable
+   * trickMode video tracks (which may have been enabled by a previous
+   * `setPlaybackRate` call), you can call:
+   * ```js
+   * player.setPlaybackRate(1, { preferTrickModeTracks: false });
+   * ```
+   *
+   * --
+   *
+   * This method can be used to switch to or exit from "trickMode" video tracks,
+   * which are tracks specifically defined to mimic the visual aspect of a VCR's
+   * fast forward/rewind feature, by only displaying a few video frames during
+   * playback.
+   *
+   * This behavior is configurable through the second argument, by adding a
+   * property named `preferTrickModeTracks` to that object.
+   *
+   * You can set that value to `true` to switch to trickMode video tracks when
+   * available, and set it to `false` when you want to disable that logic.
+   * Note that like any configuration given to `setPlaybackRate`, this setting
+   * is persisted through all future contents played by the player.
+   *
+   * If you want to stop enabling trickMode tracks, you will have to call
+   * `setPlaybackRate` again with `preferTrickModeTracks` set to `false`.
+   *
+   * You can know at any moment whether this behavior is enabled by calling
+   * the `areTrickModeTracksEnabled` method. This will only means that the
+   * RxPlayer will select in priority trickmode video tracks, not that the
+   * currently chosen video tracks is a trickmode track (for example, some
+   * contents may have no trickmode tracks available).
+   *
+   * If you want to know about the latter instead, you can call `getVideoTrack`
+   * and/or listen to `videoTrackChange` events. The track returned may have an
+   * `isTrickModeTrack` property set to `true`, indicating that it is a
+   * trickmode track.
+   *
+   * Note that switching to or getting out of a trickmode video track may
+   * lead to the player being a brief instant in a `"RELOADING"` state (notified
+   * through `playerStateChange` events and the `getPlayerState` method). When in
+   * that state, a black screen may be displayed and multiple RxPlayer APIs will
+   * not be usable.
+   *
    * @param {Number} rate
-   * @param {Boolean|undefined} enableTrickModeTrack
+   * @param {Object} opts
    */
-  setPlaybackRate(rate : number, enableTrickModeTrack?: boolean) : void {
+  setPlaybackRate(
+    rate : number,
+    opts? : { preferTrickModeTracks? : boolean }
+  ) : void {
     this._priv_speed$.next(rate);
-    if (enableTrickModeTrack === undefined) {
+
+    const preferTrickModeTracks = opts?.preferTrickModeTracks;
+    if (typeof preferTrickModeTracks !== "boolean") {
       return;
     }
-    if (enableTrickModeTrack) {
-      if (this._priv_trackChoiceManager === null ||
-          isNullOrUndefined(this._priv_contentInfos) ||
-          this._priv_contentInfos.currentPeriod === null) {
-        log.warn("API: Can't set trickMode track when no content loaded.");
-        return;
+    this._priv_preferTrickModeTracks = preferTrickModeTracks;
+    if (this._priv_trackChoiceManager !== null) {
+      if (preferTrickModeTracks &&
+          !this._priv_trackChoiceManager.isTrickModeEnabled())
+      {
+        this._priv_trackChoiceManager.enableVideoTrickModeTracks();
+      } else if (!preferTrickModeTracks &&
+                 this._priv_trackChoiceManager.isTrickModeEnabled())
+      {
+        this._priv_trackChoiceManager.disableVideoTrickModeTracks();
       }
-      if (this._priv_trackChoiceManager.trickModeTrackEnabled) {
-        return;
-      }
-      this._priv_trackChoiceManager
-        .enableVideoTrickModeTrack(this._priv_contentInfos.currentPeriod);
-    } else {
-      if (this._priv_trackChoiceManager === null ||
-          isNullOrUndefined(this._priv_contentInfos) ||
-          this._priv_contentInfos.currentPeriod === null) {
-        log.warn("API: Can't unset trickMode track when no content loaded.");
-        return;
-      }
-      if (!this._priv_trackChoiceManager.trickModeTrackEnabled) {
-        return;
-      }
-      this._priv_trackChoiceManager
-        .disableVideoTrickModeTrack(this._priv_contentInfos.currentPeriod);
     }
   }
 
@@ -2459,7 +2516,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_lastContentPlaybackInfos.manifest = manifest;
 
     const { initialAudioTrack, initialTextTrack } = contentInfos;
-    this._priv_trackChoiceManager = new TrackChoiceManager();
+    this._priv_trackChoiceManager = new TrackChoiceManager({
+      preferTrickModeTracks: this._priv_preferTrickModeTracks,
+    });
 
     const preferredAudioTracks = initialAudioTrack === undefined ?
       this._priv_preferredAudioTracks :
