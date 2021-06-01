@@ -16,6 +16,7 @@
 
 import {
   combineLatest as observableCombineLatest,
+  defer as observableDefer,
   EMPTY,
   fromEvent as observableFromEvent,
   interval as observableInterval,
@@ -49,28 +50,69 @@ import { fromEvent } from "../../utils/event_emitter";
 const YEAR_IN_SECONDS = 365 * 24 * 3600;
 
 /**
+ * Keep the MediaSource duration up-to-date with the Manifest one on
+ * subscription:
+ * Set the current duration initially and then update if needed after
+ * each Manifest updates.
+ * @param {Object} manifest
+ * @param {MediaSource} mediaSource
+ * @returns {Observable}
+ */
+export default function DurationUpdater(
+  manifest : Manifest,
+  mediaSource : MediaSource
+) : Observable<never> {
+  return observableDefer(() => {
+    let lastSetDuration: number | undefined;
+    return setMediaSourceDuration(mediaSource, manifest, undefined).pipe(
+      mergeMap((firstSetDuration) => {
+        // only update `lastSetDuration` if the MediaSource's duration has been
+        // updated.
+        if (firstSetDuration !== null) {
+          lastSetDuration = firstSetDuration;
+        }
+
+        return fromEvent(manifest, "manifestUpdate").pipe(
+          switchMap(() => setMediaSourceDuration(mediaSource, manifest, lastSetDuration)),
+          tap((setDuration) => {
+            if (setDuration !== null) {
+              lastSetDuration = setDuration;
+            }
+          })
+        );
+      }),
+      ignoreElements()
+    );
+  });
+}
+
+/**
  * Checks that duration can be updated on the MediaSource, and then
  * sets it.
- * Return the used duration to update it.
+ *
+ * Returns either:
+ *   - the new duration it has been updated to if it has
+ *   - `null` if it hasn'nt been updated
+ *
  * @param {MediaSource} mediaSource
  * @param {Object} manifest
  * @param {number | undefined} lastSetDuration
- * @returns {Observable.<number | undefined}
+ * @returns {Observable.<number | null>}
  */
 function setMediaSourceDuration(
   mediaSource: MediaSource,
   manifest: Manifest,
   lastSetDuration?: number
-): Observable<number | undefined> {
-  return mediaSourceIsOpened$(mediaSource).pipe(
+): Observable<number | null> {
+  return isMediaSourceOpened$(mediaSource).pipe(
     switchMap((isMediaSourceOpened) => {
       if (!isMediaSourceOpened) {
         return EMPTY;
       }
-      return sourceBuffersAreNotUpdating$(mediaSource.sourceBuffers);
+      return whenSourceBuffersEndedUpdates$(mediaSource.sourceBuffers);
     }),
     take(1),
-    map(() => {
+    map(() : number | null => {
       const maximumPosition = manifest.getMaximumPosition();
       const { isLive } = manifest;
       // Some targets poorly support setting a very high number for durations.
@@ -91,7 +133,7 @@ function setMediaSourceDuration(
           // In that case, we do not want to update it.
           //
           newDuration === lastSetDuration) {
-        return undefined;
+        return null;
       }
       if (isNaN(mediaSource.duration) || !isFinite(mediaSource.duration) ||
           newDuration - mediaSource.duration > 0.01) {
@@ -99,22 +141,24 @@ function setMediaSourceDuration(
         mediaSource.duration = newDuration;
         return newDuration;
       }
+      return null;
     }),
     catchError((err) => {
       log.warn("Duration Updater: Can't update duration on the MediaSource.", err);
-      return observableOf(undefined);
+      return observableOf(null);
     })
   );
 }
 
 /**
- * Emit when all the source buffers are not updating.
+ * Returns an Observable which will emit only when all the SourceBuffers ended
+ * all pending updates.
  * @param {SourceBufferList} sourceBuffers
  * @returns {Observable}
  */
-function sourceBuffersAreNotUpdating$(
+function whenSourceBuffersEndedUpdates$(
   sourceBuffers: SourceBufferList
-): Observable<undefined> {
+) : Observable<undefined> {
   if (sourceBuffers.length === 0) {
     return observableOf(undefined);
   }
@@ -145,44 +189,12 @@ function sourceBuffersAreNotUpdating$(
  * @param {MediaSource} mediaSource
  * @returns {Object}
  */
-function mediaSourceIsOpened$(mediaSource: MediaSource): Observable<boolean> {
+function isMediaSourceOpened$(mediaSource: MediaSource): Observable<boolean> {
   return observableMerge(onSourceOpen$(mediaSource).pipe(mapTo(true)),
                          onSourceEnded$(mediaSource).pipe(mapTo(false)),
                          onSourceClose$(mediaSource).pipe(mapTo(false))
   ).pipe(
     startWith(mediaSource.readyState === "open"),
     distinctUntilChanged()
-  );
-}
-
-/**
- * Keep the MediaSource duration up-to-date with the Manifest one on
- * subscription:
- * Set the current duration initially and then update if needed after
- * each Manifest updates.
- * @param {Object} manifest
- * @param {MediaSource} mediaSource
- * @returns {Observable}
- */
-export default function DurationUpdater(
-  manifest : Manifest,
-  mediaSource : MediaSource
-) : Observable<never> {
-  let lastSetDuration: number | undefined;
-  return setMediaSourceDuration(mediaSource, manifest, lastSetDuration).pipe(
-    mergeMap((firstSetDuration) => {
-      if (firstSetDuration !== undefined) {
-        lastSetDuration = firstSetDuration;
-      }
-      return fromEvent(manifest, "manifestUpdate").pipe(
-        switchMap(() => setMediaSourceDuration(mediaSource, manifest, lastSetDuration)),
-        tap((setDuration) => {
-          if (setDuration !== undefined) {
-            lastSetDuration = setDuration;
-          }
-        })
-      );
-    }),
-    ignoreElements()
   );
 }
