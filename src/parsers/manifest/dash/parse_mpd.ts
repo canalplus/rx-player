@@ -320,6 +320,13 @@ function parseCompleteIntermediateRepresentation(
     }
   }
 
+  // `isLastPeriodKnown` should be `true` in two cases for DASH contents:
+  //   1. When the content is static, because we know that no supplementary
+  //      Period will be added.
+  //   2. If the content is dynamic, only when both the duration is known and
+  //      the `minimumUpdatePeriod` is not set. This corresponds to the case
+  //      explained in "4.6.4. Transition Phase between Live and On-Demand" of
+  //      the DASH-IF IOP v4.3 for live contents transitionning to on-demand.
   const isLastPeriodKnown =
     !isDynamic ||
     (mpdIR.attributes.minimumUpdatePeriod === undefined &&
