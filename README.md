@@ -80,8 +80,11 @@ Demo pages for our previous versions are also available
 
 The fastest way to use the player directly in your code is to add this
 repository as a dependency. You can do it via npm:
+
 ```
 npm install --save rx-player
+or
+yarn add rx-player
 ```
 
 You can then directly import and use the RxPlayer in your code:
@@ -113,6 +116,10 @@ to help you familiarize with the RxPlayer API:
   - [Selecting a track](https://developers.canal-plus.com/rx-player/doc/pages/tutorials/track_selection.html)
   - [Listening to events contained in the content](https://canalplus.github.io/rx-player/doc/pages/tutorials/stream_events.html)
 
+We also wrote Live Editable Demo to play with the API:
+ - [Playing a clear dash content](https://codesandbox.io/s/rx-player-classic-wc38j)
+ - [Playing an encrypted dash content](https://codesandbox.io/s/rx-player-drm-g51hb)
+ - [Playing a metaplaylist content](https://codesandbox.io/s/rx-player-metaplaylist-l0t0d)
 
 ### Minimal Builds #############################################################
 
