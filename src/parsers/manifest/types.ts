@@ -210,10 +210,11 @@ export interface IParsedManifest {
    */
   isLive : boolean;
   /**
-   * If true, no more periods will be added after the last manifest period.
-   * The attribute is undefined if there is no way to know if the last period is known.
+   * If `true`, no more periods will be added after the current last manifest's
+   * Period.
+   * `false` if we know that more Period is coming or if we don't know.
    */
-  isLastPeriodKnown? : boolean;
+  isLastPeriodKnown : boolean;
   /** Periods contained in this manifest. */
   periods: IParsedPeriod[];
   /**

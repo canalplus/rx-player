@@ -188,8 +188,7 @@ export default function StreamOrchestrator(
   // Emits a 'resume-stream" when it's not
   const endOfStream$ = combineLatest([areStreamsComplete(...streamsArray),
                                       isLastPeriodKnown$])
-    .pipe(map(([areComplete, isLastPeriodKnown]) => (areComplete &&
-                                                     isLastPeriodKnown === true)),
+    .pipe(map(([areComplete, isLastPeriodKnown]) => areComplete && isLastPeriodKnown),
           distinctUntilChanged(),
           map((emitEndOfStream) =>
             emitEndOfStream ? EVENTS.endOfStream() : EVENTS.resumeStream()));

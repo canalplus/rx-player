@@ -296,7 +296,7 @@ function createManifest(
   const isLastPeriodKnown = !isDynamic ||
                             mplData.pollInterval === undefined &&
                             (manifests.length <= 0 ||
-                             manifests[manifests.length - 1].isLastPeriodKnown === true);
+                             manifests[manifests.length - 1].isLastPeriodKnown);
   const manifest = { availabilityStartTime: 0,
                      clockOffset,
                      suggestedPresentationDelay: 10,
