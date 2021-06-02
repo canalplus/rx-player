@@ -74,21 +74,23 @@ const emptyLoadedSessionsStore = {
  */
 function checkNothingHappen(
   loadedSessionsStore : LoadedSessionsStore,
-  limit : number,
-  done : () => void
-) {
-  const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
-  let itemNb = 0;
-  cleanOldLoadedSessions(loadedSessionsStore, limit).subscribe(
-    () => { itemNb++; },
-    () => { throw new Error("The Observable should not throw"); },
-    () => {
-      expect(itemNb).toEqual(0);
-      expect(closeSessionSpy).not.toHaveBeenCalled();
-      closeSessionSpy.mockRestore();
-      done();
-    }
-  );
+  limit : number
+) : Promise<void> {
+  return new Promise((res, rej) => {
+
+    const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
+    let itemNb = 0;
+    cleanOldLoadedSessions(loadedSessionsStore, limit).subscribe(
+      () => { itemNb++; },
+      () => { rej(new Error("The Observable should not throw")); },
+      () => {
+        expect(itemNb).toEqual(0);
+        expect(closeSessionSpy).not.toHaveBeenCalled();
+        closeSessionSpy.mockRestore();
+        res();
+      }
+    );
+  });
 }
 
 /**
@@ -146,37 +148,37 @@ function checkEntriesCleaned(
 }
 
 describe("core - eme - cleanOldLoadedSessions", () => {
-  it("should do nothing with a negative limit", (done) => {
-    checkNothingHappen(createLoadedSessionsStore(), -1, done);
-    checkNothingHappen(createLoadedSessionsStore(), -20, done);
-    checkNothingHappen(emptyLoadedSessionsStore, -20, done);
+  it("should do nothing with a negative limit", async () => {
+    await checkNothingHappen(createLoadedSessionsStore(), -1);
+    await checkNothingHappen(createLoadedSessionsStore(), -20);
+    await checkNothingHappen(emptyLoadedSessionsStore, -20);
   });
 
-  it("should do nothing with a limit equal to NaN", (done) => {
-    checkNothingHappen(createLoadedSessionsStore(), NaN, done);
-    checkNothingHappen(emptyLoadedSessionsStore, NaN, done);
+  it("should do nothing with a limit equal to NaN", async () => {
+    await checkNothingHappen(createLoadedSessionsStore(), NaN);
+    await checkNothingHappen(emptyLoadedSessionsStore, NaN);
   });
 
-  it("should do nothing with a limit equal to -infinity", (done) => {
-    checkNothingHappen(createLoadedSessionsStore(), -Infinity, done);
-    checkNothingHappen(emptyLoadedSessionsStore, -Infinity, done);
+  it("should do nothing with a limit equal to -infinity", async () => {
+    await checkNothingHappen(createLoadedSessionsStore(), -Infinity);
+    await checkNothingHappen(emptyLoadedSessionsStore, -Infinity);
   });
 
-  it("should do nothing if the limit is superior to the current length", (done) => {
-    checkNothingHappen(createLoadedSessionsStore(), 4, done);
-    checkNothingHappen(createLoadedSessionsStore(), 5, done);
-    checkNothingHappen(createLoadedSessionsStore(), 6, done);
-    checkNothingHappen(createLoadedSessionsStore(), +Infinity, done);
-    checkNothingHappen(emptyLoadedSessionsStore, 1, done);
-    checkNothingHappen(emptyLoadedSessionsStore, 2, done);
-    checkNothingHappen(emptyLoadedSessionsStore, 1000, done);
-    checkNothingHappen(emptyLoadedSessionsStore, +Infinity, done);
+  it("should do nothing if the limit is superior to the current length", async () => {
+    await checkNothingHappen(createLoadedSessionsStore(), 4);
+    await checkNothingHappen(createLoadedSessionsStore(), 5);
+    await checkNothingHappen(createLoadedSessionsStore(), 6);
+    await checkNothingHappen(createLoadedSessionsStore(), +Infinity);
+    await checkNothingHappen(emptyLoadedSessionsStore, 1);
+    await checkNothingHappen(emptyLoadedSessionsStore, 2);
+    await checkNothingHappen(emptyLoadedSessionsStore, 1000);
+    await checkNothingHappen(emptyLoadedSessionsStore, +Infinity);
 
   });
 
-  it("should do nothing if the limit is equal to the current length", (done) => {
-    checkNothingHappen(createLoadedSessionsStore(), 3, done);
-    checkNothingHappen(emptyLoadedSessionsStore, 0, done);
+  it("should do nothing if the limit is equal to the current length", async () => {
+    await checkNothingHappen(createLoadedSessionsStore(), 3);
+    await checkNothingHappen(emptyLoadedSessionsStore, 0);
   });
 
   it("should remove some if the limit is inferior to the current length", (done) => {
