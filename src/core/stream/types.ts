@@ -24,6 +24,7 @@ import {
 } from "../../manifest";
 import { IEMSG } from "../../parsers/containers/isobmff";
 import { IContentProtection } from "../eme";
+import { INeedsBufferFlush } from "../init";
 import { IBufferType } from "../segment_buffers";
 
 /** Information about a Segment waiting to be loaded by the Stream. */
@@ -429,6 +430,7 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
 
                                  IBitrateEstimationChangeEvent |
                                  INeedsMediaSourceReload |
+                                 INeedsBufferFlush |
                                  INeedsDecipherabilityFlush |
                                  IRepresentationChangeEvent |
 
@@ -450,6 +452,7 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
 
                                           IPeriodStreamReadyEvent |
                                           INeedsMediaSourceReload |
+                                          INeedsBufferFlush |
                                           IAdaptationChangeEvent |
 
                                           // From an AdaptationStream
@@ -486,6 +489,7 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
 
                                        IBitrateEstimationChangeEvent |
                                        INeedsMediaSourceReload |
+                                       INeedsBufferFlush |
                                        INeedsDecipherabilityFlush |
                                        IRepresentationChangeEvent |
 

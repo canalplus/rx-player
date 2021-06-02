@@ -38,7 +38,7 @@ const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 export type IAdaptationSwitchStrategy =
   { type: "continue"; value: undefined } |
   { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
-  { type: "needs-buffer-flush"; value:  Array<{ start: number; end: number }> } |
+  { type: "flush-buffer"; value: Array<{ start: number; end: number }> } |
   { type: "needs-reload"; value: undefined };
 
 export interface IAdaptationSwitchOptions {
@@ -133,21 +133,6 @@ export default function getAdaptationSwitchStrategy(
     return { type: "needs-reload", value: undefined };
   }
 
-  if (adaptation.type === "audio" &&
-      segmentBuffer.codec !== undefined &&
-      // We have been explicitly asked to reload
-      options.audioTrackSwitchingMode === "direct" &&
-      // We're playing the current Period
-      isTimeInRange({ start, end }, currentTime) &&
-      // There is data for the current position or the codecs are differents
-      (playbackInfo.readyState > 1 || !hasCompatibleCodec(adaptation,
-                                                          segmentBuffer.codec)) &&
-      // We're not playing the current wanted audio Adaptation yet
-      !isTimeInRanges(adaptationInBuffer, currentTime))
-  {
-    return { type: "needs-reload", value: undefined };
-  }
-
   // From here, clean-up data from the previous Adaptation, if one
 
   const rangesToExclude = [];
@@ -198,8 +183,13 @@ export default function getAdaptationSwitchStrategy(
 
   const toRemove = excludeFromRanges(unwantedRange, rangesToExclude);
 
-  return toRemove.length > 0 ? { type: "clean-buffer", value: toRemove } :
-                               { type: "continue", value: undefined };
+  if (toRemove.length === 0) {
+    return { type: "continue", value: undefined };
+  }
+
+  return adaptation.type === "audio" && options.audioTrackSwitchingMode === "direct"
+    ? { type: "flush-buffer", value: toRemove }
+    : { type: "clean-buffer", value: toRemove };
 }
 
 /**
