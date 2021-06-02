@@ -1,5 +1,39 @@
 # Changelog
 
+## v3.25.0 (2021/06/xx)
+
+### Features
+
+  - Add HDR information through the `hdrInfo` property on video Representation/tracks as returned by APIs such as `getVideoTrack`, `getAvailableVideoTracks`, the `videoTrackChange` event, `getManifest`, `getCurrentAdaptations` and `getCurrentRepresentations` [#946]
+  - Add the `DASH_WASM` experimental feature, allowing faster MPD parsing using WebAssembly [#937]
+  - Add the experimental `VideoThumbnailLoader` tool, which uses "trickmodes" DASH AdaptationSet to generate thumbnails [#647]
+  - Add `preferTrickModeTracks` option to `setPlaybackRate`, to switch on or off trickmode tracks when available on the Manifest [#940]
+  - Add `areTrickModeTracksEnabled` method to indicate whether the RxPlayer is using trickmode tracks in priority [#940]
+  - Add `trickModeTracks` and `isTrickModeTrack` properties to video tracks as returned by the `getVideoTrack` and `getAvailableVideoTracks` method and by the `videoTrackChange` event [#940]
+  - Add `maxSessionCacheSize` `keySystems` option, to configure the maximum number of decryption sessions that can be kept alive at the same time in a cache [#938]
+  - The `manifestLoader` callback defined in `transportOptions` can now ask for a request to be retried [#964]
+  - `initialManifest` now accepts the Manifest as an `ArrayBuffer` [#937]
+  - The `manifestLoader` callback defined in `transportOptions` can now send the Manifest as an `ArrayBuffer` [#937]
+
+### Bug fixes
+
+  - DASH: don't ignore new EventStream elements that weren't in the previous MPD update for a given Period [#956]
+  - DASH: fix fatal error linked to the `duration` of the `MediaSource` happening when playing a multi-Period live DASH content whose previous (before updating) last Period's segments had been fully generated and fully pushed. [#952]
+  - DASH: Avoid loading plain-text subtitles in a loop when playing before the first cue starts or after the last cue ends [#945, #948]
+  - DASH: Avoid loading plain-text subtitles in a loop when the `transportOptions.checkMediaSegmentIntegrity` is set to `true` [#947]
+  - DASH: avoid ending a dynamic stream if new Periods may be added later to the MPD [#959]
+  - DASH: avoid unnecessarily refresh a MPD based on SegmentList elements when they don't perfectly align with the pushed data [#963]
+
+### Other improvements
+
+  - Improve `audioTrackSwitchingMode` `"direct"` mode by avoiding unnecessary reloading cases [#872, #887, #943]
+  - When seeking after the end of an ended content, actually seek just a little before to avoid subtle issues [#947]
+  - DASH: limit the postponment of a Manifest refresh due to poor MPD-parsing performance to 6-times the "regular" delay (not impacted by `tansportOptions.minimumManifestUpdateInterval`) [#958]
+  - DASH: Avoid loading two times a segment instead of once when that segment is not anounced in the MPD through a SegmentBase, SegmentList nor SegmentTemplate element but just through the Representation's BaseURL. [#949]
+  - Update used RxJS version to 7.0.0, which might bring with it a smaller size and better performances [#954]
+  - demo: remove Chart.js dependency (we found that its new API documentation and errors were too impenetrable) and replace the "Buffer Size" chart by a homemade one. [#955, #957]
+
+
 ## v3.24.0 (2021/04/01)
 
 ### Features
