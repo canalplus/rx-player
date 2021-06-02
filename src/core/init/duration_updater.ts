@@ -63,20 +63,22 @@ export default function DurationUpdater(
   mediaSource : MediaSource
 ) : Observable<never> {
   return observableDefer(() => {
-    let lastSetDuration: number | undefined;
+    let lastDurationUpdate: number | undefined;
     return setMediaSourceDuration(mediaSource, manifest, undefined).pipe(
-      mergeMap((firstSetDuration) => {
-        // only update `lastSetDuration` if the MediaSource's duration has been
-        // updated.
-        if (firstSetDuration !== null) {
-          lastSetDuration = firstSetDuration;
+      mergeMap((initialDurationUpdate) => {
+        // only update `lastDurationUpdate` if the MediaSource's duration has
+        // been updated.
+        if (initialDurationUpdate !== null) {
+          lastDurationUpdate = initialDurationUpdate;
         }
 
         return fromEvent(manifest, "manifestUpdate").pipe(
-          switchMap(() => setMediaSourceDuration(mediaSource, manifest, lastSetDuration)),
-          tap((setDuration) => {
-            if (setDuration !== null) {
-              lastSetDuration = setDuration;
+          switchMap(() => setMediaSourceDuration(mediaSource,
+                                                 manifest,
+                                                 lastDurationUpdate)),
+          tap((durationUpdate) => {
+            if (durationUpdate !== null) {
+              lastDurationUpdate = durationUpdate;
             }
           })
         );
