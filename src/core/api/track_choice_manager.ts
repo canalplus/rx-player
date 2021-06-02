@@ -747,11 +747,15 @@ export default class TrackChoiceManager {
 
     const trickModeTracks = currAdaptation.trickModeTracks !== undefined ?
       currAdaptation.trickModeTracks.map((trickModeAdaptation) => {
-        return {
-          id: trickModeAdaptation.id,
-          representations: trickModeAdaptation.representations
-            .map(parseVideoRepresentation),
-        };
+        const representations = trickModeAdaptation.representations
+          .map(parseVideoRepresentation);
+        const trickMode : ITMVideoTrack = { id: trickModeAdaptation.id,
+                                            representations,
+                                            isTrickModeTrack: true };
+        if (trickModeAdaptation.isSignInterpreted === true) {
+          trickMode.signInterpreted = true;
+        }
+        return trickMode;
       }) :
       undefined;
 
@@ -859,13 +863,18 @@ export default class TrackChoiceManager {
       .map((adaptation) => {
         const trickModeTracks = adaptation.trickModeTracks !== undefined ?
           adaptation.trickModeTracks.map((trickModeAdaptation) => {
-            return {
-              id: trickModeAdaptation.id,
-              representations: trickModeAdaptation.representations
-                .map(parseVideoRepresentation),
-              active: currentId === null ? false :
-                                           currentId === trickModeAdaptation.id,
-            };
+            const isActive = currentId === null ? false :
+                                                  currentId === trickModeAdaptation.id;
+            const representations = trickModeAdaptation.representations
+              .map(parseVideoRepresentation);
+            const trickMode : ITMVideoTrackListItem = { id: trickModeAdaptation.id,
+                                                        representations,
+                                                        isTrickModeTrack: true,
+                                                        active: isActive };
+            if (trickModeAdaptation.isSignInterpreted === true) {
+              trickMode.signInterpreted = true;
+            }
+            return trickMode;
           }) :
           undefined;
 

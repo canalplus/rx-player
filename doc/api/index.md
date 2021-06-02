@@ -30,9 +30,10 @@
     - [getError](#meth-getError)
     - [getVideoElement](#meth-getVideoElement)
     - [dispose](#meth-dispose)
- - [Speed control](#meth-group-speed-control)
+ - [Speed control and trickmodes](#meth-group-speed-control)
     - [setPlaybackRate](#meth-setPlaybackRate)
     - [getPlaybackRate](#meth-getPlaybackRate)
+    - [areTrickModeTracksEnabled](#meth-areTrickModeTracksEnabled)
  - [Volume control](#meth-group-volume-control)
     - [setVolume](#meth-setVolume)
     - [getVolume](#meth-getVolume)
@@ -823,12 +824,12 @@ called the "playback rate").
 
 --
 
-__syntax__: `player.setPlaybackRate(speed)`
+__syntax__: `player.setPlaybackRate(speed)` /
+`player.setPlaybackRate(speed, { preferTrickModeTracks })`
 
 __arguments__:
   - _speed_ (``Number``): The speed / playback rate you want to set.
-  - _enableTrickModeTrack_ (``Boolean|undefined``): Tells if the trick mode
-    track, if available, should be enabled for playback.
+  - _options_ (``Object|undefined``): Options related to the speed update.
 
 --
 
@@ -846,6 +847,56 @@ As its name hints at, the value indicates the rate at which contents play:
 
   - etc.
 
+This method's effect is persisted from content to content, and can be called
+even when no content is playing (it will still have an effect for the next
+contents).
+
+If you want to reverse effects provoked by `setPlaybackRate` before playing
+another content, you will have to call `setPlaybackRate` first with the
+default settings you want to set.
+
+As an example, to reset the speed to "normal" (x1) speed and to disable
+trickMode video tracks (which may have been enabled by a previous
+`setPlaybackRate` call), you can call:
+```js
+player.setPlaybackRate(1, { preferTrickModeTracks: false });
+```
+
+--
+
+This method can be used to switch to or exit from "trickMode" video tracks,
+which are tracks specifically defined to mimic the visual aspect of a VCR's
+fast forward/rewind feature, by only displaying a few video frames during
+playback.
+
+This behavior is configurable through the second argument, by adding a
+property named `preferTrickModeTracks` to that object.
+
+You can set that value to `true` to switch to trickMode video tracks when
+available, and set it to `false` when you want to disable that logic.
+Note that like any configuration given to `setPlaybackRate`, this setting
+is persisted through all future contents played by the player.
+
+If you want to stop enabling trickMode tracks, you will have to call
+`setPlaybackRate` again with `preferTrickModeTracks` set to `false`.
+
+You can know at any moment whether this behavior is enabled by calling
+the `areTrickModeTracksEnabled` method. This will only means that the
+RxPlayer will select in priority trickmode video tracks, not that the
+currently chosen video tracks is a trickmode track (for example, some
+contents may have no trickmode tracks available).
+
+If you want to know about the latter instead, you can call `getVideoTrack`
+and/or listen to `videoTrackChange` events. The track returned may have an
+`isTrickModeTrack` property set to `true`, indicating that it is a
+trickmode track.
+
+Note that switching to or getting out of a trickmode video track may
+lead to the player being a brief instant in a `"RELOADING"` state (notified
+through `playerStateChange` events and the `getPlayerState` method). When in
+that state, a black screen may be displayed and multiple RxPlayer APIs will
+not be usable.
+
 This method can be called at any time, even when no content is loaded and is
 persisted from content to content.
 
@@ -856,13 +907,23 @@ argument to `true` (and disable it when setting `false`). If available, the
 RxPlayer will switch the current video track to the trick mode one. The trick
 mode track proposes video content that is often encoded with a very low
 framerate because the content is not intended to be played at regular framerate
-and because the chunks must be faster to load for sthe client.
+and because the chunks must be faster to load for the client.
 
-#### Example
+#### Examples
 
 ```js
 // plays three times faster than normal
 player.setPlaybackRate(3);
+```
+
+```js
+// plays five times faster than normal, and enable trickmode tracks if they exist
+player.setPlaybackRate(5, { preferTrickModeTracks: true });
+```
+
+```js
+// reset the speed to "normal" (x1) speed and to disable trickMode video tracks
+player.setPlaybackRate(1, { preferTrickModeTracks: false });
 ```
 
 
@@ -877,8 +938,10 @@ __return value__: ``Number``
 
 --
 
-Returns the current playback rate. ``1`` for normal playback, ``2`` when
-playing at double the speed, etc.
+Returns the current playback rate, that may have been updated through a previous
+`setPlaybackRate` call.
+
+``1`` for normal playback, ``2`` when playing at double the speed, etc.
 
 #### Example
 
@@ -886,6 +949,29 @@ playing at double the speed, etc.
 const currentPlaybackRate = player.getPlaybackRate();
 console.log(`Playing at a x${currentPlaybackRate}} speed`);
 ```
+
+<a name="meth-setPlaybackRate"></a>
+### areTrickModeTracksEnabled ##################################################
+
+--
+
+__syntax__: `const areEnabled = player.areTrickModeTracksEnabled()`
+
+__return value__: ``boolean``
+
+--
+
+Returns `true` if trickmode playback is active (it is usually enabled through
+the `setPlaybackRate` method), which means that the RxPlayer selects "trickmode"
+video tracks in priority.
+
+Returns `false` in other cases.
+
+Note that this doesn't mean that the player is currently playing a trickmode
+track nor that it is even playing a content, only that it selects trickmode
+tracks in priority.
+
+To switch on or off ths mode, you can use the `setPlaybackRate` method.
 
 
 
@@ -1175,7 +1261,10 @@ __return value__: ``Object|null|undefined``
 --
 
 Get information about the video track currently set.
+
 ``null`` if no video track is enabled right now.
+``undefined`` if no video content has been loaded yet or if its information is
+unknown.
 
 If a video track is set and information about it is known, this method will
 return an object with the following properties:
@@ -1210,27 +1299,28 @@ return an object with the following properties:
       characteristics of the track.
       (see [HDR support documentation](./hdr.md#hdrinfo))
 
-  - ``signInterpreted`` (``Boolean|undefined``): If set to `true`, the track is
+  - ``signInterpreted`` (``Boolean|undefined``): If set to `true`, this track is
     known to contain an interpretation in sign language.
     If set to `false`, the track is known to not contain that type of content.
     If not set or set to undefined we don't know whether that video track
     contains an interpretation in sign language.
 
-  - ``isTrickModeTrack`` (``Boolean``): If set to `true`, the track is
-    a trick mode track. The trick mode track proposes video content that is
-    often encoded with a very low framerate because the content is not intended
-    to be played at regular framerate and because the chunks must be faster to
-    load for sthe client.
+  - ``isTrickModeTrack`` (``Boolean|undefined``): If set to `true`, this track
+    is a trick mode track. This type of tracks proposes video content that is
+    often encoded with a very low framerate with the purpose to be played more
+    efficiently at a much higher speed.
+
+    To enter or exit a mode where trickmode tracks are used instead of regular
+    non-trickmode ones, you can use the `setPlaybackRate` function.
 
   - ``trickModeTracks`` (``Object | undefined``): Trick mode video tracks
-    attached to the video track. It contains the same properties that a video
-    track, exepct the trickModeTracks property. It is undefined if no available
-    tracks. When changing the playback rate with
-    [setPlaybackRate](#setPlaybackRate), the RxPlayer will switch to the first
-    of these tracks, if it is defined.
+    attached to this video track.
 
-``undefined`` if no video content has been loaded yet or if its information is
-unknown.
+    Each of those objects contain the same properties that a regular video track
+    (same properties than what is documented here).
+
+    It this property is either `undefined` or not set, then this track has no
+    linked trickmode video track.
 
 --
 
@@ -1412,12 +1502,15 @@ Each of the objects in the returned array have the following properties:
     If not set or set to undefined we don't know whether that video track
     contains an interpretation in sign language.
 
+
   - ``trickModeTracks`` (``Object | undefined``): Trick mode video tracks
-    attached to the video track. It contains the same properties that a video
-    track, exepct the trickModeTracks property. It is undefined if no available
-    tracks. When changing the playback rate with
-    [setPlaybackRate](#setPlaybackRate), the RxPlayer will switch to the first
-    of these tracks, if it is defined.
+    attached to this video track.
+
+    Each of those objects contain the same properties that a regular video track
+    (same properties than what is documented here).
+
+    It this property is either `undefined` or not set, then this track has no
+    linked trickmode video track.
 
 --
 
@@ -1573,6 +1666,18 @@ Change the current video track.
 The argument to this method is the wanted track's `id` property. This `id` can
 for example be obtained on the corresponding track object returned by the
 ``getAvailableVideoTracks`` method.
+
+If trickmode tracks are enabled (usually through the corresponding
+`setPlaybackRate` method option) and if that new video track is linked to
+trickmode tracks, one of the trickmode tracks will be loaded instead.
+
+Note that trickmode tracks cannot be forced through the `setVideoTrack` method
+by giving directly the trickmode tracks' id.
+
+If you want to enable or disable trickmode tracks, you should use
+`setPlaybackRate` instead.
+
+--
 
 Setting a new video track when a previous one was already playing can lead the
 rx-player to "reload" this content.
