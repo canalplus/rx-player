@@ -53,10 +53,12 @@ export default function parseLocalManifest(
   const parsedPeriods = localManifest.periods
     .map(period => parsePeriod(period, { periodIdGenerator,
                                          isFinished }));
+
   return { availabilityStartTime: 0,
            expired: localManifest.expired,
            transportType: "local",
-           isDynamic: !localManifest.isFinished,
+           isDynamic: !isFinished,
+           isLastPeriodKnown: isFinished,
            isLive: false,
            uris: [],
            timeBounds: { absoluteMinimumTime: minimumPosition ?? 0,

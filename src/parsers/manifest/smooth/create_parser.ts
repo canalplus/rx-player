@@ -628,6 +628,7 @@ function createSmoothStreamingParser(
       clockOffset: serverTimeOffset,
       isLive,
       isDynamic: isLive,
+      isLastPeriodKnown: true,
       timeBounds: { absoluteMinimumTime: minimumTime,
                     timeshiftDepth,
                     maximumTimeData },
