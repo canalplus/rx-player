@@ -164,10 +164,11 @@ function whenSourceBuffersEndedUpdates$(
   if (sourceBuffers.length === 0) {
     return observableOf(undefined);
   }
-  const updatingSourceBuffers$: Array<Observable<boolean>> = [];
+  const sourceBufferUpdatingStatuses : Array<Observable<boolean>> = [];
+
   for (let i = 0; i < sourceBuffers.length; i++) {
     const sourceBuffer = sourceBuffers[i];
-    updatingSourceBuffers$.push(
+    sourceBufferUpdatingStatuses.push(
       observableMerge(
         observableFromEvent(sourceBuffer, "updatestart").pipe(mapTo(true)),
         observableFromEvent(sourceBuffer, "update").pipe(mapTo(false)),
@@ -178,9 +179,9 @@ function whenSourceBuffersEndedUpdates$(
       )
     );
   }
-  return observableCombineLatest(updatingSourceBuffers$).pipe(
-    filter((updatingSourceBuffers) => {
-      return updatingSourceBuffers.every((usb) => !usb);
+  return observableCombineLatest(sourceBufferUpdatingStatuses).pipe(
+    filter((areUpdating) => {
+      return areUpdating.every((isUpdating) => !isUpdating);
     }),
     mapTo(undefined)
   );
