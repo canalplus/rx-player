@@ -51,6 +51,7 @@ class VideoThumbnail extends React.Component {
     if (this.props.videoThumbnailsData === null) {
       this.props.player.dispatch("ATTACH_VIDEO_THUMBNAIL_LOADER");
     }
+    this.element  = React.createRef();
   }
 
   correctImagePosition() {
@@ -59,7 +60,7 @@ class VideoThumbnail extends React.Component {
     }
     const { xPosition } = this.props;
 
-    if (isNaN(+xPosition) || !this.element) {
+    if (isNaN(+xPosition) || this.element.current === null) {
       return null;
     }
 
@@ -109,20 +110,30 @@ class VideoThumbnail extends React.Component {
     }
   }
 
-  componentWillReceiveProps() {
+  // TODO think about what to do about that one now
+  // (This function was there as is a very long time ago and I did not keep up
+  // to date with React to know what the new idiomatic way is).
+  // Nothing unsafe about this though
+  UNSAFE_componentWillReceiveProps() {
     this.positionIsCorrected = false;
   }
 
   componentDidMount() {
-    if (this.props.videoThumbnailsData !== null && this.element !== undefined) {
-      this.element.appendChild(this.props.videoThumbnailsData.videoElement);
+    if (this.props.videoThumbnailsData !== null &&
+        this.element.current !== null)
+    {
+      this.element.current
+        .appendChild(this.props.videoThumbnailsData.videoElement);
     }
     this.correctImagePosition();
   }
 
   componentDidUpdate() {
-    if (this.props.videoThumbnailsData !== null && this.element !== undefined) {
-      this.element.appendChild(this.props.videoThumbnailsData.videoElement);
+    if (this.props.videoThumbnailsData !== null &&
+        this.element.current !== null)
+    {
+      this.element.current
+        .appendChild(this.props.videoThumbnailsData.videoElement);
     }
     this.correctImagePosition();
   }
@@ -170,7 +181,7 @@ class VideoThumbnail extends React.Component {
     const divToDisplay = <div
       className="thumbnail-wrapper"
       style={style}
-      ref={el => this.element = el}
+      ref={this.element}
     >
       {
         this.state.displaySpinner ?

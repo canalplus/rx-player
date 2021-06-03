@@ -42,7 +42,7 @@ function ImageThumbnail({
       ref={wrapperEl}
     >
       <img
-        className={"thumbnail"}
+        className="thumbnail"
         src={imageUrl}
       />
     </div>
