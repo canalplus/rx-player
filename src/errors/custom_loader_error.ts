@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-import { INetworkErrorType } from "./error_codes";
-
 /**
- * Internal Error used when doing requests through fetch / XHRs.
+ * Internal error used to better handle errors happening when a custom
+ * `segmentLoader` or `manifestLoader` has been used.
  *
  * It is not part of the API, as such it is only a temporary error which is
  * later converted to another Error instance (e.g. NETWORK_ERROR).
- *
- * @class RequestError
+ * @class CustomLoaderError
  * @extends Error
  */
-export default class RequestError extends Error {
-  public readonly name : "RequestError";
-  public readonly type : INetworkErrorType;
+export default class CustomLoaderError extends Error {
+  public readonly name : "CustomLoaderError";
   public readonly message : string;
-  public readonly xhr? : XMLHttpRequest;
-  public readonly url : string;
-  public readonly status : number;
+  public readonly canRetry : boolean;
+  public readonly isOfflineError : boolean;
+  public readonly xhr : XMLHttpRequest | undefined;
 
   /**
    * @param {XMLHttpRequest} xhr
@@ -39,20 +36,21 @@ export default class RequestError extends Error {
    * @param {string} type
    */
   constructor(
-    url : string,
-    status : number,
-    type : INetworkErrorType,
-    xhr? : XMLHttpRequest
+    message : string,
+    canRetry : boolean,
+    isOfflineError : boolean,
+    xhr : XMLHttpRequest | undefined
   ) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-    Object.setPrototypeOf(this, RequestError.prototype);
+    Object.setPrototypeOf(this, CustomLoaderError.prototype);
 
-    this.name = "RequestError";
-    this.url = url;
+    this.name = "CustomLoaderError";
+
+    this.message = message;
+    this.canRetry = canRetry;
+    this.isOfflineError = isOfflineError;
     this.xhr = xhr;
-    this.status = status;
-    this.type = type;
-    this.message = type;
   }
 }
+

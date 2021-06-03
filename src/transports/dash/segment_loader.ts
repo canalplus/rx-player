@@ -19,6 +19,7 @@ import {
   Observer,
   of as observableOf,
 } from "rxjs";
+import { CustomLoaderError } from "../../errors";
 import xhr, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -144,7 +145,20 @@ export default function generateSegmentLoader(
       const reject = (err = {}) : void => {
         if (!hasFallbacked) {
           hasFinished = true;
-          obs.error(err);
+
+          // Format error and send it
+          const castedErr = err as (null | undefined | { message? : string;
+                                                         canRetry? : boolean;
+                                                         isOfflineError? : boolean;
+                                                         xhr? : XMLHttpRequest; });
+          const message = castedErr?.message ??
+                          "Unknown error when fetching a DASH segment through a " +
+                          "custom segmentLoader.";
+          const emittedErr = new CustomLoaderError(message,
+                                                   castedErr?.canRetry ?? false,
+                                                   castedErr?.isOfflineError ?? false,
+                                                   castedErr?.xhr);
+          obs.error(emittedErr);
         }
       };
 

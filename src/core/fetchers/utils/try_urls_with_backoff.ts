@@ -27,6 +27,7 @@ import {
 } from "rxjs/operators";
 import { isOffline } from "../../../compat";
 import {
+  CustomLoaderError,
   isKnownError,
   NetworkErrorTypes,
   RequestError,
@@ -37,6 +38,12 @@ import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
 /**
  * Called on a loader error.
  * Returns whether the loader request should be retried.
+ *
+ * TODO the notion of retrying or not could be transport-specific (e.g. 412 are
+ * mainly used for Smooth contents) and thus as part of the transport code (e.g.
+ * by rejecting with an error always having a `canRetry` property?).
+ * Or not, to ponder.
+ *
  * @param {Error} error
  * @returns {Boolean} - If true, the request can be retried.
  */
@@ -52,6 +59,19 @@ function shouldRetry(error : unknown) : boolean {
     }
     return error.type === NetworkErrorTypes.TIMEOUT ||
            error.type === NetworkErrorTypes.ERROR_EVENT;
+  } else if (error instanceof CustomLoaderError) {
+    if (typeof error.canRetry === "boolean") {
+      return error.canRetry;
+    }
+    if (error.xhr !== undefined) {
+      return error.xhr.status >= 500 ||
+             error.xhr.status === 404 ||
+             error.xhr.status === 415 || // some CDN seems to use that code when
+                                         // requesting low-latency segments too much
+                                         // in advance
+             error.xhr.status === 412;
+    }
+    return false;
   }
   return isKnownError(error) && error.code === "INTEGRITY_ERROR";
 }
@@ -62,9 +82,14 @@ function shouldRetry(error : unknown) : boolean {
  * @param {Error} error
  * @returns {Boolean}
  */
-function isOfflineRequestError(error : RequestError) : boolean {
-  return error.type === NetworkErrorTypes.ERROR_EVENT &&
-         isOffline();
+function isOfflineRequestError(error : unknown) : boolean {
+  if (error instanceof RequestError) {
+    return error.type === NetworkErrorTypes.ERROR_EVENT &&
+           isOffline();
+  } else if (error instanceof CustomLoaderError) {
+    return error.isOfflineError;
+  }
+  return false; // under doubt, return false
 }
 
 export interface IBackoffOptions { baseDelay : number;
@@ -95,8 +120,7 @@ enum REQUEST_ERROR_TYPES { None,
  * @returns {number}
  */
 function getRequestErrorType(error : unknown) : REQUEST_ERROR_TYPES {
-  return error instanceof RequestError &&
-         isOfflineRequestError(error) ? REQUEST_ERROR_TYPES.Offline :
+  return isOfflineRequestError(error) ? REQUEST_ERROR_TYPES.Offline :
                                         REQUEST_ERROR_TYPES.Regular;
 }
 

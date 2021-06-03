@@ -19,6 +19,7 @@ import {
   Observer,
   of as observableOf,
 } from "rxjs";
+import { CustomLoaderError } from "../../errors";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import {
@@ -173,7 +174,20 @@ const generateSegmentLoader = (
       const reject = (err = {}) => {
         if (!hasFallbacked) {
           hasFinished = true;
-          obs.error(err);
+
+          // Format error and send it
+          const castedErr = err as (null | undefined | { message? : string;
+                                                         canRetry? : boolean;
+                                                         isOfflineError? : boolean;
+                                                         xhr? : XMLHttpRequest; });
+          const message = castedErr?.message ??
+                          "Unknown error when fetching a Smooth segment through a " +
+                          "custom segmentLoader.";
+          const emittedErr = new CustomLoaderError(message,
+                                                   castedErr?.canRetry ?? false,
+                                                   castedErr?.isOfflineError ?? false,
+                                                   castedErr?.xhr);
+          obs.error(emittedErr);
         }
       };
 
