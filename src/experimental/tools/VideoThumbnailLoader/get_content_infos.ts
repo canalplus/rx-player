@@ -15,6 +15,7 @@
  */
 
 import Manifest from "../../../manifest";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import { IContentInfos } from "./types";
 
 /**
@@ -36,10 +37,8 @@ export default function getContentInfos(
   }
   for (let i = 0; i < period.adaptations.video.length; i++) {
     const videoAdaptation = period.adaptations.video[i];
-    if (videoAdaptation.trickModeTracks !== undefined &&
-        videoAdaptation.trickModeTracks[0] !== undefined &&
-        videoAdaptation.trickModeTracks[0].representations[0] !== undefined) {
-      const representation = videoAdaptation.trickModeTracks[0].representations[0];
+    const representation = videoAdaptation.trickModeTracks?.[0].representations?.[0];
+    if (!isNullOrUndefined(representation)) {
       return { manifest,
                period,
                adaptation: videoAdaptation,
