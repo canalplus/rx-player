@@ -79,7 +79,7 @@ describe("Memory tests", () => {
     }
     this.timeout(5 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
-                            initialaudiobitrate: Infinity,
+                            initialAudiobitrate: Infinity,
                             preferredtexttracks: [{ language: "fra",
                                                     closedcaption: true }] });
     window.gc();
@@ -128,7 +128,7 @@ describe("Memory tests", () => {
     }
     this.timeout(5 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
-                            initialaudiobitrate: Infinity,
+                            initialAudiobitrate: Infinity,
                             preferredtexttracks: [{ language: "fra",
                                                     closedcaption: true }] });
     const vtlVideoElement = document.createElement("video");
