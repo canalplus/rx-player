@@ -1079,7 +1079,7 @@ export default {
    *
    * @type {Number|null}
    */
-  FORCED_ENDED_THRESHOLD: 0.001,
+  FORCED_ENDED_THRESHOLD: 0.0008,
 
   /**
    * Maximum duration from the current position we will let in the buffer when
