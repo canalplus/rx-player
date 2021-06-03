@@ -222,14 +222,14 @@ export default class TrackChoiceManager {
     Period,
     {
       /**
-       * The "root" Adaptation (if a trickmode track was chosen, this is the
+       * The "base" Adaptation (if a trickmode track was chosen, this is the
        * Adaptation the trickmode track is linked to, and not the trickmode
        * track itself).
        */
-      rootAdaptation : Adaptation;
+      baseAdaptation : Adaptation;
       /**
-       * The chosen Adaptation itself (may be different from `rootAdaptation`
-       * when a trickmode track is chosen, in which case `rootAdaptation` is
+       * The chosen Adaptation itself (may be different from `baseAdaptation`
+       * when a trickmode track is chosen, in which case `baseAdaptation` is
        * the Adaptation the trickmode track is linked to and `adaptation` is the
        * trickmode track).
        */
@@ -469,32 +469,32 @@ export default class TrackChoiceManager {
     const videoAdaptations = period.getSupportedAdaptations("video");
 
     const prevVideoAdaptation = this._videoChoiceMemory.get(period);
-    let newRootAdaptation : Adaptation | null;
+    let newBaseAdaptation : Adaptation | null;
 
     if (prevVideoAdaptation === null) {
-      newRootAdaptation = null;
+      newBaseAdaptation = null;
     } else if (prevVideoAdaptation !== undefined &&
-               arrayIncludes(videoAdaptations, prevVideoAdaptation.rootAdaptation))
+               arrayIncludes(videoAdaptations, prevVideoAdaptation.baseAdaptation))
     {
       // still exists, re-select it
-      newRootAdaptation = prevVideoAdaptation.rootAdaptation;
+      newBaseAdaptation = prevVideoAdaptation.baseAdaptation;
     } else {
       // If that Adaptation does not exist (e.g. no choice has been made or it
       // is not in the Manifest anymore), look at preferences
       const preferredVideoTracks = this._preferredVideoTracks;
-      newRootAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations,
+      newBaseAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations,
                                                           preferredVideoTracks);
     }
 
-    if (newRootAdaptation === null) {
+    if (newBaseAdaptation === null) {
       this._videoChoiceMemory.set(period, null);
       videoInfos.adaptation$.next(null);
       return;
     }
 
-    const newVideoAdaptation = getRightVideoTrack(newRootAdaptation,
+    const newVideoAdaptation = getRightVideoTrack(newBaseAdaptation,
                                                   this.trickModeTrackEnabled);
-    this._videoChoiceMemory.set(period, { rootAdaptation: newRootAdaptation,
+    this._videoChoiceMemory.set(period, { baseAdaptation: newBaseAdaptation,
                                           adaptation: newVideoAdaptation });
     videoInfos.adaptation$.next(newVideoAdaptation);
   }
@@ -571,16 +571,16 @@ export default class TrackChoiceManager {
       throw new Error("LanguageManager: Given Period not found.");
     }
 
-    const wantedRootAdaptation = arrayFind(videoInfos.adaptations,
+    const wantedBaseAdaptation = arrayFind(videoInfos.adaptations,
                                            ({ id }) => id === wantedId);
 
-    if (wantedRootAdaptation === undefined) {
+    if (wantedBaseAdaptation === undefined) {
       throw new Error("Video Track not found.");
     }
 
-    const newVideoAdaptation = getRightVideoTrack(wantedRootAdaptation,
+    const newVideoAdaptation = getRightVideoTrack(wantedBaseAdaptation,
                                                   this.trickModeTrackEnabled);
-    this._videoChoiceMemory.set(period, { rootAdaptation: wantedRootAdaptation,
+    this._videoChoiceMemory.set(period, { baseAdaptation: wantedBaseAdaptation,
                                           adaptation: newVideoAdaptation });
     videoInfos.adaptation$.next(newVideoAdaptation);
   }
@@ -1062,12 +1062,12 @@ export default class TrackChoiceManager {
         return;
       } else if (chosenVideoAdaptation !== undefined &&
                  arrayIncludes(videoAdaptations,
-                               chosenVideoAdaptation.rootAdaptation))
+                               chosenVideoAdaptation.baseAdaptation))
       {
-        // The right root Adaptation is selected and is still available.
+        // The right Base Adaptation is selected and is still available.
         // Check if the selected Adaptation is still right
         const wantedVideoAdaptation = getRightVideoTrack(
-          chosenVideoAdaptation.rootAdaptation,
+          chosenVideoAdaptation.baseAdaptation,
           this.trickModeTrackEnabled
         );
         if (wantedVideoAdaptation.id === chosenVideoAdaptation.adaptation.id) {
@@ -1077,7 +1077,7 @@ export default class TrackChoiceManager {
         } else {
           // select the right track
           this._videoChoiceMemory.set(period, {
-            rootAdaptation: chosenVideoAdaptation.rootAdaptation,
+            baseAdaptation: chosenVideoAdaptation.baseAdaptation,
             adaptation: wantedVideoAdaptation,
           });
           videoItem.adaptation$.next(wantedVideoAdaptation);
@@ -1098,7 +1098,7 @@ export default class TrackChoiceManager {
 
       const newVideoAdaptation = getRightVideoTrack(optimalAdaptation,
                                                     this.trickModeTrackEnabled);
-      this._videoChoiceMemory.set(period, { rootAdaptation: optimalAdaptation,
+      this._videoChoiceMemory.set(period, { baseAdaptation: optimalAdaptation,
                                             adaptation: newVideoAdaptation });
       videoItem.adaptation$.next(newVideoAdaptation);
 
