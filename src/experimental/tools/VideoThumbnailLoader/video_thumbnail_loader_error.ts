@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-import createMetaplaylist from "./createMetaplaylist";
-import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
-import parseBifThumbnails from "./parseBIFThumbnails";
-import VideoThumbnailLoader from "./VideoThumbnailLoader";
+// Returned error when rejecting
+export default class VideoThumbnailLoaderError extends Error {
+  public readonly name : "VideoThumbnailLoaderError";
+  public readonly message : string;
+  public readonly code : string;
 
-export {
-  createMetaplaylist,
-  mediaCapabilitiesProber,
-  parseBifThumbnails,
-  VideoThumbnailLoader,
-};
+  /**
+   * @param {string} code
+   * @param {string} reason
+   * @param {Boolean} fatal
+   */
+  constructor(code : string, message : string) {
+    super();
+    Object.setPrototypeOf(this, VideoThumbnailLoaderError.prototype);
+    this.name = "VideoThumbnailLoaderError";
+    this.code = code;
+    this.message = message;
+  }
+}
