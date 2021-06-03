@@ -159,7 +159,7 @@ export default function initializeDirectfileContent({
   // Set the speed set by the user on the media element while pausing a
   // little longer while the buffer is empty.
   const playbackRate$ =
-    updatePlaybackRate(mediaElement, speed$, clock$, { pauseWhenStalled: true })
+    updatePlaybackRate(mediaElement, speed$, clock$)
       .pipe(ignoreElements());
 
   // Create Stalling Manager, an observable which will try to get out of

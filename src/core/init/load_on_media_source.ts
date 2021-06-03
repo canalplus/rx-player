@@ -182,7 +182,7 @@ export default function createMediaSourceLoader(
      * empty, so it can build back buffer.
      */
     const playbackRate$ =
-      updatePlaybackRate(mediaElement, speed$, clock$, { pauseWhenStalled: true })
+      updatePlaybackRate(mediaElement, speed$, clock$)
         .pipe(ignoreElements());
 
     /**

@@ -39,29 +39,19 @@ export interface IPlaybackRateOptions { pauseWhenStalled? : boolean }
  * @param {HTMLMediaElement} mediaElement
  * @param {Observable} speed$ - emit speed set by the user
  * @param {Observable} clock$ - Current playback conditions
- * @param {Object} options - Contains the following properties:
- *   - pauseWhenStalled {Boolean|undefined} - true if the player
- *     stalling should lead to a pause until it un-stalls. True by default.
  * @returns {Observable}
  */
 export default function updatePlaybackRate(
   mediaElement : HTMLMediaElement,
   speed$ : Observable<number>,
-  clock$ : Observable<IInitClockTick>,
-  { pauseWhenStalled = true } : IPlaybackRateOptions
+  clock$ : Observable<IInitClockTick>
 ) : Observable<number> {
-  let forcePause$ : Observable<boolean>;
-
-  if (!pauseWhenStalled) {
-    forcePause$ = observableOf(false);
-  } else {
-    forcePause$ = clock$
-      .pipe(
-        map((timing) => timing.stalled !== null),
-        startWith(false),
-        distinctUntilChanged()
-      );
-  }
+  const forcePause$ = clock$
+    .pipe(
+      map((timing) => timing.stalled !== null),
+      startWith(false),
+      distinctUntilChanged()
+    );
 
   return forcePause$
     .pipe(switchMap(shouldForcePause => {

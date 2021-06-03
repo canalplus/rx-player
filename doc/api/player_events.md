@@ -361,6 +361,23 @@ properties:
       characteristics of the track.
       (see [HDR support documentation](./hdr.md#hdrinfo))
 
+  - ``isTrickModeTrack`` (``Boolean|undefined``): If set to `true`, this track
+    is a trick mode track. This type of tracks proposes video content that is
+    often encoded with a very low framerate with the purpose to be played more
+    efficiently at a much higher speed.
+
+    To enter or exit a mode where trickmode tracks are used instead of regular
+    non-trickmode ones, you can use the `setPlaybackRate` function.
+
+  - ``trickModeTracks`` (``Object | undefined``): Trick mode video tracks
+    attached to this video track.
+
+    Each of those objects contain the same properties that a regular video track
+    (same properties than what is documented here).
+
+    It this property is either `undefined` or not set, then this track has no
+    linked trickmode video track.
+
 A `null` payload means that video track has been disabled.
 
 This event only concerns the currently-playing Period.
@@ -686,8 +703,6 @@ tutorial](../tutorials/stream_events.md).
 Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
 was not entered, and will thus not be exited.
-
-
 
 <a name="events-deprecated"></a>
 ## Deprecated ##################################################################
