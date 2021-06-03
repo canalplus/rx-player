@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
 import { IRepresentationIntermediateRepresentation } from "./node_parsers/Representation";
@@ -23,9 +24,6 @@ type IAdaptationType = "audio" |
                        "video" |
                        "text" |
                        "image";
-
-/** Array grouping every possible type a parsed Adaptation can be. */
-const KNOWN_ADAPTATION_TYPES : IAdaptationType[] = ["audio", "video", "text", "image"];
 
 /** Different `role`s a text Adaptation can be. */
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -64,7 +62,7 @@ export default function inferAdaptationType(
     roles : IScheme[]|null
   ) : IAdaptationType | undefined {
     const topLevel = mimeType.split("/")[0];
-    if (arrayIncludes<IAdaptationType>(KNOWN_ADAPTATION_TYPES,
+    if (arrayIncludes<IAdaptationType>(SUPPORTED_ADAPTATIONS_TYPE,
                                        topLevel as IAdaptationType)) {
       return topLevel as IAdaptationType;
     }
