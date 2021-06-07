@@ -123,7 +123,8 @@ describe("basic playback use cases: direct file", function () {
     await waitForLoadedStateAfterLoadVideo(player);
     player.seekTo(200);
     expect(player.getPlayerState()).to.equal("LOADED");
-    expect(player.getPosition()).to.equal(player.getMaximumPosition());
+    expect(player.getPosition())
+      .to.be.closeTo(player.getMaximumPosition(), 0.1);
   });
 
   it("should seek to minimum position for negative positions after playing", async function () {
@@ -148,7 +149,8 @@ describe("basic playback use cases: direct file", function () {
     expect(player.getPlayerState()).to.equal("LOADED");
     player.play();
     player.seekTo(200);
-    expect(player.getPosition()).to.equal(player.getMaximumPosition());
+    expect(player.getPosition())
+      .to.be.closeTo(player.getMaximumPosition(), 0.1);
   });
 
   it("should seek to minimum position for negative positions when paused", async function () {
@@ -180,7 +182,8 @@ describe("basic playback use cases: direct file", function () {
     await sleep(10);
     expect(player.getPlayerState()).to.equal("PAUSED");
     player.seekTo(10000);
-    expect(player.getPosition()).to.equal(player.getMaximumPosition());
+    expect(player.getPosition())
+      .to.be.closeTo(player.getMaximumPosition(), 0.1);
     expect(player.getPlayerState()).to.equal("PAUSED");
   });
 });
