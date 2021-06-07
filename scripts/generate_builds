@@ -73,6 +73,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
                       s/[[:<:]]__RELATIVE_PATH__\.BIF_PARSER[[:>:]]/\"..\/parsers\/images\/bif.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.SMOOTH[[:>:]]/\"..\/transports\/smooth\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.DASH[[:>:]]/\"..\/transports\/dash\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.DASH_JS_PARSER[[:>:]]/\"..\/parsers\/manifest\/dash\/js-parser\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.LOCAL_MANIFEST[[:<:]]/\"..\/transports\/local\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.METAPLAYLIST[[:>:]]/\"..\/transports\/metaplaylist\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER[[:>:]]/\"..\/core\/segment_buffers\/implementations\/text\/native\/index.js\"/g; \
@@ -116,6 +117,7 @@ else
                s/\b__RELATIVE_PATH__\.BIF_PARSER\b/\"..\/parsers\/images\/bif.js\"/g; \
                s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/transports\/smooth\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.DASH\b/\"..\/transports\/dash\/index.js\"/g; \
+               s/\b__RELATIVE_PATH__\.DASH_JS_PARSER\b/\"..\/parsers\/manifest\/dash\/js-parser\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.LOCAL_MANIFEST\b/\"..\/transports\/local\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.METAPLAYLIST\b/\"..\/transports\/dash\/index.js\"/g; \
                s/\b__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER\b/\"..\/core\/segment_buffers\/implementations\/text\/native\/index.js\"/g; \

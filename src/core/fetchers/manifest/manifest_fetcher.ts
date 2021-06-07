@@ -30,6 +30,7 @@ import {
   formatError,
   ICustomError,
 } from "../../../errors";
+import log from "../../../log";
 import Manifest from "../../../manifest";
 import {
   ILoaderDataLoadedValue,
@@ -239,7 +240,7 @@ export default class ManifestFetcher {
 
     // Prepare RequestScheduler
     // TODO Remove the need of a subject
-    type IRequestSchedulerData = ILoaderDataLoadedValue<string | Document>;
+    type IRequestSchedulerData = ILoaderDataLoadedValue<string | ArrayBuffer | Document>;
     const schedulerWarnings$ = new Subject<ICustomError>();
     const scheduleRequest =
       createRequestScheduler<IRequestSchedulerData>(this._backoffOptions,
@@ -273,6 +274,8 @@ export default class ManifestFetcher {
 
           // 2 - send response
           const parsingTime = performance.now() - parsingTimeStart;
+          log.info(`MF: Manifest parsed in ${parsingTime}ms`);
+
           return { type: "parsed" as const,
                    manifest: parsingEvt.value.manifest,
                    sendingTime,

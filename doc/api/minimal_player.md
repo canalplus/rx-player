@@ -87,9 +87,9 @@ Such features are imported from `"rx-player/experimental/features"` instead:
 
 ```js
 import MinimalRxPlayer from "rx-player/minimal";
-import { METAPLAYLIST } from "rx-player/experimental/features";
+import { DASH_WASM } from "rx-player/experimental/features";
 
-MinimalRxPlayer.addFeatures([METAPLAYLIST]);
+MinimalRxPlayer.addFeatures([DASH_WASM]);
 ```
 
 You can of course depend on both experimental and regular features:
@@ -97,14 +97,14 @@ You can of course depend on both experimental and regular features:
 ```js
 import MinimalRxPlayer from "rx-player/minimal";
 import { DASH, SMOOTH } from "rx-player/features";
-import { METAPLAYLIST } from "rx-player/experimental/features";
+import { DASH_WASM } from "rx-player/experimental/features";
 
-MinimalRxPlayer.addFeatures([DASH, SMOOTH, METAPLAYLIST]);
+MinimalRxPlayer.addFeatures([DASH, SMOOTH, DASH_WASM]);
 ```
 
 By using the minimal version, you will reduce the final bundle file __if
-tree-shaking is performed on the final code__ (like in webpack's production
-mode).
+tree-shaking is performed on the final code (like in webpack's production
+mode)__.
 
 The key is just to know which feature does what. The next chapter will list
 and explain the role of every one of them.
@@ -117,26 +117,27 @@ are all objects declared in upper-case.
 
 Here is the anotated exhaustive list (notes are at the bottom of the table):
 
-| Feature                  | Description of the feature                               |
-| ------------------------ | -------------------------------------------------------- |
-| `SMOOTH`                 | Enable Smooth streaming (HSS) playback                   |
-| `DASH`                   | Enable DASH playback                                     |
-| `DIRECTFILE`             | Enable playback of "directfile" contents                 |
-| `EME`                    | Enable playback of encrypted contents                    |
-| `NATIVE_TEXT_BUFFER` [1] | Allow to display text tracks through \<tracks\> elements |
-| `HTML_TEXT_BUFFER` [1]   | Allow to display richer text tracks through HTML elements|
-| `IMAGE_BUFFER` [1]       | Allow to display thumbnails through the images buffer    |
-| `NATIVE_SRT_PARSER` [2]  | Parse SRT text tracks for the native text buffer         |
-| `NATIVE_VTT_PARSER` [2]  | Parse VTT text tracks for the native text buffer         |
-| `NATIVE_TTML_PARSER` [2] | Parse TTML text tracks for the native text buffer        |
-| `NATIVE_SAMI_PARSER` [2] | Parse SAMI text tracks for the native text buffer        |
-| `HTML_SRT_PARSER` [3]    | Parse SRT text tracks for the HTML text buffer           |
-| `HTML_VTT_PARSER` [3]    | Parse VTT text tracks for the HTML text buffer           |
-| `HTML_TTML_PARSER` [3]   | Parse TTML text tracks for the HTML text buffer          |
-| `HTML_SAMI_PARSER` [3]   | Parse SAMI text tracks for the HTML text buffer          |
-| `BIF_PARSER` [4]         | Parse BIF image tracks for the image buffer              |
-| `LOCAL_MANIFEST` [5]     | Enable playback of "local" contents                      |
-| `METAPLAYLIST` [5]       | Enable playback of "metaplaylist" contents               |
+| Feature                  | Description of the feature                                 |
+| ------------------------ | --------------------------------------------------------   |
+| `SMOOTH`                 | Enable Smooth streaming (HSS) playback                     |
+| `DASH`                   | Enable DASH playback using a JavaScript-based MPD parser   |
+| `DIRECTFILE`             | Enable playback of "directfile" contents                   |
+| `EME`                    | Enable playback of encrypted contents                      |
+| `NATIVE_TEXT_BUFFER` [1] | Allow to display text tracks through \<tracks\> elements   |
+| `HTML_TEXT_BUFFER` [1]   | Allow to display richer text tracks through HTML elements  |
+| `IMAGE_BUFFER` [1]       | Allow to display thumbnails through the image buffer       |
+| `NATIVE_SRT_PARSER` [2]  | Parse SRT text tracks for the native text buffer           |
+| `NATIVE_VTT_PARSER` [2]  | Parse VTT text tracks for the native text buffer           |
+| `NATIVE_TTML_PARSER` [2] | Parse TTML text tracks for the native text buffer          |
+| `NATIVE_SAMI_PARSER` [2] | Parse SAMI text tracks for the native text buffer          |
+| `HTML_SRT_PARSER` [3]    | Parse SRT text tracks for the HTML text buffer             |
+| `HTML_VTT_PARSER` [3]    | Parse VTT text tracks for the HTML text buffer             |
+| `HTML_TTML_PARSER` [3]   | Parse TTML text tracks for the HTML text buffer            |
+| `HTML_SAMI_PARSER` [3]   | Parse SAMI text tracks for the HTML text buffer            |
+| `BIF_PARSER` [4]         | Parse BIF image tracks for the image buffer                |
+| `DASH_WASM` [5] [6]      | Enable DASH playback using a WebAssembly-based MPD parser  |
+| `LOCAL_MANIFEST` [5]     | Enable playback of "local" contents                        |
+| `METAPLAYLIST` [5]       | Enable playback of "metaplaylist" contents                 |
 
 ---
 
@@ -158,6 +159,10 @@ __[4]__: This feature will only be used if ``IMAGE_BUFFER`` is an added feature.
 __[5]__: Those type of contents are experimental. They should be imported
 from `rx-player/experimental/features`.
 
+__[6]__: In cases where both the `DASH` and `DASH_WASM` features are added
+(which are both parsers for DASH contents), the RxPlayer will default using the
+WebAssembly parser (provided by `DASH_WASM`) and fallback on the JavaScript
+parser (provided by `DASH`) when it cannot do so.
 
 ---
 

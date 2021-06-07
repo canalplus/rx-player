@@ -19,7 +19,7 @@ import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/te
 /* eslint-enable max-len */
 import {
   addFeatures,
-  IFeatureFunction,
+  IFeature,
 } from "../../features";
 
 /** Argument for the `setTextTrack` method. */
@@ -47,7 +47,7 @@ export default class TextTrackRenderer {
    * Add a given parser from the list of features.
    * @param {Array.<Function>} parsersList
    */
-  static addParsers(parsersList : IFeatureFunction[]) : void {
+  static addParsers(parsersList : IFeature[]) : void {
     addFeatures(parsersList);
   }
 
