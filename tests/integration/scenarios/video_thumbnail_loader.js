@@ -3,7 +3,7 @@ import { retry } from "rxjs/operators";
 import RxPlayer from "../../../src";
 import VideoThumbnailLoader, {
   DASH_LOADER,
-} from "../../../src/experimental/tools/videoThumbnailLoader";
+} from "../../../src/experimental/tools/VideoThumbnailLoader";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import XHRMock from "../../utils/request_mock";
 import sleep from "../../utils/sleep";
