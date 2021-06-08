@@ -50731,6 +50731,7 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
   } // From here, clean-up data from the previous Adaptation, if one
 
 
+  var shouldFlush = adaptation.type === "audio" && options.audioTrackSwitchingMode === "direct";
   var rangesToExclude = []; // First, we don't want to accidentally remove some segments from the previous
   // Period (which overlap a little with this one)
 
@@ -50764,11 +50765,14 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
     paddingAfter = 0;
   }
 
-  rangesToExclude.push({
-    start: currentTime - paddingBefore,
-    end: currentTime + paddingAfter
-  }); // Now remove possible small range from the end if there is a segment from the
+  if (!shouldFlush) {
+    rangesToExclude.push({
+      start: currentTime - paddingBefore,
+      end: currentTime + paddingAfter
+    });
+  } // Now remove possible small range from the end if there is a segment from the
   // next Period
+
 
   if (period.end !== undefined) {
     /** first segment after for the current period. */
@@ -50792,7 +50796,7 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
     };
   }
 
-  return adaptation.type === "audio" && options.audioTrackSwitchingMode === "direct" ? {
+  return shouldFlush ? {
     type: "flush-buffer",
     value: toRemove
   } : {
