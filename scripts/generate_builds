@@ -49,9 +49,7 @@ files="$(find dist/_esm5.processed -type f -iname '*.js')"
 if [[ "$OSTYPE" == "darwin"* ]]; then
   for f in "$files"; do
     sed -i.DELETE -E "s/[[:<:]]__DEV__[[:>:]]/false/g; \
-
                       s/[[:<:]]__LOGGER_LEVEL__[[:>:]]/\"NONE\"/g; \
-
                       s/[[:<:]]__FEATURES__\.EME[[:>:]]/false/g; \
                       s/[[:<:]]__FEATURES__\.SMOOTH[[:>:]]/false/g; \
                       s/[[:<:]]__FEATURES__\.DASH[[:>:]]/false/g; \
@@ -67,7 +65,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
                       s/[[:<:]]__FEATURES__\.NATIVE_TTML[[:>:]]/false/g; \
                       s/[[:<:]]__FEATURES__\.NATIVE_VTT[[:>:]]/false/g; \
                       s/[[:<:]]__FEATURES__\.BIF_PARSER[[:>:]]/false/g; \
-
                       s/[[:<:]]__RELATIVE_PATH__\.EME_MANAGER[[:>:]]/\"..\/core\/eme\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.IMAGE_BUFFER[[:>:]]/\"..\/core\/segment_buffers\/implementations\/image\/index.js\"/g; \
                       s/[[:<:]]__RELATIVE_PATH__\.BIF_PARSER[[:>:]]/\"..\/parsers\/images\/bif.js\"/g; \
