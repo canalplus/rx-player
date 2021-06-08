@@ -27,7 +27,7 @@
 ### Other improvements
 
   - Improve `audioTrackSwitchingMode` `"direct"` mode by avoiding unnecessary reloading cases [#872, #887, #943]
-  - When seeking after the end of an ended content, actually seek just a little before to avoid subtle issues [#947]
+  - When seeking after the end of an ended content, actually seek just a little before to avoid subtle issues [#941]
   - DASH: limit the postponment of a Manifest refresh due to poor MPD-parsing performance to 6-times the "regular" delay (not impacted by `tansportOptions.minimumManifestUpdateInterval`) [#958]
   - DASH: Avoid loading two times a segment instead of once when that segment is not anounced in the MPD through a SegmentBase, SegmentList nor SegmentTemplate element but just through the Representation's BaseURL. [#949]
   - Update used RxJS version to 7.0.0, which might bring with it a smaller size and better performances [#954]
