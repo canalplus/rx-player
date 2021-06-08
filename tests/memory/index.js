@@ -2,7 +2,7 @@ import { expect } from "chai";
 import RxPlayer from "../../src";
 import VideoThumbnailLoader, {
   DASH_LOADER
-} from "../../src/experimental/tools/videoThumbnailLoader";
+} from "../../src/experimental/tools/VideoThumbnailLoader";
 import { manifestInfos } from "../contents/DASH_static_SegmentTimeline";
 import textTrackInfos from "../contents/texttracks";
 import imageInfos from "../contents/imagetracks";
