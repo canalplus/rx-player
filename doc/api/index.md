@@ -971,7 +971,7 @@ Note that this doesn't mean that the player is currently playing a trickmode
 track nor that it is even playing a content, only that it selects trickmode
 tracks in priority.
 
-To switch on or off ths mode, you can use the `setPlaybackRate` method.
+To switch on or off this mode, you can use the `setPlaybackRate` method.
 
 
 
