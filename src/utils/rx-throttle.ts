@@ -63,16 +63,17 @@ export default function throttle<T, U, V>(
 
       isPending = true;
       const funcSubscription = func(...args)
-        .subscribe(
-          (i) => { obs.next(i); },
-          (e) => {
+        .subscribe({
+          next: (i) => { obs.next(i); },
+          error: (e) => {
             isPending = false;
             obs.error(e);
           },
-          () => {
+          complete: () => {
             isPending = false;
             obs.complete();
-          });
+          },
+        });
 
       return () => {
         funcSubscription.unsubscribe();

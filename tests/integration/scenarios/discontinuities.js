@@ -34,7 +34,7 @@ describe("discontinuities handling", () => {
       this.timeout(7000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type = "MEDIA_ERROR" &&
+        if (err.type === "MEDIA_ERROR" &&
             err.code === "DISCONTINUITY_ENCOUNTERED")
         {
           discontinuitiesWarningReceived++;
@@ -57,7 +57,7 @@ describe("discontinuities handling", () => {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type = "MEDIA_ERROR" &&
+        if (err.type === "MEDIA_ERROR" &&
             err.code === "DISCONTINUITY_ENCOUNTERED")
         {
           discontinuitiesWarningReceived++;
@@ -78,7 +78,7 @@ describe("discontinuities handling", () => {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type = "MEDIA_ERROR" &&
+        if (err.type === "MEDIA_ERROR" &&
             err.code === "DISCONTINUITY_ENCOUNTERED")
         {
           discontinuitiesWarningReceived++;
@@ -103,7 +103,7 @@ describe("discontinuities handling", () => {
       this.timeout(7000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type = "MEDIA_ERROR" &&
+        if (err.type === "MEDIA_ERROR" &&
             err.code === "DISCONTINUITY_ENCOUNTERED")
         {
           discontinuitiesWarningReceived++;
@@ -126,7 +126,7 @@ describe("discontinuities handling", () => {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type = "MEDIA_ERROR" &&
+        if (err.type === "MEDIA_ERROR" &&
             err.code === "DISCONTINUITY_ENCOUNTERED")
         {
           discontinuitiesWarningReceived++;
@@ -147,7 +147,7 @@ describe("discontinuities handling", () => {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type = "MEDIA_ERROR" &&
+        if (err.type === "MEDIA_ERROR" &&
             err.code === "DISCONTINUITY_ENCOUNTERED")
         {
           discontinuitiesWarningReceived++;
@@ -176,7 +176,7 @@ describe("discontinuities handling", () => {
       this.timeout(7000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type = "MEDIA_ERROR" &&
+        if (err.type === "MEDIA_ERROR" &&
             err.code === "DISCONTINUITY_ENCOUNTERED")
         {
           discontinuitiesWarningReceived++;
@@ -199,7 +199,7 @@ describe("discontinuities handling", () => {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type = "MEDIA_ERROR" &&
+        if (err.type === "MEDIA_ERROR" &&
             err.code === "DISCONTINUITY_ENCOUNTERED")
         {
           discontinuitiesWarningReceived++;
@@ -220,7 +220,7 @@ describe("discontinuities handling", () => {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type = "MEDIA_ERROR" &&
+        if (err.type === "MEDIA_ERROR" &&
             err.code === "DISCONTINUITY_ENCOUNTERED")
         {
           discontinuitiesWarningReceived++;

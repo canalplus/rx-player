@@ -80,16 +80,16 @@ function checkNothingHappen(
 
     const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
     let itemNb = 0;
-    cleanOldLoadedSessions(loadedSessionsStore, limit).subscribe(
-      () => { itemNb++; },
-      () => { rej(new Error("The Observable should not throw")); },
-      () => {
+    cleanOldLoadedSessions(loadedSessionsStore, limit).subscribe({
+      next: () => { itemNb++; },
+      error: () => { rej(new Error("The Observable should not throw")); },
+      complete: () => {
         expect(itemNb).toEqual(0);
         expect(closeSessionSpy).not.toHaveBeenCalled();
         closeSessionSpy.mockRestore();
         res();
-      }
-    );
+      },
+    });
   });
 }
 
@@ -114,8 +114,8 @@ function checkEntriesCleaned(
   const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
   let itemNb = 0;
   const pendingEntries : any[] = [];
-  cleanOldLoadedSessions(loadedSessionsStore, limit).subscribe(
-    (evt) => {
+  cleanOldLoadedSessions(loadedSessionsStore, limit).subscribe({
+    next: (evt) => {
       if (evt.type === "cleaning-old-session") {
         pendingEntries.push(evt.value);
       }
@@ -132,13 +132,13 @@ function checkEntriesCleaned(
         pendingEntries.splice(pendingEntries.indexOf(evt.value), 1);
       }
     },
-    () => { throw new Error("The Observable should not throw"); },
-    () => {
+    error: () => { throw new Error("The Observable should not throw"); },
+    complete: () => {
       expect(pendingEntries).toEqual([]);
       expect(itemNb).toEqual(entries.length * 2);
       done();
-    }
-  );
+    },
+  });
   expect(closeSessionSpy).toHaveBeenCalledTimes(entries.length);
   for (let i = 0; i < entries.length; i++) {
     expect(closeSessionSpy)

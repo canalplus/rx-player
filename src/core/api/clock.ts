@@ -27,13 +27,11 @@ import {
   interval as observableInterval,
   merge as observableMerge,
   Observable,
-  ReplaySubject,
 } from "rxjs";
 import {
   map,
   mapTo,
-  multicast,
-  refCount,
+  shareReplay,
   startWith,
 } from "rxjs/operators";
 import config from "../../config";
@@ -427,9 +425,9 @@ function createClock(
 
         startWith(lastTimings));
   }).pipe(
-    multicast(() => new ReplaySubject<IClockTick>(1)), // Always emit the last
-    refCount()
-  );
+    // Always emit the last tick when already subscribed
+    shareReplay({ bufferSize: 1, refCount: true }));
+
   return { clock$, setCurrentTime };
 }
 

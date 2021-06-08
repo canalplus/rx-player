@@ -147,25 +147,25 @@ describe("utils - throttle (RxJS)", () => {
     obs2.subscribe();
     sub2.complete();
 
-    obs1.subscribe(
-      () => { itemsReceivedFrom1++; },
-      (e) => {
+    obs1.subscribe({
+      next: () => { itemsReceivedFrom1++; },
+      error: (e) => {
         expect(e).toBe("titi");
         has1Errored = true;
-      }
-    );
+      },
+    });
     sub1.error("titi");
 
-    obs3.subscribe(
-      () => { itemsReceivedFrom3++; },
-      (e) => {
+    obs3.subscribe({
+      next: () => { itemsReceivedFrom3++; },
+      error: (e) => {
         expect(e).toBe(error);
         expect(has1Errored).toBe(true);
         expect(itemsReceivedFrom1).toBe(1);
         expect(itemsReceivedFrom3).toBe(1);
         done();
-      }
-    );
+      },
+    });
 
     sub3.error(error);
   });

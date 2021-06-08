@@ -255,15 +255,15 @@ export default class ObservablePrioritizer<T> {
           Math.min(this._minPendingPriority, newTask.priority);
         this._pendingTasks.push(newTask);
 
-        newTask.subscription = obs.subscribe(
-          (evt) => subscriber.next({ type: "data", value: evt }),
-          (error) => {
+        newTask.subscription = obs.subscribe({
+          next: (evt) => subscriber.next({ type: "data", value: evt }),
+          error: (error) => {
             subscriber.error(error);
             newTask.subscription = null;
             newTask.finished = true;
             this._onTaskEnd(newTask);
           },
-          () => {
+          complete: () => {
             subscriber.next({ type: "ended" as const });
             if (isStillSubscribed) {
               subscriber.complete();
@@ -271,7 +271,8 @@ export default class ObservablePrioritizer<T> {
             newTask.subscription = null;
             newTask.finished = true;
             this._onTaskEnd(newTask);
-          });
+          },
+        });
       };
 
       newTask = { observable: pObs$,

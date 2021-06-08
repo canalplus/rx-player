@@ -143,7 +143,7 @@ describe("core - eme - initMediaKeys", () => {
 
   it("Should throw if getMediaKeys throws", (done) => {
     const err = new Error("a");
-    const spyGetMediaKeysInfos = jest.fn(() => throwError(err));
+    const spyGetMediaKeysInfos = jest.fn(() => throwError(() => err));
     jest.mock("../get_media_keys", () => ({
       __esModule: true as const,
       default: spyGetMediaKeysInfos,
@@ -190,7 +190,7 @@ describe("core - eme - initMediaKeys", () => {
       default: spyGetMediaKeysInfos,
     }));
     const err = new Error("a");
-    const spyAttachMediaKeys = jest.fn(() => throwError(err));
+    const spyAttachMediaKeys = jest.fn(() => throwError(() => err));
     const spyDisableOldMediaKeys = jest.fn(() => {
       return observableOf(undefined);
     });

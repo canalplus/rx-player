@@ -166,9 +166,8 @@ if (isNode ||
     keyType : string,
     keySystemConfigurations : MediaKeySystemConfiguration[]
   ) : Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
-    // TODO Why TS Do not understand that isTypeSupported exists here?
     if (!isTypeSupported(keyType)) {
-      return observableThrow(undefined);
+      return observableThrow(() => new Error("Unsupported key type"));
     }
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -203,7 +202,7 @@ if (isNode ||
       }
     }
 
-    return observableThrow(undefined);
+    return observableThrow(() => new Error("Unsupported configuration"));
   };
 }
 

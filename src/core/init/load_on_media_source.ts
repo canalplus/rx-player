@@ -112,7 +112,7 @@ export default function createMediaSourceLoader(
     if (initialPeriod === undefined) {
       const error = new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
                                    "Wanted starting time not found in the Manifest.");
-      return throwError(error);
+      return throwError(() => error);
     }
 
     /** Interface to create media buffers for loaded segments. */

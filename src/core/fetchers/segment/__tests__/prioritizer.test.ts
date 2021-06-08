@@ -54,9 +54,8 @@ describe("SegmentFetchers Prioritizer", () => {
     const prioritizer = new Prioritizer({ prioritySteps: { high: 5, low: 20 } });
     let emitted = 0;
     let completed = 0;
-    prioritizer.create(a1$, 99).subscribe(
-      // next
-      (evt) => {
+    prioritizer.create(a1$, 99).subscribe({
+      next: (evt) => {
         if (emitted === 0) {
           assert(evt.type === "data",
                  `evt.type should be equal to "data" but was equal to "${evt.type}"`);
@@ -69,11 +68,10 @@ describe("SegmentFetchers Prioritizer", () => {
         emitted++;
       },
 
-      // error
-      () => { throw new Error("Should not have thrown"); },
+      error: () => { throw new Error("Should not have thrown"); },
 
-      // complete
-      () => { completed++; });
+      complete: () => { completed++; },
+    });
     expect(emitted).toEqual(2);
     expect(completed).toEqual(1);
   });
@@ -110,24 +108,27 @@ describe("SegmentFetchers Prioritizer", () => {
       };
     }
 
-    prioritizer.create(a1$, 99).subscribe(
-      onNext(1),
-      () => { throw new Error("Should not have thrown"); },
-      () => { completed++; });
+    prioritizer.create(a1$, 99).subscribe({
+      next: onNext(1),
+      error: () => { throw new Error("Should not have thrown"); },
+      complete: () => { completed++; },
+    });
     expect(emitted).toEqual(2);
     expect(completed).toEqual(1);
 
-    prioritizer.create(a2$, 0).subscribe(
-      onNext(2),
-      () => { throw new Error("Should not have thrown"); },
-      () => { completed++; });
+    prioritizer.create(a2$, 0).subscribe({
+      next: onNext(2),
+      error: () => { throw new Error("Should not have thrown"); },
+      complete: () => { completed++; },
+    });
     expect(emitted).toEqual(4);
     expect(completed).toEqual(2);
 
-    prioritizer.create(a3$, 3).subscribe(
-      onNext(3),
-      () => { throw new Error("Should not have thrown"); },
-      () => { completed++; });
+    prioritizer.create(a3$, 3).subscribe({
+      next: onNext(3),
+      error: () => { throw new Error("Should not have thrown"); },
+      complete: () => { completed++; },
+    });
     expect(emitted).toEqual(6);
     expect(completed).toEqual(3);
   });
@@ -176,8 +177,8 @@ describe("SegmentFetchers Prioritizer", () => {
 
     merge(pObs1, pObs2, pObs3, pObs4)
       .pipe(startWith({ type: "data" as const, value: 0 }))
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           const checker = checkEvents[emitted];
           if (checker === undefined) {
             throw new Error("Unexpected event");
@@ -185,12 +186,12 @@ describe("SegmentFetchers Prioritizer", () => {
           checker(evt);
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(emitted).toEqual(9);
           done();
-        }
-      );
+        },
+      });
   });
 
   it("should not wait when Observables are run from lowest priority to highest", (done) => {
@@ -237,8 +238,8 @@ describe("SegmentFetchers Prioritizer", () => {
 
     merge(pObs1, pObs2, pObs3, pObs4)
       .pipe(startWith({ type: "data" as const, value: 0 }))
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           const checker = checkEvents[emitted];
           if (checker === undefined) {
             throw new Error("Unexpected event");
@@ -246,12 +247,12 @@ describe("SegmentFetchers Prioritizer", () => {
           checker(evt);
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(emitted).toEqual(9);
           done();
-        }
-      );
+        },
+      });
   });
 
   it("should wait for higher-priority Observables", (done) => {
@@ -274,8 +275,8 @@ describe("SegmentFetchers Prioritizer", () => {
 
     merge(pObs1, pObs2, pObs3, pObs4)
       .pipe(startWith({ type: "data", value: 0 }))
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           switch (emitted) {
             case 0:
               assert(evt.type === "data",
@@ -335,12 +336,12 @@ describe("SegmentFetchers Prioritizer", () => {
           }
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(emitted).toEqual(9);
           done();
-        }
-      );
+        },
+      });
   });
 
   it("should interrupt low-priority Observables when a high priority one is created", (done) => {
@@ -362,8 +363,8 @@ describe("SegmentFetchers Prioritizer", () => {
     const pObs4 = prioritizer.create(obs4$, 0);
 
     merge(pObs1, pObs2, pObs3, pObs4)
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           switch (emitted) {
             case 0:
               expect(evt.type).toEqual("interrupted");
@@ -425,16 +426,16 @@ describe("SegmentFetchers Prioritizer", () => {
           }
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(obs1Started).toEqual(2);
           expect(obs2Started).toEqual(1);
           expect(obs3Started).toEqual(1);
           expect(obs4Started).toEqual(1);
           expect(emitted).toEqual(9);
           done();
-        }
-      );
+        },
+      });
   });
 
   it("should be able to update a priority", (done) => {
@@ -456,8 +457,8 @@ describe("SegmentFetchers Prioritizer", () => {
     const pObs4 = prioritizer.create(obs4$, 5 + 4);
 
     merge(pObs1, pObs2, pObs3, pObs4)
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           switch (emitted) {
             case 0:
               prioritizer.updatePriority(pObs4, 5 + 1);
@@ -514,12 +515,12 @@ describe("SegmentFetchers Prioritizer", () => {
           }
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(emitted).toEqual(8);
           done();
-        }
-      );
+        },
+      });
   });
 
   it("should restart interrupted observables if given the right priority", (done) => {
@@ -541,8 +542,8 @@ describe("SegmentFetchers Prioritizer", () => {
     const pObs4 = prioritizer.create(obs4$, 0);
 
     merge(pObs1, pObs2, pObs3, pObs4)
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           switch (emitted) {
             case 0:
               expect(evt.type).toEqual("interrupted");
@@ -608,16 +609,16 @@ describe("SegmentFetchers Prioritizer", () => {
           }
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(obs1Started).toEqual(2);
           expect(obs2Started).toEqual(1);
           expect(obs3Started).toEqual(1);
           expect(obs4Started).toEqual(1);
           expect(emitted).toEqual(9);
           done();
-        }
-      );
+        },
+      });
   });
 
   it("should be able to update the priority of pending tasks", (done) => {
@@ -639,8 +640,8 @@ describe("SegmentFetchers Prioritizer", () => {
     const pObs4 = prioritizer.create(obs4$, 20 + 10);
 
     merge(pObs1, pObs2, pObs3, pObs4)
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           switch (emitted) {
             case 0: // interrupting pObs1 now that pObs3 is created
               expect(evt.type).toEqual("interrupted");
@@ -711,16 +712,16 @@ describe("SegmentFetchers Prioritizer", () => {
           }
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(obs1Started).toEqual(2);
           expect(obs2Started).toEqual(2);
           expect(obs3Started).toEqual(1);
           expect(obs4Started).toEqual(1);
           expect(emitted).toEqual(10);
           done();
-        }
-      );
+        },
+      });
   });
 
   it("should be able to interrupt observables after a priority update on a pending task", (done) => {
@@ -747,8 +748,8 @@ describe("SegmentFetchers Prioritizer", () => {
     });
 
     merge(pObs1, pObs2, pObs3, pObs4)
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           switch (emitted) {
             case 0:
               expect(evt.type).toEqual("interrupted");
@@ -808,16 +809,16 @@ describe("SegmentFetchers Prioritizer", () => {
           }
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(obs1Started).toEqual(2);
           expect(obs2Started).toEqual(2);
           expect(obs3Started).toEqual(2);
           expect(obs4Started).toEqual(1);
           expect(emitted).toEqual(11);
           done();
-        }
-      );
+        },
+      });
   });
 
   it("should not start right away an updated observable which has still not the priority", (done) => {
@@ -867,8 +868,8 @@ describe("SegmentFetchers Prioritizer", () => {
     });
 
     merge(pObs1, pObs2, pObs3, pObs4)
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           const checker = checkEvents[emitted];
           if (checker === undefined) {
             throw new Error("Unexpected event");
@@ -876,12 +877,12 @@ describe("SegmentFetchers Prioritizer", () => {
           checker(evt);
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(emitted).toEqual(checkEvents.length);
           done();
-        }
-      );
+        },
+      });
   });
 
   it("should not do anything special when updating a pending task with the same priority", (done) => {
@@ -943,8 +944,8 @@ describe("SegmentFetchers Prioritizer", () => {
     });
 
     merge(pObs1, pObs2, pObs3, pObs4)
-      .subscribe(
-        (evt) => {
+      .subscribe({
+        next: (evt) => {
           const checker = checkEvents[emitted];
           if (checker === undefined) {
             throw new Error("Unexpected event");
@@ -952,11 +953,11 @@ describe("SegmentFetchers Prioritizer", () => {
           checker(evt);
           emitted++;
         },
-        () => { throw new Error("Should not have thrown"); },
-        () => {
+        error: () => { throw new Error("Should not have thrown"); },
+        complete: () => {
           expect(emitted).toEqual(checkEvents.length);
           done();
-        }
-      );
+        },
+      });
   });
 });

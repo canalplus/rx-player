@@ -31,7 +31,7 @@ export default function tryCatch<T, I>(
 ) : Observable<I> {
   try {
     return func(argsForFunc);
-  } catch (e) {
-    return observableThrow(e);
+  } catch (e : unknown) {
+    return observableThrow(() => e);
   }
 }
