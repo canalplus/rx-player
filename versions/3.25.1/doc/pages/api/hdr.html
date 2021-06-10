@@ -1,0 +1,98 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>HDR support - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-HDR%20support">HDR support</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-API">API</a>
+<ul>
+<li><a href="#subchapter-hdrInfo">hdrInfo</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Exploiting%20the%20API">Exploiting the API</a>
+<ul>
+<li><a href="#subchapter-Color%20depth">Color depth</a></li>
+<li><a href="#subchapter-Color%20gamut">Color gamut</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-HDR%20support"></a></p>
+<h1>HDR support</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>HDR (High Dynamic Range) is a video technology that improves the way light is
+represented by permitting to render brighter highlights, darker shadows and
+more details beetwen both ends. Sometimes, it allows to reproduce richer colors
+than with the standard dynamic range.</p>
+<p><a name="chapter-API"></a></p>
+<h2>API</h2>
+<p>Behind this principle, several formats exists (HDR10, HLG, Dolby Vision) and
+implements specific media and stream encoding and packaging technologies. When
+using streaming technologies, both streaming manifest and codecs strings can
+provide information about the technical HDR characteristics of the content.</p>
+<p>These information are parsed and exposed through the <code>hdrInfo</code> attribute that
+can be found in the periods/adaptation/representation path of the RxPlayer
+manifest object. Also, the <code>getAvailableVideoTracks</code> and <code>getVideoTrack</code>
+functions and the <code>videoTrackChange</code> event carries the <code>hdrInfo</code>.</p>
+<p><a name="hdrinfo"></a>
+<a name="subchapter-hdrInfo"></a></p>
+<h3>hdrInfo</h3>
+<ul>
+<li>colorDepth: <code>number|undefined</code> : It is the bit depth used for encoding the
+color for a pixel. The more bits are used for encoding, the more color shades
+could be rendered. It allows to increase rendering dynamic range without color
+banding.</li>
+<li>eotf: <code>string|undefined</code> : It is the HDR eotf. It is the transfer function
+having the video signal as input and converting it into the linear light
+output of the display.
+For example, pq (published as standard SMPTE2084) is an eotf developped by
+Dolby for HDR contents and capable of rendering brightness until 10000 nits
+(the derived SI unit of luminance).</li>
+<li>colorSpace: <code>string|undefined</code> : It is the video color space used for
+encoding. An HDR content may not have a wide color gamut.
+HD TV standards define the use of the rec709 color space for content. Most of
+HDR standards define the use of rec2020, which is a color space that contains
+rec709 color space and more. In other words, rec2020 can reproduce colors that
+cannot be shown with the rec709.</li>
+</ul>
+<p><a name="chapter-Exploiting%20the%20API"></a></p>
+<h2>Exploiting the API</h2>
+<p>HDR do not specify new display’s capabilities. However, it allows to make better
+use of the display brightness, contrast and color capabilities. HDR will not be
+rendered the same way on each used display. It is possible through several APIs
+to query the browser about its screen characteristics, to speculate about the
+quality of the HDR rendering. Here are the available APIs now :</p>
+<p><a name="subchapter-Color%20depth"></a></p>
+<h3>Color depth</h3>
+<p>In HDR, more colors and brightness levels have to be encoded. More than 8 bits
+par component are used in most of standards. It is possible to check how many
+bits are used for reproducing colors on the output display, to ensure the color
+shades could be rendered.</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * It is the bit depth used for encoding one color. Example :
+ * screen.colorDepth = 48 :
+ * - 12 bits for the red component
+ * - 12 bits for the blue component
+ * - 12 bits for the green component
+ * - 12 bits for the alpha component (optional)
+ */</span>
+<span class="hljs-keyword">const</span> colorDepth = screen.<span class="hljs-property">colorDepth</span>;
+
+<span class="hljs-comment">/**
+ * The media query tells if the current output device is compatible
+ * with the given media characteristics.
+ * Here, it tells if the given color depth for one component is supported.
+ */</span>
+<span class="hljs-keyword">const</span> is10bitsSupported = <span class="hljs-variable language_">window</span>.<span class="hljs-title function_">matchMedia</span>(<span class="hljs-string">"(min-color: 10)"</span>).<span class="hljs-property">matches</span>;
+</code></pre>
+<p><a name="subchapter-Color%20gamut"></a></p>
+<h3>Color gamut</h3>
+<p>It is possible to check if the output device is capable of displaying standard
+color gamut that are used in HDR formats.</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * The media query tells if the current output device is compatible
+ * with the given media characteristics.
+ * Here, it tells if the output device is capable of displaying approximatively
+ * the given color space.
+ */</span>
+<span class="hljs-keyword">const</span> isRec2020Supported = <span class="hljs-variable language_">window</span>.<span class="hljs-title function_">matchMedia</span>(<span class="hljs-string">"(color-gamut: rec2020)"</span>).<span class="hljs-property">matches</span>;
+
+</code></pre>
+</body></html></div></div></div></body>

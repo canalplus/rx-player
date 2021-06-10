@@ -1,0 +1,68 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>parseBifThumbnails - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-parseBifThumbnails">parseBifThumbnails</a></p>
+<ul>
+<li><a href="#chapter-About%20BIF%20files">About BIF files</a></li>
+<li><a href="#chapter-How%20to%20import%20it">How to import it</a></li>
+<li><a href="#chapter-How%20to%20use%20it">How to use it</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-parseBifThumbnails"></a></p>
+<h1>parseBifThumbnails</h1>
+<p><code>parseBifThumbnails</code> is a function allowing to easily parse <code>BIF</code> files, which
+is a file format crafted to contain video thumbnails.</p>
+<p>Those are usually used to give a visual indication of where in a given media you
+will seek to when hovering a progress bar.</p>
+<p><a name="chapter-About%20BIF%20files"></a></p>
+<h2>About BIF files</h2>
+<p>The BIF format is straightforward. It contains several metadata and then all the
+images for the whole content, in their original format (e.g. “jpeg”),
+concatenated.</p>
+<p><a name="chapter-How%20to%20import%20it"></a></p>
+<h2>How to import it</h2>
+<p><code>parseBifThumbnails</code> is for now considered an “experimental” tool. This means
+that its API could change at any new version of the RxPlayer (don’t worry, we
+would still document all changes made to it in the corresponding release note).</p>
+<p>As an experimental tool, it is imported as such:</p>
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> { parseBifThumbnails } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
+</code></pre>
+<p>You can then begin to use it right away.</p>
+<p><a name="chapter-How%20to%20use%20it"></a></p>
+<h2>How to use it</h2>
+<p>As a simple parser, <code>parseBifThumbnails</code> takes the downloaded BIF file in an
+ArrayBuffer form and returns its content under an object format, like this:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { parseBifThumbnails } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
+
+<span class="hljs-comment">// optionally, fetch the BIF resource through the usual APIs</span>
+<span class="hljs-title function_">fetch</span>(<span class="hljs-string">"http://www.example.com/thumbnails.bif"</span>).<span class="hljs-title function_">then</span>(<span class="hljs-keyword">function</span>(<span class="hljs-params">response</span>) {
+  <span class="hljs-keyword">return</span> response.<span class="hljs-title function_">arrayBuffer</span>(); <span class="hljs-comment">// obtain an ArrayBuffer response</span>
+}).<span class="hljs-title function_">then</span>(<span class="hljs-keyword">function</span>(<span class="hljs-params">buffer</span>) {
+  <span class="hljs-keyword">const</span> parsedBif = <span class="hljs-title function_">parseBifThumbnails</span>(buffer);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"parsed BIF:"</span>, parsedBif);
+};
+</code></pre>
+<p>Here is an example of the returned data:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">version</span>: <span class="hljs-string">"0.0.0.0"</span>, <span class="hljs-comment">// BIF version. For the moment, only "0.0.0.0" is</span>
+                      <span class="hljs-comment">// specified.</span>
+  <span class="hljs-attr">images</span>: [    <span class="hljs-comment">// Array of thumbnails for this content</span>
+    {
+      <span class="hljs-attr">startTime</span>: <span class="hljs-number">0</span>, <span class="hljs-comment">// Start position at which the thumbnail should be applied</span>
+                    <span class="hljs-comment">// to, in milliseconds.</span>
+                    <span class="hljs-comment">// For example, a time of `5000`, indicates that this</span>
+                    <span class="hljs-comment">// thumbnail should be shown from the 5 second mark in the</span>
+                    <span class="hljs-comment">// content (until the next image is displayed instead)</span>
+      <span class="hljs-attr">image</span>: <span class="hljs-title class_">ArrayBuffer</span>() <span class="hljs-comment">// The thumbnail itself, in an ArrayBuffer form.</span>
+    },
+    {
+      <span class="hljs-attr">startTime</span>: <span class="hljs-number">10000</span>,
+      <span class="hljs-attr">endTime</span>: <span class="hljs-number">20000</span>,
+      <span class="hljs-attr">thumbnail</span>: <span class="hljs-title class_">ArrayBuffer</span>()
+    },
+    {
+      <span class="hljs-attr">startTime</span>: <span class="hljs-number">20000</span>,
+      <span class="hljs-attr">endTime</span>: <span class="hljs-number">30000</span>,
+      <span class="hljs-attr">thumbnail</span>: <span class="hljs-title class_">ArrayBuffer</span>()
+    },
+    <span class="hljs-comment">// ...</span>
+  ],
+}
+</code></pre>
+</body></html></div></div></div></body>

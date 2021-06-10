@@ -1,0 +1,240 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>presentationTimeOffset - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-presentationTimeOffset">presentationTimeOffset</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Simple%20example">Simple example</a></li>
+<li><a href="#chapter-Time%20conversions">Time conversions</a>
+<ul>
+<li><a href="#subchapter-Easier%20conversion:%20the%20timestampOffset">Easier conversion: the timestampOffset</a></li>
+</ul>
+</li>
+<li><a href="#chapter-In%20the%20RxPlayer">In the RxPlayer</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-presentationTimeOffset"></a></p>
+<h1>presentationTimeOffset</h1>
+<p>The presentationTimeOffset is an attribute which can be encountered in an MPD
+(the “manifest” of the DASH streaming technology).</p>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>Simply put, this attribute allows to correct an offset present in the media
+segments once those are decoded.</p>
+<p>One of the possible usecase would be creating an on demand MPD from a subsection
+of an already-existing content, without modifying directly the concerned
+segments nor their (possibly time-based) URLs.</p>
+<p>Another main usecase is when handling multi-Periods MPDs.
+Segments in newer Periods already need to consider an offset, corresponding to
+the start of the given Period.
+In those cases, the presentationTimeOffset might allows to “cancel” out this
+offset. This can be useful if the corresponding segments already define the
+right time.</p>
+<p><a name="chapter-Simple%20example"></a></p>
+<h2>Simple example</h2>
+<p>For example, let’s imagine some on-demand content with a duration of 2 hours.
+To stay simple, this content begins at <code>00:00:00.000</code> and ends at
+<code>01:08:00.000</code> (1 hour and 8 minutes).</p>
+<pre><code>CONTENT:
+
+00:00:00.000                                                        01:08:00.000
+    |====================================================================|
+
+</code></pre>
+<p>Now let’s say that we want to create a new on-demand content, which is only a
+sub-part from this content.
+For example, we will take the subpart going from <code>00:05:24.000</code> to
+<code>00:12:54.000</code> (for a duration of <code>00:07:30.000</code>).</p>
+<pre><code>
+00:00:00.000                                                        02:00:00.000
+    |====|------|========================================================|
+            ^
+      Subpart going from 00:05:24 to 00:12:54.000
+
+</code></pre>
+<p>Because we might not want to use money uselessly, we want to create this new
+content simply by creating a new MPD, and without touching the already created
+segments, nor their URLs.</p>
+<p>In that condition, we will still need the client to know that this content
+actually have an offset of <code>00:05:24.000</code>. If it does not know that, we will
+just think that the content begins at a default <code>00:00:00.000</code> time.</p>
+<p>Letting the client think that the content begins at the default <code>00:00:00.000</code>
+time could lead to several issues:</p>
+<ul>
+<li>
+<p>it might not be able to request the right first segments (as the URLs could
+be time-based)</p>
+</li>
+<li>
+<p>even if it does, it might not be able to actually play the content, as we’re
+pushing segments corresponding to a <code>00:05:24.000</code> while the browser is
+still waiting for the <code>00:00:00.000</code> ones (in that case, we would just have
+an infinite buffering state).</p>
+</li>
+<li>
+<p>even if it does, the client timeline will announce a wrong time, offseted 5
+minutes and 24 seconds too late.</p>
+</li>
+</ul>
+<p>This is where the <code>presentationTimeOffset</code> comes into play. In our simple
+example, this value will just announce an offset of <code>00:05:24.000</code> (under the
+form of an integer with a timescale to convert it into seconds), and the client
+will know what to do.</p>
+<p>What the client has to do here is:</p>
+<ul>
+<li>begin to play at 0 secods</li>
+<li>ask the right segments, by adding this offset to the one it thinks it needs</li>
+<li>remove the offset from the segment before decoding it</li>
+</ul>
+<p><a name="chapter-Time%20conversions"></a></p>
+<h2>Time conversions</h2>
+<p>The presentationTimeOffset is linked to multiple other time attributes of an
+MPD, especially the start of the Period concerned, and of course the time
+of the segment.</p>
+<p>We will enounce below a simple equation which put their relation into
+perspective.</p>
+<p>To understand this equation, we will need to define some variables:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PTO</td>
+<td>The “presentationTimeOffset” attribute of the MPD</td>
+</tr>
+<tr>
+<td>mediaTime</td>
+<td>The start time announced in the segment</td>
+</tr>
+<tr>
+<td>TS</td>
+<td>Timescale used by PTO and segmentTime, to transform them into seconds</td>
+</tr>
+<tr>
+<td>periodStart</td>
+<td>Start time of the given period, in seconds</td>
+</tr>
+<tr>
+<td>presentationTime</td>
+<td>The time at which the segment will be shown, in seconds</td>
+</tr>
+</tbody>
+</table>
+<pre><code>    mediaTime        PTO
+  -------------  -  -----  +  periodStart  =  presentationTime
+       TS            TS
+</code></pre>
+<p><a name="subchapter-Easier%20conversion:%20the%20timestampOffset"></a></p>
+<h3>Easier conversion: the timestampOffset</h3>
+<p>As seen in the previous chapter, to convert the media time (time announced in
+the segments) into the presentation time (time that will be shown to the user),
+you will need to use both also include three other variables:</p>
+<ul>
+<li>
+<p>the start of the period</p>
+</li>
+<li>
+<p>the presentationTimeOffset</p>
+</li>
+<li>
+<p>the timescale used by the presentationTimeOffset and the media time</p>
+</li>
+</ul>
+<p>As a convenient plus, those three variables rarely change for a given period.</p>
+<p>To simplify the conversion, we can thus define a new variable using those three.
+This is what the <code>timestampOffset</code> is all about.</p>
+<p>Let’s go back to the equations in the previous chapters, to isolate those three
+into the really simple equation:
+<code>mediaTime/TS + timestampOffset = presentationTime</code> (you can refer to the
+previous chapter to understand what those variables means)</p>
+<pre><code>
+  mediaTime       PTO
+ -----------  -  -----  +  periodStart  =  presentationTime
+     TS           TS
+
+  mediaTime           PTO
+ -----------  + ( -  -----  +  periodStart ) =  presentationTime
+     TS               TS
+
+                          PTO                                       PTO
+  timestampOffset  =  -  -----  +  periodStart  =  periodStart  -  -----
+                          TS                                        TS
+
+</code></pre>
+<p>With <code>timestampOffset</code> defined, it becomes easy to go back and forth between
+the <code>mediaTime</code> and the <code>presentationTime</code>:</p>
+<pre><code>                       mediaTime
+presentationTime  =   -----------  +  timestampOffset
+                          TS
+
+mediaTime  =  (  presentationTime  -  timestampOffset  )  *  TS
+
+</code></pre>
+<p>As an added bonus, SourceBuffers defined in the HTML5 MediaSource Extentions
+also have a <a href="https://www.w3.org/TR/media-source/#dom-sourcebuffer-timestampoffset"><code>timestampOffset</code> property
+</a>, which
+means exactly the same thing as defined here!</p>
+<p><a name="chapter-In%20the%20RxPlayer"></a></p>
+<h2>In the RxPlayer</h2>
+<p>Now that we have all of those concepts out of the way, how are we going to use
+it, in the RxPlayer?</p>
+<p>The RxPlayer has A LOT of time-related values defined for a given segment:</p>
+<ul>
+<li>
+<p>the time defined in the segment itself (mediaTime)</p>
+</li>
+<li>
+<p>the time displayed when playing it in the HTMLMediaElement
+(presentationTime)</p>
+</li>
+<li>
+<p>the time possibly set in the request (requestSegmentTime)</p>
+</li>
+<li>
+<p>the time as announced in the corresponding attribute of the manifest
+(manifestTime)</p>
+</li>
+<li>
+<p>the time used in the corresponding Segment Object in the RxPlayer
+(playerTime)</p>
+</li>
+<li>
+<p>the time used in the <code>buffered</code> APIs of a HTMLMediaElement or SourceBuffer
+(bufferedTime)</p>
+</li>
+<li>
+<p>…</p>
+</li>
+</ul>
+<p>As it turns out it’s a lot simpler once you make two isolated groups:</p>
+<ul>
+<li>
+<p>the <code>manifest</code> group, which uses the non-offseted <code>mediaTime</code>.</p>
+<p>In this group you have:</p>
+<ul>
+<li>the mediaTime (duh)</li>
+<li>the manifestTime</li>
+<li>the requestSegmentTime</li>
+</ul>
+</li>
+<li>
+<p>the <code>real time</code> group, which uses the offseted <code>presentationTime</code>.</p>
+<p>In this group you have:</p>
+<ul>
+<li>the presentationTime</li>
+<li>the playerTime</li>
+<li>the bufferedTime</li>
+</ul>
+</li>
+</ul>
+<p>The <code>manifest</code> group is then only used in the <code>transports</code> code of the
+RxPlayer.
+Meanwhile, the <code>real time</code> group is used everywhere else.</p>
+<p>It’s actually the <code>transports</code> code that does most of the conversion for the
+rest of the code (removing the offset when requesting new segments, re-adding it
+once the segment is downloaded.</p>
+<p>To be able to offset those segments in the SourceBuffer, those are still
+informed of course of the <code>timestampOffset</code> by the <code>transports</code> code.
+Then, this <code>timestampOffset</code> will be exploited only by the final decoding
+code.</p>
+</body></html></div></div></div></body>
