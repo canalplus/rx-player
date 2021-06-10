@@ -3560,7 +3560,7 @@ This tool is documented [here](./TextTrackRenderer.md).
 The VideoThumbnailLoader is a tool allowing to display preview thumbnails based
 on possible trickmode video tracks in a content.
 
-More information on this tool and how to use it [here](./TextTrackRenderer.md).
+More information on this tool and how to use it [here](./videoThumbnailLoader.md).
 
 <a name="tools-mediaCapabilitiesProber"></a>
 ### MediaCapabilitiesProber ####################################################
