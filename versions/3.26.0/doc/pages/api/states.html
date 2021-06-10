@@ -1,0 +1,385 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Player states - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Player%20states">Player states</a></p>
+<ul>
+<li><a href="#chapter-List%20of%20possible%20states">List of possible states</a>
+<ul>
+<li><a href="#subchapter-The%20STOPPED%20state">The STOPPED state</a></li>
+<li><a href="#subchapter-The%20LOADING%20state">The LOADING state</a></li>
+<li><a href="#subchapter-The%20LOADED%20state">The LOADED state</a></li>
+<li><a href="#subchapter-The%20PLAYING%20state">The PLAYING state</a></li>
+<li><a href="#subchapter-The%20PAUSED%20state">The PAUSED state</a></li>
+<li><a href="#subchapter-The%20BUFFERING%20state">The BUFFERING state</a></li>
+<li><a href="#subchapter-The%20SEEKING%20state">The SEEKING state</a></li>
+<li><a href="#subchapter-The%20ENDED%20state">The ENDED state</a></li>
+<li><a href="#subchapter-The%20RELOADING%20state">The RELOADING state</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Possible%20state%20transitions">Possible state transitions</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Player%20states"></a></p>
+<h1>Player states</h1>
+<p>The player state, that you can obtain either with the
+<a href="index.html#meth-getPlayerState"><code>getPlayerState</code></a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>, is a central part of our API: it is from
+this value that you will know:</p>
+<ul>
+<li>when a new content finished loading</li>
+<li>when the content is paused to build buffer</li>
+<li>when the content is ended</li>
+<li>as a generality, in what “state” is the player currently</li>
+</ul>
+<p>As such, it is important this concept is understood when developping with the
+rx-player, which is exactly the point of this page.</p>
+<p><a name="chapter-List%20of%20possible%20states"></a></p>
+<h2>List of possible states</h2>
+<p>Today the player can have one of these 9 possible states:</p>
+<ul>
+<li><code>STOPPED</code></li>
+<li><code>LOADING</code></li>
+<li><code>LOADED</code></li>
+<li><code>PLAYING</code></li>
+<li><code>PAUSED</code></li>
+<li><code>BUFFERING</code></li>
+<li><code>SEEKING</code></li>
+<li><code>ENDED</code></li>
+<li><code>RELOADING</code></li>
+</ul>
+<p><a name="subchapter-The%20STOPPED%20state"></a></p>
+<h3>The STOPPED state</h3>
+<p><code>STOPPED</code> is the default state of the player. It indicates that no content is
+playing.</p>
+<p>To simplify state exploitation, <code>STOPPED</code> is also emitted as a transition state
+when loading a new content while another one was currently loaded (or loading).
+That way, you can just listen to the <code>STOPPED</code> state to know when the current
+content is not loaded anymore.</p>
+<p>When the player encounters an <a href="errors.html">error</a>, it will also stop and switch
+to the <code>STOPPED</code> state.</p>
+<p><a name="subchapter-The%20LOADING%20state"></a></p>
+<h3>The LOADING state</h3>
+<p>The <code>LOADING</code> state indicates that a new content is currently loading.
+It appears only after the <code>STOPPED</code> state.</p>
+<p>That means that the player is currently downloading enough of the content to be
+able to play it.</p>
+<p>While this state is active, most of the content-related APIs (like
+<code>setAudioTrack</code>) are not available. You have to wait for the <code>LOADED</code> state for
+that.</p>
+<p><a name="subchapter-The%20LOADED%20state"></a></p>
+<h3>The LOADED state</h3>
+<p><code>LOADED</code> appears only after a <code>LOADING</code> state, and indicates that the current
+content can now be played.</p>
+<p>From this point onward, most of the content-related APIs (like <code>setAudioTrack</code>)
+are now available.</p>
+<p>If the <code>autoPlay</code> <a href="loadVideo_options.html">loadVideo option</a> has been set to
+true, the state will then switch to <code>PLAYING</code> directly. Else, the player will
+usually be paused and stay in the <code>LOADED</code> state (there is some edge cases, see
+the “Possible state transitions” chapter for more information).</p>
+<p><a name="subchapter-The%20PLAYING%20state"></a></p>
+<h3>The PLAYING state</h3>
+<p>Indicates that the player is currently playing the content.</p>
+<p><a name="subchapter-The%20PAUSED%20state"></a></p>
+<h3>The PAUSED state</h3>
+<p>Indicates that the player is currently paused in the content.</p>
+<p><a name="subchapter-The%20BUFFERING%20state"></a></p>
+<h3>The BUFFERING state</h3>
+<p>The content is paused because it needs to build buffer.</p>
+<p>The player will not play until it gets out of this state.</p>
+<p><a name="subchapter-The%20SEEKING%20state"></a></p>
+<h3>The SEEKING state</h3>
+<p>The content is paused because it needs to build buffer after seeking in the
+content (this can be seen as a special <code>BUFFERING</code> case).</p>
+<p>The player will not play until it gets out of this state.</p>
+<p><a name="subchapter-The%20ENDED%20state"></a></p>
+<h3>The ENDED state</h3>
+<p>The player reached the end of the content.</p>
+<p>If the <code>stopAtEnd</code> <a href="player_options.html">player option</a> has been set to
+<code>true</code> or not set, the player will immediately stop the content. In that case,
+the <code>ENDED</code> state can be considered like the <code>STOPPED</code> state - in terms of what
+you can do.</p>
+<p>Else, it should now be paused at the last frame if a video content is available
+at this time and this state acts like what you can expect from HTML5 playback:</p>
+<ul>
+<li>
+<p>when seeking when the content is ended, you will be paused (even if you
+were playing before)</p>
+</li>
+<li>
+<p>after calling <code>play</code>, you will play back from the beginning</p>
+</li>
+</ul>
+<p><a name="subchapter-The%20RELOADING%20state"></a></p>
+<h3>The RELOADING state</h3>
+<p>This state indicates that the player needs to “re-load” then content.</p>
+<p>This can happen for different reasons:</p>
+<ul>
+<li>
+<p>When you switch the video track for another one, when the previous one was
+currently decoding.</p>
+</li>
+<li>
+<p>When you update manually the audio and video bitrate through respectively
+the <code>setAudioBitrate</code> and <code>setVideoBitrate</code> APIs
+(Only if you set the <code>manualBitrateSwitchingMode</code> loadVideo option to
+<code>"direct"</code>).</p>
+</li>
+</ul>
+<p>In those cases, we need to stop and reload the content on the browser-side, due
+to browser limitation.</p>
+<p>While this state is active, multiple player API are unavailable:</p>
+<ul>
+<li>you cannot play or pause</li>
+<li>you cannot seek</li>
+<li>you cannot obtain the position or duration</li>
+<li>you cannot get or switch the available video, text or audio tracks.</li>
+<li>you cannot get or switch the available video or audio bitrates.</li>
+</ul>
+<p>This is why we sometime recommend to manage this state as if it was the
+<code>LOADING</code> state (where those APIs - and other - are also not available).</p>
+<p>However, the player won’t go to the <code>LOADED</code> state after <code>RELOADING</code>, you will
+instead know that it had finished reloading simply when it goes out of this
+state (see the “Possible state transitions” chapter for more information).</p>
+<p><a name="chapter-Possible%20state%20transitions"></a></p>
+<h2>Possible state transitions</h2>
+<p>The player goes from one state to another during runtime but those changes does
+not happen at random. There is actually possible state transitions (like from
+<code>STOPPED</code> to <code>LOADING</code>) and impossible ones (like from <code>LOADING</code> to <code>SEEKING</code>).</p>
+<p>We will list here every possible state transitions.
+<em>Note that we can never have two times the same state consecutively.</em></p>
+<p>From <code>STOPPED</code>:</p>
+<ul>
+<li><code>LOADING</code>: a new content begin to load</li>
+</ul>
+<p>From <code>LOADING</code>:</p>
+<ul>
+<li>
+<p><code>LOADED</code>: the loading content was loaded succesfully and can now be played
+(most of the content-related APIs can also be used from this point)</p>
+</li>
+<li>
+<p><code>STOPPED</code>: Either:</p>
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+<li>An error happened which made it impossible to load the content.
+The corresponding <a href="errors.html">error</a> can be found either through the
+<a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>.</li>
+</ul>
+</li>
+</ul>
+<p>From <code>LOADED</code>:</p>
+<ul>
+<li>
+<p><code>PLAYING</code>: The content started to play.</p>
+</li>
+<li>
+<p><code>SEEKING</code>: A user seeked in the content.</p>
+</li>
+<li>
+<p><code>ENDED</code>: You are at the end of the content.
+Calling <a href="index.html#meth-play"><code>play</code></a> will play back from the beginning.</p>
+</li>
+<li>
+<p><code>RELOADING</code>: The content needs to be reloaded.</p>
+</li>
+<li>
+<p><code>STOPPED</code>: Either:</p>
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+<li>An error happened which made it impossible to play the content.
+The corresponding <a href="errors.html">error</a> can be found either through the
+<a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>.</li>
+</ul>
+</li>
+</ul>
+<p>From <code>PLAYING</code>:</p>
+<ul>
+<li>
+<p><code>PAUSED</code>: The content is paused.</p>
+</li>
+<li>
+<p><code>SEEKING</code>: A user seeked in the content.</p>
+</li>
+<li>
+<p><code>BUFFERING</code>: The player needs to pause to download content.</p>
+</li>
+<li>
+<p><code>ENDED</code>: You are at the end of the content.
+Calling <a href="index.html#meth-play"><code>play</code></a> will play back from the beginning.</p>
+</li>
+<li>
+<p><code>RELOADING</code>: The content needs to be reloaded.</p>
+</li>
+<li>
+<p><code>STOPPED</code>: Either:</p>
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+<li>An error happened which made it impossible to play the content.
+The corresponding <a href="errors.html">error</a> can be found either through the
+<a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>.</li>
+</ul>
+</li>
+</ul>
+<p>From <code>PAUSED</code>:</p>
+<ul>
+<li>
+<p><code>PLAYING</code>: The content plays (is un-paused).</p>
+</li>
+<li>
+<p><code>SEEKING</code>: A user seeked in the content.</p>
+</li>
+<li>
+<p><code>BUFFERING</code>: The player needs to pause to download content.</p>
+</li>
+<li>
+<p><code>ENDED</code>: You are at the end of the content.
+Calling <a href="index.html#meth-play"><code>play</code></a> will play back from the beginning.</p>
+</li>
+<li>
+<p><code>RELOADING</code>: The content needs to be reloaded.</p>
+</li>
+<li>
+<p><code>STOPPED</code>: Either:</p>
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+<li>An error happened which made it impossible to play the content.
+The corresponding <a href="errors.html">error</a> can be found either through the
+<a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>.</li>
+</ul>
+</li>
+</ul>
+<p>From <code>BUFFERING</code>:</p>
+<ul>
+<li>
+<p><code>PLAYING</code>: The content plays (and finished buffering)</p>
+</li>
+<li>
+<p><code>PAUSED</code>: The content is paused (and finished buffering)</p>
+</li>
+<li>
+<p><code>ENDED</code>: You are at the end of the content.
+Calling <a href="index.html#meth-play"><code>play</code></a> will play back from the beginning.</p>
+</li>
+<li>
+<p><code>RELOADING</code>: The content needs to be reloaded.</p>
+</li>
+<li>
+<p><code>STOPPED</code>: Either:</p>
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+<li>An error happened which made it impossible to play the content.
+The corresponding <a href="errors.html">error</a> can be found either through the
+<a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>.</li>
+</ul>
+</li>
+</ul>
+<p>From <code>SEEKING</code>:</p>
+<ul>
+<li>
+<p><code>PLAYING</code>: The content plays (and finished to seek)</p>
+</li>
+<li>
+<p><code>PAUSED</code>: The content is paused (and finished to seek)</p>
+</li>
+<li>
+<p><code>ENDED</code>: You are at the end of the content.
+Calling <a href="index.html#meth-play"><code>play</code></a> will play back from the beginning.</p>
+</li>
+<li>
+<p><code>RELOADING</code>: The content needs to be reloaded.</p>
+</li>
+<li>
+<p><code>STOPPED</code>: Either:</p>
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+<li>An error happened which made it impossible to play the content.
+The corresponding <a href="errors.html">error</a> can be found either through the
+<a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>.</li>
+</ul>
+</li>
+</ul>
+<p>From <code>ENDED</code> if the <code>stopAtEnd</code> <a href="player_options.html">player option</a> has been
+set to <code>true</code> or not set:</p>
+<ul>
+<li><code>STOPPED</code>: Only state transition possible here. Happens if either:
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+</ul>
+</li>
+</ul>
+<p>From <code>ENDED</code> if the <code>stopAtEnd</code> <a href="player_options.html">player option</a> has been
+set to <code>false</code>:</p>
+<ul>
+<li>
+<p><code>PLAYING</code>: The <code>play</code> method was called.
+The content plays back from the beginning.</p>
+</li>
+<li>
+<p><code>PAUSED</code>: A user seeked into a part of the content already-downloaded.
+The content is paused after the seek, regardless of if you were paused
+before reaching the <code>ENDED</code> state.</p>
+</li>
+<li>
+<p><code>SEEKING</code>: A user seeked in the content.</p>
+</li>
+<li>
+<p><code>RELOADING</code>: The content needs to be reloaded.</p>
+</li>
+<li>
+<p><code>STOPPED</code>: Either:</p>
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+<li>An error happened which made it impossible to play the content.
+The corresponding <a href="errors.html">error</a> can be found either through the
+<a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>.</li>
+</ul>
+</li>
+</ul>
+<p>From <code>RELOADING</code>:</p>
+<ul>
+<li>
+<p><code>PLAYING</code>: The content finished to reload and was not paused before
+reloading.</p>
+</li>
+<li>
+<p><code>PAUSED</code>: The content finished to reload and was paused before
+reloading.</p>
+</li>
+<li>
+<p><code>ENDED</code>: The content finished to reload and you are at the end of the
+content.
+Calling <a href="index.html#meth-play"><code>play</code></a> will play back from the beginning.</p>
+</li>
+<li>
+<p><code>STOPPED</code>: Either:</p>
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+<li>An error happened which made it impossible to reload the content.
+The corresponding <a href="errors.html">error</a> can be found either through the
+<a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>.</li>
+</ul>
+</li>
+</ul>
+</body></html></div></div></div></body>

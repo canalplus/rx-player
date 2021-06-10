@@ -1,0 +1,140 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>VideoThumbnailLoader - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-VideoThumbnailLoader">VideoThumbnailLoader</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-How%20to%20use%20it">How to use it</a></li>
+<li><a href="#chapter-Static%20methods">Static methods</a>
+<ul>
+<li><a href="#subchapter-addLoader">addLoader</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Instance%20methods">Instance methods</a>
+<ul>
+<li><a href="#subchapter-setTime">setTime</a></li>
+<li><a href="#subchapter-dispose">dispose</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-VideoThumbnailLoader"></a></p>
+<h1>VideoThumbnailLoader</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The VideoThumbnailLoader is a tool that can help exploiting a trickmode video
+track to provide thumbnails for a video content.</p>
+<p>The goal is to make a thumbnail out of HTML5 video element, by :</p>
+<ul>
+<li>Managing the loading / appending of resources from a given track
+(video segments).</li>
+<li>Exploiting the Media Source Extension API to make it invisible to user.</li>
+</ul>
+<p>The tool will need the loaded manifest to contain trickmode tracks. These kind
+of track exists in MPEG-DASH and HLS, and contains lightweight video tracks,
+most of the time including one unique frame for each video segments. As video
+segments from trickmode tracks may be quicker to load and easier to decode, they
+are preferred over standard video tracks for creating thumbnails.</p>
+<p><a name="chapter-How%20to%20use%20it"></a></p>
+<h2>How to use it</h2>
+<p>As an experimental tool, the VideoThumbnailLoader won’t be included in a
+default RxPlayer build.</p>
+<p>Instead, it should be imported by adding the RxPlayer through a dependency
+trough the npm registry (e.g. by doing something like <code>npm install rx-player</code>) and then specifically importing this tool from
+<code>"rx-player/experimental/tools"</code>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">VideoThumbnailLoader</span>, {
+  <span class="hljs-variable constant_">DASH_LOADER</span>
+} <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools/VideoThumbnailLoader"</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player"</span>;
+
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({ <span class="hljs-comment">/* some options */</span> });
+
+<span class="hljs-comment">// Link logic to handle DASH segments</span>
+<span class="hljs-title class_">VideoThumbnailLoader</span>.<span class="hljs-title function_">addLoader</span>(<span class="hljs-variable constant_">DASH_LOADER</span>);
+
+<span class="hljs-comment">// Video element used to display thumbnails.</span>
+<span class="hljs-keyword">const</span> thumbnailVideoElement = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">createElement</span>(<span class="hljs-string">"video"</span>);
+
+<span class="hljs-comment">// Link VideoThumbnailLoader to the RxPlayer instance</span>
+<span class="hljs-keyword">const</span> videoThumbnailLoader = <span class="hljs-keyword">new</span> <span class="hljs-title class_">VideoThumbnailLoader</span>(
+  thumbnailVideoElement,
+  player
+);
+
+player.<span class="hljs-title function_">loadVideo</span>({ <span class="hljs-comment">/* some options */</span> });
+
+<span class="hljs-comment">// Ask for the VideoThumbnailLoader to fetch a thumbnail for the current</span>
+<span class="hljs-comment">// content that should be displayed at presentation time = 200 seconds.</span>
+videoThumbnailLoader.<span class="hljs-title function_">setTime</span>(<span class="hljs-number">200</span>);
+</code></pre>
+<p><a name="chapter-Static%20methods"></a></p>
+<h2>Static methods</h2>
+<p><a name="subchapter-addLoader"></a></p>
+<h3>addLoader</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>loader</em> (<code>Object</code>): Imported loader from VideoThumbnailLoader package.</li>
+</ul>
+<p>To be able to load and parse segments from a specific streaming format, you must
+import the corresponding loader and add it to the related instance :</p>
+<p>/!\ Note that this is a static method, it has to be called on the
+<code>VideoThumbnailLoader</code> class and will add the corresponding logic to all
+<code>VideoThumbnailLoader</code> instances (even those already created).</p>
+<h4>Example</h4>
+<pre><code class="language-js">  <span class="hljs-keyword">import</span> <span class="hljs-title class_">VideoThumbnailLoader</span>, {
+    <span class="hljs-variable constant_">DASH_LOADER</span>,
+    <span class="hljs-variable constant_">MPL_LOADER</span>,
+  } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools/VideoThumbnailLoader"</span>;
+  <span class="hljs-title class_">VideoThumbnailLoader</span>.<span class="hljs-title function_">addLoader</span>(<span class="hljs-variable constant_">DASH_LOADER</span>);
+  <span class="hljs-title class_">VideoThumbnailLoader</span>.<span class="hljs-title function_">addLoader</span>(<span class="hljs-variable constant_">MPL_LOADER</span>);
+</code></pre>
+<p><a name="chapter-Instance%20methods"></a></p>
+<h2>Instance methods</h2>
+<p><a name="subchapter-setTime"></a></p>
+<h3>setTime</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>time</em> (<code>number</code>): Time for which we want to display a thumbnail, in
+seconds.</li>
+</ul>
+<p><em>return value</em>: <code>Promise</code></p>
+<p>Display thumbnail for the corresponding time (in seconds).</p>
+<p>Note: this tool rely on “trickmode” tracks to be present for the corresponding
+content at the corresponding time.</p>
+<h4>Return value</h4>
+<p>The return value is a Promise.
+It :</p>
+<ul>
+<li><code>resolve</code> when the thumbnail for given time has been loaded.</li>
+<li><code>reject</code> in case of error : return an error.</li>
+</ul>
+<p>The promise does not only rejects when setting thumbnail has failed. There are
+some cases where the thumbnail loader decides not to load. Here is a list of
+every failure code (<code>error.code</code>) :</p>
+<ul>
+<li>NO_MANIFEST : No manifest available on current RxPlayer instance.</li>
+<li>NO_TRACK : In the player manifest, there are either no period or no
+representation to get video chunks.</li>
+<li>NO_THUMBNAIL : No segments are available for this time of the track.</li>
+<li>LOADING_ERROR : An error occured when loading a thumbnail into the video
+element.</li>
+<li>ABORTED : The loading has been aborted (probably because of another loading
+started)</li>
+<li>NO_LOADER : Trickmode track can’t be loaded as no loader was imported, or
+exists for this type of content (e.g. HSS content)</li>
+</ul>
+<h4>Example</h4>
+<pre><code class="language-js">  videoThumbnailLoader.<span class="hljs-title function_">setTime</span>(<span class="hljs-number">3000</span>)
+    .<span class="hljs-title function_">then</span>(<span class="hljs-function">() =&gt;</span> {
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"Success :)"</span>);
+    })
+    .<span class="hljs-title function_">catch</span>(<span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"Failure :("</span>, err);
+    })
+</code></pre>
+<p><a name="subchapter-dispose"></a></p>
+<h3>dispose</h3>
+<p>Dispose the tool resources. It has to be called when the tool is not used
+anymore.</p>
+<h4>Example</h4>
+<pre><code class="language-js">  <span class="hljs-title function_">onComponentUnmount</span>(<span class="hljs-params"></span>) {
+    videoThumbnailLoader.<span class="hljs-title function_">dispose</span>();
+  }
+</code></pre>
+</body></html></div></div></div></body>

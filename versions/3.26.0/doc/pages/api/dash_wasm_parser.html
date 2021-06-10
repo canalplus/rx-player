@@ -1,0 +1,204 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Fast DASH MPD parsing with the DASH-WASM parser - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Fast%20DASH%20MPD%20parsing%20with%20the%20DASH-WASM%20parser">Fast DASH MPD parsing with the DASH-WASM parser</a></p>
+<ul>
+<li><a href="#chapter-Do%20I%20need%20this?">Do I need this?</a>
+<ul>
+<li><a href="#subchapter-Why%20%22experimental%22?">Why “experimental”?</a></li>
+</ul>
+</li>
+<li><a href="#chapter-How%20to%20use%20it?">How to use it?</a>
+<ul>
+<li><a href="#subchapter-Quick%20code%20example">Quick code example</a></li>
+<li><a href="#subchapter-Step%201:%20Obtaining%20the%20WebAssembly%20file">Step 1: Obtaining the WebAssembly file</a></li>
+<li><a href="#subchapter-Step%202:%20using%20the%20minimal%20build%20of%20the%20RxPlayer">Step 2: using the minimal build of the RxPlayer</a></li>
+<li><a href="#subchapter-Step%203:%20importing%20the%20%60DASH_WASM%60%20feature">Step 3: importing the <code>DASH_WASM</code> feature</a></li>
+<li><a href="#subchapter-Step%204:%20Initializing%20the%20feature">Step 4: Initializing the feature</a></li>
+<li><a href="#subchapter-Step%204bis:%20Adding%20the%20feature%20to%20the%20RxPlayer">Step 4bis: Adding the feature to the RxPlayer</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Fast%20DASH%20MPD%20parsing%20with%20the%20DASH-WASM%20parser"></a></p>
+<h1>Fast DASH MPD parsing with the DASH-WASM parser</h1>
+<p>The RxPlayer provides two different “parsers” for DASH’s Manifest format, a.k.a.
+the “MPD”:</p>
+<ol>
+<li>
+<p>A JavaScript parser.</p>
+<p>Provided in the default “bundled” builds and through the <code>DASH</code> feature in
+the minimal build.</p>
+</li>
+<li>
+<p>A generally-faster WebAssembly parser.</p>
+<p>Only provided through the <code>DASH_WASM</code> experimental feature in the minimal
+build.</p>
+</li>
+</ol>
+<p>This page is the API documentation page for the second parser.</p>
+<p><a name="chapter-Do%20I%20need%20this?"></a></p>
+<h2>Do I need this?</h2>
+<p>When playing DASH contents, parsing its MPD file often become the most expensive
+operation in terms of performance.</p>
+<p>This is especially true when the MPD is sufficiently large (for example, we
+often encounter MPD of several megabytes in size at Canal+) and when it needs
+to be refreshed (e.g. some live contents).</p>
+<p>Even for smaller MPDs, we observed that on some low-end devices (ChromeCast,
+set-top box, some smart TVs) the parsing operation can noticeably lengthen the
+content’s loading time and in some rare occasions trigger brief rebuffering
+periods.</p>
+<p>If you encouter large MPDs and/or you noticed poor performance when playing DASH
+contents, you may have a better experience with this parser.</p>
+<p>Note however that your browser has to be compatible to WebAssembly.
+In case WebAssembly is not supported on the current platform and both the
+WebAssembly and default JavaScript DASH parsers are imported through their
+respective features, the RxPlayer will automatically fallback on the latter.</p>
+<p><a name="subchapter-Why%20%22experimental%22?"></a></p>
+<h3>Why “experimental”?</h3>
+<p>As every other “experimental” features in the RxPlayer, the WebAssembly MPD
+parser should be stable in functional terms.</p>
+<p>The “experimental” notion has more to do with the fact that its API can evolve
+without impacting too much RxPlayer’s semantic versioning.
+For example, a new minor RxPlayer version could bring with it a complete API
+change regarding this feature.
+Still, potential changes would be fully documented and at least a link will be
+added both to that release’s release note and changelog file.</p>
+<p>The choice of labeling this feature as experimental has been made so we can
+have more freedom if we find ways to provide sensible improvements to it in the
+future, in case they necessitate some incompatible API change.</p>
+<p><a name="chapter-How%20to%20use%20it?"></a></p>
+<h2>How to use it?</h2>
+<p>To use the WebAssembly-based parser you will need to do two things:</p>
+<ul>
+<li>
+<p>the WebAssembly file will have to be stored somewhere, accessible through an
+URL that can be then shared to the RxPlayer.</p>
+</li>
+<li>
+<p>the <code>DASH_WASM</code> experimental feature has to be initialized with it and
+added to the RxPlayer</p>
+</li>
+</ul>
+<p>Don’t worry, it is relatively straightforward.
+The current chapter will explain everything you need to do.</p>
+<p><a name="subchapter-Quick%20code%20example"></a></p>
+<h3>Quick code example</h3>
+<p>Let’s begin by an heavily commented example of a code adding the DASH-WASM
+feature to the RxPlayer.</p>
+<p>It might be a lot to grasp now, we will focus on what has been done here step
+by step in the next chapters.</p>
+<pre><code class="language-js"><span class="hljs-comment">// Import the minimal RxPlayer</span>
+<span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+
+<span class="hljs-comment">// Import the function allowing to create the DASH-WASM parser</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH_WASM</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/features"</span>;
+
+<span class="hljs-comment">// Trigger request for the WebAssembly file.</span>
+<span class="hljs-comment">// This function can be called at any point in time.</span>
+<span class="hljs-comment">//</span>
+<span class="hljs-comment">// Before it is called, the regular JS parser will be used instead</span>
+<span class="hljs-comment">// (if it was added as a feature).</span>
+<span class="hljs-comment">//</span>
+<span class="hljs-comment">// As soon as both this function is called and the DASH_WASM feature is added</span>
+<span class="hljs-comment">// (through RxPlayer's `addFeatures` static method) - in any order you wish -</span>
+<span class="hljs-comment">// the RxPlayer will begin // to use the DASH_WASM parser for almost all</span>
+<span class="hljs-comment">// future encountered MPDs (excluding some extremely rare conditions, such as</span>
+<span class="hljs-comment">// non-UTF-8 MPDs).</span>
+<span class="hljs-variable constant_">DASH_WASM</span>.<span class="hljs-title function_">initialize</span>({ <span class="hljs-attr">wasmUrl</span>: <span class="hljs-string">"https://path/to/webassembly.wasm"</span> });
+
+<span class="hljs-comment">// Add the DASH_WASM feature to the RxPlayer.</span>
+<span class="hljs-comment">//</span>
+<span class="hljs-comment">// This can be done before or after calling the `initialize` method on the</span>
+<span class="hljs-comment">// `DASH_WASM` object, both actions will be needed to be able to use the</span>
+<span class="hljs-comment">// WebAssembly parser.</span>
+<span class="hljs-title class_">RxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([ <span class="hljs-variable constant_">DASH_WASM</span> ]);
+</code></pre>
+<p><a name="subchapter-Step%201:%20Obtaining%20the%20WebAssembly%20file"></a></p>
+<h3>Step 1: Obtaining the WebAssembly file</h3>
+<p>The RxPlayer will need to fetch the WebAssembly file to be able to run the
+DASH-WASM parser.</p>
+<p>You can find it at any of the following places:</p>
+<ul>
+<li>
+<p>With every release note published on GitHub (you should only use
+the files linked to the RxPlayer’s version you’re using), as
+<code>mpd-parser.wasm</code>.</p>
+</li>
+<li>
+<p>It is also available as <code>dist/mpd-parser.wasm</code> from the root directory of
+the project.</p>
+<p>This file is also published on npm, which mean they might already be
+loaded in your project, for example in the node_modules directory (most
+probably in <code>node_modules/rx-player/dist/mpd-parser.wasm</code> depending on
+your project).
+`</p>
+</li>
+</ul>
+<p>Once you’ve retrieved the right WebAssembly file linked to your RxPlayer
+version, you will need to store it and give its URL to the RxPlayer so it will
+be able to load it.</p>
+<p><a name="subchapter-Step%202:%20using%20the%20minimal%20build%20of%20the%20RxPlayer"></a></p>
+<h3>Step 2: using the minimal build of the RxPlayer</h3>
+<p>The <code>DASH_WASM</code> feature is only available when using the “minimal” version of
+the RxPlayer. That is, when the player is imported through the
+<code>"rx-player/minimal"</code> path:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+</code></pre>
+<p>If you weren’t using the minimal RxPlayer before, note that it necessitates that
+you add the features you want to it.
+More information about any of that can be found in the <a href="minimal_player.html">minimal player
+documentation</a>.</p>
+<p>This documentation will especially dive into the <code>DASH_WASM</code> feature, which is
+the WebAssembly parser for MPDs.</p>
+<p><a name="subchapter-Step%203:%20importing%20the%20%60DASH_WASM%60%20feature"></a></p>
+<h3>Step 3: importing the <code>DASH_WASM</code> feature</h3>
+<p>As indicated before, the <code>DASH-WASM</code> feature is an “experimental” feature.</p>
+<p>This is because although the feature is considered stable, its API may still
+change at any new RxPlayer version (if this happens, changes on its API will be
+explained on our CHANGELOG and this documentation will be updated).</p>
+<p>As any experimental features, it needs to be imported through the
+<code>rx-player/experimental/features</code> path:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH_WASM</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/features"</span>;
+</code></pre>
+<p><a name="subchapter-Step%204:%20Initializing%20the%20feature"></a></p>
+<h3>Step 4: Initializing the feature</h3>
+<p>–</p>
+<p><em>This step can be done before or after adding the <code>DASH_WASM</code> feature to the
+RxPlayer (described as the next step)</em></p>
+<p>–</p>
+<p>This step allows to provide the WebAssembly file to the <code>DASH_WASM</code> feature.</p>
+<p>This is done through a method call on the imported <code>DASH_WASM</code> function called
+<code>initialize</code>:</p>
+<pre><code class="language-js"><span class="hljs-variable constant_">DASH_WASM</span>.<span class="hljs-title function_">initialize</span>({ <span class="hljs-attr">wasmUrl</span>: <span class="hljs-string">"https://path/to/webassembly.wasm"</span> });
+</code></pre>
+<p>As you can see, this function takes an object in argument which has for now a
+single required property, <code>wasmUrl</code>, which should be the URL to the WebAssembly
+file.</p>
+<p>An important thing to consider is that <code>initialize</code> will immediately request the
+WebAssembly file.</p>
+<p>Once this function is called and once the feature is added to the RxPlayer (next
+described step), the RxPlayer will try to use the WebAssembly parser when
+possible (even if the WebAssembly request hasn’t yet finished).</p>
+<p>Note that initialization can fail, for example when WebAssembly is not available
+or when the request fails. <code>initialize</code> returns a Promise so you can be notified
+of a possible error if you wish:</p>
+<pre><code class="language-js"><span class="hljs-variable constant_">DASH_WASM</span>.<span class="hljs-title function_">initialize</span>({ <span class="hljs-attr">wasmUrl</span>: <span class="hljs-string">"https://path/to/webassembly.wasm"</span> })
+  .<span class="hljs-title function_">then</span>(<span class="hljs-function">() =&gt;</span> { <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"everything went well!"</span>); }),
+  .<span class="hljs-title function_">catch</span>(<span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> { <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(<span class="hljs-string">"Could not initialize WebAssembly"</span>, err); });
+</code></pre>
+<p>In the case where initialization fails, the RxPlayer will try to use the regular
+<code>DASH</code> js parser instead, if that feature has been added. If it has not, an
+error will be thrown when playing DASH contents.</p>
+<p><a name="subchapter-Step%204bis:%20Adding%20the%20feature%20to%20the%20RxPlayer"></a></p>
+<h3>Step 4bis: Adding the feature to the RxPlayer</h3>
+<p>–</p>
+<p><em>This step can be done before or after “initializing” the <code>DASH_WASM</code> feature
+(the aforementioned “step 4”).</em></p>
+<p>–</p>
+<p>To “link” the RxPlayer to the parser, you will need to call the <code>addFeatures</code>
+static function on the minimal RxPlayer build, like every other features.</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+
+<span class="hljs-title class_">RxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([ <span class="hljs-variable constant_">DASH_WASM</span> ]);
+</code></pre>
+<p>Once both this step an the <code>initialize</code> method (on the <code>DASH_WASM</code> object) is
+called, the RxPlayer will try to use the WebAssembly DASH_WASM parser by default
+when encountering DASH contents.</p>
+</body></html></div></div></div></body>

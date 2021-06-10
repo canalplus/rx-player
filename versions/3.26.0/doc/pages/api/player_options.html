@@ -1,0 +1,602 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Player Options - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Player%20Options">Player Options</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Properties">Properties</a>
+<ul>
+<li><a href="#subchapter-videoElement">videoElement</a></li>
+<li><a href="#subchapter-initialVideoBitrate">initialVideoBitrate</a></li>
+<li><a href="#subchapter-initialAudioBitrate">initialAudioBitrate</a></li>
+<li><a href="#subchapter-minVideoBitrate">minVideoBitrate</a></li>
+<li><a href="#subchapter-minAudioBitrate">minAudioBitrate</a></li>
+<li><a href="#subchapter-maxVideoBitrate">maxVideoBitrate</a></li>
+<li><a href="#subchapter-maxAudioBitrate">maxAudioBitrate</a></li>
+<li><a href="#subchapter-wantedBufferAhead">wantedBufferAhead</a></li>
+<li><a href="#subchapter-preferredAudioTracks">preferredAudioTracks</a></li>
+<li><a href="#subchapter-preferredTextTracks">preferredTextTracks</a></li>
+<li><a href="#subchapter-preferredVideoTracks">preferredVideoTracks</a></li>
+<li><a href="#subchapter-maxBufferAhead">maxBufferAhead</a></li>
+<li><a href="#subchapter-maxBufferBehind">maxBufferBehind</a></li>
+<li><a href="#subchapter-limitVideoWidth">limitVideoWidth</a></li>
+<li><a href="#subchapter-throttleVideoBitrateWhenHidden">throttleVideoBitrateWhenHidden</a></li>
+<li><a href="#subchapter-stopAtEnd">stopAtEnd</a></li>
+<li><a href="#subchapter-throttleWhenHidden">throttleWhenHidden</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Player%20Options"></a></p>
+<h1>Player Options</h1>
+<p><a name="overview"></a>
+<a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>Player options are options given to the player on instantiation.</p>
+<p>It’s an object with multiple properties. None of them are mandatory.
+For most usecase though, you might want to set at least the associated video
+element via the <code>videoElement</code> property.</p>
+<p><a name="prop"></a>
+<a name="chapter-Properties"></a></p>
+<h2>Properties</h2>
+<p><a name="prop-videoElement"></a>
+<a name="subchapter-videoElement"></a></p>
+<h3>videoElement</h3>
+<p><em>type</em>: <code>HTMLMediaElement|undefined</code></p>
+<p>The media element the player will use.</p>
+<p>Note that this can be a <code>&lt;video&gt;</code> or an <code>&lt;audio&gt;</code> element.</p>
+<pre><code class="language-js"><span class="hljs-comment">// Instantiate the player with the first video element in the DOM</span>
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">videoElement</span>: <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementsByTagName</span>(<span class="hljs-string">"VIDEO"</span>)[<span class="hljs-number">0</span>]
+});
+</code></pre>
+<p>If not defined, a <code>&lt;video&gt;</code> element will be created without being inserted in
+the document. You will have to do it yourself through the <code>getVideoElement</code>
+method to add it yourself:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>();
+
+<span class="hljs-keyword">const</span> videoElement = player.<span class="hljs-title function_">getVideoElement</span>();
+<span class="hljs-variable language_">document</span>.<span class="hljs-property">body</span>.<span class="hljs-title function_">appendChild</span>(videoElement);
+</code></pre>
+<p><a name="prop-initialVideoBitrate"></a>
+<a name="subchapter-initialVideoBitrate"></a></p>
+<h3>initialVideoBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>0</code></p>
+<p>This is a ceil value for the initial video bitrate chosen.</p>
+<p>That is, the first video <a href="../terms.html#representation">Representation</a> chosen
+will be both:</p>
+<ul>
+<li>inferior or equal to this value.</li>
+<li>the closest possible to this value (after filtering out the ones with a
+superior bitrate).</li>
+</ul>
+<p>If no Representation is found to respect those rules, the Representation with
+the lowest bitrate will be chosen instead. Thus, the default value - <code>0</code> -
+will lead to the lowest bitrate being chosen at first.</p>
+<pre><code class="language-js"><span class="hljs-comment">// Begin either by the video bitrate just below or equal to 700000 bps if found</span>
+<span class="hljs-comment">// or the lowest bitrate available if not.</span>
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">initialVideoBitrate</span>: <span class="hljs-number">700000</span>
+});
+</code></pre>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><a name="prop-initialAudioBitrate"></a>
+<a name="subchapter-initialAudioBitrate"></a></p>
+<h3>initialAudioBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>0</code></p>
+<p>This is a ceil value for the initial audio bitrate chosen.</p>
+<p>That is, the first audio <a href="../terms.html#representation">Representation</a> chosen
+will be:</p>
+<ul>
+<li>inferior or equal to this value.</li>
+<li>the closest possible to this value (after filtering out the ones with a
+superior bitrate).</li>
+</ul>
+<p>If no Representation is found to respect those rules, the Representation with
+the lowest bitrate will be chosen instead. Thus, the default value - <code>0</code> -
+will lead to the lowest bitrate being chosen at first.</p>
+<pre><code class="language-js"><span class="hljs-comment">// Begin either by the audio bitrate just below or equal to 5000 bps if found</span>
+<span class="hljs-comment">// or the lowest bitrate available if not.</span>
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">initialAudioBitrate</span>: <span class="hljs-number">5000</span>
+});
+</code></pre>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><a name="prop-minVideoBitrate"></a>
+<a name="subchapter-minVideoBitrate"></a></p>
+<h3>minVideoBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>0</code></p>
+<p>Minimum video bitrate reachable through adaptive streaming.</p>
+<p>When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as <code>setVideoBitrate</code>), the player will never switch
+to a video quality with a bitrate lower than that value.</p>
+<p>The exception being when no quality has a higher bitrate, in which case the
+maximum quality will always be chosen instead.</p>
+<p>For example, if you want that video qualities chosen automatically never have
+a bitrate lower than 100 kilobits per second you can call:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">minVideoBitrate</span>: <span class="hljs-number">100000</span>
+});
+</code></pre>
+<p>Any limit can be removed just by setting that value to <code>0</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove video bitrate lower limit</span>
+player.<span class="hljs-title function_">setMinVideoBitrate</span>(<span class="hljs-number">0</span>);
+</code></pre>
+<p>You can update this limit at any moment with the <code>setMinVideoBitrate</code> API
+call.</p>
+<p>Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling <code>setVideoBitrate</code>) bypass this limit completely.</p>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><a name="prop-minAudioBitrate"></a>
+<a name="subchapter-minAudioBitrate"></a></p>
+<h3>minAudioBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>0</code></p>
+<p>Minimum audio bitrate reachable through adaptive streaming.</p>
+<p>When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as <code>setAudioBitrate</code>), the player will never switch
+to an audio quality with a bitrate higher than that value.</p>
+<p>The exception being when no quality has a higher bitrate, in which case the
+minimum quality will always be chosen instead.</p>
+<p>For example, if you want that audio qualities chosen automatically never have
+a bitrate higher than 100 kilobits per second you can call:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">minAudioBitrate</span>: <span class="hljs-number">100000</span>
+});
+</code></pre>
+<p>Any limit can be removed just by setting that value to <code>0</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove audio bitrate lower limit</span>
+player.<span class="hljs-title function_">setMinAudioBitrate</span>(<span class="hljs-number">0</span>);
+</code></pre>
+<p>You can update this limit at any moment with the <code>setMinAudioBitrate</code> API
+call.</p>
+<p>Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling <code>setAudioBitrate</code>) bypass this limit completely.</p>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><a name="prop-maxVideoBitrate"></a>
+<a name="subchapter-maxVideoBitrate"></a></p>
+<h3>maxVideoBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>Infinity</code></p>
+<p>Maximum video bitrate reachable through adaptive streaming.</p>
+<p>When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as <code>setVideoBitrate</code>), the player will never switch
+to a video quality with a bitrate higher than that value.</p>
+<p>The exception being when no quality has a lower bitrate, in which case the
+minimum quality will always be chosen instead.</p>
+<p>For example, if you want that video qualities chosen automatically never have
+a bitrate higher than 1 Megabits per second you can call:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">maxVideoBitrate</span>: <span class="hljs-number">1e6</span>
+});
+</code></pre>
+<p>Any limit can be removed just by setting that value to <code>Infinity</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove video bitrate higher limit</span>
+player.<span class="hljs-title function_">setMaxVideoBitrate</span>(<span class="hljs-title class_">Infinity</span>);
+</code></pre>
+<p>You can update this limit at any moment with the <code>setMaxVideoBitrate</code> API
+call.</p>
+<p>Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling <code>setVideoBitrate</code>) bypass this limit completely.</p>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><a name="prop-maxAudioBitrate"></a>
+<a name="subchapter-maxAudioBitrate"></a></p>
+<h3>maxAudioBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>Infinity</code></p>
+<p>Maximum audio bitrate reachable through adaptive streaming.</p>
+<p>When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as <code>setAudioBitrate</code>), the player will never switch
+to an audio quality with a bitrate higher than that value.</p>
+<p>The exception being when no quality has a lower bitrate, in which case the
+minimum quality will always be chosen instead.</p>
+<p>For example, if you want that audio qualities chosen automatically never have
+a bitrate higher than 1 Megabits per second you can call:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">maxAudioBitrate</span>: <span class="hljs-number">1e6</span>
+});
+</code></pre>
+<p>Any limit can be removed just by setting that value to <code>Infinity</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove audio bitrate higher limit</span>
+player.<span class="hljs-title function_">setMaxAudioBitrate</span>(<span class="hljs-title class_">Infinity</span>);
+</code></pre>
+<p>You can update this limit at any moment with the <code>setMaxAudioBitrate</code> API
+call.</p>
+<p>Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling <code>setAudioBitrate</code>) bypass this limit completely.</p>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><a name="prop-wantedBufferAhead"></a>
+<a name="subchapter-wantedBufferAhead"></a></p>
+<h3>wantedBufferAhead</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>30</code></p>
+<p>Set the default buffering goal, as a duration ahead of the current position, in
+seconds.</p>
+<p>Once this size of buffer is reached, the player won’t try to download new
+segments anymore.</p>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><a name="prop-preferredAudioTracks"></a>
+<a name="subchapter-preferredAudioTracks"></a></p>
+<h3>preferredAudioTracks</h3>
+<p><em>type</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p><em>defaults</em>: <code>[]</code></p>
+<p>This option allows to help the RxPlayer choose an initial audio track based on
+either language preferences, codec preferences or both.</p>
+<p>It is defined as an array of objects, each object describing constraints a
+track should respect.</p>
+<p>If the first object - defining the first set of constraints - cannot be
+respected under the currently available audio tracks, the RxPlayer will skip
+it and check with the second object and so on.
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.</p>
+<p>Here is all the possible constraints you can set in any one of those objects
+(note that all properties are optional here, only those set will have an effect
+on which tracks will be filtered):</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-comment">// {string|undefined} The language the track should be in</span>
+                   <span class="hljs-comment">// (in preference as an ISO 639-1, ISO 639-2 or ISO 639-3</span>
+                   <span class="hljs-comment">// language code).</span>
+                   <span class="hljs-comment">// If not set or set to `undefined`, the RxPlayer won't</span>
+                   <span class="hljs-comment">// filter based on the language of the track.</span>
+
+  <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean|undefined} Whether the audio track should</span>
+                          <span class="hljs-comment">// be an audio description for the visually impaired</span>
+                          <span class="hljs-comment">// or not.</span>
+                          <span class="hljs-comment">// If not set or set to `undefined`, the RxPlayer</span>
+                          <span class="hljs-comment">// won't filter based on that status.</span>
+
+  <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
+           <span class="hljs-comment">// if not set or set to `undefined` we won't filter based on codecs.</span>
+
+    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
+
+    <span class="hljs-attr">all</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
+               <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
+               <span class="hljs-comment">// If `true`, we will only choose a track if EVERY profiles for</span>
+               <span class="hljs-comment">// it have a codec information that is validated by that RegExp.</span>
+               <span class="hljs-comment">// If `false`, we will choose a track if we know that at least</span>
+               <span class="hljs-comment">// A SINGLE profile from it has codec information validated by</span>
+               <span class="hljs-comment">// that RegExp.</span>
+  }
+}
+</code></pre>
+<p>This array of preferrences can be updated at any time through the
+<code>setPreferredAudioTracks</code> method, documented
+<a href="index.html#meth-getPreferredAudioTracks">here</a>.</p>
+<h4>Examples</h4>
+<p>Let’s imagine that you prefer to have french or italian over all other audio
+languages. If not found, you want to fallback to english:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredAudioTracks</span>: [
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"ita"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }
+  ]
+});
+</code></pre>
+<p>Now let’s imagine that you want to have in priority a track that contain at
+least one profile in Dolby Digital Plus (ec-3 codec) without caring about the
+language:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredAudioTracks</span>: [ { <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span> } ]
+});
+</code></pre>
+<p>At last, let’s combine both examples by preferring french over itialian, italian
+over english while preferring it to be in Dolby Digital Plus:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredAudioTracks</span>: [
+    {
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>,
+      <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span> }
+    },
+
+    <span class="hljs-comment">// We still prefer non-DD+ french over DD+ italian</span>
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+
+    {
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"ita"</span>,
+      <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span> }
+    },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"ita"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+
+    {
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>,
+      <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span> }
+    },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }
+  ]
+</code></pre>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect in <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>) when either :</p>
+<ul>
+<li>No audio track API is supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
+<p><a name="prop-preferredTextTracks"></a>
+<a name="subchapter-preferredTextTracks"></a></p>
+<h3>preferredTextTracks</h3>
+<p><em>type</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p><em>defaults</em>: <code>[]</code></p>
+<p>Set the initial text track languages preferences.</p>
+<p>This option takes an array of objects describing the languages wanted for
+subtitles:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+                       <span class="hljs-comment">// caption for the hard of hearing</span>
+}
+</code></pre>
+<p>All elements in that Array should be set in preference order: from the most
+preferred to the least preferred. You can set <code>null</code> in that array for no
+subtitles.</p>
+<p>When loading a content, the RxPlayer will then try to choose its text track by
+comparing what is available with your current preferences (i.e. if the most
+preferred is not available, it will look if the second one etc.).</p>
+<p>This array of preferrences can be updated at any time through the
+<code>setPreferredTextTracks</code> method, documented
+<a href="index.html#meth-getPreferredTextTracks">here</a>.</p>
+<h4>Example</h4>
+<p>Let’s imagine that you prefer to have french or italian subtitles.If not found,
+you want no subtitles at all.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredTextTracks</span>: [
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"ita"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+    <span class="hljs-literal">null</span>
+  ]
+});
+</code></pre>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect in <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>) when either :</p>
+<ul>
+<li>No text track API is supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
+<hr>
+<p><a name="prop-preferredVideoTracks"></a>
+<a name="subchapter-preferredVideoTracks"></a></p>
+<h3>preferredVideoTracks</h3>
+<p><em>type</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p><em>defaults</em>: <code>[]</code></p>
+<p>This option allows to help the RxPlayer choose an initial video track.</p>
+<p>It is defined as an array of objects, each object describing constraints a
+track should respect.</p>
+<p>If the first object - defining the first set of constraints - cannot be
+respected under the currently available video tracks, the RxPlayer will skip
+it and check with the second object and so on.
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.</p>
+<p>When the next encountered constraint is set to <code>null</code>, the player will simply
+disable the video track. If you want to disable the video track by default,
+you can just set <code>null</code> as the first element of this array (e.g. <code>[null]</code>).</p>
+<p>Here is all the possible constraints you can set in any one of those objects
+(note that all properties are optional here, only those set will have an effect
+on which tracks will be filtered):</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
+           <span class="hljs-comment">// if not set or set to `undefined` we won't filter based on codecs.</span>
+
+    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/hvc/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
+
+    <span class="hljs-attr">all</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
+               <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
+               <span class="hljs-comment">// If `true`, we will only choose a track if EVERY profiles for</span>
+               <span class="hljs-comment">// it have a codec information that is validated by that RegExp.</span>
+               <span class="hljs-comment">// If `false`, we will choose a track if we know that at least</span>
+               <span class="hljs-comment">// A SINGLE profile from it has codec information validated by</span>
+               <span class="hljs-comment">// that RegExp.</span>
+  }
+  <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean|undefined} If set to `true`, only tracks</span>
+                         <span class="hljs-comment">// which are known to contains a sign language</span>
+                         <span class="hljs-comment">// interpretation will be considered.</span>
+                         <span class="hljs-comment">// If set to `false`, only tracks which are known</span>
+                         <span class="hljs-comment">// to not contain it will be considered.</span>
+                         <span class="hljs-comment">// if not set or set to `undefined` we won't filter</span>
+                         <span class="hljs-comment">// based on that status.</span>
+}
+</code></pre>
+<p>This array of preferrences can be updated at any time through the
+<code>setPreferredVideoTracks</code> method, documented
+<a href="index.html#meth-getPreferredVideoTracks">here</a>.</p>
+<h4>Examples</h4>
+<p>Let’s imagine that you prefer to have a track which contains at least one H265
+profile. You can do:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredVideoTracks</span>: [ { <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> } } ]
+});
+</code></pre>
+<p>With that same constraint, let’s no consider that the current user is deaf and
+would thus prefer the video to contain a sign language interpretation.
+We could set both the previous and that new constraint that way:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredVideoTracks</span>: [
+    <span class="hljs-comment">// first let's consider the best case: H265 + sign language interpretation</span>
+    {
+      <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> }
+      <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span>,
+    },
+
+    <span class="hljs-comment">// If not available, we still prefer a sign interpreted track without H265</span>
+    { <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span> },
+
+    <span class="hljs-comment">// If not available either, we would prefer an H265 content</span>
+    { <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> } },
+
+    <span class="hljs-comment">// Note: If this is also unavailable, we will here still have a video track</span>
+    <span class="hljs-comment">// but which do not respect any of the constraints set here.</span>
+  ]
+});
+</code></pre>
+<hr>
+<p>For a totally different example, let’s imagine you want to start without any
+video track enabled (e.g. to start in an audio-only mode). To do that, you can
+simply do:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredVideoTracks</span>: [<span class="hljs-literal">null</span>]
+});
+</code></pre>
+<hr>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect in <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>) when either :</p>
+<ul>
+<li>No video track API is supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
+<p><a name="prop-maxBufferAhead"></a>
+<a name="subchapter-maxBufferAhead"></a></p>
+<h3>maxBufferAhead</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>Infinity</code></p>
+<p>Set the maximum kept buffer ahead of the current position, in seconds.</p>
+<p>Everything superior to that limit (<code>currentPosition + maxBufferAhead</code>) will
+be automatically garbage collected.</p>
+<p>This feature is not necessary as the browser should by default correctly
+remove old segments from memory if/when the memory is scarce.</p>
+<p>However on some custom targets, or just to better control the memory footprint
+of the player, you might want to set this limit.</p>
+<p>Its default value, <code>Infinity</code>, will remove this limit and just let the browser
+do this job instead.</p>
+<p>The minimum value between this one and the one returned by
+<code>getWantedBufferAhead</code> will be considered when downloading new segments.</p>
+<p><span class="emoji emoji_warning">⚠️</span> Bear in mind that a too-low configuration there (e.g. inferior to
+<code>10</code>) might prevent the browser to play the content at all.</p>
+<p>You can update that limit at any time through the <a href="index.html#meth-setMaxBufferAhead">setMaxBufferAhead
+method</a>.</p>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><a name="prop-maxBufferBehind"></a>
+<a name="subchapter-maxBufferBehind"></a></p>
+<h3>maxBufferBehind</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>Infinity</code></p>
+<p>Set the maximum kept buffer before the current position, in seconds.</p>
+<p>Everything before that limit (<code>currentPosition - maxBufferBehind</code>) will be
+automatically garbage collected.</p>
+<p>This feature is not necessary as the browser should by default correctly
+remove old segments from memory if/when the memory is scarce.</p>
+<p>However on some custom targets, or just to better control the memory footprint
+of the player, you might want to set this limit.</p>
+<p>Its default value, <code>Infinity</code>, will remove this limit and just let the browser
+do this job instead.</p>
+<p>You can update that limit at any time through the <a href="index.html#meth-setMaxBufferBehind">setMaxBufferBehind
+method</a>.</p>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><a name="prop-limitVideoWidth"></a>
+<a name="subchapter-limitVideoWidth"></a></p>
+<h3>limitVideoWidth</h3>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<p>With this feature, the possible video
+<a href="../terms.html#representation">Representations</a> considered are filtered by width:</p>
+<p>The maximum width considered is the closest superior or equal to the video
+element’s width.</p>
+<p>This is done because the other, “superior” Representations will not have any
+difference in terms of pixels (as in most case, the display limits the maximum
+resolution displayable). It thus save bandwidth with no visible difference.</p>
+<p>To activate this feature, set it to <code>true</code>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">limitVideoWidth</span>: <span class="hljs-literal">true</span>
+});
+</code></pre>
+<p>For some reasons (displaying directly a good quality when switching to
+fullscreen, specific environments), you might not want to activate this limit.</p>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded :</p>
+<ul>
+<li>In <em>DirectFile</em> mode (see [loadVideo options]
+(./loadVideo_options.md#prop-transport)).</li>
+<li>On Firefox browsers (version &gt;= 67) : We can’t know if the Picture-In-Picture
+feature or window is enabled and we can’t know PIP window size. Thus we can’t
+rely on video element size attributes, that may not reflect the real video size
+when PIP is enabled.</li>
+</ul>
+<p><a name="prop-throttleVideoBitrateWhenHidden"></a>
+<a name="subchapter-throttleVideoBitrateWhenHidden"></a></p>
+<h3>throttleVideoBitrateWhenHidden</h3>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<p>The player has a specific feature which throttle the video to the minimum
+bitrate when the current video element is considered hidden (e.g. the containing
+page is hidden and the Picture-In-Picture mode is disabled) for more than a
+minute.</p>
+<p>To activate this feature, set it to <code>true</code>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">throttleVideoBitrateWhenHidden</span>: <span class="hljs-literal">true</span>
+});
+</code></pre>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded :</p>
+<ul>
+<li>In <em>DirectFile</em> mode (see [loadVideo options]
+(./loadVideo_options.md#prop-transport)).</li>
+<li>On Firefox browsers (version &gt;= 67) : We can’t know if the Picture-In-Picture
+feature or window is enabled. Thus we can’t rely on document hiddenness
+attributes, as the video may be visible, through the PIP window.</li>
+</ul>
+<p><a name="prop-stopAtEnd"></a>
+<a name="subchapter-stopAtEnd"></a></p>
+<h3>stopAtEnd</h3>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>true</code></p>
+<p>By default, the player automatically <em>unload</em> the content once it reaches its
+end (the player goes to the <code>"ENDED"</code> state).</p>
+<p>In that case, the only way to play the content again is to (re-)call the
+<code>loadVideo</code> API, which will trigger another download of the
+<a href="../terms.html#manifest">Manifest</a> and segments.</p>
+<p>If you want to be able to seek back in the content after it ended, you may want
+to deactivate this behavior. To do so, set <code>stopAtEnd</code> to <code>false</code>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">stopAtEnd</span>: <span class="hljs-literal">false</span>
+});
+</code></pre>
+<p><a name="prop-throttleWhenHidden"></a>
+<a name="subchapter-throttleWhenHidden"></a></p>
+<h3>throttleWhenHidden</h3>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option is deprecated, it will disappear in the next major release
+<code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<p>Please use the
+<a href="#prop-throttleVideoBitrateWhenHidden">throttleVideoBitrateWhenHidden</a> property
+instead, which is better defined for advanced cases, such as Picture-In-Picture.</p>
+<p>–</p>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<p>The player has a specific feature which throttle the video to the minimum
+bitrate when the current page is hidden for more than a minute.</p>
+<p>To activate this feature, set it to <code>true</code>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">throttleWhenHidden</span>: <span class="hljs-literal">true</span>
+});
+</code></pre>
+<p>–</p>
+<p><span class="emoji emoji_warning">⚠️</span> This option will have no effect for contents loaded :</p>
+<ul>
+<li>In <em>DirectFile</em> mode (see [loadVideo options]
+(./loadVideo_options.md#prop-transport)).</li>
+<li>On Firefox browsers (version &gt;= 67) : We can’t know if the Picture-In-Picture
+feature or window is enabled. Thus we can’t rely on document hiddenness
+attributes, as the video may be visible, through the PIP window.</li>
+</ul>
+</body></html></div></div></div></body>

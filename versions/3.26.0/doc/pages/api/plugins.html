@@ -1,0 +1,479 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Plugins - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Plugins">Plugins</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-segmentLoader">segmentLoader</a></li>
+<li><a href="#chapter-manifestLoader">manifestLoader</a></li>
+<li><a href="#chapter-representationFilter">representationFilter</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Plugins"></a></p>
+<h1>Plugins</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>To allow the player to be extended, a system of “plugins” has been added.</p>
+<p>Those plugins are often under the form of functions passed as an argument to the
+<code>loadVideo</code> API call.</p>
+<p><a name="segmentLoader"></a>
+<a name="chapter-segmentLoader"></a></p>
+<h2>segmentLoader</h2>
+<p>The <code>segmentLoader</code> is a function that can be included in the <code>transportOptions</code>
+of the <code>loadVideo</code> API call.</p>
+<p>A <code>segmentLoader</code> allows to define a custom audio/video segment loader (it might
+on the future work for other types of segments, so always check the type if you
+only want those two).
+The segment loader is the part performing the segment request. One usecase where
+you might want to set your own segment loader is to integrate Peer-to-Peer
+segment downloading through the player.</p>
+<p>Before the complete documentation, let’s write an example which will just use
+an XMLHttpRequest (it has no use, as our implementation does the same thing and
+more):</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">infos</span> - infos about the segment to download
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">callbacks</span> - Object containing several callbacks to indicate
+ * that the segment has been loaded, the loading operation has failed or to
+ * fallback to our default implementation. More information on this object below
+ * this code example.
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Function|undefined</span>} - If a function is defined in the return value,
+ * it will be called if and when the request is canceled.
+ */</span>
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">customSegmentLoader</span> = (<span class="hljs-params">infos, callbacks</span>) =&gt; {
+
+  <span class="hljs-comment">// we will only use this custom loader for videos segments.</span>
+  <span class="hljs-keyword">if</span> (infos.<span class="hljs-property">adaptation</span>.<span class="hljs-property">type</span> !== <span class="hljs-string">"video"</span>) {
+    callbacks.<span class="hljs-title function_">fallback</span>();
+    <span class="hljs-keyword">return</span>;
+  }
+
+  <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> <span class="hljs-title function_">XMLHttpRequest</span>();
+  <span class="hljs-keyword">const</span> sendingTime = performance.<span class="hljs-title function_">now</span>();
+
+  xhr.<span class="hljs-property">onload</span> = <span class="hljs-keyword">function</span> <span class="hljs-title function_">onXHRLoaded</span>(<span class="hljs-params">r</span>) {
+    <span class="hljs-keyword">if</span> (<span class="hljs-number">200</span> &lt;= xhr.<span class="hljs-property">status</span> &amp;&amp; xhr.<span class="hljs-property">status</span> &lt; <span class="hljs-number">300</span>) {
+      <span class="hljs-keyword">const</span> duration = performance.<span class="hljs-title function_">now</span>() - sendingTime;
+      <span class="hljs-keyword">const</span> size = r.<span class="hljs-property">total</span>;
+      <span class="hljs-keyword">const</span> data = xhr.<span class="hljs-property">response</span>;
+      callbacks.<span class="hljs-title function_">resolve</span>({ duration, size, data });
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"didn't work"</span>);
+      err.<span class="hljs-property">xhr</span> = xhr;
+      callbacks.<span class="hljs-title function_">reject</span>(err);
+    }
+  };
+
+  xhr.<span class="hljs-property">onprogress</span> = <span class="hljs-keyword">function</span> <span class="hljs-title function_">onXHRProgress</span>(<span class="hljs-params">event</span>) {
+    <span class="hljs-keyword">const</span> currentTime = performance.<span class="hljs-title function_">now</span>();
+    callbacks.<span class="hljs-title function_">progress</span>({ <span class="hljs-attr">type</span>: <span class="hljs-string">"progress"</span>,
+                         <span class="hljs-attr">value</span>: { <span class="hljs-attr">duration</span>: currentTime - sendingTime,
+                                  <span class="hljs-attr">size</span>: event.<span class="hljs-property">loaded</span>,
+                                  <span class="hljs-attr">totalSize</span>: event.<span class="hljs-property">total</span> } });
+  };
+
+  xhr.<span class="hljs-property">onerror</span> = <span class="hljs-keyword">function</span> <span class="hljs-title function_">onXHRError</span>(<span class="hljs-params"></span>) {
+    <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"didn't work"</span>);
+    err.<span class="hljs-property">xhr</span> = xhr;
+    callbacks.<span class="hljs-title function_">reject</span>(err);
+  };
+
+  xhr.<span class="hljs-title function_">open</span>(<span class="hljs-string">"GET"</span>, infos.<span class="hljs-property">url</span>);
+  xhr.<span class="hljs-property">responseType</span> = <span class="hljs-string">"arraybuffer"</span>;
+
+  <span class="hljs-keyword">const</span> range = infos.<span class="hljs-property">segment</span>.<span class="hljs-property">range</span>;
+  <span class="hljs-keyword">if</span> (range) {
+    <span class="hljs-keyword">if</span> (range[<span class="hljs-number">1</span>] &amp;&amp; range[<span class="hljs-number">1</span>] !== <span class="hljs-title class_">Infinity</span>) {
+      xhr.<span class="hljs-title function_">setRequestHeader</span>(<span class="hljs-string">"Range"</span>, <span class="hljs-string">`bytes=<span class="hljs-subst">${range[<span class="hljs-number">0</span>]}</span>-<span class="hljs-subst">${range[<span class="hljs-number">1</span>]}</span>`</span>);
+    } <span class="hljs-keyword">else</span> {
+      xhr.<span class="hljs-title function_">setRequestHeader</span>(<span class="hljs-string">"Range"</span>, <span class="hljs-string">`bytes=<span class="hljs-subst">${range[<span class="hljs-number">0</span>]}</span>-`</span>);
+    }
+  }
+
+  xhr.<span class="hljs-title function_">send</span>();
+
+  <span class="hljs-keyword">return</span> <span class="hljs-function">() =&gt;</span> {
+    xhr.<span class="hljs-title function_">abort</span>();
+  };
+};
+</code></pre>
+<p>As you can see, this function takes two arguments:</p>
+<ol>
+<li>
+<p><strong>infos</strong>: An Object giving information about the wanted segments.
+This object contains the following properties:</p>
+<ul>
+<li>
+<p><em>url</em> (<code>string</code>): The URL the segment request should normally be
+performed at.</p>
+</li>
+<li>
+<p><em>manifest</em> (<code>Object</code>) - the Manifest object containing the segment.
+More information on its structure can be found on the documentation
+linked below [1].</p>
+</li>
+<li>
+<p><em>period</em> (<code>Object</code>) - the Period object containing the segment.
+More information on its structure can be found on the documentation
+linked below [2].</p>
+</li>
+<li>
+<p><em>adaptation</em> (<code>Object</code>) - the Adaptation object containing the segment.
+More information on its structure can be found on the documentation
+linked below [3].</p>
+</li>
+<li>
+<p><em>representation</em> (<code>Object</code>) - the Representation object containing the
+segment.
+More information on its structure can be found on the documentation
+linked below [4].</p>
+</li>
+<li>
+<p><em>segment</em> (<code>Object</code>) - the segment object related to this segment.
+More information on its structure can be found on the documentation
+linked below [5].</p>
+</li>
+</ul>
+<p>[1] <a href="manifest.html#manifest">Manifest structure</a></p>
+<p>[2] <a href="manifest.html#period">Period structure</a></p>
+<p>[3] <a href="manifest.html#adaptation">Adaptation structure</a></p>
+<p>[4] <a href="manifest.html#representation">Representation structure</a></p>
+<p>[5] <a href="manifest.html#segment">Segment structure</a></p>
+</li>
+<li>
+<p><strong>callbacks</strong>: An object containing multiple callbacks to allow this
+<code>segmentLoader</code> to communicate various events to the RxPlayer.</p>
+<p>This Object contains the following functions:</p>
+<ul>
+<li>
+<p><strong>resolve</strong>: To call after the segment is loaded, to communicate it to
+the RxPlayer.</p>
+<p>When called, it should be given an object with the following
+properties:</p>
+<ul>
+<li>
+<p><em>data</em> (<code>ArrayBuffer</code>|<code>Uint8Array</code>) - the segment data.</p>
+</li>
+<li>
+<p><em>duration</em> (<code>Number|undefined</code>) - the duration the request took, in
+milliseconds.</p>
+<p>This value may be used to estimate the ideal user bandwidth.</p>
+</li>
+<li>
+<p><em>size</em> (<code>Number|undefined</code>) size, in bytes, of the total downloaded
+response.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>progress</strong> - Callback to call when progress information is available
+on the current request. This callback allows to improve our adaptive
+streaming logic by better predicting the bandwidth before the request
+is finished and whether a request is stalling.</p>
+<p>When called, it should be given an object with the following
+properties:</p>
+<ul>
+<li>
+<p><em>duration</em> (<code>Number</code>) - The duration since the beginning of the
+request, in milliseconds.</p>
+</li>
+<li>
+<p><em>size</em> (<code>Number</code>) - the current size loaded, in bytes.</p>
+</li>
+<li>
+<p><em>totalSize</em> (<code>Number|undefined</code>) - the whole size of the wanted
+data, in bytes. Can be let to undefined when not known.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>reject</strong>: Callback to call when an error is encountered which made
+loading the segment impossible.</p>
+<p>It is recommended (but not enforced) to give it an Object or error
+instance with the following properties:</p>
+<ul>
+<li>
+<p><em>canRetry</em> (<code>boolean|undefined</code>): If set to <code>true</code>, the RxPlayer
+may retry the request (depending on the configuration set by the
+application).</p>
+<p>If set to <code>false</code>, the RxPlayer will never try to retry this
+request and will probably just stop the current content.</p>
+<p>If not set or set to <code>undefined</code>, the RxPlayer might retry or fail
+depending on other factors.</p>
+</li>
+<li>
+<p><em>xhr</em> (<code>XMLHttpRequest|undefined</code>): If an <code>XMLHttpRequest</code> was
+used to perform this request, this should be the corresponding
+instance.</p>
+<p>This can be used for example by the RxPlayer to know whether
+retrying should be done when the <code>canRetry</code> property is not set.</p>
+</li>
+<li>
+<p><em>isOfflineError</em> (<code>boolean|undefined</code>): If set to <code>true</code>, this
+indicates that this error is due to the user being offline
+(disconnected from the needed network).</p>
+<p>If set to <code>false</code>, this indicates that it wasn’t.</p>
+<p>If not known or not applicable, you can just set it to undefined
+or not define it at all.</p>
+<p>The RxPlayer might retry a segment request due to the user being
+offline a different amount of time than when the error is due to
+another issue, depending on its configuration.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>fallback</strong>: Callback to call if you want to call our default
+implementation instead for loading this segment. No argument is needed.</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>The <code>segmentLoader</code> can also return a function, which will be called if/when
+the request is aborted. You can define one to clean-up or dispose all resources.</p>
+<p><a name="manifestLoader"></a>
+<a name="chapter-manifestLoader"></a></p>
+<h2>manifestLoader</h2>
+<p>The <code>manifestLoader</code> is a function that can be included in the
+<code>transportOptions</code> of the <code>loadVideo</code> API call.</p>
+<p>A <code>manifestLoader</code> allows to define a custom <a href="../terms.html#manifest">Manifest</a>
+loader. The Manifest loader is the part performing the Manifest request.</p>
+<p>Before the complete documentation, let’s write an example which will just use
+an XMLHttpRequest (it has no use, as our implementation does the same thing and
+more):</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">string|undefined</span>} <span class="hljs-variable">url</span> - the url the Manifest request should normally
+ * be on.
+ * Can be undefined in very specific conditions, like in cases when the
+ * `loadVideo` call had no defined URL (e.g. "local" manifest, playing a locally
+ * crafted "Metaplaylist" content).
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">callbacks</span> - Object containing several callbacks to indicate
+ * that the manifest has been loaded, the loading operation has failed or to
+ * fallback to our default implementation. More information on this object below
+ * this code example.
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Function|undefined</span>} - If a function is defined in the return value,
+ * it will be called if and when the request is canceled.
+ */</span>
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">customManifestLoader</span> = (<span class="hljs-params">url, callbacks</span>) =&gt; {
+  <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> <span class="hljs-title function_">XMLHttpRequest</span>();
+  <span class="hljs-keyword">const</span> baseTime = performance.<span class="hljs-title function_">now</span>();
+
+  xhr.<span class="hljs-property">onload</span> = <span class="hljs-function">(<span class="hljs-params">r</span>) =&gt;</span> {
+    <span class="hljs-keyword">if</span> (<span class="hljs-number">200</span> &lt;= xhr.<span class="hljs-property">status</span> &amp;&amp; xhr.<span class="hljs-property">status</span> &lt; <span class="hljs-number">300</span>) {
+      <span class="hljs-keyword">const</span> duration = performance.<span class="hljs-title function_">now</span>() - baseTime;
+
+      <span class="hljs-keyword">const</span> now = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>();
+      <span class="hljs-keyword">const</span> receivingTime = now;
+
+      <span class="hljs-comment">// Note: We could have calculated `sendingTime` before the request, but</span>
+      <span class="hljs-comment">// that date would be wrong if the user updated the clock while the</span>
+      <span class="hljs-comment">// request was pending.</span>
+      <span class="hljs-comment">// `performance.now` doesn't depend on the user's clock. It is thus a</span>
+      <span class="hljs-comment">// better candidate here.</span>
+      <span class="hljs-comment">// This is why we re-calculate the sendingTime a posteriori, we are now</span>
+      <span class="hljs-comment">// sure to be aligned with the current clock.</span>
+      <span class="hljs-keyword">const</span> sendingTime = now - duration;
+
+      <span class="hljs-comment">// the request could have been redirected,</span>
+      <span class="hljs-comment">// we have to feed back the real URL</span>
+      <span class="hljs-keyword">const</span> _url = xhr.<span class="hljs-property">responseURL</span> || url;
+
+      <span class="hljs-keyword">const</span> size = r.<span class="hljs-property">total</span>;
+      <span class="hljs-keyword">const</span> data = xhr.<span class="hljs-property">response</span>;
+      callbacks.<span class="hljs-title function_">resolve</span>({
+        <span class="hljs-attr">url</span>: _url,
+        sendingTime,
+        receivingTime,
+        duration,
+        size,
+        data,
+      });
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"didn't work"</span>);
+      err.<span class="hljs-property">xhr</span> = xhr;
+      callbacks.<span class="hljs-title function_">reject</span>(err);
+    }
+  };
+
+  xhr.<span class="hljs-property">onerror</span> = <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"didn't work"</span>);
+    err.<span class="hljs-property">xhr</span> = xhr;
+    callbacks.<span class="hljs-title function_">reject</span>(err);
+  };
+
+  xhr.<span class="hljs-title function_">open</span>(<span class="hljs-string">"GET"</span>, url);
+  xhr.<span class="hljs-property">responseType</span> = <span class="hljs-string">"document"</span>;
+
+  xhr.<span class="hljs-title function_">send</span>();
+
+  <span class="hljs-keyword">return</span> <span class="hljs-function">() =&gt;</span> {
+    xhr.<span class="hljs-title function_">abort</span>();
+  };
+};
+</code></pre>
+<p>As you can see, this function takes two arguments:</p>
+<ol>
+<li>
+<p><strong>url</strong>: The URL the Manifest request should normally be performed at.</p>
+<p>This argument can be <code>undefined</code> in very rare and specific conditions where
+the Manifest URL doesn’t exist or has not been communicated by the
+application.</p>
+</li>
+<li>
+<p><strong>callbacks</strong>: An object containing multiple callbacks to allow this
+<code>manifestLoader</code> to communicate the loaded Manifest or an encountered error
+to the RxPlayer.</p>
+<p>This Object contains the following functions:</p>
+<ul>
+<li>
+<p><strong>resolve</strong>: To call after the Manifest is loaded, to communicate it to
+the RxPlayer.</p>
+<p>When called, it should be given an object with the following
+properties:</p>
+<ul>
+<li>
+<p><em>data</em> - the Manifest data.
+Many formats are accepted depending on what makes sense in the
+current transport: string, Document, ArrayBuffer, Uint8Array,
+object.</p>
+</li>
+<li>
+<p><em>duration</em> (<code>Number|undefined</code>) - the duration of the request, in
+milliseconds.</p>
+</li>
+<li>
+<p><em>size</em> (<code>Number|undefined</code>) size, in bytes, of the total downloaded
+response.</p>
+</li>
+<li>
+<p><em>url</em> (<code>string|undefined</code>) - url of the Manifest (after any
+potential redirection if one).</p>
+</li>
+<li>
+<p><em>sendingTime</em> (<code>number|undefined</code>) - Time at which the manifest
+request was done as a unix timestamp in milliseconds.</p>
+</li>
+<li>
+<p><em>receivingTime</em> (<code>number|undefined</code>) - Time at which the manifest
+request was finished as a unix timestamp in milliseconds.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>reject</strong>: Callback to call when an error is encountered which made
+loading the Manifest impossible.</p>
+<p>It is recommended (but not enforced) to give it an Object or error
+instance with the following properties:</p>
+<ul>
+<li>
+<p><em>canRetry</em> (<code>boolean|undefined</code>): If set to <code>true</code>, the RxPlayer
+may retry the request (depending on the configuration set by the
+application).</p>
+<p>If set to <code>false</code>, the RxPlayer will never try to retry this
+request and will probably just stop the current content.</p>
+<p>If not set or set to <code>undefined</code>, the RxPlayer might retry or fail
+depending on other factors.</p>
+</li>
+<li>
+<p><em>xhr</em> (<code>XMLHttpRequest|undefined</code>): If an <code>XMLHttpRequest</code> was
+used to perform this request, this should be the corresponding
+instance.</p>
+<p>This can be used for example by the RxPlayer to know whether
+retrying should be done when the <code>canRetry</code> property is not set.</p>
+</li>
+<li>
+<p><em>isOfflineError</em> (<code>boolean|undefined</code>): If set to <code>true</code>, this
+indicates that this error is due to the user being offline
+(disconnected from the needed network).</p>
+<p>If set to <code>false</code>, this indicates that it wasn’t.</p>
+<p>If not known or not applicable, you can just set it to undefined
+or not define it at all.</p>
+<p>The RxPlayer might retry a Manifest request due to the user being
+offline a different amount of time than when the error is due to
+another issue, depending on its configuration.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>fallback</strong>: Callback to call if you want to call our default
+implementation instead for this Manifest. No argument is needed.</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>The <code>manifestLoader</code> can also return a function, which will be called if/when
+the request is aborted. You can define one to clean-up or dispose all resources.</p>
+<p><a name="representationFilter"></a>
+<a name="chapter-representationFilter"></a></p>
+<h2>representationFilter</h2>
+<p>The representationFilter is a function that can be included in the
+<code>transportOptions</code> of the <code>loadVideo</code> API call.</p>
+<p>A representationFilter allows you to filter out
+<a href="../terms.html#representation">Representations</a> (i.e. media qualities) based on
+its attributes.</p>
+<p>The representationFilter will be called each time we load a
+<a href="../terms.html#manifest">Manifest</a> with two arguments:</p>
+<ul>
+<li>
+<p>representation <code>{Representation}</code>: The concerned <code>Representation</code>.
+A <code>Representation</code> structure’s is described <a href="manifest.html#representation">in the Manifest structure
+documentation</a>.</p>
+</li>
+<li>
+<p>representationInfos <code>{Object}</code>: Basic information about this
+<code>Representation</code>. Contains the following keys:</p>
+<ul>
+<li>
+<p>bufferType <code>{string}</code>: The concerned type of buffer. Can be
+<code>"video"</code>, <code>"audio"</code>, <code>"text"</code> (for subtitles) or <code>"image"</code>
+(for thumbnail).</p>
+</li>
+<li>
+<p>language <code>{string|undefined}</code>: The language the <code>Representation</code>
+is in, as announced by the Manifest.</p>
+</li>
+<li>
+<p>normalizedLanguage <code>{string|undefined}</code>: An attempt to translate the
+language into an ISO 639-3 code.
+If the translation attempt fails (no corresponding ISO 639-3 language
+code is found), it will equal the value of <code>language</code></p>
+</li>
+<li>
+<p>isClosedCaption <code>{Boolean|undefined}</code>: If true, the <code>Representation</code>
+links to subtitles with added hints for the hard of hearing.</p>
+</li>
+<li>
+<p>isAudioDescription <code>{Boolean|undefined}</code>: If true, the
+<code>Representation</code> links to an audio track with added commentary for
+the visually impaired.</p>
+</li>
+<li>
+<p>isDub <code>{Boolean|undefined}</code>): If set to <code>true</code>, this audio track is a
+“dub”, meaning it was recorded in another language than the original.
+If set to <code>false</code>, we know that this audio track is in an original
+language.
+This property is <code>undefined</code> if we do not known whether it is in an
+original language.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>This function should then returns <code>true</code> if the <code>Representation</code> should be
+kept or <code>false</code> if it should be removed.</p>
+<p>For example, here is a <code>representationFilter</code> that removes video
+<code>Representation</code>s with a video resolution higher than HD (1920x1080):</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">representation</span> - The Representation object, as defined in
+ * the documentation linked bellow [1]
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">infos</span> - supplementary information about the given
+ * Representation.
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">boolean</span>}
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">representationFilter</span>(<span class="hljs-params">representation, infos</span>) {
+  <span class="hljs-keyword">if</span> (infos.<span class="hljs-property">bufferType</span> === <span class="hljs-string">"video"</span>) {
+    <span class="hljs-comment">// If video representation, allows only those for which the height and width</span>
+    <span class="hljs-comment">// is known to be below our 1920x1080 limit</span>
+    <span class="hljs-keyword">const</span> { width, height } = representation;
+    <span class="hljs-keyword">return</span> width != <span class="hljs-literal">null</span> &amp;&amp; height != <span class="hljs-literal">null</span> &amp;&amp; width &lt;= <span class="hljs-number">1920</span> &amp;&amp; height &lt;= <span class="hljs-number">1080</span>;
+  }
+
+  <span class="hljs-comment">// Otherwise, allow all non-video representations</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+</code></pre>
+<p>[1] <a href="manifest.html#representation">Representation structure</a></p>
+</body></html></div></div></div></body>

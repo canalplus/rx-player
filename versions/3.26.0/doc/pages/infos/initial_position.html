@@ -1,0 +1,107 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>At what position does the RxPlayer start a content - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-At%20what%20position%20does%20the%20RxPlayer%20start%20a%20content">At what position does the RxPlayer start a content</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-About%20the%20minimum%20and%20maximum%20position">About the minimum and maximum position</a></li>
+<li><a href="#chapter-When%20a%20startAt%20option%20has%20been%20set">When a startAt option has been set</a></li>
+<li><a href="#chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we're%20playing%20a%20VoD%20content">When no startAt option has been set and we’re playing a VoD content</a></li>
+<li><a href="#chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we're%20playing%20a%20live%20content">When no startAt option has been set and we’re playing a live content</a></li>
+<li><a href="#chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we're%20playing%20a%20directfile%20content">When no startAt option has been set and we’re playing a directfile content</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-At%20what%20position%20does%20the%20RxPlayer%20start%20a%20content"></a></p>
+<h1>At what position does the RxPlayer start a content</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>When you give it a content to load, the RxPlayer has to set at one point the
+starting playback position.</p>
+<p>This documentation page explain how that position is calculated.</p>
+<p>Basically, we can be in one of those four different situations:</p>
+<ul>
+<li>
+<p>a valid <code>startAt</code> option has been set to <code>loadVideo</code>, in which case we use
+it to define the initial position.</p>
+</li>
+<li>
+<p>no <code>startAt</code> option has been set and we’re playing a VoD content.</p>
+</li>
+<li>
+<p>no <code>startAt</code> option has been set and we’re playing a live content.</p>
+</li>
+<li>
+<p>no <code>startAt</code> option has been set and we’re playing a directfile content.</p>
+</li>
+</ul>
+<p><a name="chapter-About%20the%20minimum%20and%20maximum%20position"></a></p>
+<h2>About the minimum and maximum position</h2>
+<p>Regardless of your current situation, the minimum and maximum position of the
+content might be calculated and used when defining that starting position.</p>
+<p>Those positions are inferred directly from the Manifest (when not playing a
+directfile content).
+Most Manifests declare every segments currently available. In that case, we can
+simply use the start of the first announced segment as a minimum position and the
+end of the last one as a maximum.</p>
+<p>In some other Manifest files, segment availability is not clearly announced.
+In those cases, the minimum and maximum positions use other properties declared
+in the Manifest, often by making usage of a synchronized clock between the
+client and the server.</p>
+<p>For “directfile” contents, we directly interrogate the browser to obtain the
+duration of the content. The minimum position here is always inferred to be <code>0</code>
+(for the moment at least).</p>
+<p><a name="chapter-When%20a%20startAt%20option%20has%20been%20set"></a></p>
+<h2>When a startAt option has been set</h2>
+<p>You can define yourself the start position at which we should play. This is
+configurable thanks to the startAt option, documented
+<a href="../api/loadVideo_options.html#prop-startAt">here in the API documentation</a>.</p>
+<p>Please note however that there is a catch: every of the possible values you
+will set will be “bounded” to the maximum and minimum position actually detected
+for the content.</p>
+<p>This means that if your startAt indicate that we should start at a position of
+<code>10</code> seconds but the content starts at <code>15</code> seconds, we will actually start
+at <code>15</code> seconds instead.</p>
+<p>You can check at which position we actually loaded when the player’s state
+(accessible either through the <code>getPlayerState</code> method or through the
+<code>playerStateChanged</code> event) changed to <code>"LOADED"</code>.</p>
+<p><a name="chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we're%20playing%20a%20VoD%20content"></a></p>
+<h2>When no startAt option has been set and we’re playing a VoD content</h2>
+<p>For VoD contents, we will just start to play at the minimum detected position in
+the Manifest.</p>
+<p><a name="chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we're%20playing%20a%20live%20content"></a></p>
+<h2>When no startAt option has been set and we’re playing a live content</h2>
+<p>For live contents, we have here three cases:</p>
+<ul>
+<li>
+<p>In the case where we have a clock synchronization mechanism with the
+server[1] and if the current date can be seeked to (i.e. segments are
+available for that position), we will try to play close to[2] that date.</p>
+</li>
+<li>
+<p>if either we do not have a clock synchronization mechanism[1] or if we have
+one but no segment is defined for the current date, we will play close to[2]
+the maximum calculated position instead.</p>
+</li>
+<li>
+<p>Third case, if we do not have any clock synchronization mechanism[1] and if
+the Manifest does not announce clearly a maximum position, we will use the
+system clock and play close to[2] that time instead.</p>
+</li>
+</ul>
+<p>[1] We can obtain a synchronized clock allowing us to to know which content
+should be broadcasted at which time by either of those means:</p>
+<ul>
+<li>the Manifest document defines one (e.g. <code>UTCTiming</code> elements for DASH
+contents).</li>
+<li>One was provided to <code>loadVideo</code> thanks to the <code>serverSyncInfos</code> transport
+option <a href="../api/loadVideo_options.html#prop-transportOptions">see loadVideo
+documentation</a>.</li>
+</ul>
+<p>[2] I wrote “close to” in every cases as we might substract some seconds from
+that value. How much we might do, depends on:</p>
+<ul>
+<li>if the manifest suggest us a delay relative to the live, in which case we
+apply it</li>
+<li>if not, we set it to the default: <code>10</code> seconds</li>
+</ul>
+<p><a name="chapter-When%20no%20startAt%20option%20has%20been%20set%20and%20we're%20playing%20a%20directfile%20content"></a></p>
+<h2>When no startAt option has been set and we’re playing a directfile content</h2>
+<p>For directfile contents, we for now just start at <code>0</code> if no <code>startAt</code> is
+defined.</p>
+</body></html></div></div></div></body>
