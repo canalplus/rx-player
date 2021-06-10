@@ -107,6 +107,7 @@
 - [Tools](#tools)
     - [StringUtils](#tools-string-parsing)
     - [TextTrackRenderer](#tools-textTrackRenderer)
+    - [Experimental - VideoThumbnailLoader](#tools-VideoThumbnailLoader)
     - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
     - [Experimental - parseBifThumbnails](#tools-parseBifThumbnails)
     - [Experimental - createMetaplaylist](#tools-createMetaplaylist)
@@ -3414,6 +3415,7 @@ importing the whole RxPlayer itself.
 
 They are all documented here.
 
+
 <a name="tools-string-utils"></a>
 ### StringUtils ################################################################
 
@@ -3551,6 +3553,14 @@ following format: srt, ttml, webVTT or SAMI) to a played video.
 
 This tool is documented [here](./TextTrackRenderer.md).
 
+
+<a name="tools-VideoThumbnailLoader"></a>
+### VideoThumbnailLoader #######################################################
+
+The VideoThumbnailLoader is a tool allowing to display preview thumbnails based
+on possible trickmode video tracks in a content.
+
+More information on this tool and how to use it [here](./TextTrackRenderer.md).
 
 <a name="tools-mediaCapabilitiesProber"></a>
 ### MediaCapabilitiesProber ####################################################
