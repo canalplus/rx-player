@@ -28,51 +28,6 @@ function _assertThisInitialized(self) {
 
 /***/ }),
 
-/***/ 2137:
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ _asyncToGenerator; }
-/* harmony export */ });
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-      }
-
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
-
-      _next(undefined);
-    });
-  };
-}
-
-/***/ }),
-
 /***/ 5991:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
@@ -16265,18 +16220,611 @@ function parseBif(buf) {
 
 /***/ }),
 
-/***/ 6992:
+/***/ 7403:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Z": function() { return /* binding */ BaseRepresentationIndex; }
+/* harmony export */ });
+/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3887);
+/* harmony import */ var _utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3911);
+/* harmony import */ var _get_init_segment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1915);
+/* harmony import */ var _get_segments_from_timeline__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6394);
+/* harmony import */ var _tokens__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4784);
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+
+/**
+ * Add a new segment to the index.
+ *
+ * /!\ Mutate the given index
+ * @param {Object} index
+ * @param {Object} segmentInfos
+ * @returns {Boolean} - true if the segment has been added
+ */
+
+function _addSegmentInfos(index, segmentInfos) {
+  if (segmentInfos.timescale !== index.timescale) {
+    var timescale = index.timescale;
+    index.timeline.push({
+      start: segmentInfos.time / segmentInfos.timescale * timescale,
+      duration: segmentInfos.duration / segmentInfos.timescale * timescale,
+      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
+      range: segmentInfos.range
+    });
+  } else {
+    index.timeline.push({
+      start: segmentInfos.time,
+      duration: segmentInfos.duration,
+      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
+      range: segmentInfos.range
+    });
+  }
+
+  return true;
+}
+
+var BaseRepresentationIndex = /*#__PURE__*/function () {
+  /**
+   * @param {Object} index
+   * @param {Object} context
+   */
+  function BaseRepresentationIndex(index, context) {
+    var _a, _b;
+
+    var periodStart = context.periodStart,
+        periodEnd = context.periodEnd,
+        representationBaseURLs = context.representationBaseURLs,
+        representationId = context.representationId,
+        representationBitrate = context.representationBitrate,
+        isEMSGWhitelisted = context.isEMSGWhitelisted;
+    var timescale = (_a = index.timescale) !== null && _a !== void 0 ? _a : 1;
+    var presentationTimeOffset = index.presentationTimeOffset != null ? index.presentationTimeOffset : 0;
+    var indexTimeOffset = presentationTimeOffset - periodStart * timescale;
+    var mediaURLs = (0,_tokens__WEBPACK_IMPORTED_MODULE_0__/* .createIndexURLs */ .k6)(representationBaseURLs, index.initialization !== undefined ? index.initialization.media : undefined, representationId, representationBitrate); // TODO If indexRange is either undefined or behind the initialization segment
+    // the following logic will not work.
+    // However taking the nth first bytes like `dash.js` does (where n = 1500) is
+    // not straightforward as we would need to clean-up the segment after that.
+    // The following logic corresponds to 100% of tested cases, so good enough for
+    // now.
+
+    var range = index.initialization !== undefined ? index.initialization.range : index.indexRange !== undefined ? [0, index.indexRange[0] - 1] : undefined;
+    this._index = {
+      indexRange: index.indexRange,
+      indexTimeOffset: indexTimeOffset,
+      initialization: {
+        mediaURLs: mediaURLs,
+        range: range
+      },
+      mediaURLs: (0,_tokens__WEBPACK_IMPORTED_MODULE_0__/* .createIndexURLs */ .k6)(representationBaseURLs, index.media, representationId, representationBitrate),
+      startNumber: index.startNumber,
+      timeline: (_b = index.timeline) !== null && _b !== void 0 ? _b : [],
+      timescale: timescale
+    };
+    this._scaledPeriodEnd = periodEnd == null ? undefined : (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .toIndexTime */ .gT)(periodEnd, this._index);
+    this._isInitialized = this._index.timeline.length > 0;
+    this._isEMSGWhitelisted = isEMSGWhitelisted;
+  }
+  /**
+   * Construct init Segment.
+   * @returns {Object}
+   */
+
+
+  var _proto = BaseRepresentationIndex.prototype;
+
+  _proto.getInitSegment = function getInitSegment() {
+    return (0,_get_init_segment__WEBPACK_IMPORTED_MODULE_2__/* .default */ .Z)(this._index, this._isEMSGWhitelisted);
+  }
+  /**
+   * Get the list of segments that are currently available from the `from`
+   * position, in seconds, ending `dur` seconds after that position.
+   *
+   * Note that if not already done, you might need to "initialize" the
+   * `BaseRepresentationIndex` first so that the list of available segments
+   * is known.
+   *
+   * @see isInitialized for more information on `BaseRepresentationIndex`
+   * initialization.
+   * @param {Number} from
+   * @param {Number} dur
+   * @returns {Array.<Object>}
+   */
+  ;
+
+  _proto.getSegments = function getSegments(from, dur) {
+    return (0,_get_segments_from_timeline__WEBPACK_IMPORTED_MODULE_3__/* .default */ .Z)(this._index, from, dur, this._isEMSGWhitelisted, this._scaledPeriodEnd);
+  }
+  /**
+   * Returns false as no Segment-Base based index should need to be refreshed.
+   * @returns {Boolean}
+   */
+  ;
+
+  _proto.shouldRefresh = function shouldRefresh() {
+    return false;
+  }
+  /**
+   * Returns first position in index.
+   * @returns {Number|null}
+   */
+  ;
+
+  _proto.getFirstPosition = function getFirstPosition() {
+    var index = this._index;
+
+    if (index.timeline.length === 0) {
+      return null;
+    }
+
+    return (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .fromIndexTime */ .zG)(index.timeline[0].start, index);
+  }
+  /**
+   * Returns last position in index.
+   * @returns {Number|null}
+   */
+  ;
+
+  _proto.getLastPosition = function getLastPosition() {
+    var timeline = this._index.timeline;
+
+    if (timeline.length === 0) {
+      return null;
+    }
+
+    var lastTimelineElement = timeline[timeline.length - 1];
+    var lastTime = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .getIndexSegmentEnd */ .jH)(lastTimelineElement, null, this._scaledPeriodEnd);
+    return (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .fromIndexTime */ .zG)(lastTime, this._index);
+  }
+  /**
+   * Segments in a segmentBase scheme should stay available.
+   * @returns {Boolean|undefined}
+   */
+  ;
+
+  _proto.isSegmentStillAvailable = function isSegmentStillAvailable() {
+    return true;
+  }
+  /**
+   * We do not check for discontinuity in SegmentBase-based indexes.
+   * @returns {null}
+   */
+  ;
+
+  _proto.checkDiscontinuity = function checkDiscontinuity() {
+    return null;
+  }
+  /**
+   * `BaseRepresentationIndex` should just already all be generated.
+   * Return `true` as a default value here.
+   * @returns {boolean}
+   */
+  ;
+
+  _proto.areSegmentsChronologicallyGenerated = function areSegmentsChronologicallyGenerated() {
+    return true;
+  }
+  /**
+   * No segment in a `BaseRepresentationIndex` are known initially.
+   * It is only defined generally in an "index segment" that will thus need to
+   * be first loaded and parsed.
+   * Until then, this `BaseRepresentationIndex` is considered as `uninitialized`
+   * (@see isInitialized).
+   *
+   * Once that those information are available, the present
+   * `BaseRepresentationIndex` can be "initialized" by adding that parsed
+   * segment information through this method.
+   * @param {Array.<Object>} indexSegments
+   * @returns {Array.<Object>}
+   */
+  ;
+
+  _proto.initializeIndex = function initializeIndex(indexSegments) {
+    for (var i = 0; i < indexSegments.length; i++) {
+      _addSegmentInfos(this._index, indexSegments[i]);
+    }
+
+    this._isInitialized = true;
+  }
+  /**
+   * Returns `false` as a `BaseRepresentationIndex` should not be dynamic and as
+   * such segments should never fall out-of-sync.
+   * @returns {Boolean}
+   */
+  ;
+
+  _proto.canBeOutOfSyncError = function canBeOutOfSyncError() {
+    return false;
+  }
+  /**
+   * Returns `true` as SegmentBase are not dynamic and as such no new segment
+   * should become available in the future.
+   * @returns {Boolean}
+   */
+  ;
+
+  _proto.isFinished = function isFinished() {
+    return true;
+  }
+  /**
+   * No segment in a `BaseRepresentationIndex` are known initially.
+   * It is only defined generally in an "index segment" that will thus need to
+   * be first loaded and parsed.
+   *
+   * Once the index segment or equivalent has been parsed, the `initializeIndex`
+   * method have to be called with the corresponding segment information so the
+   * `BaseRepresentationIndex` can be considered as "initialized" (and so this
+   * method can return `true`).
+   * Until then this method will return `false` and segments linked to that
+   * Representation may be missing.
+   * @returns {Boolean}
+   */
+  ;
+
+  _proto.isInitialized = function isInitialized() {
+    return this._isInitialized;
+  }
+  /**
+   * Replace in-place this `BaseRepresentationIndex` information by the
+   * information from another one.
+   * @param {Object} newIndex
+   */
+  ;
+
+  _proto._replace = function _replace(newIndex) {
+    this._index = newIndex._index;
+    this._isInitialized = newIndex._isInitialized;
+    this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
+    this._isEMSGWhitelisted = newIndex._isEMSGWhitelisted;
+  };
+
+  _proto._update = function _update() {
+    _log__WEBPACK_IMPORTED_MODULE_4__/* .default.error */ .Z.error("Base RepresentationIndex: Cannot update a SegmentList");
+  };
+
+  return BaseRepresentationIndex;
+}();
+
+
+
+/***/ }),
+
+/***/ 1915:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Z": function() { return /* binding */ getInitSegment; }
+/* harmony export */ });
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Construct init segment for the given index.
+ * @param {Object} index
+ * @param {function} isEMSGWhitelisted
+ * @returns {Object}
+ */
+function getInitSegment(index, isEMSGWhitelisted) {
+  var _a;
+
+  var initialization = index.initialization;
+  var privateInfos;
+
+  if (isEMSGWhitelisted !== undefined) {
+    privateInfos = {
+      isEMSGWhitelisted: isEMSGWhitelisted
+    };
+  }
+
+  return {
+    id: "init",
+    isInit: true,
+    time: 0,
+    end: 0,
+    duration: 0,
+    timescale: 1,
+    range: initialization != null ? initialization.range : undefined,
+    indexRange: index.indexRange,
+    mediaURLs: (_a = initialization === null || initialization === void 0 ? void 0 : initialization.mediaURLs) !== null && _a !== void 0 ? _a : null,
+    privateInfos: privateInfos,
+    timestampOffset: -(index.indexTimeOffset / index.timescale)
+  };
+}
+
+/***/ }),
+
+/***/ 6394:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Z": function() { return /* binding */ getSegmentsFromTimeline; }
+/* harmony export */ });
+/* harmony import */ var _utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3911);
+/* harmony import */ var _tokens__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4784);
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * For the given start time and duration of a timeline element, calculate how
+ * much this element should be repeated to contain the time given.
+ * 0 being the same element, 1 being the next one etc.
+ * @param {Number} segmentStartTime
+ * @param {Number} segmentDuration
+ * @param {Number} wantedTime
+ * @returns {Number}
+ */
+
+function getWantedRepeatIndex(segmentStartTime, segmentDuration, wantedTime) {
+  var diff = wantedTime - segmentStartTime;
+  return diff > 0 ? Math.floor(diff / segmentDuration) : 0;
+}
+/**
+ * Get a list of Segments for the time range wanted.
+ * @param {Object} index - index object, constructed by parsing the manifest.
+ * @param {number} from - starting timestamp wanted, in seconds
+ * @param {number} durationWanted - duration wanted, in seconds
+ * @param {function} isEMSGWhitelisted
+ * @param {number|undefined} maximumTime
+ * @returns {Array.<Object>}
+ */
+
+
+function getSegmentsFromTimeline(index, from, durationWanted, isEMSGWhitelisted, maximumTime) {
+  var scaledUp = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .toIndexTime */ .gT)(from, index);
+  var scaledTo = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .toIndexTime */ .gT)(from + durationWanted, index);
+  var timeline = index.timeline,
+      timescale = index.timescale,
+      mediaURLs = index.mediaURLs,
+      startNumber = index.startNumber;
+  var currentNumber = startNumber != null ? startNumber : undefined;
+  var segments = [];
+  var timelineLength = timeline.length; // TODO(pierre): use @maxSegmentDuration if possible
+
+  var maxEncounteredDuration = timeline.length > 0 && timeline[0].duration != null ? timeline[0].duration : 0;
+
+  for (var i = 0; i < timelineLength; i++) {
+    var timelineItem = timeline[i];
+    var duration = timelineItem.duration,
+        start = timelineItem.start,
+        range = timelineItem.range;
+    maxEncounteredDuration = Math.max(maxEncounteredDuration, duration);
+    var repeat = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .calculateRepeat */ .KF)(timelineItem, timeline[i + 1], maximumTime);
+    var segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
+    var segmentTime = start + segmentNumberInCurrentRange * duration;
+
+    while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
+      var segmentNumber = currentNumber != null ? currentNumber + segmentNumberInCurrentRange : undefined;
+      var detokenizedURLs = mediaURLs === null ? null : mediaURLs.map((0,_tokens__WEBPACK_IMPORTED_MODULE_1__/* .createDashUrlDetokenizer */ .QB)(segmentTime, segmentNumber));
+      var time = segmentTime - index.indexTimeOffset;
+      var segment = {
+        id: String(segmentTime),
+        time: time / timescale,
+        end: (time + duration) / timescale,
+        duration: duration / timescale,
+        isInit: false,
+        range: range,
+        timescale: 1,
+        mediaURLs: detokenizedURLs,
+        number: segmentNumber,
+        timestampOffset: -(index.indexTimeOffset / timescale),
+        privateInfos: {
+          isEMSGWhitelisted: isEMSGWhitelisted
+        }
+      };
+      segments.push(segment); // update segment number and segment time for the next segment
+
+      segmentNumberInCurrentRange++;
+      segmentTime = start + segmentNumberInCurrentRange * duration;
+    }
+
+    if (segmentTime >= scaledTo) {
+      // we reached ``scaledTo``, we're done
+      return segments;
+    }
+
+    if (currentNumber != null) {
+      currentNumber += repeat + 1;
+    }
+  }
+
+  return segments;
+}
+
+/***/ }),
+
+/***/ 4784:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "k6": function() { return /* binding */ createIndexURLs; },
+/* harmony export */   "QB": function() { return /* binding */ createDashUrlDetokenizer; }
+/* harmony export */ });
+/* unused harmony export replaceRepresentationDASHTokens */
+/* harmony import */ var _utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6923);
+/* harmony import */ var _utils_resolve_url__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9829);
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * Pad with 0 in the left of the given n argument to reach l length
+ * @param {Number|string} n
+ * @param {Number} l
+ * @returns {string}
+ */
+
+function padLeftWithZeros(n, l) {
+  var nToString = n.toString();
+
+  if (nToString.length >= l) {
+    return nToString;
+  }
+
+  var arr = new Array(l + 1).join("0") + nToString;
+  return arr.slice(-l);
+}
+/**
+ * @param {string|number} replacer
+ * @returns {Function}
+ */
+
+
+function processFormatedToken(replacer) {
+  return function (_match, _format, widthStr) {
+    var width = (0,_utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__/* .default */ .Z)(widthStr) ? parseInt(widthStr, 10) : 1;
+    return padLeftWithZeros(String(replacer), width);
+  };
+}
+/**
+ * @param {string} representationURL
+ * @param {string|undefined} media
+ * @param {string|undefined} id
+ * @param {number|undefined} bitrate
+ * @returns {string}
+ */
+
+
+function createIndexURLs(baseURLs, media, id, bitrate) {
+  if (baseURLs.length === 0) {
+    return media !== undefined ? [replaceRepresentationDASHTokens(media, id, bitrate)] : null;
+  }
+
+  return baseURLs.map(function (baseURL) {
+    return replaceRepresentationDASHTokens((0,_utils_resolve_url__WEBPACK_IMPORTED_MODULE_1__/* .default */ .Z)(baseURL, media), id, bitrate);
+  });
+}
+/**
+ * Replace "tokens" written in a given path (e.g. $RepresentationID$) by the corresponding
+ * infos, taken from the given segment.
+ * @param {string} path
+ * @param {string|undefined} id
+ * @param {number|undefined} bitrate
+ * @returns {string}
+ */
+
+function replaceRepresentationDASHTokens(path, id, bitrate) {
+  if (path.indexOf("$") === -1) {
+    return path;
+  } else {
+    return path.replace(/\$\$/g, "$").replace(/\$RepresentationID\$/g, String(id)).replace(/\$Bandwidth(|\%0(\d+)d)\$/g, processFormatedToken(bitrate === undefined ? 0 : bitrate));
+  }
+}
+/**
+ * Create function allowing to replace "tokens" in a given DASH segment URL
+ * (e.g. $Time$, which has to be replaced by the segment's start time) by the
+ * right information.
+ * @param {number|undefined} time
+ * @param {number|undefined} nb
+ * @returns {Function}
+ */
+
+function createDashUrlDetokenizer(time, nb) {
+  /**
+   * Replace the tokens in the given `url` by the segment information defined
+   * by the outer function.
+   * @param {string} url
+   * @returns {string}
+   *
+   * @throws Error - Throws if we do not have enough data to construct the URL
+   */
+  return function replaceTokensInUrl(url) {
+    if (url.indexOf("$") === -1) {
+      return url;
+    } else {
+      return url.replace(/\$\$/g, "$").replace(/\$Number(|\%0(\d+)d)\$/g, function (_x, _y, widthStr) {
+        if (nb === undefined) {
+          throw new Error("Segment number not defined in a $Number$ scheme");
+        }
+
+        return processFormatedToken(nb)(_x, _y, widthStr);
+      }).replace(/\$Time(|\%0(\d+)d)\$/g, function (_x, _y, widthStr) {
+        if (time === undefined) {
+          throw new Error("Segment time not defined in a $Time$ scheme");
+        }
+
+        return processFormatedToken(time)(_x, _y, widthStr);
+      });
+    }
+  };
+}
+
+/***/ }),
+
+/***/ 148:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "ZP": function() { return /* binding */ common; }
+  "Z": function() { return /* binding */ js_parser; }
 });
 
-// UNUSED EXPORTS: BaseRepresentationIndex, ListRepresentationIndex, TemplateRepresentationIndex, TimelineRepresentationIndex
-
+// EXTERNAL MODULE: ./src/utils/assert_unreachable.ts
+var assert_unreachable = __webpack_require__(8418);
+// EXTERNAL MODULE: ./src/utils/is_null_or_undefined.ts
+var is_null_or_undefined = __webpack_require__(1946);
 // EXTERNAL MODULE: ./src/config.ts
 var config = __webpack_require__(944);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
@@ -20240,628 +20788,14 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
 
 /* harmony default export */ var common = (parseMpdIr);
 
-
-/***/ }),
-
-/***/ 7403:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ BaseRepresentationIndex; }
-/* harmony export */ });
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3887);
-/* harmony import */ var _utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3911);
-/* harmony import */ var _get_init_segment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1915);
-/* harmony import */ var _get_segments_from_timeline__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6394);
-/* harmony import */ var _tokens__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4784);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-/**
- * Add a new segment to the index.
- *
- * /!\ Mutate the given index
- * @param {Object} index
- * @param {Object} segmentInfos
- * @returns {Boolean} - true if the segment has been added
- */
-
-function _addSegmentInfos(index, segmentInfos) {
-  if (segmentInfos.timescale !== index.timescale) {
-    var timescale = index.timescale;
-    index.timeline.push({
-      start: segmentInfos.time / segmentInfos.timescale * timescale,
-      duration: segmentInfos.duration / segmentInfos.timescale * timescale,
-      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
-      range: segmentInfos.range
-    });
-  } else {
-    index.timeline.push({
-      start: segmentInfos.time,
-      duration: segmentInfos.duration,
-      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
-      range: segmentInfos.range
-    });
-  }
-
-  return true;
-}
-
-var BaseRepresentationIndex = /*#__PURE__*/function () {
-  /**
-   * @param {Object} index
-   * @param {Object} context
-   */
-  function BaseRepresentationIndex(index, context) {
-    var _a, _b;
-
-    var periodStart = context.periodStart,
-        periodEnd = context.periodEnd,
-        representationBaseURLs = context.representationBaseURLs,
-        representationId = context.representationId,
-        representationBitrate = context.representationBitrate,
-        isEMSGWhitelisted = context.isEMSGWhitelisted;
-    var timescale = (_a = index.timescale) !== null && _a !== void 0 ? _a : 1;
-    var presentationTimeOffset = index.presentationTimeOffset != null ? index.presentationTimeOffset : 0;
-    var indexTimeOffset = presentationTimeOffset - periodStart * timescale;
-    var mediaURLs = (0,_tokens__WEBPACK_IMPORTED_MODULE_0__/* .createIndexURLs */ .k6)(representationBaseURLs, index.initialization !== undefined ? index.initialization.media : undefined, representationId, representationBitrate); // TODO If indexRange is either undefined or behind the initialization segment
-    // the following logic will not work.
-    // However taking the nth first bytes like `dash.js` does (where n = 1500) is
-    // not straightforward as we would need to clean-up the segment after that.
-    // The following logic corresponds to 100% of tested cases, so good enough for
-    // now.
-
-    var range = index.initialization !== undefined ? index.initialization.range : index.indexRange !== undefined ? [0, index.indexRange[0] - 1] : undefined;
-    this._index = {
-      indexRange: index.indexRange,
-      indexTimeOffset: indexTimeOffset,
-      initialization: {
-        mediaURLs: mediaURLs,
-        range: range
-      },
-      mediaURLs: (0,_tokens__WEBPACK_IMPORTED_MODULE_0__/* .createIndexURLs */ .k6)(representationBaseURLs, index.media, representationId, representationBitrate),
-      startNumber: index.startNumber,
-      timeline: (_b = index.timeline) !== null && _b !== void 0 ? _b : [],
-      timescale: timescale
-    };
-    this._scaledPeriodEnd = periodEnd == null ? undefined : (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .toIndexTime */ .gT)(periodEnd, this._index);
-    this._isInitialized = this._index.timeline.length > 0;
-    this._isEMSGWhitelisted = isEMSGWhitelisted;
-  }
-  /**
-   * Construct init Segment.
-   * @returns {Object}
-   */
-
-
-  var _proto = BaseRepresentationIndex.prototype;
-
-  _proto.getInitSegment = function getInitSegment() {
-    return (0,_get_init_segment__WEBPACK_IMPORTED_MODULE_2__/* .default */ .Z)(this._index, this._isEMSGWhitelisted);
-  }
-  /**
-   * Get the list of segments that are currently available from the `from`
-   * position, in seconds, ending `dur` seconds after that position.
-   *
-   * Note that if not already done, you might need to "initialize" the
-   * `BaseRepresentationIndex` first so that the list of available segments
-   * is known.
-   *
-   * @see isInitialized for more information on `BaseRepresentationIndex`
-   * initialization.
-   * @param {Number} from
-   * @param {Number} dur
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto.getSegments = function getSegments(from, dur) {
-    return (0,_get_segments_from_timeline__WEBPACK_IMPORTED_MODULE_3__/* .default */ .Z)(this._index, from, dur, this._isEMSGWhitelisted, this._scaledPeriodEnd);
-  }
-  /**
-   * Returns false as no Segment-Base based index should need to be refreshed.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.shouldRefresh = function shouldRefresh() {
-    return false;
-  }
-  /**
-   * Returns first position in index.
-   * @returns {Number|null}
-   */
-  ;
-
-  _proto.getFirstPosition = function getFirstPosition() {
-    var index = this._index;
-
-    if (index.timeline.length === 0) {
-      return null;
-    }
-
-    return (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .fromIndexTime */ .zG)(index.timeline[0].start, index);
-  }
-  /**
-   * Returns last position in index.
-   * @returns {Number|null}
-   */
-  ;
-
-  _proto.getLastPosition = function getLastPosition() {
-    var timeline = this._index.timeline;
-
-    if (timeline.length === 0) {
-      return null;
-    }
-
-    var lastTimelineElement = timeline[timeline.length - 1];
-    var lastTime = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .getIndexSegmentEnd */ .jH)(lastTimelineElement, null, this._scaledPeriodEnd);
-    return (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .fromIndexTime */ .zG)(lastTime, this._index);
-  }
-  /**
-   * Segments in a segmentBase scheme should stay available.
-   * @returns {Boolean|undefined}
-   */
-  ;
-
-  _proto.isSegmentStillAvailable = function isSegmentStillAvailable() {
-    return true;
-  }
-  /**
-   * We do not check for discontinuity in SegmentBase-based indexes.
-   * @returns {null}
-   */
-  ;
-
-  _proto.checkDiscontinuity = function checkDiscontinuity() {
-    return null;
-  }
-  /**
-   * `BaseRepresentationIndex` should just already all be generated.
-   * Return `true` as a default value here.
-   * @returns {boolean}
-   */
-  ;
-
-  _proto.areSegmentsChronologicallyGenerated = function areSegmentsChronologicallyGenerated() {
-    return true;
-  }
-  /**
-   * No segment in a `BaseRepresentationIndex` are known initially.
-   * It is only defined generally in an "index segment" that will thus need to
-   * be first loaded and parsed.
-   * Until then, this `BaseRepresentationIndex` is considered as `uninitialized`
-   * (@see isInitialized).
-   *
-   * Once that those information are available, the present
-   * `BaseRepresentationIndex` can be "initialized" by adding that parsed
-   * segment information through this method.
-   * @param {Array.<Object>} indexSegments
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto.initializeIndex = function initializeIndex(indexSegments) {
-    for (var i = 0; i < indexSegments.length; i++) {
-      _addSegmentInfos(this._index, indexSegments[i]);
-    }
-
-    this._isInitialized = true;
-  }
-  /**
-   * Returns `false` as a `BaseRepresentationIndex` should not be dynamic and as
-   * such segments should never fall out-of-sync.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.canBeOutOfSyncError = function canBeOutOfSyncError() {
-    return false;
-  }
-  /**
-   * Returns `true` as SegmentBase are not dynamic and as such no new segment
-   * should become available in the future.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.isFinished = function isFinished() {
-    return true;
-  }
-  /**
-   * No segment in a `BaseRepresentationIndex` are known initially.
-   * It is only defined generally in an "index segment" that will thus need to
-   * be first loaded and parsed.
-   *
-   * Once the index segment or equivalent has been parsed, the `initializeIndex`
-   * method have to be called with the corresponding segment information so the
-   * `BaseRepresentationIndex` can be considered as "initialized" (and so this
-   * method can return `true`).
-   * Until then this method will return `false` and segments linked to that
-   * Representation may be missing.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.isInitialized = function isInitialized() {
-    return this._isInitialized;
-  }
-  /**
-   * Replace in-place this `BaseRepresentationIndex` information by the
-   * information from another one.
-   * @param {Object} newIndex
-   */
-  ;
-
-  _proto._replace = function _replace(newIndex) {
-    this._index = newIndex._index;
-    this._isInitialized = newIndex._isInitialized;
-    this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
-    this._isEMSGWhitelisted = newIndex._isEMSGWhitelisted;
-  };
-
-  _proto._update = function _update() {
-    _log__WEBPACK_IMPORTED_MODULE_4__/* .default.error */ .Z.error("Base RepresentationIndex: Cannot update a SegmentList");
-  };
-
-  return BaseRepresentationIndex;
-}();
-
-
-
-/***/ }),
-
-/***/ 1915:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ getInitSegment; }
-/* harmony export */ });
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Construct init segment for the given index.
- * @param {Object} index
- * @param {function} isEMSGWhitelisted
- * @returns {Object}
- */
-function getInitSegment(index, isEMSGWhitelisted) {
-  var _a;
-
-  var initialization = index.initialization;
-  var privateInfos;
-
-  if (isEMSGWhitelisted !== undefined) {
-    privateInfos = {
-      isEMSGWhitelisted: isEMSGWhitelisted
-    };
-  }
-
-  return {
-    id: "init",
-    isInit: true,
-    time: 0,
-    end: 0,
-    duration: 0,
-    timescale: 1,
-    range: initialization != null ? initialization.range : undefined,
-    indexRange: index.indexRange,
-    mediaURLs: (_a = initialization === null || initialization === void 0 ? void 0 : initialization.mediaURLs) !== null && _a !== void 0 ? _a : null,
-    privateInfos: privateInfos,
-    timestampOffset: -(index.indexTimeOffset / index.timescale)
-  };
-}
-
-/***/ }),
-
-/***/ 6394:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ getSegmentsFromTimeline; }
-/* harmony export */ });
-/* harmony import */ var _utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3911);
-/* harmony import */ var _tokens__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4784);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * For the given start time and duration of a timeline element, calculate how
- * much this element should be repeated to contain the time given.
- * 0 being the same element, 1 being the next one etc.
- * @param {Number} segmentStartTime
- * @param {Number} segmentDuration
- * @param {Number} wantedTime
- * @returns {Number}
- */
-
-function getWantedRepeatIndex(segmentStartTime, segmentDuration, wantedTime) {
-  var diff = wantedTime - segmentStartTime;
-  return diff > 0 ? Math.floor(diff / segmentDuration) : 0;
-}
-/**
- * Get a list of Segments for the time range wanted.
- * @param {Object} index - index object, constructed by parsing the manifest.
- * @param {number} from - starting timestamp wanted, in seconds
- * @param {number} durationWanted - duration wanted, in seconds
- * @param {function} isEMSGWhitelisted
- * @param {number|undefined} maximumTime
- * @returns {Array.<Object>}
- */
-
-
-function getSegmentsFromTimeline(index, from, durationWanted, isEMSGWhitelisted, maximumTime) {
-  var scaledUp = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .toIndexTime */ .gT)(from, index);
-  var scaledTo = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .toIndexTime */ .gT)(from + durationWanted, index);
-  var timeline = index.timeline,
-      timescale = index.timescale,
-      mediaURLs = index.mediaURLs,
-      startNumber = index.startNumber;
-  var currentNumber = startNumber != null ? startNumber : undefined;
-  var segments = [];
-  var timelineLength = timeline.length; // TODO(pierre): use @maxSegmentDuration if possible
-
-  var maxEncounteredDuration = timeline.length > 0 && timeline[0].duration != null ? timeline[0].duration : 0;
-
-  for (var i = 0; i < timelineLength; i++) {
-    var timelineItem = timeline[i];
-    var duration = timelineItem.duration,
-        start = timelineItem.start,
-        range = timelineItem.range;
-    maxEncounteredDuration = Math.max(maxEncounteredDuration, duration);
-    var repeat = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .calculateRepeat */ .KF)(timelineItem, timeline[i + 1], maximumTime);
-    var segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
-    var segmentTime = start + segmentNumberInCurrentRange * duration;
-
-    while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
-      var segmentNumber = currentNumber != null ? currentNumber + segmentNumberInCurrentRange : undefined;
-      var detokenizedURLs = mediaURLs === null ? null : mediaURLs.map((0,_tokens__WEBPACK_IMPORTED_MODULE_1__/* .createDashUrlDetokenizer */ .QB)(segmentTime, segmentNumber));
-      var time = segmentTime - index.indexTimeOffset;
-      var segment = {
-        id: String(segmentTime),
-        time: time / timescale,
-        end: (time + duration) / timescale,
-        duration: duration / timescale,
-        isInit: false,
-        range: range,
-        timescale: 1,
-        mediaURLs: detokenizedURLs,
-        number: segmentNumber,
-        timestampOffset: -(index.indexTimeOffset / timescale),
-        privateInfos: {
-          isEMSGWhitelisted: isEMSGWhitelisted
-        }
-      };
-      segments.push(segment); // update segment number and segment time for the next segment
-
-      segmentNumberInCurrentRange++;
-      segmentTime = start + segmentNumberInCurrentRange * duration;
-    }
-
-    if (segmentTime >= scaledTo) {
-      // we reached ``scaledTo``, we're done
-      return segments;
-    }
-
-    if (currentNumber != null) {
-      currentNumber += repeat + 1;
-    }
-  }
-
-  return segments;
-}
-
-/***/ }),
-
-/***/ 4784:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "k6": function() { return /* binding */ createIndexURLs; },
-/* harmony export */   "QB": function() { return /* binding */ createDashUrlDetokenizer; }
-/* harmony export */ });
-/* unused harmony export replaceRepresentationDASHTokens */
-/* harmony import */ var _utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6923);
-/* harmony import */ var _utils_resolve_url__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9829);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * Pad with 0 in the left of the given n argument to reach l length
- * @param {Number|string} n
- * @param {Number} l
- * @returns {string}
- */
-
-function padLeftWithZeros(n, l) {
-  var nToString = n.toString();
-
-  if (nToString.length >= l) {
-    return nToString;
-  }
-
-  var arr = new Array(l + 1).join("0") + nToString;
-  return arr.slice(-l);
-}
-/**
- * @param {string|number} replacer
- * @returns {Function}
- */
-
-
-function processFormatedToken(replacer) {
-  return function (_match, _format, widthStr) {
-    var width = (0,_utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__/* .default */ .Z)(widthStr) ? parseInt(widthStr, 10) : 1;
-    return padLeftWithZeros(String(replacer), width);
-  };
-}
-/**
- * @param {string} representationURL
- * @param {string|undefined} media
- * @param {string|undefined} id
- * @param {number|undefined} bitrate
- * @returns {string}
- */
-
-
-function createIndexURLs(baseURLs, media, id, bitrate) {
-  if (baseURLs.length === 0) {
-    return media !== undefined ? [replaceRepresentationDASHTokens(media, id, bitrate)] : null;
-  }
-
-  return baseURLs.map(function (baseURL) {
-    return replaceRepresentationDASHTokens((0,_utils_resolve_url__WEBPACK_IMPORTED_MODULE_1__/* .default */ .Z)(baseURL, media), id, bitrate);
-  });
-}
-/**
- * Replace "tokens" written in a given path (e.g. $RepresentationID$) by the corresponding
- * infos, taken from the given segment.
- * @param {string} path
- * @param {string|undefined} id
- * @param {number|undefined} bitrate
- * @returns {string}
- */
-
-function replaceRepresentationDASHTokens(path, id, bitrate) {
-  if (path.indexOf("$") === -1) {
-    return path;
-  } else {
-    return path.replace(/\$\$/g, "$").replace(/\$RepresentationID\$/g, String(id)).replace(/\$Bandwidth(|\%0(\d+)d)\$/g, processFormatedToken(bitrate === undefined ? 0 : bitrate));
-  }
-}
-/**
- * Create function allowing to replace "tokens" in a given DASH segment URL
- * (e.g. $Time$, which has to be replaced by the segment's start time) by the
- * right information.
- * @param {number|undefined} time
- * @param {number|undefined} nb
- * @returns {Function}
- */
-
-function createDashUrlDetokenizer(time, nb) {
-  /**
-   * Replace the tokens in the given `url` by the segment information defined
-   * by the outer function.
-   * @param {string} url
-   * @returns {string}
-   *
-   * @throws Error - Throws if we do not have enough data to construct the URL
-   */
-  return function replaceTokensInUrl(url) {
-    if (url.indexOf("$") === -1) {
-      return url;
-    } else {
-      return url.replace(/\$\$/g, "$").replace(/\$Number(|\%0(\d+)d)\$/g, function (_x, _y, widthStr) {
-        if (nb === undefined) {
-          throw new Error("Segment number not defined in a $Number$ scheme");
-        }
-
-        return processFormatedToken(nb)(_x, _y, widthStr);
-      }).replace(/\$Time(|\%0(\d+)d)\$/g, function (_x, _y, widthStr) {
-        if (time === undefined) {
-          throw new Error("Segment time not defined in a $Time$ scheme");
-        }
-
-        return processFormatedToken(time)(_x, _y, widthStr);
-      });
-    }
-  };
-}
-
-/***/ }),
-
-/***/ 3139:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  "Z": function() { return /* binding */ js_parser; }
-});
-
-// EXTERNAL MODULE: ./src/utils/assert_unreachable.ts
-var assert_unreachable = __webpack_require__(8418);
-// EXTERNAL MODULE: ./src/utils/is_null_or_undefined.ts
-var is_null_or_undefined = __webpack_require__(1946);
-// EXTERNAL MODULE: ./src/parsers/manifest/dash/common/index.ts + 31 modules
-var common = __webpack_require__(6992);
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/assertThisInitialized.js
 var assertThisInitialized = __webpack_require__(3349);
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js
 var inheritsLoose = __webpack_require__(1788);
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/wrapNativeSuper.js + 4 modules
 var wrapNativeSuper = __webpack_require__(3786);
-// EXTERNAL MODULE: ./src/log.ts + 1 modules
-var log = __webpack_require__(3887);
 // EXTERNAL MODULE: ./src/utils/base64.ts
 var base64 = __webpack_require__(9689);
-// EXTERNAL MODULE: ./src/utils/is_non_empty_string.ts
-var is_non_empty_string = __webpack_require__(6923);
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/js-parser/node_parsers/utils.ts
 
 
@@ -21310,8 +21244,6 @@ function parseContentComponent(root) {
 
   return ret;
 }
-// EXTERNAL MODULE: ./src/utils/string_parsing.ts
-var string_parsing = __webpack_require__(3635);
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/js-parser/node_parsers/ContentProtection.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -21578,8 +21510,6 @@ function parseSegmentBase(root) {
 
   return [attributes, warnings];
 }
-// EXTERNAL MODULE: ./src/utils/object_assign.ts
-var object_assign = __webpack_require__(8026);
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/js-parser/node_parsers/SegmentURL.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -22993,7 +22923,7 @@ function parseFromDocument(document, args) {
       mpdIR = _createMPDIntermediat[0],
       warnings = _createMPDIntermediat[1];
 
-  var ret = (0,common/* default */.ZP)(mpdIR, args, warnings);
+  var ret = common(mpdIR, args, warnings);
   return processReturn(ret);
   /**
    * Handle `parseMpdIr` return values, asking for resources if they are needed
@@ -28189,7 +28119,7 @@ function findEndOfCueBlock(linified, startOfCueBlock) {
 
 /***/ }),
 
-/***/ 5877:
+/***/ 1732:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -28584,8 +28514,42 @@ function doesXmlSeemsUtf8Encoded(xmlData) {
 var Observable = __webpack_require__(1480);
 // EXTERNAL MODULE: ./src/errors/custom_loader_error.ts
 var custom_loader_error = __webpack_require__(7839);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
-var asyncToGenerator = __webpack_require__(2137);
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
 var regenerator = __webpack_require__(7757);
 var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
@@ -28703,7 +28667,7 @@ function fetchRequest(options) {
       }
 
       function _readBufferAndSendEvents() {
-        _readBufferAndSendEvents = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee() {
+        _readBufferAndSendEvents = _asyncToGenerator( /*#__PURE__*/regenerator_default().mark(function _callee() {
           var data, currentTime, dataChunk, receivedTime, duration;
           return regenerator_default().wrap(function _callee$(_context) {
             while (1) {
@@ -43099,2386 +43063,14 @@ var error_codes = __webpack_require__(5992);
 var features = __webpack_require__(7874);
 // EXTERNAL MODULE: ./src/manifest/index.ts + 6 modules
 var manifest = __webpack_require__(1989);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
-var asyncToGenerator = __webpack_require__(2137);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
-var regenerator = __webpack_require__(7757);
-var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
-// EXTERNAL MODULE: ./node_modules/pinkie/index.js
-var pinkie = __webpack_require__(8555);
-var pinkie_default = /*#__PURE__*/__webpack_require__.n(pinkie);
-// EXTERNAL MODULE: ./src/utils/assert_unreachable.ts
-var assert_unreachable = __webpack_require__(8418);
-// EXTERNAL MODULE: ./src/utils/noop.ts
-var noop = __webpack_require__(8894);
-// EXTERNAL MODULE: ./src/parsers/manifest/dash/common/index.ts + 31 modules
-var common = __webpack_require__(6992);
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/utils.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @param {TextDecoder} textDecoder
- * @param {ArrayBuffer} buffer
- * @param {number} ptr
- * @param {number} len
- * @returns {string}
- */
-function parseString(textDecoder, buffer, ptr, len) {
-  var arr = new Uint8Array(buffer, ptr, len);
-  return textDecoder.decode(arr);
-}
-/**
- * @param {number} val
- * @returns {number|boolean}
- */
-
-
-function parseFloatOrBool(val) {
-  return val === Infinity ? true : val === -Infinity ? false : val;
-}
-
-
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/BaseURL.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Generate an "attribute parser" once inside a `BaseURL` node.
- * @param {Object} baseUrlAttrs
- * @param {WebAssembly.Memory} linearMemory
- * @returns {Function}
- */
-
-function generateBaseUrlAttrParser(baseUrlAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  var dataView;
-  return function onMPDAttribute(attr, ptr, len) {
-    switch (attr) {
-      case 64
-      /* Text */
-      :
-        baseUrlAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 43
-      /* AvailabilityTimeOffset */
-      :
-        dataView = new DataView(linearMemory.buffer);
-        baseUrlAttrs.attributes.availabilityTimeOffset = dataView.getFloat64(ptr, true);
-        break;
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/ContentComponent.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Generate an "attribute parser" once inside a `BaseURL` node.
- * @param {Object} baseUrlAttrs
- * @param {WebAssembly.Memory} linearMemory
- * @returns {Function}
- */
-
-function generateContentComponentAttrParser(ccAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  return function onMPDAttribute(attr, ptr, len) {
-    switch (attr) {
-      case 0
-      /* Id */
-      :
-        ccAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 60
-      /* Language */
-      :
-        ccAttrs.language = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 61
-      /* ContentType */
-      :
-        ccAttrs.contentType = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 62
-      /* Par */
-      :
-        ccAttrs.par = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-    }
-  };
-}
-// EXTERNAL MODULE: ./src/utils/base64.ts
-var base64 = __webpack_require__(9689);
-// EXTERNAL MODULE: ./src/utils/string_parsing.ts
-var string_parsing = __webpack_require__(3635);
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/ContentProtection.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-/**
- * @param {Object} cpAttrs
- * @param {WebAssembly.Memory} linearMemory
- * @returns {Function}
- */
-
-function generateContentProtectionAttrParser(cp, linearMemory) {
-  var cpAttrs = cp.attributes;
-  var cpChildren = cp.children;
-  var textDecoder = new TextDecoder();
-  return function onContentProtectionAttribute(attr, ptr, len) {
-    switch (attr) {
-      case 16
-      /* SchemeIdUri */
-      :
-        cpAttrs.schemeIdUri = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 13
-      /* ContentProtectionValue */
-      :
-        cpAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 14
-      /* ContentProtectionKeyId */
-      :
-        var kid = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        cpAttrs.keyId = (0,string_parsing/* hexToBytes */.nr)(kid.replace(/-/g, ""));
-        break;
-
-      case 15
-      /* ContentProtectionCencPSSH */
-      :
-        try {
-          var b64 = parseString(textDecoder, linearMemory.buffer, ptr, len);
-          cpChildren.cencPssh.push((0,base64/* base64ToBytes */.K)(b64));
-        } catch (_) {
-          /* TODO log error? register as warning? */
-        }
-
-        break;
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/Scheme.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Generate an "attribute parser" once inside a `BaseURL` node.
- * @param {Object} baseUrlAttrs
- * @param {WebAssembly.Memory} linearMemory
- * @returns {Function}
- */
-
-function generateSchemeAttrParser(schemeAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  return function onMPDAttribute(attr, ptr, len) {
-    switch (attr) {
-      case 16
-      /* SchemeIdUri */
-      :
-        schemeAttrs.schemeIdUri = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 17
-      /* SchemeValue */
-      :
-        schemeAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/SegmentBase.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-function generateSegmentBaseAttrParser(segmentBaseAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  return function onSegmentBaseAttribute(attr, ptr, len) {
-    switch (attr) {
-      case 29
-      /* InitializationRange */
-      :
-        {
-          var dataView = new DataView(linearMemory.buffer);
-
-          if (segmentBaseAttrs.initialization === undefined) {
-            segmentBaseAttrs.initialization = {};
-          }
-
-          segmentBaseAttrs.initialization.range = [dataView.getFloat64(ptr, true), dataView.getFloat64(ptr + 8, true)];
-          break;
-        }
-
-      case 67
-      /* InitializationMedia */
-      :
-        if (segmentBaseAttrs.initialization === undefined) {
-          segmentBaseAttrs.initialization = {};
-        }
-
-        segmentBaseAttrs.initialization.media = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 43
-      /* AvailabilityTimeOffset */
-      :
-        {
-          var _dataView = new DataView(linearMemory.buffer);
-
-          segmentBaseAttrs.availabilityTimeOffset = _dataView.getFloat64(ptr, true);
-          break;
-        }
-
-      case 22
-      /* AvailabilityTimeComplete */
-      :
-        {
-          segmentBaseAttrs.availabilityTimeComplete = new DataView(linearMemory.buffer).getUint8(0) === 0;
-          break;
-        }
-
-      case 24
-      /* PresentationTimeOffset */
-      :
-        {
-          var _dataView2 = new DataView(linearMemory.buffer);
-
-          segmentBaseAttrs.presentationTimeOffset = _dataView2.getFloat64(ptr, true);
-          break;
-        }
-
-      case 27
-      /* TimeScale */
-      :
-        {
-          var _dataView3 = new DataView(linearMemory.buffer);
-
-          segmentBaseAttrs.timescale = _dataView3.getFloat64(ptr, true);
-          break;
-        }
-
-      case 31
-      /* IndexRange */
-      :
-        {
-          var _dataView4 = new DataView(linearMemory.buffer);
-
-          segmentBaseAttrs.indexRange = [_dataView4.getFloat64(ptr, true), _dataView4.getFloat64(ptr + 8, true)];
-          break;
-        }
-
-      case 23
-      /* IndexRangeExact */
-      :
-        {
-          segmentBaseAttrs.indexRangeExact = new DataView(linearMemory.buffer).getUint8(0) === 0;
-          break;
-        }
-
-      case 1
-      /* Duration */
-      :
-        {
-          var _dataView5 = new DataView(linearMemory.buffer);
-
-          segmentBaseAttrs.duration = _dataView5.getFloat64(ptr, true);
-          break;
-        }
-
-      case 20
-      /* StartNumber */
-      :
-        {
-          var _dataView6 = new DataView(linearMemory.buffer);
-
-          segmentBaseAttrs.startNumber = _dataView6.getFloat64(ptr, true);
-          break;
-        }
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/SegmentUrl.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Generate "attribute parser" for an encountered `SegmentURL` opening
- * tag.
- * @param {Object} segmentUrlAttrs
- * @param {WebAssembly.Memory} linearMemory
- * @returns {Function}
- */
-
-function generateSegmentUrlAttrParser(segmentUrlAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  return function onSegmentUrlAttribute(attr, ptr, len) {
-    switch (attr) {
-      case 28
-      /* Index */
-      :
-        segmentUrlAttrs.index = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 31
-      /* IndexRange */
-      :
-        {
-          var dataView = new DataView(linearMemory.buffer);
-          segmentUrlAttrs.indexRange = [dataView.getFloat64(ptr, true), dataView.getFloat64(ptr + 8, true)];
-          break;
-        }
-
-      case 30
-      /* Media */
-      :
-        segmentUrlAttrs.media = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 18
-      /* MediaRange */
-      :
-        {
-          var _dataView = new DataView(linearMemory.buffer);
-
-          segmentUrlAttrs.mediaRange = [_dataView.getFloat64(ptr, true), _dataView.getFloat64(ptr + 8, true)];
-          break;
-        }
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/SegmentList.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * Generate a "children parser" once inside a `SegmentList` node.
- * @param {Object} segListChildren
- * @param {WebAssembly.Memory} linearMemory
- * @param {ParsersStack} parsersStack
- * @returns {Function}
- */
-
-function generateSegmentListChildrenParser(segListChildren, linearMemory, parsersStack) {
-  return function onRootChildren(nodeId) {
-    switch (nodeId) {
-      case 20
-      /* SegmentUrl */
-      :
-        {
-          var segmentObj = {};
-
-          if (segListChildren.list === undefined) {
-            segListChildren.list = [];
-          }
-
-          segListChildren.list.push(segmentObj);
-          var attrParser = generateSegmentUrlAttrParser(segmentObj, linearMemory);
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, attrParser);
-          break;
-        }
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/SegmentTemplate.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-function generateSegmentTemplateAttrParser(segmentTemplateAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  return function onSegmentTemplateAttribute(attr, ptr, len) {
-    switch (attr) {
-      case 19
-      /* SegmentTimeline */
-      :
-        {
-          var dataView = new DataView(linearMemory.buffer);
-          segmentTemplateAttrs.timeline = [];
-          var base = ptr;
-
-          for (var i = 0; i < len / 24; i++) {
-            segmentTemplateAttrs.timeline.push({
-              start: dataView.getFloat64(base, true),
-              duration: dataView.getFloat64(base + 8, true),
-              repeatCount: dataView.getFloat64(base + 16, true)
-            });
-            base += 24;
-          }
-
-          break;
-        }
-
-      case 67
-      /* InitializationMedia */
-      :
-        segmentTemplateAttrs.initialization = {
-          media: parseString(textDecoder, linearMemory.buffer, ptr, len)
-        };
-        break;
-
-      case 28
-      /* Index */
-      :
-        segmentTemplateAttrs.index = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 43
-      /* AvailabilityTimeOffset */
-      :
-        {
-          var _dataView = new DataView(linearMemory.buffer);
-
-          segmentTemplateAttrs.availabilityTimeOffset = _dataView.getFloat64(ptr, true);
-          break;
-        }
-
-      case 22
-      /* AvailabilityTimeComplete */
-      :
-        {
-          segmentTemplateAttrs.availabilityTimeComplete = new DataView(linearMemory.buffer).getUint8(0) === 0;
-          break;
-        }
-
-      case 24
-      /* PresentationTimeOffset */
-      :
-        {
-          var _dataView2 = new DataView(linearMemory.buffer);
-
-          segmentTemplateAttrs.presentationTimeOffset = _dataView2.getFloat64(ptr, true);
-          break;
-        }
-
-      case 27
-      /* TimeScale */
-      :
-        {
-          var _dataView3 = new DataView(linearMemory.buffer);
-
-          segmentTemplateAttrs.timescale = _dataView3.getFloat64(ptr, true);
-          break;
-        }
-
-      case 31
-      /* IndexRange */
-      :
-        {
-          var _dataView4 = new DataView(linearMemory.buffer);
-
-          segmentTemplateAttrs.indexRange = [_dataView4.getFloat64(ptr, true), _dataView4.getFloat64(ptr + 8, true)];
-          break;
-        }
-
-      case 23
-      /* IndexRangeExact */
-      :
-        {
-          segmentTemplateAttrs.indexRangeExact = new DataView(linearMemory.buffer).getUint8(0) === 0;
-          break;
-        }
-
-      case 30
-      /* Media */
-      :
-        segmentTemplateAttrs.media = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 32
-      /* BitstreamSwitching */
-      :
-        {
-          segmentTemplateAttrs.bitstreamSwitching = new DataView(linearMemory.buffer).getUint8(0) === 0;
-          break;
-        }
-
-      case 1
-      /* Duration */
-      :
-        {
-          var _dataView5 = new DataView(linearMemory.buffer);
-
-          segmentTemplateAttrs.duration = _dataView5.getFloat64(ptr, true);
-          break;
-        }
-
-      case 20
-      /* StartNumber */
-      :
-        {
-          var _dataView6 = new DataView(linearMemory.buffer);
-
-          segmentTemplateAttrs.startNumber = _dataView6.getFloat64(ptr, true);
-          break;
-        }
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/Representation.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-
-
-/**
- * Generate a "children parser" once inside a `Representation` node.
- * @param {Object} childrenObj
- * @param {WebAssembly.Memory} linearMemory
- * @param {ParsersStack} parsersStack
- * @returns {Function}
- */
-
-function generateRepresentationChildrenParser(childrenObj, linearMemory, parsersStack) {
-  return function onRootChildren(nodeId) {
-    switch (nodeId) {
-      case 15
-      /* BaseURL */
-      :
-        {
-          var baseUrl = {
-            value: "",
-            attributes: {}
-          };
-          childrenObj.baseURLs.push(baseUrl);
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, generateBaseUrlAttrParser(baseUrl, linearMemory));
-          break;
-        }
-
-      case 19
-      /* InbandEventStream */
-      :
-        {
-          var inbandEvent = {};
-
-          if (childrenObj.inbandEventStreams === undefined) {
-            childrenObj.inbandEventStreams = [];
-          }
-
-          childrenObj.inbandEventStreams.push(inbandEvent);
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, generateSchemeAttrParser(inbandEvent, linearMemory));
-          break;
-        }
-
-      case 17
-      /* SegmentBase */
-      :
-        {
-          var segmentBaseObj = {};
-          childrenObj.segmentBase = segmentBaseObj;
-          var attributeParser = generateSegmentBaseAttrParser(segmentBaseObj, linearMemory);
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, attributeParser);
-          break;
-        }
-
-      case 18
-      /* SegmentList */
-      :
-        {
-          var segmentListObj = {
-            list: []
-          };
-          childrenObj.segmentList = segmentListObj;
-          var childrenParser = generateSegmentListChildrenParser(segmentListObj, linearMemory, parsersStack); // Re-use SegmentBase attribute parse as we should have the same attributes
-
-          var _attributeParser = generateSegmentBaseAttrParser(segmentListObj, linearMemory);
-
-          parsersStack.pushParsers(nodeId, childrenParser, _attributeParser);
-          break;
-        }
-
-      case 16
-      /* SegmentTemplate */
-      :
-        {
-          var stObj = {};
-          childrenObj.segmentTemplate = stObj;
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, // SegmentTimeline as treated like an attribute
-          generateSegmentTemplateAttrParser(stObj, linearMemory));
-          break;
-        }
-    }
-  };
-}
-/**
- * @param {Object} representationAttrs
- * @param {WebAssembly.Memory} linearMemory
- * @returns {Function}
- */
-
-function generateRepresentationAttrParser(representationAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  return function onRepresentationAttribute(attr, ptr, len) {
-    var dataView = new DataView(linearMemory.buffer);
-
-    switch (attr) {
-      case 0
-      /* Id */
-      :
-        representationAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 3
-      /* AudioSamplingRate */
-      :
-        representationAttrs.audioSamplingRate = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 63
-      /* Bitrate */
-      :
-        representationAttrs.bitrate = dataView.getFloat64(ptr, true);
-        break;
-
-      case 4
-      /* Codecs */
-      :
-        representationAttrs.codecs = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 5
-      /* CodingDependency */
-      :
-        representationAttrs.codingDependency = new DataView(linearMemory.buffer).getUint8(0) === 0;
-        break;
-
-      case 6
-      /* FrameRate */
-      :
-        representationAttrs.frameRate = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 7
-      /* Height */
-      :
-        representationAttrs.height = dataView.getFloat64(ptr, true);
-        break;
-
-      case 8
-      /* Width */
-      :
-        representationAttrs.width = dataView.getFloat64(ptr, true);
-        break;
-
-      case 9
-      /* MaxPlayoutRate */
-      :
-        representationAttrs.maxPlayoutRate = dataView.getFloat64(ptr, true);
-        break;
-
-      case 10
-      /* MaxSAPPeriod */
-      :
-        representationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
-        break;
-
-      case 11
-      /* MimeType */
-      :
-        representationAttrs.mimeType = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 2
-      /* Profiles */
-      :
-        representationAttrs.profiles = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 65
-      /* QualityRanking */
-      :
-        representationAttrs.qualityRanking = dataView.getFloat64(ptr, true);
-        break;
-
-      case 12
-      /* SegmentProfiles */
-      :
-        representationAttrs.segmentProfiles = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/AdaptationSet.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-
-
-
-
-
-/**
- * Generate a "children parser" once inside a `AdaptationSet` node.
- * @param {Object} adaptationSetChildren
- * @param {WebAssembly.Memory} linearMemory
- * @param {ParsersStack} parsersStack
- * @returns {Function}
- */
-
-function generateAdaptationSetChildrenParser(adaptationSetChildren, linearMemory, parsersStack) {
-  return function onRootChildren(nodeId) {
-    switch (nodeId) {
-      case 8
-      /* Accessibility */
-      :
-        {
-          var accessibility = {};
-
-          if (adaptationSetChildren.accessibilities === undefined) {
-            adaptationSetChildren.accessibilities = [];
-          }
-
-          adaptationSetChildren.accessibilities.push(accessibility);
-          var schemeAttrParser = generateSchemeAttrParser(accessibility, linearMemory);
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, schemeAttrParser);
-          break;
-        }
-
-      case 15
-      /* BaseURL */
-      :
-        {
-          var baseUrl = {
-            value: "",
-            attributes: {}
-          };
-          adaptationSetChildren.baseURLs.push(baseUrl);
-          var attributeParser = generateBaseUrlAttrParser(baseUrl, linearMemory);
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, attributeParser);
-          break;
-        }
-
-      case 9
-      /* ContentComponent */
-      :
-        {
-          var contentComponent = {};
-          adaptationSetChildren.contentComponent = contentComponent;
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, generateContentComponentAttrParser(contentComponent, linearMemory));
-          break;
-        }
-
-      case 10
-      /* ContentProtection */
-      :
-        {
-          var contentProtection = {
-            children: {
-              cencPssh: []
-            },
-            attributes: {}
-          };
-
-          if (adaptationSetChildren.contentProtections === undefined) {
-            adaptationSetChildren.contentProtections = [];
-          }
-
-          adaptationSetChildren.contentProtections.push(contentProtection);
-          var contentProtAttrParser = generateContentProtectionAttrParser(contentProtection, linearMemory);
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, contentProtAttrParser);
-          break;
-        }
-
-      case 11
-      /* EssentialProperty */
-      :
-        {
-          var essentialProperty = {};
-
-          if (adaptationSetChildren.essentialProperties === undefined) {
-            adaptationSetChildren.essentialProperties = [];
-          }
-
-          adaptationSetChildren.essentialProperties.push(essentialProperty);
-          var childrenParser = noop/* default */.Z; // EssentialProperty have no sub-element
-
-          var _attributeParser = generateSchemeAttrParser(essentialProperty, linearMemory);
-
-          parsersStack.pushParsers(nodeId, childrenParser, _attributeParser);
-          break;
-        }
-
-      case 19
-      /* InbandEventStream */
-      :
-        {
-          var inbandEvent = {};
-
-          if (adaptationSetChildren.inbandEventStreams === undefined) {
-            adaptationSetChildren.inbandEventStreams = [];
-          }
-
-          adaptationSetChildren.inbandEventStreams.push(inbandEvent);
-          var _childrenParser = noop/* default */.Z; // InbandEventStream have no sub-element
-
-          var _attributeParser2 = generateSchemeAttrParser(inbandEvent, linearMemory);
-
-          parsersStack.pushParsers(nodeId, _childrenParser, _attributeParser2);
-          break;
-        }
-
-      case 7
-      /* Representation */
-      :
-        {
-          var representationObj = {
-            children: {
-              baseURLs: []
-            },
-            attributes: {}
-          };
-          adaptationSetChildren.representations.push(representationObj);
-
-          var _childrenParser2 = generateRepresentationChildrenParser(representationObj.children, linearMemory, parsersStack);
-
-          var _attributeParser3 = generateRepresentationAttrParser(representationObj.attributes, linearMemory);
-
-          parsersStack.pushParsers(nodeId, _childrenParser2, _attributeParser3);
-          break;
-        }
-
-      case 12
-      /* Role */
-      :
-        {
-          var role = {};
-
-          if (adaptationSetChildren.roles === undefined) {
-            adaptationSetChildren.roles = [];
-          }
-
-          adaptationSetChildren.roles.push(role);
-
-          var _attributeParser4 = generateSchemeAttrParser(role, linearMemory);
-
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, _attributeParser4);
-          break;
-        }
-
-      case 13
-      /* SupplementalProperty */
-      :
-        {
-          var supplementalProperty = {};
-
-          if (adaptationSetChildren.supplementalProperties === undefined) {
-            adaptationSetChildren.supplementalProperties = [];
-          }
-
-          adaptationSetChildren.supplementalProperties.push(supplementalProperty);
-
-          var _attributeParser5 = generateSchemeAttrParser(supplementalProperty, linearMemory);
-
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, _attributeParser5);
-          break;
-        }
-
-      case 17
-      /* SegmentBase */
-      :
-        {
-          var segmentBaseObj = {};
-          adaptationSetChildren.segmentBase = segmentBaseObj;
-
-          var _attributeParser6 = generateSegmentBaseAttrParser(segmentBaseObj, linearMemory);
-
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, _attributeParser6);
-          break;
-        }
-
-      case 18
-      /* SegmentList */
-      :
-        {
-          var segmentListObj = {
-            list: []
-          };
-          adaptationSetChildren.segmentList = segmentListObj;
-
-          var _childrenParser3 = generateSegmentListChildrenParser(segmentListObj, linearMemory, parsersStack); // Re-use SegmentBase attribute parse as we should have the same attributes
-
-
-          var _attributeParser7 = generateSegmentBaseAttrParser(segmentListObj, linearMemory);
-
-          parsersStack.pushParsers(nodeId, _childrenParser3, _attributeParser7);
-          break;
-        }
-
-      case 16
-      /* SegmentTemplate */
-      :
-        {
-          var stObj = {};
-          adaptationSetChildren.segmentTemplate = stObj;
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, // SegmentTimeline as treated like an attribute
-          generateSegmentTemplateAttrParser(stObj, linearMemory));
-          break;
-        }
-    }
-  };
-}
-/**
- * @param {Object} adaptationAttrs
- * @param {WebAssembly.Memory} linearMemory
- * @returns {Function}
- */
-
-function generateAdaptationSetAttrParser(adaptationAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  return function onAdaptationSetAttribute(attr, ptr, len) {
-    var dataView = new DataView(linearMemory.buffer);
-
-    switch (attr) {
-      case 0
-      /* Id */
-      :
-        adaptationAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 48
-      /* Group */
-      :
-        adaptationAttrs.group = dataView.getFloat64(ptr, true);
-        break;
-
-      case 60
-      /* Language */
-      :
-        adaptationAttrs.language = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 61
-      /* ContentType */
-      :
-        adaptationAttrs.contentType = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 62
-      /* Par */
-      :
-        adaptationAttrs.par = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 53
-      /* MinBandwidth */
-      :
-        adaptationAttrs.minBitrate = dataView.getFloat64(ptr, true);
-        break;
-
-      case 49
-      /* MaxBandwidth */
-      :
-        adaptationAttrs.maxBitrate = dataView.getFloat64(ptr, true);
-        break;
-
-      case 56
-      /* MinWidth */
-      :
-        adaptationAttrs.minWidth = dataView.getFloat64(ptr, true);
-        break;
-
-      case 52
-      /* MaxWidth */
-      :
-        adaptationAttrs.maxWidth = dataView.getFloat64(ptr, true);
-        break;
-
-      case 55
-      /* MinHeight */
-      :
-        adaptationAttrs.minHeight = dataView.getFloat64(ptr, true);
-        break;
-
-      case 51
-      /* MaxHeight */
-      :
-        adaptationAttrs.maxHeight = dataView.getFloat64(ptr, true);
-        break;
-
-      case 54
-      /* MinFrameRate */
-      :
-        adaptationAttrs.minFrameRate = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 50
-      /* MaxFrameRate */
-      :
-        adaptationAttrs.maxFrameRate = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 57
-      /* SelectionPriority */
-      :
-        adaptationAttrs.selectionPriority = dataView.getFloat64(ptr, true);
-        break;
-
-      case 58
-      /* SegmentAlignment */
-      :
-        adaptationAttrs.segmentAlignment = parseFloatOrBool(dataView.getFloat64(ptr, true));
-        break;
-
-      case 59
-      /* SubsegmentAlignment */
-      :
-        adaptationAttrs.subsegmentAlignment = parseFloatOrBool(dataView.getFloat64(ptr, true));
-        break;
-
-      case 32
-      /* BitstreamSwitching */
-      :
-        adaptationAttrs.bitstreamSwitching = dataView.getFloat64(ptr, true) !== 0;
-        break;
-
-      case 3
-      /* AudioSamplingRate */
-      :
-        adaptationAttrs.audioSamplingRate = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 4
-      /* Codecs */
-      :
-        adaptationAttrs.codecs = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 2
-      /* Profiles */
-      :
-        adaptationAttrs.profiles = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 12
-      /* SegmentProfiles */
-      :
-        adaptationAttrs.segmentProfiles = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 11
-      /* MimeType */
-      :
-        adaptationAttrs.mimeType = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 5
-      /* CodingDependency */
-      :
-        adaptationAttrs.codingDependency = dataView.getFloat64(ptr, true) !== 0;
-        break;
-
-      case 6
-      /* FrameRate */
-      :
-        adaptationAttrs.frameRate = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 7
-      /* Height */
-      :
-        adaptationAttrs.height = dataView.getFloat64(ptr, true);
-        break;
-
-      case 8
-      /* Width */
-      :
-        adaptationAttrs.width = dataView.getFloat64(ptr, true);
-        break;
-
-      case 9
-      /* MaxPlayoutRate */
-      :
-        adaptationAttrs.maxPlayoutRate = dataView.getFloat64(ptr, true);
-        break;
-
-      case 10
-      /* MaxSAPPeriod */
-      :
-        adaptationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
-        break;
-      // TODO
-      // case AttributeName.StartsWithSap:
-      //   adaptationAttrs.startsWithSap = dataView.getFloat64(ptr, true);
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/EventStream.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * Generate a "children parser" once inside a `EventStream` node.
- * @param {Object} childrenObj
- * @param {WebAssembly.Memory} linearMemory
- * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
- * @returns {Function}
- */
-
-function generateEventStreamChildrenParser(childrenObj, linearMemory, parsersStack, fullMpd) {
-  return function onRootChildren(nodeId) {
-    switch (nodeId) {
-      case 6
-      /* EventStreamElt */
-      :
-        {
-          var event = {};
-          childrenObj.events.push(event);
-          var attrParser = generateEventAttrParser(event, linearMemory, fullMpd);
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, attrParser);
-          break;
-        }
-    }
-  };
-}
-/**
- * @param {Object} esAttrs
- * @param {WebAssembly.Memory} linearMemory
- * @returns {Function}
- */
-
-function generateEventStreamAttrParser(esAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  return function onEventStreamAttribute(attr, ptr, len) {
-    var dataView = new DataView(linearMemory.buffer);
-
-    switch (attr) {
-      case 16
-      /* SchemeIdUri */
-      :
-        esAttrs.schemeIdUri = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 17
-      /* SchemeValue */
-      :
-        esAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 27
-      /* TimeScale */
-      :
-        esAttrs.timescale = dataView.getFloat64(ptr, true);
-        break;
-    }
-  };
-}
-/**
- * @param {Object} eventAttr
- * @param {WebAssembly.Memory} linearMemory
- * @param {ArrayBuffer} fullMpd
- * @returns {Function}
- */
-
-function generateEventAttrParser(eventAttr, linearMemory, fullMpd) {
-  var textDecoder = new TextDecoder();
-  return function onEventStreamAttribute(attr, ptr, len) {
-    var dataView = new DataView(linearMemory.buffer);
-
-    switch (attr) {
-      case 25
-      /* EventPresentationTime */
-      :
-        eventAttr.presentationTime = dataView.getFloat64(ptr, true);
-        break;
-
-      case 1
-      /* Duration */
-      :
-        eventAttr.duration = dataView.getFloat64(ptr, true);
-        break;
-
-      case 0
-      /* Id */
-      :
-        eventAttr.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 69
-      /* EventStreamEltRange */
-      :
-        var rangeStart = dataView.getFloat64(ptr, true);
-        var rangeEnd = dataView.getFloat64(ptr + 8, true);
-        eventAttr.eventStreamData = fullMpd.slice(rangeStart, rangeEnd);
-        break;
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/Period.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-
-/**
- * Generate a "children parser" once inside a `Perod` node.
- * @param {Object} periodChildren
- * @param {WebAssembly.Memory} linearMemory
- * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
- * @returns {Function}
- */
-
-function generatePeriodChildrenParser(periodChildren, linearMemory, parsersStack, fullMpd) {
-  return function onRootChildren(nodeId) {
-    switch (nodeId) {
-      case 4
-      /* AdaptationSet */
-      :
-        {
-          var adaptationObj = {
-            children: {
-              baseURLs: [],
-              representations: []
-            },
-            attributes: {}
-          };
-          periodChildren.adaptations.push(adaptationObj);
-          var childrenParser = generateAdaptationSetChildrenParser(adaptationObj.children, linearMemory, parsersStack);
-          var attributeParser = generateAdaptationSetAttrParser(adaptationObj.attributes, linearMemory);
-          parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
-          break;
-        }
-
-      case 15
-      /* BaseURL */
-      :
-        {
-          var baseUrl = {
-            value: "",
-            attributes: {}
-          };
-          periodChildren.baseURLs.push(baseUrl);
-          var _childrenParser = noop/* default */.Z;
-
-          var _attributeParser = generateBaseUrlAttrParser(baseUrl, linearMemory);
-
-          parsersStack.pushParsers(nodeId, _childrenParser, _attributeParser);
-          break;
-        }
-
-      case 5
-      /* EventStream */
-      :
-        {
-          var eventStream = {
-            children: {
-              events: []
-            },
-            attributes: {}
-          };
-          periodChildren.eventStreams.push(eventStream);
-
-          var _childrenParser2 = generateEventStreamChildrenParser(eventStream.children, linearMemory, parsersStack, fullMpd);
-
-          var attrParser = generateEventStreamAttrParser(eventStream.attributes, linearMemory);
-          parsersStack.pushParsers(nodeId, _childrenParser2, attrParser);
-          break;
-        }
-
-      case 16
-      /* SegmentTemplate */
-      :
-        {
-          var stObj = {};
-          periodChildren.segmentTemplate = stObj;
-          parsersStack.pushParsers(nodeId, noop/* default */.Z, // SegmentTimeline as treated like an attribute
-          generateSegmentTemplateAttrParser(stObj, linearMemory));
-          break;
-        }
-    }
-  };
-}
-/**
- * @param {Object} periodAttrs
- * @param {WebAssembly.Memory} linearMemory
- * @returns {Function}
- */
-
-function generatePeriodAttrParser(periodAttrs, linearMemory) {
-  var textDecoder = new TextDecoder();
-  return function onPeriodAttribute(attr, ptr, len) {
-    switch (attr) {
-      case 0
-      /* Id */
-      :
-        periodAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 45
-      /* Start */
-      :
-        periodAttrs.start = new DataView(linearMemory.buffer).getFloat64(ptr, true);
-        break;
-
-      case 1
-      /* Duration */
-      :
-        periodAttrs.duration = new DataView(linearMemory.buffer).getFloat64(ptr, true);
-        break;
-
-      case 32
-      /* BitstreamSwitching */
-      :
-        periodAttrs.bitstreamSwitching = new DataView(linearMemory.buffer).getUint8(0) === 0;
-        break;
-
-      case 46
-      /* XLinkHref */
-      :
-        periodAttrs.xlinkHref = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 47
-      /* XLinkActuate */
-      :
-        periodAttrs.xlinkActuate = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/MPD.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-/**
- * Generate a "children parser" once inside an `MPD` node.
- * @param {Object} mpdChildren
- * @param {WebAssembly.Memory} linearMemory
- * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
- * @returns {Function}
- */
-
-function generateMPDChildrenParser(mpdChildren, linearMemory, parsersStack, fullMpd) {
-  return function onRootChildren(nodeId) {
-    switch (nodeId) {
-      case 15
-      /* BaseURL */
-      :
-        {
-          var baseUrl = {
-            value: "",
-            attributes: {}
-          };
-          mpdChildren.baseURLs.push(baseUrl);
-          var childrenParser = noop/* default */.Z; // BaseURL have no sub-element
-
-          var attributeParser = generateBaseUrlAttrParser(baseUrl, linearMemory);
-          parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
-          break;
-        }
-
-      case 2
-      /* Period */
-      :
-        {
-          var period = {
-            children: {
-              adaptations: [],
-              baseURLs: [],
-              eventStreams: []
-            },
-            attributes: {}
-          };
-          mpdChildren.periods.push(period);
-
-          var _childrenParser = generatePeriodChildrenParser(period.children, linearMemory, parsersStack, fullMpd);
-
-          var _attributeParser = generatePeriodAttrParser(period.attributes, linearMemory);
-
-          parsersStack.pushParsers(nodeId, _childrenParser, _attributeParser);
-          break;
-        }
-
-      case 3
-      /* UtcTiming */
-      :
-        {
-          var utcTiming = {};
-          mpdChildren.utcTimings.push(utcTiming);
-          var _childrenParser2 = noop/* default */.Z; // UTCTiming have no sub-element
-
-          var _attributeParser2 = generateSchemeAttrParser(utcTiming, linearMemory);
-
-          parsersStack.pushParsers(nodeId, _childrenParser2, _attributeParser2);
-          break;
-        }
-    }
-  };
-}
-function generateMPDAttrParser(mpdChildren, mpdAttrs, linearMemory) {
-  var dataView;
-  var textDecoder = new TextDecoder();
-  return function onMPDAttribute(attr, ptr, len) {
-    switch (attr) {
-      case 0
-      /* Id */
-      :
-        mpdAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 2
-      /* Profiles */
-      :
-        mpdAttrs.profiles = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 33
-      /* Type */
-      :
-        mpdAttrs.type = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
-
-      case 34
-      /* AvailabilityStartTime */
-      :
-        var startTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        mpdAttrs.availabilityStartTime = new Date(startTime).getTime() / 1000;
-        break;
-
-      case 35
-      /* AvailabilityEndTime */
-      :
-        var endTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        mpdAttrs.availabilityEndTime = new Date(endTime).getTime() / 1000;
-        break;
-
-      case 36
-      /* PublishTime */
-      :
-        var publishTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        mpdAttrs.publishTime = new Date(publishTime).getTime() / 1000;
-        break;
-
-      case 68
-      /* MediaPresentationDuration */
-      :
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.duration = dataView.getFloat64(ptr, true);
-        break;
-
-      case 37
-      /* MinimumUpdatePeriod */
-      :
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.minimumUpdatePeriod = dataView.getFloat64(ptr, true);
-        break;
-
-      case 38
-      /* MinBufferTime */
-      :
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.minBufferTime = dataView.getFloat64(ptr, true);
-        break;
-
-      case 39
-      /* TimeShiftBufferDepth */
-      :
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.timeShiftBufferDepth = dataView.getFloat64(ptr, true);
-        break;
-
-      case 40
-      /* SuggestedPresentationDelay */
-      :
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.suggestedPresentationDelay = dataView.getFloat64(ptr, true);
-        break;
-
-      case 41
-      /* MaxSegmentDuration */
-      :
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.maxSegmentDuration = dataView.getFloat64(ptr, true);
-        break;
-
-      case 42
-      /* MaxSubsegmentDuration */
-      :
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.maxSubsegmentDuration = dataView.getFloat64(ptr, true);
-        break;
-
-      case 66
-      /* Location */
-      :
-        var location = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        mpdChildren.locations.push(location);
-        break;
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/root.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @param {Object} rootObj
- * @param {WebAssembly.Memory} linearMemory
- * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
- * @returns {Function}
- */
-
-function generateRootChildrenParser(rootObj, linearMemory, parsersStack, fullMpd) {
-  return function onRootChildren(nodeId) {
-    switch (nodeId) {
-      case 1
-      /* MPD */
-      :
-        rootObj.mpd = {
-          children: {
-            baseURLs: [],
-            locations: [],
-            periods: [],
-            utcTimings: []
-          },
-          attributes: {}
-        };
-        var childrenParser = generateMPDChildrenParser(rootObj.mpd.children, linearMemory, parsersStack, fullMpd);
-        var attributeParser = generateMPDAttrParser(rootObj.mpd.children, rootObj.mpd.attributes, linearMemory);
-        parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
-        break;
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/generators/XLink.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Generate a "children parser" when an XLink has been loaded.
- * @param {Object} xlinkObj
- * @param {WebAssembly.Memory} linearMemory
- * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
- * @returns {Function}
- */
-
-function generateXLinkChildrenParser(xlinkObj, linearMemory, parsersStack, fullMpd) {
-  return function onRootChildren(nodeId) {
-    switch (nodeId) {
-      case 2
-      /* Period */
-      :
-        {
-          var period = {
-            children: {
-              adaptations: [],
-              baseURLs: [],
-              eventStreams: []
-            },
-            attributes: {}
-          };
-          xlinkObj.periods.push(period);
-          var childrenParser = generatePeriodChildrenParser(period.children, linearMemory, parsersStack, fullMpd);
-          var attributeParser = generatePeriodAttrParser(period.attributes, linearMemory);
-          parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
-          break;
-        }
-    }
-  };
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/parsers_stack.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Maintains a stack of children and attributes parsers, to easily parse
- * the very hierarchical MPDs.
- *
- * This class allows to easily push and pop such parsers once nodes are
- * respectively opened and closed.
- *
- * @class ParsersStack
- */
-
-var ParsersStack = /*#__PURE__*/function () {
-  function ParsersStack() {
-    this._currentNodeId = null;
-    this.childrenParser = noop/* default */.Z;
-    this.attributeParser = noop/* default */.Z;
-    this._stack = [{
-      nodeId: null,
-      children: noop/* default */.Z,
-      attribute: noop/* default */.Z
-    }];
-  }
-
-  var _proto = ParsersStack.prototype;
-
-  _proto.pushParsers = function pushParsers(nodeId, childrenParser, attrParser) {
-    this._currentNodeId = nodeId;
-    this.childrenParser = childrenParser;
-    this.attributeParser = attrParser;
-
-    this._stack.push({
-      nodeId: nodeId,
-      attribute: attrParser,
-      children: childrenParser
-    });
-  };
-
-  _proto.popIfCurrent = function popIfCurrent(idToPop) {
-    if (this._currentNodeId !== idToPop) {
-      return;
-    }
-
-    this._stack.pop();
-
-    var _this$_stack = this._stack[this._stack.length - 1],
-        nodeId = _this$_stack.nodeId,
-        children = _this$_stack.children,
-        attribute = _this$_stack.attribute;
-    this._currentNodeId = nodeId;
-    this.attributeParser = attribute;
-    this.childrenParser = children;
-    return;
-  };
-
-  _proto.reset = function reset() {
-    this.childrenParser = noop/* default */.Z;
-    this.attributeParser = noop/* default */.Z;
-    this._stack = [{
-      nodeId: null,
-      children: noop/* default */.Z,
-      attribute: noop/* default */.Z
-    }];
-  };
-
-  return ParsersStack;
-}();
-
-
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/ts/dash-wasm-parser.ts
-
-
-
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-
-
-
-var MAX_READ_SIZE = 15e3;
-
-var DashWasmParser = /*#__PURE__*/function () {
-  /**
-   * Create a new `DashWasmParser`.
-   * @param {object} opts
-   */
-  function DashWasmParser() {
-    this._parsersStack = new ParsersStack();
-    this._instance = null;
-    this._mpdData = null;
-    this._linearMemory = null;
-    this.status = "uninitialized";
-    this._initProm = null;
-    this._warnings = [];
-    this._isParsing = false;
-  }
-  /**
-   * Returns Promise that will resolve when the initialization has ended (either
-   * with success, in which cases the Promise resolves, either with failure, in
-   * which case it rejects the corresponding error).
-   *
-   * This is actually the exact same Promise than the one returned by the first
-   * `initialize` call.
-   *
-   * If that method was never called, returns a rejecting Promise.
-   * @returns {Promise}
-   */
-
-
-  var _proto = DashWasmParser.prototype;
-
-  _proto.waitForInitialization = function waitForInitialization() {
-    var _a;
-
-    return (_a = this._initProm) !== null && _a !== void 0 ? _a : pinkie_default().reject("No initialization performed yet.");
-  };
-
-  _proto.initialize = /*#__PURE__*/function () {
-    var _initialize = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee2(opts) {
-      var _this = this;
-
-      var parsersStack, textDecoder, self, imports, fetchedWasm, streamingProm, onTagOpen, onTagClose, onAttribute, onCustomEvent, readNext;
-      return regenerator_default().wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              readNext = function _readNext(ptr, wantedSize) {
-                if (self._mpdData === null) {
-                  throw new Error("DashWasmParser Error: No MPD to read.");
-                }
-
-                var linearMemory = self._linearMemory;
-                var _self$_mpdData = self._mpdData,
-                    mpd = _self$_mpdData.mpd,
-                    cursor = _self$_mpdData.cursor;
-                var sizeToRead = Math.min(wantedSize, MAX_READ_SIZE, mpd.byteLength - cursor);
-                var arr = new Uint8Array(linearMemory.buffer, ptr, sizeToRead);
-                arr.set(new Uint8Array(mpd, cursor, sizeToRead));
-                self._mpdData.cursor += sizeToRead;
-                return sizeToRead;
-              };
-
-              onCustomEvent = function _onCustomEvent(evt, ptr, len) {
-                var linearMemory = self._linearMemory;
-                var arr = new Uint8Array(linearMemory.buffer, ptr, len);
-
-                if (evt === 1
-                /* Error */
-                ) {
-                    var decoded = textDecoder.decode(arr);
-                    log/* default.warn */.Z.warn("WASM Error Event:", decoded);
-
-                    self._warnings.push(new Error(decoded));
-                  } else if (evt === 0
-                /* Log */
-                ) {
-                    var _decoded = textDecoder.decode(arr);
-
-                    log/* default.warn */.Z.warn("WASM Log Event:", _decoded);
-                  }
-              };
-
-              onAttribute = function _onAttribute(attr, ptr, len) {
-                // Call the active "attributeParser"
-                return parsersStack.attributeParser(attr, ptr, len);
-              };
-
-              onTagClose = function _onTagClose(tag) {
-                // Only pop current parsers from the `parsersStack` if that tag was the
-                // active one.
-                return parsersStack.popIfCurrent(tag);
-              };
-
-              onTagOpen = function _onTagOpen(tag) {
-                // Call the active "childrenParser"
-                return parsersStack.childrenParser(tag);
-              };
-
-              if (!(this.status !== "uninitialized")) {
-                _context2.next = 9;
-                break;
-              }
-
-              return _context2.abrupt("return", pinkie_default().reject(new Error("DashWasmParser already initialized.")));
-
-            case 9:
-              if (this.isCompatible()) {
-                _context2.next = 12;
-                break;
-              }
-
-              this.status = "failure";
-              return _context2.abrupt("return", pinkie_default().reject(new Error("Target not compatible with WebAssembly.")));
-
-            case 12:
-              this.status = "initializing";
-              parsersStack = this._parsersStack;
-              /** Re-used TextDecoder instance. */
-
-              textDecoder = new TextDecoder();
-              /* eslint-disable @typescript-eslint/no-this-alias */
-
-              self = this;
-              /* eslint-enable @typescript-eslint/no-this-alias */
-
-              imports = {
-                env: {
-                  memoryBase: 0,
-                  tableBase: 0,
-                  memory: new WebAssembly.Memory({
-                    initial: 10
-                  }),
-                  table: new WebAssembly.Table({
-                    initial: 2,
-                    element: "anyfunc"
-                  }),
-                  onTagOpen: onTagOpen,
-                  onCustomEvent: onCustomEvent,
-                  onAttribute: onAttribute,
-                  readNext: readNext,
-                  onTagClose: onTagClose
-                }
-              };
-              fetchedWasm = fetch(opts.wasmUrl);
-              streamingProm = typeof WebAssembly.instantiateStreaming === "function" ? WebAssembly.instantiateStreaming(fetchedWasm, imports) : pinkie_default().reject("`WebAssembly.instantiateStreaming` API not available");
-              this._initProm = streamingProm["catch"]( /*#__PURE__*/function () {
-                var _ref = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(e) {
-                  var res, resAb;
-                  return regenerator_default().wrap(function _callee$(_context) {
-                    while (1) {
-                      switch (_context.prev = _context.next) {
-                        case 0:
-                          log/* default.warn */.Z.warn("Unable to call `instantiateStreaming` on WASM:", e);
-                          _context.next = 3;
-                          return fetchedWasm;
-
-                        case 3:
-                          res = _context.sent;
-
-                          if (!(res.status < 200 || res.status >= 300)) {
-                            _context.next = 6;
-                            break;
-                          }
-
-                          throw new Error("WebAssembly request failed. status: " + String(res.status));
-
-                        case 6:
-                          _context.next = 8;
-                          return res.arrayBuffer();
-
-                        case 8:
-                          resAb = _context.sent;
-                          return _context.abrupt("return", WebAssembly.instantiate(resAb, imports));
-
-                        case 10:
-                        case "end":
-                          return _context.stop();
-                      }
-                    }
-                  }, _callee);
-                }));
-
-                return function (_x2) {
-                  return _ref.apply(this, arguments);
-                };
-              }()).then(function (instanceWasm) {
-                _this._instance = instanceWasm; // TODO better types?
-
-                /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-                /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-                _this._linearMemory = _this._instance.instance.exports.memory;
-                /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
-                /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-
-                _this.status = "initialized";
-              })["catch"](function (err) {
-                var message = err instanceof Error ? err.toString() : "Unknown error";
-                log/* default.warn */.Z.warn("DW: Could not create DASH-WASM parser:", message);
-                _this.status = "failure";
-              });
-              return _context2.abrupt("return", this._initProm);
-
-            case 21:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2, this);
-    }));
-
-    function initialize(_x) {
-      return _initialize.apply(this, arguments);
-    }
-
-    return initialize;
-  }()
-  /**
-   * @param {Document} manifest - Original manifest as returned by the server
-   * @param {Object} args
-   * @returns {Object}
-   */
-  ;
-
-  _proto.runWasmParser = function runWasmParser(mpd, args) {
-    var _this$_parseMpd = this._parseMpd(mpd),
-        mpdIR = _this$_parseMpd[0],
-        warnings = _this$_parseMpd[1];
-
-    if (mpdIR === null) {
-      throw new Error("DASH Parser: Unknown error while parsing the MPD");
-    }
-
-    var ret = (0,common/* default */.ZP)(mpdIR, args, warnings);
-    return this._processParserReturnValue(ret);
-  }
-  /**
-   * Return `true` if the current plaform is compatible with WebAssembly and the
-   * TextDecoder interface (for faster UTF-8 parsing), which are needed features
-   * for the `DashWasmParser`.
-   * @returns {boolean}
-   */
-  ;
-
-  _proto.isCompatible = function isCompatible() {
-    return typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function" && typeof window.TextDecoder === "function";
-  };
-
-  _proto._parseMpd = function _parseMpd(mpd) {
-    var _a;
-
-    if (this._instance === null) {
-      throw new Error("DashWasmParser not initialized");
-    }
-
-    if (this._isParsing) {
-      throw new Error("Parsing operation already pending.");
-    }
-
-    this._isParsing = true;
-    this._mpdData = {
-      mpd: mpd,
-      cursor: 0
-    };
-    var rootObj = {};
-    var linearMemory = this._linearMemory;
-    var rootChildrenParser = generateRootChildrenParser(rootObj, linearMemory, this._parsersStack, mpd);
-
-    this._parsersStack.pushParsers(null, rootChildrenParser, noop/* default */.Z);
-
-    this._warnings = [];
-
-    try {
-      // TODO better type this
-
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      this._instance.instance.exports.parse();
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
-
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
-    } catch (err) {
-      this._parsersStack.reset();
-
-      this._warnings = [];
-      this._isParsing = false;
-      throw err;
-    }
-
-    var parsed = (_a = rootObj.mpd) !== null && _a !== void 0 ? _a : null;
-    var warnings = this._warnings;
-
-    this._parsersStack.reset();
-
-    this._warnings = [];
-    this._isParsing = false;
-    return [parsed, warnings];
-  };
-
-  _proto._parseXlink = function _parseXlink(xlinkData) {
-    if (this._instance === null) {
-      throw new Error("DashWasmParser not initialized");
-    }
-
-    if (this._isParsing) {
-      throw new Error("Parsing operation already pending.");
-    }
-
-    this._isParsing = true;
-    this._mpdData = {
-      mpd: xlinkData,
-      cursor: 0
-    };
-    var rootObj = {
-      periods: []
-    };
-    var linearMemory = this._linearMemory;
-    var xlinkParser = generateXLinkChildrenParser(rootObj, linearMemory, this._parsersStack, xlinkData);
-
-    this._parsersStack.pushParsers(null, xlinkParser, noop/* default */.Z);
-
-    this._warnings = [];
-
-    try {
-      // TODO better type this
-
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      this._instance.instance.exports.parse_xlink();
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
-
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
-    } catch (err) {
-      this._parsersStack.reset();
-
-      this._warnings = [];
-      this._isParsing = false;
-      throw err;
-    }
-
-    var periods = rootObj.periods;
-    var warnings = this._warnings;
-
-    this._parsersStack.reset();
-
-    this._warnings = [];
-    this._isParsing = false;
-    return [periods, warnings];
-  }
-  /**
-   * Handle `parseMpdIr` return values, asking for resources if they are needed
-   * and pre-processing them before continuing parsing.
-   *
-   * @param {Object} initialRes
-   * @returns {Object}
-   */
-  ;
-
-  _proto._processParserReturnValue = function _processParserReturnValue(initialRes) {
-    var _this2 = this;
-
-    if (initialRes.type === "done") {
-      return initialRes;
-    } else if (initialRes.type === "needs-clock") {
-      var continueParsingMPD = function continueParsingMPD(loadedClock) {
-        if (loadedClock.length !== 1) {
-          throw new Error("DASH parser: wrong number of loaded ressources.");
-        }
-
-        var newRet = initialRes.value["continue"](loadedClock[0].responseData);
-        return _this2._processParserReturnValue(newRet);
-      };
-
-      return {
-        type: "needs-resources",
-        value: {
-          urls: [initialRes.value.url],
-          format: "string",
-          "continue": continueParsingMPD
-        }
-      };
-    } else if (initialRes.type === "needs-xlinks") {
-      var _continueParsingMPD = function _continueParsingMPD(loadedXlinks) {
-        var resourceInfos = [];
-
-        for (var i = 0; i < loadedXlinks.length; i++) {
-          var _loadedXlinks$i = loadedXlinks[i],
-              xlinkData = _loadedXlinks$i.responseData,
-              receivedTime = _loadedXlinks$i.receivedTime,
-              sendingTime = _loadedXlinks$i.sendingTime,
-              url = _loadedXlinks$i.url;
-
-          var _this2$_parseXlink = _this2._parseXlink(xlinkData),
-              periodsIr = _this2$_parseXlink[0],
-              periodsIRWarnings = _this2$_parseXlink[1];
-
-          resourceInfos.push({
-            url: url,
-            receivedTime: receivedTime,
-            sendingTime: sendingTime,
-            parsed: periodsIr,
-            warnings: periodsIRWarnings
-          });
-        }
-
-        var newRet = initialRes.value["continue"](resourceInfos);
-        return _this2._processParserReturnValue(newRet);
-      };
-
-      return {
-        type: "needs-resources",
-        value: {
-          urls: initialRes.value.xlinksUrls,
-          format: "arraybuffer",
-          "continue": _continueParsingMPD
-        }
-      };
-    } else {
-      (0,assert_unreachable/* default */.Z)(initialRes);
-    }
-  };
-
-  return DashWasmParser;
-}();
-
-
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/wasm-parser/index.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/* harmony default export */ var wasm_parser = (DashWasmParser);
 // EXTERNAL MODULE: ./src/utils/are_arrays_of_numbers_equal.ts
 var are_arrays_of_numbers_equal = __webpack_require__(4791);
 // EXTERNAL MODULE: ./src/utils/event_emitter.ts
 var event_emitter = __webpack_require__(1959);
 // EXTERNAL MODULE: ./src/utils/is_null_or_undefined.ts
 var is_null_or_undefined = __webpack_require__(1946);
+// EXTERNAL MODULE: ./src/utils/noop.ts
+var noop = __webpack_require__(8894);
 // EXTERNAL MODULE: ./src/utils/object_assign.ts
 var object_assign = __webpack_require__(8026);
 // EXTERNAL MODULE: ./src/utils/promise.ts
@@ -46927,6 +44519,8 @@ var ObservablePrioritizer = /*#__PURE__*/function () {
 var tap = __webpack_require__(2006);
 // EXTERNAL MODULE: ./src/utils/array_includes.ts
 var array_includes = __webpack_require__(7714);
+// EXTERNAL MODULE: ./src/utils/assert_unreachable.ts
+var assert_unreachable = __webpack_require__(8418);
 // EXTERNAL MODULE: ./src/utils/id_generator.ts
 var id_generator = __webpack_require__(908);
 ;// CONCATENATED MODULE: ./src/utils/initialization_segment_cache.ts
@@ -58395,7 +55989,6 @@ function getRightVideoTrack(adaptation, isTrickModeEnabled) {
 
 
 
-
 /* eslint-disable @typescript-eslint/naming-convention */
 
 var DEFAULT_UNMUTED_VOLUME = config/* default.DEFAULT_UNMUTED_VOLUME */.Z.DEFAULT_UNMUTED_VOLUME;
@@ -58453,7 +56046,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     videoElement.preload = "auto";
     _this.version =
     /* PLAYER_VERSION */
-    "3.25.0";
+    "3.25.1";
     _this.log = log/* default */.Z;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -61231,16 +58824,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
 Player.version =
 /* PLAYER_VERSION */
-"3.25.0";
-window.DASH_WASM = {
-  initialize: function initialize(opts) {
-    var dashWasmParser = new wasm_parser();
-    dashWasmParser.initialize(opts)["catch"](function (err) {
-      console.error("ERROR:", err);
-    });
-    features/* default.dashParsers.wasm */.Z.dashParsers.wasm = dashWasmParser;
-  }
-};
+"3.25.1";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
@@ -61309,8 +58893,8 @@ function initializeFeaturesObject() {
   }
 
   if (true) {
-    features_object/* default.transports.dash */.Z.transports.dash = __webpack_require__(5877)/* .default */ .Z;
-    features_object/* default.dashParsers.js */.Z.dashParsers.js = __webpack_require__(3139)/* .default */ .Z;
+    features_object/* default.transports.dash */.Z.transports.dash = __webpack_require__(1732)/* .default */ .Z;
+    features_object/* default.dashParsers.js */.Z.dashParsers.js = __webpack_require__(148)/* .default */ .Z;
   }
 
   if (false) {}
