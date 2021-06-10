@@ -187,7 +187,7 @@ class VideoThumbnail extends React.Component {
         this.state.displaySpinner ?
           <div style={divSpinnerStyle}>
             <img
-              src="../assets/spinner.gif"
+              src="./assets/spinner.gif"
               style={spinnerStyle}
             />
           </div> :

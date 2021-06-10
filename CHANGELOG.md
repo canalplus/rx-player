@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.25.1 (2021/06/10)
+
+### Bug fixes
+
+  - fix import path for the experimental `VideoThumbnailLoader` tool
+
+
 ## v3.25.0 (2021/06/10)
 
 ### Features
