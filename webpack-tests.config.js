@@ -57,6 +57,7 @@ const config = {
       __RELATIVE_PATH__: {
         BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
         DASH: JSON.stringify("../transports/dash/index.ts"),
+        DASH_JS_PARSER: JSON.stringify("../parsers/manifest/dash/js-parser/index.ts"),
         DIRECTFILE: JSON.stringify("../core/init/initialize_directfile.ts"),
         EME_MANAGER: JSON.stringify("../core/eme/index.ts"),
         HTML_SAMI: JSON.stringify("../parsers/texttracks/sami/html.ts"),

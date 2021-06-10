@@ -59,31 +59,57 @@ This property is mandatory.
 
 Can be either:
 
-  - ``"dash"`` - for DASH contents
+  - **`"dash"` - for DASH contents.**
 
-  - ``"smooth"`` - for Microsoft Smooth Streaming contents
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least either one of the following features to be able
+    to play DASH contents:
+      - the `DASH` feature (rely on a generally-sufficient JavaScript parser)
+      - the `DASH_WASM` experimental feature (backed by a WebAssembly parser,
+        more efficient when handling very large MPDs).
+        More information in the [`DASH_WASM` experimental feature
+        documentation](./dash_wasm_parser.md).
+      - or both (which will use the latter only when available)
 
-  - ``"directfile"`` - for loading a video in _DirectFile_ mode, which allows to
-    directly play media files (example: ``.mp4`` or ``.webm`` files) without
+  - **`"smooth"` - for Microsoft Smooth Streaming contents**
+
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `SMOOTH` feature to be able to play Smooth
+    contents.
+
+  - **`"directfile"` - for loading a video in _DirectFile_ mode, which allows to
+    directly play media files** (example: ``.mp4`` or ``.webm`` files) without
     using a transport protocol. With that option, you can even play HLS
     contents on multiple browsers (mainly safari and iOS browsers).
+
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `DIRECTFILE` feature to be able to play those
+    contents.
 
     :warning: In that mode, multiple APIs won't have any effect.
     This is documented in the documentation of each concerned method, option or
     event in the API.
 
-  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams, which are
+  - **`"metaplaylist"` for [MetaPlaylist](./metaplaylist.md) streams**, which are
     a concatenation of multiple smooth and DASH contents
 
-  - `"local"` for [local manifests](./local_manifest.md), which allows to play
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `METAPLAYLIST` experimental feature to be able
+    to play those contents.
+
+  - **`"local"` for [local manifests](./local_manifest.md)**, which allows to play
     downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
+
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `LOCAL_MANIFEST` experimental feature to be
+    able to play those contents.
 
 Example:
 ```js
 // play some dash content
 rxPlayer.loadVideo({
   transport: "dash",
-  url: https://www.example.com/dash.mpd
+  url: "https://www.example.com/dash.mpd"
 })
 ```
 
@@ -116,7 +142,7 @@ Example:
 ```js
 // play some dash content
 rxPlayer.loadVideo({
-  url: https://www.example.com/dash.mpd,
+  url: "https://www.example.com/dash.mpd",
   transport: "dash"
 })
 ```
@@ -370,6 +396,23 @@ useful depending on your needs):
     MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
     the errors documentation](./errors.md#types-media_error).
 
+  - __maxSessionCacheSize__ (`number|undefined`): The RxPlayer maintains a cache
+    of recently opened `MediaKeySession` (and consequently of recently fetched
+    licenses) as an optimization measure.
+    That way, loading a content whose license had already been fetched won't
+    necessitate a new license request, leading to shorter loading times and less
+    requests.
+
+    The size of this cache is usually kept relatively low (in the 10s) by the
+    player.
+    We found out however that some devices have an event lower limit for the
+    number of `MediaKeySession` that can be created at the same time.
+
+    The `maxSessionCacheSize` option allows to configure the maximum number of
+    `MediaKeySession` that should be kept "alive" at the same time. Any
+    supplementary older `MediaKeySession` will be closed, at least when the time
+    comes to create a new one.
+
   - __closeSessionsOnStop__ (``Boolean|undefined``): If set to ``true``, the
     ``MediaKeySession`` created for a content will be immediately closed when
     the content stops its playback.
@@ -379,6 +422,10 @@ useful depending on your needs):
 
     If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the
     same content needs to be re-decrypted.
+
+    If you want to set this property because the current device has a limited
+    number of `MediaKeySession` that can be created at the same time, prefer
+    using `maxSessionCacheSize` instead.
 
   - __singleLicensePer__ (``string|undefined``): Allows to use optimally a
     single license for multiple decryption keys.
@@ -727,7 +774,7 @@ considered stable:
     });
     ```
 
-  - __initialManifest__ (`string|Document|Object`):
+  - __initialManifest__ (`string|Document|Object|ArrayBuffer`):
 
     Manifest that will be initially used (before any potential Manifest
     refresh).

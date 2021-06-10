@@ -14,5 +14,6 @@
  * limitations under the License.
  */
 
+export { DASH_WASM } from "./dash_wasm";
 export { LOCAL_MANIFEST } from "./local";
 export { METAPLAYLIST } from "./metaplaylist";

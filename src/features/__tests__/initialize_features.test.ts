@@ -50,6 +50,7 @@ describe("Features - initializeFeaturesObject", () => {
       BIF_PARSER: "../parsers/images/bif.ts",
       SMOOTH: "../transports/smooth/index.ts",
       DASH: "../transports/dash/index.ts",
+      DASH_JS_PARSER: "../parsers/manifest/dash/js-parser/index.ts",
       LOCAL_MANIFEST: "../transports/local/index.ts",
       METAPLAYLIST: "../transports/metaplaylist/index.ts",
       NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
@@ -67,6 +68,7 @@ describe("Features - initializeFeaturesObject", () => {
     };
     const feat = {
       transports: {},
+      dashParsers: { js: null, wasm: null },
       imageBuffer: null,
       imageParser: null,
       nativeTextTracksBuffer: null,
@@ -88,6 +90,10 @@ describe("Features - initializeFeaturesObject", () => {
         dash: require("../../transports/dash/index").default,
         smooth: require("../../transports/smooth/index").default,
         local: require("../../transports/local/index").default,
+      },
+      dashParsers: {
+        js: require("../../parsers/manifest/dash/js-parser").default,
+        wasm: null,
       },
       emeManager: require("../../core/eme/index").default,
       directfile: {

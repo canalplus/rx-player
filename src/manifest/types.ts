@@ -31,3 +31,28 @@ export enum MANIFEST_UPDATE_TYPE {
 
 /** Every possible value for the Adaptation's `type` property. */
 export type IAdaptationType = "video" | "audio" | "text" | "image";
+
+export interface IHDRInformation {
+  /**
+   * It is the bit depth used for encoding color for a pixel.
+   *
+   * It is used to ask to the user agent if the color depth is supported by the
+   * output device.
+   */
+  colorDepth?: number;
+  /**
+   * It is the HDR eotf. It is the transfer function having the video signal as
+   * input and converting it into the linear light output of the display. The
+   * conversion is done within the display device.
+   *
+   * It may be used here to ask the MediaSource if it supported.
+   */
+  eotf?: string;
+  /**
+   * It is the video color space used for encoding. An HDR content may not have
+   * a wide color gamut.
+   *
+   * It may be used to ask about output device color space support.
+   */
+  colorSpace?: string;
+}

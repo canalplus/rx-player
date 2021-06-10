@@ -8,7 +8,7 @@ import /* waitForPlayerState, */ {
 
 const EVENTS = streamEventsInfos.events;
 
-describe("DASH multi-track content (SegmentTimeline)", function () {
+describe("DASH Stream events", function () {
   let player;
 
   async function loadContent(position) {

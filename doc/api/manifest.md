@@ -252,6 +252,14 @@ _type_: ``Boolean|undefined``
 This property only makes sense for text Adaptations. In this case, if ``true``
 it means that the text track has added hints for the hard of hearing.
 
+#### isTrickModeTrack
+
+_type_ : ``Boolean|undefined``
+
+This property only makes sense for video Adaptations. In this case, if ``true``
+it means that the video track is a trick mode track that will be played only
+if the user start the trick mode on the respective main adaptation.
+
 #### representations
 
 _type_: ``Array.<Representation>``
@@ -344,6 +352,13 @@ _type_: ``string|undefined``
 
 The represesentation frame rate for this Representation. It defines either the
 number of frames per second as an integer (24), or as a ratio (24000 / 1000).
+
+#### hdrInfo
+
+_type_: ``Object|undefined``
+
+Information about the hdr characteristics of the track.
+(see [HDR support documentation](./hdr.md#hdrinfo))
 
 <a name="representation-index"></a>
 ## Structure of a RepresentationIndex Object ###################################

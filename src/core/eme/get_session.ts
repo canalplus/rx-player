@@ -25,7 +25,6 @@ import {
   mergeMap,
 } from "rxjs/operators";
 import { ICustomMediaKeySession } from "../../compat";
-import config from "../../config";
 import log from "../../log";
 import cleanOldLoadedSessions, {
   ICleanedOldSessionEvent,
@@ -37,8 +36,6 @@ import {
   IMediaKeySessionStores,
 } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
-
-const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS } = config;
 
 /** Information concerning a MediaKeySession. */
 export interface IMediaKeySessionContext {
@@ -94,7 +91,8 @@ export type IGetSessionEvent = ICreatedSession |
 export default function getSession(
   initializationData : IInitializationDataInfo,
   stores : IMediaKeySessionStores,
-  wantedSessionType : MediaKeySessionType
+  wantedSessionType : MediaKeySessionType,
+  maxSessionCacheSize : number
 ) : Observable<IGetSessionEvent> {
   return observableDefer(() : Observable<IGetSessionEvent> => {
     /**
@@ -127,8 +125,7 @@ export default function getSession(
       observableOf(null)
     ).pipe(mergeMap(() => {
       return observableConcat(
-        cleanOldLoadedSessions(loadedSessionsStore,
-                               EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS - 1),
+        cleanOldLoadedSessions(loadedSessionsStore, maxSessionCacheSize),
         createSession(stores, initializationData, wantedSessionType)
           .pipe(map((evt) => ({ type: evt.type,
                                 value: { mediaKeySession: evt.value.mediaKeySession,

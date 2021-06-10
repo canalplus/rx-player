@@ -59,8 +59,7 @@ export interface IRepresentationInfos { bufferType: IAdaptationType;
 
 /** Type for the `representationFilter` API. */
 export type IRepresentationFilter = (representation: Representation,
-                                     adaptationInfos: IRepresentationInfos)
-                                    => boolean;
+                                     adaptationInfos: IRepresentationInfos) => boolean;
 
 /**
  * Normalized Adaptation structure.
@@ -113,11 +112,16 @@ export default class Adaptation {
   /** `true` if at least one Representation is in a supported codec. `false` otherwise. */
   public isSupported : boolean;
 
+  /** Tells if the track is a trick mode track. */
+  public isTrickModeTrack? : boolean;
+
   /**
    * Array containing every errors that happened when the Adaptation has been
    * created, in the order they have happened.
    */
   public readonly parsingErrors : ICustomError[];
+
+  public readonly trickModeTracks? : Adaptation[];
 
   /**
    * @constructor
@@ -128,9 +132,11 @@ export default class Adaptation {
     representationFilter? : IRepresentationFilter;
     isManuallyAdded? : boolean;
   } = {}) {
+    const { trickModeTracks } = parsedAdaptation;
     const { representationFilter, isManuallyAdded } = options;
     this.parsingErrors = [];
     this.id = parsedAdaptation.id;
+    this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
 
     if (!isSupportedAdaptationType(parsedAdaptation.type)) {
       log.info("Manifest: Not supported adaptation type", parsedAdaptation.type);
@@ -158,6 +164,11 @@ export default class Adaptation {
     }
     if (parsedAdaptation.isSignInterpreted !== undefined) {
       this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
+    }
+
+    if (trickModeTracks !== undefined &&
+        trickModeTracks.length > 0) {
+      this.trickModeTracks = trickModeTracks.map((track) => new Adaptation(track));
     }
 
     const argsRepresentations = parsedAdaptation.representations;

@@ -18,6 +18,7 @@ import {
   Observable,
   Observer,
 } from "rxjs";
+import { CustomLoaderError } from "../../errors";
 import {
   CustomManifestLoader,
   ILoadedManifest,
@@ -64,7 +65,8 @@ export default function callCustomManifestLoader(
                               size: _args.size,
                               duration: _args.duration,
                               url: _args.url,
-                              receivedTime, sendingTime } });
+                              receivedTime,
+                              sendingTime } });
           obs.complete();
         }
       };
@@ -76,7 +78,20 @@ export default function callCustomManifestLoader(
       const reject = (err : unknown) : void => {
         if (!hasFallbacked) {
           hasFinished = true;
-          obs.error(err);
+
+          // Format error and send it
+          const castedErr = err as (null | undefined | { message? : string;
+                                                         canRetry? : boolean;
+                                                         isOfflineError? : boolean;
+                                                         xhr? : XMLHttpRequest; });
+          const message = castedErr?.message ??
+                          "Unknown error when fetching the Manifest through a " +
+                          "custom manifestLoader.";
+          const emittedErr = new CustomLoaderError(message,
+                                                   castedErr?.canRetry ?? false,
+                                                   castedErr?.isOfflineError ?? false,
+                                                   castedErr?.xhr);
+          obs.error(emittedErr);
         }
       };
 

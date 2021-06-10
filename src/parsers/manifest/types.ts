@@ -15,12 +15,21 @@
  */
 
 import { IRepresentationIndex } from "../../manifest";
-import { IParsedStreamEventData } from "./dash/node_parsers/EventStream";
+import { IHDRInformation } from "../../manifest/types";
 
 export interface IManifestStreamEvent { start: number;
                                         end?: number;
                                         id?: string;
                                         data: IParsedStreamEventData; }
+
+export interface IParsedStreamEventData {
+  type: "dash-event-stream";
+  value: {
+    schemeIdUri: string;
+    timescale: number;
+    element: Element;
+  };
+}
 
 /** Describes information about an encryption Key ID of a given media. */
 export interface IContentProtectionKID { keyId : Uint8Array;
@@ -110,6 +119,10 @@ export interface IParsedRepresentation {
    * Not set if unknown or if it makes no sense (e.g. for audio).
    */
   width?: number;
+  /**
+   * Information about the HDR characteristic of a content.
+   */
+  hdrInfo?: IHDRInformation;
 }
 
 /** Every possible types an Adaptation can have. */
@@ -159,11 +172,17 @@ export interface IParsedAdaptation {
    * video with sign language.
    */
   isSignInterpreted? : boolean;
+  /** Tells if the track is a trick mode track. */
+  isTrickModeTrack? : boolean;
   /**
    * Language the `Adaptation` is in.
    * Not set if unknown or if it makes no sense for the current track.
    */
   language?: string;
+  /**
+   * TrickMode tracks attached to the adaptation.
+   */
+  trickModeTracks?: IParsedAdaptation[];
 }
 
 /** Information on a given period of time in the Manifest */
@@ -296,3 +315,4 @@ export interface IParsedManifest {
   /** URIs where the manifest can be refreshed by order of importance. */
   uris?: string[];
 }
+
