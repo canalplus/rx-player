@@ -41,7 +41,7 @@ describe("Video Thumbnail Loader", () => {
   });
 
   it("should not work when no thumbnail track", async () => {
-    videoThumbnailLoader.addLoader(DASH_LOADER);
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
     await sleep(75);
     let time;
@@ -57,7 +57,7 @@ describe("Video Thumbnail Loader", () => {
   });
 
   it("should not work when no period at given time", async () => {
-    videoThumbnailLoader.addLoader(DASH_LOADER);
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
     await sleep(75);
     const manifest = rxPlayer.getManifest();
@@ -104,7 +104,7 @@ describe("Video Thumbnail Loader", () => {
   });
 
   it("should load one thumbnail", async () => {
-    videoThumbnailLoader.addLoader(DASH_LOADER);
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail = { time: 1,
                               range: [0, 4] };
     rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
@@ -133,7 +133,7 @@ describe("Video Thumbnail Loader", () => {
   });
 
   it("should load several thumbnails", async () => {
-    videoThumbnailLoader.addLoader(DASH_LOADER);
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 4] };
     const wantedThumbnail2 = { time: 30,
@@ -184,7 +184,7 @@ describe("Video Thumbnail Loader", () => {
   });
 
   it("should set twice the same thumbnail (consecutively)", async () => {
-    videoThumbnailLoader.addLoader(DASH_LOADER);
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 4] };
     rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
@@ -234,7 +234,7 @@ describe("Video Thumbnail Loader", () => {
   });
 
   it("should set several times the same thumbnail (at the same time)", async () => {
-    videoThumbnailLoader.addLoader(DASH_LOADER);
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 4] };
     rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
@@ -278,7 +278,7 @@ describe("Video Thumbnail Loader", () => {
   });
 
   it("should not re-trigger common segments requests when loading contiguous thumbnails", async () => {
-    videoThumbnailLoader.addLoader(DASH_LOADER);
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 8] };
     rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
@@ -316,7 +316,7 @@ describe("Video Thumbnail Loader", () => {
   });
 
   it("should abort a job when starting another", async () => {
-    videoThumbnailLoader.addLoader(DASH_LOADER);
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 4] };
     const wantedThumbnail2 = { time: 11,
@@ -357,7 +357,7 @@ describe("Video Thumbnail Loader", () => {
   });
 
   it("should empty buffer after dispose", async () => {
-    videoThumbnailLoader.addLoader(DASH_LOADER);
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail = { time: 1,
                               range: [0, 4] };
     rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });

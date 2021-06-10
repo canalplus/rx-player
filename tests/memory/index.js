@@ -132,6 +132,7 @@ describe("Memory tests", () => {
                             preferredtexttracks: [{ language: "fra",
                                                     closedcaption: true }] });
     const vtlVideoElement = document.createElement("video");
+    VideoThumbnailLoader.addLoader(DASH_LOADER);
     const videoThumbnailLoader =
       new VideoThumbnailLoader(vtlVideoElement, player);
 
@@ -149,8 +150,6 @@ describe("Memory tests", () => {
       [refToVideoAdaptation];
     expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
       .not.to.equal(undefined);
-
-    videoThumbnailLoader.addLoader(DASH_LOADER);
 
     for (let c = 0; c < 100; c++) {
       await videoThumbnailLoader.setTime(c);

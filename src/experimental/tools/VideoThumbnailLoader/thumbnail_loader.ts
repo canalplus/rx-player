@@ -62,6 +62,8 @@ interface ITimeSettingTask { contentInfos: IContentInfos;
                              stop: () => void;
                              promise: Promise<number>; }
 
+const loaders : ILoaders = {};
+
 /**
  * This tool, as a supplement to the RxPlayer, intent to help creating thumbnails
  * from a video source.
@@ -75,7 +77,6 @@ export default class VideoThumbnailLoader {
   private _player: Player;
   private _currentTask?: ITimeSettingTask;
   private _nextTaskSegmentsCompleteIds?: string[];
-  private _loaders: ILoaders = {};
   constructor(videoElement: HTMLVideoElement,
               player: Player) {
     this._videoElement = videoElement;
@@ -87,8 +88,8 @@ export default class VideoThumbnailLoader {
    * It allows to use it when setting time.
    * @param {function} loaderFunc
    */
-  addLoader(loaderFunc: (features: ILoaders) => void): void {
-    loaderFunc(this._loaders);
+  static addLoader(loaderFunc: (features: ILoaders) => void): void {
+    loaderFunc(loaders);
   }
 
   /**
@@ -171,7 +172,6 @@ export default class VideoThumbnailLoader {
     if (this._currentTask !== undefined) {
       this._currentTask.stop();
     }
-    this._loaders = {};
     disposeMediaSource();
   }
 
@@ -189,7 +189,7 @@ export default class VideoThumbnailLoader {
                                 segments: ISegment[],
                                 time: number
   ): Promise<number> {
-    const loader = this._loaders[contentInfos.manifest.transport];
+    const loader = loaders[contentInfos.manifest.transport];
     if (loader === undefined) {
       const error =
         new VideoThumbnailLoaderError("NO_LOADER",

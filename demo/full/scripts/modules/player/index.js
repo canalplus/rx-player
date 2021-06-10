@@ -15,6 +15,8 @@ import VideoThumbnailLoader, {
   DASH_LOADER
 } from "../../../../../src/experimental/tools/VideoThumbnailLoader";
 
+VideoThumbnailLoader.addLoader(DASH_LOADER);
+
 const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   const player = new RxPlayer({
     limitVideoWidth: false,
@@ -114,7 +116,6 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
         thumbnailVideoElement,
         player
       );
-      videoThumbnailLoader.addLoader(DASH_LOADER);
       state.set({
         videoThumbnailsData: {
           videoThumbnailLoader,

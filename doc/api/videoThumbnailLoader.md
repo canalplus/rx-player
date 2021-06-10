@@ -35,23 +35,27 @@ import VideoThumbnailLoader, {
 import RxPlayer from "rx-player";
 
 const player = new RxPlayer({ /* some options */ });
-player.loadVideo({ /* some other options */ });
+
+// Link logic to handle DASH segments
+VideoThumbnailLoader.addLoader(DASH_LOADER);
 
 // Video element used to display thumbnails.
 const thumbnailVideoElement = document.createElement("video");
+
+// Link VideoThumbnailLoader to the RxPlayer instance
 const videoThumbnailLoader = new VideoThumbnailLoader(
   thumbnailVideoElement,
   player
 );
 
-videoThumbnailLoader.addLoader(DASH_LOADER);
+player.loadVideo({ /* some options */ });
 
-// Ask for the video thumbnail loader to fetch the thumbnail
-// that should be displayed at presentation time = 200.
+// Ask for the VideoThumbnailLoader to fetch a thumbnail for the current
+// content that should be displayed at presentation time = 200 seconds.
 videoThumbnailLoader.setTime(200);
 ```
 
-## Functions ###################################################################
+## Static methods ##############################################################
 
 ### addLoader ##################################################################
 
@@ -61,22 +65,29 @@ _arguments_:
 To be able to load and parse segments from a specific streaming format, you must
 import the corresponding loader and add it to the related instance :
 
+/!\ Note that this is a static method, it has to be called on the
+`VideoThumbnailLoader` class and will add the corresponding logic to all
+`VideoThumbnailLoader` instances (even those already created).
+
 #### Example
 
 ```js
-  import {
+  import VideoThumbnailLoader, {
     DASH_LOADER,
     MPL_LOADER,
   } from "rx-player/experimental/tools/VideoThumbnailLoader";
-  videoThumbnailLoader.addLoader(DASH_LOADER);
-  videoThumbnailLoader.addLoader(MPL_LOADER);
+  VideoThumbnailLoader.addLoader(DASH_LOADER);
+  VideoThumbnailLoader.addLoader(MPL_LOADER);
 ```
+
+## Instance methods ############################################################
 
 ### setTime ####################################################################
 
 _arguments_:
 
-  - _time_ (``number``): Time for which we want to display a thumbnail.
+  - _time_ (``number``): Time for which we want to display a thumbnail, in
+    seconds.
 
 _return value_: ``Promise``
 
