@@ -40,6 +40,29 @@ describe("Video Thumbnail Loader", () => {
     xhrMock.restore();
   });
 
+  it("should not work when no fetcher was imported", async () => {
+    const wantedThumbnail = { time: 1,
+                              range: [0, 4] };
+    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
+    await sleep(75);
+    const manifest = rxPlayer.getManifest();
+    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
+    expect(refToVideoAdaptation).not.to.equal(undefined);
+    manifest.periods[0].adaptations.video[0].trickModeTracks =
+      [refToVideoAdaptation];
+    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
+      .not.to.equal(undefined);
+    let error;
+    try {
+      await videoThumbnailLoader.setTime(wantedThumbnail.time);
+    } catch (err) {
+      error = err;
+    }
+    expect(error).not.to.equal(undefined);
+    expect(error.message).to.equal("VideoThumbnailLoaderError: No imported "+
+                                   "loader for this transport type: dash");
+  });
+
   it("should not work when no thumbnail track", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
@@ -78,29 +101,6 @@ describe("Video Thumbnail Loader", () => {
     expect(error).not.to.equal(undefined);
     expect(time).to.equal(undefined);
     expect(error.message).to.equal("Couldn't find track for this time.");
-  });
-
-  it("should not work when no fetcher was imported", async () => {
-    const wantedThumbnail = { time: 1,
-                              range: [0, 4] };
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    await sleep(75);
-    const manifest = rxPlayer.getManifest();
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
-    let error;
-    try {
-      await videoThumbnailLoader.setTime(wantedThumbnail.time);
-    } catch (err) {
-      error = err;
-    }
-    expect(error).not.to.equal(undefined);
-    expect(error.message).to.equal("VideoThumbnailLoaderError: No imported "+
-                                   "loader for this transport type: dash");
   });
 
   it("should load one thumbnail", async () => {
