@@ -575,8 +575,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
     const { autoPlay,
             audioTrackSwitchingMode,
-            defaultAudioTrack,
-            defaultTextTrack,
             enableFastSwitching,
             initialManifest,
             keySystems,
@@ -731,8 +729,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
       mediaElementTrackChoiceManager =
         this._priv_initializeMediaElementTrackChoiceManager(
-          defaultAudioTrack,
-          defaultTextTrack,
           currentContentCanceller.signal
         );
       if (currentContentCanceller.isUsed()) {
@@ -758,8 +754,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       currentPeriod: null,
       activeAdaptations: null,
       activeRepresentations: null,
-      initialAudioTrack: defaultAudioTrack,
-      initialTextTrack: defaultTextTrack,
       trackChoiceManager: null,
       mediaElementTrackChoiceManager,
     };
@@ -2356,24 +2350,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const cancelSignal = contentInfos.currentContentCanceller.signal;
     this._priv_reloadingMetadata.manifest = manifest;
 
-    const { initialAudioTrack, initialTextTrack } = contentInfos;
     contentInfos.trackChoiceManager = new TrackChoiceManager({
       preferTrickModeTracks: this._priv_preferTrickModeTracks,
     });
 
-    const preferredAudioTracks = initialAudioTrack === undefined ?
-      this._priv_preferredAudioTracks :
-      [initialAudioTrack];
-    contentInfos.trackChoiceManager.setPreferredAudioTracks(preferredAudioTracks, true);
-
-    const preferredTextTracks = initialTextTrack === undefined ?
-      this._priv_preferredTextTracks :
-      [initialTextTrack];
-    contentInfos.trackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
-
     contentInfos.trackChoiceManager
-      .setPreferredVideoTracks(this._priv_preferredVideoTracks,
-                               true);
+      .setPreferredAudioTracks(this._priv_preferredAudioTracks, true);
+    contentInfos.trackChoiceManager
+      .setPreferredTextTracks(this._priv_preferredTextTracks, true);
+    contentInfos.trackChoiceManager
+      .setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
+
     manifest.addEventListener("manifestUpdate", (updates) => {
       // Update the tracks chosen if it changed
       if (contentInfos.trackChoiceManager !== null) {
@@ -2879,14 +2866,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * @param {Object} defaultAudioTrack
-   * @param {Object} defaultTextTrack
    * @param {Object} cancelSignal
    * @returns {Object}
    */
   private _priv_initializeMediaElementTrackChoiceManager(
-    defaultAudioTrack : IAudioTrackPreference | null | undefined,
-    defaultTextTrack : ITextTrackPreference | null | undefined,
     cancelSignal : CancellationSignal
   ) : MediaElementTrackChoiceManager {
     assert(features.directfile !== null,
@@ -2897,16 +2880,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const mediaElementTrackChoiceManager =
       new features.directfile.mediaElementTrackChoiceManager(this.videoElement);
 
-    const preferredAudioTracks = defaultAudioTrack === undefined ?
-      this._priv_preferredAudioTracks :
-      [defaultAudioTrack];
-    mediaElementTrackChoiceManager.setPreferredAudioTracks(preferredAudioTracks, true);
-
-    const preferredTextTracks = defaultTextTrack === undefined ?
-      this._priv_preferredTextTracks :
-      [defaultTextTrack];
-    mediaElementTrackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
-
+    mediaElementTrackChoiceManager
+      .setPreferredAudioTracks(this._priv_preferredAudioTracks, true);
+    mediaElementTrackChoiceManager
+      .setPreferredTextTracks(this._priv_preferredTextTracks, true);
     mediaElementTrackChoiceManager
       .setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
 
@@ -3040,10 +3017,6 @@ interface IPublicApiContentInfos {
   activeRepresentations : {
     [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
   } | null;
-  /** Store starting audio track if one. */
-  initialAudioTrack : undefined|IAudioTrackPreference;
-  /** Store starting text track if one. */
-  initialTextTrack : undefined|ITextTrackPreference;
   /** Keep information on the active SegmentBuffers. */
   segmentBuffersStore : SegmentBuffersStore | null;
   /**
