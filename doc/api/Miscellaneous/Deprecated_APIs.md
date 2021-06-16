@@ -83,31 +83,6 @@ Exactly like `getCurrentAdaptations` and `getManifest`, we found that this API:
 We thus plan to remove that API completely without replacing it.
 If that's a problem for you, please open an issue.
 
-### getNativeTextTrack
-
-`getNativeTextTrack` returned the first `TextTrack` element attached to the
-media element or `null ` if it did not exist.
-
-This API was originally created to allow users to manipulate the `TextTrack`
-element themselves. For example, to "catch" cues as they appear and display them
-differently.
-
-What changed is that we now have two text track modes:
-
-- `html`, which allow advanced subtitle management
-- `native`, the old mode, which display subtitles natively through a
-  `TextTrack` element.
-
-This API will only return an element for the `native` mode, but none for the
-`html` mode because its element is not attached to the media element.
-
-We heavily insist on people wanting advanced usecases to use the `html` mode, as
-many formatting options do not work in `native` mode.
-
-As we considered that `getNativeTextTrack` API was more confusing than it was
-helpful in our current API, we decided to deprecate it. Do not hesitate to open
-an issue if you use this API.
-
 ### getImageTrackData
 
 `getImageTrackData` has been deprecated like most API related to BIF thumbnail
@@ -120,15 +95,6 @@ You can replace this API by using the
 ## RxPlayer Events
 
 The following RxPlayer events has been deprecated.
-
-### nativeTextTracksChange
-
-`nativeTextTracksChange` events are deprecated. Which means they probably
-won't be sent in a `v4.x.x` version.
-
-The reasons are basically the same than for the `getNativeTextTracks` method.
-It should not be needed anymore as most advanced needs should be better answered
-by an `html` text track mode.
 
 ### imageTrackUpdate
 
