@@ -131,9 +131,7 @@ const generateContentId = idGenerator();
 const { getPageActivityRef,
         getPictureOnPictureStateRef,
         getVideoVisibilityRef,
-        getVideoWidthRef,
-        onTextTrackAdded,
-        onTextTrackRemoved } = events;
+        getVideoWidthRef } = events;
 
 /**
  * @class Player
@@ -366,54 +364,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_pictureInPictureRef = getPictureOnPictureStateRef(videoElement,
                                                                  destroyCanceller.signal);
-
-    /** Store last known TextTrack array linked to the media element. */
-    let prevTextTracks : TextTrack[] = [] ;
-    for (let i = 0; i < videoElement.textTracks?.length; i++) {
-      const textTrack = videoElement.textTracks?.[i];
-      if (!isNullOrUndefined(textTrack)) {
-        prevTextTracks.push(textTrack);
-      }
-    }
-
-    /** Callback called when a TextTrack element is added or removed. */
-    const onTextTrackChanges = (_evt : unknown) => {
-      const evt = _evt as Event;
-      const target = evt.target as TextTrackList;
-      const textTrackArr : TextTrack[] = [];
-      for (let i = 0; i < target.length; i++) {
-        const textTrack = target[i];
-        textTrackArr.push(textTrack);
-      }
-
-      const oldTextTracks = prevTextTracks;
-      prevTextTracks = textTrackArr;
-
-      // We can have two consecutive textTrackChanges with the exact same
-      // payload when we perform multiple texttrack operations before the event
-      // loop is freed.
-      if (oldTextTracks.length !== textTrackArr.length) {
-        this._priv_onNativeTextTracksNext(textTrackArr);
-        return;
-      }
-      for (let i = 0; i < oldTextTracks.length; i++) {
-        if (oldTextTracks[i] !== textTrackArr[i]) {
-          this._priv_onNativeTextTracksNext(textTrackArr);
-          return ;
-        }
-      }
-      return ;
-    };
-
-    if (!isNullOrUndefined(videoElement.textTracks)) {
-      onTextTrackAdded(videoElement.textTracks,
-                       onTextTrackChanges,
-                       destroyCanceller.signal);
-      onTextTrackRemoved(videoElement.textTracks,
-                         onTextTrackChanges,
-                         destroyCanceller.signal);
-    }
-
     this._priv_speed = createSharedReference(videoElement.playbackRate,
                                              this._destroyCanceller.signal);
     this._priv_preferTrickModeTracks = false;
@@ -1042,26 +992,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getVideoElement() : HTMLMediaElement|null {
     return this.videoElement;
-  }
-
-  /**
-   * If one returns the first native text-track element attached to the media element.
-   * @deprecated
-   * @returns {TextTrack} - The native TextTrack attached (`null` when none)
-   */
-  getNativeTextTrack() : TextTrack|null {
-    warnOnce("getNativeTextTrack is deprecated." +
-             " Please open an issue if you used this API.");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-    const videoElement = this.videoElement;
-    const textTracks = videoElement.textTracks;
-    if (textTracks.length > 0) {
-      return videoElement.textTracks[0];
-    } else {
-      return null;
-    }
   }
 
   /**
@@ -2673,17 +2603,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each time a textTrack is added to the video DOM Element.
-   *
-   * Trigger the right Player Event.
-   *
-   * @param {Array.<TextTrackElement>} tracks
-   */
-  private _priv_onNativeTextTracksNext(tracks : TextTrack[]) : void {
-    this.trigger("nativeTextTracksChange", tracks);
-  }
-
-  /**
    * Triggered each time the player state updates.
    *
    * Trigger the right Player Event.
@@ -2920,7 +2839,6 @@ interface IPublicAPIEvent {
   volumeChange : number;
   error : IPlayerError | Error;
   warning : IPlayerError | Error;
-  nativeTextTracksChange : TextTrack[];
   periodChange : IPeriod;
   availableAudioBitratesChange : number[];
   availableVideoBitratesChange : number[];
