@@ -92,7 +92,7 @@ export default function request<T>(
       // is more precise, it might also be more efficient.
       timeoutId = window.setTimeout(() => {
         clearCancellingProcess();
-        reject(new RequestError(url, xhr.status, "TIMEOUT", xhr));
+        reject(new RequestError(url, xhr.status, "TIMEOUT"));
       }, timeout + 3000);
     }
 
@@ -132,12 +132,12 @@ export default function request<T>(
 
     xhr.onerror = function onXHRError() {
       clearCancellingProcess();
-      reject(new RequestError(url, xhr.status, "ERROR_EVENT", xhr));
+      reject(new RequestError(url, xhr.status, "ERROR_EVENT"));
     };
 
     xhr.ontimeout = function onXHRTimeout() {
       clearCancellingProcess();
-      reject(new RequestError(url, xhr.status, "TIMEOUT", xhr));
+      reject(new RequestError(url, xhr.status, "TIMEOUT"));
     };
 
     if (onProgress !== undefined) {
@@ -178,7 +178,7 @@ export default function request<T>(
           }
 
           if (isNullOrUndefined(responseData)) {
-            reject(new RequestError(url, xhr.status, "PARSE_ERROR", xhr));
+            reject(new RequestError(url, xhr.status, "PARSE_ERROR"));
             return;
           }
 
@@ -192,7 +192,7 @@ export default function request<T>(
                     responseData });
 
         } else {
-          reject(new RequestError(url, xhr.status, "ERROR_HTTP_CODE", xhr));
+          reject(new RequestError(url, xhr.status, "ERROR_HTTP_CODE"));
         }
       }
     };
