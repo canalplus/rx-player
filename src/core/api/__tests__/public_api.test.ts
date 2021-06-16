@@ -74,14 +74,6 @@ describe("API - Public API", () => {
       });
     });
 
-//     describe("getNativeTextTrack", () => {
-//       it("should return null in getNativeTextTrack by default", () => {
-// eslint-disable import/no-deprecated
-//         expect(player.getNativeTextTrack()).toBe(null);
-// eslint-enable import/no-deprecated
-//       });
-//     });
-
     describe("getPlayerState", () => {
       it("should return \"STOPPED\" in getPlayerState by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
