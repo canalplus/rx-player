@@ -42,7 +42,10 @@ import { IConstructorOptions } from "rx-player/types";
 
 function generateConstructorOptions() : IConstructorOptions {
   const videoElement = document.querySelector("video");
-  return { videoElement };
+  return {
+    stopAtEnd: false,
+    videoElement,
+  };
 }
 
 const options = generateConstructorOptions();
@@ -134,12 +137,6 @@ exported:
   - `ISupplementaryImageTrackOption`: type for an element of the
     `supplementaryImageTracks` array, which is an optional property given to
     `loadVideo`.
-
-  - `IDefaultAudioTrackOption`: type for the `defaultAudioTrack` property
-    optionally given to `loadVideo`.
-
-  - `IDefaultTextTrackOption`: type for the `defaultAudioTrack` property
-    optionally given to `loadVideo`.
 
   - `INetworkConfigOption`: type for the `networkConfig` property
     optionally given to `loadVideo`.
