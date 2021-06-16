@@ -83,35 +83,7 @@ export interface ILoadVideoOptions {
   /* eslint-disable import/no-deprecated */
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
-  defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
-  defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
   /* eslint-enable import/no-deprecated */
-}
-
-/**
- * Value for the `defaultAudioTrack` option of the `loadVideo` method.
- * @deprecated
- */
-export interface IDefaultAudioTrackOption {
-  /** The language wanted for the audio track. */
-  language : string;
-  /** The language normalized into ISO639-3 */
-  normalized : string;
-  /** If `true`, this is an audio description for the visually impaired. */
-  audioDescription : boolean;
-}
-
-/**
- * Value for the `defaultTextTrack` option of the `loadVideo` method.
- * @deprecated
- */
-export interface IDefaultTextTrackOption {
-  /** The language wanted for the text track. */
-  language : string;
-  /** The language normalized into ISO639-3 */
-  normalized : string;
-  /** If `true`, this is closed captions for the hard of hearing. */
-  closedCaption : boolean;
 }
 
 /**

@@ -298,12 +298,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
     } | null;
 
-    /** Store starting audio track if one. */
-    initialAudioTrack : undefined|IAudioTrackPreference;
-
-    /** Store starting text track if one. */
-    initialTextTrack : undefined|ITextTrackPreference;
-
     /** Keep information on the active SegmentBuffers. */
     segmentBuffersStore : SegmentBuffersStore | null;
   };
@@ -616,8 +610,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
     const { autoPlay,
             audioTrackSwitchingMode,
-            defaultAudioTrack,
-            defaultTextTrack,
             enableFastSwitching,
             initialManifest,
             keySystems,
@@ -660,9 +652,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                            manifest: null,
                            currentPeriod: null,
                            activeAdaptations: null,
-                           activeRepresentations: null,
-                           initialAudioTrack: defaultAudioTrack,
-                           initialTextTrack: defaultTextTrack };
+                           activeRepresentations: null };
 
 
     const videoElement = this.videoElement;
@@ -836,17 +826,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_mediaElementTrackChoiceManager =
         new features.directfile.mediaElementTrackChoiceManager(this.videoElement);
 
-      const preferredAudioTracks = defaultAudioTrack === undefined ?
-        this._priv_preferredAudioTracks :
-        [defaultAudioTrack];
       this._priv_mediaElementTrackChoiceManager
-        .setPreferredAudioTracks(preferredAudioTracks, true);
-
-      const preferredTextTracks = defaultTextTrack === undefined ?
-        this._priv_preferredTextTracks :
-        [defaultTextTrack];
+        .setPreferredAudioTracks(this._priv_preferredAudioTracks, true);
       this._priv_mediaElementTrackChoiceManager
-        .setPreferredTextTracks(preferredTextTracks, true);
+        .setPreferredTextTracks(this._priv_preferredTextTracks, true);
 
       this._priv_mediaElementTrackChoiceManager
         .setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
@@ -2372,23 +2355,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos.manifest = manifest;
     this._priv_lastContentPlaybackInfos.manifest = manifest;
 
-    const { initialAudioTrack, initialTextTrack } = contentInfos;
     this._priv_trackChoiceManager = new TrackChoiceManager({
       preferTrickModeTracks: this._priv_preferTrickModeTracks,
     });
 
-    const preferredAudioTracks = initialAudioTrack === undefined ?
-      this._priv_preferredAudioTracks :
-      [initialAudioTrack];
-    this._priv_trackChoiceManager.setPreferredAudioTracks(preferredAudioTracks, true);
+    this._priv_trackChoiceManager
+      .setPreferredAudioTracks(this._priv_preferredAudioTracks, true);
+    this._priv_trackChoiceManager
+      .setPreferredTextTracks(this._priv_preferredTextTracks, true);
+    this._priv_trackChoiceManager
+      .setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
 
-    const preferredTextTracks = initialTextTrack === undefined ?
-      this._priv_preferredTextTracks :
-      [initialTextTrack];
-    this._priv_trackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
-
-    this._priv_trackChoiceManager.setPreferredVideoTracks(this._priv_preferredVideoTracks,
-                                                          true);
     manifest.addEventListener("manifestUpdate", () => {
       // Update the tracks chosen if it changed
       if (this._priv_trackChoiceManager !== null) {

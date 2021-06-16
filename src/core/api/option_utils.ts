@@ -44,10 +44,6 @@ import {
 } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import {
-  normalizeAudioTrack,
-  normalizeTextTrack,
-} from "../../utils/languages";
 import objectAssign from "../../utils/object_assign";
 import warnOnce from "../../utils/warn_once";
 
@@ -113,8 +109,6 @@ interface IParsedLoadVideoOptionsBase {
   minimumManifestUpdateInterval : number;
   networkConfig: INetworkConfigOption;
   transportOptions : IParsedTransportOptions;
-  defaultAudioTrack : IAudioTrackPreference|null|undefined;
-  defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
@@ -574,20 +568,6 @@ function parseLoadVideoOptions(
     textTrackMode = options.textTrackMode;
   }
 
-  if (!isNullOrUndefined(options.defaultAudioTrack)) {
-    warnOnce("The `defaultAudioTrack` loadVideo option is deprecated.\n" +
-             "Please use the `preferredAudioTracks` constructor option or the" +
-             "`setPreferredAudioTracks` method instead");
-  }
-  const defaultAudioTrack = normalizeAudioTrack(options.defaultAudioTrack);
-
-  if (!isNullOrUndefined(options.defaultTextTrack)) {
-    warnOnce("The `defaultTextTrack` loadVideo option is deprecated.\n" +
-             "Please use the `preferredTextTracks` constructor option or the" +
-             "`setPreferredTextTracks` method instead");
-  }
-  const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-
   const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
                                      DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
@@ -634,8 +614,6 @@ function parseLoadVideoOptions(
   // TODO without cast
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
   return { autoPlay,
-           defaultAudioTrack,
-           defaultTextTrack,
            enableFastSwitching,
            keySystems,
            initialManifest,
