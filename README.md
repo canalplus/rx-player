@@ -83,7 +83,7 @@ repository as a dependency. You can do it via npm:
 
 ```
 npm install --save rx-player
-or
+# or, when using yarn instead of npm
 yarn add rx-player
 ```
 
