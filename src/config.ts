@@ -153,13 +153,6 @@ export default {
   DEFAULT_AUTO_PLAY: false,
 
   /**
-   * If set to false, "native" subtitles (in a <track> element) will be hidden
-   * by default.
-   * @type {Boolean}
-   */
-  DEFAULT_SHOW_NATIVE_SUBTITLE: true,
-
-  /**
    * Default buffer goal in seconds.
    * Once enough content has been downloaded to fill the buffer up to
    * ``current position + DEFAULT_WANTED_BUFFER_AHEAD", we will stop downloading

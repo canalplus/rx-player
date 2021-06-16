@@ -44,10 +44,10 @@ describe("compat - addTextTrack", () => {
     }));
 
     const addTextTrack = require("../add_text_track").default;
-    const { track, trackElement } = addTextTrack(fakeMediaElement, true);
+    const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
-    expect(track.mode).toBe("hidden");
+    expect(track.mode).toBe("showing");
     expect(mockAddTextTrack).not.toHaveBeenCalled();
   });
 
@@ -74,7 +74,7 @@ describe("compat - addTextTrack", () => {
     }));
 
     const addTextTrack = require("../add_text_track").default;
-    const { track, trackElement } = addTextTrack(fakeMediaElement, false);
+    const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
     expect(fakeMediaElement.textTracks.length).toBe(1);
@@ -117,52 +117,7 @@ describe("compat - addTextTrack", () => {
       .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
     const addTextTrack = require("../add_text_track").default;
-    const { track, trackElement } = addTextTrack(fakeMediaElement, true);
-    expect(track).toBe(fakeTextTrack);
-    expect(track.mode).toBe("hidden");
-    expect(trackElement).toBe(fakeTextTrackElement);
-    expect(fakeMediaElement.textTracks[0]).toBe(fakeTextTrack);
-    expect(fakeMediaElement.childNodes[0]).toBe(fakeTextTrackElement);
-    expect(spyOnCreateElement).toHaveBeenCalledTimes(1);
-    expect(mockAppendChild).toHaveBeenCalledTimes(1);
-    spyOnCreateElement.mockReset();
-  });
-
-  it("should create hidden trackElement and set track on mediaElement", () => {
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
-      isIEOrEdge: false,
-    }));
-
-    const fakeTextTrack = {
-      id: "textTrack1",
-      HIDDEN: "hidden",
-      SHOWING: "showing",
-    } as unknown as TextTrack;
-    const fakeTextTrackElement = {
-      track: fakeTextTrack,
-      kind: undefined,
-    } as unknown as HTMLTrackElement;
-
-    const fakeTextTracks: TextTrack[] = [];
-    const fakeChildNodes: HTMLTrackElement[] = [];
-
-    const mockAppendChild = jest.fn((_trackElement) => {
-      fakeChildNodes.push(_trackElement);
-      fakeTextTracks.push(_trackElement.track);
-    });
-
-    const fakeMediaElement = {
-      textTracks: fakeTextTracks,
-      appendChild: mockAppendChild,
-      childNodes: fakeChildNodes,
-    };
-
-    const spyOnCreateElement = jest.spyOn(document, "createElement")
-      .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
-
-    const addTextTrack = require("../add_text_track").default;
-    const { track, trackElement } = addTextTrack(fakeMediaElement, false);
+    const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(track).toBe(fakeTextTrack);
     expect(track.mode).toBe("showing");
     expect(trackElement).toBe(fakeTextTrackElement);

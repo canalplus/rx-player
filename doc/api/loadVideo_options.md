@@ -19,7 +19,6 @@
     - [lowLatencyMode](#prop-lowLatencyMode)
     - [networkConfig](#prop-networkConfig)
     - [enableFastSwitching](#prop-enableFastSwitching)
-    - [hideNativeSubtitle (deprecated)](#prop-hideNativeSubtitle)
     - [supplementaryImageTracks (deprecated)](#prop-supplementaryImageTracks)
     - [supplementaryTextTracks (deprecated)](#prop-supplementaryTextTracks)
     - [defaultAudioTrack (deprecated)](#prop-defaultAudioTrack)
@@ -1333,42 +1332,6 @@ Forbiding the RxPlayer to replace segments altogether is today not possible and
 would even break playback in some situations: when multi-Period DASH contents
 have overlapping segments, when the browser garbage-collect partially a
 segment...
-
-
-
-<a name="prop-hideNativeSubtitle"></a>
-### hideNativeSubtitle #########################################################
-
----
-
-:warning: This option is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_type_: ``Boolean``
-
-_defaults_: ``false``
-
----
-
-:warning: This option has no effect in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-If set to ``true``, the eventual <track> element will be put on mode ``hidden``
-when added to the video element, so it won't actually display the subtitles the
-rx-player add to it.
-
-This has an effect only if:
-
-  - the current ``textTrackMode`` is equal to ``"native"`` (see [textTrackMode
-    option](#prop-textTrackMode))
-
-  - a text track is currently active
-
-  - the text track format is understood by the rx-player
 
 
 
