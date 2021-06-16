@@ -79,11 +79,14 @@ Demo pages for our previous versions are also available
 ## How to use it? ##############################################################
 
 The fastest way to use the player directly in your code is to add this
-repository as a dependency. You can do it via npm:
+repository as a dependency.
 
-```
+You can do it via [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/):
+```sh
+# when using npm:
 npm install --save rx-player
-# or, when using yarn instead of npm
+
+# or, when using yarn instead:
 yarn add rx-player
 ```
 
@@ -116,10 +119,10 @@ to help you familiarize with the RxPlayer API:
   - [Selecting a track](https://developers.canal-plus.com/rx-player/doc/pages/tutorials/track_selection.html)
   - [Listening to events contained in the content](https://canalplus.github.io/rx-player/doc/pages/tutorials/stream_events.html)
 
-We also wrote Live Editable Demo to play with the API:
- - [Playing a clear dash content](https://codesandbox.io/s/rx-player-classic-wc38j)
- - [Playing an encrypted dash content](https://codesandbox.io/s/rx-player-drm-g51hb)
- - [Playing a metaplaylist content](https://codesandbox.io/s/rx-player-metaplaylist-l0t0d)
+We also wrote Live editable demos to play with the API:
+ - [Playing a clear DASH content](https://codesandbox.io/s/rx-player-classic-wc38j)
+ - [Playing an encrypted DASH content](https://codesandbox.io/s/rx-player-drm-g51hb)
+ - [Playing an RxPlayer-specific MetaPlaylist content](https://codesandbox.io/s/rx-player-metaplaylist-l0t0d)
 
 ### Minimal Builds #############################################################
 
@@ -157,7 +160,7 @@ room](https://gitter.im/canalplus/rx-player).
 
 ### Dependencies ###############################################################
 
-After cloning our repo, you should first install our dependencies via
+After cloning our repo, you should first install our dependencies via either
 [npm](https://www.npmjs.com/):
 ```sh
 npm install
