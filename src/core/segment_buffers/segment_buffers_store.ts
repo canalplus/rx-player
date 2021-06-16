@@ -33,8 +33,7 @@ const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
                                                 "image" ];
 
 /** Options available for a "text" SegmentBuffer */
-export type ITextTrackSegmentBufferOptions = { textTrackMode? : "native";
-                                               hideNativeSubtitle? : boolean; } |
+export type ITextTrackSegmentBufferOptions = { textTrackMode? : "native" } |
                                              { textTrackMode : "html";
                                                textTrackElement : HTMLElement; };
 
@@ -293,9 +292,8 @@ export default class SegmentBuffersStore {
         if (features.nativeTextTracksBuffer == null) {
           throw new Error("Native Text track feature not activated");
         }
-        segmentBuffer = new features
-          .nativeTextTracksBuffer(this._mediaElement,
-                                  options.hideNativeSubtitle === true);
+        segmentBuffer = new features.nativeTextTracksBuffer(this._mediaElement);
+
       }
       this._initializedSegmentBuffers.text = segmentBuffer;
       return segmentBuffer;
