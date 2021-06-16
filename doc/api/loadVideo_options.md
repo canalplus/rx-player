@@ -1280,7 +1280,7 @@ This object can take the following properties (all are optional):
 
   - The request failed because of a timeout
 
-  - the request failed because of an unknown XHR error (might be a
+  - the request failed because of an unknown request error (might be a
     parsing/interface error)
 
 

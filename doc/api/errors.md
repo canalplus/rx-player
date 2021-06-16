@@ -100,7 +100,7 @@ Among its properties, you have:
 
   - ``url`` (``string``): The url the request has been on
 
-  - ``status`` (``Number``): Shortcut to the status code of the xhr.
+  - ``status`` (``Number``): Status code of the HTTP request.
 
   - ``errorType`` (``string``): Further precision about what went wrong.
 
@@ -110,9 +110,6 @@ Among its properties, you have:
       - ``"PARSE_ERROR"``: No data could have been extracted from this request
       - ``"ERROR_HTTP_CODE"``: The request finished with a status code not in
         the 2xx range.
-
-  - ``code`` (``number``): The HTTP code of the request at the time of the
-    error (`0` if no request has been done yet)
 
   - ``xhr`` (``XMLHttpRequest|undefined``): The xhr associated with the request.
     Not defined if the current content has been launched in `lowLatencyMode`.
