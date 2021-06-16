@@ -32,7 +32,6 @@
     - [streamEventSkip](events-streamEventSkip)
  - [Deprecated](#events-deprecated)
     - [imageTrackUpdate (deprecated)](#events-imageTrackUpdate)
-    - [nativeTextTracksChange (deprecated)](#events-nativeTextTracksChange)
 
 
 
@@ -738,27 +737,3 @@ Has the following property in its payload:
   page](./images.md#api-structure).
 
 
-<a name="events-nativeTextTracksChange"></a>
-### nativeTextTracksChange #####################################################
-
----
-
-:warning: This event is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_payload type_: ``Array.<TextTrackElement>``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
-Triggered each times a new ``<track>`` element is removed or added to the video
-element.
-
-The payload is the array of ``TextTrack`` elements. The RxPlayer will only set
-a single ``<track>`` when a text track is set.
