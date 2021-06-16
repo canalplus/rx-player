@@ -69,7 +69,6 @@ describe("API - parseConstructorOptions", () => {
     DEFAULT_MAX_BUFFER_AHEAD,
     DEFAULT_MAX_BUFFER_BEHIND,
     DEFAULT_MAX_VIDEO_BUFFER_SIZE,
-    // DEFAULT_SHOW_NATIVE_SUBTITLE,
     // DEFAULT_TEXT_TRACK_MODE,
     DEFAULT_THROTTLE_WHEN_HIDDEN,
     DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
@@ -496,7 +495,6 @@ describe("API - parseLoadVideoOptions", () => {
     defaultAudioTrack: undefined,
     defaultTextTrack: undefined,
     enableFastSwitching: true,
-    hideNativeSubtitle: false,
     initialManifest: undefined,
     keySystems: [],
     lowLatencyMode: false,
@@ -734,29 +732,6 @@ describe("API - parseLoadVideoOptions", () => {
       "option is deprecated.\n" +
       "Please use the `preferredTextTracks` constructor option or the" +
       "`setPreferredTextTracks` method instead");
-  });
-
-  it("should authorize setting a hideNativeSubtitle option", () => {
-    expect(parseLoadVideoOptions({
-      hideNativeSubtitle: false,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      hideNativeSubtitle: false,
-    });
-    expect(parseLoadVideoOptions({
-      hideNativeSubtitle: true,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      hideNativeSubtitle: true,
-    });
   });
 
   it("should authorize setting a keySystem option", () => {
