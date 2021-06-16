@@ -28,8 +28,6 @@ export {
   IKeySystemOption,
   ISupplementaryTextTrackOption,
   ISupplementaryImageTrackOption,
-  IDefaultAudioTrackOption,
-  IDefaultTextTrackOption,
   INetworkConfigOption,
   IStartAtOption,
 

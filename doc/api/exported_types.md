@@ -126,12 +126,6 @@ exported:
     ``supplementaryImageTracks`` array, which is an optional property given to
     ``loadVideo``.
 
-  - ``IDefaultAudioTrackOption``: type for the ``defaultAudioTrack`` property
-    optionally given to ``loadVideo``.
-
-  - ``IDefaultTextTrackOption``: type for the ``defaultAudioTrack`` property
-    optionally given to ``loadVideo``.
-
   - ``INetworkConfigOption``: type for the ``networkConfig`` property
     optionally given to ``loadVideo``.
 

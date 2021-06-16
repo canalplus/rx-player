@@ -24,10 +24,6 @@
 
 import config from "../../../config";
 import log from "../../../log";
-import {
-  normalizeAudioTrack,
-  normalizeTextTrack,
-} from "../../../utils/languages";
 import warnOnce from "../../../utils/warn_once";
 import {
   checkReloadOptions,
@@ -39,10 +35,6 @@ jest.mock("../../../log");
 jest.mock("../../../utils/languages");
 jest.mock("../../../utils/warn_once");
 const warnOnceMock = warnOnce as jest.Mock<ReturnType<typeof warnOnce>>;
-const normalizeAudioTrackMock = normalizeAudioTrack as
-  jest.Mock<ReturnType<typeof normalizeAudioTrack>>;
-const normalizeTextTrackMock = normalizeTextTrack as
-  jest.Mock<ReturnType<typeof normalizeTextTrack>>;
 const logWarnMock = log.warn as jest.Mock<ReturnType<typeof log.warn>>;
 
 const {
@@ -67,8 +59,6 @@ describe("API - parseConstructorOptions", () => {
 
   afterEach(() => {
     warnOnceMock.mockReset();
-    normalizeAudioTrackMock.mockReset();
-    normalizeTextTrackMock.mockReset();
     logWarnMock.mockReset();
   });
 
@@ -484,15 +474,11 @@ describe("API - parseLoadVideoOptions", () => {
 
   afterEach(() => {
     warnOnceMock.mockReset();
-    normalizeAudioTrackMock.mockReset();
-    normalizeTextTrackMock.mockReset();
   });
 
   const defaultLoadVideoOptions = {
     audioTrackSwitchingMode: "seamless",
     autoPlay: false,
-    defaultAudioTrack: undefined,
-    defaultTextTrack: undefined,
     enableFastSwitching: true,
     initialManifest: undefined,
     keySystems: [],
@@ -678,59 +664,6 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
       autoPlay: true,
     });
-  });
-
-  it("should normalize a defaultAudioTrack given but announce its deprecation", () => {
-    const track = { normalized: "fra", audioDescription: true, language: "fr" };
-    warnOnceMock.mockReturnValue(undefined);
-    normalizeAudioTrackMock.mockReturnValue(track);
-    normalizeTextTrackMock.mockReturnValue(undefined);
-
-    expect(parseLoadVideoOptions({
-      url: "foo",
-      transport: "bar",
-      defaultAudioTrack: "Kankyō Ongaku" as any,
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      defaultAudioTrack: track,
-    });
-    expect(normalizeAudioTrackMock).toHaveBeenCalledTimes(1);
-    expect(normalizeAudioTrackMock).toHaveBeenCalledWith("Kankyō Ongaku");
-    expect(normalizeTextTrackMock).toHaveBeenCalledTimes(1);
-    expect(normalizeTextTrackMock).toHaveBeenCalledWith(undefined);
-    expect(warnOnceMock).toHaveBeenCalledTimes(1);
-    expect(warnOnceMock).toHaveBeenCalledWith("The `defaultAudioTrack` loadVideo " +
-      "option is deprecated.\n" +
-      "Please use the `preferredAudioTracks` constructor option or the" +
-      "`setPreferredAudioTracks` method instead");
-  });
-
-  it("should normalize a defaultTextTrack given but announce its deprecation", () => {
-    const track = { normalized: "fra", closedCaption: true, language: "fr" };
-    warnOnceMock.mockReturnValue(undefined);
-    normalizeAudioTrackMock.mockReturnValue(undefined);
-    normalizeTextTrackMock.mockReturnValue(track);
-    expect(parseLoadVideoOptions({
-      url: "foo",
-      transport: "bar",
-      defaultTextTrack: "Laurie Spiegel" as any,
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      defaultTextTrack: track,
-    });
-    expect(normalizeTextTrackMock).toHaveBeenCalledTimes(1);
-    expect(normalizeTextTrackMock).toHaveBeenCalledWith("Laurie Spiegel");
-    expect(normalizeAudioTrackMock).toHaveBeenCalledTimes(1);
-    expect(normalizeAudioTrackMock).toHaveBeenCalledWith(undefined);
-    expect(warnOnceMock).toHaveBeenCalledTimes(1);
-    expect(warnOnceMock).toHaveBeenCalledWith("The `defaultTextTrack` loadVideo " +
-      "option is deprecated.\n" +
-      "Please use the `preferredTextTracks` constructor option or the" +
-      "`setPreferredTextTracks` method instead");
   });
 
   it("should authorize setting a keySystem option", () => {
