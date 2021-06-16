@@ -26,13 +26,10 @@ import { isIEOrEdge } from "./browser_detection";
  *     undefined if no trackElement was added.
  *
  * @param {HTMLMediaElement} mediaElement
- * @param {Boolean} hidden - If `true`, the text track will be hidden by
- * default. If `false`, the text track will be directly showing.
  * @returns {Object}
  */
 export default function addTextTrack(
-  mediaElement : HTMLMediaElement,
-  hidden : boolean
+  mediaElement : HTMLMediaElement
 ) : { track : ICompatTextTrack;
       trackElement : HTMLTrackElement | undefined; }
 {
@@ -45,14 +42,13 @@ export default function addTextTrack(
     const tracksLength = mediaElement.textTracks.length;
     track = (tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] :
                                 mediaElement.addTextTrack(kind)) as ICompatTextTrack;
-    track.mode = hidden ? (track.HIDDEN ?? "hidden") :
-                          (track.SHOWING ?? "showing");
+    track.mode = track.SHOWING ?? "showing";
   } else {
     trackElement = document.createElement("track");
     mediaElement.appendChild(trackElement);
     track = trackElement.track;
     trackElement.kind = kind;
-    track.mode = hidden ? "hidden" : "showing";
+    track.mode = "showing";
   }
   return { track, trackElement };
 }

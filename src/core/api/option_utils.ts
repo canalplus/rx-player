@@ -128,7 +128,6 @@ interface IParsedLoadVideoOptionsBase {
  */
 interface IParsedLoadVideoOptionsNative extends IParsedLoadVideoOptionsBase {
   textTrackMode : "native";
-  hideNativeSubtitle : boolean;
 }
 
 /**
@@ -445,7 +444,6 @@ function parseLoadVideoOptions(
           DEFAULT_CODEC_SWITCHING_BEHAVIOR,
           DEFAULT_ENABLE_FAST_SWITCHING,
           DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-          DEFAULT_SHOW_NATIVE_SUBTITLE,
           DEFAULT_TEXT_TRACK_MODE } = config.getCurrent();
 
   if (isNullOrUndefined(options)) {
@@ -619,11 +617,6 @@ function parseLoadVideoOptions(
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
 
-  let hideNativeSubtitle = !DEFAULT_SHOW_NATIVE_SUBTITLE;
-  if (!isNullOrUndefined(options.hideNativeSubtitle)) {
-    warnOnce("The `hideNativeSubtitle` loadVideo option is deprecated");
-    hideNativeSubtitle = !!options.hideNativeSubtitle;
-  }
   const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
                                      DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
@@ -669,7 +662,6 @@ function parseLoadVideoOptions(
            defaultAudioTrack,
            defaultTextTrack,
            enableFastSwitching,
-           hideNativeSubtitle,
            keySystems,
            initialManifest,
            lowLatencyMode,
