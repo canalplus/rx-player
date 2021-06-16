@@ -55,7 +55,6 @@ const customSegmentLoader = (infos, callbacks) => {
       callbacks.resolve({ duration, size, data });
     } else {
       const err = new Error("didn't work");
-      err.xhr = xhr;
       callbacks.reject(err);
     }
   };
@@ -70,7 +69,6 @@ const customSegmentLoader = (infos, callbacks) => {
 
   xhr.onerror = function onXHRError() {
     const err = new Error("didn't work");
-    err.xhr = xhr;
     callbacks.reject(err);
   };
 
@@ -184,13 +182,6 @@ As you can see, this function takes two arguments:
 
               If not set or set to `undefined`, the RxPlayer might retry or fail
               depending on other factors.
-
-            - *xhr* (`XMLHttpRequest|undefined`): If an `XMLHttpRequest` was
-              used to perform this request, this should be the corresponding
-              instance.
-
-              This can be used for example by the RxPlayer to know whether
-              retrying should be done when the `canRetry` property is not set.
 
             - *isOfflineError* (`boolean|undefined`): If set to `true`, this
               indicates that this error is due to the user being offline
@@ -350,13 +341,6 @@ As you can see, this function takes two arguments:
 
               If not set or set to `undefined`, the RxPlayer might retry or fail
               depending on other factors.
-
-            - *xhr* (`XMLHttpRequest|undefined`): If an `XMLHttpRequest` was
-              used to perform this request, this should be the corresponding
-              instance.
-
-              This can be used for example by the RxPlayer to know whether
-              retrying should be done when the `canRetry` property is not set.
 
             - *isOfflineError* (`boolean|undefined`): If set to `true`, this
               indicates that this error is due to the user being offline

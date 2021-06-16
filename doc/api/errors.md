@@ -111,14 +111,6 @@ Among its properties, you have:
       - ``"ERROR_HTTP_CODE"``: The request finished with a status code not in
         the 2xx range.
 
-  - ``xhr`` (``XMLHttpRequest|undefined``): The xhr associated with the request.
-    Not defined if the current content has been launched in `lowLatencyMode`.
-
-    Note: This last property is deprecated. It will disappear in the next major
-    release, the `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
-
-
-
 
 <a name="types-media_error"></a>
 ### MEDIA_ERROR ################################################################
