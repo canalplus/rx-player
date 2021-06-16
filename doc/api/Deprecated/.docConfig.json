@@ -21,10 +21,6 @@
       "displayName": "getImageTrackData"
     },
     {
-      "path": "./getNativeTextTrack.md",
-      "displayName": "getNativeTextTrack"
-    },
-    {
       "path": "./getVideoLoadedTime.md",
       "displayName": "getVideoLoadedTime"
     },
