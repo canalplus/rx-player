@@ -51,8 +51,7 @@ export type IHTMLTextTracksBuffer =
       textTrackElement : HTMLElement) => SegmentBuffer;
 
 export type INativeTextTracksBuffer =
-  new(mediaElement : HTMLMediaElement,
-      hideNativeSubtitle : boolean) => SegmentBuffer;
+  new(mediaElement : HTMLMediaElement) => SegmentBuffer;
 
 export type IMediaElementTrackChoiceManager = typeof MediaElementTrackChoiceManager;
 

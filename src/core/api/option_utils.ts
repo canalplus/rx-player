@@ -54,7 +54,6 @@ const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
         DEFAULT_MAX_BITRATES,
         DEFAULT_MAX_BUFFER_AHEAD,
         DEFAULT_MAX_BUFFER_BEHIND,
-        DEFAULT_SHOW_NATIVE_SUBTITLE,
         DEFAULT_TEXT_TRACK_MODE,
         DEFAULT_THROTTLE_WHEN_HIDDEN,
         DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
@@ -246,7 +245,6 @@ export interface ILoadVideoOptions {
   networkConfig? : INetworkConfigOption;
   startAt? : IStartAtOption;
   textTrackMode? : "native"|"html";
-  hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
   manualBitrateSwitchingMode? : "seamless"|"direct";
   enableFastSwitching? : boolean;
@@ -290,7 +288,6 @@ interface IParsedLoadVideoOptionsBase {
  */
 interface IParsedLoadVideoOptionsNative extends IParsedLoadVideoOptionsBase {
   textTrackMode : "native";
-  hideNativeSubtitle : boolean;
 }
 
 /**
@@ -718,11 +715,6 @@ function parseLoadVideoOptions(
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
 
-  let hideNativeSubtitle = !DEFAULT_SHOW_NATIVE_SUBTITLE;
-  if (!isNullOrUndefined(options.hideNativeSubtitle)) {
-    warnOnce("The `hideNativeSubtitle` loadVideo option is deprecated");
-    hideNativeSubtitle = !!options.hideNativeSubtitle;
-  }
   const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
                                      DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
@@ -772,7 +764,6 @@ function parseLoadVideoOptions(
            defaultAudioTrack,
            defaultTextTrack,
            enableFastSwitching,
-           hideNativeSubtitle,
            keySystems,
            initialManifest,
            lowLatencyMode,
