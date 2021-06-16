@@ -217,12 +217,6 @@ properties, methods, events and so on.
   - [`supplementaryTextTracks`](../api/Loading_a_Content.md#supplementarytexttracks):
     [Deprecated] Add supplementary tracks in the content for text.
 
-  - [`defaultAudioTrack`](../api/Loading_a_Content.md#defaultaudioTrack):
-    [Deprecated] Default characteristics wanted for the audio track.
-
-  - [`defaultTextTrack`](../api/Loading_a_Content.md#defaulttexttrack):
-    [Deprecated] Default characteristics wanted for the text track.
-
 ## Methods
 
   - [`loadVideo`](../api/Loading_a_Content.md): Load a content.
