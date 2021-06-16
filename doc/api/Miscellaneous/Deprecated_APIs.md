@@ -245,17 +245,6 @@ You can read [the related chapter](#bif-apis) for more information.
 You can replace this API by using the
 [parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.
 
-### hideNativeSubtitle
-
-The `hideNativeSubtitle` option is deprecated and won't be replaced.
-
-This is because it was added at a time when our text track API was much less
-advanced. Some applications wanted to handle subtitles themselves and thus hid
-the true "native" subtitles to display them themselves in a better way.
-
-However, this API seems to not be used anymore. Please open an issue if you need
-it.
-
 ## RxPlayer constructor options
 
 The following RxPlayer constructor options are deprecated.
@@ -308,14 +297,3 @@ content.
 
 We recommend to only set a Manifest URL in that property when the transport is
 equal to `smooth`.
-
-### NetworkError
-
-The `xhr` property from a `NetworkError` is deprecated.
-
-This is to prepare the support of low-latency streaming, with
-[CMAF](https://mpeg.chiariglione.org/standards/mpeg-a/common-media-application-format),
-where the `fetch` API has to be used instead of an `XMLHttpRequest`.
-
-We recommend to not rely on this property anymore. You still should have access
-to the `status` and `url` properties.
