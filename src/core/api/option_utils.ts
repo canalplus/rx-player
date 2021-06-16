@@ -30,10 +30,6 @@ import {
 } from "../../transports";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import {
-  normalizeAudioTrack,
-  normalizeTextTrack,
-} from "../../utils/languages";
 import objectAssign from "../../utils/object_assign";
 import warnOnce from "../../utils/warn_once";
 import { IKeySystemOption } from "../eme";
@@ -125,32 +121,6 @@ export interface ISupplementaryImageTrackOption {
   url : string;
   /** Mime-type used to know the format of the image track. */
   mimeType : string;
-}
-
-/**
- * Value for the `defaultAudioTrack` option of the `loadVideo` method.
- * @deprecated
- */
-export interface IDefaultAudioTrackOption {
-  /** The language wanted for the audio track. */
-  language : string;
-  /** The language normalized into ISO639-3 */
-  normalized : string;
-  /** If `true`, this is an audio description for the visually impaired. */
-  audioDescription : boolean;
-}
-
-/**
- * Value for the `defaultTextTrack` option of the `loadVideo` method.
- * @deprecated
- */
-export interface IDefaultTextTrackOption {
-  /** The language wanted for the text track. */
-  language : string;
-  /** The language normalized into ISO639-3 */
-  normalized : string;
-  /** If `true`, this is closed captions for the hard of hearing. */
-  closedCaption : boolean;
 }
 
 /** Value for the `networkConfig` option of the `loadVideo` method. */
@@ -254,8 +224,6 @@ export interface ILoadVideoOptions {
   /* eslint-disable import/no-deprecated */
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
-  defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
-  defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
   /* eslint-enable import/no-deprecated */
 }
 
@@ -273,8 +241,6 @@ interface IParsedLoadVideoOptionsBase {
   minimumManifestUpdateInterval : number;
   networkConfig: INetworkConfigOption;
   transportOptions : IParsedTransportOptions;
-  defaultAudioTrack : IAudioTrackPreference|null|undefined;
-  defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
@@ -701,20 +667,6 @@ function parseLoadVideoOptions(
     textTrackMode = options.textTrackMode;
   }
 
-  if (!isNullOrUndefined(options.defaultAudioTrack)) {
-    warnOnce("The `defaultAudioTrack` loadVideo option is deprecated.\n" +
-             "Please use the `preferredAudioTracks` constructor option or the" +
-             "`setPreferredAudioTracks` method instead");
-  }
-  const defaultAudioTrack = normalizeAudioTrack(options.defaultAudioTrack);
-
-  if (!isNullOrUndefined(options.defaultTextTrack)) {
-    warnOnce("The `defaultTextTrack` loadVideo option is deprecated.\n" +
-             "Please use the `preferredTextTracks` constructor option or the" +
-             "`setPreferredTextTracks` method instead");
-  }
-  const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-
   const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
                                      DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
@@ -761,8 +713,6 @@ function parseLoadVideoOptions(
   // TODO without cast
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
   return { autoPlay,
-           defaultAudioTrack,
-           defaultTextTrack,
            enableFastSwitching,
            keySystems,
            initialManifest,
