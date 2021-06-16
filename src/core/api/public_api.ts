@@ -151,8 +151,7 @@ import TrackChoiceManager from "./track_choice_manager";
 const { getPageActivityRef,
         getPictureOnPictureStateRef,
         getVideoVisibilityRef,
-        getVideoWidthRef,
-        onTextTrackChanges$ } = events;
+        getVideoWidthRef } = events;
 
 /**
  * @class Player
@@ -437,37 +436,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_pictureInPictureRef = getPictureOnPictureStateRef(videoElement,
                                                                  destroyCanceller.signal);
-
-    onTextTrackChanges$(videoElement.textTracks)
-      .pipe(
-        takeUntil(this._priv_destroy$),
-        map((evt : Event) => { // prepare TextTrack array
-          const target = evt.target as TextTrackList;
-          const arr : TextTrack[] = [];
-          for (let i = 0; i < target.length; i++) {
-            const textTrack = target[i];
-            arr.push(textTrack);
-          }
-          return arr;
-        }),
-
-        // We can have two consecutive textTrackChanges with the exact same
-        // payload when we perform multiple texttrack operations before the event
-        // loop is freed.
-        // In that case we only want to fire one time the observable.
-        distinctUntilChanged((textTracksA, textTracksB) => {
-          if (textTracksA.length !== textTracksB.length) {
-            return false;
-          }
-          for (let i = 0; i < textTracksA.length; i++) {
-            if (textTracksA[i] !== textTracksB[i]) {
-              return false;
-            }
-          }
-          return true;
-        })
-      )
-      .subscribe((x : TextTrack[]) => this._priv_onNativeTextTracksNext(x));
 
     this._priv_speed = createSharedReference(videoElement.playbackRate);
     this._priv_preferTrickModeTracks = false;
@@ -1128,26 +1096,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getVideoElement() : HTMLMediaElement|null {
     return this.videoElement;
-  }
-
-  /**
-   * If one returns the first native text-track element attached to the media element.
-   * @deprecated
-   * @returns {TextTrack} - The native TextTrack attached (`null` when none)
-   */
-  getNativeTextTrack() : TextTrack|null {
-    warnOnce("getNativeTextTrack is deprecated." +
-             " Please open an issue if you used this API.");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-    const videoElement = this.videoElement;
-    const textTracks = videoElement.textTracks;
-    if (textTracks.length > 0) {
-      return videoElement.textTracks[0];
-    } else {
-      return null;
-    }
   }
 
   /**
@@ -2746,17 +2694,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each time a textTrack is added to the video DOM Element.
-   *
-   * Trigger the right Player Event.
-   *
-   * @param {Array.<TextTrackElement>} tracks
-   */
-  private _priv_onNativeTextTracksNext(tracks : TextTrack[]) : void {
-    this.trigger("nativeTextTracksChange", tracks);
-  }
-
-  /**
    * Triggered each time the player state updates.
    *
    * Trigger the right Player Event.
@@ -2891,7 +2828,6 @@ interface IPublicAPIEvent {
   volumeChange : number;
   error : IPlayerError | Error;
   warning : IPlayerError | Error;
-  nativeTextTracksChange : TextTrack[];
   periodChange : IPeriod;
   availableAudioBitratesChange : number[];
   availableVideoBitratesChange : number[];

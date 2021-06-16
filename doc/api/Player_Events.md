@@ -643,24 +643,3 @@ page](./Miscellaneous/images.md).
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
-
-### nativeTextTracksChange
-
-<div class="warning">
-This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
-
-_payload type_: `Array.<TextTrackElement>`
-
-Triggered each times a new `<track>` element is removed or added to the media
-element.
-
-The payload is the array of `TextTrack` elements. The RxPlayer will only set
-a single `<track>` when a text track is set.
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
