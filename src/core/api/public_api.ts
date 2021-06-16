@@ -795,8 +795,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       /** Options used by the TextTrack SegmentBuffer. */
       const textTrackOptions = options.textTrackMode === "native" ?
-        { textTrackMode: "native" as const,
-          hideNativeSubtitle: options.hideNativeSubtitle } :
+        { textTrackMode: "native" as const } :
         { textTrackMode: "html" as const,
           textTrackElement: options.textTrackElement };
 

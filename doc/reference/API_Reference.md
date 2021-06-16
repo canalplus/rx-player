@@ -211,9 +211,6 @@ properties, methods, events and so on.
     Enable or disable an optimization replacing segments of poor quality with
     segments of a better quality.
 
-  - [`hideNativeSubtitle`](../api/Loading_a_Content.md#hidenativesubtitle):
-    [Deprecated] hide subtitles in `<track>` elements.
-
   - [`supplementaryImageTracks`](../api/Loading_a_Content.md#supplementaryimagetracks):
     [Deprecated] Add supplementary tracks in the content for thumbnails.
 
