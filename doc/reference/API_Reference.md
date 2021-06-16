@@ -462,10 +462,6 @@ properties, methods, events and so on.
   - [`getImageTrackData`](../api/Deprecated/getImageTrackData.md):
     [Deprecated] Returns the data of the current image track.
 
-  - [`getNativeTextTrack`](../api/Deprecated/getNativeTextTrack.md):
-    [Deprecated] Returns the first `<track>` element attached to the media
-    element.
-
 ## Static Properties
 
   - [`version`](../api/Static_Properties.md#version):
@@ -550,9 +546,6 @@ properties, methods, events and so on.
 
   - [`imageTrackUpdate`](../api/Player_Events.md#imagetrackupdate):
     [Deprecated] The current image track changed.
-
-  - [`nativeTextTracksChange`](../api/Player_Events.md#nativetexttrackschange):
-    [Deprecated] A `<track>` element is added or removed to the media element.
 
 ## Error types
 
