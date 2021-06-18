@@ -55,7 +55,8 @@ export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         isClosedCaption? : boolean;
                                         isDub? : boolean;
                                         isSignInterpreted?: boolean;
-                                        normalizedLanguage? : string; }
+                                        normalizedLanguage? : string;
+                                        rawRepresentations: Representation[]; }
 
 /** Type for the `representationFilter` API. */
 export type IRepresentationFilter = (representation: Representation,
@@ -174,26 +175,29 @@ export default class Adaptation {
     const argsRepresentations = parsedAdaptation.representations;
     const representations : Representation[] = [];
     let isSupported : boolean = false;
-    for (let i = 0; i < argsRepresentations.length; i++) {
-      const representation = new Representation(argsRepresentations[i],
-                                                { type: this.type });
+    const rawRepresentations = argsRepresentations.map(
+      r => new Representation(r, { type: this.type })
+    );
+    rawRepresentations.forEach(representation => {
       const shouldAdd =
         isNullOrUndefined(representationFilter) ||
         representationFilter(representation,
-                             { bufferType: this.type,
-                               language: this.language,
-                               normalizedLanguage: this.normalizedLanguage,
-                               isClosedCaption: this.isClosedCaption,
-                               isDub: this.isDub,
-                               isAudioDescription: this.isAudioDescription,
-                               isSignInterpreted: this.isSignInterpreted });
+          { bufferType: this.type,
+            language: this.language,
+            normalizedLanguage: this.normalizedLanguage,
+            isClosedCaption: this.isClosedCaption,
+            isDub: this.isDub,
+            isAudioDescription: this.isAudioDescription,
+            isSignInterpreted: this.isSignInterpreted,
+            rawRepresentations });
       if (shouldAdd) {
         representations.push(representation);
         if (!isSupported && representation.isSupported) {
           isSupported = true;
         }
       }
-    }
+    });
+
     representations.sort((a, b) => a.bitrate - b.bitrate);
     this.representations = representations;
 
