@@ -856,7 +856,7 @@ considered stable:
     rxPlayer.loadVideo({
       // ...
       transportOptions: {
-        representationFilter(representations, infos) {
+        representationFilter(representation, infos) {
           // ...
         }
       }
