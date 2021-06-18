@@ -23,7 +23,7 @@ import waitForState, {
 } from "../../utils/waitForPlayerState";
 import XHRMock from "../../utils/request_mock";
 
-describe("basic playback use cases: non-linear DASH SegmentTimeline", function () {
+describe.only("basic playback use cases: non-linear DASH SegmentTimeline", function () {
   let player;
   let xhrMock;
 
@@ -216,7 +216,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getPlayerState()).to.equal("PAUSED");
   });
 
-  it("should download first segment when wanted buffer ahead is under first segment duration", async function () {
+  it.only("should download first segment when wanted buffer ahead is under first segment duration", async function () {
     xhrMock.lock();
     player.setWantedBufferAhead(2);
     player.loadVideo({
@@ -230,10 +230,12 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await sleep(1);
 
     // init segments first media segments
+    console.log("BEF", JSON.stringify(xhrMock.getLockedXHR().map(e => e.url)));
     expect(xhrMock.getLockedXHR().length).to.equal(4);
     await xhrMock.flush();
     await sleep(100);
 
+    console.log("AFT", JSON.stringify(xhrMock.getLockedXHR().map(e => e.url)));
     expect(xhrMock.getLockedXHR().length).to.equal(0); // nada
     expect(player.getVideoLoadedTime()).to.be.above(4);
     expect(player.getVideoLoadedTime()).to.be.below(5);

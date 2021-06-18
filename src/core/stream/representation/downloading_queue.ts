@@ -51,124 +51,32 @@ import objectAssign from "../../../utils/object_assign";
 import {
   IPrioritizedSegmentFetcher,
   IPrioritizedSegmentFetcherEvent,
+  ISegmentFetcherChunkEvent,
+  ISegmentFetcherChunkCompleteEvent,
 } from "../../fetchers";
 import {
   IQueuedSegment,
 } from "../types";
 
-/** Event sent by the DownloadingQueue. */
-export type IDownloadingQueueEvent<T> = IParsedSegmentEvent<T> |
-                                        IParsedInitSegmentEvent<T> |
-                                        IEndOfSegmentEvent |
-                                        ILoaderRetryEvent |
-                                        IEndOfQueueEvent;
-
 /**
- * Notify that the initialization segment has been fully loaded and parsed.
- *
- * You can now push that segment to its corresponding buffer and use its parsed
- * metadata.
- */
-export type IParsedInitSegmentEvent<T> = ISegmentParserParsedInitSegment<T> &
-                                         { segment : ISegment;
-                                           type : "parsed-init"; };
-
-/**
- * Notify that a media chunk (decodable sub-part of a media segment) has been
- * loaded and parsed.
- *
- * It can now be pushed to its corresponding buffer. Note that there might be
- * multiple `IParsedSegmentEvent` for a single segment, if that segment is
- * divided into multiple decodable chunks.
- * You will know that all `IParsedSegmentEvent` have been loaded for a given
- * segment once you received the `IEndOfSegmentEvent` for that segment.
- */
-export type IParsedSegmentEvent<T> = ISegmentParserParsedSegment<T> &
-                                     { segment : ISegment;
-                                       type : "parsed-media"; };
-
-/** Notify that a media or initialization segment has been fully-loaded. */
-// TODO Shouldn't that event anounce when the segment has been fully loaded AND
-// parsed? There is technically a risk here if parsing takes too much
-// (asynchronous) time leading to that event being sent before a
-// `IParsedSegmentEvent` for that same segment.
-// In that case we could have all sorts of funny issues.
-export interface IEndOfSegmentEvent { type : "end-of-segment";
-                                      value: { segment : ISegment }; }
-
-/**
- * Notify that a media or initialization segment request is retried.
- * This happened most likely because of an HTTP error.
- */
-export interface ILoaderRetryEvent { type : "retry";
-                                     value : { segment : ISegment;
-                                               error : ICustomError; }; }
-
-/**
- * Notify that the media segment queue is now empty.
- * This can be used to re-check if any segment are now needed.
- */
-export interface IEndOfQueueEvent { type : "end-of-queue"; value : null }
-
-/**
- * Structure of the object that has to be emitted through the `downloadQueue$`
- * Observable, to signal which segments are currently needed.
- */
-export interface IDownloadQueueItem {
-  /**
-   * A potential initialization segment that needs to be loaded and parsed.
-   * It will generally be requested in parralel of any media segment.
-   *
-   * Can be set to `null` if you don't need to load the initialization segment
-   * (e.g. because you already have it or because there is none here).
-   */
-  initSegment : IQueuedSegment | null;
-
-  /**
-   * The queue of media segments currently needed for download.
-   * Those will be loaded from the first element in that queue to the last
-   * element in it.
-   */
-  segmentQueue : IQueuedSegment[];
-}
-
-/** Object describing a pending Segment request. */
-interface ISegmentRequestObject<T> {
-  /** The segment the request is for. */
-  segment : ISegment;
-  /** The request Observable itself. Can be used to update its priority. */
-  request$ : Observable<IPrioritizedSegmentFetcherEvent<T>>;
-  /** Last set priority of the segment request (lower number = higher priority). */
-  priority : number;
-}
-
-/** Context for segments downloaded through the DownloadingQueue. */
-export interface IDownloadingQueueContext {
-  /** Adaptation linked to the segments you want to load. */
-  adaptation : Adaptation;
-  /** Manifest linked to the segments you want to load. */
-  manifest : Manifest;
-  /** Period linked to the segments you want to load. */
-  period : Period;
-  /** Representation linked to the segments you want to load. */
-  representation : Representation;
-}
-
-/**
- * Class scheduling segment downloads for a single Representation according the given
- * `downloadQueue$`.
+ * Class scheduling segment downloads for a single Representation.
  * @class DownloadingQueue
  */
 export default class DownloadingQueue<T> {
   /** Context of the Representation that will be loaded through this DownloadingQueue. */
   private _content : IDownloadingQueueContext;
   /**
-   * DownloadingQueue Observable.
+   * Observable doing segment requests and emitting related events.
    * We only can have maximum one at a time.
    * `null` when `start` has never been called.
    */
   private _currentObs$ : Observable<IDownloadingQueueEvent<T>> | null;
-  /** Queue of segments scheduled for download. */
+  /**
+   * Current queue of segments scheduled for download.
+   *
+   * Segments whose request are still pending are still in that queue. Segments
+   * are only removed from it once their request has finished.
+   */
   private _downloadQueue$ : BehaviorSubject<IDownloadQueueItem>;
   /**
    * Pending request for the initialization segment.
@@ -182,23 +90,36 @@ export default class DownloadingQueue<T> {
   private _mediaSegmentRequest : ISegmentRequestObject<T>|null;
   /** Interface used to load segments. */
   private _segmentFetcher : IPrioritizedSegmentFetcher<T>;
-
-    /** Emit the timescale anounced in the initialization segment once parsed. */
+  /** Emit the timescale anounced in the initialization segment once parsed. */
   private _parsedInitSegment$ : ReplaySubject<number | undefined>;
 
   /**
-   * Create a new DownloadingQueue.
+   * Create a new `DownloadingQueue`.
+   *
    * @param {Object} content - The context of the Representation you want to
    * load segments for.
    * @param {BehaviorSubject} downloadQueue$ - Emit the queue of segments you
    * want to load.
    * @param {Object} segmentFetcher - Interface to facilitate the download of
    * segments.
+   * @param {boolean} hasInitSegment - Declare that an initialization segment
+   * will need to be downloaded.
+   *
+   * A `DownloadingQueue` ALWAYS wait for the initialization segment to be
+   * loaded and parsed before parsing a media segment.
+   *
+   * In cases where no initialization segment exist, this would lead to the
+   * `DownloadingQueue` waiting indefinitely for it.
+   *
+   * By setting that value to `false`, you anounce to the `DownloadingQueue`
+   * that it should not wait for an initialization segment before parsing a
+   * media segment.
    */
   constructor(
     content: IDownloadingQueueContext,
     downloadQueue$ : BehaviorSubject<IDownloadQueueItem>,
-    segmentFetcher : IPrioritizedSegmentFetcher<T>
+    segmentFetcher : IPrioritizedSegmentFetcher<T>,
+    hasInitSegment : boolean
   ) {
     this._content = content;
     this._currentObs$ = null;
@@ -207,11 +128,9 @@ export default class DownloadingQueue<T> {
     this._mediaSegmentRequest = null;
     this._segmentFetcher = segmentFetcher;
     this._parsedInitSegment$ = new ReplaySubject<number|undefined>(1);
-  }
-
-  // XXX TODO
-  public declareNoInitializationSegment() : void {
-    this._parsedInitSegment$.next(undefined);
+    if (!hasInitSegment) {
+      this._parsedInitSegment$.next(undefined);
+    }
   }
 
   /**
@@ -235,7 +154,7 @@ export default class DownloadingQueue<T> {
   }
 
   /**
-   * Start the current downloading queue, emitting events as it loads
+   * Start the current downloading queue, emitting events as it loads and parses
    * initialization and media segments.
    *
    * If it was already started, returns the same - shared - Observable.
@@ -265,7 +184,27 @@ export default class DownloadingQueue<T> {
         }),
         switchMap(({ segmentQueue }) =>
           segmentQueue.length > 0 ? this._requestMediaSegments() :
-                                    EMPTY));
+                                    EMPTY),
+        mergeMap((evt) => {
+          if (evt.type !== "chunk" && evt.type !== "chunk-complete") {
+            return observableOf(evt);
+          }
+          return this._parsedInitSegment$.pipe(
+            take(1),
+            map((initTimescale) => {
+              if (evt.type === "chunk-complete") {
+                return { type: "end-of-segment" as const,
+                         value: { segment: evt.segment } };
+              }
+              const parsed = evt.parse(initTimescale);
+              assert(parsed.segmentType === "media",
+                     "Should have loaded a media segment.");
+              return objectAssign({},
+                                  parsed,
+                                  { type: "parsed-media" as const,
+                                    segment: evt.segment });
+            }));
+        }));
 
       const initSegmentPush$ = this._downloadQueue$.pipe(
         filter((next) => {
@@ -296,14 +235,22 @@ export default class DownloadingQueue<T> {
   }
 
   /**
+   * Internal logic performing media segment requests.
    * @returns {Observable}
    */
-  private _requestMediaSegments() : Observable<IDownloadingQueueEvent<T>> {
+  private _requestMediaSegments() : Observable<ILoaderRetryEvent |
+                                               IEndOfQueueEvent |
+                                               ISegmentFetcherChunkCompleteEvent |
+                                               ISegmentFetcherChunkEvent<T>> {
     const { segmentQueue } = this._downloadQueue$.getValue();
     const currentNeededSegment = segmentQueue[0];
     const recursivelyRequestSegments = (
       startingSegment : IQueuedSegment | undefined
-    ) : Observable<IDownloadingQueueEvent<T>> => {
+    ) : Observable<ILoaderRetryEvent |
+                   IEndOfQueueEvent |
+                   ISegmentFetcherChunkCompleteEvent |
+                   ISegmentFetcherChunkEvent<T>
+    > => {
       if (startingSegment === undefined) {
         return observableOf({ type : "end-of-queue",
                               value : null });
@@ -314,7 +261,7 @@ export default class DownloadingQueue<T> {
 
       this._mediaSegmentRequest = { segment, priority, request$ };
       return request$
-        .pipe(mergeMap((evt) : Observable<IDownloadingQueueEvent<T>> => {
+        .pipe(mergeMap((evt) => {
           switch (evt.type) {
             case "warning":
               return observableOf({ type: "retry" as const,
@@ -327,7 +274,7 @@ export default class DownloadingQueue<T> {
               this._mediaSegmentRequest = null;
               const lastQueue = this._downloadQueue$.getValue().segmentQueue;
               if (lastQueue.length === 0) {
-                return observableOf({ type : "end-of-queue",
+                return observableOf({ type : "end-of-queue" as const,
                                       value : null });
               } else if (lastQueue[0].segment.id === segment.id) {
                 lastQueue.shift();
@@ -336,21 +283,7 @@ export default class DownloadingQueue<T> {
 
             case "chunk":
             case "chunk-complete":
-              return this._parsedInitSegment$.pipe(
-                take(1),
-                map((initTimescale) => {
-                  if (evt.type === "chunk-complete") {
-                    return { type: "end-of-segment" as const,
-                             value: { segment } };
-                  }
-                  const parsed = evt.parse(initTimescale);
-                  assert(parsed.segmentType === "media",
-                         "Should have loaded a media segment.");
-                  return objectAssign({},
-                                      parsed,
-                                      { type: "parsed-media" as const,
-                                        segment });
-                }));
+              return observableOf(evt);
 
             default:
               assertUnreachable(evt);
@@ -364,6 +297,7 @@ export default class DownloadingQueue<T> {
   }
 
   /**
+   * Internal logic performing initialization segment requests.
    * @param {Object} queuedInitSegment
    * @returns {Observable}
    */
@@ -422,12 +356,127 @@ export default class DownloadingQueue<T> {
   }
 }
 
+/** Event sent by the DownloadingQueue. */
+export type IDownloadingQueueEvent<T> = IParsedInitSegmentEvent<T> |
+                                        IParsedSegmentEvent<T> |
+                                        IEndOfSegmentEvent |
+                                        ILoaderRetryEvent |
+                                        IEndOfQueueEvent;
+
+/**
+ * Notify that the initialization segment has been fully loaded and parsed.
+ *
+ * You can now push that segment to its corresponding buffer and use its parsed
+ * metadata.
+ *
+ * Only sent if an initialization segment exists (when the `DownloadingQueue`'s
+ * `hasInitSegment` constructor option has been set to `true`).
+ * In that case, an `IParsedInitSegmentEvent` will always be sent before any
+ * `IParsedSegmentEvent` event is sent.
+ */
+export type IParsedInitSegmentEvent<T> = ISegmentParserParsedInitSegment<T> &
+                                         { segment : ISegment;
+                                           type : "parsed-init"; };
+
+/**
+ * Notify that a media chunk (decodable sub-part of a media segment) has been
+ * loaded and parsed.
+ *
+ * If an initialization segment exists (when the `DownloadingQueue`'s
+ * `hasInitSegment` constructor option has been set to `true`), an
+ * `IParsedSegmentEvent` will always be sent AFTER the `IParsedInitSegmentEvent`
+ * event.
+ *
+ * It can now be pushed to its corresponding buffer. Note that there might be
+ * multiple `IParsedSegmentEvent` for a single segment, if that segment is
+ * divided into multiple decodable chunks.
+ * You will know that all `IParsedSegmentEvent` have been loaded for a given
+ * segment once you received the `IEndOfSegmentEvent` for that segment.
+ */
+export type IParsedSegmentEvent<T> = ISegmentParserParsedSegment<T> &
+                                     { segment : ISegment;
+                                       type : "parsed-media"; };
+
+/** Notify that a media or initialization segment has been fully-loaded. */
+export interface IEndOfSegmentEvent { type : "end-of-segment";
+                                      value: { segment : ISegment }; }
+
+/**
+ * Notify that a media or initialization segment request is retried.
+ * This happened most likely because of an HTTP error.
+ */
+export interface ILoaderRetryEvent { type : "retry";
+                                     value : { segment : ISegment;
+                                               error : ICustomError; }; }
+
+/**
+ * Notify that the media segment queue is now empty.
+ * This can be used to re-check if any segment are now needed.
+ */
+export interface IEndOfQueueEvent { type : "end-of-queue"; value : null }
+
+/**
+ * Structure of the object that has to be emitted through the `downloadQueue$`
+ * Observable, to signal which segments are currently needed.
+ */
+export interface IDownloadQueueItem {
+  /**
+   * A potential initialization segment that needs to be loaded and parsed.
+   * It will generally be requested in parralel of the first media segments.
+   *
+   * Can be set to `null` if you don't need to load the initialization segment
+   * for now.
+   *
+   * If the `DownloadingQueue`'s `hasInitSegment` constructor option has been
+   * set to `true`, no media segment will be parsed before the initialization
+   * segment has been loaded and parsed.
+   */
+  initSegment : IQueuedSegment | null;
+
+  /**
+   * The queue of media segments currently needed for download.
+   *
+   * Those will be loaded from the first element in that queue to the last
+   * element in it.
+   *
+   * Note that any media segments in the segment queue will only be parsed once
+   * either of these is true:
+   *   - An initialization segment has been loaded and parsed by this
+   *     `DownloadingQueue` instance.
+   *   - The `DownloadingQueue`'s `hasInitSegment` constructor option has been
+   *     set to `false`.
+   */
+  segmentQueue : IQueuedSegment[];
+}
+
 /** Object describing a pending Segment request. */
 interface ISegmentRequestObject<T> {
   /** The segment the request is for. */
-  segment : ISegment; // The Segment the request is for
+  segment : ISegment;
   /** The request Observable itself. Can be used to update its priority. */
   request$ : Observable<IPrioritizedSegmentFetcherEvent<T>>;
   /** Last set priority of the segment request (lower number = higher priority). */
-  priority : number; // The current priority of the request
+  priority : number;
+}
+
+/** Context for segments downloaded through the DownloadingQueue. */
+export interface IDownloadingQueueContext {
+  /** Adaptation linked to the segments you want to load. */
+  adaptation : Adaptation;
+  /** Manifest linked to the segments you want to load. */
+  manifest : Manifest;
+  /** Period linked to the segments you want to load. */
+  period : Period;
+  /** Representation linked to the segments you want to load. */
+  representation : Representation;
+}
+
+/** Object describing a pending Segment request. */
+interface ISegmentRequestObject<T> {
+  /** The segment the request is for. */
+  segment : ISegment;
+  /** The request Observable itself. Can be used to update its priority. */
+  request$ : Observable<IPrioritizedSegmentFetcherEvent<T>>;
+  /** Last set priority of the segment request (lower number = higher priority). */
+  priority : number;
 }

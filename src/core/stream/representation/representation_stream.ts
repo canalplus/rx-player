@@ -33,7 +33,6 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
-  ReplaySubject,
   Subject,
 } from "rxjs";
 import {
@@ -198,8 +197,11 @@ interface IInitSegmentState<T> {
    * `null` if there's no initialization segment for that Representation.
    */
   segment : ISegment | null;
-  /** Initialization segment data, once loaded.  */
-  segmentData$ : ReplaySubject<T | null>;
+  /**
+   * Initialization segment data.
+   * `null` either when it doesn't exist or when it has not been loaded yet.
+   */
+  segmentData : T | null;
   /** `true` if the initialization segment has been loaded and parsed. */
   isLoaded : boolean;
 }
@@ -224,14 +226,18 @@ export default function RepresentationStream<T>({
   terminate$,
   options,
 } : IRepresentationStreamArguments<T>) : Observable<IRepresentationStreamEvent<T>> {
-  const { period, adaptation, representation } = content;
-  const { bufferGoal$, drmSystemId, fastSwitchThreshold$ } = options;
+  const { period,
+          adaptation,
+          representation } = content;
+  const { bufferGoal$,
+          drmSystemId,
+          fastSwitchThreshold$ } = options;
   const bufferType = adaptation.type;
 
   /** Saved initialization segment state for this representation. */
   const initSegmentState : IInitSegmentState<T> = {
     segment: representation.index.getInitSegment(),
-    segmentData$: new ReplaySubject<T | null>(1),
+    segmentData: null,
     isLoaded: false,
   };
 
@@ -242,17 +248,33 @@ export default function RepresentationStream<T>({
   const lastSegmentQueue$ =
     new BehaviorSubject<IDownloadQueueItem>({ initSegment: null,
                                               segmentQueue: [] });
+  const hasInitSegment = initSegmentState.segment !== null;
 
   /** Will load every segments in `lastSegmentQueue$` */
   const downloadingQueue = new DownloadingQueue(content,
                                                 lastSegmentQueue$,
-                                                segmentFetcher);
+                                                segmentFetcher,
+                                                hasInitSegment);
 
-  if (initSegmentState.segment === null) {
-    // There's no init segment here, we can bypass loading it and parsing it
-    downloadingQueue.declareNoInitializationSegment();
-    initSegmentState.segmentData$.next(null);
+  if (!hasInitSegment) {
+    initSegmentState.segmentData = null;
     initSegmentState.isLoaded = true;
+  }
+
+  /**
+   * `true` if the event notifying about encryption data has already been
+   * constructed.
+   * Allows to avoid sending multiple times protection events.
+   */
+  let hasSentEncryptionData = false;
+  let encryptionEvent$ : Observable<IEncryptionDataEncounteredEvent> = EMPTY;
+  if (drmSystemId !== undefined) {
+    const encryptionData = representation.getEncryptionData(drmSystemId);
+    if (encryptionData.length > 0) {
+      encryptionEvent$ = observableOf(...encryptionData.map(d =>
+        EVENTS.encryptionDataEncountered(d)));
+      hasSentEncryptionData = true;
+    }
   }
 
   /** Observable loading and pushing segments scheduled through `lastSegmentQueue$`. */
@@ -300,42 +322,43 @@ export default function RepresentationStream<T>({
                  !initSegmentState.isLoaded &&
                  initSegmentState.segment !== null)
       {
-        // prepend initialization segment
         const initSegmentPriority = neededSegments[0].priority;
         neededInitSegment = { segment: initSegmentState.segment,
                               priority: initSegmentPriority };
       }
 
-      const mostNeededSegment = neededSegments[0];
-      const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
-      const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
-
       if (terminate === null) {
         lastSegmentQueue$.next({ initSegment: neededInitSegment,
                                  segmentQueue: neededSegments });
+      } else if (terminate.urgent) {
+        log.debug("Stream: Urgent switch, terminate now.", bufferType);
+        lastSegmentQueue$.next({ initSegment: null, segmentQueue: [] });
+        lastSegmentQueue$.complete();
+        return observableOf(EVENTS.streamTerminating());
       } else {
-        const { urgent } = terminate;
-        if (urgent) {
-          log.debug("Stream: Urgent switch, terminate now.", bufferType);
-          lastSegmentQueue$.next({ initSegment: null, segmentQueue: [] });
+        // Non-urgent termination wanted:
+        // End the download of the current media segment if pending and
+        // terminate once either that request is finished or another segment
+        // is wanted instead, whichever comes first.
+
+        const mostNeededSegment = neededSegments[0];
+        const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
+        const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
+
+        const nextQueue = currentSegmentRequest === null ||
+                          mostNeededSegment === undefined ||
+                          currentSegmentRequest.id !== mostNeededSegment.segment.id ?
+          [] :
+          [mostNeededSegment];
+
+        const nextInit = initSegmentRequest === null ? null :
+                                                       neededInitSegment;
+        lastSegmentQueue$.next({ initSegment: nextInit,
+                                 segmentQueue: nextQueue });
+        if (nextQueue.length === 0 && nextInit === null) {
+          log.debug("Stream: No request left, terminate", bufferType);
           lastSegmentQueue$.complete();
           return observableOf(EVENTS.streamTerminating());
-        } else {
-          const nextQueue = currentSegmentRequest === null ||
-                            mostNeededSegment === undefined ||
-                            currentSegmentRequest.id !== mostNeededSegment.segment.id ?
-            [] :
-            [mostNeededSegment];
-
-          const nextInit = initSegmentRequest === null ? null :
-                                                         neededInitSegment;
-          lastSegmentQueue$.next({ initSegment: nextInit,
-                                   segmentQueue: nextQueue });
-          if (nextQueue.length === 0 && nextInit === null) {
-            log.debug("Stream: No request left, terminate", bufferType);
-            lastSegmentQueue$.complete();
-            return observableOf(EVENTS.streamTerminating());
-          }
         }
       }
 
@@ -356,21 +379,6 @@ export default function RepresentationStream<T>({
     takeWhile((e) => e.type !== "stream-terminating", true)
   );
 
-  /**
-   * `true` if the event notifying about encryption data has already been
-   * constructed.
-   * Allows to avoid sending multiple times protection events.
-   */
-  let hasSentEncryptionData = false;
-  let encryptionEvent$ : Observable<IEncryptionDataEncounteredEvent> = EMPTY;
-  if (drmSystemId !== undefined) {
-    const encryptionData = representation.getEncryptionData(drmSystemId);
-    if (encryptionData.length > 0) {
-      encryptionEvent$ = observableOf(...encryptionData.map(d =>
-        EVENTS.encryptionDataEncountered(d)));
-      hasSentEncryptionData = true;
-    }
-  }
   return observableMerge(status$, queue$, encryptionEvent$).pipe(share());
 
   /**
@@ -440,7 +448,8 @@ export default function RepresentationStream<T>({
       nextTick(() => {
         reCheckNeededSegments$.next();
       });
-      initSegmentState.segmentData$.next(evt.initializationData);
+      console.warn("III", evt.segment.mediaURLs?.[0]);
+      initSegmentState.segmentData = evt.initializationData;
       initSegmentState.isLoaded = true;
 
       // Now that the initialization segment has been parsed - which may have
@@ -464,6 +473,7 @@ export default function RepresentationStream<T>({
               needsManifestRefresh,
               protectionDataUpdate } = evt;
 
+      console.warn("OOO", evt.segment.mediaURLs?.[0]);
       // TODO better handle use cases like key rotation by not always grouping
       // every protection data together? To check.
       const segmentEncryptionEvent$ = protectionDataUpdate &&
@@ -481,16 +491,15 @@ export default function RepresentationStream<T>({
                        value: inbandEvents }) :
         EMPTY;
 
-      const pushMediaSegment$ = initSegmentState.segmentData$.pipe(
-        take(1),
-        mergeMap((initSegmentData) => pushMediaSegment({ clock$,
-                                                         content,
-                                                         initSegmentData,
+      const initSegmentData = initSegmentState.segmentData;
+      const pushMediaSegment$ = pushMediaSegment({ clock$,
+                                                   content,
+                                                   initSegmentData,
 
-                                                         // XXX TODO
-                                                         parsedSegment: evt,
-                                                         segment: evt.segment,
-                                                         segmentBuffer })));
+                                                   // XXX TODO
+                                                   parsedSegment: evt,
+                                                   segment: evt.segment,
+                                                   segmentBuffer });
       return observableConcat(segmentEncryptionEvent$,
                               manifestRefresh$,
                               inbandEvents$,

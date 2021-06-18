@@ -66,6 +66,7 @@ export type ISegmentFetcherWarning = ISegmentLoaderWarning;
  */
 export interface ISegmentFetcherChunkEvent<TSegmentDataType> {
   type : "chunk";
+  segment : ISegment;
   /**
    * Parse the downloaded chunk.
    *
@@ -85,7 +86,10 @@ export interface ISegmentFetcherChunkEvent<TSegmentDataType> {
  * Event sent when all "chunk" of the segments have been communicated through
  * `ISegmentFetcherChunkEvent` events.
  */
-export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete" }
+export interface ISegmentFetcherChunkCompleteEvent {
+  type: "chunk-complete";
+  segment : ISegment;
+}
 
 /** Event sent by the SegmentFetcher when fetching a segment. */
 export type ISegmentFetcherEvent<TSegmentDataType> =
@@ -207,12 +211,14 @@ export default function createSegmentFetcher<
           return observableOf(evt);
         }
         if (evt.type === "chunk-complete") {
-          return observableOf({ type: "chunk-complete" as const });
+          return observableOf({ type: "chunk-complete" as const,
+                                segment: content.segment });
         }
 
         const isChunked = evt.type === "chunk";
         const data = {
           type: "chunk" as const,
+          segment: content.segment,
           /**
            * Parse the loaded data.
            * @param {Object} [initTimescale]
@@ -236,7 +242,8 @@ export default function createSegmentFetcher<
           return observableOf(data);
         }
         return observableConcat(observableOf(data),
-                                observableOf({ type: "chunk-complete" as const }));
+                                observableOf({ type: "chunk-complete" as const,
+                                               segment: content.segment }));
       }),
       share() // avoid multiple side effects if multiple subs
     );
