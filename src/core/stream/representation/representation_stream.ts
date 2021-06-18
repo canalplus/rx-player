@@ -448,7 +448,6 @@ export default function RepresentationStream<T>({
       nextTick(() => {
         reCheckNeededSegments$.next();
       });
-      console.warn("III", evt.segment.mediaURLs?.[0]);
       initSegmentState.segmentData = evt.initializationData;
       initSegmentState.isLoaded = true;
 
@@ -473,7 +472,6 @@ export default function RepresentationStream<T>({
               needsManifestRefresh,
               protectionDataUpdate } = evt;
 
-      console.warn("OOO", evt.segment.mediaURLs?.[0]);
       // TODO better handle use cases like key rotation by not always grouping
       // every protection data together? To check.
       const segmentEncryptionEvent$ = protectionDataUpdate &&

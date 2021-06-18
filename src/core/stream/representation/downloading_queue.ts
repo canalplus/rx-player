@@ -91,7 +91,14 @@ export default class DownloadingQueue<T> {
   /** Interface used to load segments. */
   private _segmentFetcher : IPrioritizedSegmentFetcher<T>;
   /** Emit the timescale anounced in the initialization segment once parsed. */
-  private _parsedInitSegment$ : ReplaySubject<number | undefined>;
+  private _initSegmentMetadata$ : ReplaySubject<number | undefined>;
+  /**
+   * Some media segments might have been loaded and are only awaiting for the
+   * initialization segment to be parsed before being parsed themselves.
+   * This `Set` will contain the `id` property of all segments that are
+   * currently awaiting this event.
+   */
+  private _mediaSegmentsAwaitingInitMetadata : Set<string>;
 
   /**
    * Create a new `DownloadingQueue`.
@@ -127,9 +134,10 @@ export default class DownloadingQueue<T> {
     this._initSegmentRequest = null;
     this._mediaSegmentRequest = null;
     this._segmentFetcher = segmentFetcher;
-    this._parsedInitSegment$ = new ReplaySubject<number|undefined>(1);
+    this._initSegmentMetadata$ = new ReplaySubject<number|undefined>(1);
+    this._mediaSegmentsAwaitingInitMetadata = new Set();
     if (!hasInitSegment) {
-      this._parsedInitSegment$.next(undefined);
+      this._initSegmentMetadata$.next(undefined);
     }
   }
 
@@ -167,18 +175,35 @@ export default class DownloadingQueue<T> {
     const obs = observableDefer(() => {
       const mediaQueue$ = this._downloadQueue$.pipe(
         filter(({ segmentQueue }) => {
+          // First, the first elements of the segmentQueue might be already
+          // loaded but awaiting the initialization segment to be parsed.
+          // Filter those out.
+          let nextSegmentToLoadIdx = 0;
+          while (true) {
+            if (nextSegmentToLoadIdx >= segmentQueue.length) {
+              break;
+            }
+            const nextSegment = segmentQueue[nextSegmentToLoadIdx].segment;
+            if (this._mediaSegmentsAwaitingInitMetadata.has(nextSegment.id)) {
+              nextSegmentToLoadIdx++;
+            } else {
+              break;
+            }
+          }
+
           const currentSegmentRequest = this._mediaSegmentRequest;
-          if (segmentQueue.length === 0) {
+          if (nextSegmentToLoadIdx >= segmentQueue.length) {
             return currentSegmentRequest !== null;
           } else if (currentSegmentRequest === null) {
             return true;
           }
-          if (currentSegmentRequest.segment.id !== segmentQueue[0].segment.id) {
+          const nextItem = segmentQueue[nextSegmentToLoadIdx];
+          if (currentSegmentRequest.segment.id !== nextItem.segment.id) {
             return true;
           }
-          if (currentSegmentRequest.priority !== segmentQueue[0].priority) {
+          if (currentSegmentRequest.priority !== nextItem.priority) {
             this._segmentFetcher.updatePriority(currentSegmentRequest.request$,
-                                                segmentQueue[0].priority);
+                                                nextItem.priority);
           }
           return false;
         }),
@@ -189,7 +214,8 @@ export default class DownloadingQueue<T> {
           if (evt.type !== "chunk" && evt.type !== "chunk-complete") {
             return observableOf(evt);
           }
-          return this._parsedInitSegment$.pipe(
+          this._mediaSegmentsAwaitingInitMetadata.add(evt.segment.id);
+          return this._initSegmentMetadata$.pipe(
             take(1),
             map((initTimescale) => {
               if (evt.type === "chunk-complete") {
@@ -203,6 +229,9 @@ export default class DownloadingQueue<T> {
                                   parsed,
                                   { type: "parsed-media" as const,
                                     segment: evt.segment });
+            }),
+            finalize(() => {
+              this._mediaSegmentsAwaitingInitMetadata.delete(evt.segment.id);
             }));
         }));
 
@@ -338,7 +367,7 @@ export default class DownloadingQueue<T> {
               // side-effect a posteriori in a concat operator
               observableDefer(() => {
                 if (parsed.segmentType === "init") {
-                  this._parsedInitSegment$.next(parsed.initTimescale);
+                  this._initSegmentMetadata$.next(parsed.initTimescale);
                 }
                 return EMPTY;
               }));
