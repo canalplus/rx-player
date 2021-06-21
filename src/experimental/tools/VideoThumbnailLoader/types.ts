@@ -33,5 +33,4 @@ export type ILoaders = Partial<Record<string, ITransportPipelines>>;
 
 export type IThumbnailLoaderSegmentParser =
   ISegmentParser<Uint8Array | ArrayBuffer | null,
-                 Uint8Array | ArrayBuffer | null,
                  Uint8Array | ArrayBuffer | null>;
