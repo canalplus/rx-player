@@ -1,5 +1,4 @@
 import React from "react";
-import clsx from "clsx";
 import Layout from "@theme/Layout";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
@@ -91,7 +90,7 @@ const featuresDeep = [
 
 function Feature({ learnMoreURL, title, description }) {
   return (
-    <div className={clsx("col col--4", styles.feature)}>
+    <div className={`col col--4 ${styles.feature}`}>
       <h3>{title}</h3>
       <p>{description}</p>
       <a href={learnMoreURL}>Learn more</a>
@@ -103,7 +102,7 @@ function FeatureDeep({ title, description, imageUrl, positionImage }) {
   const imgUrl = useBaseUrl(imageUrl);
   if (positionImage === "left") {
     return (
-      <div className={clsx(styles.featureDeep)}>
+      <div className={styles.featureDeep}>
         {imgUrl && (
           <div className="text--center">
             <img className={styles.featureImage} src={imgUrl} alt={title} />
@@ -117,7 +116,7 @@ function FeatureDeep({ title, description, imageUrl, positionImage }) {
     );
   }
   return (
-    <div className={clsx(styles.featureDeep)}>
+    <div className={styles.featureDeep}>
       <div className={styles.text}>
         <h3>{title}</h3>
         <p>{description}</p>
@@ -139,14 +138,14 @@ function Home() {
       title={`Hello from ${siteConfig.title}`}
       description="Description will go into a meta tag in <head />"
     >
-      <header className={clsx("hero hero--primary", styles.heroBanner)}>
+      <header className={`hero hero--primary ${styles.heroBanner}`}>
         <div className="container">
           <h1 className="hero__title">
             {siteConfig.title}, {siteConfig.tagline}
           </h1>
           <div className={styles.buttons}>
             <Link
-              className={clsx("button", styles.getStarted)}
+              className={`button ${styles.getStarted}`}
               to={useBaseUrl("docs/tutorials/quick_start")}
             >
               GET STARTED
