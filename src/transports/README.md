@@ -130,12 +130,16 @@ Its concept can be illustrated as such:
                              +--------+
 ```
 
-The parser returns an Observable which will emit the parsed resource when done.
+Depending on the type of parser (e.g. Manifest parser or segment parser), that
+task can be synchronous or asynchronous.
 
-This Observable will throw if the resource is corrupted or miss crucial
-information.
+In asynchronous cases, the parser will return an Observable emitting a unique
+time the result when done and throwing if an error is encountered.
 
-[1] the parser could also need to perform requests (e.g. it needs to fetch the
+In synchronous cases, the parser returns directly the result, and can throw
+directly when/if an error is encountered.
+
+[1] a parser could also need to perform requests (e.g. it needs to fetch the
 current time from a server).
 In such cases, the parser is given a special callback, which allows it to
 receive the same error-handling perks than a loader, such as multiple retries,

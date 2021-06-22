@@ -94,30 +94,27 @@ function loadAndPushInitData(contentInfos: IContentInfos,
     filter((evt): evt is { type: "data"; value: { responseData: Uint8Array } } =>
       evt.type === "data"),
     mergeMap((evt) => {
-      return segmentParser({
+      const parsed = segmentParser({
         response: {
           data: evt.value.responseData,
           isChunked: false,
         },
         content: inventoryInfos,
-      }).pipe(
-        mergeMap((parserEvent) => {
-          if (parserEvent.type !== "parsed-init-segment") {
-            return EMPTY;
-          }
-          const { initializationData } = parserEvent.value;
-          const initSegmentData = initializationData instanceof ArrayBuffer ?
-            new Uint8Array(initializationData) : initializationData;
-          return sourceBuffer
-            .pushChunk({ data: { initSegment: initSegmentData,
-                                 chunk: null,
-                                 appendWindow: [undefined, undefined],
-                                 timestampOffset: 0,
-                                 codec: contentInfos
-                                   .representation.getMimeTypeString() },
-                         inventoryInfos: null });
-        })
-      );
+      });
+      if (parsed.segmentType !== "init") {
+        return EMPTY;
+      }
+      const { initializationData } = parsed;
+      const initSegmentData = initializationData instanceof ArrayBuffer ?
+        new Uint8Array(initializationData) : initializationData;
+      return sourceBuffer
+        .pushChunk({ data: { initSegment: initSegmentData,
+                             chunk: null,
+                             appendWindow: [undefined, undefined],
+                             timestampOffset: 0,
+                             codec: contentInfos
+                               .representation.getMimeTypeString() },
+                     inventoryInfos: null });
     })
   );
 }

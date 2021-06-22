@@ -76,9 +76,25 @@ export interface ISegmentFetcherCreatorBackoffOptions {
  *   .subscribe((res) => console.log("audio chunk downloaded:", res));
  * ```
  */
-export default class SegmentFetcherCreator<T> {
+export default class SegmentFetcherCreator {
+  /**
+   * Transport pipelines of the currently choosen streaming protocol (e.g. DASH,
+   * Smooth etc.).
+   */
   private readonly _transport : ITransportPipelines;
-  private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<T>>;
+  /**
+   * `ObservablePrioritizer` linked to this SegmentFetcherCreator.
+   *
+   * Note: this is typed as `any` because segment loaders / parsers can use
+   * different types depending on the type of buffer. We could maybe be smarter
+   * about it, but typing as any just in select places, like here, looks like
+   * a good compromise.
+   */
+  private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<any>>;
+  /**
+   * Options used by the SegmentFetcherCreator, e.g. to allow configuration on
+   * segment retries (number of retries maximum, default delay and so on).
+   */
   private readonly _backoffOptions : ISegmentFetcherCreatorBackoffOptions;
 
   /**
@@ -110,12 +126,16 @@ export default class SegmentFetcherCreator<T> {
                         IABRRequestProgressEvent |
                         IABRRequestEndEvent |
                         IABRMetricsEvent>
-  ) : IPrioritizedSegmentFetcher<T> {
+  ) : IPrioritizedSegmentFetcher<any> {
     const backoffOptions = getSegmentBackoffOptions(bufferType, this._backoffOptions);
-    const segmentFetcher = createSegmentFetcher<T>(bufferType,
-                                                   this._transport,
-                                                   requests$,
-                                                   backoffOptions);
-    return applyPrioritizerToSegmentFetcher<T>(this._prioritizer, segmentFetcher);
+    const pipelines = this._transport[bufferType];
+
+    // Types are very complicated here as they are per-type of buffer.
+    // This is the reason why `any` is used instead.
+    const segmentFetcher = createSegmentFetcher<any, any>(bufferType,
+                                                          pipelines,
+                                                          requests$,
+                                                          backoffOptions);
+    return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
   }
 }

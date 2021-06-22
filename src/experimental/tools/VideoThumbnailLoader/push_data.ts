@@ -2,7 +2,6 @@ import {
   EMPTY,
   Observable,
 } from "rxjs";
-import { mergeMap } from "rxjs/operators";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 import Manifest, {
   Adaptation,
@@ -32,26 +31,23 @@ export default function pushData(
   responseData: Uint8Array,
   videoSourceBuffer: AudioVideoSegmentBuffer
 ): Observable<void> {
-  return segmentParser({
+  const parsed = segmentParser({
     response: { data: responseData,
                 isChunked: false },
     content: inventoryInfos,
-  }).pipe(
-    mergeMap((parserEvt) => {
-      if (parserEvt.type !== "parsed-segment") {
-        return EMPTY;
-      }
-      const { chunkData, appendWindow } = parserEvt.value;
-      const segmentData = chunkData instanceof ArrayBuffer ?
-        new Uint8Array(chunkData) : chunkData;
-      return videoSourceBuffer
-        .pushChunk({ data: { chunk: segmentData,
-                             timestampOffset: 0,
-                             appendWindow,
-                             initSegment: null,
-                             codec: inventoryInfos
-                               .representation.getMimeTypeString() },
-                     inventoryInfos });
-    })
-  );
+  });
+  if (parsed.segmentType !== "media") {
+    return EMPTY;
+  }
+  const { chunkData, appendWindow } = parsed;
+  const segmentData = chunkData instanceof ArrayBuffer ?
+    new Uint8Array(chunkData) : chunkData;
+  return videoSourceBuffer
+    .pushChunk({ data: { chunk: segmentData,
+                         timestampOffset: 0,
+                         appendWindow,
+                         initSegment: null,
+                         codec: inventoryInfos
+                           .representation.getMimeTypeString() },
+                 inventoryInfos });
 }

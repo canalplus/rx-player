@@ -38,7 +38,6 @@ import {
 import {
   finalize,
   ignoreElements,
-  map,
   mergeMap,
   share,
   startWith,
@@ -56,9 +55,8 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import {
-  ISegmentParserInitSegment,
   ISegmentParserParsedInitSegment,
-  ISegmentParserSegment,
+  ISegmentParserParsedSegment,
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
@@ -121,7 +119,7 @@ export interface ITerminationOrder {
 }
 
 /** Arguments to give to the RepresentationStream. */
-export interface IRepresentationStreamArguments<T> {
+export interface IRepresentationStreamArguments<TSegmentDataType> {
   /** Periodically emits the current playback conditions. */
   clock$ : Observable<IRepresentationStreamClockTick>;
   /** The context of the Representation you want to load. */
@@ -130,9 +128,9 @@ export interface IRepresentationStreamArguments<T> {
              period : Period;
              representation : Representation; };
   /** The `SegmentBuffer` on which segments will be pushed. */
-  segmentBuffer : SegmentBuffer<T>;
+  segmentBuffer : SegmentBuffer<TSegmentDataType>;
   /** Interface used to load new segments. */
-  segmentFetcher : IPrioritizedSegmentFetcher<T>;
+  segmentFetcher : IPrioritizedSegmentFetcher<TSegmentDataType>;
   /**
    * Observable emitting when the RepresentationStream should "terminate".
    *
@@ -191,40 +189,6 @@ export interface IRepresentationStreamOptions {
   fastSwitchThreshold$: Observable< undefined | number>;
 }
 
-/** Internal event used to notify that the initialization segment has been parsed. */
-type IParsedInitSegmentEvent<T> = ISegmentParserInitSegment<T> &
-                                  { segment : ISegment };
-
-/** Internal event used to notify that a media segment has been parsed. */
-type IParsedSegmentEvent<T> = ISegmentParserSegment<T> &
-                              { segment : ISegment };
-
-/** Internal event used to notify that a segment has been fully-loaded. */
-interface IEndOfSegmentEvent { type : "end-of-segment";
-                               value: { segment : ISegment }; }
-
-/** Internal event used to notify that a segment request is retried. */
-interface ILoaderRetryEvent { type : "retry";
-                              value : { segment : ISegment;
-                                        error : ICustomError; };
-}
-
-/** Internal event sent when loading a segment. */
-type ISegmentLoadingEvent<T> = IParsedSegmentEvent<T> |
-                               IParsedInitSegmentEvent<T> |
-                               IEndOfSegmentEvent |
-                               ILoaderRetryEvent;
-
-/** Object describing a pending Segment request. */
-interface ISegmentRequestObject<T> {
-  /** The segment the request is for. */
-  segment : ISegment; // The Segment the request is for
-  /** The request Observable itself. Can be used to update its priority. */
-  request$ : Observable<IPrioritizedSegmentFetcherEvent<T>>;
-  /** Last set priority of the segment request (lower number = higher priority). */
-  priority : number; // The current priority of the request
-}
-
 /**
  * Build up buffer for a single Representation.
  *
@@ -254,8 +218,9 @@ export default function RepresentationStream<T>({
    * Saved initialization segment state for this representation.
    * `null` if the initialization segment hasn't been loaded yet.
    */
-  let initSegmentObject : ISegmentParserParsedInitSegment<T> | null =
-    initSegment === null ? { initializationData: null,
+  let initSegmentObject : ISegmentParserParsedInitSegment<T | null> | null =
+    initSegment === null ? { segmentType: "init",
+                             initializationData: null,
                              protectionDataUpdate: false,
                              initTimescale: undefined } :
                            null;
@@ -449,11 +414,11 @@ export default function RepresentationStream<T>({
             switch (evt.type) {
               case "warning":
                 return observableOf({ type: "retry" as const,
-                                      value: { segment, error: evt.value } });
+                                      segment,
+                                      error: evt.value });
               case "chunk-complete":
                 currentSegmentRequest = null;
-                return observableOf({ type: "end-of-segment" as const,
-                                      value: { segment } });
+                return observableOf({ type: "end-of-segment", segment });
 
               case "interrupted":
                 log.info("Stream: segment request interrupted temporarly.", segment);
@@ -461,9 +426,10 @@ export default function RepresentationStream<T>({
 
               case "chunk":
                 const initTimescale = initSegmentObject?.initTimescale;
-                return evt.parse(initTimescale).pipe(map(parserResponse => {
-                  return objectAssign({ segment }, parserResponse);
-                }));
+                const parsed = evt.parse(initTimescale);
+                return observableOf({ type: "parsed",
+                                      segment,
+                                      payload: parsed });
 
               case "ended":
                 return requestNextSegment$;
@@ -495,73 +461,23 @@ export default function RepresentationStream<T>({
     switch (evt.type) {
       case "retry":
         return observableConcat(
-          observableOf({ type: "warning" as const, value: evt.value.error }),
+          observableOf({ type: "warning" as const, value: evt.error }),
           observableDefer(() => { // better if done after warning is emitted
-            const retriedSegment = evt.value.segment;
+            const retriedSegment = evt.segment;
             const { index } = representation;
             if (index.isSegmentStillAvailable(retriedSegment) === false) {
               reCheckNeededSegments$.next();
-            } else if (index.canBeOutOfSyncError(evt.value.error, retriedSegment)) {
+            } else if (index.canBeOutOfSyncError(evt.error, retriedSegment)) {
               return observableOf(EVENTS.manifestMightBeOufOfSync());
             }
             return EMPTY; // else, ignore.
           }));
 
-      case "parsed-init-segment": {
-        initSegmentObject = evt.value;
+      case "parsed":
+        return onParsedChunk(evt);
 
-        // Now that the initialization segment has been parsed - which may have
-        // included encryption information - take care of the encryption event
-        // if not already done.
-        const allEncryptionData = representation.getAllEncryptionData();
-        const initEncEvt$ = !hasSentEncryptionData &&
-                            allEncryptionData.length > 0 ?
-          observableOf(...allEncryptionData.map(p =>
-            EVENTS.encryptionDataEncountered(p))) :
-          EMPTY;
-        const pushEvent$ = pushInitSegment({ clock$,
-                                             content,
-                                             segment: evt.segment,
-                                             segmentData: evt.value.initializationData,
-                                             segmentBuffer });
-        return observableMerge(initEncEvt$, pushEvent$);
-      }
-
-      case "parsed-segment": {
-        const initSegmentData = initSegmentObject?.initializationData ?? null;
-        const { inbandEvents,
-                needsManifestRefresh } = evt.value;
-
-        // TODO better handle use cases like key rotation by not always grouping
-        // every protection data together? To check.
-        const segmentEncryptionEvent = evt.value.protectionDataUpdate &&
-                                       !hasSentEncryptionData ?
-          observableOf(...representation.getAllEncryptionData().map(p =>
-            EVENTS.encryptionDataEncountered(p))) :
-          EMPTY;
-
-        const manifestRefresh$ = needsManifestRefresh === true ?
-          observableOf(EVENTS.needsManifestRefresh()) :
-          EMPTY;
-
-        const inbandEvents$ = inbandEvents !== undefined &&
-                              inbandEvents.length > 0 ?
-          observableOf({ type: "inband-events" as const,
-                         value: inbandEvents }) :
-          EMPTY;
-
-        return observableConcat(segmentEncryptionEvent,
-                                manifestRefresh$,
-                                inbandEvents$,
-                                pushMediaSegment({ clock$,
-                                                   content,
-                                                   initSegmentData,
-                                                   parsedSegment: evt.value,
-                                                   segment: evt.segment,
-                                                   segmentBuffer }));
-      }
       case "end-of-segment": {
-        const { segment } = evt.value;
+        const { segment } = evt;
         return segmentBuffer.endOfSegment(objectAssign({ segment }, content))
           .pipe(ignoreElements());
       }
@@ -570,4 +486,102 @@ export default function RepresentationStream<T>({
         assertUnreachable(evt);
     }
   }
+
+  /**
+   * Process a chunk that has just been parsed by pushing it to the
+   * SegmentBuffer and emitting the right events.
+   * @param {Object} evt
+   * @returns {Observable}
+   */
+  function onParsedChunk(
+    evt : IParsedSegmentEvent<T>
+  ) : Observable<IStreamEventAddedSegment<T> |
+                 IEncryptionDataEncounteredEvent |
+                 IInbandEventsEvent |
+                 IStreamNeedsManifestRefresh |
+                 IStreamManifestMightBeOutOfSync>
+  {
+    const parsed = evt.payload;
+    if (parsed.segmentType === "init") {
+      initSegmentObject = parsed;
+
+      // Now that the initialization segment has been parsed - which may have
+      // included encryption information - take care of the encryption event
+      // if not already done.
+      const allEncryptionData = representation.getAllEncryptionData();
+      const initEncEvt$ = !hasSentEncryptionData &&
+                          allEncryptionData.length > 0 ?
+        observableOf(...allEncryptionData.map(p =>
+          EVENTS.encryptionDataEncountered(p))) :
+        EMPTY;
+      const pushEvent$ = pushInitSegment({ clock$,
+                                           content,
+                                           segment: evt.segment,
+                                           segmentData: parsed.initializationData,
+                                           segmentBuffer });
+      return observableMerge(initEncEvt$, pushEvent$);
+
+    } else {
+      const initSegmentData = initSegmentObject?.initializationData ?? null;
+      const { inbandEvents,
+              needsManifestRefresh,
+              protectionDataUpdate } = parsed;
+
+      // TODO better handle use cases like key rotation by not always grouping
+      // every protection data together? To check.
+      const segmentEncryptionEvent$ = protectionDataUpdate &&
+                                     !hasSentEncryptionData ?
+        observableOf(...representation.getAllEncryptionData().map(p =>
+          EVENTS.encryptionDataEncountered(p))) :
+        EMPTY;
+
+      const manifestRefresh$ =  needsManifestRefresh === true ?
+        observableOf(EVENTS.needsManifestRefresh()) :
+        EMPTY;
+      const inbandEvents$ = inbandEvents !== undefined &&
+                            inbandEvents.length > 0 ?
+        observableOf({ type: "inband-events" as const,
+                       value: inbandEvents }) :
+        EMPTY;
+      return observableConcat(segmentEncryptionEvent$,
+                              manifestRefresh$,
+                              inbandEvents$,
+                              pushMediaSegment({ clock$,
+                                                 content,
+                                                 initSegmentData,
+                                                 parsedSegment: parsed,
+                                                 segment: evt.segment,
+                                                 segmentBuffer }));
+    }
+  }
+}
+
+/** Internal event used to notify that a chunk has just been parsed. */
+interface IParsedSegmentEvent<T> { type: "parsed";
+                                   payload: ISegmentParserParsedInitSegment<T> |
+                                            ISegmentParserParsedSegment<T>;
+                                   segment : ISegment; }
+
+/** Internal event used to notify that a segment has been fully-loaded. */
+interface IEndOfSegmentEvent { type : "end-of-segment";
+                               segment : ISegment; }
+
+/** Internal event used to notify that a segment request is retried. */
+interface ILoaderRetryEvent { type : "retry";
+                              segment : ISegment;
+                              error : ICustomError; }
+
+/** Internal event sent when loading a segment. */
+type ISegmentLoadingEvent<T> = IParsedSegmentEvent<T> |
+                               IEndOfSegmentEvent |
+                               ILoaderRetryEvent;
+
+/** Object describing a pending Segment request. */
+interface ISegmentRequestObject<T> {
+  /** The segment the request is for. */
+  segment : ISegment; // The Segment the request is for
+  /** The request Observable itself. Can be used to update its priority. */
+  request$ : Observable<IPrioritizedSegmentFetcherEvent<T>>;
+  /** Last set priority of the segment request (lower number = higher priority). */
+  priority : number; // The current priority of the request
 }

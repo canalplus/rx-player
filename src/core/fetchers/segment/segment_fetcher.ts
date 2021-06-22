@@ -21,7 +21,6 @@ import {
   Subject,
 } from "rxjs";
 import {
-  catchError,
   filter,
   finalize,
   mergeMap,
@@ -31,9 +30,9 @@ import {
 import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
-  ISegmentParserInitSegment,
-  ISegmentParserSegment,
-  ITransportPipelines,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
+  ISegmentPipeline,
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
 import assertUnreachable from "../../../utils/assert_unreachable";
@@ -65,11 +64,21 @@ export type ISegmentFetcherWarning = ISegmentLoaderWarning;
  * Event sent when a new "chunk" of the segment is available.
  * A segment can contain n chunk(s) for n >= 0.
  */
-export interface ISegmentFetcherChunkEvent<T> {
+export interface ISegmentFetcherChunkEvent<TSegmentDataType> {
   type : "chunk";
-  /** Parse the downloaded chunk. */
-  parse : (initTimescale? : number) => Observable<ISegmentParserInitSegment<T> |
-                                                  ISegmentParserSegment<T>>;
+  /**
+   * Parse the downloaded chunk.
+   *
+   * Take in argument the timescale value that might have been obtained by
+   * parsing an initialization segment from the same Representation.
+   * Can be left to `undefined` if unknown or inexistant, segment parsers should
+   * be resilient and still work without that information.
+   *
+   * @param {number} initTimescale
+   * @returns {Object}
+   */
+  parse(initTimescale? : number) : ISegmentParserParsedInitSegment<TSegmentDataType> |
+                                   ISegmentParserParsedSegment<TSegmentDataType>;
 }
 
 /**
@@ -79,12 +88,13 @@ export interface ISegmentFetcherChunkEvent<T> {
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete" }
 
 /** Event sent by the SegmentFetcher when fetching a segment. */
-export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
-                                      ISegmentFetcherChunkEvent<T> |
-                                      ISegmentFetcherWarning;
+export type ISegmentFetcherEvent<TSegmentDataType> =
+  ISegmentFetcherChunkCompleteEvent |
+  ISegmentFetcherChunkEvent<TSegmentDataType> |
+  ISegmentFetcherWarning;
 
-export type ISegmentFetcher<T> = (content : ISegmentLoaderContent) =>
-                                   Observable<ISegmentFetcherEvent<T>>;
+export type ISegmentFetcher<TSegmentDataType> = (content : ISegmentLoaderContent) =>
+  Observable<ISegmentFetcherEvent<TSegmentDataType>>;
 
 const generateRequestID = idGenerator();
 
@@ -96,23 +106,23 @@ const generateRequestID = idGenerator();
  * @param {Object} options
  * @returns {Function}
  */
-export default function createSegmentFetcher<T>(
+export default function createSegmentFetcher<
+  LoadedFormat,
+  TSegmentDataType
+>(
   bufferType : IBufferType,
-  transport : ITransportPipelines,
+  segmentPipeline : ISegmentPipeline<LoadedFormat, TSegmentDataType>,
   requests$ : Subject<IABRMetricsEvent |
                       IABRRequestBeginEvent |
                       IABRRequestProgressEvent |
                       IABRRequestEndEvent>,
   options : IBackoffOptions
-) : ISegmentFetcher<T> {
+) : ISegmentFetcher<TSegmentDataType> {
   const cache = arrayIncludes(["audio", "video"], bufferType) ?
     new InitializationSegmentCache<any>() :
     undefined;
-  const segmentLoader = createSegmentLoader<any>(transport[bufferType].loader,
-                                                 cache,
-                                                 options);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const segmentParser = transport[bufferType].parser as any; // deal with it
+  const segmentLoader = createSegmentLoader(segmentPipeline.loader, cache, options);
+  const segmentParser = segmentPipeline.parser;
 
   /**
    * Process the segmentLoader observable to adapt it to the the rest of the
@@ -125,7 +135,7 @@ export default function createSegmentFetcher<T>(
    */
   return function fetchSegment(
     content : ISegmentLoaderContent
-  ) : Observable<ISegmentFetcherEvent<T>> {
+  ) : Observable<ISegmentFetcherEvent<TSegmentDataType>> {
     const id = generateRequestID();
     let requestBeginSent = false;
     return segmentLoader(content).pipe(
@@ -176,7 +186,7 @@ export default function createSegmentFetcher<T>(
 
       filter((e) : e is ISegmentLoaderChunk |
                         ISegmentLoaderChunkComplete |
-                        ISegmentLoaderData<T> |
+                        ISegmentLoaderData<LoadedFormat> |
                         ISegmentFetcherWarning => {
         switch (e.type) {
           case "warning":
@@ -208,20 +218,17 @@ export default function createSegmentFetcher<T>(
            * @param {Object} [initTimescale]
            * @returns {Observable}
            */
-          parse(initTimescale? : number) : Observable<ISegmentParserInitSegment<T> |
-                                                      ISegmentParserSegment<T>> {
+          parse(initTimescale? : number) :
+            ISegmentParserParsedInitSegment<TSegmentDataType> |
+            ISegmentParserParsedSegment<TSegmentDataType>
+          {
             const response = { data: evt.value.responseData, isChunked };
-            /* eslint-disable @typescript-eslint/no-unsafe-call */
-            /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-            /* eslint-disable @typescript-eslint/no-unsafe-return */
-            return segmentParser({ response, initTimescale, content })
-            /* eslint-enable @typescript-eslint/no-unsafe-call */
-            /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-            /* eslint-enable @typescript-eslint/no-unsafe-return */
-              .pipe(catchError((error: unknown) => {
-                throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
-                                           defaultReason: "Unknown parsing error" });
-              }));
+            try {
+              return segmentParser({ response, initTimescale, content });
+            } catch (error : unknown) {
+              throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
+                                         defaultReason: "Unknown parsing error" });
+            }
           },
         };
 

@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
+import Manifest, {
+  Adaptation,
+  ISegment,
+  Period,
+  Representation,
+} from "../../manifest";
 import { getMDHDTimescale } from "../../parsers/containers/isobmff";
 import {
   strToUtf8,
@@ -26,8 +28,8 @@ import {
 import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserArguments,
-  ISegmentParserInitSegment,
-  ISegmentParserSegment,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
   ITextTrackSegmentData,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
@@ -39,30 +41,44 @@ import {
 
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.
- * @param {Object} infos
+ *
+ * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
+ * @param {boolean} isChunked - If `true`, the `data` may contain only a
+ * decodable subpart of the full data in the linked segment.
+ * @param {Object} content - Object describing the context of the given
+ * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
+ * `Manifest` it is a part of etc.
+ * @param {number|undefined} initTimescale - `timescale` value - encountered
+ * in this linked initialization segment (if it exists) - that may also apply
+ * to that segment if no new timescale is defined in it.
+ * Can be `undefined` if no timescale was defined, if it is not known, or if
+ * no linked initialization segment was yet parsed.
  * @returns {Observable.<Object>}
  */
 function parseISOBMFFEmbeddedTextTrack(
-  { response,
-    content,
-    initTimescale } : ISegmentParserArguments< Uint8Array |
-                                               ArrayBuffer |
-                                               string >
-) : Observable<ISegmentParserInitSegment<null> |
-               ISegmentParserSegment<ITextTrackSegmentData>>
+  data : Uint8Array | ArrayBuffer | string,
+  isChunked : boolean,
+  content : { manifest : Manifest;
+              period : Period;
+              adaptation : Adaptation;
+              representation : Representation;
+              segment : ISegment; },
+  initTimescale : number | undefined,
+  __priv_patchLastSegmentInSidx? : boolean
+) : ISegmentParserParsedInitSegment<null> |
+    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
-  const { data, isChunked } = response;
 
   const chunkBytes = typeof data === "string" ? strToUtf8(data) :
                      data instanceof Uint8Array ? data :
                                                   new Uint8Array(data);
   if (segment.isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: null,
-                                   initTimescale: mdhdTimescale,
-                                   protectionDataUpdate: false } });
+    return { segmentType: "init",
+             initializationData: null,
+             initTimescale: mdhdTimescale,
+             protectionDataUpdate: false };
   }
   const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
                                            isChunked,
@@ -73,36 +89,44 @@ function parseISOBMFFEmbeddedTextTrack(
                                                     chunkInfos,
                                                     isChunked);
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData,
-                                 chunkInfos,
-                                 chunkOffset,
-                                 appendWindow: [period.start, period.end],
-                                 protectionDataUpdate: false } });
+  return { segmentType: "media",
+           chunkData,
+           chunkInfos,
+           chunkOffset,
+           protectionDataUpdate: false,
+           appendWindow: [period.start, period.end] };
 }
 
 /**
- * Parse TextTrack data in plain text form.
- * @param {Object} infos
+ * Parse TextTrack data when it is in plain text form.
+ *
+ * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
+ * @param {boolean} isChunked - If `true`, the `data` may contain only a
+ * decodable subpart of the full data in the linked segment.
+ * @param {Object} content - Object describing the context of the given
+ * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
+ * `Manifest` it is a part of etc.
  * @returns {Observable.<Object>}
  */
 function parsePlainTextTrack(
-  { response,
-    content } : ISegmentParserArguments< Uint8Array |
-                                         ArrayBuffer |
-                                         string >
-) : Observable<ISegmentParserInitSegment<null> |
-               ISegmentParserSegment<ITextTrackSegmentData>>
+  data : Uint8Array | ArrayBuffer | string,
+  isChunked : boolean,
+  content : { manifest : Manifest;
+              period : Period;
+              adaptation : Adaptation;
+              representation : Representation;
+              segment : ISegment; }
+) : ISegmentParserParsedInitSegment<null> |
+    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
   if (segment.isInit) {
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: null,
-                                   initTimescale: undefined,
-                                   protectionDataUpdate: false } });
+    return { segmentType: "init",
+             initializationData: null,
+             initTimescale: undefined,
+             protectionDataUpdate: false };
   }
 
-  const { data, isChunked } = response;
   let textTrackData : string;
   if (typeof data !== "string") {
     const bytesData = data instanceof Uint8Array ? data :
@@ -113,12 +137,12 @@ function parsePlainTextTrack(
   }
   const chunkData = getPlainTextTrackData(content, textTrackData, isChunked);
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData,
-                                 chunkInfos: null,
-                                 chunkOffset,
-                                 appendWindow: [period.start, period.end],
-                                 protectionDataUpdate: false } });
+  return { segmentType: "media",
+           chunkData,
+           chunkInfos: null,
+           chunkOffset,
+           protectionDataUpdate: false,
+           appendWindow: [period.start, period.end] };
 }
 
 /**
@@ -133,25 +157,27 @@ export default function textTrackParser(
                                       ArrayBuffer |
                                       string |
                                       null >
-) : Observable<ISegmentParserInitSegment<null> |
-               ISegmentParserSegment<ITextTrackSegmentData>>
+) : ISegmentParserParsedInitSegment<null> |
+    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
 {
   const { period, adaptation, representation, segment } = content;
   const { data, isChunked } = response;
-  if (data === null) { // No data, just return empty infos
+
+  if (data === null) {
+    // No data, just return an empty placeholder object
     if (segment.isInit) {
-      return observableOf({ type: "parsed-init-segment",
-                            value: { initializationData: null,
-                                     protectionDataUpdate: false,
-                                     initTimescale: undefined } });
+      return { segmentType: "init",
+               initializationData: null,
+               protectionDataUpdate: false,
+               initTimescale: undefined };
     }
-    const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-    return observableOf({ type: "parsed-segment",
-                          value: { chunkData: null,
-                                   chunkInfos: null,
-                                   chunkOffset,
-                                   appendWindow: [period.start, period.end],
-                                   protectionDataUpdate: false } });
+    const chunkOffset = segment.timestampOffset ?? 0;
+    return { segmentType: "media",
+             chunkData: null,
+             chunkInfos: null,
+             chunkOffset,
+             protectionDataUpdate: false,
+             appendWindow: [period.start, period.end] };
   }
 
   const containerType = inferSegmentContainer(adaptation.type, representation);
@@ -161,10 +187,8 @@ export default function textTrackParser(
     // TODO Handle webm containers
     throw new Error("Text tracks with a WEBM container are not yet handled.");
   } else if (containerType === "mp4") {
-    return parseISOBMFFEmbeddedTextTrack({ response: { data, isChunked },
-                                           content,
-                                           initTimescale });
+    return parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale);
   } else {
-    return parsePlainTextTrack({ response: { data, isChunked }, content });
+    return parsePlainTextTrack(data, isChunked, content);
   }
 }
