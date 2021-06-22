@@ -113,7 +113,7 @@ class WebkitMediaKeySession
     this.keyStatuses = new Map();
     this.expiration = NaN;
 
-    this.update = (license: Uint8Array) => {
+    this.update = (license: BufferSource) => {
       return new PPromise((resolve, reject) => {
         /* eslint-disable @typescript-eslint/no-unsafe-member-access */
         if (this._nativeSession === undefined ||
@@ -122,9 +122,17 @@ class WebkitMediaKeySession
           return reject("Unavailable WebKit key session.");
         }
         try {
+          let uInt8Arraylicense: Uint8Array;
+          if (license instanceof ArrayBuffer) {
+            uInt8Arraylicense = new Uint8Array(license);
+          } else if (license instanceof Uint8Array) {
+            uInt8Arraylicense = license;
+          } else {
+            uInt8Arraylicense = new Uint8Array(license.buffer);
+          }
           /* eslint-disable @typescript-eslint/no-unsafe-member-access */
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-          resolve(this._nativeSession.update(license));
+          resolve(this._nativeSession.update(uInt8Arraylicense));
           /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         } catch (err) {
           reject(err);
