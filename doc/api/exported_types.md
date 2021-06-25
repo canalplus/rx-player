@@ -71,7 +71,7 @@ RxPlayer's method ``loadVideo``.
 Example:
 
 ```ts
-// the type(s) wanted
+// the type wanted
 import { ILoadVideoOptions } from "rx-player/types";
 
 // hypothetical file exporting an RxPlayer instance
@@ -95,14 +95,31 @@ rxPlayer.loadVideo(loadVideoOpts);
 Speaking of ``loadVideo``, some subparts of ``ILoadVideoOptions`` are also
 exported:
 
-  - ``ITransportOptions``: type for the ``transportOptions`` property
-    optionally given to ``loadVideo``.
-
   - ``IKeySystemOption``: type for an element of the ``keySystems`` array,
     which is an optional property given to ``loadVideo``.
 
     To clarify, the ``keySystems`` property in a ``loadVideo`` call is an
     optional array of one or multiple ``IKeySystemOption``.
+
+  - `IPersistentSessionStorage`: type of the `licenseStorage` property of the
+    `keySystems` option given to `loadVideo`.
+
+  - `IPersistentSessionInfo`: type used by an `IPersistentSessionStorage`.
+
+  - ``ITransportOptions``: type for the ``transportOptions`` property
+    optionally given to ``loadVideo``.
+
+  - `IManifestLoader`: type for the `manifestLoader` function optionally set
+    on the `transportOptions` option of `loadVideo`.
+
+  - `IRepresentationFilter`: type for the `representationFilter` function
+    optionally set on the `transportOptions` option of `loadVideo`.
+
+  - `IRepresentationInfos`: type for the second argument of the
+    `representationFilter` function (defined by `IRepresentationFilter`.)
+
+  - `ISegmentLoader`: type for the `segmentLoader` function optionally set on
+    the `transportOptions` option of `loadVideo`.
 
   - ``ISupplementaryTextTrackOption``: type for an element of the
     ``supplementaryTextTracks`` array, which is an optional property given to
@@ -123,6 +140,16 @@ exported:
 
   - ``IStartAtOption``: type for the ``startAt`` property optionally given to
     ``loadVideo``.
+
+
+### Manifest structure #########################################################
+
+Several `RxPlayer` methods rely on a `Manifest` structure and one of its
+"children": the `Period`, the `Adaptation`, the `Representation` or the
+`Segment`.
+
+All of those can be imported from `"rx-player/types"` respectively as
+`IManifest`, `IPeriod`, `IAdaptation`, `IRepresentation` and `ISegment`
 
 
 ### getAvailableAudioTracks method / availableAudioTracksChange event ##########
@@ -299,4 +326,30 @@ function processEventData(eventData : IStreamEventData) {
 rxPlayer.addEventListener("streamEvent", (evt : IStreamEvent) {
   processEventData(evt.data);
 });
+```
+
+
+### RxPlayer errors and warnings ###############################################
+
+RxPlayer errors and warnings may for now be either a plain `Error` instance or
+a special RxPlayer-defined error (which extends the `Error` Object).
+
+All RxPlayer-defined error are compatible with the exported `IPlayerError` type.
+
+Which means that you could write the following:
+```ts
+// the type wanted
+import { IPlayerError } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+rxPlayer.addEventListener("error", (err : Error | IPlayerError) => {
+  // ...
+});
+
+rxPlayer.addEventListener("warning", (err : Error | IPlayerError) => {
+  // ...
+});
+
 ```

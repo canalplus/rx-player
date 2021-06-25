@@ -89,7 +89,7 @@ export interface IParsedRepresentation {
    * Representation but which should be different than any other Representation
    * in the same Adaptation.
    */
-  id: string | number;
+  id: string;
 
   /** Codec(s) associated with this Representation. */
   codecs?: string;

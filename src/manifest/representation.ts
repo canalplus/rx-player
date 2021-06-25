@@ -34,7 +34,7 @@ import {
  */
 class Representation {
   /** ID uniquely identifying the Representation in the Adaptation. */
-  public readonly id : string|number;
+  public readonly id : string;
 
   /**
    * Interface allowing to get information about segments available for this

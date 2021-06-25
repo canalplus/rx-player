@@ -16,6 +16,7 @@
 
 import Adaptation, {
   IRepresentationFilter,
+  IRepresentationInfos,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
 import areSameContent from "./are_same_content";
@@ -33,9 +34,13 @@ import {
   ISegment,
   StaticRepresentationIndex,
 } from "./representation_index";
-import { IAdaptationType } from "./types";
+import {
+  IAdaptationType,
+  IHDRInformation,
+} from "./types";
 
 export default Manifest;
+export * from "./types";
 export {
   // utils
   areSameContent,
@@ -48,9 +53,11 @@ export {
   // types
   IAdaptationType,
   IBaseContentInfos,
+  IHDRInformation,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
   IRepresentationFilter,
+  IRepresentationInfos,
   IRepresentationIndex,
   ISegment,
   ISupplementaryImageTrack,

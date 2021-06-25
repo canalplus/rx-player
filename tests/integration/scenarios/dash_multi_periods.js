@@ -312,7 +312,7 @@ describe("DASH multi-Period with different choices", function () {
   });
 });
 
-describe.only("DASH multi-Period with same choices", function () {
+describe("DASH multi-Period with same choices", function () {
   let player;
 
   async function loadContent() {

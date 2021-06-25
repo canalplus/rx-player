@@ -18,7 +18,7 @@ import assertUnreachable from "../../utils/assert_unreachable";
 import request from "../../utils/request";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  CustomManifestLoader,
+  ICustomManifestLoader,
   ILoadedManifestFormat,
   IRequestedData,
 } from "../types";
@@ -66,7 +66,7 @@ function generateRegularManifestLoader(
  * @returns {Function}
  */
 export default function generateManifestLoader(
-  { customManifestLoader } : { customManifestLoader?: CustomManifestLoader },
+  { customManifestLoader } : { customManifestLoader?: ICustomManifestLoader },
   preferredType: "arraybuffer" | "text" | "document"
 ) : (
     url : string | undefined,

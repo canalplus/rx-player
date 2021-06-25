@@ -21,13 +21,13 @@ import {
   CancellationSignal,
 } from "../../utils/task_canceller";
 import {
-  CustomManifestLoader,
+  ICustomManifestLoader,
   ILoadedManifestFormat,
   IRequestedData,
 } from "../types";
 
 export default function callCustomManifestLoader(
-  customManifestLoader : CustomManifestLoader,
+  customManifestLoader : ICustomManifestLoader,
   fallbackManifestLoader : (
     url : string | undefined,
     cancelSignal : CancellationSignal

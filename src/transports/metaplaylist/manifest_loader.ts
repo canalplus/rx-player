@@ -17,7 +17,7 @@
 import request from "../../utils/request";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  CustomManifestLoader,
+  ICustomManifestLoader,
   ILoadedManifestFormat,
   IRequestedData,
 } from "../types";
@@ -43,7 +43,7 @@ function regularManifestLoader(
  * @returns {Function}
  */
 export default function generateManifestLoader(
-  { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
+  { customManifestLoader } : { customManifestLoader?: ICustomManifestLoader }
 ) : (
     url : string | undefined,
     cancelSignal : CancellationSignal

@@ -23,8 +23,8 @@ import config from "../../config";
 import log from "../../log";
 import { IRepresentationFilter } from "../../manifest";
 import {
-  CustomManifestLoader,
-  CustomSegmentLoader,
+  ICustomManifestLoader,
+  ICustomSegmentLoader,
   ILoadedManifestFormat,
   ITransportOptions as IParsedTransportOptions,
 } from "../../transports";
@@ -86,13 +86,13 @@ export interface ITransportOptions {
   /** Manifest object that will be used initially. */
   initialManifest? : ILoadedManifestFormat;
   /** Custom implementation for performing Manifest requests. */
-  manifestLoader? : CustomManifestLoader;
+  manifestLoader? : ICustomManifestLoader;
   /** Possible custom URL pointing to a shorter form of the Manifest. */
   manifestUpdateUrl? : string;
   /** Minimum bound for Manifest updates, in milliseconds. */
   minimumManifestUpdateInterval? : number;
   /** Custom implementation for performing segment requests. */
-  segmentLoader? : CustomSegmentLoader;
+  segmentLoader? : ICustomSegmentLoader;
   /** Custom logic to filter out unwanted qualities. */
   representationFilter? : IRepresentationFilter;
   /** Base time for the segments in case it is not found in the Manifest. */
