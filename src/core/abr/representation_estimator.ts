@@ -39,7 +39,6 @@ import {
 import { getLeftSizeOfRange } from "../../utils/ranges";
 import BandwidthEstimator from "./bandwidth_estimator";
 import BufferBasedChooser from "./buffer_based_chooser";
-import generateCachedSegmentDetector from "./cached_segment_detector";
 import filterByBitrate from "./filter_by_bitrate";
 import filterByWidth from "./filter_by_width";
 import NetworkAnalyzer from "./network_analyzer";
@@ -415,7 +414,6 @@ export default function RepresentationEstimator({
                                                                        initialBitrate,
                                               lowLatencyMode);
   const requestsStore = new PendingRequestsStore();
-  const shouldIgnoreMetrics = generateCachedSegmentDetector();
 
   /**
    * Callback to call when new metrics are available
@@ -423,12 +421,6 @@ export default function RepresentationEstimator({
    */
   function onMetric(value : IABRMetricsEventValue) : void {
     const { duration, size, content } = value;
-
-    if (shouldIgnoreMetrics(content, duration)) {
-      // We already loaded not cached segments.
-      // Do not consider cached segments anymore.
-      return;
-    }
 
     // calculate bandwidth
     bandwidthEstimator.addSample(duration, size);
