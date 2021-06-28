@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import noop from "../../../../../../utils/noop";
 import {
   IMPDIntermediateRepresentation,
 } from "../../../node_parser_types";
@@ -53,6 +54,12 @@ export function generateRootChildrenParser(
                                                       rootObj.mpd.attributes,
                                                       linearMemory);
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
+        break;
+
+      default:
+        // Allows to make sure we're not mistakenly closing a re-opened
+        // tag.
+        parsersStack.pushParsers(nodeId, noop, noop);
         break;
     }
   };

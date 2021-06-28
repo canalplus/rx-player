@@ -162,7 +162,7 @@ export default class DashWasmParser {
         memoryBase: 0,
         tableBase: 0,
         memory: new WebAssembly.Memory({ initial: 10 }),
-        table: new WebAssembly.Table({ initial: 2, element: "anyfunc" }),
+        table: new WebAssembly.Table({ initial: 1, element: "anyfunc" }),
         onTagOpen,
         onCustomEvent,
         onAttribute,
@@ -391,7 +391,7 @@ export default class DashWasmParser {
 
     try {
       // TODO better type this
-      (this._instance.instance.exports.parse_xlink as () => void)();
+      (this._instance.instance.exports.parse as () => void)();
     } catch (err) {
       this._parsersStack.reset();
       this._warnings = [];
