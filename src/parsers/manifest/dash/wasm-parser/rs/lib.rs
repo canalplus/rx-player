@@ -81,12 +81,5 @@ extern "C" {
 pub extern "C" fn parse() {
     let buf_read = BufReader::new(MPDReader {});
     let mut processor = MPDProcessor::new(buf_read);
-    processor.process_document();
-}
-
-#[no_mangle]
-pub extern "C" fn parse_xlink() {
-    let buf_read = BufReader::new(MPDReader {});
-    let mut processor = MPDProcessor::new(buf_read);
-    processor.process_xlink();
+    processor.process_tags();
 }

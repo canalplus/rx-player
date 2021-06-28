@@ -162,7 +162,7 @@ export default class DashWasmParser {
         memoryBase: 0,
         tableBase: 0,
         memory: new WebAssembly.Memory({ initial: 10 }),
-        table: new WebAssembly.Table({ initial: 2, element: "anyfunc" }),
+        table: new WebAssembly.Table({ initial: 1, element: "anyfunc" }),
         onTagOpen,
         onCustomEvent,
         onAttribute,
@@ -401,7 +401,7 @@ export default class DashWasmParser {
       // TODO better type this
       /* eslint-disable @typescript-eslint/no-unsafe-call */
       /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      (this._instance.instance.exports as any).parse_xlink();
+      (this._instance.instance.exports as any).parse();
       /* eslint-enable @typescript-eslint/no-unsafe-call */
       /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     } catch (err) {

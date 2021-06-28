@@ -53,6 +53,12 @@ export function generateEventStreamChildrenParser(
         parsersStack.pushParsers(nodeId, noop, attrParser);
         break;
       }
+
+      default:
+        // Allows to make sure we're not mistakenly closing a re-opened
+        // tag.
+        parsersStack.pushParsers(nodeId, noop, noop);
+        break;
     }
   };
 }
