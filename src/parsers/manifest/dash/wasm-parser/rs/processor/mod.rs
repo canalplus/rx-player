@@ -1,5 +1,5 @@
-use std::io::BufReader;
-use quick_xml::Reader;
+use std::io::{BufReader, Cursor};
+use quick_xml::{Reader, Writer};
 use quick_xml::events::Event;
 
 mod attributes;
@@ -215,7 +215,10 @@ impl MPDProcessor {
                         .report_err();
                     break;
                 }
-                Err(e) => ParsingError::from(e).report_err(),
+                Err(e) => {
+                    ParsingError::from(e).report_err();
+                    break;
+                },
                 _ => (),
             }
         }
@@ -248,7 +251,10 @@ impl MPDProcessor {
                         .report_err();
                     break;
                 }
-                Err(e) => ParsingError::from(e).report_err(),
+                Err(e) => {
+                    ParsingError::from(e).report_err();
+                    break;
+                },
                 _ => (),
             }
             self.reader_buf.clear();
@@ -282,7 +288,10 @@ impl MPDProcessor {
                         .report_err();
                     break;
                 }
-                Err(e) => ParsingError::from(e).report_err(),
+                Err(e) => {
+                    ParsingError::from(e).report_err();
+                    break;
+                },
                 _ => (),
             }
             self.reader_buf.clear();
@@ -317,7 +326,10 @@ impl MPDProcessor {
                         .report_err();
                     break;
                 }
-                Err(e) => ParsingError::from(e).report_err(),
+                Err(e) => {
+                    ParsingError::from(e).report_err();
+                    break;
+                },
                 _ => (),
             }
             self.reader_buf.clear();
@@ -331,40 +343,14 @@ impl MPDProcessor {
 
 
         loop {
-            // We need to keep the XML as-is in the JS-side when it comes to
-            // EventStream's `<Event> elements, as this is part of its public API.
-            //
-            // That means that we have to communicate in some way this exact data.
-            // Sadly, quick_xml doesn't seem to have corresponding APIs that would
-            // make this easy.
-            // In the meantime, we will just return the first and last position
-            // in bytes of `<Event>` elements (by recording the position just before
-            // it's opening tag is encountered and just after the closing one is).
-            // It will then be up to the JS-side to slice and decode the
-            // corresponding XML.
-            let initial_buffer_pos = self.reader.buffer_position();
-
             let evt = self.read_next_event();
             match evt {
                 Ok(Event::Start(tag)) if tag.name() == b"Event" => {
                     TagName::EventStreamElt.report_tag_open();
                     attributes::report_event_stream_event_attrs(&tag);
-                    match self.get_event_stream_event_ending_position() {
-                        Ok(ending_pos) => {
-                            AttributeName::EventStreamEltRange
-                                .report((initial_buffer_pos as f64, ending_pos as f64));
-                        },
-                        Err (e) => e.report_err(),
-                    }
-                    TagName::EventStreamElt.report_tag_close();
-                },
-                Ok(Event::Empty(tag)) if tag.name() == b"Event" => {
-                    TagName::EventStreamElt.report_tag_open();
-                    attributes::report_event_stream_event_attrs(&tag);
-                    let curr_pos = self.reader.buffer_position();
-                    AttributeName::EventStreamEltRange
-                        .report((initial_buffer_pos as f64, curr_pos as f64));
-                    TagName::EventStreamElt.report_tag_close();
+                    let mut writer = Writer::new(Cursor::new(Vec::new()));
+                    let _res = writer.write_event(Event::Start(tag));
+                    self.process_event_stream_event_element(writer);
                 },
                 Ok(Event::Start(tag)) if tag.name() == b"EventStream" => inner_tag += 1,
                 Ok(Event::End(tag)) if tag.name() == b"EventStream" => {
@@ -379,35 +365,55 @@ impl MPDProcessor {
                         .report_err();
                     break;
                 }
-                Err(e) => ParsingError::from(e).report_err(),
+                Err(e) => {
+                    ParsingError::from(e).report_err();
+                    break;
+                },
                 _ => (),
             }
             self.reader_buf.clear();
         }
     }
 
-    /// Returns the ending position (not included), in bytes in the whole parsed MPD, where the
-    /// current `<Event>` element ends.
-    fn get_event_stream_event_ending_position(&mut self) -> Result<usize, ParsingError> {
+    fn process_event_stream_event_element(
+        &mut self,
+        mut writer: Writer<std::io::Cursor<Vec<u8>>>
+    ) {
+        // We want to receive Text Events with the exact same format here, to
+        // be able to report the exact Event's inner content
+        self.reader.trim_text(false);
         let mut inner_event_tag = 0u32;
         loop {
-            match self.read_next_event() {
+            let read = self.read_next_event();
+            if let Ok(ref evt) = read {
+                let _res = writer.write_event(evt);
+            }
+            match read {
                 Ok(Event::Start(tag)) if tag.name() == b"Event" => inner_event_tag += 1,
                 Ok(Event::End(tag)) if tag.name() == b"Event" => {
                     if inner_event_tag > 0 {
                         inner_event_tag -= 1;
                     } else {
-                        return Ok(self.reader.buffer_position());
+                        let _content = writer.into_inner().into_inner();
+
+                        // XXX TODO report content
+
+                        TagName::EventStreamElt.report_tag_close();
+                        break;
                     }
                 }
                 Ok(Event::Eof) => {
-                    return Err(ParsingError("Unexpected end of file in an Event element.".to_owned()))
+                    ParsingError("Unexpected end of file in an Event element.".to_owned())
+                        .report_err();
+                    break;
                 }
                 Err(e) => {
-                    return Err(ParsingError::from(e))
+                    ParsingError::from(e).report_err();
+                    break;
                 },
                 _ => {},
             }
         }
+        self.reader.trim_text(true);
     }
 }
