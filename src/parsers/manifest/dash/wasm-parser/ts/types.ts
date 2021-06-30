@@ -233,6 +233,12 @@ export const enum AttributeName {
   QualityRanking = 65,
   Location = 66,
 
+  /// URL of the initialization segment as an UTF-8-encoded string.
+  ///
+  /// This attribute corresponds to the value of the `initialization`
+  /// attribute that can be found in a `<SegmentTemplate>` element or to the
+  /// value of the `sourceURL` attribute that can be found in an
+  /// `<Initialization>` element.
   InitializationMedia = 67,
 
   /// Describes an encountered "mediaPresentationDuration" attribute, as found
@@ -241,15 +247,16 @@ export const enum AttributeName {
   /// This value has been converted into seconds, as an f64.
   MediaPresentationDuration = 68,
 
-  /// Describes the byte range (end not included) of an encountered `<Event>`
-  /// element in the whole MPD.
+  /// `<Event>` element encountered in an `<EventStream>`, as an UTF-8 encoded
+  /// string (including the top `<Event>`).
   ///
-  /// This can be useful to re-construct the whole element on the JS-sid.
+  /// This attribute can be useful to re-construct the whole element on the
+  /// JS-side.
   ///
-  /// It is reported as an array of two f64 values.
-  /// The first number indicating the starting range (included).
-  /// The second indicating the ending range (non-included).
-  EventStreamEltRange = 69,
+  /// Note that this `<Event>` element might contain namespaced attributes and
+  /// element names. To be notified of all potential namespaces present in
+  /// this element, you might also want to consider the `Namespace` attribute.
+  EventStreamEvent = 69,
 
   /// Describes an XML namespace coming from either a `<MPD>` element, a
   /// `<Period> element or a `<EventStream>` elements, as those are the three
