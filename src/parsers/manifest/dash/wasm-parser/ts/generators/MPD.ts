@@ -152,6 +152,26 @@ export function generateMPDAttrParser(
         const location = parseString(textDecoder, linearMemory.buffer, ptr, len);
         mpdChildren.locations.push(location);
         break;
+      case AttributeName.Namespace:
+        const xmlNs = { key: "", value: "" };
+        dataView = new DataView(linearMemory.buffer);
+        let offset = ptr;
+        const keySize = dataView.getUint32(offset);
+        offset += 4;
+
+        xmlNs.key = parseString(textDecoder, linearMemory.buffer, offset, keySize);
+        offset += keySize;
+
+        const valSize = dataView.getUint32(offset);
+        offset += 4;
+        xmlNs.value = parseString(textDecoder, linearMemory.buffer, offset, valSize);
+
+        if (mpdAttrs.namespaces === undefined) {
+          mpdAttrs.namespaces = [xmlNs];
+        } else {
+          mpdAttrs.namespaces.push(xmlNs);
+        }
+        break;
     }
   };
 }

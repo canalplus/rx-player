@@ -81,6 +81,25 @@ export function generateEventStreamAttrParser(
       case AttributeName.TimeScale:
         esAttrs.timescale = dataView.getFloat64(ptr, true);
         break;
+      case AttributeName.Namespace:
+        const xmlNs = { key: "", value: "" };
+        let offset = ptr;
+        const keySize = dataView.getUint32(offset);
+        offset += 4;
+
+        xmlNs.key = parseString(textDecoder, linearMemory.buffer, offset, keySize);
+        offset += keySize;
+
+        const valSize = dataView.getUint32(offset);
+        offset += 4;
+        xmlNs.value = parseString(textDecoder, linearMemory.buffer, offset, valSize);
+
+        if (esAttrs.namespaces === undefined) {
+          esAttrs.namespaces = [xmlNs];
+        } else {
+          esAttrs.namespaces.push(xmlNs);
+        }
+        break;
     }
   };
 }
