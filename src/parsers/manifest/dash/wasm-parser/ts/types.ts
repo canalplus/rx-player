@@ -250,4 +250,34 @@ export const enum AttributeName {
   /// The first number indicating the starting range (included).
   /// The second indicating the ending range (non-included).
   EventStreamEltRange = 69,
+
+  /// Describes an XML namespace coming from either a `<MPD>` element, a
+  /// `<Period> element or a `<EventStream>` elements, as those are the three
+  /// parent tags of potential `<Event>` elements.
+  ///
+  /// It is reported as the concatenation of four values:
+  ///
+  ///   - In the four first bytes: The length of the namespace's name (the
+  ///     part in the XML attribute just after "xmlns:"), as a big endian
+  ///     unsigned 32 bit integer
+  ///
+  ///   - The namespace's name (the part coming after "xmlns:" in the
+  ///     attribute's name), as an UTF-8 encoded string.
+  ///     The length of this attribute is indicated by the preceding four
+  ///     bytes.
+  ///
+  ///   - As the next four bytes: The length of the namespace's value (the
+  ///     corresponding XML attribute's value), as a big endian
+  ///     unsigned 32 bit integer
+  ///
+  ///   - The namespace's value (the value of the corresponding XML
+  ///     attribute), as an UTF-8 encoded string.
+  ///     The length of this attribute is indicated by the preceding four
+  ///     bytes.
+  ///
+  /// This special Attribute was needed because we need those namespaces to be
+  /// able to communicate `<Event>` property under a JavaScript's Element
+  /// format: the browser's `DOMParser` API needs to know all potential
+  /// namespaces that will appear in it.
+  Namespace = 70,
 }

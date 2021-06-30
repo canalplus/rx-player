@@ -92,6 +92,16 @@ export interface IMPDAttributes {
   suggestedPresentationDelay? : number;
   maxSegmentDuration? : number;
   maxSubsegmentDuration? : number;
+
+  /**
+   * XML namespaces linked to the `<MPD>` element.
+   *
+   * This property is only needed when the EventStream's `<Event>` elements are
+   * not parsed through the browser's DOMParser API, and thus might depend on
+   * parent namespaces to be parsed correctly.
+   */
+  namespaces? : Array<{ key: string;
+                        value: string; }>;
 }
 
 /** Intermediate representation of an encountered Period node. */
@@ -153,6 +163,16 @@ export interface IPeriodAttributes {
   bitstreamSwitching? : boolean;
   xlinkHref? : string;
   xlinkActuate? : string;
+
+  /**
+   * XML namespaces linked to the `<Period>` element.
+   *
+   * This property is only needed when the EventStream's `<Event>` elements are
+   * not parsed through the browser's DOMParser API, and thus might depend on
+   * parent namespaces to be parsed correctly.
+   */
+  namespaces? : Array<{ key: string;
+                        value: string; }>;
 }
 
 /** AdaptationSet once parsed into its intermediate representation. */
@@ -370,6 +390,15 @@ export interface IEventStreamAttributes {
   schemeIdUri? : string;
   timescale? : number;
   value? : string;
+
+  /**
+   * XML namespaces linked to the `<EventStream>` element.
+   *
+   * This property is only needed when the EventStream's `<Event>` elements are
+   * not parsed through the browser's DOMParser API, and thus might depend on
+   * parent namespaces to be parsed correctly.
+   */
+  namespaces? : Array<{ key: string; value: string }>;
 }
 
 export interface IEventStreamChildren {
