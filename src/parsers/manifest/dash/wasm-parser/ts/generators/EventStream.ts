@@ -35,21 +35,19 @@ import { parseString } from "../utils";
  * @param {Object} childrenObj
  * @param {WebAssembly.Memory} linearMemory
  * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
  * @returns {Function}
  */
 export function generateEventStreamChildrenParser(
   childrenObj : IEventStreamChildren,
   linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
+  parsersStack : ParsersStack
 )  : IChildrenParser {
   return function onRootChildren(nodeId : number) {
     switch (nodeId) {
       case TagName.EventStreamElt: {
         const event = {};
         childrenObj.events.push(event);
-        const attrParser = generateEventAttrParser(event, linearMemory, fullMpd);
+        const attrParser = generateEventAttrParser(event, linearMemory);
         parsersStack.pushParsers(nodeId, noop, attrParser);
         break;
       }
@@ -94,13 +92,11 @@ export function generateEventStreamAttrParser(
 /**
  * @param {Object} eventAttr
  * @param {WebAssembly.Memory} linearMemory
- * @param {ArrayBuffer} fullMpd
  * @returns {Function}
  */
 function generateEventAttrParser(
   eventAttr : IEventStreamEventIntermediateRepresentation,
-  linearMemory : WebAssembly.Memory,
-  fullMpd : ArrayBuffer
+  linearMemory : WebAssembly.Memory
 ) : IAttributeParser {
   const textDecoder = new TextDecoder();
   return function onEventStreamAttribute(attr : number, ptr : number, len : number) {
@@ -116,9 +112,7 @@ function generateEventAttrParser(
         eventAttr.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
       case AttributeName.EventStreamEltRange:
-        const rangeStart = dataView.getFloat64(ptr, true);
-        const rangeEnd = dataView.getFloat64(ptr + 8, true);
-        eventAttr.eventStreamData = fullMpd.slice(rangeStart, rangeEnd);
+        eventAttr.eventStreamData = linearMemory.buffer.slice(ptr, ptr + len);
         break;
     }
   };

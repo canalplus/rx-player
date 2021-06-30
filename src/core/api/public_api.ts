@@ -75,6 +75,9 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import { IBifThumbnail } from "../../parsers/images/bif";
+import DashWasmParser, {
+  IDashWasmParserOptions,
+} from "../../parsers/manifest/dash/wasm-parser";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
   fromEvent,
@@ -2978,6 +2981,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 }
 Player.version = /* PLAYER_VERSION */"3.26.0";
+
+(window as any).dashWasmParser = {
+  initialize(opts : IDashWasmParserOptions) {
+    const dashWasmParser = new DashWasmParser();
+    dashWasmParser.initialize(opts).catch(err => {
+      console.error("ERROR:", err);
+    });
+    features.dashParsers.wasm = dashWasmParser;
+  },
+};
 
 export default Player;
 export { IStreamEventData };

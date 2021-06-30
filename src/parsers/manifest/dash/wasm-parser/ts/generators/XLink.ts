@@ -30,14 +30,12 @@ import {
  * @param {Object} xlinkObj
  * @param {WebAssembly.Memory} linearMemory
  * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
  * @returns {Function}
  */
 export function generateXLinkChildrenParser(
   xlinkObj : { periods: IPeriodIntermediateRepresentation[] },
   linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
+  parsersStack : ParsersStack
 )  : IChildrenParser {
   return function onRootChildren(nodeId : number) {
     switch (nodeId) {
@@ -49,8 +47,7 @@ export function generateXLinkChildrenParser(
         xlinkObj.periods.push(period);
         const childrenParser = generatePeriodChildrenParser(period.children,
                                                             linearMemory,
-                                                            parsersStack,
-                                                            fullMpd);
+                                                            parsersStack);
         const attributeParser = generatePeriodAttrParser(period.attributes, linearMemory);
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;

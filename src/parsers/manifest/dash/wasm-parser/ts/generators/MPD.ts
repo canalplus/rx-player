@@ -40,14 +40,12 @@ import { generateSchemeAttrParser } from "./Scheme";
  * @param {Object} mpdChildren
  * @param {WebAssembly.Memory} linearMemory
  * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
  * @returns {Function}
  */
 export function generateMPDChildrenParser(
   mpdChildren : IMPDChildren,
   linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
+  parsersStack : ParsersStack
 )  : IChildrenParser {
   return function onRootChildren(nodeId : number) {
     switch (nodeId) {
@@ -70,8 +68,7 @@ export function generateMPDChildrenParser(
         mpdChildren.periods.push(period);
         const childrenParser = generatePeriodChildrenParser(period.children,
                                                             linearMemory,
-                                                            parsersStack,
-                                                            fullMpd);
+                                                            parsersStack);
         const attributeParser = generatePeriodAttrParser(period.attributes, linearMemory);
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;

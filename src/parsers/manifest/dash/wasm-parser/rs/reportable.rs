@@ -90,7 +90,20 @@ impl ReportableAttribute for &[SegmentObject] {
     }
 }
 
+// TODO merge the two following. Something like AsRef?
+
 impl<'a> ReportableAttribute for std::borrow::Cow<'a, [u8]> {
+    #[inline(always)]
+    fn report_as_attr(&self, attr_name: AttributeName) {
+        debug_assert!(attr_name as u64 <= u8::MAX as u64);
+
+        // UNSAFE: We're using FFI, so we don't know how the pointer is used.
+        // Hopefully, the JavaScript-side should clone that value synchronously.
+        unsafe { onAttribute(attr_name, self.as_ptr(), self.len()); };
+    }
+}
+
+impl ReportableAttribute for Vec<u8> {
     #[inline(always)]
     fn report_as_attr(&self, attr_name: AttributeName) {
         debug_assert!(attr_name as u64 <= u8::MAX as u64);

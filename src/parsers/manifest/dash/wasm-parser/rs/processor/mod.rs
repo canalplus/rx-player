@@ -394,10 +394,9 @@ impl MPDProcessor {
                     if inner_event_tag > 0 {
                         inner_event_tag -= 1;
                     } else {
-                        let _content = writer.into_inner().into_inner();
-
-                        // XXX TODO report content
-
+                        use crate::reportable::ReportableAttribute;
+                        let content = writer.into_inner().into_inner();
+                        content.report_as_attr(AttributeName::EventStreamEvent);
                         TagName::EventStreamElt.report_tag_close();
                         break;
                     }

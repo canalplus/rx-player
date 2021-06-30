@@ -343,8 +343,7 @@ export default class DashWasmParser {
     const linearMemory = this._linearMemory as WebAssembly.Memory;
     const rootChildrenParser = generateRootChildrenParser(rootObj,
                                                           linearMemory,
-                                                          this._parsersStack,
-                                                          mpd);
+                                                          this._parsersStack);
     this._parsersStack.pushParsers(null, rootChildrenParser, noop);
     this._warnings = [];
 
@@ -392,8 +391,7 @@ export default class DashWasmParser {
     const linearMemory = this._linearMemory as WebAssembly.Memory;
     const xlinkParser = generateXLinkChildrenParser(rootObj,
                                                     linearMemory,
-                                                    this._parsersStack,
-                                                    xlinkData);
+                                                    this._parsersStack);
     this._parsersStack.pushParsers(null, xlinkParser, noop);
     this._warnings = [];
 

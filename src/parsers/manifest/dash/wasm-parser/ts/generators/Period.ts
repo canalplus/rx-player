@@ -45,14 +45,12 @@ import { generateSegmentTemplateAttrParser } from "./SegmentTemplate";
  * @param {Object} periodChildren
  * @param {WebAssembly.Memory} linearMemory
  * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
  * @returns {Function}
  */
 export function generatePeriodChildrenParser(
   periodChildren : IPeriodChildren,
   linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
+  parsersStack : ParsersStack
 )  : IChildrenParser {
   return function onRootChildren(nodeId : number) {
     switch (nodeId) {
@@ -87,8 +85,7 @@ export function generatePeriodChildrenParser(
         periodChildren.eventStreams.push(eventStream);
         const childrenParser = generateEventStreamChildrenParser(eventStream.children,
                                                                  linearMemory,
-                                                                 parsersStack,
-                                                                 fullMpd);
+                                                                 parsersStack);
         const attrParser = generateEventStreamAttrParser(eventStream.attributes,
                                                          linearMemory);
         parsersStack.pushParsers(nodeId, childrenParser, attrParser);

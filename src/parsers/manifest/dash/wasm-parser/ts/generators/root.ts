@@ -29,14 +29,12 @@ import {
  * @param {Object} rootObj
  * @param {WebAssembly.Memory} linearMemory
  * @param {ParsersStack} parsersStack
- * @param {ArrayBuffer} fullMpd
  * @returns {Function}
  */
 export function generateRootChildrenParser(
   rootObj : { mpd? : IMPDIntermediateRepresentation },
   linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
+  parsersStack : ParsersStack
 )  : (nodeId : number) => void {
   return function onRootChildren(nodeId : number) {
     switch (nodeId) {
@@ -48,8 +46,7 @@ export function generateRootChildrenParser(
                         attributes: {} };
         const childrenParser = generateMPDChildrenParser(rootObj.mpd.children,
                                                          linearMemory,
-                                                         parsersStack,
-                                                         fullMpd);
+                                                         parsersStack);
         const attributeParser = generateMPDAttrParser(rootObj.mpd.children,
                                                       rootObj.mpd.attributes,
                                                       linearMemory);

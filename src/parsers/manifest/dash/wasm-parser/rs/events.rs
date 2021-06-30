@@ -247,7 +247,7 @@ pub enum AttributeName {
     /// It is reported as an array of two f64 values.
     /// The first number indicating the starting range (included).
     /// The second indicating the ending range (non-included).
-    EventStreamEltRange = 69,
+    EventStreamEvent = 69,
 }
 
 impl TagName {

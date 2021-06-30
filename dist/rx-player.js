@@ -28200,14 +28200,12 @@ function imageParser(_ref2) {
 
   if (content.segment.isInit) {
     // image init segment has no use
-    return (0,of.of)({
-      type: "parsed-init-segment",
-      value: {
-        initializationData: null,
-        protectionDataUpdate: false,
-        initTimescale: undefined
-      }
-    });
+    return {
+      segmentType: "init",
+      initializationData: null,
+      protectionDataUpdate: false,
+      initTimescale: undefined
+    };
   }
 
   if (isChunked) {
@@ -28217,43 +28215,38 @@ function imageParser(_ref2) {
   var chunkOffset = (0,take_first_set/* default */.Z)(segment.timestampOffset, 0); // TODO image Parsing should be more on the buffer side, no?
 
   if (data === null || features/* default.imageParser */.Z.imageParser === null) {
-    return (0,of.of)({
-      type: "parsed-segment",
-      value: {
-        chunkData: null,
-        chunkInfos: {
-          duration: segment.duration,
-          time: segment.time
-        },
-        chunkOffset: chunkOffset,
-        appendWindow: [period.start, period.end],
-        protectionDataUpdate: false
-      }
-    });
+    return {
+      segmentType: "media",
+      chunkData: null,
+      chunkInfos: {
+        duration: segment.duration,
+        time: segment.time
+      },
+      chunkOffset: chunkOffset,
+      protectionDataUpdate: false,
+      appendWindow: [period.start, period.end]
+    };
   }
 
   var bifObject = features/* default.imageParser */.Z.imageParser(new Uint8Array(data));
   var thumbsData = bifObject.thumbs;
-  return (0,of.of)({
-    type: "parsed-segment",
-    value: {
-      chunkData: {
-        data: thumbsData,
-        start: 0,
-        end: Number.MAX_VALUE,
-        timescale: 1,
-        type: "bif"
-      },
-      chunkInfos: {
-        time: 0,
-        duration: Number.MAX_VALUE,
-        timescale: bifObject.timescale
-      },
-      chunkOffset: chunkOffset,
-      appendWindow: [period.start, period.end],
-      protectionDataUpdate: false
-    }
-  });
+  return {
+    segmentType: "media",
+    chunkData: {
+      data: thumbsData,
+      start: 0,
+      end: Number.MAX_VALUE,
+      timescale: 1,
+      type: "bif"
+    },
+    chunkInfos: {
+      time: 0,
+      duration: Number.MAX_VALUE
+    },
+    chunkOffset: chunkOffset,
+    protectionDataUpdate: false,
+    appendWindow: [period.start, period.end]
+  };
 }
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/from.js + 13 modules
 var from = __webpack_require__(1973);
@@ -29820,7 +29813,6 @@ function getEventsOutOfEMSGs(parsedEMSGs, manifestPublishTime) {
 
 
 
-
 /**
  * @param {Object} config
  * @returns {Function}
@@ -29843,26 +29835,22 @@ function generateAudioVideoSegmentParser(_ref) {
 
     if (data === null) {
       if (segment.isInit) {
-        return (0,of.of)({
-          type: "parsed-init-segment",
-          value: {
-            initializationData: null,
-            protectionDataUpdate: false,
-            initTimescale: undefined
-          }
-        });
+        return {
+          segmentType: "init",
+          initializationData: null,
+          protectionDataUpdate: false,
+          initTimescale: undefined
+        };
       }
 
-      return (0,of.of)({
-        type: "parsed-segment",
-        value: {
-          chunkData: null,
-          chunkInfos: null,
-          chunkOffset: 0,
-          appendWindow: appendWindow,
-          protectionDataUpdate: false
-        }
-      });
+      return {
+        segmentType: "media",
+        chunkData: null,
+        chunkInfos: null,
+        chunkOffset: 0,
+        protectionDataUpdate: false,
+        appendWindow: appendWindow
+      };
     }
 
     var chunkData = data instanceof Uint8Array ? data : new Uint8Array(data);
@@ -29900,32 +29888,28 @@ function generateAudioVideoSegmentParser(_ref) {
           if (events !== undefined) {
             var needsManifestRefresh = events.needsManifestRefresh,
                 inbandEvents = events.inbandEvents;
-            return (0,of.of)({
-              type: "parsed-segment",
-              value: {
-                chunkData: chunkData,
-                chunkInfos: chunkInfos,
-                chunkOffset: chunkOffset,
-                appendWindow: appendWindow,
-                inbandEvents: inbandEvents,
-                needsManifestRefresh: needsManifestRefresh,
-                protectionDataUpdate: protectionDataUpdate
-              }
-            });
+            return {
+              segmentType: "media",
+              chunkData: chunkData,
+              chunkInfos: chunkInfos,
+              chunkOffset: chunkOffset,
+              appendWindow: appendWindow,
+              inbandEvents: inbandEvents,
+              protectionDataUpdate: protectionDataUpdate,
+              needsManifestRefresh: needsManifestRefresh
+            };
           }
         }
       }
 
-      return (0,of.of)({
-        type: "parsed-segment",
-        value: {
-          chunkData: chunkData,
-          chunkInfos: chunkInfos,
-          chunkOffset: chunkOffset,
-          appendWindow: appendWindow,
-          protectionDataUpdate: protectionDataUpdate
-        }
-      });
+      return {
+        segmentType: "media",
+        chunkData: chunkData,
+        chunkInfos: chunkInfos,
+        chunkOffset: chunkOffset,
+        protectionDataUpdate: protectionDataUpdate,
+        appendWindow: appendWindow
+      };
     } // we're handling an initialization segment
 
 
@@ -29958,14 +29942,12 @@ function generateAudioVideoSegmentParser(_ref) {
 
     var timescale = seemsToBeMP4 ? (0,utils/* getMDHDTimescale */.LD)(chunkData) : containerType === "webm" ? getTimeCodeScale(chunkData, 0) : undefined;
     var parsedTimescale = (0,is_null_or_undefined/* default */.Z)(timescale) ? undefined : timescale;
-    return (0,of.of)({
-      type: "parsed-init-segment",
-      value: {
-        initializationData: chunkData,
-        protectionDataUpdate: protectionDataUpdate,
-        initTimescale: parsedTimescale
-      }
-    });
+    return {
+      segmentType: "init",
+      initializationData: chunkData,
+      protectionDataUpdate: protectionDataUpdate,
+      initTimescale: parsedTimescale
+    };
   };
 }
 ;// CONCATENATED MODULE: ./src/transports/dash/text_loader.ts
@@ -30243,24 +30225,32 @@ function getPlainTextTrackData(_ref2, textTrackData, isChunked) {
 
 
 
-
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.
- * @param {Object} infos
+ *
+ * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
+ * @param {boolean} isChunked - If `true`, the `data` may contain only a
+ * decodable subpart of the full data in the linked segment.
+ * @param {Object} content - Object describing the context of the given
+ * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
+ * `Manifest` it is a part of etc.
+ * @param {number|undefined} initTimescale - `timescale` value - encountered
+ * in this linked initialization segment (if it exists) - that may also apply
+ * to that segment if no new timescale is defined in it.
+ * Can be `undefined` if no timescale was defined, if it is not known, or if
+ * no linked initialization segment was yet parsed.
+ * @param {boolean} __priv_patchLastSegmentInSidx - Enable ugly Canal+-specific
+ * fix for an issue people on the content-packaging side could not fix.
+ * For more information on that, look at the code using it.
  * @returns {Observable.<Object>}
  */
 
-function parseISOBMFFEmbeddedTextTrack(_ref, __priv_patchLastSegmentInSidx) {
-  var response = _ref.response,
-      content = _ref.content,
-      initTimescale = _ref.initTimescale;
+function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, __priv_patchLastSegmentInSidx) {
   var period = content.period,
       representation = content.representation,
       segment = content.segment;
   var isInit = segment.isInit,
       indexRange = segment.indexRange;
-  var data = response.data,
-      isChunked = response.isChunked;
   var chunkBytes = typeof data === "string" ? (0,string_parsing/* strToUtf8 */.tG)(data) : data instanceof Uint8Array ? data : new Uint8Array(data);
 
   if (isInit) {
@@ -30286,58 +30276,54 @@ function parseISOBMFFEmbeddedTextTrack(_ref, __priv_patchLastSegmentInSidx) {
       representation.index.initializeIndex(sidxSegments);
     }
 
-    return (0,of.of)({
-      type: "parsed-init-segment",
-      value: {
-        initializationData: null,
-        protectionDataUpdate: false,
-        initTimescale: mdhdTimescale
-      }
-    });
+    return {
+      segmentType: "init",
+      initializationData: null,
+      protectionDataUpdate: false,
+      initTimescale: mdhdTimescale
+    };
   }
 
   var chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, initTimescale);
   var chunkData = getISOBMFFEmbeddedTextTrackData(content, chunkBytes, chunkInfos, isChunked);
   var chunkOffset = (0,take_first_set/* default */.Z)(segment.timestampOffset, 0);
-  return (0,of.of)({
-    type: "parsed-segment",
-    value: {
-      chunkData: chunkData,
-      chunkInfos: chunkInfos,
-      chunkOffset: chunkOffset,
-      appendWindow: [period.start, period.end],
-      protectionDataUpdate: false
-    }
-  });
+  return {
+    segmentType: "media",
+    chunkData: chunkData,
+    chunkInfos: chunkInfos,
+    chunkOffset: chunkOffset,
+    protectionDataUpdate: false,
+    appendWindow: [period.start, period.end]
+  };
 }
 /**
- * Parse TextTrack data in plain text form.
- * @param {Object} infos
+ * Parse TextTrack data when it is in plain text form.
+ *
+ * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
+ * @param {boolean} isChunked - If `true`, the `data` may contain only a
+ * decodable subpart of the full data in the linked segment.
+ * @param {Object} content - Object describing the context of the given
+ * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
+ * `Manifest` it is a part of etc.
  * @returns {Observable.<Object>}
  */
 
 
-function parsePlainTextTrack(_ref2) {
-  var response = _ref2.response,
-      content = _ref2.content;
+function parsePlainTextTrack(data, isChunked, content) {
   var period = content.period,
       segment = content.segment;
   var _segment$timestampOff = segment.timestampOffset,
       timestampOffset = _segment$timestampOff === void 0 ? 0 : _segment$timestampOff;
 
   if (segment.isInit) {
-    return (0,of.of)({
-      type: "parsed-init-segment",
-      value: {
-        initializationData: null,
-        protectionDataUpdate: false,
-        initTimescale: undefined
-      }
-    });
+    return {
+      segmentType: "init",
+      initializationData: null,
+      protectionDataUpdate: false,
+      initTimescale: undefined
+    };
   }
 
-  var data = response.data,
-      isChunked = response.isChunked;
   var textTrackData;
 
   if (typeof data !== "string") {
@@ -30348,67 +30334,60 @@ function parsePlainTextTrack(_ref2) {
   }
 
   var chunkData = getPlainTextTrackData(content, textTrackData, isChunked);
-  return (0,of.of)({
-    type: "parsed-segment",
-    value: {
-      chunkData: chunkData,
-      chunkInfos: null,
-      chunkOffset: timestampOffset,
-      appendWindow: [period.start, period.end],
-      protectionDataUpdate: false
-    }
-  });
+  return {
+    segmentType: "media",
+    chunkData: chunkData,
+    chunkInfos: null,
+    chunkOffset: timestampOffset,
+    protectionDataUpdate: false,
+    appendWindow: [period.start, period.end]
+  };
 }
 /**
+ * Generate a "segment parser" for DASH text tracks.
+ *
  * @param {Object} config
  * @returns {Function}
  */
 
 
-function generateTextTrackParser(_ref3) {
-  var __priv_patchLastSegmentInSidx = _ref3.__priv_patchLastSegmentInSidx;
+function generateTextTrackParser(_ref) {
+  var __priv_patchLastSegmentInSidx = _ref.__priv_patchLastSegmentInSidx;
 
   /**
    * Parse TextTrack data.
    * @param {Object} infos
    * @returns {Observable.<Object>}
    */
-  return function textTrackParser(_ref4) {
-    var response = _ref4.response,
-        content = _ref4.content,
-        initTimescale = _ref4.initTimescale;
+  return function textTrackParser(_ref2) {
+    var response = _ref2.response,
+        content = _ref2.content,
+        initTimescale = _ref2.initTimescale;
+
+    var _a;
+
     var period = content.period,
         adaptation = content.adaptation,
         representation = content.representation,
         segment = content.segment;
-    var _segment$timestampOff2 = segment.timestampOffset,
-        timestampOffset = _segment$timestampOff2 === void 0 ? 0 : _segment$timestampOff2;
     var data = response.data,
         isChunked = response.isChunked;
 
     if (data === null) {
-      // No data, just return empty infos
-      if (segment.isInit) {
-        return (0,of.of)({
-          type: "parsed-init-segment",
-          value: {
-            initializationData: null,
-            protectionDataUpdate: false,
-            initTimescale: undefined
-          }
-        });
-      }
-
-      return (0,of.of)({
-        type: "parsed-segment",
-        value: {
-          chunkData: null,
-          chunkInfos: null,
-          chunkOffset: timestampOffset,
-          appendWindow: [period.start, period.end],
-          protectionDataUpdate: false
-        }
-      });
+      // No data, just return an empty placeholder object
+      return segment.isInit ? {
+        segmentType: "init",
+        initializationData: null,
+        protectionDataUpdate: false,
+        initTimescale: undefined
+      } : {
+        segmentType: "media",
+        chunkData: null,
+        chunkInfos: null,
+        chunkOffset: (_a = segment.timestampOffset) !== null && _a !== void 0 ? _a : 0,
+        protectionDataUpdate: false,
+        appendWindow: [period.start, period.end]
+      };
     }
 
     var containerType = inferSegmentContainer(adaptation.type, representation); // TODO take a look to check if this is an ISOBMFF/webm when undefined?
@@ -30417,22 +30396,9 @@ function generateTextTrackParser(_ref3) {
       // TODO Handle webm containers
       throw new Error("Text tracks with a WEBM container are not yet handled.");
     } else if (containerType === "mp4") {
-      return parseISOBMFFEmbeddedTextTrack({
-        response: {
-          data: data,
-          isChunked: isChunked
-        },
-        content: content,
-        initTimescale: initTimescale
-      }, __priv_patchLastSegmentInSidx);
+      return parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, __priv_patchLastSegmentInSidx);
     } else {
-      return parsePlainTextTrack({
-        response: {
-          data: data,
-          isChunked: isChunked
-        },
-        content: content
-      });
+      return parsePlainTextTrack(data, isChunked, content);
     }
   };
 }
@@ -33773,42 +33739,36 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
 
       if (data === null) {
         if (segment.isInit) {
-          return (0,of.of)({
-            type: "parsed-init-segment",
-            value: {
-              initializationData: null,
-              protectionDataUpdate: false,
-              initTimescale: undefined
-            }
-          });
+          return {
+            segmentType: "init",
+            initializationData: null,
+            protectionDataUpdate: false,
+            initTimescale: undefined
+          };
         }
 
-        return (0,of.of)({
-          type: "parsed-segment",
-          value: {
-            chunkData: null,
-            chunkInfos: null,
-            chunkOffset: 0,
-            appendWindow: [undefined, undefined],
-            protectionDataUpdate: false
-          }
-        });
+        return {
+          segmentType: "media",
+          chunkData: null,
+          chunkInfos: null,
+          chunkOffset: 0,
+          protectionDataUpdate: false,
+          appendWindow: [undefined, undefined]
+        };
       }
 
       var responseBuffer = data instanceof Uint8Array ? data : new Uint8Array(data);
 
       if (segment.isInit) {
         var timescale = (_b = (_a = segment.privateInfos) === null || _a === void 0 ? void 0 : _a.smoothInitSegment) === null || _b === void 0 ? void 0 : _b.timescale;
-        return (0,of.of)({
-          type: "parsed-init-segment",
-          value: {
-            initializationData: data,
-            // smooth init segments are crafted by hand.
-            // Their timescale is the one from the manifest.
-            initTimescale: timescale,
-            protectionDataUpdate: false
-          }
-        });
+        return {
+          segmentType: "init",
+          initializationData: data,
+          // smooth init segments are crafted by hand.
+          // Their timescale is the one from the manifest.
+          initTimescale: timescale,
+          protectionDataUpdate: false
+        };
       }
 
       var timingInfos = initTimescale !== undefined ? extractTimingsInfos(responseBuffer, isChunked, initTimescale, segment, manifest.isLive) : null;
@@ -33826,16 +33786,14 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         addNextSegments(adaptation, nextSegments, segment);
       }
 
-      return (0,of.of)({
-        type: "parsed-segment",
-        value: {
-          chunkData: chunkData,
-          chunkInfos: chunkInfos,
-          chunkOffset: 0,
-          appendWindow: [undefined, undefined],
-          protectionDataUpdate: false
-        }
-      });
+      return {
+        segmentType: "media",
+        chunkData: chunkData,
+        chunkInfos: chunkInfos,
+        chunkOffset: 0,
+        protectionDataUpdate: false,
+        appendWindow: [undefined, undefined]
+      };
     }
   };
   var textTrackPipeline = {
@@ -33895,27 +33853,23 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
 
       if (segment.isInit) {
         // text init segment has no use in HSS
-        return (0,of.of)({
-          type: "parsed-init-segment",
-          value: {
-            initializationData: null,
-            protectionDataUpdate: false,
-            initTimescale: undefined
-          }
-        });
+        return {
+          segmentType: "init",
+          initializationData: null,
+          protectionDataUpdate: false,
+          initTimescale: undefined
+        };
       }
 
       if (data === null) {
-        return (0,of.of)({
-          type: "parsed-segment",
-          value: {
-            chunkData: null,
-            chunkInfos: null,
-            chunkOffset: 0,
-            appendWindow: [undefined, undefined],
-            protectionDataUpdate: false
-          }
-        });
+        return {
+          segmentType: "media",
+          chunkData: null,
+          chunkInfos: null,
+          chunkOffset: 0,
+          protectionDataUpdate: false,
+          appendWindow: [undefined, undefined]
+        };
       }
 
       var nextSegments;
@@ -34011,22 +33965,20 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
       }
 
       var chunkOffset = segmentStart !== null && segmentStart !== void 0 ? segmentStart : 0;
-      return (0,of.of)({
-        type: "parsed-segment",
-        value: {
-          chunkData: {
-            type: _sdType,
-            data: _sdData,
-            start: segmentStart,
-            end: segmentEnd,
-            language: language
-          },
-          chunkInfos: chunkInfos,
-          chunkOffset: chunkOffset,
-          appendWindow: [undefined, undefined],
-          protectionDataUpdate: false
-        }
-      });
+      return {
+        segmentType: "media",
+        chunkData: {
+          type: _sdType,
+          data: _sdData,
+          start: segmentStart,
+          end: segmentEnd,
+          language: language
+        },
+        chunkInfos: chunkInfos,
+        chunkOffset: chunkOffset,
+        protectionDataUpdate: false,
+        appendWindow: [undefined, undefined]
+      };
     }
   };
   var imageTrackPipeline = {
@@ -34058,14 +34010,12 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
 
       if (content.segment.isInit) {
         // image init segment has no use
-        return (0,of.of)({
-          type: "parsed-init-segment",
-          value: {
-            initializationData: null,
-            protectionDataUpdate: false,
-            initTimescale: undefined
-          }
-        });
+        return {
+          segmentType: "init",
+          initializationData: null,
+          protectionDataUpdate: false,
+          initTimescale: undefined
+        };
       }
 
       if (isChunked) {
@@ -34074,40 +34024,35 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
 
 
       if (data === null || features/* default.imageParser */.Z.imageParser === null) {
-        return (0,of.of)({
-          type: "parsed-segment",
-          value: {
-            chunkData: null,
-            chunkInfos: null,
-            chunkOffset: 0,
-            appendWindow: [undefined, undefined],
-            protectionDataUpdate: false
-          }
-        });
+        return {
+          segmentType: "media",
+          chunkData: null,
+          chunkInfos: null,
+          chunkOffset: 0,
+          protectionDataUpdate: false,
+          appendWindow: [undefined, undefined]
+        };
       }
 
       var bifObject = features/* default.imageParser */.Z.imageParser(new Uint8Array(data));
       var thumbsData = bifObject.thumbs;
-      return (0,of.of)({
-        type: "parsed-segment",
-        value: {
-          chunkData: {
-            data: thumbsData,
-            start: 0,
-            end: Number.MAX_VALUE,
-            timescale: 1,
-            type: "bif"
-          },
-          chunkInfos: {
-            time: 0,
-            duration: Number.MAX_VALUE,
-            timescale: bifObject.timescale
-          },
-          chunkOffset: 0,
-          protectionDataUpdate: false,
-          appendWindow: [undefined, undefined]
-        }
-      });
+      return {
+        segmentType: "media",
+        chunkData: {
+          data: thumbsData,
+          start: 0,
+          end: Number.MAX_VALUE,
+          timescale: 1,
+          type: "bif"
+        },
+        chunkInfos: {
+          time: 0,
+          duration: Number.MAX_VALUE
+        },
+        chunkOffset: 0,
+        protectionDataUpdate: false,
+        appendWindow: [undefined, undefined]
+      };
     }
   };
   return {
@@ -44787,12 +44732,10 @@ var generateRequestID = (0,id_generator/* default */.Z)();
  * @returns {Function}
  */
 
-function segment_fetcher_createSegmentFetcher(bufferType, transport, requests$, options) {
+function segment_fetcher_createSegmentFetcher(bufferType, segmentPipeline, requests$, options) {
   var cache = (0,array_includes/* default */.Z)(["audio", "video"], bufferType) ? new initialization_segment_cache() : undefined;
-  var segmentLoader = createSegmentLoader(transport[bufferType].loader, cache, options); // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-
-  var segmentParser = transport[bufferType].parser; // deal with it
-
+  var segmentLoader = createSegmentLoader(segmentPipeline.loader, cache, options);
+  var segmentParser = segmentPipeline.parser;
   /**
    * Process the segmentLoader observable to adapt it to the the rest of the
    * code:
@@ -44907,28 +44850,19 @@ function segment_fetcher_createSegmentFetcher(bufferType, transport, requests$, 
             data: evt.value.responseData,
             isChunked: isChunked
           };
-          /* eslint-disable @typescript-eslint/no-unsafe-call */
 
-          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-          /* eslint-disable @typescript-eslint/no-unsafe-return */
-
-          return segmentParser({
-            response: response,
-            initTimescale: initTimescale,
-            content: content
-          })
-          /* eslint-enable @typescript-eslint/no-unsafe-call */
-
-          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
-          /* eslint-enable @typescript-eslint/no-unsafe-return */
-          .pipe((0,catchError/* catchError */.K)(function (error) {
+          try {
+            return segmentParser({
+              response: response,
+              initTimescale: initTimescale,
+              content: content
+            });
+          } catch (error) {
             throw formatError(error, {
               defaultCode: "PIPELINE_PARSE_ERROR",
               defaultReason: "Unknown parsing error"
             });
-          }));
+          }
         }
       };
 
@@ -45022,8 +44956,10 @@ var SegmentFetcherCreator = /*#__PURE__*/function () {
 
   _proto.createSegmentFetcher = function createSegmentFetcher(bufferType, requests$) {
     var backoffOptions = getSegmentBackoffOptions(bufferType, this._backoffOptions);
+    var pipelines = this._transport[bufferType]; // Types are very complicated here as they are per-type of buffer.
+    // This is the reason why `any` is used instead.
 
-    var segmentFetcher = segment_fetcher_createSegmentFetcher(bufferType, this._transport, requests$, backoffOptions);
+    var segmentFetcher = segment_fetcher_createSegmentFetcher(bufferType, pipelines, requests$, backoffOptions);
 
     return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
   };
@@ -49730,6 +49666,7 @@ function RepresentationStream(_ref) {
    */
 
   var initSegmentObject = initSegment === null ? {
+    segmentType: "init",
     initializationData: null,
     protectionDataUpdate: false,
     initTimescale: undefined
@@ -49924,19 +49861,15 @@ function RepresentationStream(_ref) {
           case "warning":
             return (0,of.of)({
               type: "retry",
-              value: {
-                segment: segment,
-                error: evt.value
-              }
+              segment: segment,
+              error: evt.value
             });
 
           case "chunk-complete":
             currentSegmentRequest = null;
             return (0,of.of)({
               type: "end-of-segment",
-              value: {
-                segment: segment
-              }
+              segment: segment
             });
 
           case "interrupted":
@@ -49945,11 +49878,12 @@ function RepresentationStream(_ref) {
 
           case "chunk":
             var initTimescale = initSegmentObject === null || initSegmentObject === void 0 ? void 0 : initSegmentObject.initTimescale;
-            return evt.parse(initTimescale).pipe((0,map/* map */.U)(function (parserResponse) {
-              return (0,object_assign/* default */.Z)({
-                segment: segment
-              }, parserResponse);
-            }));
+            var parsed = evt.parse(initTimescale);
+            return (0,of.of)({
+              type: "parsed",
+              segment: segment,
+              payload: parsed
+            });
 
           case "ended":
             return requestNextSegment$;
@@ -49971,75 +49905,30 @@ function RepresentationStream(_ref) {
 
 
   function onLoaderEvent(evt) {
-    var _a;
-
     switch (evt.type) {
       case "retry":
         return (0,concat/* concat */.z)((0,of.of)({
           type: "warning",
-          value: evt.value.error
+          value: evt.error
         }), (0,defer/* defer */.P)(function () {
-          var retriedSegment = evt.value.segment;
+          var retriedSegment = evt.segment;
           var index = representation.index;
 
           if (index.isSegmentStillAvailable(retriedSegment) === false) {
             reCheckNeededSegments$.next();
-          } else if (index.canBeOutOfSyncError(evt.value.error, retriedSegment)) {
+          } else if (index.canBeOutOfSyncError(evt.error, retriedSegment)) {
             return (0,of.of)(stream_events_generators.manifestMightBeOufOfSync());
           }
 
           return empty/* EMPTY */.E; // else, ignore.
         }));
 
-      case "parsed-init-segment":
-        {
-          initSegmentObject = evt.value; // Now that the initialization segment has been parsed - which may have
-          // included encryption information - take care of the encryption event
-          // if not already done.
-
-          var allEncryptionData = representation.getAllEncryptionData();
-          var initEncEvt$ = !hasSentEncryptionData && allEncryptionData.length > 0 ? of.of.apply(void 0, allEncryptionData.map(function (p) {
-            return stream_events_generators.encryptionDataEncountered(p);
-          })) : empty/* EMPTY */.E;
-          var pushEvent$ = pushInitSegment({
-            clock$: clock$,
-            content: content,
-            segment: evt.segment,
-            segmentData: evt.value.initializationData,
-            segmentBuffer: segmentBuffer
-          });
-          return (0,merge/* merge */.T)(initEncEvt$, pushEvent$);
-        }
-
-      case "parsed-segment":
-        {
-          var initSegmentData = (_a = initSegmentObject === null || initSegmentObject === void 0 ? void 0 : initSegmentObject.initializationData) !== null && _a !== void 0 ? _a : null;
-          var _evt$value = evt.value,
-              inbandEvents = _evt$value.inbandEvents,
-              needsManifestRefresh = _evt$value.needsManifestRefresh; // TODO better handle use cases like key rotation by not always grouping
-          // every protection data together? To check.
-
-          var segmentEncryptionEvent = evt.value.protectionDataUpdate && !hasSentEncryptionData ? of.of.apply(void 0, representation.getAllEncryptionData().map(function (p) {
-            return stream_events_generators.encryptionDataEncountered(p);
-          })) : empty/* EMPTY */.E;
-          var manifestRefresh$ = needsManifestRefresh === true ? (0,of.of)(stream_events_generators.needsManifestRefresh()) : empty/* EMPTY */.E;
-          var inbandEvents$ = inbandEvents !== undefined && inbandEvents.length > 0 ? (0,of.of)({
-            type: "inband-events",
-            value: inbandEvents
-          }) : empty/* EMPTY */.E;
-          return (0,concat/* concat */.z)(segmentEncryptionEvent, manifestRefresh$, inbandEvents$, pushMediaSegment({
-            clock$: clock$,
-            content: content,
-            initSegmentData: initSegmentData,
-            parsedSegment: evt.value,
-            segment: evt.segment,
-            segmentBuffer: segmentBuffer
-          }));
-        }
+      case "parsed":
+        return onParsedChunk(evt);
 
       case "end-of-segment":
         {
-          var segment = evt.value.segment;
+          var segment = evt.segment;
           return segmentBuffer.endOfSegment((0,object_assign/* default */.Z)({
             segment: segment
           }, content)).pipe((0,ignoreElements/* ignoreElements */.l)());
@@ -50047,6 +49936,61 @@ function RepresentationStream(_ref) {
 
       default:
         (0,assert_unreachable/* default */.Z)(evt);
+    }
+  }
+  /**
+   * Process a chunk that has just been parsed by pushing it to the
+   * SegmentBuffer and emitting the right events.
+   * @param {Object} evt
+   * @returns {Observable}
+   */
+
+
+  function onParsedChunk(evt) {
+    var _a;
+
+    var parsed = evt.payload;
+
+    if (parsed.segmentType === "init") {
+      initSegmentObject = parsed; // Now that the initialization segment has been parsed - which may have
+      // included encryption information - take care of the encryption event
+      // if not already done.
+
+      var allEncryptionData = representation.getAllEncryptionData();
+      var initEncEvt$ = !hasSentEncryptionData && allEncryptionData.length > 0 ? of.of.apply(void 0, allEncryptionData.map(function (p) {
+        return stream_events_generators.encryptionDataEncountered(p);
+      })) : empty/* EMPTY */.E;
+      var pushEvent$ = pushInitSegment({
+        clock$: clock$,
+        content: content,
+        segment: evt.segment,
+        segmentData: parsed.initializationData,
+        segmentBuffer: segmentBuffer
+      });
+      return (0,merge/* merge */.T)(initEncEvt$, pushEvent$);
+    } else {
+      var initSegmentData = (_a = initSegmentObject === null || initSegmentObject === void 0 ? void 0 : initSegmentObject.initializationData) !== null && _a !== void 0 ? _a : null;
+      var inbandEvents = parsed.inbandEvents,
+          needsManifestRefresh = parsed.needsManifestRefresh,
+          protectionDataUpdate = parsed.protectionDataUpdate; // TODO better handle use cases like key rotation by not always grouping
+      // every protection data together? To check.
+
+      var segmentEncryptionEvent$ = protectionDataUpdate && !hasSentEncryptionData ? of.of.apply(void 0, representation.getAllEncryptionData().map(function (p) {
+        return stream_events_generators.encryptionDataEncountered(p);
+      })) : empty/* EMPTY */.E;
+      var manifestRefresh$ = needsManifestRefresh === true ? (0,of.of)(stream_events_generators.needsManifestRefresh()) : empty/* EMPTY */.E;
+      var inbandEvents$ = inbandEvents !== undefined && inbandEvents.length > 0 ? (0,of.of)({
+        type: "inband-events",
+        value: inbandEvents
+      }) : empty/* EMPTY */.E;
+      return (0,concat/* concat */.z)(segmentEncryptionEvent$, manifestRefresh$, inbandEvents$, pushMediaSegment({
+        clock$: clock$,
+        content: content,
+        initSegmentData: initSegmentData,
+        parsedSegment: parsed,
+        segment: evt.segment,
+        segmentBuffer: segmentBuffer
+      }));
     }
   }
 }
