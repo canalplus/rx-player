@@ -14,61 +14,67 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Observer,
-} from "rxjs";
+import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
 import {
+  CancellationError,
+  CancellationSignal,
+} from "../../utils/task_canceller";
+import {
   CustomManifestLoader,
-  ILoadedManifest,
-  IManifestLoaderArguments,
-  IManifestLoaderEvent,
+  ILoadedManifestFormat,
+  IRequestedData,
 } from "../types";
 
 export default function callCustomManifestLoader(
   customManifestLoader : CustomManifestLoader,
   fallbackManifestLoader : (
-    x : IManifestLoaderArguments
-  ) => Observable< IManifestLoaderEvent >
-) : (x : IManifestLoaderArguments) => Observable< IManifestLoaderEvent > {
-
-  return (args : IManifestLoaderArguments) : Observable< IManifestLoaderEvent > => {
-    return new Observable((obs: Observer<IManifestLoaderEvent>) => {
-      const { url } = args;
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) => Promise< IRequestedData<ILoadedManifestFormat> >
+) : (
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) => Promise< IRequestedData<ILoadedManifestFormat> >
+{
+  return (
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) : Promise< IRequestedData<ILoadedManifestFormat> > => {
+    return new PPromise((res, rej) => {
       const timeAPIsDelta = Date.now() - performance.now();
+      /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;
-      let hasFallbacked = false;
 
       /**
        * Callback triggered when the custom manifest loader has a response.
        * @param {Object} args
        */
-      const resolve = (_args : { data : ILoadedManifest;
+      const resolve = (_args : { data : ILoadedManifestFormat;
                                  size? : number;
                                  duration? : number;
                                  url? : string;
                                  receivingTime? : number;
                                  sendingTime? : number; }) =>
       {
-        if (!hasFallbacked) {
-          hasFinished = true;
-          const receivedTime =
-            _args.receivingTime !== undefined ? _args.receivingTime - timeAPIsDelta :
-                                                undefined;
-          const sendingTime =
-            _args.sendingTime !== undefined ? _args.sendingTime - timeAPIsDelta :
-                                              undefined;
-
-          obs.next({ type: "data-loaded",
-                     value: { responseData: _args.data,
-                              size: _args.size,
-                              duration: _args.duration,
-                              url: _args.url,
-                              receivedTime,
-                              sendingTime } });
-          obs.complete();
+        if (hasFinished || cancelSignal.isCancelled) {
+          return;
         }
+        hasFinished = true;
+        cancelSignal.deregister(abortCustomLoader);
+
+        const receivedTime =
+          _args.receivingTime !== undefined ? _args.receivingTime - timeAPIsDelta :
+                                              undefined;
+        const sendingTime =
+          _args.sendingTime !== undefined ? _args.sendingTime - timeAPIsDelta :
+                                            undefined;
+
+        res({ responseData: _args.data,
+              size: _args.size,
+              duration: _args.duration,
+              url: _args.url,
+              receivedTime, sendingTime });
       };
 
       /**
@@ -76,23 +82,25 @@ export default function callCustomManifestLoader(
        * @param {*} err - The corresponding error encountered
        */
       const reject = (err : unknown) : void => {
-        if (!hasFallbacked) {
-          hasFinished = true;
-
-          // Format error and send it
-          const castedErr = err as (null | undefined | { message? : string;
-                                                         canRetry? : boolean;
-                                                         isOfflineError? : boolean;
-                                                         xhr? : XMLHttpRequest; });
-          const message = castedErr?.message ??
-                          "Unknown error when fetching the Manifest through a " +
-                          "custom manifestLoader.";
-          const emittedErr = new CustomLoaderError(message,
-                                                   castedErr?.canRetry ?? false,
-                                                   castedErr?.isOfflineError ?? false,
-                                                   castedErr?.xhr);
-          obs.error(emittedErr);
+        if (hasFinished || cancelSignal.isCancelled) {
+          return;
         }
+        hasFinished = true;
+        cancelSignal.deregister(abortCustomLoader);
+
+        // Format error and send it
+        const castedErr = err as (null | undefined | { message? : string;
+                                                       canRetry? : boolean;
+                                                       isOfflineError? : boolean;
+                                                       xhr? : XMLHttpRequest; });
+        const message = castedErr?.message ??
+                        "Unknown error when fetching the Manifest through a " +
+                        "custom manifestLoader.";
+        const emittedErr = new CustomLoaderError(message,
+                                                 castedErr?.canRetry ?? false,
+                                                 castedErr?.isOfflineError ?? false,
+                                                 castedErr?.xhr);
+        rej(emittedErr);
       };
 
       /**
@@ -100,18 +108,33 @@ export default function callCustomManifestLoader(
        * the "regular" implementation
        */
       const fallback = () => {
-        hasFallbacked = true;
-        fallbackManifestLoader(args).subscribe(obs);
+        if (hasFinished || cancelSignal.isCancelled) {
+          return;
+        }
+        hasFinished = true;
+        cancelSignal.deregister(abortCustomLoader);
+        fallbackManifestLoader(url, cancelSignal).then(res, rej);
       };
 
       const callbacks = { reject, resolve, fallback };
       const abort = customManifestLoader(url, callbacks);
 
-      return () => {
-        if (!hasFinished && !hasFallbacked && typeof abort === "function") {
+      cancelSignal.register(abortCustomLoader);
+
+      /**
+       * The logic to run when the custom loader is cancelled while pending.
+       * @param {Error} err
+       */
+      function abortCustomLoader(err : CancellationError) {
+        if (hasFinished) {
+          return;
+        }
+        hasFinished = true;
+        if (typeof abort === "function") {
           abort();
         }
-      };
+        rej(err);
+      }
     });
   };
 }

@@ -14,17 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  EMPTY,
-  Observable,
-  timer as observableTimer,
-} from "rxjs";
-import {
-  catchError,
-  map,
-  mergeMap,
-  startWith,
-} from "rxjs/operators";
+import PPromise from "pinkie";
 import { isOffline } from "../../../compat";
 import {
   CustomLoaderError,
@@ -33,7 +23,11 @@ import {
   RequestError,
 } from "../../../errors";
 import log from "../../../log";
+import cancellableSleep from "../../../utils/cancellable_sleep";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 
 /**
  * Called on a loader error.
@@ -92,27 +86,35 @@ function isOfflineRequestError(error : unknown) : boolean {
   return false; // under doubt, return false
 }
 
-export interface IBackoffOptions { baseDelay : number;
-                                   maxDelay : number;
-                                   maxRetryRegular : number;
-                                   maxRetryOffline : number; }
-
-export interface IBackoffRetry {
-  type : "retry";
-  value : unknown; // The error that made us retry
+/** Settings to give to the backoff functions to configure their behavior. */
+export interface IBackoffSettings {
+  /**
+   * Initial delay to wait if a request fails before making a new request, in
+   * milliseconds.
+   */
+  baseDelay : number;
+  /**
+   * Maximum delay to wait if a request fails before making a new request, in
+   * milliseconds.
+   */
+  maxDelay : number;
+  /**
+   * Maximum number of retries to perform on "regular" errors (e.g. due to HTTP
+   * status, integrity errors, timeouts...).
+   */
+  maxRetryRegular : number;
+  /**
+   * Maximum number of retries to perform when it appears that the user is
+   * currently offline.
+   */
+  maxRetryOffline : number;
+  /** Callback called when a request is retried. */
+  onRetry : (err : unknown) => void;
 }
 
-export interface IBackoffResponse<T> {
-  type : "response";
-  value : T;
-}
-
-export type IBackoffEvent<T> = IBackoffRetry |
-                               IBackoffResponse<T>;
-
-enum REQUEST_ERROR_TYPES { None,
-                           Regular,
-                           Offline }
+const enum REQUEST_ERROR_TYPES { None,
+                                 Regular,
+                                 Offline }
 
 /**
  * Guess the type of error obtained.
@@ -129,12 +131,15 @@ function getRequestErrorType(error : unknown) : REQUEST_ERROR_TYPES {
  *
  * Here how it works:
  *
- *   1. we give it one or multiple URLs available for the element we want to
- *      request, the request callback and some options
+ *   1. You give it one or multiple URLs available for the resource you want to
+ *      request (from the most important URL to the least important), the
+ *      request callback itself, and some options.
  *
  *   2. it tries to call the request callback with the first URL:
- *        - if it works as expected, it wrap the response in a `response` event.
- *        - if it fails, it emits a `retry` event and try with the next one.
+ *        - if it works as expected, it resolves the returned Promise with that
+ *          request's response.
+ *        - if it fails, it calls ther `onRetry` callback given with the
+ *          corresponding error and try with the next URL.
  *
  *   3. When all URLs have been tested (and failed), it decides - according to
  *      the error counters, configuration and errors received - if it can retry
@@ -142,34 +147,45 @@ function getRequestErrorType(error : unknown) : REQUEST_ERROR_TYPES {
  *        - If it can, it increments the corresponding error counter, wait a
  *          delay (based on an exponential backoff) and restart the same logic
  *          for all retry-able URL.
- *        - If it can't it just throws the error.
+ *        - If it can't it just reject the error through the returned Promise.
  *
  * Note that there are in fact two separate counters:
  *   - one for "offline" errors
  *   - one for other xhr errors
  * Both counters are resetted if the error type changes from an error to the
  * next.
- * @param {Array.<string} obs$
- * @param {Function} request$
+ *
+ * @param {Array.<string>} urls
+ * @param {Function} performRequest
  * @param {Object} options - Configuration options.
- * @returns {Observable}
+ * @param {Object} cancellationSignal
+ * @returns {Promise}
  */
-export default function tryURLsWithBackoff<T>(
+export function tryURLsWithBackoff<T>(
   urls : Array<string|null>,
-  request$ : (url : string | null) => Observable<T>,
-  options : IBackoffOptions
-) : Observable<IBackoffEvent<T>> {
+  performRequest : (
+    url : string | null,
+    cancellationSignal : CancellationSignal
+  ) => Promise<T>,
+  options : IBackoffSettings,
+  cancellationSignal : CancellationSignal
+) : Promise<T> {
+  if (cancellationSignal.isCancelled) {
+    return PPromise.reject(cancellationSignal.cancellationError);
+  }
+
   const { baseDelay,
           maxDelay,
           maxRetryRegular,
-          maxRetryOffline } = options;
+          maxRetryOffline,
+          onRetry } = options;
   let retryCount = 0;
   let lastError = REQUEST_ERROR_TYPES.None;
 
   const urlsToTry = urls.slice();
   if (urlsToTry.length === 0) {
     log.warn("Fetchers: no URL given to `tryURLsWithBackoff`.");
-    return EMPTY;
+    return PPromise.reject(new Error("No URL to request"));
   }
   return tryURLsRecursively(urlsToTry[0], 0);
 
@@ -186,71 +202,87 @@ export default function tryURLsWithBackoff<T>(
    * @param {number} index
    * @returns {Observable}
    */
-  function tryURLsRecursively(
+  async function tryURLsRecursively(
     url : string | null,
     index : number
-  ) : Observable<IBackoffEvent<T>> {
-    return request$(url).pipe(
-      map(res => ({ type : "response" as const, value: res })),
-      catchError((error : unknown) => {
-        if (!shouldRetry(error)) { // ban this URL
-          if (urlsToTry.length <= 1) { // This was the last one, throw
-            throw error;
-          }
+  ) : Promise<T> {
+    try {
+      const res = await performRequest(url, cancellationSignal);
+      return res;
+    } catch (error : unknown) {
+      if (TaskCanceller.isCancellationError(error)) {
+        throw error;
+      }
 
-          // else, remove that element from the array and go the next URL
-          urlsToTry.splice(index, 1);
-          const newIndex = index >= urlsToTry.length - 1 ? 0 :
-                                                           index;
-          return tryURLsRecursively(urlsToTry[newIndex], newIndex)
-            .pipe(startWith({ type: "retry" as const, value: error }));
-        }
-
-        const currentError = getRequestErrorType(error);
-        const maxRetry = currentError === REQUEST_ERROR_TYPES.Offline ? maxRetryOffline :
-                                                                        maxRetryRegular;
-
-        if (currentError !== lastError) {
-          retryCount = 0;
-          lastError = currentError;
-        }
-
-        if (index < urlsToTry.length - 1) { // there is still URLs to test
-          const newIndex = index + 1;
-          return tryURLsRecursively(urlsToTry[newIndex], newIndex)
-            .pipe(startWith({ type: "retry" as const, value: error }));
-        }
-
-        // Here, we were using the last element of the `urlsToTry` array.
-        // Increment counter and restart with the first URL
-
-        retryCount++;
-        if (retryCount > maxRetry) {
+      if (!shouldRetry(error)) {
+        // ban this URL
+        if (urlsToTry.length <= 1) { // This was the last one, throw
           throw error;
         }
-        const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1),
-                               maxDelay);
-        const fuzzedDelay = getFuzzedDelay(delay);
-        const nextURL = urlsToTry[0];
-        return observableTimer(fuzzedDelay).pipe(
-          mergeMap(() => tryURLsRecursively(nextURL, 0)),
-          startWith({ type: "retry" as const, value: error }));
-      })
-    );
+
+        // else, remove that element from the array and go the next URL
+        urlsToTry.splice(index, 1);
+        const newIndex = index >= urlsToTry.length - 1 ? 0 :
+                                                         index;
+        onRetry(error);
+        if (cancellationSignal.isCancelled) {
+          throw cancellationSignal.cancellationError;
+        }
+        return tryURLsRecursively(urlsToTry[newIndex], newIndex);
+      }
+
+      const currentError = getRequestErrorType(error);
+      const maxRetry = currentError === REQUEST_ERROR_TYPES.Offline ? maxRetryOffline :
+                                                                      maxRetryRegular;
+
+      if (currentError !== lastError) {
+        retryCount = 0;
+        lastError = currentError;
+      }
+
+      if (index < urlsToTry.length - 1) { // there is still URLs to test
+        const newIndex = index + 1;
+        onRetry(error);
+        if (cancellationSignal.isCancelled) {
+          throw cancellationSignal.cancellationError;
+        }
+        return tryURLsRecursively(urlsToTry[newIndex], newIndex);
+      }
+
+      // Here, we were using the last element of the `urlsToTry` array.
+      // Increment counter and restart with the first URL
+
+      retryCount++;
+      if (retryCount > maxRetry) {
+        throw error;
+      }
+      const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1),
+                             maxDelay);
+      const fuzzedDelay = getFuzzedDelay(delay);
+      const nextURL = urlsToTry[0];
+      onRetry(error);
+      if (cancellationSignal.isCancelled) {
+        throw cancellationSignal.cancellationError;
+      }
+
+      await cancellableSleep(fuzzedDelay, cancellationSignal);
+      return tryURLsRecursively(nextURL, 0);
+    }
   }
 }
 
 /**
  * Lightweight version of the request algorithm, this time with only a simple
- * Observable given.
+ * Promise given.
  * @param {Function} request$
  * @param {Object} options
  * @returns {Observable}
  */
-export function tryRequestObservableWithBackoff<T>(
-  request$ : Observable<T>,
-  options : IBackoffOptions
-) : Observable<IBackoffEvent<T>> {
+export function tryRequestPromiseWithBackoff<T>(
+  performRequest : () => Promise<T>,
+  options : IBackoffSettings,
+  cancellationSignal : CancellationSignal
+) : Promise<T> {
   // same than for a single unknown URL
-  return tryURLsWithBackoff([null], () => request$, options);
+  return tryURLsWithBackoff([null], performRequest, options, cancellationSignal);
 }

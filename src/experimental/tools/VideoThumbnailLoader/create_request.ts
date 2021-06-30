@@ -1,6 +1,5 @@
 import {
   EMPTY,
-  Observable,
 } from "rxjs";
 import {
   catchError,
@@ -8,19 +7,25 @@ import {
   take,
 } from "rxjs/operators";
 import {
-  ISegmentLoaderContent,
-  ISegmentLoaderEvent,
-} from "../../../core/fetchers/segment/create_segment_loader";
+  ISegmentFetcher,
+  ISegmentFetcherChunkEvent,
+} from "../../../core/fetchers/segment/segment_fetcher";
 import { ISegment } from "../../../manifest";
+import {
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
+} from "../../../transports";
 import getCompleteSegmentId from "./get_complete_segment_id";
 import { IContentInfos } from "./types";
 
 const requests = new Map<string, ICancellableRequest>();
 
 export interface ICancellableRequest {
-  data?: Uint8Array;
+  data?: ISegmentParserParsedInitSegment<Uint8Array | ArrayBuffer> |
+         ISegmentParserParsedSegment<Uint8Array | ArrayBuffer>;
   error?: Error;
-  onData?: (data: Uint8Array) => void;
+  onData?: (data: ISegmentParserParsedInitSegment<Uint8Array | ArrayBuffer> |
+                  ISegmentParserParsedSegment<Uint8Array | ArrayBuffer>) => void;
   onError?: (err: Error) => void;
   cancel: () => void;
 }
@@ -34,11 +39,7 @@ export interface ICancellableRequest {
  * @returns {Object}
  */
 export function createRequest(
-  segmentLoader: (
-    x : ISegmentLoaderContent
-  ) => Observable<ISegmentLoaderEvent<Uint8Array |
-                                      ArrayBuffer |
-                                      null>>,
+  segmentFetcher: ISegmentFetcher<ArrayBuffer | Uint8Array>,
   contentInfos: IContentInfos,
   segment: ISegment
 ): ICancellableRequest {
@@ -47,14 +48,18 @@ export function createRequest(
   if (lastRequest !== undefined) {
     return lastRequest;
   }
-  const subscription = segmentLoader({ manifest: contentInfos.manifest,
-                                       period: contentInfos.period,
-                                       adaptation: contentInfos.adaptation,
-                                       representation: contentInfos.representation,
-                                       segment }).pipe(
-    filter((evt): evt is { type: "data";
-                           value: { responseData: Uint8Array }; } =>
-      evt.type === "data"
+
+  const _request: ICancellableRequest = {
+    cancel: () => subscription.unsubscribe(),
+  };
+
+  const subscription = segmentFetcher({ manifest: contentInfos.manifest,
+                                        period: contentInfos.period,
+                                        adaptation: contentInfos.adaptation,
+                                        representation: contentInfos.representation,
+                                        segment }).pipe(
+    filter((evt): evt is ISegmentFetcherChunkEvent<ArrayBuffer | Uint8Array> =>
+      evt.type === "chunk"
     ),
     take(1),
     catchError((err: Error) => {
@@ -65,15 +70,12 @@ export function createRequest(
       return EMPTY;
     })
   ).subscribe((evt) => {
-    _request.data = evt.value.responseData;
+    const parsed = evt.parse();
+    _request.data = parsed;
     if (_request.onData !== undefined) {
-      _request.onData(evt.value.responseData);
+      _request.onData(parsed);
     }
   });
-
-  const _request: ICancellableRequest = {
-    cancel: () => subscription.unsubscribe(),
-  };
 
   requests.set(completeSegmentId, _request);
 

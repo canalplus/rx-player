@@ -21,23 +21,23 @@ import {
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  ISegmentParserParsedSegment,
+  ISegmentContext,
   ISegmentParserParsedInitSegment,
-  ISegmentParserArguments,
+  ISegmentParserParsedSegment,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import inferSegmentContainer from "../utils/infer_segment_container";
 
-export default function segmentParser({
-  content,
-  response,
-  initTimescale,
-} : ISegmentParserArguments<ArrayBuffer | Uint8Array | null>
+export default function segmentParser(
+  loadedSegment : { data : ArrayBuffer | Uint8Array | null;
+                    isChunked : boolean; },
+  content : ISegmentContext,
+  initTimescale : number | undefined
 ) : ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null> |
     ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>
 {
   const { period, adaptation, representation, segment } = content;
-  const { data } = response;
+  const { data } = loadedSegment;
   const appendWindow : [ number, number | undefined ] = [ period.start, period.end ];
 
   if (data === null) {

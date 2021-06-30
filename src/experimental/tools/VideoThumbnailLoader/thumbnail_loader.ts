@@ -32,7 +32,9 @@ import {
   tap,
 } from "rxjs/operators";
 import Player from "../../../core/api";
-import createSegmentLoader from "../../../core/fetchers/segment/create_segment_loader";
+import createSegmentFetcher, {
+  ISegmentFetcher,
+} from "../../../core/fetchers/segment/segment_fetcher";
 import log from "../../../log";
 import { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
@@ -206,22 +208,21 @@ export default class VideoThumbnailLoader {
       })
     );
 
-    const segmentLoader = createSegmentLoader(
-      loader.video.loader,
-      undefined,
+    const segmentFetcher = createSegmentFetcher(
+      "video",
+      loader.video,
+      new Subject(),
       { baseDelay: 0,
         maxDelay: 0,
         maxRetryOffline: 0,
         maxRetryRegular: 0 }
-    );
-    const { parser: segmentParser } = loader.video;
+    ) as ISegmentFetcher<ArrayBuffer | Uint8Array>;
 
     const taskPromise: Promise<number> = lastValueFrom(observableRace(
       abortError$,
       getInitializedSourceBuffer$(contentInfos,
                                   this._videoElement,
-                                  { segmentLoader,
-                                    segmentParser }).pipe(
+                                  segmentFetcher).pipe(
         mergeMap((videoSourceBuffer) => {
           const bufferCleaning$ = removeBufferAroundTime$(this._videoElement,
                                                           videoSourceBuffer,
@@ -229,7 +230,7 @@ export default class VideoThumbnailLoader {
           log.debug("VTL: Removing buffer around time.", time);
 
           const segmentsLoading$ =
-            loadSegments(segments, segmentLoader, contentInfos);
+            loadSegments(segments, segmentFetcher, contentInfos);
 
           return observableMerge(bufferCleaning$.pipe(ignoreElements()),
                                  segmentsLoading$
@@ -237,13 +238,15 @@ export default class VideoThumbnailLoader {
             mergeMap((arr) => {
               return combineLatest(
                 arr.map(({ segment, data }) => {
+                  if (data.segmentType === "init") {
+                    throw new Error("Unexpected initialization segment parsed.");
+                  }
                   const start = segment.time / segment.timescale;
                   const end = start + (segment.duration / segment.timescale);
                   const inventoryInfos = objectAssign({ segment,
                                                         start,
                                                         end }, contentInfos);
                   return pushData(inventoryInfos,
-                                  segmentParser,
                                   data,
                                   videoSourceBuffer)
                     .pipe(tap(() => {

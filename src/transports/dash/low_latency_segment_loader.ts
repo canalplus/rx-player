@@ -14,86 +14,70 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
-  mergeMap,
-  scan,
-} from "rxjs/operators";
-import log from "../../log";
 import { concat } from "../../utils/byte_parsing";
 import fetchRequest, {
-  IDataChunk,
-  IDataComplete,
+  IFetchedDataObject,
 } from "../../utils/request/fetch";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  ILoaderProgressEvent,
-  ISegmentLoaderArguments,
-  ISegmentLoaderChunkEvent,
-  ISegmentLoaderEvent,
+  ISegmentContext,
+  ISegmentLoaderCallbacks,
+  ISegmentLoaderResultChunkedComplete,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import extractCompleteChunks from "./extract_complete_chunks";
 
+/**
+ * Load segments through a "chunk" mode (decodable chunk by decodable chunk).
+ *
+ * This method is particularly adapted to low-latency streams.
+ *
+ * @param {string} url - URL of the segment to download.
+ * @param {Object} content - Context of the segment needed.
+ * @param {Object} callbacks
+ * @param {CancellationSignal} cancelSignal
+ * @returns {Promise}
+ */
 export default function lowLatencySegmentLoader(
   url : string,
-  args : ISegmentLoaderArguments
-) : Observable< ISegmentLoaderEvent<ArrayBuffer> > {
-  // Items emitted after processing fetch events
-  interface IScannedChunk {
-    event: IDataChunk | IDataComplete | null; // Event received from fetch
-    completeChunks: Uint8Array[]; // Complete chunks received on the event
-    partialChunk: Uint8Array | null; // Remaining incomplete chunk received on the event
-  }
-
-  const { segment } = args;
+  content : ISegmentContext,
+  callbacks : ISegmentLoaderCallbacks<Uint8Array>,
+  cancelSignal : CancellationSignal
+) : Promise<ISegmentLoaderResultChunkedComplete> {
+  const { segment } = content;
   const headers = segment.range !== undefined ? { Range: byteRange(segment.range) } :
                                                 undefined;
+  let partialChunk : Uint8Array | null = null;
 
-  return fetchRequest({ url, headers })
-    .pipe(
-      scan<IDataChunk | IDataComplete, IScannedChunk>((acc, evt) => {
-        if (evt.type === "data-complete") {
-          if (acc.partialChunk !== null) {
-            log.warn("DASH Pipelines: remaining chunk does not belong to any segment");
-          }
-          return { event: evt, completeChunks: [], partialChunk: null };
-        }
+  /**
+   * Called each time `fetch` has new data available.
+   * @param {Object} info
+   */
+  function onData(info : IFetchedDataObject) : void {
+    const chunk = new Uint8Array(info.chunk);
+    const concatenated = partialChunk !== null ? concat(partialChunk, chunk) :
+                                                 chunk;
+    const res = extractCompleteChunks(concatenated);
+    const completeChunks = res[0];
+    partialChunk = res[1];
+    for (let i = 0; i < completeChunks.length; i++) {
+      callbacks.onNewChunk(completeChunks[i]);
+      if (cancelSignal.isCancelled) {
+        return;
+      }
+    }
+    callbacks.onProgress({ duration: info.duration,
+                           size: info.size,
+                           totalSize: info.totalSize });
+    if (cancelSignal.isCancelled) {
+      return;
+    }
+  }
 
-        const data = new Uint8Array(evt.value.chunk);
-        const concatenated = acc.partialChunk !== null ? concat(acc.partialChunk,
-                                                                data) :
-                                                         data;
-        const [ completeChunks,
-                partialChunk ] = extractCompleteChunks(concatenated);
-        return { event: evt, completeChunks, partialChunk };
-      }, { event: null, completeChunks: [], partialChunk: null }),
-
-      mergeMap((evt : IScannedChunk) => {
-        const emitted : Array<ISegmentLoaderChunkEvent |
-                              ILoaderProgressEvent> = [];
-        for (let i = 0; i < evt.completeChunks.length; i++) {
-          emitted.push({ type: "data-chunk",
-                         value: { responseData: evt.completeChunks[i] } });
-        }
-        const { event } = evt;
-        if (event !== null && event.type === "data-chunk") {
-          const { value } = event;
-          emitted.push({ type: "progress",
-                         value: { duration: value.duration,
-                                  size: value.size,
-                                  totalSize: value.totalSize } });
-        } else if (event !== null && event.type === "data-complete") {
-          const { value } = event;
-          emitted.push({ type: "data-chunk-complete",
-                         value: { duration: value.duration,
-                                  receivedTime: value.receivedTime,
-                                  sendingTime: value.sendingTime,
-                                  size: value.size,
-                                  url: value.url } });
-        }
-        return observableOf(...emitted);
-      }));
+  return fetchRequest({ url,
+                        headers,
+                        onData,
+                        cancelSignal })
+    .then((res) => ({ resultType: "chunk-complete" as const,
+                      resultData: res }));
 }

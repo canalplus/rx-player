@@ -24,23 +24,16 @@ import {
   Subject,
 } from "rxjs";
 import {
-  filter,
   map,
   mapTo,
   mergeMap,
   tap,
 } from "rxjs/operators";
-import {
-  ISegmentLoaderContent,
-  ISegmentLoaderEvent,
-} from "../../../core/fetchers/segment/create_segment_loader";
+import { ISegmentFetcher } from "../../../core/fetchers/segment/segment_fetcher";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 import { ISegment } from "../../../manifest";
 import prepareSourceBuffer from "./prepare_source_buffer";
-import {
-  IContentInfos,
-  IThumbnailLoaderSegmentParser,
-} from "./types";
+import { IContentInfos } from "./types";
 
 let mediaSourceSubscription: Subscription | undefined;
 let sourceBufferContent: IContentInfos | undefined;
@@ -79,34 +72,25 @@ function hasAlreadyPushedInitData(contentInfos: IContentInfos): boolean {
 function loadAndPushInitData(contentInfos: IContentInfos,
                              initSegment: ISegment,
                              sourceBuffer: AudioVideoSegmentBuffer,
-                             segmentParser: IThumbnailLoaderSegmentParser,
-                             segmentLoader: (
-                               x : ISegmentLoaderContent
-                             ) => Observable<ISegmentLoaderEvent<Uint8Array |
-                                                                 ArrayBuffer |
-                                                                 null>>) {
-  const inventoryInfos = { manifest: contentInfos.manifest,
-                           period: contentInfos.period,
-                           adaptation: contentInfos.adaptation,
-                           representation: contentInfos.representation,
-                           segment: initSegment };
-  return segmentLoader(inventoryInfos).pipe(
-    filter((evt): evt is { type: "data"; value: { responseData: Uint8Array } } =>
-      evt.type === "data"),
+                             segmentFetcher: ISegmentFetcher<ArrayBuffer | Uint8Array>) {
+  const segmentInfos = { manifest: contentInfos.manifest,
+                         period: contentInfos.period,
+                         adaptation: contentInfos.adaptation,
+                         representation: contentInfos.representation,
+                         segment: initSegment };
+  return segmentFetcher(segmentInfos).pipe(
     mergeMap((evt) => {
-      const parsed = segmentParser({
-        response: {
-          data: evt.value.responseData,
-          isChunked: false,
-        },
-        content: inventoryInfos,
-      });
+      if (evt.type !== "chunk") {
+        return EMPTY;
+      }
+      const parsed = evt.parse();
       if (parsed.segmentType !== "init") {
         return EMPTY;
       }
       const { initializationData } = parsed;
       const initSegmentData = initializationData instanceof ArrayBuffer ?
-        new Uint8Array(initializationData) : initializationData;
+        new Uint8Array(initializationData) :
+        initializationData;
       return sourceBuffer
         .pushChunk({ data: { initSegment: initSegmentData,
                              chunk: null,
@@ -130,15 +114,7 @@ function loadAndPushInitData(contentInfos: IContentInfos,
 export function getInitializedSourceBuffer$(
   contentInfos: IContentInfos,
   element: HTMLVideoElement,
-  { segmentLoader,
-    segmentParser }: {
-    segmentLoader: (
-      x : ISegmentLoaderContent
-    ) => Observable<ISegmentLoaderEvent<Uint8Array |
-                                        ArrayBuffer |
-                                        null>>;
-    segmentParser: IThumbnailLoaderSegmentParser;
-  }
+  segmentFetcher : ISegmentFetcher<ArrayBuffer | Uint8Array>
 ): Observable<AudioVideoSegmentBuffer> {
   if (hasAlreadyPushedInitData(contentInfos)) {
     return sourceBuffer$;
@@ -172,8 +148,7 @@ export function getInitializedSourceBuffer$(
       return loadAndPushInitData(contentInfos,
                                  initSegment,
                                  sourceBuffer,
-                                 segmentParser,
-                                 segmentLoader)
+                                 segmentFetcher)
         .pipe(mapTo(sourceBuffer));
     }),
     tap(() => { sourceBufferContent = contentInfos; })

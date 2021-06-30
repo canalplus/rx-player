@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  ISegment,
-  Period,
-  Representation,
-} from "../../manifest";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
@@ -31,7 +25,8 @@ import {
 } from "../../utils/string_parsing";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  ISegmentParserArguments,
+  ISegmentContext,
+  ISegmentParser,
   ISegmentParserParsedInitSegment,
   ISegmentParserParsedSegment,
   ITextTrackSegmentData,
@@ -63,18 +58,13 @@ import {
  * @returns {Observable.<Object>}
  */
 function parseISOBMFFEmbeddedTextTrack(
-  data : Uint8Array | ArrayBuffer | string,
+  data : ArrayBuffer | Uint8Array | string,
   isChunked : boolean,
-  content : { manifest : Manifest;
-              period : Period;
-              adaptation : Adaptation;
-              representation : Representation;
-              segment : ISegment; },
+  content : ISegmentContext,
   initTimescale : number | undefined,
   __priv_patchLastSegmentInSidx? : boolean
-) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
-{
+) : ISegmentParserParsedSegment< ITextTrackSegmentData | null > |
+    ISegmentParserParsedInitSegment< null > {
   const { period, representation, segment } = content;
   const { isInit, indexRange } = segment;
 
@@ -144,16 +134,11 @@ function parseISOBMFFEmbeddedTextTrack(
  * @returns {Observable.<Object>}
  */
 function parsePlainTextTrack(
-  data : Uint8Array | ArrayBuffer | string,
+  data : ArrayBuffer | Uint8Array | string,
   isChunked : boolean,
-  content : { manifest : Manifest;
-              period : Period;
-              adaptation : Adaptation;
-              representation : Representation;
-              segment : ISegment; }
-) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
-{
+  content : ISegmentContext
+) : ISegmentParserParsedSegment< ITextTrackSegmentData | null > |
+    ISegmentParserParsedInitSegment< null > {
   const { period, segment } = content;
   const { timestampOffset = 0 } = segment;
   if (segment.isInit) {
@@ -188,24 +173,22 @@ function parsePlainTextTrack(
  */
 export default function generateTextTrackParser(
   { __priv_patchLastSegmentInSidx } : { __priv_patchLastSegmentInSidx? : boolean }
-) {
+) : ISegmentParser< ArrayBuffer | Uint8Array | string | null,
+                    ITextTrackSegmentData | null > {
   /**
    * Parse TextTrack data.
    * @param {Object} infos
    * @returns {Observable.<Object>}
    */
   return function textTrackParser(
-    { response,
-      content,
-      initTimescale } : ISegmentParserArguments< Uint8Array |
-                                                 ArrayBuffer |
-                                                 string |
-                                                 null >
-  ) : ISegmentParserParsedInitSegment<null> |
-      ISegmentParserParsedSegment<ITextTrackSegmentData | null>
-  {
+    loadedSegment : { data : ArrayBuffer | Uint8Array | string | null;
+                      isChunked : boolean; },
+    content : ISegmentContext,
+    initTimescale : number | undefined
+  ) : ISegmentParserParsedSegment< ITextTrackSegmentData | null > |
+      ISegmentParserParsedInitSegment< null > {
     const { period, adaptation, representation, segment } = content;
-    const { data, isChunked } = response;
+    const { data, isChunked } = loadedSegment;
 
     if (data === null) {
       // No data, just return an empty placeholder object

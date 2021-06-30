@@ -14,18 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  combineLatest as observableCombineLatest,
-  concat as observableConcat,
-  from as observableFrom,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
-  filter,
-  map,
-  mergeMap,
-} from "rxjs/operators";
+import PPromise from "pinkie";
 import features from "../../features";
 import log from "../../log";
 import Manifest from "../../manifest";
@@ -36,23 +25,24 @@ import {
   strToUtf8,
   utf8ToStr,
 } from "../../utils/string_parsing";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  ILoaderDataLoadedValue,
-  IManifestParserArguments,
-  IManifestParserResponseEvent,
-  IManifestParserWarningEvent,
+  IManifestParserOptions,
+  IManifestParserRequestScheduler,
+  IManifestParserResult,
+  IRequestedData,
   ITransportOptions,
 } from "../types";
-import returnParsedManifest from "../utils/return_parsed_manifest";
 
-/**
- * @param {Object} options
- * @returns {Function}
- */
 export default function generateManifestParser(
   options : ITransportOptions
-) : (x : IManifestParserArguments) => Observable<IManifestParserWarningEvent |
-                                                 IManifestParserResponseEvent>
+) : (
+    manifestData : IRequestedData<unknown>,
+    parserOptions : IManifestParserOptions,
+    onWarnings : (warnings : Error[]) => void,
+    cancelSignal : CancellationSignal,
+    scheduleRequest : IManifestParserRequestScheduler
+  ) => IManifestParserResult | Promise<IManifestParserResult>
 {
   const { aggressiveMode,
           referenceDateTime } = options;
@@ -60,24 +50,26 @@ export default function generateManifestParser(
     options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime :
     undefined;
   return function manifestParser(
-    args : IManifestParserArguments
-  ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
-    const { response,
-            scheduleRequest,
-            url: loaderURL,
-            externalClockOffset: argClockOffset } = args;
-    const url = response.url ?? loaderURL;
-    const { responseData } = response;
+    manifestData : IRequestedData<unknown>,
+    parserOptions : IManifestParserOptions,
+    onWarnings : (warnings : Error[]) => void,
+    cancelSignal : CancellationSignal,
+    scheduleRequest : IManifestParserRequestScheduler
+  ) : IManifestParserResult | Promise<IManifestParserResult> {
+    const { responseData } = manifestData;
+    const argClockOffset = parserOptions.externalClockOffset;
+    const url = manifestData.url ?? parserOptions.originalUrl;
 
     const optAggressiveMode = aggressiveMode === true;
     const externalClockOffset = serverTimeOffset ?? argClockOffset;
-    const unsafelyBaseOnPreviousManifest = args.unsafeMode ? args.previousManifest :
-                                                             null;
-    const parserOpts = { aggressiveMode: optAggressiveMode,
-                         unsafelyBaseOnPreviousManifest,
-                         url,
-                         referenceDateTime,
-                         externalClockOffset };
+    const unsafelyBaseOnPreviousManifest = parserOptions.unsafeMode ?
+      parserOptions.previousManifest :
+      null;
+    const dashParserOpts = { aggressiveMode: optAggressiveMode,
+                             unsafelyBaseOnPreviousManifest,
+                             url,
+                             referenceDateTime,
+                             externalClockOffset };
 
     const parsers = features.dashParsers;
     if (parsers.wasm === null ||
@@ -96,22 +88,22 @@ export default function generateManifestParser(
 
       if (parsers.wasm.status === "initialized") {
         log.debug("DASH: Running WASM MPD Parser.");
-        const parsed = parsers.wasm.runWasmParser(manifestAB, parserOpts);
+        const parsed = parsers.wasm.runWasmParser(manifestAB, dashParserOpts);
         return processMpdParserResponse(parsed);
       } else {
         log.debug("DASH: Awaiting WASM initialization before parsing the MPD.");
         const initProm = parsers.wasm.waitForInitialization()
           .catch(() => { /* ignore errors, we will check the status later */ });
-        return observableFrom(initProm).pipe(mergeMap(() => {
+        return initProm.then(() => {
           if (parsers.wasm === null || parsers.wasm.status !== "initialized") {
             log.warn("DASH: WASM MPD parser initialization failed. " +
                      "Running JS parser instead");
             return runDefaultJsParser();
           }
           log.debug("DASH: Running WASM MPD Parser.");
-          const parsed = parsers.wasm.runWasmParser(manifestAB, parserOpts);
+          const parsed = parsers.wasm.runWasmParser(manifestAB, dashParserOpts);
           return processMpdParserResponse(parsed);
-        }));
+        });
       }
     }
 
@@ -126,7 +118,7 @@ export default function generateManifestParser(
         throw new Error("No MPD parser is imported");
       }
       const manifestDoc = getManifestAsDocument(responseData);
-      const parsedManifest = parsers.js(manifestDoc, parserOpts);
+      const parsedManifest = parsers.js(manifestDoc, dashParserOpts);
       return processMpdParserResponse(parsedManifest);
     }
 
@@ -138,50 +130,54 @@ export default function generateManifestParser(
      */
     function processMpdParserResponse(
       parserResponse : IDashParserResponse<string> | IDashParserResponse<ArrayBuffer>
-    ) : Observable<IManifestParserWarningEvent | IManifestParserResponseEvent> {
+    ) : IManifestParserResult | Promise<IManifestParserResult> {
       if (parserResponse.type === "done") {
-        const { warnings, parsed } = parserResponse.value;
-        const warningEvents = warnings.map(warning => ({ type: "warning" as const,
-                                                         value: warning }));
-        const manifest = new Manifest(parsed, options);
-        return observableConcat(observableOf(...warningEvents),
-                                returnParsedManifest(manifest, url));
+        if (parserResponse.value.warnings.length > 0) {
+          onWarnings(parserResponse.value.warnings);
+        }
+        if (cancelSignal.isCancelled) {
+          return PPromise.reject(cancelSignal.cancellationError);
+        }
+        const manifest = new Manifest(parserResponse.value.parsed, options);
+        return { manifest, url };
       }
 
       const { value } = parserResponse;
 
-      const externalResources$ = value.urls.map(resourceUrl =>
-        scheduleRequest(() =>
-          request<string | ArrayBuffer>({
-            url: resourceUrl,
-            responseType: value.format === "string" ? "text" :
-                                                      "arraybuffer",
-          }).pipe(
-            filter((e) => e.type === "data-loaded"),
-            map((e) : ILoaderDataLoadedValue<string | ArrayBuffer> => e.value))));
+      const externalResources = value.urls.map(resourceUrl => {
+        return scheduleRequest(() => {
+          const req = value.format === "string" ?
+            request({ url: resourceUrl,
+                      responseType: "text" as const,
+                      cancelSignal }) :
+            request({ url: resourceUrl,
+                      responseType: "arraybuffer" as const,
+                      cancelSignal });
+          return req;
+        });
+      });
 
-      return observableCombineLatest(externalResources$)
-        .pipe(mergeMap(loadedResources => {
-          if (value.format === "string") {
-            const resources = loadedResources.map(resource => {
-              if (typeof resource.responseData !== "string") {
-                throw new Error("External DASH resources should have been a string");
-              }
-              // Normally not needed but TypeScript is just dumb here
-              return objectAssign(resource, { responseData: resource.responseData });
-            });
-            return processMpdParserResponse(value.continue(resources));
-          } else {
-            const resources = loadedResources.map(resource => {
-              if (!(resource.responseData instanceof ArrayBuffer)) {
-                throw new Error("External DASH resources should have been ArrayBuffers");
-              }
-              // Normally not needed but TypeScript is just dumb here
-              return objectAssign(resource, { responseData: resource.responseData });
-            });
-            return processMpdParserResponse(value.continue(resources));
-          }
-        }));
+      return PPromise.all(externalResources).then(loadedResources => {
+        if (value.format === "string") {
+          const resources = loadedResources.map(resource => {
+            if (typeof resource.responseData !== "string") {
+              throw new Error("External DASH resources should have been a string");
+            }
+            // Normally not needed but TypeScript is just dumb here
+            return objectAssign(resource, { responseData: resource.responseData });
+          });
+          return processMpdParserResponse(value.continue(resources));
+        } else {
+          const resources = loadedResources.map(resource => {
+            if (!(resource.responseData instanceof ArrayBuffer)) {
+              throw new Error("External DASH resources should have been ArrayBuffers");
+            }
+            // Normally not needed but TypeScript is just dumb here
+            return objectAssign(resource, { responseData: resource.responseData });
+          });
+          return processMpdParserResponse(value.continue(resources));
+        }
+      });
     }
   };
 }

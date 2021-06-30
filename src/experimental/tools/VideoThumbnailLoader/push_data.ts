@@ -1,5 +1,4 @@
 import {
-  EMPTY,
   Observable,
 } from "rxjs";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
@@ -9,7 +8,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
-import { IThumbnailLoaderSegmentParser } from "./types";
+import { ISegmentParserParsedSegment } from "../../../transports";
 
 /**
  * Push data to the video source buffer.
@@ -27,18 +26,9 @@ export default function pushData(
                     segment: ISegment;
                     start: number;
                     end: number; },
-  segmentParser: IThumbnailLoaderSegmentParser,
-  responseData: Uint8Array,
+  parsed: ISegmentParserParsedSegment<Uint8Array | ArrayBuffer>,
   videoSourceBuffer: AudioVideoSegmentBuffer
 ): Observable<void> {
-  const parsed = segmentParser({
-    response: { data: responseData,
-                isChunked: false },
-    content: inventoryInfos,
-  });
-  if (parsed.segmentType !== "media") {
-    return EMPTY;
-  }
   const { chunkData, appendWindow } = parsed;
   const segmentData = chunkData instanceof ArrayBuffer ?
     new Uint8Array(chunkData) : chunkData;
