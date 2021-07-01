@@ -107,10 +107,7 @@ export default function manifestUpdateScheduler({
   const fetchManifest = throttle(
     (manifestURL : string | undefined, options : IManifestFetcherParserOptions)
     : Observable<IWarningEvent | IManifestFetcherParsedResult> =>
-      manifestFetcher.fetch(manifestURL).pipe(
-        mergeMap((response) => response.type === "warning" ?
-          observableOf(response) : // bubble-up warnings
-          response.parse(options)),
+      manifestFetcher.fetchAndParse(options, manifestURL).pipe(
         share()));
 
   // The Manifest always keeps the same reference

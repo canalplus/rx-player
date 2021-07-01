@@ -39,7 +39,6 @@ import {
   filter,
   map,
   mapTo,
-  mergeMap,
   mergeMapTo,
   share,
   shareReplay,
@@ -800,10 +799,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         manifest$ = manifestFetcher.parse(initialManifest, { previousManifest: null,
                                                              unsafeMode: false });
       } else {
-        manifest$ = manifestFetcher.fetch(url).pipe(
-          mergeMap((response) => response.type === "warning" ?
-            observableOf(response) : // bubble-up warnings
-            response.parse({ previousManifest: null, unsafeMode: false })));
+        manifest$ = manifestFetcher.fetchAndParse({ previousManifest: null,
+                                                    unsafeMode: false },
+                                                  url);
       }
 
       // Load the Manifest right now and share it with every subscriber until

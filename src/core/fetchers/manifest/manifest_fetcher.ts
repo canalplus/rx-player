@@ -17,7 +17,10 @@
 import PPromise from "pinkie";
 import {
   Observable,
+  Observer,
+  of as observableOf,
 } from "rxjs";
+import { mergeMap } from "rxjs/operators";
 import config from "../../../config";
 import {
   formatError,
@@ -26,6 +29,7 @@ import {
 import log from "../../../log";
 import Manifest from "../../../manifest";
 import {
+  ILoadedManifestFormat,
   IRequestedData,
   ITransportManifestPipeline,
   ITransportPipelines,
@@ -156,9 +160,7 @@ export default class ManifestFetcher {
   }
 
   /**
-   * (re-)Load the Manifest.
-   * This method does not yet parse it, parsing will then be available through
-   * a callback available on the response.
+   * (re-)Load then parses the Manifest.
    *
    * You can set an `url` on which that Manifest will be requested.
    * If not set, the regular Manifest url - defined on the `ManifestFetcher`
@@ -167,10 +169,19 @@ export default class ManifestFetcher {
    * @param {string} [url]
    * @returns {Observable}
    */
-  public fetch(url? : string) : Observable<IManifestFetcherResponse |
-                                           IManifestFetcherWarningEvent>
+  public fetchAndParse(
+    parserOptions : IManifestFetcherParserOptions,
+    url? : string
+  ) : Observable<IManifestFetcherParsedResult |
+                 IManifestFetcherWarningEvent>
   {
-    return new Observable((obs) => {
+    // Transitory type used internally
+    interface IManifestFetcherLoadedManifest {
+      type: "response";
+      response: IRequestedData<ILoadedManifestFormat>;
+    }
+    return new Observable((obs : Observer<IManifestFetcherWarningEvent |
+                                          IManifestFetcherLoadedManifest>) => {
       const pipelines = this._pipelines;
       const requestUrl = url ?? this._manifestUrl;
 
@@ -191,12 +202,7 @@ export default class ManifestFetcher {
       loadingPromise
         .then(response => {
           hasFinishedLoading = true;
-          obs.next({
-            type: "response",
-            parse: (parserOptions : IManifestFetcherParserOptions) => {
-              return this._parseLoadedManifest(response, parserOptions);
-            },
-          });
+          obs.next({ type: "response" as const, response });
           obs.complete();
         })
         .catch((err : unknown) => {
@@ -245,7 +251,14 @@ export default class ManifestFetcher {
                                             backoffSettings,
                                             canceller.signal);
       }
-    });
+    }).pipe(mergeMap((evt) : Observable<IManifestFetcherWarningEvent |
+                                        IManifestFetcherParsedResult> =>
+    {
+      if (evt.type === "warning") {
+        return observableOf(evt);
+      }
+      return this._parseLoadedManifest(evt.response, parserOptions);
+    }));
   }
 
   /**
