@@ -189,7 +189,21 @@ export interface ITransportManifestPipeline {
     url : string | undefined,
     cancelSignal : CancellationSignal,
   ) => Promise<string | undefined>;
+
+  getStreamingParser : (url : string | null) =>
+    IManifestStreamingParser | null;
 }
+
+export type IManifestStreamingParser =
+  (
+    parserOptions : IManifestParserOptions,
+    onParserWarnings : (warnings : Error[]) => void,
+    scheduleRequest : IManifestParserRequestScheduler,
+    cancelSignal : CancellationSignal
+  ) => {
+    requestPromise : Promise<IRequestedData<null>>;
+    parsingPromise : Promise<IManifestParserResult>;
+  };
 
 /** Functions allowing to load and parse segments of any type. */
 export interface ISegmentPipeline<
@@ -359,15 +373,6 @@ export type IManifestParserRequestScheduler =
 export interface IManifestParserResult {
   /** The parsed Manifest Object itself. */
   manifest : Manifest;
-  /**
-   * "Real" URL (post-redirection) at which the Manifest can be refreshed.
-   *
-   * Note that this doesn't always apply e.g. some Manifest might need multiple
-   * URLs to be fetched, some other might need to fetch no URL.
-   * This property should only be set when a unique URL is sufficient to
-   * retrieve the whole data.
-   */
-  url? : string;
 }
 
 /**

@@ -159,6 +159,147 @@ export default class ManifestFetcher {
     this._settings = settings;
   }
 
+  public fetchAndParse(
+    parserOptions : IManifestFetcherParserOptions,
+    url? : string
+  ) : Observable<IManifestFetcherParsedResult |
+                 IManifestFetcherWarningEvent>
+  {
+    return new Observable((obs) => {
+      const pipelines = this._pipelines;
+      const requestUrl = url ?? this._manifestUrl ?? null;
+
+      const runStreamingParser = pipelines.getStreamingParser(requestUrl);
+      if (runStreamingParser === null) {
+        throw new Error("XXX TODO");
+      }
+
+      /** Allows to cancel the loading operation. */
+      const canceller = new TaskCanceller();
+
+      const backoffSettings = this._getBackoffSetting((err) => {
+        obs.next({ type: "warning", value: errorSelector(err) });
+      });
+      const parsingTimeStart = performance.now();
+      // const { sendingTime, receivedTime } = loaded;
+
+      const opts = { externalClockOffset: parserOptions.externalClockOffset,
+                     unsafeMode: parserOptions.unsafeMode,
+                     previousManifest: parserOptions.previousManifest,
+                     originalUrl: this._manifestUrl };
+      const parser = runStreamingParser(opts,
+                                        onWarnings,
+                                        scheduleRequest,
+                                        canceller.signal);
+
+      let sendingTime : number | undefined;
+      let receivedTime : number | undefined;
+      parser.requestPromise
+        .then((val) => {
+          sendingTime = val.sendingTime;
+          receivedTime = val.receivedTime;
+        })
+        .catch((err) => {
+          if (canceller.isUsed) {
+            // Cancellation is already handled by RxJS
+            return;
+          }
+          canceller.cancel();
+          emitError(err, true);
+        });
+
+      parser.parsingPromise
+        .then(res => {
+          emitManifestAndComplete(res.manifest);
+        })
+        .catch((err) => {
+          if (canceller.isUsed) {
+            // Cancellation is already handled by RxJS
+            return;
+          }
+          canceller.cancel();
+          emitError(err, true);
+        });
+
+      return () => {
+        canceller.cancel();
+      };
+
+      /**
+       * Perform a request with the same retry mechanisms and error handling
+       * than for a Manifest loader.
+       * @param {Function} performRequest
+       * @returns {Function}
+       */
+      async function scheduleRequest<T>(
+        performRequest : () => Promise<T>
+      ) : Promise<T> {
+        try {
+          const data = await tryRequestPromiseWithBackoff(performRequest,
+                                                          backoffSettings,
+                                                          canceller.signal);
+          return data;
+        } catch (err) {
+          throw errorSelector(err);
+        }
+      }
+
+      /**
+       * Handle minor errors encountered by a Manifest parser.
+       * @param {Array.<Error>} warnings
+       */
+      function onWarnings(warnings : Error[]) : void {
+        for (const warning of warnings) {
+          if (canceller.isUsed) {
+            return;
+          }
+          emitError(warning, false);
+        }
+      }
+
+      /**
+       * Emit a formatted "parsed" event through `obs`.
+       * To call once the Manifest has been parsed.
+       * @param {Object} manifest
+       */
+      function emitManifestAndComplete(manifest : Manifest) : void {
+        onWarnings(manifest.parsingErrors);
+        const now = performance.now();
+        const parsingTime = now - parsingTimeStart;
+        const sinceRequest = receivedTime === undefined ? undefined :
+                                                          now - receivedTime;
+        log.error(`MF: Manifest parsed in ${parsingTime}ms ${sinceRequest ?? 0}`);
+
+        obs.next({ type: "parsed" as const,
+                   manifest,
+                   sendingTime,
+                   receivedTime,
+                   parsingTime });
+        obs.complete();
+      }
+
+      /**
+       * Format the given Error and emit it through `obs`.
+       * Either through a `"warning"` event, if `isFatal` is `false`, or through
+       * a fatal Observable error, if `isFatal` is set to `true`.
+       * @param {*} err
+       * @param {boolean} isFatal
+       */
+      function emitError(err : unknown, isFatal : boolean) : void {
+        const formattedError = formatError(err, {
+          defaultCode: "PIPELINE_PARSE_ERROR",
+          defaultReason: "Unknown error when parsing the Manifest",
+        });
+        if (isFatal) {
+          obs.error(formattedError);
+        } else {
+          obs.next({ type: "warning" as const,
+                     value: formattedError });
+        }
+      }
+    });
+  }
+
   /**
    * (re-)Load then parses the Manifest.
    *
@@ -169,7 +310,7 @@ export default class ManifestFetcher {
    * @param {string} [url]
    * @returns {Observable}
    */
-  public fetchAndParse(
+  public fetchAndParse2(
     parserOptions : IManifestFetcherParserOptions,
     url? : string
   ) : Observable<IManifestFetcherParsedResult |
@@ -381,7 +522,7 @@ export default class ManifestFetcher {
       function emitManifestAndComplete(manifest : Manifest) : void {
         onWarnings(manifest.parsingErrors);
         const parsingTime = performance.now() - parsingTimeStart;
-        log.info(`MF: Manifest parsed in ${parsingTime}ms`);
+        log.error(`MF: Manifest parsed in ${parsingTime}ms`);
 
         obs.next({ type: "parsed" as const,
                    manifest,

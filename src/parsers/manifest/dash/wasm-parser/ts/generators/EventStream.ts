@@ -130,7 +130,7 @@ function generateEventAttrParser(
       case AttributeName.Id:
         eventAttr.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
-      case AttributeName.EventStreamEltRange:
+      case AttributeName.EventStreamEvent:
         eventAttr.eventStreamData = linearMemory.buffer.slice(ptr, ptr + len);
         break;
     }

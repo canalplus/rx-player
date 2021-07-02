@@ -10,7 +10,7 @@ mod utils;
 
 pub use errors::{ParsingError, Result};
 
-use std::io::BufReader;
+use std::{cell::RefCell, io::BufReader};
 use events::*;
 use processor::MPDProcessor;
 use reader::MPDReader;
@@ -78,8 +78,32 @@ extern "C" {
 }
 
 #[no_mangle]
-pub extern "C" fn parse() {
+pub extern "C" fn create_processor() -> u32 {
     let buf_read = BufReader::new(MPDReader {});
-    let mut processor = MPDProcessor::new(buf_read);
-    processor.process_tags();
+    let processor = MPDProcessor::new(buf_read);
+
+    // Create a RefCell around the processor to keep an eye on potential
+    // reentrancy situations (like a processor being owned multiple times).
+    // Also put it in a box to store it on the heap
+    // This line is inspired from how wasm_bindgen works internally.
+    Box::into_raw(Box::new(RefCell::new(processor))) as u32
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn free_processor(processor_ptr: u32) {
+    let processor_ptr = processor_ptr as *mut RefCell<MPDProcessor>;
+    if processor_ptr.is_null() {
+        panic!("Null pointer given to `free_processor`.");
+    }
+    (*processor_ptr).borrow_mut(); // ensure that there is no active borrows
+    drop(Box::from_raw(processor_ptr));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn parse_current_data(processor_ptr: u32) {
+    let processor_ptr = processor_ptr as *mut RefCell<MPDProcessor>;
+    if processor_ptr.is_null() {
+        panic!("Invalid MPDProcessor pointer");
+    }
+    (&*processor_ptr).borrow_mut().continue_parsing()
 }

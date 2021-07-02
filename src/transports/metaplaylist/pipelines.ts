@@ -183,6 +183,15 @@ export default function(options : ITransportOptions): ITransportPipelines {
         });
       }
     },
+
+    /**
+     * Return `null` as no streaming parser has been developped for MetaPlaylist
+     * contents.
+     * @returns {null}
+     */
+    getStreamingParser() : null {
+      return null;
+    },
   };
 
   /**

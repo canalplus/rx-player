@@ -62,7 +62,12 @@ impl SegmentObject {
                         _ => {},
                     }
                 },
-                Err(err) => ParsingError::from(err).report_err(),
+                Err(err) => {
+                    ParsingError(format!("Curr: {}, T: {}, D: {}, R: {}", time_base, segment_obj.start,
+                            segment_obj.duration, segment_obj.repeat_count)).report_err();
+                    ParsingError(format!("{}", std::str::from_utf8(e.attributes_raw()).unwrap())).report_err();
+                    ParsingError::from(err).report_err();
+                }
             };
         }
         if !has_t {

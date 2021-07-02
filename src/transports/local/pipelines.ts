@@ -72,7 +72,16 @@ export default function getLocalManifestPipelines(
       }
       const parsed = parseLocalManifest(loadedManifest as ILocalManifest);
       const manifest = new Manifest(parsed, options);
-      return { manifest, url: undefined };
+      return { manifest };
+    },
+
+    /**
+     * Return `null` as no streaming parser has been developped for local
+     * contents.
+     * @returns {null}
+     */
+    getStreamingParser() : null {
+      return null;
     },
   };
 

@@ -88,7 +88,9 @@ export default function generateManifestParser(
 
       if (parsers.wasm.status === "initialized") {
         log.debug("DASH: Running WASM MPD Parser.");
-        const parsed = parsers.wasm.runWasmParser(manifestAB, dashParserOpts);
+        const parser = parsers.wasm.createMpdParser();
+        parser.parseNextChunk(manifestAB);
+        const parsed = parser.end(dashParserOpts);
         return processMpdParserResponse(parsed);
       } else {
         log.debug("DASH: Awaiting WASM initialization before parsing the MPD.");
@@ -101,7 +103,9 @@ export default function generateManifestParser(
             return runDefaultJsParser();
           }
           log.debug("DASH: Running WASM MPD Parser.");
-          const parsed = parsers.wasm.runWasmParser(manifestAB, dashParserOpts);
+          const parser = parsers.wasm.createMpdParser();
+          parser.parseNextChunk(manifestAB);
+          const parsed = parser.end(dashParserOpts);
           return processMpdParserResponse(parsed);
         });
       }
@@ -139,7 +143,7 @@ export default function generateManifestParser(
           return PPromise.reject(cancelSignal.cancellationError);
         }
         const manifest = new Manifest(parserResponse.value.parsed, options);
-        return { manifest, url };
+        return { manifest };
       }
 
       const { value } = parserResponse;

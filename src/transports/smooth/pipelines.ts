@@ -156,7 +156,16 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         supplementaryImageTracks: options.supplementaryImageTracks,
         supplementaryTextTracks: options.supplementaryTextTracks,
       });
-      return { manifest, url };
+      return { manifest };
+    },
+
+    /**
+     * Return `null` as no streaming parser has been developped for HSS
+     * contents.
+     * @returns {null}
+     */
+    getStreamingParser() : null {
+      return null;
     },
   };
 

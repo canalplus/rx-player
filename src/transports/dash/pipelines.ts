@@ -16,6 +16,7 @@
 
 import features from "../../features";
 import {
+  IManifestStreamingParser,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
@@ -25,6 +26,7 @@ import {
   imageParser,
 } from "./image_pipelines";
 import generateManifestParser from "./manifest_parser";
+import generateManifestStreamingParser from "./manifest_streaming_parser";
 import generateSegmentLoader from "./segment_loader";
 import generateAudioVideoSegmentParser from "./segment_parser";
 import generateTextTrackLoader from "./text_loader";
@@ -48,8 +50,15 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   const textTrackLoader = generateTextTrackLoader(options);
   const textTrackParser = generateTextTrackParser(options);
 
+  function getStreamingParser(
+    url : string | null
+  ) : IManifestStreamingParser | null {
+    return generateManifestStreamingParser(url, options);
+  }
+
   return { manifest: { loadManifest: manifestLoader,
-                       parseManifest: manifestParser },
+                       parseManifest: manifestParser,
+                       getStreamingParser },
            audio: { loadSegment: segmentLoader,
                     parseSegment: audioVideoSegmentParser },
            video: { loadSegment: segmentLoader,

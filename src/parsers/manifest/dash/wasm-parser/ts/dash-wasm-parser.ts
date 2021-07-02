@@ -41,6 +41,13 @@ import {
 
 const MAX_READ_SIZE = 15e3;
 
+export interface IMPDParserInstance {
+  parseNextChunk(data : ArrayBuffer) : void;
+  abort() : void;
+  end(args : IMPDParserArguments) : IDashParserResponse<string> |
+                                    IDashParserResponse<ArrayBuffer>;
+}
+
 export default class DashWasmParser {
   /**
    * Current "status" of the DASH-WASM parser.
@@ -57,47 +64,9 @@ export default class DashWasmParser {
                   "initialized" |
                   "failure";
 
-  /**
-   * Promise used to notify of the initialization status.
-   * `null` when no initialization has happened yet.
-   */
-  private _initProm : Promise<void> | null;
-  /** Abstraction simplifying the exploitation of the DASH-WASM parser's events. */
-  private _parsersStack : ParsersStack;
-  /**
-   * Created WebAssembly instance.
-   * `null` when no WebAssembly instance is created.
-   */
-  private _instance : WebAssembly.WebAssemblyInstantiatedSource | null;
-  /**
-   * Information about the data read by the DASH-WASM parser.
-   * `null` if we're not parsing anything for the moment.
-   */
-  private _mpdData : {
-    /**
-     * First not-yet read position in `mpd`, in bytes.
-     * When the parser asks for new data, we start giving data from that point
-     * on.
-     */
-    cursor : number;
-    /**
-     * Complete data that needs to be parsed.
-     * This is either the full MPD or xlinks.
-     */
-    mpd : ArrayBuffer;
-  } | null;
-  /**
-   * Warnings event currently encountered during parsing.
-   * Emptied when no parsing is taking place.
-   */
-  private _warnings : Error[];
-  /**
-   * Memory used by the WebAssembly instance.
-   * `null` when no WebAssembly instance is created.
-   */
-  private _linearMemory : WebAssembly.Memory | null;
 
   /**
+   * XXX TODO
    * `true` if we're currently parsing a MPD.
    * Used to explicitely forbid parsing a MPD when a parsing operation is
    * already pending, as the current logic cannot handle that.
@@ -107,7 +76,57 @@ export default class DashWasmParser {
    * Still, this property was added to make it much more explicit, in case of
    * future improvements.
    */
-  private _isParsing : boolean;
+  private _parsingContext : {
+    processorId : number;
+    /**
+     * Created WebAssembly instance.
+     * `null` when no WebAssembly instance is created.
+     */
+    instance : WebAssembly.WebAssemblyInstantiatedSource;
+    /**
+     * Information about the data read by the DASH-WASM parser.
+     * `null` if we're not parsing anything for the moment.
+     */
+    mpdData : {
+      /**
+       * First not-yet read position in `mpd`, in bytes.
+       * When the parser asks for new data, we start giving data from that point
+       * on.
+       */
+      cursor : number;
+      /**
+       * XXX TODO
+       * Complete data that needs to be parsed.
+       * This is either the full MPD or xlinks.
+       */
+      mpdChunks : ArrayBuffer[];
+    };
+    /**
+     * Warnings event currently encountered during parsing.
+     * Emptied when no parsing is taking place.
+     */
+    warnings : Error[];
+    /**
+     * Memory used by the WebAssembly instance.
+     * `null` when no WebAssembly instance is created.
+     */
+    linearMemory : WebAssembly.Memory | null;
+  } | null;
+
+  /** Abstraction simplifying the exploitation of the DASH-WASM parser's events. */
+  private _parsersStack : ParsersStack;
+
+  /**
+   * Promise used to notify of the initialization status.
+   * `null` when no initialization has happened yet.
+   */
+  private _initProm : Promise<void> | null;
+  /**
+   * Created WebAssembly instance.
+   * `null` when no WebAssembly instance is created.
+   */
+  private _instance : WebAssembly.WebAssemblyInstantiatedSource | null;
+
   /**
    * Create a new `DashWasmParser`.
    * @param {object} opts
@@ -115,12 +134,9 @@ export default class DashWasmParser {
   constructor() {
     this._parsersStack = new ParsersStack();
     this._instance = null;
-    this._mpdData = null;
-    this._linearMemory = null;
     this.status = "uninitialized";
     this._initProm = null;
-    this._warnings = [];
-    this._isParsing = false;
+    this._parsingContext = null;
   }
 
   /**
@@ -177,6 +193,7 @@ export default class DashWasmParser {
       WebAssembly.instantiateStreaming(fetchedWasm, imports) :
       PPromise.reject("`WebAssembly.instantiateStreaming` API not available");
 
+    let linearMemory : WebAssembly.Memory;
     this._initProm = streamingProm
       .catch(async (e) => {
         log.warn("Unable to call `instantiateStreaming` on WASM:", e);
@@ -193,7 +210,7 @@ export default class DashWasmParser {
         // TODO better types?
         /* eslint-disable @typescript-eslint/no-unsafe-assignment */
         /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-        this._linearMemory = (this._instance.instance.exports as any).memory;
+        linearMemory = (this._instance.instance.exports as any).memory;
         /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
@@ -212,6 +229,7 @@ export default class DashWasmParser {
      * @param {number} tag - Identify the tag encountered (@see TagName)
      */
     function onTagOpen(tag : TagName) : void {
+      window.bloup.tags.push(tag);
       // Call the active "childrenParser"
       return parsersStack.childrenParser(tag);
     }
@@ -240,6 +258,8 @@ export default class DashWasmParser {
      * @param {number} len - Length of the attribute's value, in bytes.
      */
     function onAttribute(attr : AttributeName, ptr : number, len : number) : void {
+      window.bloup.attributes.push({ attr,
+                                     val: linearMemory.buffer.slice(ptr, ptr + len) });
       // Call the active "attributeParser"
       return parsersStack.attributeParser(attr, ptr, len);
     }
@@ -254,12 +274,14 @@ export default class DashWasmParser {
      * @param {number} len - Length of the payload, in bytes.
      */
     function onCustomEvent(evt : CustomEventType, ptr : number, len : number) : void {
-      const linearMemory = self._linearMemory as WebAssembly.Memory;
+      if (self._parsingContext === null)  {
+        throw new Error("DashWasmParser Error: No parsing operation is pending.");
+      }
       const arr = new Uint8Array(linearMemory.buffer, ptr, len);
       if (evt === CustomEventType.Error) {
         const decoded = textDecoder.decode(arr);
         log.warn("WASM Error Event:", decoded);
-        self._warnings.push(new Error(decoded));
+        self._parsingContext.warnings.push(new Error(decoded));
       } else if (evt === CustomEventType.Log) {
         const decoded = textDecoder.decode(arr);
         log.warn("WASM Log Event:", decoded);
@@ -280,17 +302,31 @@ export default class DashWasmParser {
      * in WebAssembly's linear memory (at the `ptr` offset).
      */
     function readNext(ptr : number, wantedSize : number) : number {
-      if (self._mpdData === null)  {
+      if (self._parsingContext === null)  {
         throw new Error("DashWasmParser Error: No MPD to read.");
       }
-      const linearMemory = self._linearMemory as WebAssembly.Memory;
-      const { mpd, cursor } = self._mpdData;
+      const mpdData = self._parsingContext.mpdData;
+      let mpd = mpdData.mpdChunks[0];
+      if (mpd === undefined) {
+        return 0;
+      }
+      if (mpdData.cursor >= mpd.byteLength) {
+        mpdData.mpdChunks.shift();
+        mpdData.cursor = 0;
+        if (mpdData.mpdChunks.length === 0) {
+          return 0;
+        }
+        mpd = mpdData.mpdChunks[0];
+      }
       const sizeToRead = Math.min(wantedSize,
                                   MAX_READ_SIZE,
-                                  mpd.byteLength - cursor);
+                                  mpd.byteLength - mpdData.cursor);
       const arr = new Uint8Array(linearMemory.buffer, ptr, sizeToRead);
-      arr.set(new Uint8Array(mpd, cursor, sizeToRead));
-      self._mpdData.cursor += sizeToRead;
+      arr.set(new Uint8Array(mpd, mpdData.cursor, sizeToRead));
+      mpdData.cursor += sizeToRead;
+      window.PREV_ARR = window.ARTR ? window.ARTR.slice() : [];
+      window.ARTR = mpd.slice(mpdData.cursor - sizeToRead, mpdData.cursor);
+      window.bloup = { tags: [], attributes: [] };
       return sizeToRead;
     }
   }
@@ -300,16 +336,70 @@ export default class DashWasmParser {
    * @param {Object} args
    * @returns {Object}
    */
-  public runWasmParser(
-    mpd : ArrayBuffer,
-    args : IMPDParserArguments
-  ) : IDashParserResponse<string> | IDashParserResponse<ArrayBuffer> {
-    const [mpdIR, warnings] = this._parseMpd(mpd);
-    if (mpdIR === null) {
-      throw new Error("DASH Parser: Unknown error while parsing the MPD");
+  public createMpdParser() : IMPDParserInstance {
+    if (this._instance === null) {
+      throw new Error("DashWasmParser not initialized");
     }
-    const ret = parseMpdIr(mpdIR, args, warnings);
-    return this._processParserReturnValue(ret);
+    if (this._parsingContext !== null) {
+      throw new Error("Parsing operation already pending.");
+    }
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    const exports = (this._instance.instance.exports as any);
+    const processor : number = (this._instance.instance.exports as any)
+      .create_processor();
+    const linearMemory : WebAssembly.Memory = exports.memory;
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+
+    this._parsingContext = {
+      processorId: processor,
+      instance: this._instance,
+      mpdData: { mpdChunks: [], cursor: 0 },
+      warnings: [],
+      linearMemory,
+    };
+    const mpdData =  this._parsingContext.mpdData;
+    const warnings = this._parsingContext.warnings;
+
+    const rootObj : { mpd? : IMPDIntermediateRepresentation } = {};
+    const rootChildrenParser = generateRootChildrenParser(rootObj,
+                                                          linearMemory,
+                                                          this._parsersStack);
+    this._parsersStack.pushParsers(null, rootChildrenParser, noop);
+
+    return {
+      parseNextChunk: (data : ArrayBuffer) => {
+        mpdData.mpdChunks.push(data);
+        try {
+          /* eslint-disable @typescript-eslint/no-unsafe-call */
+          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+          this._getWasmExports().parse_current_data(processor);
+          /* eslint-enable @typescript-eslint/no-unsafe-call */
+          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+        } catch (err) {
+          this._parsersStack.reset();
+          this._freeParser();
+          this._parsingContext = null;
+          throw err;
+        }
+      },
+      abort: () => {
+        this._freeParser();
+      },
+
+      end: (args : IMPDParserArguments) => {
+        this._freeParser();
+        const parsed = rootObj.mpd ?? null;
+        if (parsed === null) {
+          throw new Error("DASH Parser: Unknown error while parsing the MPD");
+        }
+        const ret = parseMpdIr(parsed, args, warnings);
+        return this._processParserReturnValue(ret);
+      },
+    };
   }
 
   /**
@@ -324,53 +414,6 @@ export default class DashWasmParser {
            typeof window.TextDecoder === "function";
   }
 
-  private _parseMpd(
-    mpd : ArrayBuffer
-  ) : [IMPDIntermediateRepresentation | null,
-       Error[]]
-  {
-    if (this._instance === null) {
-      throw new Error("DashWasmParser not initialized");
-    }
-    if (this._isParsing) {
-      throw new Error("Parsing operation already pending.");
-    }
-    this._isParsing = true;
-    this._mpdData = { mpd, cursor: 0 };
-
-    const rootObj : { mpd? : IMPDIntermediateRepresentation } = {};
-
-    const linearMemory = this._linearMemory as WebAssembly.Memory;
-    const rootChildrenParser = generateRootChildrenParser(rootObj,
-                                                          linearMemory,
-                                                          this._parsersStack);
-    this._parsersStack.pushParsers(null, rootChildrenParser, noop);
-    this._warnings = [];
-
-    try {
-      // TODO better type this
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      (this._instance.instance.exports as any).parse();
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    } catch (err) {
-      this._parsersStack.reset();
-      this._warnings = [];
-      this._isParsing = false;
-      throw err;
-    }
-
-    const parsed = rootObj.mpd ?? null;
-    const warnings = this._warnings;
-
-    this._parsersStack.reset();
-    this._warnings = [];
-    this._isParsing = false;
-
-    return [parsed, warnings];
-  }
-
   private _parseXlink(
     xlinkData : ArrayBuffer
   ) : [IPeriodIntermediateRepresentation[],
@@ -379,42 +422,82 @@ export default class DashWasmParser {
     if (this._instance === null) {
       throw new Error("DashWasmParser not initialized");
     }
-    if (this._isParsing) {
+    if (this._parsingContext !== null) {
       throw new Error("Parsing operation already pending.");
     }
-    this._isParsing = true;
-    this._mpdData = { mpd: xlinkData, cursor: 0 };
+
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    const exports = (this._instance.instance.exports as any);
+    const processor : number = (this._instance.instance.exports as any)
+      .create_processor();
+    const linearMemory : WebAssembly.Memory = exports.memory;
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+
+    const warnings : Error[] = [];
+
+    this._parsingContext = {
+      processorId: processor,
+      instance: this._instance,
+      mpdData: { mpdChunks: [xlinkData], cursor: 0 },
+      warnings,
+      linearMemory,
+    };
 
     const rootObj : { periods : IPeriodIntermediateRepresentation[] } =
       { periods: [] };
 
-    const linearMemory = this._linearMemory as WebAssembly.Memory;
     const xlinkParser = generateXLinkChildrenParser(rootObj,
                                                     linearMemory,
                                                     this._parsersStack);
     this._parsersStack.pushParsers(null, xlinkParser, noop);
-    this._warnings = [];
-
     try {
-      // TODO better type this
       /* eslint-disable @typescript-eslint/no-unsafe-call */
       /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      (this._instance.instance.exports as any).parse();
+      this._getWasmExports().parse_current_data(processor);
       /* eslint-enable @typescript-eslint/no-unsafe-call */
       /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     } catch (err) {
       this._parsersStack.reset();
-      this._warnings = [];
-      this._isParsing = false;
+      this._freeParser();
+      this._parsingContext = null;
       throw err;
     }
 
     const { periods } = rootObj;
-    const warnings = this._warnings;
-    this._parsersStack.reset();
-    this._warnings = [];
-    this._isParsing = false;
+    this._freeParser();
     return [periods, warnings];
+  }
+
+  private _getWasmExports() : any {
+    if (this._instance === null) {
+      throw new Error("DashWasmParser not initialized");
+    }
+    // TODO better type this
+    /* eslint-disable @typescript-eslint/no-unsafe-return */
+    return (this._instance.instance.exports as any);
+    /* eslint-enable @typescript-eslint/no-unsafe-return */
+  }
+
+  private _freeParser() : void {
+    this._parsersStack.reset();
+    if (this._parsingContext === null) {
+      return ;
+    }
+    try {
+      /* eslint-disable @typescript-eslint/no-unsafe-call */
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      this._getWasmExports().free_processor(this._parsingContext.processorId);
+      /* eslint-enable @typescript-eslint/no-unsafe-call */
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    } catch (err) {
+      this._parsingContext = null;
+      throw err;
+    }
+    this._parsingContext = null;
   }
 
   /**

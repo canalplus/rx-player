@@ -323,6 +323,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   constructor(parsedManifest : IParsedManifest, options : IManifestParsingOptions) {
     super();
+    parsedManifest.periods.pop();
     const { supplementaryTextTracks = [],
             supplementaryImageTracks = [],
             representationFilter,

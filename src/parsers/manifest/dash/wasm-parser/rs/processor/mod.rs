@@ -12,9 +12,91 @@ use crate::reader::MPDReader;
 pub use s_element::SegmentObject;
 
 pub struct MPDProcessor {
-    reader : quick_xml::Reader<BufReader<MPDReader>>,
-    reader_buf : Vec<u8>,
-    segment_objs_buf : Vec<SegmentObject>,
+    reader: quick_xml::Reader<BufReader<MPDReader>>,
+    reader_buf: Vec<u8>,
+    segment_objs_buf: Vec<SegmentObject>,
+    state: MPDProcessorState,
+}
+
+/// Save the MPDProcessor's state each at instantiation and each time a parsing
+/// operation is done through the `continue_parsing` method.
+///
+/// This allows the `MPDProcessor` to interrupt parsing when it encounters Eof,
+/// while picking up exactly where it was when `continue_parsing` is called
+/// again.
+enum MPDProcessorState {
+    /// We either never parsed yet or encountered Eof when parsing through the
+    /// main parsing loop, which does not need to save state.
+    Main,
+
+    /// The last time we parsed, we encountered Eof inside a `<SegmentTimeline>`
+    /// element.
+    SegmentTimeline {
+        /// Count of inner `<SegmentTimeline>` tags if they exists.
+        /// This allows to not close the current node when it is an inner that is
+        /// closed.
+        inner_tags: u32,
+
+        /// Ending timestamp of the previous <S> element, starting at `0`.
+        /// Most subsequent <S> elements won't explicitly indicate a starting
+        /// timestamp which indicates that they start at the end of the previous
+        /// <S> element (its starting timestamp + its duration).
+        initial_time: f64,
+    },
+
+    /// The last time we parsed, we encountered Eof inside a `<Location>`
+    /// element.
+    Location {
+        /// Count of inner `<Location>` tags if they exists.
+        /// This allows to not close the current node when it is an inner that is
+        /// closed.
+        inner_tags: u32,
+    },
+
+    /// The last time we parsed, we encountered Eof inside a `<BaseURL>`
+    /// element.
+    BaseURL {
+        /// Count of inner `<BaseURL>` tags if they exists.
+        /// This allows to not close the current node when it is an inner that is
+        /// closed.
+        inner_tags: u32,
+    },
+
+    /// The last time we parsed, we encountered Eof inside a `<cenc:pssh>`
+    /// element.
+    Cenc {
+        /// Count of inner `<cenc:pssh>` tags if they exists.
+        /// This allows to not close the current node when it is an inner that is
+        /// closed.
+        inner_tags: u32,
+    },
+
+    /// The last time we parsed, we encountered Eof inside a `<EventStream>`
+    /// element.
+    EventStream {
+        /// Count of inner `<EventStream>` tags if they exists.
+        /// This allows to not close the current node when it is an inner that is
+        /// closed.
+        inner_tags: u32,
+    },
+
+    /// The last time we parsed, we encountered Eof inside a `<Event>` element
+    /// itself inside a `<EventStream>` element.
+    EventStreamEvent {
+        /// Count the parent's `<EventStream>` inner tags if they exists.
+        /// This allows to not close the parent node when it is an inner that is
+        /// closed.
+        event_stream_inner_tags: u32,
+
+        /// Count of inner `<Event>` tags if they exists.
+        /// This allows to not close the current node when it is an inner that is
+        /// closed.
+        inner_tags: u32,
+
+        /// Event need to be re-serialized into XML,
+        /// This `Writer` interface allows to write back the XML in UTF-8 form.
+        writer: Writer<Cursor<Vec<u8>>>,
+    },
 }
 
 impl MPDProcessor {
@@ -29,15 +111,73 @@ impl MPDProcessor {
         reader.trim_text(true);
         reader.check_end_names(false);
         MPDProcessor {
+            state: MPDProcessorState::Main,
             reader,
             reader_buf: Vec::new(),
             segment_objs_buf: Vec::new(),
         }
     }
 
-    pub fn process_tags(&mut self) {
+    /// Begin and continue parsing the MPD available through the MPDProcessor's
+    /// associated reader.
+    ///
+    /// On encountering Eof on the read data, its state will be saved so calling this
+    /// method again will continue where it left.
+    pub fn continue_parsing(&mut self) {
+        // Get and replace state with the default `Main` value, so we're owning
+        // the old state here.
+        let state = std::mem::replace(&mut self.state, MPDProcessorState::Main);
+        match state {
+            MPDProcessorState::Main => { self.process_main_elements(); },
+            MPDProcessorState::SegmentTimeline { inner_tags, initial_time } => {
+                if self.process_segment_timeline_element(inner_tags, initial_time) {
+                    // The SegmentTimeline is completely parsed, we can continue
+                    self.process_main_elements();
+                }
+            },
+            MPDProcessorState::Location { inner_tags } => {
+                if self.process_location_element(inner_tags) {
+                    self.process_main_elements();
+                }
+            },
+            MPDProcessorState::BaseURL { inner_tags } => {
+                if self.process_base_url_element(inner_tags) {
+                    self.process_main_elements();
+                }
+            },
+            MPDProcessorState::Cenc { inner_tags } => {
+                if self.process_cenc_element(inner_tags) {
+                    self.process_main_elements();
+                }
+            },
+            MPDProcessorState::EventStream { inner_tags } => {
+                if self.process_event_stream_element(inner_tags) {
+                    self.process_main_elements();
+                }
+            },
+            MPDProcessorState::EventStreamEvent {
+                inner_tags,
+                event_stream_inner_tags,
+                writer
+            } => {
+                let complete = self.process_event_stream_event_element(
+                    inner_tags,
+                    event_stream_inner_tags,
+                    writer);
+                if complete {
+                    if self.process_event_stream_element(event_stream_inner_tags) {
+                        self.process_main_elements();
+                    }
+                }
+            },
+        }
+    }
+
+    /// Read through the "principal" tags of the MPD.
+    /// Returns on Eof
+    pub fn process_main_elements(&mut self) {
         loop {
-            match self.read_next_event() {
+            match  self.read_next_event() {
                 Ok(Event::Start(tag)) => match tag.name() {
                     b"MPD" => {
                         TagName::MPD.report_tag_open();
@@ -110,20 +250,29 @@ impl MPDProcessor {
                     b"BaseURL" => {
                         TagName::BaseURL.report_tag_open();
                         attributes::report_base_url_attrs(&tag);
-                        self.process_base_url_element();
+                        if !self.process_base_url_element(0) {
+                            break;
+                        }
                     },
-                    b"cenc:pssh" => self.process_cenc_element(),
-                    b"Location" => self.process_location_element(),
+                    b"cenc:pssh" => if !self.process_cenc_element(0) {
+                        break;
+                    },
+                    b"Location" => if !self.process_location_element(0) {
+                        break;
+                    },
                     b"SegmentTimeline" =>
-                        self.process_segment_timeline_element(),
-
+                        if !self.process_segment_timeline_element(0, 0.) {
+                            break;
+                        },
                     b"EventStream" => {
                         TagName::EventStream.report_tag_open();
                         attributes::report_event_stream_attrs(&tag);
-                        self.process_event_stream_element();
+                        if !self.process_event_stream_element(0) {
+                            break;
+                        }
                     },
 
-                    _ => {}
+                    _ => {},
                 },
                 Ok(Event::End(tag)) => match tag.name() {
                     b"MPD" => TagName::MPD.report_tag_close(),
@@ -146,6 +295,7 @@ impl MPDProcessor {
                     _ => {},
                 },
                 Ok(Event::Eof) => {
+                    self.state = MPDProcessorState::Main;
                     break;
                 }
                 Err(e) => ParsingError::from(e).report_err(),
@@ -161,9 +311,7 @@ impl MPDProcessor {
     /// short and generally used in loops.
     #[inline(always)]
     fn read_next_event(&mut self) -> quick_xml::Result<quick_xml::events::Event> {
-        if !self.reader_buf.is_empty() {
-            self.reader_buf.clear();
-        }
+        self.reader.try_clear_buffer(&mut self.reader_buf);
         self.reader.read_event(&mut self.reader_buf)
     }
 
@@ -172,21 +320,19 @@ impl MPDProcessor {
     ///
     /// Report its children tag and attributes until either its corresponding
     /// closing SegmentTemplate tag has been found or until EOF is encountered.
-    fn process_segment_timeline_element(&mut self) {
-        // Count inner SegmentTimeline tags if it exists.
-        // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag : u32 = 0;
-
-        // Will store the ending timestamp of the previous <S> element, starting
-        // at `0`.
-        // Most subsequent <S> elements won't explicitly indicate a starting
-        // timestamp which indicates that they start at the end of the previous
-        // <S> element (its starting timestamp + its duration).
-        let mut curr_time_base : f64 = 0.;
-
+    ///
+    /// If Eof has been encountered before the SegmentTimeline's ending tag,
+    /// save state to `self.state` and return `false`.
+    /// In any other cases, return `true`.
+    fn process_segment_timeline_element(
+        &mut self,
+        mut inner_tags: u32,
+        initial_time: f64
+    ) -> bool {
+        let mut curr_time_base = initial_time;
         loop {
             match self.read_next_event() {
-                Ok(Event::Start(tag)) | Ok(Event::Empty(tag)) if tag.name() == b"S" => {
+                Ok(Event::Start(tag)) if tag.name() == b"S" => {
                     match SegmentObject::from_s_element(&tag, curr_time_base) {
                         Ok(segment_obj) => {
                             if segment_obj.repeat_count == 0. {
@@ -201,19 +347,22 @@ impl MPDProcessor {
                     }
                 },
                 Ok(Event::Start(tag)) if tag.name() == b"SegmentTimeline" =>
-                    inner_tag += 1,
+                    inner_tags += 1,
                 Ok(Event::End(tag)) if tag.name() == b"SegmentTimeline" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
+                    if inner_tags > 0 {
+                        inner_tags -= 1;
                     } else {
                         AttributeName::SegmentTimeline.report(self.segment_objs_buf.as_slice());
                         break;
                     }
                 },
                 Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a SegmentTimeline.".to_owned())
-                        .report_err();
-                    break;
+                    // Eof encountered in a SegmentTimeline. Save state and exit
+                    self.state = MPDProcessorState::SegmentTimeline {
+                        inner_tags,
+                        initial_time: curr_time_base,
+                    };
+                    return false;
                 }
                 Err(e) => {
                     ParsingError::from(e).report_err();
@@ -223,13 +372,18 @@ impl MPDProcessor {
             }
         }
         self.segment_objs_buf.clear();
+        true
     }
 
-    fn process_location_element(&mut self) {
-        // Count inner Location tags if it exists.
-        // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag : u32 = 0;
-
+    /// Loop over a Location's element children (to call when a <Location> node
+    /// has just been found).
+    ///
+    /// Report its children tag and attributes until either its corresponding
+    /// closing SegmentTemplate tag has been found or until EOF is encountered.
+    ///
+    /// If Eof has been encountered before the Location's ending tag, save state
+    /// to `self.state` and return `false`. In any other cases, return `true`.
+    fn process_location_element(&mut self, mut inner_tags: u32) -> bool {
         loop {
             match self.read_next_event() {
                 Ok(Event::Text(t)) => if t.len() > 0 {
@@ -238,18 +392,17 @@ impl MPDProcessor {
                         Err(err) => ParsingError::from(err).report_err(),
                     }
                 },
-                Ok(Event::Start(tag)) if tag.name() == b"Location" => inner_tag += 1,
+                Ok(Event::Start(tag)) if tag.name() == b"Location" => inner_tags += 1,
                 Ok(Event::End(tag)) if tag.name() == b"Location" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
+                    if inner_tags > 0 {
+                        inner_tags -= 1;
                     } else {
                         break;
                     }
                 },
                 Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a Location tag.".to_owned())
-                        .report_err();
-                    break;
+                    self.state = MPDProcessorState::Location { inner_tags };
+                    return false;
                 }
                 Err(e) => {
                     ParsingError::from(e).report_err();
@@ -257,15 +410,20 @@ impl MPDProcessor {
                 },
                 _ => (),
             }
-            self.reader_buf.clear();
+            self.reader.try_clear_buffer(&mut self.reader_buf);
         }
+        true
     }
 
-    fn process_base_url_element(&mut self) {
-        // Count inner BaseURL tags if it exists.
-        // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag : u32 = 0;
-
+    /// Loop over a BaseURL's element children (to call when a <BaseURL> node
+    /// has just been found).
+    ///
+    /// Report its children tag and attributes until either its corresponding
+    /// closing SegmentTemplate tag has been found or until EOF is encountered.
+    ///
+    /// If Eof has been encountered before the BaseURL's ending tag, save state
+    /// to `self.state` and return `false`. In any other cases, return `true`.
+    fn process_base_url_element(&mut self, mut inner_tags: u32) -> bool {
         loop {
             match self.read_next_event() {
                 Ok(Event::Text(t)) => if t.len() > 0 {
@@ -274,19 +432,18 @@ impl MPDProcessor {
                         Err(err) => ParsingError::from(err).report_err(),
                     }
                 },
-                Ok(Event::Start(tag)) if tag.name() == b"BaseURL" => inner_tag += 1,
+                Ok(Event::Start(tag)) if tag.name() == b"BaseURL" => inner_tags += 1,
                 Ok(Event::End(tag)) if tag.name() == b"BaseURL" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
+                    if inner_tags > 0 {
+                        inner_tags -= 1;
                     } else {
                         TagName::BaseURL.report_tag_close();
                         break;
                     }
                 },
                 Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a BaseURL.".to_owned())
-                        .report_err();
-                    break;
+                    self.state = MPDProcessorState::BaseURL { inner_tags };
+                    return false;
                 }
                 Err(e) => {
                     ParsingError::from(e).report_err();
@@ -294,14 +451,22 @@ impl MPDProcessor {
                 },
                 _ => (),
             }
-            self.reader_buf.clear();
+            self.reader.try_clear_buffer(&mut self.reader_buf);
         }
+        true
     }
 
-    fn process_cenc_element(&mut self) {
+    /// Loop over a "cenc:pssh"'s element children (to call when a <cenc:pssh>
+    /// node has just been found).
+    ///
+    /// Report its children tag and attributes until either its corresponding
+    /// closing SegmentTemplate tag has been found or until EOF is encountered.
+    ///
+    /// If Eof has been encountered before the "cenc:pssh"'s ending tag, save
+    /// state to `self.state` and return `false`. In any other cases, return `true`.
+    fn process_cenc_element(&mut self, mut inner_tags: u32) -> bool {
         // Count inner cenc:pssh tags if it exists.
         // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag : u32 = 0;
 
         loop {
             match self.read_next_event() {
@@ -313,18 +478,17 @@ impl MPDProcessor {
                         Err(err) => ParsingError::from(err).report_err(),
                     }
                 },
-                Ok(Event::Start(tag)) if tag.name() == b"cenc:pssh" => inner_tag += 1,
+                Ok(Event::Start(tag)) if tag.name() == b"cenc:pssh" => inner_tags += 1,
                 Ok(Event::End(tag)) if tag.name() == b"cenc:pssh" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
+                    if inner_tags > 0 {
+                        inner_tags -= 1;
                     } else {
                         break;
                     }
                 },
                 Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a cenc:pssh tag.".to_owned())
-                        .report_err();
-                    break;
+                    self.state = MPDProcessorState::Cenc { inner_tags };
+                    return false;
                 }
                 Err(e) => {
                     ParsingError::from(e).report_err();
@@ -332,38 +496,44 @@ impl MPDProcessor {
                 },
                 _ => (),
             }
-            self.reader_buf.clear();
+            self.reader.try_clear_buffer(&mut self.reader_buf);
         }
+        true
     }
 
-    fn process_event_stream_element(&mut self) {
-        // Count inner EventStream tags if it exists.
-        // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag = 0u32;
-
-
+    /// Loop over a EventStream's element children (to call when a <EventStream>
+    /// node has just been found).
+    ///
+    /// Report its children tag and attributes until either its corresponding
+    /// closing SegmentTemplate tag has been found or until EOF is encountered.
+    ///
+    /// If Eof has been encountered before the EventStream's ending tag, save
+    /// state to `self.state` and return `false`. In any other cases, return
+    /// `true`.
+    fn process_event_stream_element(&mut self, mut inner_tags: u32) -> bool {
         loop {
-            let evt = self.read_next_event();
-            match evt {
+            match self.read_next_event() {
                 Ok(Event::Start(tag)) if tag.name() == b"Event" => {
                     TagName::EventStreamElt.report_tag_open();
                     attributes::report_event_stream_event_attrs(&tag);
                     let mut writer = Writer::new(Cursor::new(Vec::new()));
                     let _res = writer.write_event(Event::Start(tag));
-                    self.process_event_stream_event_element(writer);
+                    let complete = self.process_event_stream_event_element(0, inner_tags, writer);
+                    if !complete {
+                        break;
+                    }
                 },
-                Ok(Event::Start(tag)) if tag.name() == b"EventStream" => inner_tag += 1,
+                Ok(Event::Start(tag)) if tag.name() == b"EventStream" => inner_tags += 1,
                 Ok(Event::End(tag)) if tag.name() == b"EventStream" => {
-                    if inner_tag > 0 { inner_tag -= 1; }
+                    if inner_tags > 0 { inner_tags -= 1; }
                     else {
                         TagName::EventStream.report_tag_close();
                         break;
                     }
                 },
                 Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a EventStream.".to_owned())
-                        .report_err();
-                    break;
+                    self.state = MPDProcessorState::EventStream { inner_tags };
+                    return false;
                 }
                 Err(e) => {
                     ParsingError::from(e).report_err();
@@ -371,28 +541,39 @@ impl MPDProcessor {
                 },
                 _ => (),
             }
-            self.reader_buf.clear();
+            self.reader.try_clear_buffer(&mut self.reader_buf);
         }
+        true
     }
 
+    /// Loop over an Event's element children (to call when a <Event> node has
+    /// just been found).
+    ///
+    /// Report its children tag and attributes until either its corresponding
+    /// closing SegmentTemplate tag has been found or until EOF is encountered.
+    ///
+    /// If Eof has been encountered before the Event's ending tag, save
+    /// state to `self.state` and return `false`. In any other cases, return
+    /// `true`.
     fn process_event_stream_event_element(
         &mut self,
-        mut writer: Writer<std::io::Cursor<Vec<u8>>>
-    ) {
+        mut inner_tags: u32,
+        event_stream_inner_tags: u32,
+        mut writer: Writer<Cursor<Vec<u8>>>
+    ) -> bool {
         // We want to receive Text Events with the exact same format here, to
         // be able to report the exact Event's inner content
         self.reader.trim_text(false);
-        let mut inner_event_tag = 0u32;
         loop {
             let read = self.read_next_event();
             if let Ok(ref evt) = read {
                 let _res = writer.write_event(evt);
             }
             match read {
-                Ok(Event::Start(tag)) if tag.name() == b"Event" => inner_event_tag += 1,
+                Ok(Event::Start(tag)) if tag.name() == b"Event" => inner_tags += 1,
                 Ok(Event::End(tag)) if tag.name() == b"Event" => {
-                    if inner_event_tag > 0 {
-                        inner_event_tag -= 1;
+                    if inner_tags > 0 {
+                        inner_tags -= 1;
                     } else {
                         use crate::reportable::ReportableAttribute;
                         let content = writer.into_inner().into_inner();
@@ -402,9 +583,13 @@ impl MPDProcessor {
                     }
                 }
                 Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in an Event element.".to_owned())
-                        .report_err();
-                    break;
+                    self.state = MPDProcessorState::EventStreamEvent {
+                        event_stream_inner_tags,
+                        inner_tags,
+                        writer,
+                    };
+                    self.reader.trim_text(true);
+                    return false;
                 }
                 Err(e) => {
                     ParsingError::from(e).report_err();
@@ -414,5 +599,6 @@ impl MPDProcessor {
             }
         }
         self.reader.trim_text(true);
+        true
     }
 }
