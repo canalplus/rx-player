@@ -29,12 +29,12 @@ import {
 import log from "../../log";
 import { IInitClockTick } from "./types";
 
-export interface IPlaybackRateOptions { pauseWhenStalled? : boolean }
+export interface IPlaybackRateOptions { pauseWhenRebuffering? : boolean }
 
 /**
  * Manage playback speed.
  * Set playback rate set by the user, pause playback when the player appear to
- * stall and restore the speed once it appears to un-stall.
+ * rebuffering and restore the speed once it appears to exit rebuffering status.
  *
  * @param {HTMLMediaElement} mediaElement
  * @param {Observable} speed$ - emit speed set by the user
@@ -48,7 +48,7 @@ export default function updatePlaybackRate(
 ) : Observable<number> {
   const forcePause$ = clock$
     .pipe(
-      map((timing) => timing.stalled !== null),
+      map((timing) => timing.rebuffering !== null),
       startWith(false),
       distinctUntilChanged()
     );

@@ -21,7 +21,8 @@ export {
 } from "./public_api";
 export {
   IClockMediaEventType,
-  IStalledStatus,
+  IFreezingStatus,
+  IRebufferingStatus,
 } from "./clock";
 export {
   IConstructorOptions,

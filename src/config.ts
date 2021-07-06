@@ -600,7 +600,7 @@ export default {
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume when
-   * the player was stalled due to a low readyState.
+   * the player was rebuffering due to a low readyState.
    * @type {Number}
    */
   RESUME_GAP_AFTER_NOT_ENOUGH_DATA: {
@@ -619,17 +619,65 @@ export default {
   },
 
   /**
-   * Maximum number of seconds in the buffer based on which a "stalling"
+   * Maximum number of seconds in the buffer based on which a "rebuffering"
    * strategy will be considered:
    * The player will pause playback to get enough time building a sufficient
-   * buffer. This mostly happen when seeking in an unbuffered part or when
-   * buffering.
+   * buffer. This mostly happen when seeking in an unbuffered part or when not
+   * enough buffer is ahead of the current position.
    * @type {Number}
    */
-  STALL_GAP: {
+  REBUFFERING_GAP: {
     DEFAULT: 0.5,
     LOW_LATENCY: 0.2,
   },
+
+  /**
+   * Amount of time (in seconds) with data ahead of the current position, at
+   * which we always consider the browser to be able to play.
+   *
+   * If the media element has this amount of data in advance or more but
+   * playback cannot begin, the player will consider it "freezing".
+   */
+  MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING: 2,
+
+  /**
+   * A media whose position inexplicably does not increment despite playing is
+   * called as "freezing" in the RxPlayer.
+   *
+   * If the media is still "freezing" after waiting for `UNFREEZING_SEEK_DELAY`
+   * milliseconds, the RxPlayer will try to un-freeze the situation by interacting
+   * with the media element.
+   *
+   * Those interactions can be costly in time before playback continue, so it
+   * should be set at a sufficiently high value to avoid false positives.
+   */
+  UNFREEZING_SEEK_DELAY: 6000,
+
+  /**
+   * A media whose position inexplicably does not increment despite playing is
+   * called as "freezing" in the RxPlayer.
+   *
+   * A small freezing interval may be normal as the browser may take time before
+   * playing, e.g. after a seek.
+   *
+   * If the media is still "freezing" after waiting for `FREEZING_STALLED_DELAY`
+   * milliseconds, the RxPlayer will emit a BUFFERING state through its API to
+   * notify that the player cannot currently advance.
+   */
+  FREEZING_STALLED_DELAY: 600,
+
+  /**
+   * A media whose position inexplicably does not increment despite playing is
+   * called as "freezing" in the RxPlayer.
+   *
+   * If the media is frozen for a sufficiently large time
+   * (@see UNFREEZING_SEEK_DELAY), the RxPlayer will perform a seek corresponding
+   * to its current position plus `UNFREEZING_DELTA_POSITION` seconds.
+   *
+   * This should be kept short enough as the goal is just to un-freeze lower-level
+   * buffers.
+   */
+  UNFREEZING_DELTA_POSITION: 0.001,
 
   /**
    * Maximum authorized difference between what we calculated to be the

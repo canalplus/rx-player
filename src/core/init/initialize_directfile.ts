@@ -28,9 +28,9 @@ import {
 import {
   filter,
   ignoreElements,
-  map,
   mergeMap,
   mergeMapTo,
+  switchMap,
   share,
   take,
 } from "rxjs/operators";
@@ -38,14 +38,14 @@ import {
   clearElementSrc,
   setElementSrc$,
 } from "../../compat";
-import { MediaError } from "../../errors";
 import log from "../../log";
 import deferSubscriptions from "../../utils/defer_subscriptions";
 import { IKeySystemOption } from "../eme";
 import createEMEManager from "./create_eme_manager";
-import EVENTS from "./events_generators";
+import emitLoadedEvent from "./emit_loaded_event";
 import { IInitialTimeOptions } from "./get_initial_time";
-import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
+import initialSeekAndPlay from "./initial_seek_and_play";
+import StallAvoider from "./stall_avoider";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IDirectfileEvent,
@@ -137,12 +137,12 @@ export default function initializeDirectfileContent({
   const initialTime = () => getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Init: Initial time calculated:", initialTime);
 
-  const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
-                                                      mediaElement,
-                                                      startTime: initialTime,
-                                                      mustAutoPlay: autoPlay,
-                                                      setCurrentTime,
-                                                      isDirectfile: true });
+  const { seek$, play$ } = initialSeekAndPlay({ clock$,
+                                                mediaElement,
+                                                startTime: initialTime,
+                                                mustAutoPlay: autoPlay,
+                                                setCurrentTime,
+                                                isDirectfile: true });
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
@@ -162,14 +162,22 @@ export default function initializeDirectfileContent({
     updatePlaybackRate(mediaElement, speed$, clock$)
       .pipe(ignoreElements());
 
-  // Create Stalling Manager, an observable which will try to get out of
-  // various infinite stalling issues
-  const stalled$ = clock$.pipe(
-    map(tick => tick.stalled === null ? EVENTS.unstalled() :
-                                        EVENTS.stalled(tick.stalled)));
+  /**
+   * Observable trying to avoid various stalling situations, emitting "stalled"
+   * events when it cannot, as well as "unstalled" events when it get out of one.
+   */
+  const stallAvoider$ = StallAvoider(clock$,
+                                     mediaElement,
+                                     null,
+                                     EMPTY,
+                                     setCurrentTime);
 
-  // Manage "loaded" event and warn if autoplay is blocked on the current browser
-  const loadedEvent$ = emeManager$.pipe(
+  /**
+   * Emit a "loaded" events once the initial play has been performed and the
+   * media can begin playback.
+   * Also emits warning events if issues arise when doing so.
+   */
+  const loadingEvts$ = emeManager$.pipe(
     filter(function isEMEReady(evt) {
       if (evt.type === "created-media-keys") {
         evt.value.attachMediaKeys$.next();
@@ -178,30 +186,22 @@ export default function initializeDirectfileContent({
       return evt.type === "eme-disabled" || evt.type === "attached-media-keys";
     }),
     take(1),
-    mergeMapTo(load$),
-    mergeMap((evt) => {
-      if (evt === "autoplay-blocked") {
-        const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
-                                     "Cannot trigger auto-play automatically: " +
-                                     "your browser does not allow it.");
-        return observableOf(EVENTS.warning(error), EVENTS.loaded(null));
-      } else if (evt === "not-loaded-metadata") {
-        const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
-                                     "Cannot load automatically: your browser " +
-                                     "falsely announced having loaded the content.");
-        return observableOf(EVENTS.warning(error));
+    mergeMapTo(play$),
+    switchMap((evt) => {
+      if (evt.type === "warning") {
+        return observableOf(evt);
       }
-      return observableOf(EVENTS.loaded(null));
+      return emitLoadedEvent(clock$, mediaElement, null, true);
     }));
 
   const initialSeek$ = seek$.pipe(ignoreElements());
 
-  return observableMerge(loadedEvent$,
+  return observableMerge(loadingEvts$,
                          initialSeek$,
                          emeManager$,
                          mediaError$,
                          playbackRate$,
-                         stalled$);
+                         stallAvoider$);
 }
 
 export { IDirectfileEvent };

@@ -22,7 +22,8 @@ import Manifest, {
 } from "../../manifest";
 import {
   IClockMediaEventType,
-  IStalledStatus,
+  IFreezingStatus,
+  IRebufferingStatus,
 } from "../api";
 import {
   IAttachedMediaKeysEvent,
@@ -72,8 +73,10 @@ export interface IInitClockTick { position : number;
                                                  null;
                                   readyState : number;
                                   paused : boolean;
-                                  stalled : IStalledStatus |
-                                            null;
+                                  rebuffering : IRebufferingStatus |
+                                                null;
+                                  freezing : IFreezingStatus |
+                                             null;
                                   seeking : boolean; }
 
 /** Event sent after the Manifest has been loaded and parsed for the first time. */
@@ -113,9 +116,20 @@ export interface IWarningEvent { type : "warning";
 export interface IReloadingMediaSourceEvent { type: "reloading-media-source";
                                               value: undefined; }
 
-/** Event sent after the player stalled, leading to buffering. */
-export interface IStalledEvent { type : "stalled";
-                                 value : IStalledStatus; }
+/** Event sent after the player stalled. */
+export interface IStalledEvent {
+  type : "stalled";
+  /** The reason behind the stall */
+  value : IStallingSituation;
+}
+
+export type IStallingSituation =
+  "seeking" | // Rebuffering after seeking
+  "not-ready" | // Rebuffering after low ready state
+  "internal-seek" | // Rebuffering after a seek happened inside the player
+  "buffering" | // Other rebuffering cases
+  "freezing"; // stalled for an unknown reason (might be waiting for
+              // a decryption key)
 
 /** Event sent when the player goes out of a stalling situation. */
 export interface IUnstalledEvent { type : "unstalled";

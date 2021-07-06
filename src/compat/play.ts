@@ -27,7 +27,7 @@ import tryCatch from "../utils/rx-try_catch";
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-export default function play$(mediaElement : HTMLMediaElement) : Observable<unknown> {
+export default function play(mediaElement : HTMLMediaElement) : Observable<unknown> {
   return observableDefer(() =>
     // mediaElement.play is not always a Promise. In the improbable case it
     // throws, I prefer still to catch to return the error wrapped in an

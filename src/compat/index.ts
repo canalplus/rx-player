@@ -48,12 +48,11 @@ import hasEMEAPIs from "./has_eme_apis";
 import isCodecSupported from "./is_codec_supported";
 import isNode from "./is_node";
 import isOffline from "./is_offline";
-import isPlaybackStuck from "./is_playback_stuck";
 import isVTTCue from "./is_vtt_cue";
 import makeVTTCue from "./make_vtt_cue";
 import onHeightWidthChange from "./on_height_width_change";
 import patchWebkitSourceBuffer from "./patch_webkit_source_buffer";
-import play$ from "./play";
+import play from "./play";
 import setElementSrc$ from "./set_element_src";
 // eslint-disable-next-line max-len
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "./should_reload_media_source_on_decipherability_update";
@@ -91,13 +90,12 @@ export {
   isFullscreen,
   isNode,
   isOffline,
-  isPlaybackStuck,
   isVTTCue,
   loadSession,
   makeVTTCue,
   MediaSource_,
   onHeightWidthChange,
-  play$,
+  play,
   requestFullscreen,
   requestMediaKeySystemAccess,
   setElementSrc$,

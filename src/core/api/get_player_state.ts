@@ -15,6 +15,7 @@
  */
 
 import config from "../../config";
+import { IStallingSituation } from "../init";
 
 const { FORCED_ENDED_THRESHOLD } = config;
 
@@ -46,16 +47,13 @@ export const PLAYER_STATES =
  * @param {boolean} isPlaying - false when the player is paused. true otherwise.
  * @param {Object} stalledStatus - Current stalled state:
  *   - null when not stalled
- *   - an object with a description of the situation if stalled.
+ *   - a description of the situation if stalled.
  * @returns {string}
  */
 export default function getLoadedContentState(
   mediaElement : HTMLMediaElement,
   isPlaying : boolean,
-  stalledStatus : { reason : "seeking" |
-                             "not-ready" |
-                             "internal-seek" |
-                             "buffering"; } |
+  stalledStatus : IStallingSituation |
                   null
 ) : IPlayerState {
   if (mediaElement.ended) {
@@ -75,8 +73,8 @@ export default function getLoadedContentState(
       return PLAYER_STATES.ENDED;
     }
 
-    return stalledStatus.reason === "seeking" ? PLAYER_STATES.SEEKING :
-                                                PLAYER_STATES.BUFFERING;
+    return stalledStatus === "seeking" ? PLAYER_STATES.SEEKING :
+                                         PLAYER_STATES.BUFFERING;
   }
   return isPlaying ? PLAYER_STATES.PLAYING :
                      PLAYER_STATES.PAUSED;

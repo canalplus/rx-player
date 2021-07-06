@@ -60,7 +60,6 @@ import {
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
-import { IStalledStatus } from "../../api";
 import {
   IPrioritizedSegmentFetcher,
   IPrioritizedSegmentFetcherEvent,
@@ -93,8 +92,6 @@ export interface IRepresentationStreamClockTick {
   * Not set for non-live contents.
   */
   liveGap? : number;
-  /** If set, the player is currently stalled (blocked). */
-  stalled : IStalledStatus|null;
   /**
    * Offset in seconds to add to the time to obtain the position we
    * actually want to download from.

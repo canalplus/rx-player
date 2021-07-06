@@ -989,10 +989,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       filter((evt) : evt is IStalledEvent => evt.type === "stalled" ||
                                              evt.type === "unstalled"),
       map(x => x.value),
-      distinctUntilChanged((wasStalled, isStalled) => {
-        return wasStalled === null && isStalled === null ||
-               (wasStalled !== null && isStalled !== null &&
-                wasStalled.reason === isStalled.reason);
+      distinctUntilChanged((prevStallReason, currStallReason) => {
+        return prevStallReason === null && currStallReason === null ||
+               (prevStallReason !== null && currStallReason !== null &&
+                prevStallReason === currStallReason);
       }));
 
     /** Emit when the content is considered "loaded". */
