@@ -53,30 +53,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getManifest", () => {
-      it("should return null in getManifest by default", () => {
-        expect(player.getManifest()).to.equal(null);
-      });
-    });
-
-    describe("getCurrentAdaptations", () => {
-      it("should return null in getCurrentAdaptations by default", () => {
-        expect(player.getCurrentAdaptations()).to.equal(null);
-      });
-    });
-
-    describe("getCurrentRepresentations", () => {
-      it("should return null in getCurrentRepresentations by default", () => {
-        expect(player.getCurrentRepresentations()).to.equal(null);
-      });
-    });
-
-    describe("getNativeTextTrack", () => {
-      it("should return null in getNativeTextTrack by default", () => {
-        expect(player.getNativeTextTrack()).to.equal(null);
-      });
-    });
-
     describe("getPlayerState", () => {
       it("should return \"STOPPED\" in getPlayerState by default", () => {
         expect(player.getPlayerState()).to.equal("STOPPED");
@@ -144,12 +120,6 @@ describe("initial idle state", () => {
     describe("getVolume", () => {
       it("should return 1 in getVolume by default", () => {
         expect(player.getVolume()).to.equal(1);
-      });
-    });
-
-    describe("isFullscreen", () => {
-      it("should return false in isFullscreen by default", () => {
-        expect(player.isFullscreen()).to.equal(false);
       });
     });
 
@@ -236,21 +206,6 @@ describe("initial idle state", () => {
         expect(() => player.seekTo({ relative: 5 })).to.throw();
         expect(() => player.seekTo({ position: 5 })).to.throw();
         expect(() => player.seekTo({ wallClockTime: 5 })).to.throw();
-      });
-    });
-
-    describe("exitFullscreen", () => {
-      it("should allow exitFullscreen by default", () => {
-        expect(player.exitFullscreen()).to.equal(undefined);
-      });
-    });
-
-    describe("setFullscreen", () => {
-      it("should allow setFullscreen by default", () => {
-        expect(player.setFullscreen()).to.equal(undefined);
-
-        // TODO remove for v3.0.0
-        expect(player.setFullscreen(false)).to.equal(undefined);
       });
     });
 
