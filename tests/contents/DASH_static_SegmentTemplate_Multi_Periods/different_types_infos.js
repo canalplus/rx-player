@@ -21,11 +21,13 @@ export default {
       adaptations: {
         audio: [
           {
+            id: "audio",
             isAudioDescription: undefined,
             language: undefined,
             normalizedLanguage: undefined,
             representations: [
               {
+                id: "aaclc",
                 bitrate: 66295,
                 codec: "mp4a.40.2",
                 mimeType: "audio/mp4",
@@ -55,9 +57,10 @@ export default {
         ],
         video: [
           {
+            id: "video",
             representations: [
-
               {
+                id: "h264bl_low",
                 bitrate: 50842,
                 height: 180,
                 width: 320,
@@ -87,6 +90,7 @@ export default {
               },
 
               {
+                id: "h264bl_mid",
                 bitrate: 194834,
                 height: 360,
                 width: 640,
@@ -116,6 +120,7 @@ export default {
               },
 
               {
+                id: "h264bl_hd",
                 bitrate: 514793,
                 height: 720,
                 width: 1280,
@@ -145,6 +150,7 @@ export default {
               },
 
               {
+                id: "h264bl_full",
                 bitrate: 770663,
                 height: 1080,
                 width: 1920,
@@ -183,11 +189,13 @@ export default {
       adaptations: {
         audio: [
           {
+            id: "audio",
             isAudioDescription: undefined,
             language: undefined,
             normalizedLanguage: undefined,
             representations: [
               {
+                id: "aaclc",
                 bitrate: 66295,
                 codec: "mp4a.40.2",
                 mimeType: "audio/mp4",
@@ -217,9 +225,10 @@ export default {
         ],
         video: [
           {
+            id: "video",
             representations: [
-
               {
+                id: "h264bl_low",
                 bitrate: 50842,
                 height: 180,
                 width: 320,
@@ -249,6 +258,7 @@ export default {
               },
 
               {
+                id: "h264bl_mid",
                 bitrate: 194834,
                 height: 360,
                 width: 640,
@@ -278,6 +288,7 @@ export default {
               },
 
               {
+                id: "h264bl_hd",
                 bitrate: 514793,
                 height: 720,
                 width: 1280,
@@ -307,6 +318,7 @@ export default {
               },
 
               {
+                id: "h264bl_full",
                 bitrate: 770663,
                 height: 1080,
                 width: 1920,

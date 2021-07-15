@@ -317,9 +317,10 @@ describe("loadVideo Options", () => {
         expect(numberOfTimeRepresentationFilterIsCalledForVideo)
           .to.equal(initialNumberOfRepresentations);
 
-        const currentVideoRepresentations =
-          player.getCurrentAdaptations().video.representations;
-        expect(currentVideoRepresentations.length).to.equal(
+        const currentVideoTrack = player.getAvailableVideoTracks()
+          .find(track => track.active);
+
+        expect(currentVideoTrack.representations).to.have.length(
           Math.floor(initialNumberOfRepresentations / 2)
         );
       });

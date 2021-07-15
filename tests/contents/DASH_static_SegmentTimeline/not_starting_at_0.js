@@ -20,11 +20,13 @@ export default {
       adaptations: {
         audio: [
           {
+            id: "audio-audio-mp4a.40.2-audio/mp4",
             isAudioDescription: undefined,
             language: undefined,
             normalizedLanguage: undefined,
             representations: [
               {
+                id: "audio=128000",
                 bitrate: 128000,
                 codec: "mp4a.40.2",
                 mimeType: "audio/mp4",
@@ -60,9 +62,11 @@ export default {
         ],
         video: [
           {
+            id: "video-video-video/mp4",
             representations: [
 
               {
+                id: "video=400000",
                 bitrate: 400000,
                 height: 124,
                 width: 220,
@@ -97,6 +101,7 @@ export default {
               },
 
               {
+                id: "video=795000",
                 bitrate: 795000,
                 height: 208,
                 width: 368,
@@ -131,6 +136,7 @@ export default {
               },
 
               {
+                id: "video=1193000",
                 bitrate: 1193000,
                 height: 432,
                 width: 768,
@@ -165,6 +171,7 @@ export default {
               },
 
               {
+                id: "video=1996000",
                 bitrate: 1996000,
                 height: 944,
                 width: 1680,

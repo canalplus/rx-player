@@ -160,8 +160,7 @@ describe("DASH live content (SegmentTemplate)", function() {
 
       const audioTracks = player.getAvailableAudioTracks();
 
-      const currentPeriod = player.getManifest().periods[0];
-      const audioAdaptations = currentPeriod.adaptations.audio;
+      const audioAdaptations = manifestInfos.periods[0].adaptations.audio;
       expect(audioTracks.length).to
         .equal(audioAdaptations ? audioAdaptations.length : 0);
 
@@ -209,8 +208,7 @@ describe("DASH live content (SegmentTemplate)", function() {
 
       const textTracks = player.getAvailableTextTracks();
 
-      const currentPeriod = player.getManifest().periods[0];
-      const textAdaptations = currentPeriod.adaptations.text;
+      const textAdaptations = manifestInfos.periods[0].adaptations.text;
       expect(textTracks.length).to
         .equal(textAdaptations ? textAdaptations.length : 0);
 
@@ -258,8 +256,7 @@ describe("DASH live content (SegmentTemplate)", function() {
 
       const videoTracks = player.getAvailableVideoTracks();
 
-      const currentPeriod = player.getManifest().periods[0];
-      const videoAdaptations = currentPeriod.adaptations.video;
+      const videoAdaptations = manifestInfos.periods[0].adaptations.video;
       expect(videoTracks.length).to
         .equal(videoAdaptations ? videoAdaptations.length : 0);
 
@@ -280,8 +277,8 @@ describe("DASH live content (SegmentTemplate)", function() {
               ) {
                 const reprTrack = videoTrack
                   .representations[representationIndex];
-                const representation =
-                  adaptation.getRepresentation(reprTrack.id);
+                const representation = adaptation.representations
+                  .find(({ id }) => id === reprTrack.id);
                 expect(reprTrack.bitrate).to.equal(representation.bitrate);
                 expect(reprTrack.frameRate).to
                   .equal(representation.frameRate);
@@ -487,8 +484,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
       const audioTracks = player.getAvailableAudioTracks();
 
-      const currentPeriod = player.getManifest().periods[0];
-      const audioAdaptations = currentPeriod.adaptations.audio;
+      const audioAdaptations = manifestInfos.periods[0].adaptations.audio;
       expect(audioTracks.length).to
         .equal(audioAdaptations ? audioAdaptations.length : 0);
 
@@ -536,8 +532,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
       const textTracks = player.getAvailableTextTracks();
 
-      const currentPeriod = player.getManifest().periods[0];
-      const textAdaptations = currentPeriod.adaptations.text;
+      const textAdaptations = manifestInfos.periods[0].adaptations.text;
       expect(textTracks.length).to
         .equal(textAdaptations ? textAdaptations.length : 0);
 
@@ -585,8 +580,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
       const videoTracks = player.getAvailableVideoTracks();
 
-      const currentPeriod = player.getManifest().periods[0];
-      const videoAdaptations = currentPeriod.adaptations.video;
+      const videoAdaptations = manifestInfos.periods[0].adaptations.video;
       expect(videoTracks.length).to
         .equal(videoAdaptations ? videoAdaptations.length : 0);
 
@@ -607,8 +601,8 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
               ) {
                 const reprTrack = videoTrack
                   .representations[representationIndex];
-                const representation =
-                  adaptation.getRepresentation(reprTrack.id);
+                const representation = adaptation.representations
+                  .find(({ id }) => id === reprTrack.id);
                 expect(reprTrack.bitrate).to.equal(representation.bitrate);
                 expect(reprTrack.frameRate).to
                   .equal(representation.frameRate);

@@ -17,6 +17,7 @@ export default {
       adaptations: {
         audio: [
           {
+            id: "audio-eng-audio-audio/mp4",
             isAudioDescription: false,
             language: "eng",
             normalizedLanguage: "eng",
@@ -57,9 +58,12 @@ export default {
         ],
         video: [
           {
+            id:"video-video-video/mp4",
             representations: [
               {
+                id: "V300",
                 bitrate: 300000,
+                frameRate: "60/2",
                 height: 360,
                 width: 640,
                 codec: "avc1.64001e",

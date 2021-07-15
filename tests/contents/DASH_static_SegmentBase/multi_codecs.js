@@ -23,11 +23,13 @@ export default {
       adaptations: {
         audio: [
           {
+            id: "9",
             isAudioDescription: undefined,
             language: "en",
             normalizedLanguage: "eng",
             representations: [
               {
+                id: "13",
                 bitrate: 130107,
                 codec: "mp4a.40.2",
                 mimeType: "audio/mp4",
@@ -42,11 +44,13 @@ export default {
             ],
           },
           {
+            id: "10",
             isAudioDescription: undefined,
             language: "en",
             normalizedLanguage: "eng",
             representations: [
               {
+                id: "15",
                 bitrate: 135879,
                 codec: "opus",
                 mimeType: "audio/webm",
@@ -61,11 +65,13 @@ export default {
             ],
           },
           {
+            id: "5",
             isAudioDescription: undefined,
             language: "es",
             normalizedLanguage: "spa",
             representations: [
               {
+                id: "6",
                 bitrate: 132868,
                 codec: "mp4a.40.2",
                 mimeType: "audio/mp4",
@@ -80,11 +86,13 @@ export default {
             ],
           },
           {
+            id: "6",
             isAudioDescription: undefined,
             language: "de",
             normalizedLanguage: "deu",
             representations: [
               {
+                id: "7",
                 bitrate: 131498,
                 codec: "mp4a.40.2",
                 mimeType: "audio/mp4",
@@ -99,11 +107,13 @@ export default {
             ],
           },
           {
+            id: "7",
             isAudioDescription: undefined,
             language: "fr",
             normalizedLanguage: "fra",
             representations: [
               {
+                id: "8",
                 bitrate: 134256,
                 codec: "mp4a.40.2",
                 mimeType: "audio/mp4",
@@ -118,11 +128,13 @@ export default {
             ],
           },
           {
+            id: "11",
             isAudioDescription: undefined,
             language: "fr",
             normalizedLanguage: "fra",
             representations: [
               {
+                id: "16",
                 bitrate: 111053,
                 codec: "opus",
                 mimeType: "audio/webm",
@@ -137,11 +149,13 @@ export default {
             ],
           },
           {
+            id: "12",
             isAudioDescription: undefined,
             language: "de",
             normalizedLanguage: "deu",
             representations: [
               {
+                id: "17",
                 bitrate: 108452,
                 codec: "opus",
                 mimeType: "audio/webm",
@@ -156,11 +170,13 @@ export default {
             ],
           },
           {
+            id: "13",
             isAudioDescription: undefined,
             language: "it",
             normalizedLanguage: "ita",
             representations: [
               {
+                id: "18",
                 bitrate: 110873,
                 codec: "opus",
                 mimeType: "audio/webm",
@@ -175,11 +191,13 @@ export default {
             ],
           },
           {
+            id: "14",
             isAudioDescription: undefined,
             language: "it",
             normalizedLanguage: "ita",
             representations: [
               {
+                id: "20",
                 bitrate: 133951,
                 codec: "mp4a.40.2",
                 mimeType: "audio/mp4",
@@ -194,11 +212,13 @@ export default {
             ],
           },
           {
+            id: "15",
             isAudioDescription: undefined,
             language: "es",
             normalizedLanguage: "spa",
             representations: [
               {
+                id: "22",
                 bitrate: 116381,
                 codec: "opus",
                 mimeType: "audio/webm",
@@ -215,6 +235,7 @@ export default {
         ],
         text: [
           {
+            id: "1",
             isClosedCaption: undefined,
             language: "en",
             normalizedLanguage: "eng",
@@ -240,6 +261,7 @@ export default {
             ],
           },
           {
+            id: "0",
             isClosedCaption: undefined,
             language: "el",
             normalizedLanguage: "ell",
@@ -265,6 +287,7 @@ export default {
             ],
           },
           {
+            id: "2",
             isClosedCaption: undefined,
             language: "fr",
             normalizedLanguage: "fra",
@@ -290,6 +313,7 @@ export default {
             ],
           },
           {
+            id: "3",
             isClosedCaption: undefined,
             language: "pt-BR",
             normalizedLanguage: "por",
@@ -317,8 +341,10 @@ export default {
         ],
         video: [
           {
+            id: "4",
             representations: [
               {
+                id: "12",
                 bitrate: 99529,
                 height: 144,
                 width: 192,
@@ -334,6 +360,7 @@ export default {
                 },
               },
               {
+                id: "9",
                 bitrate: 397494,
                 height: 240,
                 width: 320,
@@ -349,6 +376,7 @@ export default {
                 },
               },
               {
+                id: "4",
                 bitrate: 752174,
                 height: 360,
                 width: 480,
@@ -364,6 +392,7 @@ export default {
                 },
               },
               {
+                id: "5",
                 bitrate: 1005796,
                 height: 480,
                 width: 640,
@@ -379,6 +408,7 @@ export default {
                 },
               },
               {
+                id: "10",
                 bitrate: 1408303,
                 height: 576,
                 width: 768,
@@ -396,8 +426,10 @@ export default {
             ],
           },
           {
+            id: "8",
             representations: [
               {
+                id: "14",
                 bitrate: 81505,
                 height: 144,
                 width: 192,
@@ -413,6 +445,7 @@ export default {
                 },
               },
               {
+                id: "21",
                 bitrate: 203461,
                 height: 240,
                 width: 320,
@@ -428,6 +461,7 @@ export default {
                 },
               },
               {
+                id: "11",
                 bitrate: 362665,
                 height: 360,
                 width: 480,
@@ -443,6 +477,7 @@ export default {
                 },
               },
               {
+                id: "19",
                 bitrate: 485260,
                 height: 480,
                 width: 640,
@@ -458,6 +493,7 @@ export default {
                 },
               },
               {
+                id: "23",
                 bitrate: 620659,
                 height: 576,
                 width: 768,
