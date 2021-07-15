@@ -71,7 +71,6 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     videoTrackId: undefined,
     volume: player.getVolume(),
     wallClockDiff: undefined,
-    manifest: undefined,
     /**
      * If `true`, the currently set video track has a linked "trickmode" track.
      * @type {boolean}

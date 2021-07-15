@@ -55,7 +55,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     map(() => {
       const position = player.getPosition();
       const duration = player.getVideoDuration();
-      const adaptations = player.getCurrentAdaptations();
+      const videoTrack = player.getVideoTrack();
       return {
         currentTime: player.getPosition(),
         wallClockDiff: player.getWallClockTime() - position,
@@ -65,10 +65,10 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         maximumPosition: player.getMaximumPosition(),
         liveGap: player.getMaximumPosition() - player.getPosition(),
         playbackPosition: player.getPlaybackRate(),
-        manifest: player.getManifest(),
-        videoTrackHasTrickMode: adaptations !== null &&
-          adaptations.video !== undefined && adaptations.video !== null &&
-          adaptations.video.trickModeTracks !== undefined,
+        videoTrackHasTrickMode: videoTrack !== null &&
+          videoTrack !== undefined &&
+          videoTrack.trickModeTracks !== undefined &&
+          videoTrack.trickModeTracks.length > 0,
       };
     }),
     takeUntil($destroy)
