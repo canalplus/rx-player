@@ -91,11 +91,7 @@
     - [getUrl](#meth-getUrl)
     - [getCurrentKeySystem](#meth-getCurrentKeySystem)
  - [Deprecated](#meth-group-deprecated)
-    - [getManifest (deprecated)](#meth-getManifest)
-    - [getCurrentAdaptations (deprecated)](#meth-getCurrentAdaptations)
-    - [getCurrentRepresentations (deprecated)](#meth-getCurrentRepresentations)
     - [getImageTrackData (deprecated)](#meth-getImageTrackData)
-    - [getNativeTextTrack (deprecated)](#meth-getNativeTextTrack)
 - [Static properties](#static)
     - [version](#static-version)
     - [ErrorTypes](#static-ErrorTypes)
@@ -3121,101 +3117,6 @@ The following methods are deprecated. They are still supported but we advise
 users to not use those as they might become not supported in the future.
 
 
-<a name="meth-getManifest"></a>
-### getManifest ################################################################
-
---
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
---
-
---
-
-__syntax__: `const manifest = player.getManifest()`
-
-__return value__: ``Manifest|null``
-
---
-
-Returns the current loaded [Manifest](../terms.md#manifest) if one.
-The Manifest object structure is relatively complex and is described in the
-[Manifest Object structure page](./manifest.md).
-
-``null`` if the player is either stopped or not loaded.
-
-``null`` in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
-The Manifest will be available before the player reaches the ``"LOADED"`` state.
-
-
-<a name="meth-getCurrentAdaptations"></a>
-### getCurrentAdaptations ######################################################
-
---
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
---
-
---
-
-__syntax__: `const adaptations = player.getCurrentAdaptations()`
-
-__return value__: ``Object|null``
-
---
-
-Returns the [Adaptations](../terms.md#adaptation) being loaded per type if a
-[Manifest](../terms.md#manifest) is loaded. The returned object will have at
-most a key for each type ("video", "audio", "text" and "image") which will each
-contain an array of Adaptation Objects.
-
-The Adaptation object structure is relatively complex and is described in the
-[Manifest Object structure page](./manifest.md#adaptation).
-
-``null`` if the current Adaptations are not known yet.
-
-``null`` in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
-
-<a name="meth-getCurrentRepresentations"></a>
-### getCurrentRepresentations ##################################################
-
---
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
---
-
---
-
-__syntax__: `const representations = player.getCurrentRepresentations()`
-
-__return value__: ``Object|null``
-
---
-
-Returns the [Representations](../terms.md#representation) being loaded per type
-if a [Manifest](../terms.md#manifest) is loaded. The returned object will have
-at most a key for each type ("video", "audio", "text" and "image") which will
-each contain an array of Representation Objects.
-
-An Representation object structure is relatively complex and is described in the
-[Manifest Object structure page](./manifest.md#representation).
-
-``null`` if the current Representations are not known yet.
-
-``null`` in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
-
-
 <a name="meth-getImageTrackData"></a>
 ### getImageTrackData ##########################################################
 
@@ -3242,33 +3143,6 @@ The returned array follows the usual image playlist structure, defined
 
 ``null`` in _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)).
-
-
-<a name="meth-getNativeTextTrack"></a>
-### getNativeTextTrack #########################################################
-
---
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
---
-
---
-
-__syntax__: `const textTrack = player.getNativeTextTrack()`
-
-__return value__: ``TextTrack|null``
-
---
-
-Returns the first text track of the video's element, null if none.
-
-This is equivalent to:
-```js
-const el = player.getVideoElement();
-const textTrack = el.textTracks.length ? el.textTracks[0] : null;
-```
 
 
 

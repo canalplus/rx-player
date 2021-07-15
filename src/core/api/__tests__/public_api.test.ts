@@ -51,30 +51,6 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getManifest", () => {
-      it("should return null in getManifest by default", () => {
-        const PublicAPI = require("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getManifest()).toBe(null);
-      });
-    });
-
-    describe("getCurrentAdaptations", () => {
-      it("should return null in getCurrentAdaptations by default", () => {
-        const PublicAPI = require("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getCurrentAdaptations()).toBe(null);
-      });
-    });
-
-    describe("getCurrentRepresentations", () => {
-      it("should return null in getCurrentRepresentations by default", () => {
-        const PublicAPI = require("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getCurrentRepresentations()).toBe(null);
-      });
-    });
-
     describe("getPlayerState", () => {
       it("should return \"STOPPED\" in getPlayerState by default", () => {
         const PublicAPI = require("../public_api").default;
