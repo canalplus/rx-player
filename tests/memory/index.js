@@ -3,7 +3,10 @@ import RxPlayer from "../../src";
 import VideoThumbnailLoader, {
   DASH_LOADER
 } from "../../src/experimental/tools/VideoThumbnailLoader";
-import { manifestInfos } from "../contents/DASH_static_SegmentTimeline";
+import {
+  manifestInfos,
+  trickModeInfos,
+} from "../contents/DASH_static_SegmentTimeline";
 import textTrackInfos from "../contents/texttracks";
 import imageInfos from "../contents/imagetracks";
 import sleep from "../utils/sleep.js";
@@ -117,7 +120,7 @@ describe("Memory tests", () => {
     expect(heapDifference).to.be.below(10e6);
   });
 
-  it("should not have a sensible memory leak after 100 setTime calls of VideoThumbnailLoader", async function() {
+  it("should not have a sensible memory leak after 1000 setTime calls of VideoThumbnailLoader", async function() {
     if (window.performance == null ||
         window.performance.memory == null ||
         window.gc == null)
@@ -139,20 +142,13 @@ describe("Memory tests", () => {
     window.gc();
     const initialMemory = window.performance.memory;
 
-    player.loadVideo({ url: manifestInfos.url,
-                       transport: manifestInfos.transport,
+    player.loadVideo({ url: trickModeInfos.url,
+                       transport: trickModeInfos.transport,
                        autoPlay: true });
     await waitForLoadedStateAfterLoadVideo(player);
-    const manifest = player.getManifest();
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
 
-    for (let c = 0; c < 100; c++) {
-      await videoThumbnailLoader.setTime(c);
+    for (let c = 0; c < 1000; c++) {
+      await videoThumbnailLoader.setTime(c % 101);
     }
 
     player.stop();

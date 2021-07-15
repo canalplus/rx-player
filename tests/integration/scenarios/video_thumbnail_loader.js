@@ -1,25 +1,15 @@
 import { expect } from "chai";
-import { retry } from "rxjs/operators";
 import RxPlayer from "../../../src";
 import VideoThumbnailLoader, {
   DASH_LOADER,
 } from "../../../src/experimental/tools/VideoThumbnailLoader";
-import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
+import {
+  manifestInfos,
+  trickModeInfos,
+} from "../../contents/DASH_static_SegmentTimeline";
 import XHRMock from "../../utils/request_mock";
 import sleep from "../../utils/sleep";
-
-async function getManifest(rxPlayer, nbrOfRetries) {
-  const manifest = rxPlayer.getManifest();
-  if (manifest != null) {
-    return manifest;
-  }
-  await sleep(10);
-  const retryNbr = (nbrOfRetries ? nbrOfRetries : 0) + 1;
-  if (retryNbr !== undefined && retry >= 10) {
-    throw new Error("Can't get manifest");
-  }
-  return getManifest(rxPlayer, retryNbr);
-}
+import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
 describe("Video Thumbnail Loader", () => {
   let rxPlayer;
@@ -28,9 +18,7 @@ describe("Video Thumbnail Loader", () => {
   const videoElement = document.createElement("video");
 
   beforeEach(() => {
-    rxPlayer = new RxPlayer({
-      wantedBufferAhead: 0,
-    });
+    rxPlayer = new RxPlayer();
     videoThumbnailLoader = new VideoThumbnailLoader(videoElement, rxPlayer);
     xhrMock = new XHRMock();
   });
@@ -40,18 +28,12 @@ describe("Video Thumbnail Loader", () => {
     xhrMock.restore();
   });
 
-  it("should not work when no fetcher was imported", async () => {
+  it("should not work when no fetcher was imported", async function() {
     const wantedThumbnail = { time: 1,
                               range: [0, 4] };
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    await sleep(75);
-    const manifest = rxPlayer.getManifest();
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
+    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
+
     let error;
     try {
       await videoThumbnailLoader.setTime(wantedThumbnail.time);
@@ -66,7 +48,8 @@ describe("Video Thumbnail Loader", () => {
   it("should not work when no thumbnail track", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    await sleep(75);
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
+
     let time;
     let error;
     try {
@@ -81,15 +64,11 @@ describe("Video Thumbnail Loader", () => {
 
   it("should not work when no period at given time", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
+    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
     await sleep(75);
+
     const manifest = rxPlayer.getManifest();
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
+
     let time;
     let error;
     try {
@@ -107,15 +86,9 @@ describe("Video Thumbnail Loader", () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail = { time: 1,
                               range: [0, 4] };
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    await sleep(75);
-    const manifest = rxPlayer.getManifest();
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
+    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
+
     let time;
     let error;
     try {
@@ -138,15 +111,9 @@ describe("Video Thumbnail Loader", () => {
                                range: [0, 4] };
     const wantedThumbnail2 = { time: 30,
                                range: [28.028, 32.028] };
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    await sleep(75);
-    const manifest = rxPlayer.getManifest();
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
+    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
+
     let time;
     let error;
     try {
@@ -187,15 +154,9 @@ describe("Video Thumbnail Loader", () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 4] };
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    await sleep(75);
-    const manifest = rxPlayer.getManifest();
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
+    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
+
     let time;
     let error;
 
@@ -237,15 +198,10 @@ describe("Video Thumbnail Loader", () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 4] };
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    const manifest = await getManifest(rxPlayer);
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
+    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
+    rxPlayer.setWantedBufferAhead(0);
     xhrMock.lock();
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
@@ -281,15 +237,10 @@ describe("Video Thumbnail Loader", () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 8] };
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    const manifest = await getManifest(rxPlayer);
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
+    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
+    rxPlayer.setWantedBufferAhead(0);
     xhrMock.lock();
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
     await sleep(75);
@@ -321,15 +272,8 @@ describe("Video Thumbnail Loader", () => {
                                range: [0, 4] };
     const wantedThumbnail2 = { time: 11,
                                range: [8.008, 16.008] }; // load two segments
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    await sleep(75);
-    const manifest = rxPlayer.getManifest();
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
+    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
     let error1;
     let error2;
@@ -360,15 +304,9 @@ describe("Video Thumbnail Loader", () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail = { time: 1,
                               range: [0, 4] };
-    rxPlayer.loadVideo({ url: manifestInfos.url, transport: "dash" });
-    await sleep(75);
-    const manifest = rxPlayer.getManifest();
-    const refToVideoAdaptation = manifest.periods[0].adaptations.video[0];
-    expect(refToVideoAdaptation).not.to.equal(undefined);
-    manifest.periods[0].adaptations.video[0].trickModeTracks =
-      [refToVideoAdaptation];
-    expect(manifest.periods[0].adaptations.video[0].trickModeTracks)
-      .not.to.equal(undefined);
+    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
+
     let time;
     let error;
     try {

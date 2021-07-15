@@ -1,4 +1,5 @@
 import manifestInfos from "./infos.js";
+import trickModeInfos from "./trickmode.js";
 import discontinuityInfos from "./discontinuity.js";
 import multiAdaptationSetsInfos from "./multi-AdaptationSets.js";
 import notStartingAt0ManifestInfos from "./not_starting_at_0.js";
@@ -8,6 +9,7 @@ import segmentTemplateInheritancePeriodAS from "./segment_template_inheritance_p
 
 export {
   manifestInfos,
+  trickModeInfos,
   discontinuityInfos,
   multiAdaptationSetsInfos,
   notStartingAt0ManifestInfos,
