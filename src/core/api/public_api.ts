@@ -65,7 +65,6 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import {
-  IAdaptation,
   IAudioTrack,
   IAudioTrackPreference,
   IAvailableAudioTrack,
@@ -80,7 +79,6 @@ import {
   IPlayerError,
   IPlayerState,
   IPositionUpdate,
-  IRepresentation,
   IStreamEvent,
   ITextTrack,
   ITextTrackPreference,
@@ -1014,59 +1012,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getError() : Error|null {
     return this._priv_currentError;
-  }
-
-  /**
-   * Returns manifest/playlist object.
-   * null if the player is STOPPED.
-   * @deprecated
-   * @returns {Manifest|null} - The current Manifest (`null` when not known).
-   */
-  getManifest() : Manifest|null {
-    warnOnce("getManifest is deprecated." +
-             " Please open an issue if you used this API.");
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    return this._priv_contentInfos.manifest;
-  }
-
-  /**
-   * Returns Adaptations (tracks) for every currently playing type
-   * (audio/video/text...).
-   * @deprecated
-   * @returns {Object|null} - The current Adaptation objects, per type (`null`
-   * when none is known for now.
-   */
-  getCurrentAdaptations(
-  ) : Partial<Record<IBufferType, IAdaptation|null>> | null {
-    warnOnce("getCurrentAdaptations is deprecated." +
-             " Please open an issue if you used this API.");
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
-    if (currentPeriod === null ||
-        activeAdaptations === null ||
-        isNullOrUndefined(activeAdaptations[currentPeriod.id]))
-    {
-      return null;
-    }
-    return activeAdaptations[currentPeriod.id];
-  }
-
-  /**
-   * Returns representations (qualities) for every currently playing type
-   * (audio/video/text...).
-   * @deprecated
-   * @returns {Object|null} - The current Representation objects, per type
-   * (`null` when none is known for now.
-   */
-  getCurrentRepresentations(
-  ) : Partial<Record<IBufferType, IRepresentation|null>> | null {
-    warnOnce("getCurrentRepresentations is deprecated." +
-             " Please open an issue if you used this API.");
-    return this._priv_getCurrentRepresentations();
   }
 
   /**
@@ -2155,6 +2100,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return null;
   }
 
+  // ---- Undocumented Private methods. ----
+  //
+  // Those methods are just here either to allow some tools relying on the
+  // RxPlayer instance to work or to improve the RxPlayer's demo.
+  //
+  // They should not be used by any external code.
+
   /**
    * /!\ For demo use only! Do not touch!
    *
@@ -2175,6 +2127,22 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       segmentBufferStatus.value.getInventory() :
       null;
   }
+
+  /**
+   * /!\ For tools use only! Do not touch!
+   *
+   * Returns manifest/playlist object.
+   * null if the player is STOPPED.
+   * @returns {Manifest|null} - The current Manifest (`null` when not known).
+   */
+  __priv_getManifest() : Manifest|null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    return this._priv_contentInfos.manifest;
+  }
+
+  // ---- Private methods ----
 
   /**
    * Reset all state properties relative to a playing content.

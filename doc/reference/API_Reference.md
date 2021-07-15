@@ -441,15 +441,6 @@ properties, methods, events and so on.
   - [`getCurrentKeySystem`](../api/Content_Information/getCurrentKeySystem.md):
     Returns the name of the current key system.
 
-  - [`getManifest`](../api/Deprecated/getManifest.md):
-    [Deprecated] Information on the current Manifest.
-
-  - [`getCurrentAdaptations`](../api/Deprecated/getCurrentAdaptations.md):
-    [Deprecated] Information on the current Adaptations.
-
-  - [`getCurrentRepresentations`](../api/Deprecated/getCurrentRepresentations.md):
-    [Deprecated] Information on the current Representations.
-
   - [`getImageTrackData`](../api/Deprecated/getImageTrackData.md):
     [Deprecated] Returns the data of the current image track.
 
