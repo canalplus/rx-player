@@ -67,7 +67,7 @@ describe("Video Thumbnail Loader", () => {
     rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
     await sleep(75);
 
-    const manifest = rxPlayer.getManifest();
+    const manifest = rxPlayer.__priv_getManifest();
 
     let time;
     let error;

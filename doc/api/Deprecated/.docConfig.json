@@ -1,17 +1,6 @@
 {
   "pages": [
     {
-      "path": "./getManifest.md",
-      "displayName": "getManifest"
-    },
-    {
-      "path": "./getCurrentAdaptations.md",
-      "displayName": "getCurrentAdaptations"
-    },
-    {
-      "path": "./getCurrentRepresentations.md",
-      "displayName": "getCurrentRepresentations"
-    },
       "path": "./getImageTrackData.md",
       "displayName": "getImageTrackData"
     }

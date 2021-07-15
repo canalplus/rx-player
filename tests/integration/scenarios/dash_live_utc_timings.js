@@ -156,10 +156,9 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush();
       await sleep(10);
 
-      const { availabilityStartTime } = player.getManifest();
       const timeShiftBufferDepth = 5 * 60;
-      const maximumPosition = (Date.now()) / 1000 -
-        availabilityStartTime;
+      const maximumPosition = Date.now() / 1000 -
+        manifestInfos.availabilityStartTime;
       const minimumPosition = maximumPosition - timeShiftBufferDepth;
 
       expect(player.getMinimumPosition()).to.be
