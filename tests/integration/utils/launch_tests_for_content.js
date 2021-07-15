@@ -50,9 +50,7 @@ export default function launchTestsForContent(manifestInfos) {
   let player;
   let xhrMock;
 
-  const { availabilityStartTime,
-          isDynamic,
-          isLive,
+  const { isLive,
           maximumPosition,
           minimumPosition,
           periods: periodsInfos,
@@ -187,147 +185,6 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("getManifest", () => {
-      it("should return the manifest correctly parsed", async function () {
-        xhrMock.lock();
-        player.loadVideo({ url: manifestInfos.url, transport });
-
-        await sleep(10);
-        await xhrMock.flush(); // only wait for the manifest request
-        await sleep(10);
-
-        const manifest = player.getManifest();
-        expect(manifest).not.to.equal(null);
-        expect(typeof manifest).to.equal("object");
-        expect(manifest.transport).to.equal(transport);
-        expect(typeof manifest.id).to.equal("string");
-        expect(manifest.isDynamic).to.equal(isDynamic);
-        expect(manifest.isLive).to.equal(isLive);
-        expect(manifest.getUrl()).to.equal(manifestInfos.url);
-
-        expect(manifest.getMaximumSafePosition()).to.equal(maximumPosition);
-        expect(manifest.getMinimumSafePosition()).to.equal(minimumPosition);
-        expect(manifest.availabilityStartTime).to.equal(availabilityStartTime);
-
-        expect(manifest.periods.length).to.equal(periodsInfos.length);
-        for (
-          let periodIndex = 0;
-          periodIndex < periodsInfos.length;
-          periodIndex++
-        ) {
-          const periodInfos = periodsInfos[periodIndex];
-          const period = manifest.periods[periodIndex];
-
-          expect(period.start).to.equal(periodInfos.start);
-          expect(period.duration).to.equal(periodInfos.duration);
-          expect(period.end).to
-            .equal(periodInfos.start + periodInfos.duration);
-
-          const allAdaptationInfos = periodInfos.adaptations;
-          const allAdaptations = period.adaptations;
-
-          Object.keys(allAdaptations).forEach((type) => {
-            const adaptations = allAdaptations[type];
-            const adaptationsInfos = allAdaptationInfos[type];
-
-            expect(adaptations.length).to.equal(adaptationsInfos.length);
-
-            for (
-              let adaptationIndex = 0;
-              adaptationIndex < adaptations.length;
-              adaptationIndex++
-            ) {
-              const adaptation = adaptations[adaptationIndex];
-              const adaptationInfos = adaptationsInfos[adaptationIndex];
-              const bitrates = adaptationInfos.representations
-                .map(representation => representation.bitrate);
-
-              expect(!!adaptation.isAudioDescription)
-                .to.equal(!!adaptationInfos.isAudioDescription);
-
-              expect(!!adaptation.isClosedCaption)
-                .to.equal(!!adaptationInfos.isClosedCaption);
-
-              expect(adaptation.language)
-                .to.equal(adaptationInfos.language);
-
-              expect(adaptation.normalizedLanguage)
-                .to.equal(adaptationInfos.normalizedLanguage);
-
-              expect(adaptation.getAvailableBitrates())
-                .to.eql(bitrates);
-
-              expect(typeof adaptation.id).to.equal("string");
-              expect(adaptation.representations.length)
-                .to.equal(adaptationInfos.representations.length);
-
-              for (
-                let representationIndex = 0;
-                representationIndex < adaptation.representations.length;
-                representationIndex++
-              ) {
-                const representation = adaptation
-                  .representations[representationIndex];
-                const representationInfos = adaptationInfos
-                  .representations[representationIndex];
-
-                expect(representation.bitrate)
-                  .to.equal(representationInfos.bitrate);
-
-                expect(representation.codec)
-                  .to.equal(representationInfos.codec);
-
-                expect(typeof representation.id).to.equal("string");
-
-                expect(representation.mimeType)
-                  .to.equal(representation.mimeType);
-
-                expect(typeof representation.index).to.equal("object");
-
-                const reprIndex = representation.index;
-                const reprIndexInfos = representationInfos.index;
-
-                const initSegment = reprIndex.getInitSegment();
-                const initSegmentInfos = reprIndexInfos.init;
-                if (initSegmentInfos) {
-                  expect(initSegment.mediaURLs)
-                    .to.deep.equal(initSegmentInfos.mediaURLs);
-                  expect(typeof initSegment.id).to.equal("string");
-                }
-
-                if (reprIndexInfos.segments.length) {
-                  const timescale = reprIndexInfos.segments[0].timescale;
-                  const firstSegmentTime =
-                    reprIndexInfos.segments[0].time / timescale;
-                  const rangeDuration = (
-                    (
-                      reprIndexInfos.segments[0].time +
-                      reprIndexInfos.segments[0].duration / 2
-                    ) / timescale
-                  ) - firstSegmentTime;
-                  const firstSegments =
-                    reprIndex.getSegments(firstSegmentTime, rangeDuration);
-
-                  expect(firstSegments.length).to.equal(1);
-
-                  const firstSegment = firstSegments[0];
-
-                  expect(firstSegment.time)
-                    .to.equal(reprIndexInfos.segments[0].time);
-
-                  expect(firstSegment.timescale)
-                    .to.equal(reprIndexInfos.segments[0].timescale);
-
-                  expect(firstSegment.mediaURLs)
-                    .to.deep.equal(reprIndexInfos.segments[0].mediaURLs);
-                }
-              }
-            }
-          });
-        }
-      });
-    });
-
     describe("reload", () => {
       it("should reload at given absolute position", async function () {
         player.setVideoBitrate(0);
@@ -414,81 +271,6 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("getCurrentAdaptations", () => {
-      it("should return the currently played adaptations", async function () {
-        player.setVideoBitrate(0);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-
-        const currentAdaptations = player.getCurrentAdaptations();
-        expect(typeof currentAdaptations).to.eql("object");
-        expect(currentAdaptations.video).to
-          .equal(
-            player.getManifest().periods[firstPeriodIndex].adaptations.video &&
-            player.getManifest().periods[firstPeriodIndex].adaptations.video[0]
-          );
-        expect(currentAdaptations.text).to
-          .equal(null);
-        expect(currentAdaptations.image).to
-          .equal(
-            (
-              player.getManifest().periods[firstPeriodIndex]
-                .adaptations.image &&
-              player.getManifest().periods[firstPeriodIndex]
-                .adaptations.image[0]
-            ) || null
-          );
-        expect(currentAdaptations.audio).to
-          .equal(
-            player.getManifest().periods[firstPeriodIndex]
-              .adaptations.audio &&
-            player.getManifest().periods[firstPeriodIndex]
-              .adaptations.audio[0]
-          );
-      });
-    });
-
-    describe("getCurrentRepresentations", () => {
-      it("should return the currently played representations", async () => {
-        player.setVideoBitrate(0);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-
-        const currentRepresentations = player.getCurrentRepresentations();
-        expect(currentRepresentations.video).to
-          .equal(
-            (
-              player.getCurrentAdaptations().video &&
-              player.getCurrentAdaptations().video.representations[0]
-            ) || undefined
-          );
-        expect(currentRepresentations.text).to
-          .equal(undefined);
-        expect(currentRepresentations.image).to
-          .equal(
-            (
-              player.getCurrentAdaptations().image &&
-              player.getCurrentAdaptations().image.representations[0]
-            ) || undefined
-          );
-        expect(currentRepresentations.audio).to
-          .equal(
-            (
-              player.getCurrentAdaptations().audio &&
-              player.getCurrentAdaptations().audio.representations[0]
-            ) || undefined
-          );
-      });
-    });
-
     describe("getVideoElement", () => {
       it("should return a video element", async () => {
         player.loadVideo({
@@ -500,18 +282,6 @@ export default function launchTestsForContent(manifestInfos) {
         expect(player.getVideoElement()).to.not.be.null;
         expect(player.getVideoElement().nodeType).to.eql(Element.ELEMENT_NODE);
         expect(player.getVideoElement().nodeName.toLowerCase()).to.eql("video");
-      });
-    });
-
-    describe("getNativeTextTrack", () => {
-      it("should be null if no enabled text track", async () => {
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-          autoPlay: false,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getNativeTextTrack()).to.be.null;
       });
     });
 

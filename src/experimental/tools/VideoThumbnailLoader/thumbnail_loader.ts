@@ -107,7 +107,8 @@ export default class VideoThumbnailLoader {
       }
     }
 
-    const manifest = this._player.getManifest();
+    // TODO cleaner way to interop than an undocumented method?
+    const manifest = this._player.__priv_getManifest();
     if (manifest === null) {
       return Promise.reject(
         new VideoThumbnailLoaderError("NO_MANIFEST",
