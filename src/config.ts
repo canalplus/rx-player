@@ -186,7 +186,7 @@ export default {
    */
   MAXIMUM_MAX_BUFFER_AHEAD: {
     text: 5 * 60 * 60,
-  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  } as Partial<Record<"audio"|"video"|"text", number>>,
   /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
@@ -198,7 +198,7 @@ export default {
    */
   MAXIMUM_MAX_BUFFER_BEHIND: {
     text: 5 * 60 * 60,
-  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  } as Partial<Record<"audio"|"video"|"text", number>>,
   /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
   /**
@@ -216,7 +216,7 @@ export default {
   DEFAULT_INITIAL_BITRATES: {
     audio: 0, // only "audio" segments
     video: 0, // only "video" segments
-    other: 0, // tracks which are not audio/video (text images).
+    other: 0, // tracks which are not audio/video (like text).
               // Though those are generally at a single bitrate, so no adaptive
               // mechanism is triggered for them.
   },
@@ -798,7 +798,7 @@ export default {
   BUFFER_PADDING: {
     audio: 1, // only "audio" segments
     video: 3, // only "video" segments
-    other: 1, // tracks which are not audio/video (text images).
+    other: 1, // tracks which are not audio/video (like text).
   },
 
   /**
@@ -1125,7 +1125,6 @@ export default {
     video: { before: 2, after: 2.5 },
     audio: { before: 2, after: 2.5 },
     text: { before: 0, after: 0 }, // not managed natively, so no problem here
-    image: { before: 0, after: 0 }, // not managed natively, so no problem here
   },
 
   /**

@@ -723,12 +723,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getImageTrackData", () => {
-      it("should return null in getImageTrackData by default", () => {
-        expect(player.getImageTrackData()).to.equal(null);
-      });
-    });
-
     describe("getMinimumPosition", () => {
       it("should return null in getMinimumPosition by default", () => {
         expect(player.getMinimumPosition()).to.equal(null);

@@ -87,7 +87,6 @@ function formatContent(content) {
            isDisabled,
            isLocalContent,
            isLowLatency: !!content.lowLatency,
-           supplementaryImageTracks: content.supplementaryImageTracks,
            transport: content.transport,
            url: content.url };
 }
@@ -297,7 +296,6 @@ class ContentList extends React.Component {
             transport,
             fallbackKeyError,
             fallbackLicenseRequest,
-            supplementaryImageTracks,
             isLowLatency,
             drmInfos = [] } = content;
 
@@ -307,7 +305,6 @@ class ContentList extends React.Component {
         loadVideo({ url,
                     transport,
                     autoPlay,
-                    supplementaryImageTracks,
                     textTrackMode: "html",
                     lowLatencyMode: isLowLatency,
                     keySystems });

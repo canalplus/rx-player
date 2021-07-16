@@ -53,8 +53,6 @@ describe("Features - initializeFeaturesObject", () => {
     });
     win.__RELATIVE_PATH__ = {
       EME_MANAGER: "../core/eme/index.ts",
-      IMAGE_BUFFER: "../core/segment_buffers/implementations/image/index.ts",
-      BIF_PARSER: "../parsers/images/bif.ts",
       SMOOTH: "../transports/smooth/index.ts",
       DASH: "../transports/dash/index.ts",
       DASH_JS_PARSER: "../parsers/manifest/dash/js-parser/index.ts",
@@ -76,8 +74,6 @@ describe("Features - initializeFeaturesObject", () => {
     const feat = {
       transports: {},
       dashParsers: { js: null, wasm: null },
-      imageBuffer: null,
-      imageParser: null,
       nativeTextTracksBuffer: null,
       nativeTextTracksParsers: {},
       htmlTextTracksBuffer: null,
@@ -108,10 +104,6 @@ describe("Features - initializeFeaturesObject", () => {
         mediaElementTrackChoiceManager:
           require("../../core/api/media_element_track_choice_manager").default,
       },
-      imageBuffer: require(
-        "../../core/segment_buffers/implementations/image/index"
-      ).default,
-      imageParser: require("../../parsers/images/bif").default,
       nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {

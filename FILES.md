@@ -167,7 +167,6 @@ What is exported there are functions to load:
   - Manifests/MPDs
   - video/audio segments
   - subtitles tracks
-  - image tracks
 
 For different streaming technologies.
 

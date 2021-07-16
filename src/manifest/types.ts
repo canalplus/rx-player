@@ -30,7 +30,7 @@ export enum MANIFEST_UPDATE_TYPE {
 }
 
 /** Every possible value for the Adaptation's `type` property. */
-export type IAdaptationType = "video" | "audio" | "text" | "image";
+export type IAdaptationType = "video" | "audio" | "text";
 
 export interface IHDRInformation {
   /**

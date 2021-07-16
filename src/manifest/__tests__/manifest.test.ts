@@ -69,7 +69,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.suggestedPresentationDelay).toEqual(undefined);
     expect(manifest.uris).toEqual([]);
 
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
@@ -109,7 +109,7 @@ describe("Manifest - Manifest", () => {
                                          contentWarnings: [] } ]);
     expect(manifest.adaptations).toEqual({});
 
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
@@ -145,7 +145,7 @@ describe("Manifest - Manifest", () => {
     expect(fakePeriod).toHaveBeenCalledTimes(2);
     expect(fakePeriod).toHaveBeenCalledWith(period1, representationFilter);
     expect(fakePeriod).toHaveBeenCalledWith(period2, representationFilter);
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
@@ -185,7 +185,7 @@ describe("Manifest - Manifest", () => {
     ]);
     expect(manifest.adaptations).toBe(adapP1);
 
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
@@ -223,7 +223,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.contentWarnings).toContainEqual(new Error("0"));
     expect(manifest.contentWarnings).toContainEqual(new Error("1"));
 
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
@@ -274,7 +274,7 @@ describe("Manifest - Manifest", () => {
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
     expect(manifest.uris).toEqual(["url1", "url2"]);
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
@@ -416,7 +416,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod2, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
@@ -507,7 +507,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod3, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.info).toHaveBeenCalledTimes(2);
     // expect(fakeLogger.info).toHaveBeenCalledWith(
@@ -584,7 +584,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.warn).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.warn)
@@ -657,7 +657,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeUpdatePeriodInPlace).not.toHaveBeenCalled();
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.info).toHaveBeenCalledTimes(4);
     eeSpy.mockRestore();
@@ -744,7 +744,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod4, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
-    expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
+    expect(fakeIdGenerator).toHaveBeenCalledTimes(1);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.info).toHaveBeenCalledTimes(5);
     eeSpy.mockRestore();

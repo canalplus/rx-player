@@ -125,7 +125,6 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | `EME`                    | Enable playback of encrypted contents                      |
 | `NATIVE_TEXT_BUFFER` [1] | Allow to display text tracks through \<tracks\> elements   |
 | `HTML_TEXT_BUFFER` [1]   | Allow to display richer text tracks through HTML elements  |
-| `IMAGE_BUFFER` [1]       | Allow to display thumbnails through the image buffer       |
 | `NATIVE_SRT_PARSER` [2]  | Parse SRT text tracks for the native text buffer           |
 | `NATIVE_VTT_PARSER` [2]  | Parse VTT text tracks for the native text buffer           |
 | `NATIVE_TTML_PARSER` [2] | Parse TTML text tracks for the native text buffer          |
@@ -134,10 +133,9 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | `HTML_VTT_PARSER` [3]    | Parse VTT text tracks for the HTML text buffer             |
 | `HTML_TTML_PARSER` [3]   | Parse TTML text tracks for the HTML text buffer            |
 | `HTML_SAMI_PARSER` [3]   | Parse SAMI text tracks for the HTML text buffer            |
-| `BIF_PARSER` [4]         | Parse BIF image tracks for the image buffer                |
-| `DASH_WASM` [5] [6]      | Enable DASH playback using a WebAssembly-based MPD parser  |
-| `LOCAL_MANIFEST` [5]     | Enable playback of "local" contents                        |
-| `METAPLAYLIST` [5]       | Enable playback of "metaplaylist" contents                 |
+| `DASH_WASM` [4] [5]      | Enable DASH playback using a WebAssembly-based MPD parser  |
+| `LOCAL_MANIFEST` [4]     | Enable playback of "local" contents                        |
+| `METAPLAYLIST` [4]       | Enable playback of "metaplaylist" contents                 |
 
 ---
 
@@ -154,12 +152,10 @@ feature.
 __[3]__: Those features will only be used if ``HTML_TEXT_BUFFER`` is an added
 feature.
 
-__[4]__: This feature will only be used if ``IMAGE_BUFFER`` is an added feature.
-
-__[5]__: Those type of contents are experimental. They should be imported
+__[4]__: Those type of contents are experimental. They should be imported
 from `rx-player/experimental/features`.
 
-__[6]__: In cases where both the `DASH` and `DASH_WASM` features are added
+__[5]__: In cases where both the `DASH` and `DASH_WASM` features are added
 (which are both parsers for DASH contents), the RxPlayer will default using the
 WebAssembly parser (provided by `DASH_WASM`) and fallback on the JavaScript
 parser (provided by `DASH`) when it cannot do so.
@@ -204,19 +200,6 @@ RxPlayer.addFeatures([
   HTML_VTT_PARSER,
   HTML_TTML_PARSER
 ]);
-```
-
-#### Smooth contents with thumbnails (BIF) support
-
-```js
-import RxPlayer from "rx-player/minimal";
-import {
-  SMOOTH,
-  IMAGE_BUFFER,
-  BIF_PARSER
-} from "rx-player/features";
-
-RxPlayer.addFeatures([ SMOOTH, IMAGE_BUFFER, BIF_PARSER ]);
 ```
 
 
@@ -313,11 +296,6 @@ text tracks[[1]](#note-1) will be ignored during a build.
 #### RXP_HTML_SRT
 True by default. If set to "false", all code relative to SRT parsing for html
 text tracks[[1]](#note-1) will be ignored during a build.
-
-<a name="env-bif"></a>
-#### RXP_BIF_PARSER
-True by default. If set to "false", all code relative to BIF image parsing will
-be ignored during a build.
 
 <a name="env-barebone"></a>
 #### RXP_BAREBONE

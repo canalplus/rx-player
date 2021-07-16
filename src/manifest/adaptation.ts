@@ -28,8 +28,7 @@ import {
 /** List in an array every possible value for the Adaptation's `type` property. */
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
                                                                "video",
-                                                               "text",
-                                                               "image" ];
+                                                               "text" ];
 
 /**
  * Information describing a single Representation from an Adaptation, to be used

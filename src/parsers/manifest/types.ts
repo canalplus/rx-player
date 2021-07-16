@@ -128,8 +128,7 @@ export interface IParsedRepresentation {
 /** Every possible types an Adaptation can have. */
 export type IParsedAdaptationType = "audio" |
                                     "video" |
-                                    "text" |
-                                    "image";
+                                    "text";
 
 /**
  * Collection of multiple `Adaptation`, regrouped by type, as used by a

@@ -19,7 +19,6 @@
     - [lowLatencyMode](#prop-lowLatencyMode)
     - [networkConfig](#prop-networkConfig)
     - [enableFastSwitching](#prop-enableFastSwitching)
-    - [supplementaryImageTracks (deprecated)](#prop-supplementaryImageTracks)
 
 
 <a name="overview"></a>
@@ -1329,54 +1328,3 @@ Forbiding the RxPlayer to replace segments altogether is today not possible and
 would even break playback in some situations: when multi-Period DASH contents
 have overlapping segments, when the browser garbage-collect partially a
 segment...
-
-
-
-<a name="prop-supplementaryImageTracks"></a>
-### supplementaryImageTracks ###################################################
-
----
-
-:warning: This option is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
-If you want to parse and display a BIF image track, you can use the
-[`parseBifThumbnails`](./parseBifThumbnails.md) tool, which will also work for
-Directfile contents.
-
----
-
-_type_: ``Array.<Object>|Object|undefined``
-_defaults_: ``[]``
-
----
-
-:warning: This option has no effect in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-This option allows to specify information about supplementary image tracks you
-might want to add to those already declared in the
-[Manifest](../terms.md#manifest).
-
-This only work under the following conditions:
-
-  - the image track is not fragmented
-
-  - the image track can be retrieved by fetching a single URL
-
-  - the image track is in an understood format and enough information has been
-    given to infer it.
-
-
-Each of those can have the following properties:
-```js
-const supplementaryImageTracks = [{
-  url: ImageTrackURL, // {string} The url on which the complete image track can
-                      // be obtained
-
-  mimeType: "application/bif", // {string} A mimeType used to describe
-                               // the image format.
-}];
-```

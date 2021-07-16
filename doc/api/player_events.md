@@ -30,8 +30,6 @@
     - [inbandEvents](#events-inbandEvents)
     - [streamEvent](events-streamEvent)
     - [streamEventSkip](events-streamEventSkip)
- - [Deprecated](#events-deprecated)
-    - [imageTrackUpdate (deprecated)](#events-imageTrackUpdate)
 
 
 
@@ -701,39 +699,3 @@ tutorial](../tutorials/stream_events.md).
 Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
 was not entered, and will thus not be exited.
-
-<a name="events-deprecated"></a>
-## Deprecated ##################################################################
-
-The following events are deprecated. They are still supported but we advise
-users to not use those as they might become not supported in the future.
-
-
-<a name="events-imageTrackUpdate"></a>
-### imageTrackUpdate ###########################################################
-
----
-
-:warning: This event is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_payload type_: ``Object``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
-Triggered each time the current image playlist changes (has new images).
-
-Has the following property in its payload:
-  _data_ (``Array.<Object>``): Every image data.
-
-  Each image has a structure as defined in the [Images structure
-  page](./images.md#api-structure).
-
-

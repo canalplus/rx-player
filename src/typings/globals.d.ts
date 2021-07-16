@@ -22,7 +22,6 @@
 declare const __DEV__: boolean;
 declare const __LOGGER_LEVEL__: string;
 declare const __FEATURES__ : {
-  BIF_PARSER : boolean;
   DASH : boolean;
   DIRECTFILE : boolean;
   EME : boolean;
@@ -39,7 +38,6 @@ declare const __FEATURES__ : {
   SMOOTH : boolean;
 };
 declare const __RELATIVE_PATH__ : {
-  BIF_PARSER: string;
   DASH: string;
   DASH_JS_PARSER: string;
   DIRECTFILE: string;
@@ -49,7 +47,6 @@ declare const __RELATIVE_PATH__ : {
   HTML_TEXT_BUFFER: string;
   HTML_TTML: string;
   HTML_VTT: string;
-  IMAGE_BUFFER: string;
   LOCAL_MANIFEST : string;
   MEDIA_ELEMENT_TRACK_CHOICE_MANAGER: string;
   METAPLAYLIST: string;

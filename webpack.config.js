@@ -85,17 +85,11 @@ module.exports = (env) => {
         EME: isBarebone ?
           process.env.RXP_EME === "true" :
           process.env.RXP_EME !== "false",
-
-        BIF_PARSER: isBarebone ?
-          process.env.RXP_BIF_PARSER === "true" :
-          process.env.RXP_BIF_PARSER !== "false",
       },
 
       // Path relative to src/features where optional features are implemented
       __RELATIVE_PATH__: {
         EME_MANAGER: JSON.stringify("../core/eme/index.ts"),
-        IMAGE_BUFFER: JSON.stringify("../core/segment_buffers/implementations/image/index.ts"),
-        BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
         SMOOTH: JSON.stringify("../transports/smooth/index.ts"),
         DASH: JSON.stringify("../transports/dash/index.ts"),
         DASH_JS_PARSER: JSON.stringify("../parsers/manifest/dash/js-parser/index.ts"),

@@ -30,11 +30,6 @@ export default function initializeFeaturesObject() : void {
     features.emeManager = require(__RELATIVE_PATH__.EME_MANAGER).default;
   }
 
-  if (__FEATURES__.BIF_PARSER) {
-    features.imageBuffer = require(__RELATIVE_PATH__.IMAGE_BUFFER).default;
-    features.imageParser = require(__RELATIVE_PATH__.BIF_PARSER).default;
-  }
-
   // Feature switching the Native TextTrack implementation
   const HAS_NATIVE_MODE = __FEATURES__.NATIVE_VTT ||
                           __FEATURES__.NATIVE_SAMI ||
