@@ -54,7 +54,6 @@ export interface IConstructorOptions {
   maxVideoBufferSize?: number;
 
   limitVideoWidth? : boolean;
-  throttleWhenHidden? : boolean;
   throttleVideoBitrateWhenHidden? : boolean;
 
   preferredAudioTracks? : IAudioTrackPreference[];
