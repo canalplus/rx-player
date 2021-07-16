@@ -421,14 +421,6 @@ properties, methods, events and so on.
     Returns in seconds the difference between the current position and the end
     of the current media time range.
 
-  - [`getVideoLoadedTime`](../api/Buffer_Information/getVideoLoadedTime.md):
-    Returns in seconds the difference between the start and the end of the
-    current media time range.
-
-  - [`getVideoPlayedTime`](../api/Buffer_Information/getVideoPlayedTime.md):
-    Returns in seconds the difference between the start of the current media
-    time range and the current position.
-
   - [`getUrl`](../api/Content_Information/getUrl.md):
     Get URL of the currently-played content.
 

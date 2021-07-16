@@ -44,8 +44,9 @@ describe("basic playback use cases: direct file", function () {
     await sleep(200);
     expect(player.getPosition()).to.be.above(0);
     expect(player.getPosition()).to.be.below(0.25);
-    expect(player.getVideoLoadedTime()).to.be.above(0);
-    expect(player.getVideoPlayedTime()).to.be.above(0);
+    expect(player.getVideoBufferGap()).to.be.above(0);
+    expect(player.getMediaElement().buffered.start(0))
+      .to.be.below(player.getPosition());
   });
 
   it("should play slowly for a speed inferior to 1", async function () {
@@ -62,8 +63,9 @@ describe("basic playback use cases: direct file", function () {
     expect(player.getPosition()).to.be.below(0.500);
     expect(player.getPosition()).to.be.above(0.150);
     expect(player.getPosition()).to.be.above(lastPosition);
-    expect(player.getVideoLoadedTime()).to.be.above(0);
-    expect(player.getVideoPlayedTime()).to.be.above(0);
+    expect(player.getVideoBufferGap()).to.be.above(0);
+    expect(player.getMediaElement().buffered.start(0))
+      .to.be.below(player.getPosition());
     expect(player.getPlaybackRate()).to.equal(0.5);
   });
 
@@ -79,8 +81,9 @@ describe("basic playback use cases: direct file", function () {
     expect(player.getPlayerState()).to.equal("PLAYING");
     expect(player.getPosition()).to.be.below(2);
     expect(player.getPosition()).to.be.above(1);
-    expect(player.getVideoLoadedTime()).to.be.above(0);
-    expect(player.getVideoPlayedTime()).to.be.above(0);
+    expect(player.getVideoBufferGap()).to.be.above(0);
+    expect(player.getMediaElement().buffered.start(0))
+      .to.be.below(player.getPosition());
     expect(player.getPlaybackRate()).to.equal(3);
     expect(player.getMediaElement().playbackRate).to.equal(3);
   });
