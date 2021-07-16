@@ -30,12 +30,6 @@ export default function initializeFeaturesObject() : void {
     features.ContentDecryptor = require("../core/decrypt/index.ts").default;
   }
 
-  if (__FEATURES__.BIF_PARSER === __FEATURES__.IS_ENABLED as number) {
-    features.imageBuffer =
-      require("../core/segment_buffers/implementations/image/index.ts").default;
-    features.imageParser = require("../parsers/images/bif.ts").default;
-  }
-
   // Feature switching the Native TextTrack implementation
   const HAS_NATIVE_MODE = __FEATURES__.NATIVE_VTT ||
                           __FEATURES__.NATIVE_SAMI ||

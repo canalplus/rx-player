@@ -615,31 +615,3 @@ was not entered, and will thus not be exited.
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
-
-## Deprecated
-
-The following events are deprecated. They are still supported but we advise
-users to not use those as they might become not supported in the future.
-
-### imageTrackUpdate
-
-<div class="warning">
-This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
-
-_payload type_: `Object`
-
-Triggered each time the current image playlist changes (has new images).
-
-Has the following property in its payload:
-_data_ (`Array.<Object>`): Every image data.
-
-Each image has a structure as defined in the [Images structure
-page](./Miscellaneous/images.md).
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>

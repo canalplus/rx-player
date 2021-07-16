@@ -88,8 +88,6 @@
     - [isLive](#meth-isLive)
     - [getUrl](#meth-getUrl)
     - [getCurrentKeySystem](#meth-getCurrentKeySystem)
- - [Deprecated](#meth-group-deprecated)
-    - [getImageTrackData (deprecated)](#meth-getImageTrackData)
 - [Static properties](#static)
     - [version](#static-version)
     - [ErrorTypes](#static-ErrorTypes)
@@ -3056,42 +3054,6 @@ __return value__: ``string|undefined``
 --
 
 Returns the type of keySystem used for DRM-protected contents.
-
-
-
-<a name="meth-group-deprecated"></a>
-## Deprecated ##################################################################
-
-The following methods are deprecated. They are still supported but we advise
-users to not use those as they might become not supported in the future.
-
-
-<a name="meth-getImageTrackData"></a>
-### getImageTrackData ##########################################################
-
---
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
---
-
---
-
-__syntax__: `const data = player.getImageTrackData()`
-
-__return value__: ``Array.<Object>|null``
-
---
-
-The current image track's data, null if no content is loaded / no image track
-data is available.
-
-The returned array follows the usual image playlist structure, defined
-[here](./images.md#api-structure).
-
-``null`` in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
 
 
 

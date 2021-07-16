@@ -40,14 +40,13 @@ type IPeriodsList = Partial<Record<string, IPeriodObject>>;
  * Emit null if no Period can be considered active currently.
  *
  * @example
- * For 4 BUFFER_TYPES: "AUDIO", "VIDEO", "TEXT" and "IMAGE":
+ * For 3 BUFFER_TYPES: "AUDIO", "VIDEO" and "TEXT":
  * ```
  *                     +-------------+
  *         Period 1    | Period 2    | Period 3
  * AUDIO   |=========| | |===      | |
  * VIDEO               | |=====    | |
  * TEXT    |(NO TEXT)| | |(NO TEXT)| | |====    |
- * IMAGE   |=========| | |=        | |
  *                     +-------------+
  *
  * The active Period here is Period 2 as Period 1 has no video
