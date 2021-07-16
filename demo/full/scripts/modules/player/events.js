@@ -47,7 +47,7 @@ const linkPlayerEventsToState = (player, state, abortSignal) => {
       return;
     }
     const position = player.getPosition();
-    const duration = player.getVideoDuration();
+    const duration = player.getMediaDuration();
     const videoTrack = player.getVideoTrack();
     state.set({
       currentTime: player.getPosition(),
