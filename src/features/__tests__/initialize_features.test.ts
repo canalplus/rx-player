@@ -38,7 +38,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -69,7 +68,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 1,
       DASH: 1,
       DIRECTFILE: 1,
       EME: 1,
@@ -89,8 +87,6 @@ describe("Features - initializeFeaturesObject", () => {
     const feat = {
       transports: {},
       dashParsers: { js: null, wasm: null },
-      imageBuffer: null,
-      imageParser: null,
       nativeTextTracksBuffer: null,
       nativeTextTracksParsers: {},
       htmlTextTracksBuffer: null,
@@ -124,10 +120,6 @@ describe("Features - initializeFeaturesObject", () => {
             "../../core/api/tracks_management/media_element_track_choice_manager"
           ).default,
       },
-      imageBuffer: jest.requireActual(
-        "../../core/segment_buffers/implementations/image/index"
-      ).default,
-      imageParser: jest.requireActual("../../parsers/images/bif").default,
       nativeTextTracksBuffer: jest.requireActual("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
@@ -154,7 +146,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -197,7 +188,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -240,7 +230,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -283,7 +272,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -326,7 +314,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -369,7 +356,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -412,7 +398,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -455,7 +440,6 @@ describe("Features - initializeFeaturesObject", () => {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
