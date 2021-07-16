@@ -247,7 +247,7 @@ properties, methods, events and so on.
   - [`getMaximumPosition`](../api/Basic_Methods/getMaximumPosition.md): Get the
     maximum seekable position.
 
-  - [`getVideoDuration`](../api/Basic_Methods/getVideoDuration.md): Get the
+  - [`getMediaDuration`](../api/Basic_Methods/getMediaDuration.md): Get the
     duration linked to the media element.
 
   - [`getError`](../api/Basic_Methods/getError.md): Returns the current "fatal"
