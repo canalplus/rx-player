@@ -29,13 +29,13 @@ export default function createSegmentBufferSizeGraph(
   return bufferSizeGraphWrapperElt;
 
   function addBufferSize() {
-    if (instance.getVideoElement() === null) {
+    if (instance.getMediaElement() === null) {
       // disposed player. Clean-up everything
       bufferSizeGraphWrapperElt.innerHTML = "";
       clearInterval(intervalId);
       return;
     }
-    const bufferGap = instance.getVideoBufferGap();
+    const bufferGap = instance.getCurrentBufferGap();
     if (bufferGap === Infinity) {
       bufferSizeGraph.pushBufferSize(0);
     } else {
