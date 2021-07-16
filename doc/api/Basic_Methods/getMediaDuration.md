@@ -1,4 +1,4 @@
-# getVideoDuration
+# getMediaDuration
 
 ## Description
 
@@ -14,7 +14,7 @@ position, as would normally be expected from a property named "duration".
 ## Syntax
 
 ```js
-const duration = player.getVideoDuration();
+const duration = player.getMediaDuration();
 ```
 
   - **return value** `number`: Current content duration, as taken from the
@@ -24,7 +24,7 @@ const duration = player.getVideoDuration();
 
 ```js
 const pos = player.getPosition();
-const dur = player.getVideoDuration();
+const dur = player.getMediaDuration();
 
 console.log(`current position: ${pos} / ${dur}`);
 ```
