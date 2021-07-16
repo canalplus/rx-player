@@ -35,9 +35,7 @@ import objectAssign from "../../utils/object_assign";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
   IChunkTimeInfo,
-  IImageTrackSegmentData,
   ILoadedAudioVideoSegmentFormat,
-  ILoadedImageSegmentFormat,
   ILoadedTextSegmentFormat,
   IManifestParserOptions,
   IManifestParserRequestScheduler,
@@ -131,8 +129,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
   // other streaming protocols used here
   const otherTransportOptions = objectAssign({},
                                              options,
-                                             { manifestLoader: undefined,
-                                               supplementaryImageTracks: [] });
+                                             { manifestLoader: undefined });
 
   const manifestPipeline = {
     loadManifest: manifestLoader,
@@ -374,51 +371,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
     },
   };
 
-  const imageTrackPipeline = {
-    loadSegment(
-      wantedCdn : ICdnMetadata | null,
-      content : ISegmentContext,
-      loaderOptions : ISegmentLoaderOptions,
-      cancelToken : CancellationSignal,
-      callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
-    ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
-                ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat> |
-                ISegmentLoaderResultChunkedComplete>
-    {
-      const { segment } = content;
-      const { image } = getTransportPipelinesFromSegment(segment);
-      const ogContent = getOriginalContent(segment);
-      return image.loadSegment(wantedCdn,
-                               ogContent,
-                               loaderOptions,
-                               cancelToken,
-                               callbacks);
-    },
-
-    parseSegment(
-      loadedSegment : { data : ILoadedImageSegmentFormat; isChunked : boolean },
-      content : ISegmentContext,
-      initTimescale : number | undefined
-    ) : ISegmentParserParsedInitChunk<IImageTrackSegmentData | null> |
-        ISegmentParserParsedMediaChunk<IImageTrackSegmentData>
-    {
-      const { segment } = content;
-      const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const { image } = getTransportPipelinesFromSegment(segment);
-      const ogContent = getOriginalContent(segment);
-
-      const parsed = image.parseSegment(loadedSegment, ogContent, initTimescale);
-      if (parsed.segmentType === "init") {
-        return parsed;
-      }
-      const timeInfos = offsetTimeInfos(contentStart, contentEnd, parsed);
-      return objectAssign({}, parsed, timeInfos);
-    },
-  };
-
   return { manifest: manifestPipeline,
            audio: audioPipeline,
            video: videoPipeline,
-           text: textTrackPipeline,
-           image: imageTrackPipeline };
+           text: textTrackPipeline };
 }
