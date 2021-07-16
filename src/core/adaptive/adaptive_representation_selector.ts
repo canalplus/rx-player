@@ -120,7 +120,6 @@ export default function createAdaptiveRepresentationSelector(
     const filters = {
       limitWidth: throttlers.limitWidth[type] ?? limitWidthDefaultRef,
       throttleBitrate: throttlers.throttleBitrate[type] ??
-                       throttlers.throttle[type] ??
                        throttleBitrateDefaultRef,
     };
     return getEstimateReference({ bandwidthEstimator,
@@ -909,8 +908,6 @@ export interface IAdaptiveRepresentationSelectorArguments {
 export interface IRepresentationEstimatorThrottlers {
   limitWidth : Partial<Record<IBufferType,
                               IReadOnlySharedReference<number>>>;
-  throttle : Partial<Record<IBufferType,
-                            IReadOnlySharedReference<number>>>;
   throttleBitrate : Partial<Record<IBufferType,
                                    IReadOnlySharedReference<number>>>;
 }
