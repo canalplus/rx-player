@@ -441,7 +441,7 @@ properties, methods, events and so on.
     Returns information on the key system currently attached to the
     HTMLMediaElement linked to the RxPlayer.
 
-  - [`getVideoBufferGap`](../api/Playback_Information/getVideoBufferGap.md):
+  - [`getCurrentBufferGap`](../api/Playback_Information/getCurrentBufferGap.md):
     Returns in seconds the difference between the current position and the end
     of the current media time range.
 
