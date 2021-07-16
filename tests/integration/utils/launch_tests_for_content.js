@@ -481,43 +481,6 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("getVideoPlayedTime", () => {
-      // TODO handle live contents
-      it("should return the difference between the start of the current range and the current time", async function() {
-        this.timeout(3000);
-        player.setWantedBufferAhead(10);
-        expect(player.getWantedBufferAhead()).to.equal(10);
-
-        player.loadVideo({ url: manifestInfos.url,
-                           transport,
-                           autoPlay: false });
-        await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(100);
-
-        expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.001);
-        expect(player.getVideoPlayedTime()).to.equal(0);
-
-        xhrMock.lock();
-        player.seekTo(minimumPosition + 5);
-        await sleep(100);
-        expect(player.getVideoPlayedTime()).to.be.closeTo(5, 0.001);
-
-        await xhrMock.flush();
-        xhrMock.unlock();
-        await sleep(300);
-        expect(player.getVideoPlayedTime()).to.be.closeTo(5, 0.001);
-
-        player.seekTo(minimumPosition + 30);
-        await sleep(800);
-        const initialLoadedTime = player.getVideoPlayedTime();
-        expect(initialLoadedTime).to.be.closeTo(0, 4);
-
-        player.seekTo(minimumPosition + 30 + 5);
-        expect(player.getVideoPlayedTime()).to.be
-          .closeTo(initialLoadedTime + 5, 1);
-      });
-    });
-
     // TODO handle live contents
     describe("getWallClockTime", () => {
       it("should be at the minimum time by default", async () => {

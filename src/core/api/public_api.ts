@@ -1148,20 +1148,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns in seconds the difference between:
-   *   - the current time.
-   *   - the start of the current contiguous loaded range.
-   * @returns {Number}
-   */
-  getVideoPlayedTime() : number {
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-    const videoElement = this.videoElement;
-    return getPlayedSizeOfRange(videoElement.buffered, videoElement.currentTime);
-  }
-
-  /**
    * Get the current position, in s, in wall-clock time.
    * That is:
    *   - for live content, get a timestamp, in s, of the current played content.

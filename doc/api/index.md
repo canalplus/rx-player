@@ -84,7 +84,6 @@
     - [getMaxBufferAhead](#meth-getMaxBufferAhead)
  - [Buffer information](#meth-group-buffer-info)
     - [getVideoLoadedTime](#meth-getVideoLoadedTime)
-    - [getVideoPlayedTime](#meth-getVideoPlayedTime)
     - [getVideoBufferGap](#meth-getVideoBufferGap)
  - [Content information](#meth-group-content-info)
     - [isLive](#meth-isLive)
@@ -2987,30 +2986,6 @@ return `20` (`60 - 40`).
 
 `0` if there's no data loaded for the current position.
 
-
-<a name="meth-getVideoPlayedTime"></a>
-### getVideoPlayedTime #########################################################
-
---
-
-__syntax__: `const playedTime = player.getVideoPlayedTime()`
-
-__return value__: ``Number``
-
---
-
-Returns in seconds the difference between:
-  - the start of the current contiguous loaded range.
-  - the current time.
-
-In other words, this is the amount of time in the current contiguous range of
-media data the player has already played.
-If we're currently playing at the position at `51` seconds, and there is media
-data from the second `40` to the second `60`, then `getVideoPlayedTime()` will
-return `11` (`51 - 40`).
-
-`0` if there's no data loaded for the current position.
-
 <a name="meth-getVideoBufferGap"></a>
 ### getVideoBufferGap ##########################################################
 
@@ -3030,7 +3005,7 @@ Returns in seconds the difference between:
 In other words, this is the amount of seconds left in the buffer before the end
 of the current contiguous range of media data.
 If we're currently playing at the position at `51` seconds, and there is media
-data from the second `40` to the second `60`, then `getVideoPlayedTime()` will
+data from the second `40` to the second `60`, then `getVideoBufferGap()` will
 return `9` (`60 - 51`).
 
 

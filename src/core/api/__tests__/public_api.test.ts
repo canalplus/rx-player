@@ -109,14 +109,6 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getVideoPlayedTime", () => {
-      it("should return 0 in getVideoPlayedTime by default", () => {
-        const PublicAPI = require("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getVideoPlayedTime()).toBe(0);
-      });
-    });
-
     describe("getWallClockTime", () => {
       it("should return 0 in getWallClockTime by default", () => {
         const PublicAPI = require("../public_api").default;
