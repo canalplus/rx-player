@@ -53,8 +53,8 @@
       "displayName": "getError"
     },
     {
-      "path": "./getVideoElement.md",
-      "displayName": "getVideoElement"
+      "path": "./getMediaElement.md",
+      "displayName": "getMediaElement"
     },
     {
       "path": "./dispose.md",
