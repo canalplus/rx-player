@@ -57,7 +57,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       return {
         currentTime: player.getPosition(),
         wallClockDiff: player.getWallClockTime() - position,
-        bufferGap: player.getVideoBufferGap(),
+        bufferGap: player.getCurrentBufferGap(),
         duration: Number.isNaN(duration) ? undefined : duration,
         minimumPosition: player.getMinimumPosition(),
         maximumPosition: player.getMaximumPosition(),

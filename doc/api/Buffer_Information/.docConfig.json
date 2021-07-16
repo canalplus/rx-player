@@ -1,8 +1,8 @@
 {
   "pages": [
     {
-      "path": "./getVideoBufferGap.md",
-      "displayName": "getVideoBufferGap"
+      "path": "./getCurrentBufferGap.md",
+      "displayName": "getCurrentBufferGap"
     }
   ]
 }
