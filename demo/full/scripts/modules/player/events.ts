@@ -55,7 +55,7 @@ function linkPlayerEventsToState(
 
     function updatePositionInfo() {
       const position = player.getPosition();
-      const duration = player.getVideoDuration();
+      const duration = player.getMediaDuration();
       const videoTrack = player.getVideoTrack();
       const livePosition = player.getLivePosition();
       const maximumPosition = player.getMaximumPosition();
