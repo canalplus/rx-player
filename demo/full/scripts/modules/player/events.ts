@@ -59,7 +59,7 @@ function linkPlayerEventsToState(
       const videoTrack = player.getVideoTrack();
       const livePosition = player.getLivePosition();
       const maximumPosition = player.getMaximumPosition();
-      let bufferGap = player.getVideoBufferGap();
+      let bufferGap = player.getCurrentBufferGap();
       bufferGap = !isFinite(bufferGap) || isNaN(bufferGap) ?
         0 :
         bufferGap;
