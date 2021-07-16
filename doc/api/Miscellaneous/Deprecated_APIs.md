@@ -8,33 +8,6 @@ we switch to a v4.x.x version.
 You will find here which APIs are deprecated, why, and depending on the
 concerned API, how to replace it.
 
-## RxPlayer constructor options
-
-The following RxPlayer constructor options are deprecated.
-
-### throttleWhenHidden
-
-`throttleWhenHidden`has been deprecated as video visibility relies only on
-page visibility API and document hiddenness.
-
-A video should be visible if the Picture-In-Picture mode is activated, even
-if the `hidden` attribute of `document` is set to `true`.
-
-`throttleVideoBitrateWhenHidden` relies on both and can be used like this :
-
-```js
-const rxPlayer = new RxPlayer({
-  // ... RxPlayer options
-  // throttleWhenHidden: true [deprecated]
-  throttleVideoBitrateWhenHidden: true,
-});
-```
-
-## Other properties
-
-Some very specific properties from various methods are deprecated.
-You will find them here.
-
 ### Smooth
 
 Setting a `*.wsx`, a `*.ism` or a `*.isml` URL as an `url` property in
