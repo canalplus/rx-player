@@ -31,7 +31,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -63,7 +63,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -108,7 +108,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -142,7 +142,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -197,7 +197,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -252,7 +252,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -307,7 +307,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -364,7 +364,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -400,7 +400,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -428,7 +428,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -460,7 +460,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -496,7 +496,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -525,7 +525,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -550,7 +550,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -575,7 +575,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -600,7 +600,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -636,7 +636,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -668,7 +668,6 @@ describe("Manifest - Period", () => {
       period.adaptations.audio[0],
     ]);
 
-    expect(period.getAdaptationsForType("image")).toHaveLength(0);
     expect(period.getAdaptationsForType("text")).toHaveLength(0);
   });
 
@@ -679,7 +678,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -718,7 +717,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
   });
 });

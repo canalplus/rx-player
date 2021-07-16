@@ -75,10 +75,6 @@
     {
       "path": "./Miscellaneous",
       "displayName": "Miscellaneous"
-    },
-    {
-      "path": "./Deprecated",
-      "displayName": "Deprecated Methods"
     }
   ]
 }

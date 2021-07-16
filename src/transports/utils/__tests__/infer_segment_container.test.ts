@@ -60,18 +60,6 @@ describe("Transport utils - inferSegmentContainer", () => {
                                    index: {},
                                    mimeType: "video/mp4" } as Representation))
       .toEqual(undefined);
-    expect(inferSegmentContainer("image",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/mp4" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("image",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/mp4" } as Representation))
-      .toEqual(undefined);
   });
 
   /* eslint-disable max-len */
@@ -117,18 +105,6 @@ describe("Transport utils - inferSegmentContainer", () => {
                                    id: "1",
                                    index: {},
                                    mimeType: "video/webm" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("image",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/webm" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("image",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/webm" } as Representation))
       .toEqual(undefined);
   });
 
