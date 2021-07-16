@@ -52,7 +52,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   intervalObservable(POSITION_UPDATES_INTERVAL).pipe(
     map(() => {
       const position = player.getPosition();
-      const duration = player.getVideoDuration();
+      const duration = player.getMediaDuration();
       const videoTrack = player.getVideoTrack();
       return {
         currentTime: player.getPosition(),

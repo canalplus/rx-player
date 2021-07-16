@@ -33,7 +33,7 @@ During this period of time:
   - `seekTo` will not work
   - `getPosition` will return 0
   - `getWallClockTime` will return 0
-  - `getVideoDuration` will return `NaN`
+  - `getMediaDuration` will return `NaN`
   - `getAvailableAudioTracks` will return an empty array
   - `getAvailableTextTracks` will return an empty array
   - `getAvailableVideoTracks` will return an empty array
