@@ -15,7 +15,6 @@
  */
 
 import PPromise from "pinkie";
-import features from "../../features";
 import log from "../../log";
 import Manifest, {
   Adaptation,
@@ -33,9 +32,7 @@ import {
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
   IChunkTimeInfo,
-  IImageTrackSegmentData,
   ILoadedAudioVideoSegmentFormat,
-  ILoadedImageSegmentFormat,
   ILoadedTextSegmentFormat,
   IManifestParserOptions,
   IManifestParserResult,
@@ -112,7 +109,6 @@ export default function(options : ITransportOptions) : ITransportPipelines {
 
       const manifest = new Manifest(parserResult, {
         representationFilter: options.representationFilter,
-        supplementaryImageTracks: options.supplementaryImageTracks,
       });
       return { manifest, url };
     },
@@ -388,78 +384,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     },
   };
 
-  const imageTrackPipeline = {
-    loadSegment(
-      url : string | null,
-      content : ISegmentContext,
-      cancelSignal : CancellationSignal,
-      callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
-    ) : PPromise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
-                 ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>> {
-      if (content.segment.isInit || url === null) {
-        // image do not need an init segment. Passthrough directly to the parser
-        return PPromise.resolve({ resultType: "segment-created" as const,
-                                  resultData: null });
-      }
-
-      return request({ url,
-                       responseType: "arraybuffer",
-                       onProgress: callbacks.onProgress,
-                       cancelSignal })
-        .then((data) => ({ resultType: "segment-loaded" as const,
-                           resultData: data }));
-    },
-
-    parseSegment(
-      loadedSegment : { data : ArrayBuffer | Uint8Array | null;
-                        isChunked : boolean; },
-      content : ISegmentContext,
-      _initTimescale : number | undefined
-    ) : ISegmentParserParsedInitChunk< null > |
-        ISegmentParserParsedMediaChunk< IImageTrackSegmentData | null >
-    {
-      const { data, isChunked } = loadedSegment;
-
-      if (content.segment.isInit) { // image init segment has no use
-        return { segmentType: "init",
-                 initializationData: null,
-                 protectionDataUpdate: false,
-                 initTimescale: undefined };
-      }
-
-      if (isChunked) {
-        throw new Error("Image data should not be downloaded in chunks");
-      }
-
-      // TODO image Parsing should be more on the buffer side, no?
-      if (data === null || features.imageParser === null) {
-        return { segmentType: "media",
-                 chunkData: null,
-                 chunkInfos: null,
-                 chunkOffset: 0,
-                 protectionDataUpdate: false,
-                 appendWindow: [undefined, undefined] };
-      }
-
-      const bifObject = features.imageParser(new Uint8Array(data));
-      const thumbsData = bifObject.thumbs;
-      return { segmentType: "media",
-               chunkData: { data: thumbsData,
-                            start: 0,
-                            end: Number.MAX_VALUE,
-                            timescale: 1,
-                            type: "bif" },
-               chunkInfos: { time: 0,
-                             duration: Number.MAX_VALUE },
-               chunkOffset: 0,
-               protectionDataUpdate: false,
-               appendWindow: [undefined, undefined] };
-    },
-  };
-
   return { manifest: manifestPipeline,
            audio: audioVideoPipeline,
            video: audioVideoPipeline,
-           text: textTrackPipeline,
-           image: imageTrackPipeline };
+           text: textTrackPipeline };
 }

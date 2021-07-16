@@ -754,14 +754,6 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getImageTrackData", () => {
-      it("should return null in getImageTrackData by default", () => {
-        const PublicAPI = require("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getImageTrackData()).toBe(null);
-      });
-    });
-
     describe("getMinimumPosition", () => {
       it("should return null in getMinimumPosition by default", () => {
         const PublicAPI = require("../public_api").default;

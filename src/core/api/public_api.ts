@@ -62,7 +62,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { IBifThumbnail } from "../../parsers/images/bif";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
   fromEvent,
@@ -75,7 +74,6 @@ import { getLeftSizeOfRange } from "../../utils/ranges";
 import createSharedReference, {
   ISharedReference,
 } from "../../utils/reference";
-import warnOnce from "../../utils/warn_once";
 import {
   clearEMESession,
   disposeEME,
@@ -184,7 +182,6 @@ interface IPublicAPIEvent {
   videoTrackChange : ITMVideoTrack | null;
   audioBitrateChange : number;
   videoBitrateChange : number;
-  imageTrackUpdate : { data: IBifThumbnail[] };
   bitrateEstimationChange : IBitrateEstimate;
   volumeChange : number;
   error : ICustomError | Error;
@@ -276,8 +273,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      */
     lastBitrates : { audio? : number;
                      video? : number;
-                     text? : number;
-                     image? : number; };
+                     text? : number; };
 
     /** Store last wanted minAutoBitrates for the next ABRManager instanciation. */
     minAutoBitrates : { audio : ISharedReference<number>;
@@ -317,13 +313,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * `false` is the current content has a transport protocol (Smooth/DASH...).
      */
     isDirectFile : boolean;
-
-    /**
-     * Current Image Track Data associated to the content.
-     * `null` if the current content has no image playlist linked to it.
-     * @deprecated
-     */
-    thumbnails : IBifThumbnail[]|null;
 
     /**
      * Manifest linked to the current content.
@@ -2012,22 +2001,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 
-
-  /**
-   * @returns {Array.<Object>|null}
-   * @deprecated
-   */
-  getImageTrackData() : IBifThumbnail[] | null {
-    warnOnce("`getImageTrackData` is deprecated." +
-             "Please use the `parseBifThumbnails` tool instead.");
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    /* eslint-disable import/no-deprecated */
-    return this._priv_contentInfos.thumbnails;
-    /* eslint-enable import/no-deprecated */
-  }
-
   /**
    * Get minimum seek-able position.
    * @returns {number}
@@ -2213,27 +2186,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "decipherabilityUpdate":
         this.trigger("decipherabilityUpdate", event.value);
         break;
-      case "added-segment":
-        if (this._priv_contentInfos === null) {
-          log.error("API: Added segment while no content is loaded");
-          return;
-        }
-
-        // Manage image tracks
-        // @deprecated
-        const { content, segmentData } = event.value;
-        if (content.adaptation.type === "image") {
-          if (!isNullOrUndefined(segmentData) &&
-              (segmentData as { type : string }).type === "bif")
-          {
-            const imageData = (segmentData as { data : IBifThumbnail[] }).data;
-            /* eslint-disable import/no-deprecated */
-            this._priv_contentInfos.thumbnails = imageData;
-            this.trigger("imageTrackUpdate",
-                         { data: this._priv_contentInfos.thumbnails });
-            /* eslint-enable import/no-deprecated */
-          }
-        }
     }
   }
 
@@ -2420,15 +2372,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         } else {
           this._priv_trackChoiceManager.addPeriod(type, period, adaptation$);
           this._priv_trackChoiceManager.setInitialTextTrack(period);
-        }
-        break;
-
-      default:
-        const adaptations = period.adaptations[type];
-        if (!isNullOrUndefined(adaptations) && adaptations.length > 0) {
-          adaptation$.next(adaptations[0]);
-        } else {
-          adaptation$.next(null);
         }
         break;
     }

@@ -105,7 +105,6 @@ function generateFullDemo(options) {
           IS_DISABLED: 0,
           IS_ENABLED: 1,
 
-          BIF_PARSER: 1,
           DASH: 1,
           DIRECTFILE: 1,
           EME: 1,

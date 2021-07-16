@@ -24,11 +24,9 @@ import Manifest, {
   IExposedSegment,
   IRepresentationFilter,
   ISegment,
-  ISupplementaryImageTrack,
   Period,
   Representation,
 } from "../manifest";
-import { IBifThumbnail } from "../parsers/images/bif";
 import { ILocalManifest } from "../parsers/manifest/local";
 import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
 import TaskCanceller, {
@@ -61,9 +59,6 @@ export interface ITransportPipelines {
   /** Functions allowing to load an parse text (e.g. subtitles) segments. */
   text : ISegmentPipeline<ILoadedTextSegmentFormat,
                           ITextTrackSegmentData | null>;
-  /** Functions allowing to load an parse image (e.g. thumbnails) segments. */
-  image : ISegmentPipeline<ILoadedImageSegmentFormat,
-                           IImageTrackSegmentData | null>;
 }
 
 /** Functions allowing to load and parse the Manifest. */
@@ -388,15 +383,6 @@ export interface ITextTrackSegmentData {
   end? : number;
 }
 
-/** Format under which image data is decodable by the RxPlayer. */
-export interface IImageTrackSegmentData {
-  data : IBifThumbnail[]; // image track data, in the given type
-  end : number; // end time time until which the segment apply
-  start : number; // start time from which the segment apply
-  timescale : number; // timescale to convert the start and end into seconds
-  type : string; // the type of the data (example: "bif")
-}
-
 export type IManifestParserRequest1 = (
   (
     /**
@@ -435,15 +421,8 @@ export interface ITransportTextSegmentPipeline {
                                 ITextTrackSegmentData | null>;
 }
 
-export interface ITransportImageSegmentPipeline {
-  loadSegment : ISegmentLoader<ILoadedImageSegmentFormat>;
-  parseSegment : ISegmentParser<ILoadedImageSegmentFormat,
-                                IImageTrackSegmentData | null>;
-}
-
 export type ITransportSegmentPipeline = ITransportAudioVideoSegmentPipeline |
-                                        ITransportTextSegmentPipeline |
-                                        ITransportImageSegmentPipeline;
+                                        ITransportTextSegmentPipeline;
 
 export type ITransportPipeline = ITransportManifestPipeline |
                                  ITransportSegmentPipeline;
@@ -461,9 +440,6 @@ export interface ITransportOptions {
   representationFilter? : IRepresentationFilter;
   segmentLoader? : ICustomSegmentLoader;
   serverSyncInfos? : IServerSyncInfos;
-  /* eslint-disable import/no-deprecated */
-  supplementaryImageTracks? : ISupplementaryImageTrack[];
-  /* eslint-enable import/no-deprecated */
 
   __priv_patchLastSegmentInSidx? : boolean;
 }
@@ -645,11 +621,6 @@ export type ILoadedTextSegmentFormat = Uint8Array |
                                        ArrayBuffer |
                                        string |
                                        null;
-
-/** Format of a loaded image segment before parsing. */
-export type ILoadedImageSegmentFormat = Uint8Array |
-                                        ArrayBuffer |
-                                        null;
 
 /**
  * Result returned by a segment parser when it parsed a chunk from an init

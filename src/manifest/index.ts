@@ -21,7 +21,6 @@ import Adaptation, {
 } from "./adaptation";
 import Manifest, {
   IManifestParsingOptions,
-  ISupplementaryImageTrack,
 } from "./manifest";
 import Period from "./period";
 import Representation from "./representation";
@@ -65,7 +64,6 @@ export {
   IRepresentationInfos,
   IRepresentationIndex,
   ISegment,
-  ISupplementaryImageTrack,
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 };

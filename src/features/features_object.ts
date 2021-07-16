@@ -26,8 +26,6 @@ const features : IFeaturesObject = { dashParsers: { wasm: null,
                                      emeManager: null,
                                      htmlTextTracksBuffer: null,
                                      htmlTextTracksParsers: {},
-                                     imageBuffer: null,
-                                     imageParser: null,
                                      nativeTextTracksBuffer: null,
                                      nativeTextTracksParsers: {},
                                      transports: {} };
