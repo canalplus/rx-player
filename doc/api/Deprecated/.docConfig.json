@@ -7,14 +7,6 @@
     {
       "path": "./getImageTrackData.md",
       "displayName": "getImageTrackData"
-    },
-    {
-      "path": "./getVideoLoadedTime.md",
-      "displayName": "getVideoLoadedTime"
-    },
-    {
-      "path": "./getVideoPlayedTime.md",
-      "displayName": "getVideoPlayedTime"
     }
   ]
 }
