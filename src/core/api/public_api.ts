@@ -2743,7 +2743,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       position: observation.position,
       duration: observation.duration,
       playbackRate: observation.playbackRate,
-      maximumBufferTime: maximumPosition,
+      maximumPosition,
 
       // TODO fix higher up?
       bufferGap: isFinite(observation.bufferGap) ? observation.bufferGap :
