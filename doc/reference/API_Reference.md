@@ -220,9 +220,6 @@ properties, methods, events and so on.
     Enable or disable an optimization replacing segments of poor quality with
     segments of a better quality.
 
-  - [`supplementaryImageTracks`](../api/Loading_a_Content.md#supplementaryimagetracks):
-    [Deprecated] Add supplementary tracks in the content for thumbnails.
-
 ## Static methods
 
   - [`addFeatures`](../api/RxPlayer_Features.md):
@@ -460,12 +457,6 @@ properties, methods, events and so on.
   - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
     Returns the last stored content position, in seconds.
 
-  - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
-    [Deprecated] Returns the name of the current key system.
-
-  - [`getImageTrackData`](../api/Deprecated/getImageTrackData.md):
-    [Deprecated] Returns the data of the current image track.
-
   - [`createDebugElement`](../api/Miscellaneous/Debug_Element.md):
     Display a RxPlayer-specialized debugging element.
 
@@ -559,9 +550,6 @@ properties, methods, events and so on.
 
   - [`streamEventSkip`](../api/Player_Events.md#streameventskip):
     A "stream event" was just skipped.
-
-  - [`imageTrackUpdate`](../api/Player_Events.md#imagetrackupdate):
-    [Deprecated] The current image track changed.
 
 ## Error types
 
