@@ -21,8 +21,8 @@
       "displayName": "createDebugElement"
     },
     {
-      "path": "./getVideoBufferGap.md",
-      "displayName": "getVideoBufferGap"
+      "path": "./getCurrentBufferGap.md",
+      "displayName": "getCurrentBufferGap"
     },
     {
       "path": "./isContentLoaded.md",
