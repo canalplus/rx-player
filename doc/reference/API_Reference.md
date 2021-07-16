@@ -223,9 +223,6 @@ properties, methods, events and so on.
   - [`supplementaryImageTracks`](../api/Loading_a_Content.md#supplementaryimagetracks):
     [Deprecated] Add supplementary tracks in the content for thumbnails.
 
-  - [`supplementaryTextTracks`](../api/Loading_a_Content.md#supplementarytexttracks):
-    [Deprecated] Add supplementary tracks in the content for text.
-
 ## Static methods
 
   - [`addFeatures`](../api/RxPlayer_Features.md):
