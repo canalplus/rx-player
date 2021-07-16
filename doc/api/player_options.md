@@ -54,12 +54,12 @@ const player = new Player({
 ```
 
 If not defined, a `<video>` element will be created without being inserted in
-the document. You will have to do it yourself through the ``getVideoElement``
+the document. You will have to do it yourself through the ``getMediaElement``
 method to add it yourself:
 ```js
 const player = new Player();
 
-const videoElement = player.getVideoElement();
+const videoElement = player.getMediaElement();
 document.body.appendChild(videoElement);
 ```
 

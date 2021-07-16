@@ -83,7 +83,7 @@ describe("API - Public API", () => {
         const player = new PublicAPI();
 
         // ! HAHA ! NaN is not === to NaN
-        const videoElement = player.getVideoElement();
+        const videoElement = player.getMediaElement();
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }
@@ -269,7 +269,7 @@ describe("API - Public API", () => {
       /* eslint-enable max-len */
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
-        const videoElement = player.getVideoElement();
+        const videoElement = player.getMediaElement();
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }
@@ -288,7 +288,7 @@ describe("API - Public API", () => {
       it("should set the volume to 0 in mute by default", () => {
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
-        const videoElement = player.getVideoElement();
+        const videoElement = player.getMediaElement();
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }
@@ -312,7 +312,7 @@ describe("API - Public API", () => {
         const player = new PublicAPI();
         // back to a "normal" state.
         player.unMute();
-        const videoElement = player.getVideoElement();
+        const videoElement = player.getMediaElement();
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }

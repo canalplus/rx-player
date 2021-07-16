@@ -28,7 +28,7 @@
     - [getMaximumPosition](#meth-getMaximumPosition)
     - [getVideoDuration](#meth-getVideoDuration)
     - [getError](#meth-getError)
-    - [getVideoElement](#meth-getVideoElement)
+    - [getMediaElement](#meth-getMediaElement)
     - [dispose](#meth-dispose)
  - [Speed control and trickmodes](#meth-group-speed-control)
     - [setPlaybackRate](#meth-setPlaybackRate)
@@ -579,7 +579,7 @@ The argument can be an object with a single ``Number`` property, either:
   - ``relative``: seek relatively to the current position
 
   - ``position``: seek to the given absolute position (equivalent to
-    ``player.getVideoElement().currentTime = newPosition``)
+    ``player.getMediaElement().currentTime = newPosition``)
 
   - ``wallClockTime``: seek to the given wallClock position, as returned by
     ``getWallClockTime``.
@@ -762,12 +762,12 @@ if (!error) {
 ```
 
 
-<a name="meth-getVideoElement"></a>
-### getVideoElement ############################################################
+<a name="meth-getMediaElement"></a>
+### getMediaElement ############################################################
 
 --
 
-__syntax__: `const elt = player.getVideoElement()`
+__syntax__: `const elt = player.getMediaElement()`
 
 __return value__: ``HTMLMediaElement``
 
@@ -784,7 +784,7 @@ was instantiated with one.
 #### Example
 
 ```js
-const videoElement = player.getVideoElement();
+const videoElement = player.getMediaElement();
 videoElement.className = "my-video-element";
 ```
 
