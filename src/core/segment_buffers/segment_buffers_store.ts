@@ -27,8 +27,7 @@ import {
 
 const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
                                                 "video",
-                                                "text",
-                                                "image" ];
+                                                "text" ];
 
 /** Options available for a "text" SegmentBuffer */
 export type ITextTrackSegmentBufferOptions = { textTrackMode? : "native" } |
@@ -120,9 +119,6 @@ export default class SegmentBuffersStore {
         features.htmlTextTracksBuffer != null
     ) {
       bufferTypes.push("text");
-    }
-    if (features.imageBuffer != null) {
-      bufferTypes.push("image");
     }
     return bufferTypes;
   }
@@ -299,14 +295,6 @@ export default class SegmentBuffersStore {
 
       }
       this._initializedSegmentBuffers.text = segmentBuffer;
-      return segmentBuffer;
-    } else if (bufferType === "image") {
-      if (features.imageBuffer == null) {
-        throw new Error("Image buffer feature not activated");
-      }
-      log.info("SB: Creating a new image SegmentBuffer");
-      segmentBuffer = new features.imageBuffer();
-      this._initializedSegmentBuffers.image = segmentBuffer;
       return segmentBuffer;
     }
 

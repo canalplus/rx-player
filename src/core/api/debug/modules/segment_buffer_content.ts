@@ -42,7 +42,7 @@ export default function createSegmentBufferGraph(
   return bufferGraphWrapper;
 
   function update() {
-    if (instance.getVideoElement() === null) {
+    if (instance.getMediaElement() === null) {
       // disposed player. Clean-up everything
       bufferGraphWrapper.style.display = "none";
       bufferGraphWrapper.innerHTML = "";
@@ -90,9 +90,9 @@ export default function createSegmentBufferGraph(
       }
 
       loadingRangeRepInfoElt.innerHTML = "";
-      const rep = instance.getCurrentRepresentations()?.[bufferType];
-      const adap = instance.getCurrentAdaptations()?.[bufferType];
-      const manifest = instance.getManifest();
+      const rep = instance.__priv_getCurrentRepresentations()?.[bufferType];
+      const adap = instance.__priv_getCurrentAdaptation()?.[bufferType];
+      const manifest = instance.__priv_getManifest();
       if (manifest !== null && !isNullOrUndefined(rep) && !isNullOrUndefined(adap)) {
         const period = manifest.getPeriodForTime(currentTime);
         if (period !== undefined) {
