@@ -81,9 +81,9 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getVideoBufferGap", () => {
-      it("should return Infinity in getVideoBufferGap by default", () => {
-        expect(player.getVideoBufferGap()).to.equal(Infinity);
+    describe("getCurrentBufferGap", () => {
+      it("should return Infinity in getCurrentBufferGap by default", () => {
+        expect(player.getCurrentBufferGap()).to.equal(Infinity);
       });
     });
 

@@ -1104,7 +1104,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *   - the current time
    * @returns {Number}
    */
-  getVideoBufferGap() : number {
+  getCurrentBufferGap() : number {
     if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
