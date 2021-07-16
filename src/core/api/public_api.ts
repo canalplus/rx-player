@@ -122,8 +122,7 @@ import {
 
 const generateContentId = idGenerator();
 
-const { getPageActivityRef,
-        getPictureOnPictureStateRef,
+const { getPictureOnPictureStateRef,
         getVideoVisibilityRef,
         getVideoWidthRef } = events;
 
@@ -241,9 +240,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** Store wanted configuration for the `limitVideoWidth` option. */
   private readonly _priv_limitVideoWidth : boolean;
 
-  /** Store wanted configuration for the `throttleWhenHidden` option. */
-  private readonly _priv_throttleWhenHidden : boolean;
-
   /** Store wanted configuration for the `throttleVideoBitrateWhenHidden` option. */
   private readonly _priv_throttleVideoBitrateWhenHidden : boolean;
 
@@ -337,7 +333,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             preferredAudioTracks,
             preferredTextTracks,
             preferredVideoTracks,
-            throttleWhenHidden,
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
@@ -390,7 +385,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                         video: createSharedReference(-1, this._destroyCanceller.signal) },
     };
 
-    this._priv_throttleWhenHidden = throttleWhenHidden;
     this._priv_throttleVideoBitrateWhenHidden = throttleVideoBitrateWhenHidden;
     this._priv_limitVideoWidth = limitVideoWidth;
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
@@ -605,23 +599,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                         initialManifest };
 
       const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
-      const throttlers : IABRThrottlers = { throttle: {},
-                                            throttleBitrate: {},
+      const throttlers : IABRThrottlers = { throttleBitrate: {},
                                             limitWidth: {} };
 
-      if (this._priv_throttleWhenHidden) {
-        if (!relyOnVideoVisibilityAndSize) {
-          log.warn("API: Can't apply throttleWhenHidden because " +
-                   "browser can't be trusted for visibility.");
-        } else {
-          throttlers.throttle = {
-            video: createMappedReference(
-              getPageActivityRef(currentContentCanceller.signal),
-              isActive => isActive ? Infinity : 0,
-              currentContentCanceller.signal),
-          };
-        }
-      }
       if (this._priv_throttleVideoBitrateWhenHidden) {
         if (!relyOnVideoVisibilityAndSize) {
           log.warn("API: Can't apply throttleVideoBitrateWhenHidden because " +

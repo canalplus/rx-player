@@ -67,10 +67,6 @@ properties, methods, events and so on.
     Limit the maximum video bitrate when the current video is hidden to the
     user.
 
-  - [`throttleWhenHidden`](../api/Creating_a_Player.md#throttlewhenhidden):
-    [Deprecated] Limit the maximum video bitrate when the current video is
-    hidden to the user.
-
 ## `loadVideo` options
 
   - [`transport`](../api/Loading_a_Content.md#transport): The adaptive streaming
