@@ -8,7 +8,7 @@ The argument can be an object with a single `Number` property, either:
 
 - `relative`: seek relatively to the current position
 
-- `position`: seek to the given absolute position (equivalent to `player.getVideoElement().currentTime = newPosition`)
+- `position`: seek to the given absolute position (equivalent to `player.getMediaElement().currentTime = newPosition`)
 
 - `wallClockTime`: seek to the given wallClock position, as returned by
   `getWallClockTime`.
