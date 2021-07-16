@@ -47,7 +47,6 @@ import {
   IAvailableAudioTrack,
   IAvailableTextTrack,
   IAvailableVideoTrack,
-  IBifThumbnail,
   IBitrateEstimate,
   IConstructorOptions,
   IDecipherabilityUpdateContent,
@@ -65,6 +64,7 @@ import {
 } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import assert from "../../utils/assert";
+import assertUnreachable from "../../utils/assert_unreachable";
 import EventEmitter, {
   IEventPayload,
   IListener,
@@ -82,7 +82,6 @@ import createSharedReference, {
 import TaskCanceller, {
   CancellationSignal,
 } from "../../utils/task_canceller";
-import warnOnce from "../../utils/warn_once";
 import { IABRThrottlers } from "../adaptive";
 import {
   clearOnStop,
@@ -194,8 +193,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      */
     lastBitrates : { audio? : number;
                      video? : number;
-                     text? : number;
-                     image? : number; };
+                     text? : number; };
 
     /** Store last wanted minAutoBitrates for the adaptive logic. */
     minAutoBitrates : { audio : ISharedReference<number>;
@@ -704,7 +702,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       initializer,
       isDirectFile,
       segmentBuffersStore: null,
-      thumbnails: null,
       manifest: null,
       currentPeriod: null,
       activeAdaptations: null,
@@ -774,23 +771,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onManifestReady(contentInfos, manifest));
     initializer.addEventListener("loaded", (evt) => {
       contentInfos.segmentBuffersStore = evt.segmentBuffersStore;
-    });
-    initializer.addEventListener("addedSegment", (evt) => {
-      // Manage image tracks
-      // @deprecated
-      const { content, segmentData } = evt;
-      if (content.adaptation.type === "image") {
-        if (!isNullOrUndefined(segmentData) &&
-            (segmentData as { type : string }).type === "bif")
-        {
-          const imageData = (segmentData as { data : IBifThumbnail[] }).data;
-          /* eslint-disable import/no-deprecated */
-          contentInfos.thumbnails = imageData;
-          this.trigger("imageTrackUpdate",
-                       { data: contentInfos.thumbnails });
-          /* eslint-enable import/no-deprecated */
-        }
-      }
     });
 
     // Now, that most events are linked, prepare the next content.
@@ -1987,22 +1967,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 
-
-  /**
-   * @returns {Array.<Object>|null}
-   * @deprecated
-   */
-  getImageTrackData() : IBifThumbnail[] | null {
-    warnOnce("`getImageTrackData` is deprecated." +
-             "Please use the `parseBifThumbnails` tool instead.");
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    /* eslint-disable import/no-deprecated */
-    return this._priv_contentInfos.thumbnails;
-    /* eslint-enable import/no-deprecated */
-  }
-
   /**
    * Get minimum seek-able position.
    * @returns {number}
@@ -2327,15 +2291,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           trackChoiceManager.setInitialTextTrack(period);
         }
         break;
-
       default:
-        const adaptations = period.adaptations[type];
-        if (!isNullOrUndefined(adaptations) && adaptations.length > 0) {
-          adaptationRef.setValue(adaptations[0]);
-        } else {
-          adaptationRef.setValue(null);
-        }
-        break;
+        assertUnreachable(type);
     }
   }
 
@@ -2746,7 +2703,6 @@ interface IPublicAPIEvent {
   videoTrackChange : IVideoTrack | null;
   audioBitrateChange : number;
   videoBitrateChange : number;
-  imageTrackUpdate : { data: IBifThumbnail[] };
   bitrateEstimationChange : IBitrateEstimate;
   volumeChange : number;
   error : IPlayerError | Error;
@@ -2784,12 +2740,6 @@ interface IPublicApiContentInfos {
    * `false` is the current content has a transport protocol (Smooth/DASH...).
    */
   isDirectFile : boolean;
-  /**
-   * Current Image Track Data associated to the content.
-   * `null` if the current content has no image playlist linked to it.
-   * @deprecated
-   */
-  thumbnails : IBifThumbnail[]|null;
   /**
    * Manifest linked to the current content.
    * `null` if the current content loaded has no manifest or if the content is

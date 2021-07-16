@@ -85,7 +85,6 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     error: null,
     hasCurrentContent: false,
     hasEnded: false,
-    images: [],
     isBuffering: false,
     isCatchUpEnabled: false,
     isCatchingUp: false,
