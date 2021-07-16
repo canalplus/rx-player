@@ -83,7 +83,7 @@
     - [setMaxBufferAhead](#meth-setMaxBufferAhead)
     - [getMaxBufferAhead](#meth-getMaxBufferAhead)
  - [Buffer information](#meth-group-buffer-info)
-    - [getVideoBufferGap](#meth-getVideoBufferGap)
+    - [getCurrentBufferGap](#meth-getCurrentBufferGap)
  - [Content information](#meth-group-content-info)
     - [isLive](#meth-isLive)
     - [getUrl](#meth-getUrl)
@@ -2961,13 +2961,12 @@ This setting can be updated either by:
 The methods in this chapter allows to retrieve information about what is
 currently buffered.
 
-<a name="meth-getVideoBufferGap"></a>
-### getVideoBufferGap ##########################################################
-
+<a name="meth-getCurrentBufferGap"></a>
+### getCurrentBufferGap ##########################################################
 
 --
 
-__syntax__: `const bufferGap = player.getVideoBufferGap()`
+__syntax__: `const bufferGap = player.getCurrentBufferGap()`
 
 __return value__: ``Number``
 
@@ -2980,7 +2979,7 @@ Returns in seconds the difference between:
 In other words, this is the amount of seconds left in the buffer before the end
 of the current contiguous range of media data.
 If we're currently playing at the position at `51` seconds, and there is media
-data from the second `40` to the second `60`, then `getVideoBufferGap()` will
+data from the second `40` to the second `60`, then `getCurrentBufferGap()` will
 return `9` (`60 - 51`).
 
 
