@@ -29,10 +29,6 @@
       "displayName": "Text Tracks"
     },
     {
-      "path": "./images.md",
-      "displayName": "Images"
-    },
-    {
       "path": "./MetaPlaylist.md",
       "displayName": "MetaPlaylist"
     },

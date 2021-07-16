@@ -109,7 +109,7 @@ export default class SegmentFetcherCreator {
     bufferType : IBufferType,
     callbacks : ISegmentFetcherLifecycleCallbacks
   ) : IPrioritizedSegmentFetcher<unknown> {
-    const backoffOptions = getSegmentFetcherOptions(bufferType, this._backoffOptions);
+    const backoffOptions = getSegmentFetcherOptions(this._backoffOptions);
     const pipelines = this._transport[bufferType];
 
     // Types are very complicated here as they are per-type of buffer.

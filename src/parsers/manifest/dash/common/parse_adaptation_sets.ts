@@ -245,8 +245,7 @@ export default function parseAdaptationSets(
             IAdaptationSetOrderingData ]>
   > = { video: [],
         audio: [],
-        text: [],
-        image: [] };
+        text: [] };
   const trickModeAdaptations: Array<{ adaptation: IParsedAdaptation;
                                       trickModeAttachedAdaptationIds: string[]; }> = [];
   const adaptationSwitchingInfos : IAdaptationSwitchingInfos = {};

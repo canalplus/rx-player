@@ -432,7 +432,6 @@ export interface ISegmentFetcherOptions {
  * @returns {Object}
  */
 export function getSegmentFetcherOptions(
-  bufferType : string,
   { maxRetryRegular,
     maxRetryOffline,
     lowLatencyMode,
@@ -446,8 +445,7 @@ export function getSegmentFetcherOptions(
           DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
           INITIAL_BACKOFF_DELAY_BASE,
           MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
-  return { maxRetryRegular: bufferType === "image" ? 0 :
-                            maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+  return { maxRetryRegular: maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
            maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
            baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR,
