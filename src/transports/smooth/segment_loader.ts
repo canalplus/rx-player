@@ -31,11 +31,11 @@ import {
 } from "../types";
 import byteRange from "../utils/byte_range";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
+import isMP4EmbeddedTrack from "./is_mp4_embedded_track";
 import {
   createAudioInitSegment,
   createVideoInitSegment,
 } from "./isobmff";
-import { isMP4EmbeddedTrack } from "./utils";
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
