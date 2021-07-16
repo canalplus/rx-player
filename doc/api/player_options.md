@@ -28,7 +28,7 @@
 Player options are options given to the player on instantiation.
 
 It's an object with multiple properties. None of them are mandatory.
-For most usecase though, you might want to set at least the associated video
+For most usecase though, you might want to set at least the associated media
 element via the ``videoElement`` property.
 
 
@@ -43,7 +43,8 @@ _type_: ``HTMLMediaElement|undefined``
 
 The media element the player will use.
 
-Note that this can be a `<video>` or an `<audio>` element.
+Note that despite what its name suggests, this can be a `<video>` or an
+`<audio>` element.
 
 ```js
 // Instantiate the player with the first video element in the DOM
