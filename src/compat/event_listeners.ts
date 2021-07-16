@@ -221,40 +221,6 @@ function getDocumentVisibilityRef(
 }
 
 /**
- * Returns a reference:
- *   - Set to `true` when the current page is considered visible and active.
- *   - Set to `false` otherwise.
- * @param {Object} stopListening - `CancellationSignal` allowing to free the
- * resources allocated to update this value.
- * @returns {Object}
- */
-function getPageActivityRef(
-  stopListening : CancellationSignal
-) : IReadOnlySharedReference<boolean> {
-  const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
-  let currentTimeout : number | undefined;
-  const ref = createSharedReference(true, stopListening);
-  stopListening.register(() => {
-    clearTimeout(currentTimeout);
-    currentTimeout = undefined;
-  });
-
-  isDocVisibleRef.onUpdate(function onDocVisibilityChange(isVisible : boolean) : void {
-    clearTimeout(currentTimeout); // clear potential previous timeout
-    currentTimeout = undefined;
-    if (!isVisible) {
-      const { INACTIVITY_DELAY } = config.getCurrent();
-      currentTimeout = window.setTimeout(() => {
-        ref.setValueIfChanged(false);
-      }, INACTIVITY_DELAY);
-    }
-    ref.setValueIfChanged(true);
-  }, { clearSignal: stopListening, emitCurrentValue: true });
-
-  return ref;
-}
-
-/**
  * Get video width from Picture-in-Picture window
  * @param {HTMLMediaElement} mediaElement
  * @param {Object} pipWindow
@@ -539,7 +505,6 @@ function addEventListener(
 
 export {
   addEventListener,
-  getPageActivityRef,
   getPictureOnPictureStateRef,
   getVideoVisibilityRef,
   getVideoWidthRef,

@@ -102,28 +102,6 @@ If you previously set `throwOnLicenseExpiration` to `true` or `undefined`, you
 can just remove this property as this still the default behavior.
 
 
-## RxPlayer constructor options
-
-The following RxPlayer constructor options are deprecated.
-
-### throttleWhenHidden
-
-`throttleWhenHidden`has been deprecated as video visibility relies only on
-page visibility API and document hiddenness.
-
-A video should be visible if the Picture-In-Picture mode is activated, even
-if the `hidden` attribute of `document` is set to `true`.
-
-`throttleVideoBitrateWhenHidden` relies on both and can be used like this :
-
-```js
-const rxPlayer = new RxPlayer({
-  // ... RxPlayer options
-  // throttleWhenHidden: true [deprecated]
-  throttleVideoBitrateWhenHidden: true,
-});
-```
-
 ## Other properties
 
 Some very specific properties from various methods are deprecated.
