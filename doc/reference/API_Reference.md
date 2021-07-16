@@ -417,7 +417,7 @@ properties, methods, events and so on.
     Get the maximum memory the video buffer can take up in the memory, in
     kilobytes.
 
-  - [`getVideoBufferGap`](../api/Buffer_Information/getVideoBufferGap.md):
+  - [`getCurrentBufferGap`](../api/Buffer_Information/getCurrentBufferGap.md):
     Returns in seconds the difference between the current position and the end
     of the current media time range.
 

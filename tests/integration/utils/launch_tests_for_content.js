@@ -391,7 +391,7 @@ export default function launchTestsForContent(manifestInfos) {
       }
     });
 
-    describe("getVideoBufferGap", () => {
+    describe("getCurrentBufferGap", () => {
       // TODO handle live contents
       it("should return the buffer gap of the current range", async function() {
         this.timeout(20000);
@@ -407,35 +407,35 @@ export default function launchTestsForContent(manifestInfos) {
         await waitForLoadedStateAfterLoadVideo(player);
         await sleep(3000);
 
-        let bufferGap = player.getVideoBufferGap();
+        let bufferGap = player.getCurrentBufferGap();
         expect(bufferGap).to.be.at.least(9.5);
         expect(bufferGap).to.be.at.most(10 + 10);
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
         await sleep(3000);
-        bufferGap = player.getVideoBufferGap();
+        bufferGap = player.getCurrentBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(minimumPosition + 10);
         await sleep(3000);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        bufferGap = player.getVideoBufferGap();
+        bufferGap = player.getCurrentBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(minimumPosition + 10 + 30);
         await sleep(3000);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        bufferGap = player.getVideoBufferGap();
+        bufferGap = player.getCurrentBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
         await sleep(4000);
-        bufferGap = player.getVideoBufferGap();
+        bufferGap = player.getCurrentBufferGap();
         expect(bufferGap).to.be
           .at.least(player.getMaximumPosition() -
                       minimumPosition - (10 + 30) - 2);
