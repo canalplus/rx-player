@@ -30,7 +30,7 @@ export default function constructDebugGeneralInfo(
     representationsElt,
   ]);
   function updateGeneralInfo() {
-    const videoElement = instance.getVideoElement();
+    const videoElement = instance.getMediaElement();
     if (videoElement === null) {
       // disposed player. Clean-up everything
       generalInfoElt.innerHTML = "";
@@ -40,7 +40,7 @@ export default function constructDebugGeneralInfo(
       return;
     } else {
       const currentTime = instance.getPosition();
-      const bufferGap = instance.getVideoBufferGap();
+      const bufferGap = instance.getCurrentBufferGap();
       const bufferGapStr = bufferGap === Infinity ? "0" : bufferGap.toFixed(2);
       const valuesLine1 : Array<[string, string]> = [
         ["ct", currentTime.toFixed(2)],

@@ -67,8 +67,7 @@ interface IAdaptationParserArguments { root : Element;
 
 type IAdaptationType = "audio" |
                        "video" |
-                       "text" |
-                       "image";
+                       "text";
 
 const DEFAULT_MIME_TYPES : Partial<Record<string, string>> = {
   audio: "audio/mp4",
