@@ -71,11 +71,7 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Logger from "../../utils/logger";
 import objectAssign from "../../utils/object_assign";
 import PPromise from "../../utils/promise";
-import {
-  getLeftSizeOfRange,
-  getPlayedSizeOfRange,
-  getSizeOfRange,
-} from "../../utils/ranges";
+import { getLeftSizeOfRange } from "../../utils/ranges";
 import createSharedReference, {
   ISharedReference,
 } from "../../utils/reference";
@@ -1129,34 +1125,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const videoElement = this.videoElement;
     return getLeftSizeOfRange(videoElement.buffered, videoElement.currentTime);
-  }
-
-  /**
-   * Returns in seconds the difference between:
-   *   - the end of the current contiguous loaded range.
-   *   - the start of the current contiguous loaded range.
-   * @returns {Number}
-   */
-  getVideoLoadedTime() : number {
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-    const videoElement = this.videoElement;
-    return getSizeOfRange(videoElement.buffered, videoElement.currentTime);
-  }
-
-  /**
-   * Returns in seconds the difference between:
-   *   - the current time.
-   *   - the start of the current contiguous loaded range.
-   * @returns {Number}
-   */
-  getVideoPlayedTime() : number {
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-    const videoElement = this.videoElement;
-    return getPlayedSizeOfRange(videoElement.buffered, videoElement.currentTime);
   }
 
   /**
