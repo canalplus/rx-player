@@ -7,7 +7,6 @@
  */
 
 import {
-  BIF_PARSER,
   DASH,
   DIRECTFILE,
   EME,
@@ -16,7 +15,6 @@ import {
   HTML_TEXT_BUFFER,
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
-  IMAGE_BUFFER,
   SMOOTH,
 } from "../../../../../src/features/list";
 import {
@@ -45,7 +43,6 @@ import type {
 } from "../../../../../src/public_types";
 
 RxPlayer.addFeatures([
-  BIF_PARSER,
   DASH,
   DIRECTFILE,
   EME,
@@ -54,7 +51,6 @@ RxPlayer.addFeatures([
   HTML_TEXT_BUFFER,
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
-  IMAGE_BUFFER,
   SMOOTH,
   METAPLAYLIST,
   DEBUG_ELEMENT,
@@ -119,7 +115,6 @@ export interface IPlayerModuleState {
   error: Error | null;
   hasCurrentContent: boolean;
   hasEnded: boolean;
-  images: IBifThumbnail[];
   isBuffering: boolean;
   isCatchUpEnabled: boolean;
   isCatchingUp: boolean;
@@ -170,7 +165,6 @@ const PlayerModule = declareModule(
     error: null,
     hasCurrentContent: false,
     hasEnded: false,
-    images: [],
     isBuffering: false,
     isCatchUpEnabled: false,
     isCatchingUp: false,
