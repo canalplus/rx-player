@@ -74,9 +74,9 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getVideoDuration", () => {
+    describe("getMediaDuration", () => {
       /* eslint-disable max-len */
-      it("should return the video element initial duration in getVideoDuration by default", () => {
+      it("should return the video element initial duration in getMediaDuration by default", () => {
       /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
@@ -86,7 +86,7 @@ describe("API - Public API", () => {
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }
-        expect(player.getVideoDuration()).toEqual(
+        expect(player.getMediaDuration()).toEqual(
           videoElement.duration
         );
       });
