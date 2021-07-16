@@ -186,25 +186,6 @@ function visibilityChange() : Observable<boolean> {
 }
 
 /**
- * Emit `true` if the page is considered active.
- * `false` when considered inactive.
- * Emit the original value on subscription.
- * @returns {Observable}
- */
-function isPageActive() : Observable<boolean> {
-  return visibilityChange().pipe(
-    switchMap((x) => {
-      if (!x) {
-        return observableOf(x).pipe(
-          delay(INACTIVITY_DELAY)
-        );
-      }
-      return observableOf(x);
-    })
-  );
-}
-
-/**
  * Get video width from Picture-in-Picture window
  * @param {HTMLMediaElement} mediaElement
  * @param {Object} pipWindow
@@ -431,7 +412,6 @@ const onKeyError$ = compatibleListener(["keyerror", "error"]);
 const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 
 export {
-  isPageActive,
   isVideoVisible,
   videoWidth$,
   onPlayPause$,

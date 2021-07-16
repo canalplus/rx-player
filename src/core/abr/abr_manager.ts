@@ -40,8 +40,6 @@ export type IABRManagerPlaybackObservation = IRepresentationEstimatorPlaybackObs
 interface IRepresentationEstimatorsThrottlers {
   limitWidth : Partial<Record<IBufferType,
                               Observable<number>>>;
-  throttle : Partial<Record<IBufferType,
-                            Observable<number>>>;
   throttleBitrate : Partial<Record<IBufferType,
                                    Observable<number>>>;
 }
@@ -122,8 +120,7 @@ export default class ABRManager {
                                        observableOf(Infinity));
     const initialBitrate = takeFirstSet<number>(this._initialBitrates[type], 0);
     const filters$ = createFilters(this._throttlers.limitWidth[type],
-                                   this._throttlers.throttleBitrate[type],
-                                   this._throttlers.throttle[type]);
+                                   this._throttlers.throttleBitrate[type]);
     return RepresentationEstimator({ bandwidthEstimator,
                                      streamEvents$,
                                      observation$,
@@ -157,22 +154,16 @@ export default class ABRManager {
  * @param {Observable} limitWidth$ - Emit the width at which the chosen
  * Representation should be limited.
  * @param {Observable} throttleBitrate$ - Emit the maximum bitrate authorized.
- * @param {Observable} throttle$ - Also emit the maximum bitrate authorized.
- * Here for legacy reasons.
  * @returns {Observable}
  */
 function createFilters(
   limitWidth$? : Observable<number>,
-  throttleBitrate$? : Observable<number>,
-  throttle$? : Observable<number>
+  throttleBitrate$? : Observable<number>
 ) : Observable<IABRFiltersObject> {
   const deviceEventsArray : Array<Observable<IABRFiltersObject>> = [];
 
   if (limitWidth$ != null) {
     deviceEventsArray.push(limitWidth$.pipe(map(width => ({ width }))));
-  }
-  if (throttle$ != null) {
-    deviceEventsArray.push(throttle$.pipe(map(bitrate => ({ bitrate }))));
   }
   if (throttleBitrate$ != null) {
     deviceEventsArray.push(throttleBitrate$.pipe(map(bitrate => ({ bitrate }))));
