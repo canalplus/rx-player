@@ -30,7 +30,6 @@ import {
   ITransportManifestPipeline,
   ITransportPipelines,
 } from "../../../transports";
-import assert from "../../../utils/assert";
 import TaskCanceller from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
 import {
@@ -184,11 +183,7 @@ export default class ManifestFetcher {
         obs.next({ type: "warning", value: errorSelector(err) });
       });
 
-      const loadingPromise = pipelines.resolveManifestUrl === undefined ?
-        callLoaderWithRetries(requestUrl) :
-        callResolverWithRetries(requestUrl).then(callLoaderWithRetries);
-
-      loadingPromise
+      callLoaderWithRetries(requestUrl)
         .then(response => {
           hasFinishedLoading = true;
           obs.next({
@@ -213,23 +208,6 @@ export default class ManifestFetcher {
           canceller.cancel();
         }
       };
-
-      /**
-       * Call the resolver part of the pipeline, retrying if it fails according
-       * to the current settings.
-       * Returns the Promise of the last attempt.
-       * /!\ This pipeline should have a `resolveManifestUrl` function defined.
-       * @param {string | undefined}  resolverUrl
-       * @returns {Promise}
-       */
-      function callResolverWithRetries(resolverUrl : string | undefined) {
-        const { resolveManifestUrl } = pipelines;
-        assert(resolveManifestUrl !== undefined);
-        const callResolver = () => resolveManifestUrl(resolverUrl, canceller.signal);
-        return tryRequestPromiseWithBackoff(callResolver,
-                                            backoffSettings,
-                                            canceller.signal);
-      }
 
       /**
        * Call the loader part of the pipeline, retrying if it fails according
