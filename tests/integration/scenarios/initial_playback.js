@@ -66,7 +66,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getVideoLoadedTime()).to.be.above(0);
     expect(player.getVideoPlayedTime()).to.be.above(0);
     expect(player.getPlaybackRate()).to.equal(0.5);
-    expect(player.getVideoElement().playbackRate).to.equal(0.5);
+    expect(player.getMediaElement().playbackRate).to.equal(0.5);
   });
 
   it("should play faster for a speed superior to 1", async function () {
@@ -83,7 +83,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getVideoLoadedTime()).to.be.above(0);
     expect(player.getVideoPlayedTime()).to.be.above(0);
     expect(player.getPlaybackRate()).to.equal(3);
-    expect(player.getVideoElement().playbackRate).to.equal(3);
+    expect(player.getMediaElement().playbackRate).to.equal(3);
   });
 
   it("should be able to seek when loaded", async function () {
@@ -313,7 +313,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     player.seekTo(6);
     await sleep(100);
 
-    expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(4);
+    expect(Math.round(player.getMediaElement().buffered.start(0))).to.equal(4);
   });
 
   it("may switch to SEEKING state when seeking to a buffered part when playing", async function() {
