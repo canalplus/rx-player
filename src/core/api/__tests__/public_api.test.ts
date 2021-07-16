@@ -93,11 +93,11 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getVideoBufferGap", () => {
-      it("should return Infinity in getVideoBufferGap by default", () => {
+    describe("getCurrentBufferGap", () => {
+      it("should return Infinity in getCurrentBufferGap by default", () => {
         const PublicAPI = require("../public_api").default;
         const player = new PublicAPI();
-        expect(player.getVideoBufferGap()).toBe(Infinity);
+        expect(player.getCurrentBufferGap()).toBe(Infinity);
       });
     });
 

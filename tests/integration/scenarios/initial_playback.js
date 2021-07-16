@@ -47,7 +47,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await sleep(200);
     expect(player.getPosition()).to.be.above(0);
     expect(player.getPosition()).to.be.below(0.25);
-    expect(player.getVideoBufferGap()).to.be.above(0);
+    expect(player.getCurrentBufferGap()).to.be.above(0);
     expect(player.getMediaElement().buffered.start(0))
       .to.be.below(player.getPosition());
   });
@@ -82,7 +82,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await sleep(400);
     expect(player.getPosition()).to.be.below(1.25);
     expect(player.getPosition()).to.be.above(0.5);
-    expect(player.getVideoBufferGap()).to.be.above(0);
+    expect(player.getCurrentBufferGap()).to.be.above(0);
     expect(player.getMediaElement().buffered.start(0))
       .to.be.below(player.getPosition());
     expect(player.getPlaybackRate()).to.equal(3);
@@ -237,8 +237,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await sleep(100);
 
     expect(xhrMock.getLockedXHR().length).to.equal(0); // nada
-    expect(player.getVideoBufferGap()).to.be.above(4);
-    expect(player.getVideoBufferGap()).to.be.below(5);
+    expect(player.getCurrentBufferGap()).to.be.above(4);
+    expect(player.getCurrentBufferGap()).to.be.below(5);
   });
 
   it("should download more than the first segment when wanted buffer ahead is over the first segment duration", async function () {
@@ -263,8 +263,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await xhrMock.flush();
     await sleep(100);
 
-    expect(player.getVideoBufferGap()).to.be.above(7);
-    expect(player.getVideoBufferGap()).to.be.below(9);
+    expect(player.getCurrentBufferGap()).to.be.above(7);
+    expect(player.getCurrentBufferGap()).to.be.below(9);
   });
 
   it("should continue downloading when seek to wanted buffer ahead", async function() {
@@ -275,10 +275,10 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(100);
-    const videoLoadedTime = player.getVideoBufferGap();
+    const videoLoadedTime = player.getCurrentBufferGap();
     player.seekTo(videoLoadedTime);
     await sleep(100);
-    expect(player.getVideoBufferGap()).to.be.above(videoLoadedTime);
+    expect(player.getCurrentBufferGap()).to.be.above(videoLoadedTime);
     player.play();
     await sleep(100);
     expect(player.getPlayerState()).to.equal("PLAYING");
@@ -299,7 +299,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await sleep(40);
 
     // The real limit is actually closer to the duration of a segment
-    expect(Math.round(player.getVideoBufferGap())).to.be.below(13);
+    expect(Math.round(player.getCurrentBufferGap())).to.be.below(13);
   });
 
   it("should delete buffer behind", async function() {
@@ -330,13 +330,13 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     player.play();
     await sleep(1000);
     expect(player.getPlayerState()).to.equal("PLAYING");
-    expect(player.getVideoBufferGap()).to.be.above(10);
+    expect(player.getCurrentBufferGap()).to.be.above(10);
 
     player.seekTo(10);
     await waitForState(player, "SEEKING", ["PLAYING"]);
-    expect(player.getVideoBufferGap()).to.be.above(10);
+    expect(player.getCurrentBufferGap()).to.be.above(10);
     await sleep(1000);
-    expect(player.getVideoBufferGap()).to.be.above(10);
+    expect(player.getCurrentBufferGap()).to.be.above(10);
     expect(player.getPlayerState()).to.equal("PLAYING");
   });
 
@@ -350,13 +350,13 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(1000);
     expect(player.getPlayerState()).to.equal("LOADED");
-    expect(player.getVideoBufferGap()).to.be.above(10);
+    expect(player.getCurrentBufferGap()).to.be.above(10);
 
     player.seekTo(10);
     await waitForState(player, "SEEKING", ["PAUSED"]);
-    expect(player.getVideoBufferGap()).to.be.above(10);
+    expect(player.getCurrentBufferGap()).to.be.above(10);
     await sleep(1000);
-    expect(player.getVideoBufferGap()).to.be.above(10);
+    expect(player.getCurrentBufferGap()).to.be.above(10);
     expect(player.getPlayerState()).to.equal("PAUSED");
   });
 
@@ -376,16 +376,16 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
     player.seekTo(10);
     await waitForState(player, "SEEKING", ["PLAYING"]);
-    expect(player.getVideoBufferGap()).to.equal(Infinity);
+    expect(player.getCurrentBufferGap()).to.equal(Infinity);
 
     await sleep(100);
     expect(player.getPlayerState()).to.equal("SEEKING");
-    expect(player.getVideoBufferGap()).to.equal(Infinity);
+    expect(player.getCurrentBufferGap()).to.equal(Infinity);
 
     await xhrMock.flush();
     await sleep(100);
-    expect(player.getVideoBufferGap()).to.be.above(1);
-    expect(player.getVideoBufferGap()).to.be.below(10);
+    expect(player.getCurrentBufferGap()).to.be.above(1);
+    expect(player.getCurrentBufferGap()).to.be.below(10);
     expect(player.getPlayerState()).to.equal("PLAYING");
   });
 });
