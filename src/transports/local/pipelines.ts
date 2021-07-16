@@ -81,18 +81,8 @@ export default function getLocalManifestPipelines(
   const textTrackPipeline = { loadSegment: segmentLoader,
                               parseSegment: textTrackParser };
 
-  const imageTrackPipeline = {
-    loadSegment:  () : never => {
-      throw new Error("Images track not supported in local transport.");
-    },
-    parseSegment: () : never => {
-      throw new Error("Images track not supported in local transport.");
-    },
-  };
-
   return { manifest: manifestPipeline,
            audio: segmentPipeline,
            video: segmentPipeline,
-           text: textTrackPipeline,
-           image: imageTrackPipeline };
+           text: textTrackPipeline };
 }

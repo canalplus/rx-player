@@ -211,9 +211,6 @@ properties, methods, events and so on.
     Enable or disable an optimization replacing segments of poor quality with
     segments of a better quality.
 
-  - [`supplementaryImageTracks`](../api/Loading_a_Content.md#supplementaryimagetracks):
-    [Deprecated] Add supplementary tracks in the content for thumbnails.
-
 ## Methods
 
   - [`loadVideo`](../api/Loading_a_Content.md): Load a content.
@@ -430,9 +427,6 @@ properties, methods, events and so on.
   - [`getCurrentKeySystem`](../api/Content_Information/getCurrentKeySystem.md):
     Returns the name of the current key system.
 
-  - [`getImageTrackData`](../api/Deprecated/getImageTrackData.md):
-    [Deprecated] Returns the data of the current image track.
-
 ## Static Properties
 
   - [`version`](../api/Static_Properties.md#version):
@@ -514,9 +508,6 @@ properties, methods, events and so on.
 
   - [`streamEventSkip`](../api/Player_Events.md#streameventskip):
     A "stream event" was just skipped.
-
-  - [`imageTrackUpdate`](../api/Player_Events.md#imagetrackupdate):
-    [Deprecated] The current image track changed.
 
 ## Error types
 

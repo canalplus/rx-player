@@ -374,7 +374,7 @@ The representationFilter will be called each time we load a
   `Representation`. Contains the following keys:
 
   - bufferType `{string}`: The concerned type of buffer. Can be
-    `"video"`, `"audio"`, `"text"` (for subtitles) or `"image"`
+    `"video"`, `"audio"`, `"text"` (for subtitles)
     (for thumbnail).
 
   - language `{string|undefined}`: The language the `Representation`
