@@ -45,8 +45,8 @@
       "displayName": "getMaximumPosition"
     },
     {
-      "path": "./getVideoDuration.md",
-      "displayName": "getVideoDuration"
+      "path": "./getMediaDuration.md",
+      "displayName": "getMediaDuration"
     },
     {
       "path": "./getError.md",

@@ -55,7 +55,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         return {};
       }
       const position = player.getPosition();
-      const duration = player.getVideoDuration();
+      const duration = player.getMediaDuration();
       const videoTrack = player.getVideoTrack();
       return {
         currentTime: player.getPosition(),
