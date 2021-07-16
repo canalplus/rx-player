@@ -113,7 +113,6 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       const manifest = new Manifest(parserResult, {
         representationFilter: options.representationFilter,
         supplementaryImageTracks: options.supplementaryImageTracks,
-        supplementaryTextTracks: options.supplementaryTextTracks,
       });
       return { manifest, url };
     },
