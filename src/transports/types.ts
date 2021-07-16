@@ -19,7 +19,6 @@ import Manifest, {
   Adaptation,
   ISegment,
   ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
   Period,
   Representation,
 } from "../manifest";
@@ -765,7 +764,6 @@ export interface ITransportOptions {
   serverSyncInfos? : IServerSyncInfos | undefined;
   /* eslint-disable import/no-deprecated */
   supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
-  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
   /* eslint-enable import/no-deprecated */
 
   __priv_patchLastSegmentInSidx? : boolean | undefined;
