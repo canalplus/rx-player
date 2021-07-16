@@ -87,21 +87,6 @@ export interface ILoadVideoOptions {
   enableFastSwitching? : boolean;
   audioTrackSwitchingMode? : IAudioTrackSwitchingMode;
   onCodecSwitch? : "continue"|"reload";
-
-  /* eslint-disable import/no-deprecated */
-  supplementaryImageTracks? : ISupplementaryImageTrackOption[];
-  /* eslint-enable import/no-deprecated */
-}
-
-/**
- * External image (".bif") track we have to add to the Manifest once downloaded.
- * @deprecated
- */
-export interface ISupplementaryImageTrackOption {
-  /** URL the external image track can be found at. */
-  url : string;
-  /** Mime-type used to know the format of the image track. */
-  mimeType : string;
 }
 
 /**
@@ -178,8 +163,7 @@ export interface IManifest {
    */
   adaptations : { audio? : IAdaptation[];
                   video? : IAdaptation[];
-                  text? : IAdaptation[];
-                  image? : IAdaptation[]; };
+                  text? : IAdaptation[]; };
   isLive : boolean;
   transport : string;
 }
@@ -191,11 +175,10 @@ export interface IPeriod {
   end? : number | undefined;
   adaptations : { audio? : IAdaptation[];
                   video? : IAdaptation[];
-                  text? : IAdaptation[];
-                  image? : IAdaptation[]; };
+                  text? : IAdaptation[]; };
 }
 
-export type IAdaptationType = "video" | "audio" | "text" | "image";
+export type IAdaptationType = "video" | "audio" | "text";
 
 /** Adaptation (represents a track), as documented in the API documentation. */
 export interface IAdaptation {
@@ -701,23 +684,6 @@ export interface IRepresentationInfos { bufferType: string;
                                         isDub? : boolean | undefined;
                                         isSignInterpreted?: boolean | undefined;
                                         normalizedLanguage? : string | undefined; }
-
-export interface IBifThumbnail { index : number;
-                                 duration : number;
-                                 ts : number;
-                                 data : Uint8Array; }
-
-export interface IBifObject { fileFormat : string;
-                              version : string;
-                              imageCount : number;
-                              timescale : number;
-                              format : string;
-                              width : number;
-                              height : number;
-                              aspectRatio : string;
-                              isVod : boolean;
-                              thumbs : IBifThumbnail[];
-}
 
 /**
  * Definition of a single audio Representation as represented by the

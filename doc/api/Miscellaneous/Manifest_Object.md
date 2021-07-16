@@ -149,7 +149,7 @@ it is the current last content of the current Manifest.
 _type_: `Object`
 
 The [Adaptations](../../Getting_Started/Glossary.md#adaptation) (tracks if you want) for the current
-content, per-type (audio/video/text/image).
+content, per-type (audio/video/text).
 
 See [the Adaptation chapter](#adaptation) for more info about an Adaptation's
 structure.
@@ -159,7 +159,6 @@ The Adaptation object _can_ contain any of the following keys:
 - audio (`Array.<Adaptation>`): The audio Adaptation(s) available.
 - video (`Array.<Adaptation>`): The video Adaptation(s) available.
 - text (`Array.<Adaptation>`): The text Adaptation(s) available.
-- image (`Array.<Adaptation>`): The image Adaptation(s) available.
 
 ## Structure of an Adaptation Object
 
@@ -184,11 +183,9 @@ identifications purpose, when updating the Manifest for example.
 _type_: `string`
 
 The type of the Adaptation. The possible types are:
-
-- `"video"`
-- `"audio"`
-- `"text"`
-- `"image"`
+  - `"video"`
+  - `"audio"`
+  - `"text"`
 
 #### language
 
