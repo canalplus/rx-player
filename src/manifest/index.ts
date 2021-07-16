@@ -20,7 +20,6 @@ import Adaptation, {
 import Manifest, {
   IDecipherabilityUpdateElement,
   IManifestParsingOptions,
-  ISupplementaryImageTrack,
 } from "./manifest";
 import Period from "./period";
 import Representation from "./representation";
@@ -59,7 +58,6 @@ export {
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   ISegment,
-  ISupplementaryImageTrack,
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 };
