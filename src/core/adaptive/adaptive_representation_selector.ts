@@ -113,7 +113,6 @@ export default function createAdaptiveRepresentationSelector(
         createSharedReference(undefined)),
       throttleBitrate: takeFirstSet<IReadOnlySharedReference<number>>(
         throttlers.throttleBitrate[type],
-        throttlers.throttle[type],
         createSharedReference(Infinity)),
     };
     return getEstimateReference({ bandwidthEstimator,
@@ -882,8 +881,6 @@ export interface IAdaptiveRepresentationSelectorArguments {
 export interface IRepresentationEstimatorThrottlers {
   limitWidth : Partial<Record<IBufferType,
                               IReadOnlySharedReference<number>>>;
-  throttle : Partial<Record<IBufferType,
-                            IReadOnlySharedReference<number>>>;
   throttleBitrate : Partial<Record<IBufferType,
                                    IReadOnlySharedReference<number>>>;
 }
