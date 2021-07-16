@@ -157,7 +157,7 @@ interface IPositionUpdateItem {
   /** Amount of buffer available for now in front of the current position, in seconds. */
   bufferGap : number;
   /** Current maximum seekable position. */
-  maximumBufferTime? : number;
+  maximumPosition? : number;
   wallClockTime? : number;
   /**
    * Only for live contents. Difference between the "live edge" and the current
@@ -2719,7 +2719,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       position: observation.position,
       duration: observation.duration,
       playbackRate: observation.playbackRate,
-      maximumBufferTime: maximumPosition,
+      maximumPosition,
 
       // TODO fix higher up?
       bufferGap: isFinite(observation.bufferGap) ? observation.bufferGap :

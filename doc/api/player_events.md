@@ -126,7 +126,7 @@ The object emitted as the following properties:
   - ``liveGap`` (``Number|undefined``): Only for live contents. The gap between
     the current position and the "live edge".
 
-  - ``maximumBufferTime`` (``Number|undefined``): The maximum time until which
+  - ``maximumPosition`` (``Number|undefined``): The maximum time until which
     the buffer can currently be filled. That is:
 
     - for static contents (like VoD), the duration.
