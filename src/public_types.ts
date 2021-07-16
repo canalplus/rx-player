@@ -562,7 +562,7 @@ export interface IPositionUpdate {
   /** Amount of buffer available for now in front of the current position, in seconds. */
   bufferGap : number;
   /** Current maximum seekable position. */
-  maximumBufferTime? : number | undefined;
+  maximumPosition? : number | undefined;
   wallClockTime? : number | undefined;
   /**
    * Only for live contents. Difference between the "live edge" and the current
