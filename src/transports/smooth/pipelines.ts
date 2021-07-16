@@ -31,7 +31,6 @@ import {
   utf8ToStr,
 } from "../../utils/string_parsing";
 import { CancellationSignal } from "../../utils/task_canceller";
-import warnOnce from "../../utils/warn_once";
 import {
   IChunkTimeInfo,
   IImageTrackSegmentData,
@@ -56,17 +55,9 @@ import generateManifestLoader from "../utils/generate_manifest_loader";
 import extractTimingsInfos, {
   INextSegmentsInfos,
 } from "./extract_timings_infos";
+import isMP4EmbeddedTrack from "./is_mp4_embedded_track";
 import { patchSegment } from "./isobmff";
 import generateSegmentLoader from "./segment_loader";
-import {
-  extractISML,
-  extractToken,
-  isMP4EmbeddedTrack,
-  replaceToken,
-  resolveManifest,
-} from "./utils";
-
-const WSX_REG = /\.wsx?(\?token=\S+)?/;
 
 /**
  * @param {Object} adaptation
@@ -102,38 +93,6 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                                 "text");
 
   const manifestPipeline = {
-    // TODO (v4.x.x) Remove that function
-    resolveManifestUrl(
-      url : string | undefined,
-      cancelSignal : CancellationSignal
-    ) : Promise<string | undefined> {
-      if (url === undefined) {
-        return PPromise.resolve(undefined);
-      }
-
-      let resolving : Promise<string>;
-      if (WSX_REG.test(url)) {
-        warnOnce("Giving WSX URL to loadVideo is deprecated." +
-                 " You should only give Manifest URLs.");
-        resolving = request({ url: replaceToken(url, ""),
-                              responseType: "document",
-                              cancelSignal })
-          .then(value => {
-            const extractedURL = extractISML(value.responseData);
-            if (extractedURL === null || extractedURL.length === 0) {
-              throw new Error("Invalid ISML");
-            }
-            return extractedURL;
-          });
-      } else {
-        resolving = PPromise.resolve(url);
-      }
-
-      const token = extractToken(url);
-      return resolving.then((_url) =>
-        replaceToken(resolveManifest(_url), token));
-    },
-
     loadManifest: manifestLoader,
 
     parseManifest(
