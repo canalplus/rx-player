@@ -28,7 +28,6 @@ import {
   ITransportManifestPipeline,
   ITransportPipelines,
 } from "../../../transports";
-import assert from "../../../utils/assert";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import noop from "../../../utils/noop";
@@ -206,12 +205,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       this.trigger("warning", errorSelector(err));
     });
 
-    const loadingPromise = pipelines.resolveManifestUrl === undefined ?
-      callLoaderWithRetries(requestUrl) :
-      callResolverWithRetries(requestUrl).then(callLoaderWithRetries);
-
     try {
-      const response = await loadingPromise;
+      const response = await callLoaderWithRetries(requestUrl);
       return {
         parse: (parserOptions : IManifestFetcherParserOptions) => {
           return this._parseLoadedManifest(response,
@@ -221,23 +216,6 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       };
     } catch (err) {
       throw errorSelector(err);
-    }
-
-    /**
-     * Call the resolver part of the pipeline, retrying if it fails according
-     * to the current settings.
-     * Returns the Promise of the last attempt.
-     * /!\ This pipeline should have a `resolveManifestUrl` function defined.
-     * @param {string | undefined}  resolverUrl
-     * @returns {Promise}
-     */
-    function callResolverWithRetries(
-      resolverUrl : string | undefined
-    ) : Promise<string | undefined> {
-      const { resolveManifestUrl } = pipelines;
-      assert(resolveManifestUrl !== undefined);
-      const callResolver = () => resolveManifestUrl(resolverUrl, cancelSignal);
-      return scheduleRequestPromise(callResolver, backoffSettings, cancelSignal);
     }
 
     /**
