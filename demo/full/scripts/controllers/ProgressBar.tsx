@@ -1,5 +1,4 @@
 import * as React from "react";
-import ImageThumbnail from "../components/ImageThumbnail";
 import ProgressbarComponent from "../components/ProgressBar";
 import ToolTip from "../components/ToolTip";
 import VideoThumbnail from "../components/VideoThumbnail";
@@ -17,7 +16,6 @@ function ProgressBar({
 }): JSX.Element {
   const bufferGap = useModuleState(player, "bufferGap");
   const currentTime = useModuleState(player, "currentTime");
-  const images = useModuleState(player, "images");
   const isContentLoaded = useModuleState(player, "isContentLoaded");
   const isLive = useModuleState(player, "isLive");
   const minimumPosition = useModuleState(player, "minimumPosition");
@@ -28,7 +26,6 @@ function ProgressBar({
   const [timeIndicatorText, setTimeIndicatorText] = React.useState("");
   const [thumbnailIsVisible, setThumbnailIsVisible] = React.useState(false);
   const [tipPosition, setTipPosition] = React.useState(0);
-  const [image, setImage] = React.useState<Uint8Array|null>(null);
   const [imageTime, setImageTime] = React.useState<number|null>(null);
 
   const wrapperElementRef = React.useRef<HTMLDivElement>(null);
@@ -75,45 +72,19 @@ function ProgressBar({
     []
   );
 
-  const showImageThumbnail = React.useCallback(
-    (ts: number, clientX: number): void => {
-      if (!images || !images.length) {
-        return;
-      }
-
-      const timestampToMs = ts * 1000;
-      const imageIndex = images.findIndex(i =>
-        i && i.ts > timestampToMs
-      );
-      const image = imageIndex === -1 ?
-        images[images.length - 1] :
-        images[imageIndex - 1];
-      if (!image) {
-        return;
-      }
-      setThumbnailIsVisible(true);
-      setTipPosition(clientX);
-      setImage(image.data);
-    },
-    [images]
-  );
-
   const showThumbnail = React.useCallback(
     (ts: number, clientX: number): void => {
       if (enableVideoThumbnails) {
         showVideoTumbnail(ts, clientX);
-      } else {
-        showImageThumbnail(ts, clientX);
       }
     },
-    [showVideoTumbnail, showImageThumbnail, enableVideoThumbnails]
+    [showVideoTumbnail, enableVideoThumbnails]
   );
 
   const hideTumbnail = React.useCallback((): void => {
     setThumbnailIsVisible(false);
     setTipPosition(0);
     setImageTime(null);
-    setImage(null);
   }, []);
 
   const seek = React.useCallback((position: number): void => {
@@ -156,11 +127,6 @@ function ProgressBar({
         xPosition={xThumbnailPosition}
         time={imageTime}
         player={player}
-      />;
-    } else if (image !== null) {
-      thumbnailElement = <ImageThumbnail
-        image={image}
-        xPosition={xThumbnailPosition}
       />;
     }
   }
