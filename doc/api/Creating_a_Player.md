@@ -738,38 +738,3 @@ This option will have no effect for contents loaded :
   attributes, as the video may be visible, through the PIP window.
 
 </div>
-
-
-### throttleWhenHidden
-
-<div class="warning">
-This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-
-This option will have no effect for contents loaded :
-
-- In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
-- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
-  feature or window is enabled. Thus we can't rely on document hiddenness
-  attributes, as the video may be visible, through the PIP window.
-
-</div>
-
-Please use the [throttleVideoBitrateWhenHidden](#throttlevideobitratewhenhidden) property
-instead, which is better defined for advanced cases, such as Picture-In-Picture.
-
-_type_: `Boolean`
-
-_defaults_: `false`
-
-The player has a specific feature which throttle the video to the minimum
-bitrate when the current page is hidden for more than a minute.
-
-To activate this feature, set it to `true`.
-
-```js
-const player = Player({
-  throttleWhenHidden: true,
-});
-```
