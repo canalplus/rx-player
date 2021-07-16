@@ -71,11 +71,11 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getVideoDuration", () => {
-      it("should return the video element initial duration in getVideoDuration by default", () => {
+    describe("getMediaDuration", () => {
+      it("should return the video element initial duration in getMediaDuration by default", () => {
 
         // ! HAHA ! NaN is not === to NaN
-        expect(player.getVideoDuration()).to.eql(
+        expect(player.getMediaDuration()).to.eql(
           player.getMediaElement().duration
         );
       });
