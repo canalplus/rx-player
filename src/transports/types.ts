@@ -159,40 +159,6 @@ export interface ITransportManifestPipeline {
     scheduleRequest : IManifestParserRequestScheduler
   ) => IManifestParserResult |
        Promise<IManifestParserResult>;
-
-  /**
-   * @deprecated
-   * "Resolves the Manifest's URL, to obtain its true URL.
-   * This is a deprecated function which corresponds to an old use case at
-   * Canal+ where the URL of the Manifest first need to be parsed from a .wsx
-   * file.
-   * Thankfully this API should not be used anymore, though to not break
-   * compatibility, we have to keep it until a v4.x.x release.
-   *
-   * @param {string | undefined} url - URL used to obtain the real URL of the
-   * Manifest.
-   * @param {CancellationSignal} cancelSignal - Cancellation signal which will
-   * allow to abort the resolving operation if you do not want the Manifest
-   * anymore.
-   * When cancelled, the promise returned by this function will reject with a
-   * `CancellationError`.
-   * @returns {Promise.<string|undefined>} - Promise emitting the "real" URL of
-   * the Manifest, that should be loaded by the `loadManifest` function.
-   * `undefined` if the URL is either unknown or inexistant.
-   *
-   * Rejects in two cases:
-   *
-   *   1. The resolving operation has been aborted through the `cancelSignal`
-   *      given in argument.
-   *      In that case, this Promise will reject a `CancellationError`.
-   *
-   *   2. The resolving operation failed, most likely due to a request error.
-   *      In that case, this Promise will reject the corresponding Error.
-   */
-  resolveManifestUrl? : (
-    url : string | undefined,
-    cancelSignal : CancellationSignal,
-  ) => Promise<string | undefined>;
 }
 
 /** Functions allowing to load and parse segments of any type. */
