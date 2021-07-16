@@ -26,8 +26,7 @@ import { IAdaptationType } from "./types";
 /** List in an array every possible value for the Adaptation's `type` property. */
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
                                                                "video",
-                                                               "text",
-                                                               "image" ];
+                                                               "text" ];
 
 /**
  * Normalized Adaptation structure.

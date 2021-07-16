@@ -40,13 +40,6 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   linkPlayerEventToState("availableAudioBitratesChange", "availableAudioBitrates");
   linkPlayerEventToState("availableVideoBitratesChange", "availableVideoBitrates");
 
-
-  fromPlayerEvent(player, "imageTrackUpdate").pipe(
-    distinctUntilChanged(),
-    takeUntil($destroy),
-    map(({ data }) => data)
-  ).subscribe(images => state.set({ images }));
-
   // use an interval for current position
   // TODO Only active for content playback
   intervalObservable(POSITION_UPDATES_INTERVAL).pipe(
@@ -116,7 +109,6 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         stateUpdates.availableLanguages = [];
         stateUpdates.availableSubtitles = [];
         stateUpdates.lowLatencyMode = false;
-        stateUpdates.images = [];
         stateUpdates.subtitle = null;
         stateUpdates.language = null;
         stateUpdates.videoTrack = null;

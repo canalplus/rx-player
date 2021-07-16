@@ -25,7 +25,6 @@ import XHRMock from "../../utils/request_mock";
  *            audio,
  *            video,
  *            text,
- *            image
  *          }[]
  *             .isClosedCaption? {boolean}
  *             .isAudioDescription? {boolean}

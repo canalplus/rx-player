@@ -493,7 +493,6 @@ describe("API - parseLoadVideoOptions", () => {
     textTrackMode: "native",
     transportOptions: {
       lowLatencyMode: false,
-      supplementaryImageTracks: [],
     },
     url: undefined,
   };
@@ -601,8 +600,7 @@ describe("API - parseLoadVideoOptions", () => {
       ...defaultLoadVideoOptions,
       transport: "bar",
       transportOptions: { lowLatencyMode: false,
-                          manifestLoader,
-                          supplementaryImageTracks: [] },
+                          manifestLoader },
     });
   });
 
@@ -785,8 +783,7 @@ describe("API - parseLoadVideoOptions", () => {
       lowLatencyMode: true,
       transport: "bar",
       url: "foo",
-      transportOptions: { lowLatencyMode: true,
-                          supplementaryImageTracks: [] },
+      transportOptions: { lowLatencyMode: true },
     });
   });
 
@@ -804,7 +801,6 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
       transportOptions: {
         lowLatencyMode: false,
-        supplementaryImageTracks: [],
       },
     });
   });
@@ -1093,113 +1089,6 @@ If badly set, continue will be used as default`);
     });
   });
 
-  it("should authorize setting a supplementaryImageTracks option", () => {
-    const supplementaryImageTracks1 = {
-      url: "foo",
-      mimeType: "bar/baz",
-    };
-    const supplementaryImageTracks2 = {
-      url: "bar",
-      mimeType: "toto",
-    };
-    expect(parseLoadVideoOptions({
-      supplementaryImageTracks: supplementaryImageTracks1 as any,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-        supplementaryImageTracks: [supplementaryImageTracks1],
-      },
-    });
-    expect(parseLoadVideoOptions({
-      supplementaryImageTracks: [supplementaryImageTracks1, supplementaryImageTracks2],
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-        supplementaryImageTracks: [ supplementaryImageTracks1,
-                                    supplementaryImageTracks2 ],
-      },
-    });
-  });
-
-  it("should throw when setting an invalid supplementaryImageTracks option", () => {
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryImageTracks: {} as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary image track given. Missing either mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryImageTracks: { url: "test" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary image track given. Missing either mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryImageTracks: { mimeType: "test" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary image track given. Missing either mimetype or url");
-    }
-  });
-
   it("should authorize setting a transportOptions option", () => {
     const func = jest.fn();
     expect(parseLoadVideoOptions({
@@ -1211,7 +1100,6 @@ If badly set, continue will be used as default`);
       url: "foo",
       transport: "bar",
       transportOptions: { lowLatencyMode: false,
-                          supplementaryImageTracks: [],
                           segmentLoader: func },
     });
   });
@@ -1353,8 +1241,7 @@ If badly set, continue will be used as default`);
       url: "foo",
       transport: "bar",
       transportOptions: { lowLatencyMode: false,
-                          __priv_toto: 4,
-                          supplementaryImageTracks: [] },
+                          __priv_toto: 4 },
     });
   });
 });

@@ -67,10 +67,6 @@ RXP_EME=false npm run build:min
 echo -n "w/o EME: " >> sizes
 stat -c %s dist/rx-player.min.js >> sizes
 
-RXP_BIF_PARSER=false npm run build:min
-echo -n "w/o BIF_PARSER: " >> sizes
-stat -c %s dist/rx-player.min.js >> sizes
-
 RXP_BAREBONE=true npm run build:min
 echo -n "BAREBONE: " >> sizes
 stat -c %s dist/rx-player.min.js >> sizes
