@@ -89,7 +89,6 @@ function PLAYER(state, initOpts, abortSignal) {
     error: null,
     hasCurrentContent: false,
     hasEnded: false,
-    images: [],
     isBuffering: false,
     isCatchUpEnabled: false,
     isCatchingUp: false,

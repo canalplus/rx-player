@@ -36,10 +36,6 @@ const linkPlayerEventsToState = (player, state, abortSignal) => {
   linkPlayerEventToState("availableAudioBitratesChange", "availableAudioBitrates");
   linkPlayerEventToState("availableVideoBitratesChange", "availableVideoBitrates");
 
-  addEventListener(player, "imageTrackUpdate", ({ data }) => {
-    state.set({ images: data });
-  }, abortSignal);
-
   // use an interval for current position
   // TODO Only active for content playback
   const intervalId = setInterval(() => {
@@ -107,7 +103,6 @@ const linkPlayerEventsToState = (player, state, abortSignal) => {
         stateUpdates.availableLanguages = [];
         stateUpdates.availableSubtitles = [];
         stateUpdates.lowLatencyMode = false;
-        stateUpdates.images = [];
         stateUpdates.subtitle = null;
         stateUpdates.language = null;
         stateUpdates.videoTrack = null;

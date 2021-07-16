@@ -47,7 +47,6 @@ import {
   IAvailableAudioTrack,
   IAvailableTextTrack,
   IAvailableVideoTrack,
-  IBifThumbnail,
   IBitrateEstimate,
   IConstructorOptions,
   IDecipherabilityUpdateContent,
@@ -65,6 +64,7 @@ import {
 } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import assert from "../../utils/assert";
+import assertUnreachable from "../../utils/assert_unreachable";
 import EventEmitter, {
   IEventPayload,
   IListener,
@@ -194,8 +194,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      */
     lastBitrates : { audio? : number;
                      video? : number;
-                     text? : number;
-                     image? : number; };
+                     text? : number; };
 
     /** Store last wanted minAutoBitrates for the adaptive logic. */
     minAutoBitrates : { audio : ISharedReference<number>;
@@ -719,7 +718,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       initializer,
       isDirectFile,
       segmentBuffersStore: null,
-      thumbnails: null,
       manifest: null,
       currentPeriod: null,
       activeAdaptations: null,
@@ -789,23 +787,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onManifestReady(contentInfos, manifest));
     initializer.addEventListener("loaded", (evt) => {
       contentInfos.segmentBuffersStore = evt.segmentBuffersStore;
-    });
-    initializer.addEventListener("addedSegment", (evt) => {
-      // Manage image tracks
-      // @deprecated
-      const { content, segmentData } = evt;
-      if (content.adaptation.type === "image") {
-        if (!isNullOrUndefined(segmentData) &&
-            (segmentData as { type : string }).type === "bif")
-        {
-          const imageData = (segmentData as { data : IBifThumbnail[] }).data;
-          /* eslint-disable import/no-deprecated */
-          contentInfos.thumbnails = imageData;
-          this.trigger("imageTrackUpdate",
-                       { data: contentInfos.thumbnails });
-          /* eslint-enable import/no-deprecated */
-        }
-      }
     });
 
     // Now, that most events are linked, prepare the next content.
@@ -1245,7 +1226,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number|undefined}
    */
   getVideoBitrate() : number|undefined {
-    const representations = this._priv_getCurrentRepresentations();
+    const representations = this.__priv_getCurrentRepresentations();
     if (representations === null || isNullOrUndefined(representations.video)) {
       return undefined;
     }
@@ -1257,7 +1238,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number|undefined}
    */
   getAudioBitrate() : number|undefined {
-    const representations = this._priv_getCurrentRepresentations();
+    const representations = this.__priv_getCurrentRepresentations();
     if (representations === null || isNullOrUndefined(representations.audio)) {
       return undefined;
     }
@@ -2001,22 +1982,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 
-
-  /**
-   * @returns {Array.<Object>|null}
-   * @deprecated
-   */
-  getImageTrackData() : IBifThumbnail[] | null {
-    warnOnce("`getImageTrackData` is deprecated." +
-             "Please use the `parseBifThumbnails` tool instead.");
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    /* eslint-disable import/no-deprecated */
-    return this._priv_contentInfos.thumbnails;
-    /* eslint-enable import/no-deprecated */
-  }
-
   /**
    * Get minimum seek-able position.
    * @returns {number}
@@ -2099,11 +2064,44 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * null if the player is STOPPED.
    * @returns {Manifest|null} - The current Manifest (`null` when not known).
    */
+  // TODO remove the need for that method
   __priv_getManifest() : Manifest|null {
     if (this._priv_contentInfos === null) {
       return null;
     }
     return this._priv_contentInfos.manifest;
+  }
+
+  // TODO remove the need for that method
+  __priv_getCurrentAdaptation(
+  ) : Partial<Record<IBufferType, Adaptation|null>> | null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
+    if (currentPeriod === null ||
+        activeAdaptations === null ||
+        isNullOrUndefined(activeAdaptations[currentPeriod.id]))
+    {
+      return null;
+    }
+    return activeAdaptations[currentPeriod.id];
+  }
+
+  // TODO remove the need for that method
+  __priv_getCurrentRepresentations(
+  ) : Partial<Record<IBufferType, Representation|null>> | null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
+    if (currentPeriod === null ||
+        activeRepresentations === null ||
+        isNullOrUndefined(activeRepresentations[currentPeriod.id]))
+    {
+      return null;
+    }
+    return activeRepresentations[currentPeriod.id];
   }
 
   // ---- Private methods ----
@@ -2276,7 +2274,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (contentInfos.currentContentCanceller.isUsed()) {
       return;
     }
-    const audioBitrate = this._priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
+    const audioBitrate = this.__priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
     this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange",
                                                 audioBitrate,
                                                 cancelSignal);
@@ -2284,7 +2282,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
 
-    const videoBitrate = this._priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
+    const videoBitrate = this.__priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
     this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange",
                                                 videoBitrate,
                                                 cancelSignal);
@@ -2341,15 +2339,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           trackChoiceManager.setInitialTextTrack(period);
         }
         break;
-
       default:
-        const adaptations = period.adaptations[type];
-        if (!isNullOrUndefined(adaptations) && adaptations.length > 0) {
-          adaptationRef.setValue(adaptations[0]);
-        } else {
-          adaptationRef.setValue(null);
-        }
-        break;
+        assertUnreachable(type);
     }
   }
 
@@ -2649,21 +2640,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 
-  private _priv_getCurrentRepresentations(
-  ) : Partial<Record<IBufferType, Representation|null>> | null {
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
-    if (currentPeriod === null ||
-        activeRepresentations === null ||
-        isNullOrUndefined(activeRepresentations[currentPeriod.id]))
-    {
-      return null;
-    }
-    return activeRepresentations[currentPeriod.id];
-  }
-
   /**
    * @param {string} evt
    * @param {*} arg
@@ -2760,7 +2736,6 @@ interface IPublicAPIEvent {
   videoTrackChange : IVideoTrack | null;
   audioBitrateChange : number;
   videoBitrateChange : number;
-  imageTrackUpdate : { data: IBifThumbnail[] };
   bitrateEstimationChange : IBitrateEstimate;
   volumeChange : number;
   error : IPlayerError | Error;
@@ -2798,12 +2773,6 @@ interface IPublicApiContentInfos {
    * `false` is the current content has a transport protocol (Smooth/DASH...).
    */
   isDirectFile : boolean;
-  /**
-   * Current Image Track Data associated to the content.
-   * `null` if the current content has no image playlist linked to it.
-   * @deprecated
-   */
-  thumbnails : IBifThumbnail[]|null;
   /**
    * Manifest linked to the current content.
    * `null` if the current content loaded has no manifest or if the content is

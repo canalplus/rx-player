@@ -23,7 +23,6 @@ declare const __FEATURES__ : {
   IS_ENABLED : number;
   IS_DISABLED : number;
 
-  BIF_PARSER : number;
   DASH : number;
   DIRECTFILE : number;
   EME : number;
@@ -45,7 +44,6 @@ declare const enum FEATURES_ENUM {
   IS_DISABLED,
   IS_ENABLED,
 
-  BIF_PARSER,
   DASH,
   DIRECTFILE,
   EME,
