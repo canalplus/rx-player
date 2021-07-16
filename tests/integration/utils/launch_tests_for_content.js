@@ -445,42 +445,6 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("getVideoLoadedTime", () => {
-      // TODO handle live contents
-      it("should return the time of the current loaded time", async function() {
-        this.timeout(4000);
-        player.setWantedBufferAhead(10);
-        expect(player.getWantedBufferAhead()).to.equal(10);
-
-        player.loadVideo({ url: manifestInfos.url,
-                           transport,
-                           autoPlay: false });
-        await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(500);
-
-        const initialBufferGap = player.getVideoBufferGap();
-        expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.1);
-        expect(player.getVideoLoadedTime()).to.be
-          .closeTo(initialBufferGap, 0.1);
-
-        xhrMock.lock();
-        player.seekTo(minimumPosition + 5);
-        await sleep(300);
-        expect(player.getVideoLoadedTime()).to.be
-          .closeTo(initialBufferGap, 0.1);
-
-        await xhrMock.flush();
-        xhrMock.unlock();
-        await sleep(300);
-        expect(player.getVideoLoadedTime())
-          .to.be.closeTo(initialBufferGap + 5, 10);
-
-        player.seekTo(minimumPosition + 50);
-        await sleep(300);
-        expect(player.getVideoLoadedTime()).to.be.closeTo(10, 10);
-      });
-    });
-
     // TODO handle live contents
     describe("getWallClockTime", () => {
       it("should be at the minimum time by default", async () => {

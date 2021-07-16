@@ -87,12 +87,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getVideoLoadedTime", () => {
-      it("should return 0 in getVideoLoadedTime by default", () => {
-        expect(player.getVideoLoadedTime()).to.equal(0);
-      });
-    });
-
     describe("getWallClockTime", () => {
       it("should return 0 in getWallClockTime by default", () => {
         expect(player.getWallClockTime()).to.equal(0);
