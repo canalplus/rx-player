@@ -71,7 +71,6 @@ export interface IParsedConstructorOptions {
   wantedBufferAhead : number;
   maxVideoBufferSize : number;
   limitVideoWidth : boolean;
-  throttleWhenHidden : boolean;
   throttleVideoBitrateWhenHidden : boolean;
 
   preferredAudioTracks : IAudioTrackPreference[];
@@ -150,9 +149,6 @@ function parseConstructorOptions(
   let wantedBufferAhead : number;
   let maxVideoBufferSize : number;
 
-  let throttleWhenHidden : boolean;
-  let throttleVideoBitrateWhenHidden : boolean;
-
   let preferredAudioTracks : IAudioTrackPreference[];
   let preferredTextTracks : ITextTrackPreference[];
   let preferredVideoTracks : IVideoTrackPreference[];
@@ -172,7 +168,6 @@ function parseConstructorOptions(
           DEFAULT_MAX_BUFFER_AHEAD,
           DEFAULT_MAX_BUFFER_BEHIND,
           DEFAULT_MAX_VIDEO_BUFFER_SIZE,
-          DEFAULT_THROTTLE_WHEN_HIDDEN,
           DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
           DEFAULT_WANTED_BUFFER_AHEAD } = config.getCurrent();
 
@@ -221,25 +216,10 @@ function parseConstructorOptions(
     DEFAULT_LIMIT_VIDEO_WIDTH :
     !!options.limitVideoWidth;
 
-  if (!isNullOrUndefined(options.throttleWhenHidden)) {
-    warnOnce("`throttleWhenHidden` API is deprecated. Consider using " +
-             "`throttleVideoBitrateWhenHidden` instead.");
-
-    throttleWhenHidden = !!options.throttleWhenHidden;
-  } else {
-    throttleWhenHidden = DEFAULT_THROTTLE_WHEN_HIDDEN;
-  }
-
-  // `throttleWhenHidden` and `throttleVideoBitrateWhenHidden` can be in conflict
-  // Do not activate the latter if the former is
-  if (throttleWhenHidden) {
-    throttleVideoBitrateWhenHidden = false;
-  } else {
-    throttleVideoBitrateWhenHidden =
-      isNullOrUndefined(options.throttleVideoBitrateWhenHidden) ?
-        DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
-        !!options.throttleVideoBitrateWhenHidden;
-  }
+  const throttleVideoBitrateWhenHidden =
+    isNullOrUndefined(options.throttleVideoBitrateWhenHidden) ?
+      DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
+      !!options.throttleVideoBitrateWhenHidden;
 
   if (options.preferredTextTracks !== undefined) {
     if (!Array.isArray(options.preferredTextTracks)) {
@@ -356,7 +336,6 @@ function parseConstructorOptions(
            videoElement,
            wantedBufferAhead,
            maxVideoBufferSize,
-           throttleWhenHidden,
            throttleVideoBitrateWhenHidden,
            preferredAudioTracks,
            preferredTextTracks,
