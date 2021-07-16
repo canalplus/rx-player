@@ -52,7 +52,7 @@ const linkPlayerEventsToState = (player, state, abortSignal) => {
     state.set({
       currentTime: player.getPosition(),
       wallClockDiff: player.getWallClockTime() - position,
-      bufferGap: player.getVideoBufferGap(),
+      bufferGap: player.getCurrentBufferGap(),
       duration: Number.isNaN(duration) ? undefined : duration,
       minimumPosition: player.getMinimumPosition(),
       maximumPosition: player.getMaximumPosition(),
