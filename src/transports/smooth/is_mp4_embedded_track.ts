@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import { ISegment, Representation } from "../../manifest";
-import { ICdnMetadata } from "../../parsers/manifest";
-import resolveURL from "../../utils/resolve_url";
-
+import { Representation } from "../../manifest";
 
 /**
  * Returns `true` if the given Representation refers to segments in an MP4
@@ -25,21 +22,9 @@ import resolveURL from "../../utils/resolve_url";
  * @param {Representation} representation
  * @returns {Boolean}
  */
-function isMP4EmbeddedTrack(representation : Representation) : boolean {
+export default function isMP4EmbeddedTrack(
+  representation : Representation
+) : boolean {
   return typeof representation.mimeType === "string" &&
          representation.mimeType.indexOf("mp4") >= 0;
 }
-
-function constructSegmentUrl(
-  wantedCdn : ICdnMetadata | null,
-  segment : ISegment
-) : string | null {
-  return wantedCdn === null   ? null :
-         segment.url === null ? wantedCdn.baseUrl :
-                                resolveURL(wantedCdn.baseUrl, segment.url);
-}
-
-export {
-  constructSegmentUrl,
-  isMP4EmbeddedTrack,
-};
