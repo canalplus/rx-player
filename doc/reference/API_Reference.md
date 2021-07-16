@@ -253,7 +253,7 @@ properties, methods, events and so on.
   - [`getError`](../api/Basic_Methods/getError.md): Returns the current "fatal"
     error.
 
-  - [`getVideoElement`](../api/Basic_Methods/getVideoElement.md): Returns the
+  - [`getMediaElement`](../api/Basic_Methods/getMediaElement.md): Returns the
     media element linked to the RxPlayer.
 
   - [`dispose`](../api/Basic_Methods/dispose.md): Dispose of most resources
