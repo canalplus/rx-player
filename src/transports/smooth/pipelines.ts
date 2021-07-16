@@ -115,7 +115,6 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
       const manifest = new Manifest(parserResult, {
         representationFilter: transportOptions.representationFilter,
         supplementaryImageTracks: transportOptions.supplementaryImageTracks,
-        supplementaryTextTracks: transportOptions.supplementaryTextTracks,
       });
       return { manifest, url };
     },

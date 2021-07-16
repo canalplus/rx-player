@@ -130,10 +130,6 @@ exported:
   - `ISegmentLoader`: type for the `segmentLoader` function optionally set on
     the `transportOptions` option of `loadVideo`.
 
-  - `ISupplementaryTextTrackOption`: type for an element of the
-    `supplementaryTextTracks` array, which is an optional property given to
-    `loadVideo`.
-
   - `ISupplementaryImageTrackOption`: type for an element of the
     `supplementaryImageTracks` array, which is an optional property given to
     `loadVideo`.
