@@ -439,23 +439,15 @@ properties, methods, events and so on.
 
   - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
     Returns `true` if a content is loaded.
-  
+
   - [`isBuffering`](../api/Playback_Information/isBuffering.md):
     Returns `true` if the player is buffering.
-  
+
   - [`isPaused`](../api/Playback_Information/isPaused.md):
     Returns `true` if the `<video>` element is paused.
 
   - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
-    Returns the last stored content position, in seconds. 
-
-  - [`getVideoLoadedTime`](../api/Deprecated/getVideoLoadedTime.md):
-    [Deprecated] Returns in seconds the difference between the start and the end
-    of the current media time range.
-
-  - [`getVideoPlayedTime`](../api/Deprecated/getVideoPlayedTime.md):
-    [Deprecated] Returns in seconds the difference between the start of the
-    current media time range and the current position.
+    Returns the last stored content position, in seconds.
 
   - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
     [Deprecated] Returns the name of the current key system.
