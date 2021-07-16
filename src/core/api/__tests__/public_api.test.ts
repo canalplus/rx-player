@@ -100,22 +100,6 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getVideoLoadedTime", () => {
-      it("should return 0 in getVideoLoadedTime by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getVideoLoadedTime()).toBe(0);
-      });
-    });
-
-    describe("getVideoPlayedTime", () => {
-      it("should return 0 in getVideoPlayedTime by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getVideoPlayedTime()).toBe(0);
-      });
-    });
-
     describe("getWallClockTime", () => {
       it("should return 0 in getWallClockTime by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
