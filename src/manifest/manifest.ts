@@ -56,34 +56,9 @@ interface ISupplementaryImageTrack {
   url : string;
 }
 
-/**
- * Interface a manually-added supplementary text track should respect.
- * @deprecated
- */
-interface ISupplementaryTextTrack {
-  /** mime-type identifying the type of container for the track. */
-  mimeType : string;
-  /** codecs in the container (mimeType can be enough) */
-  codecs? : string;
-  /** URL to the text track file */
-  url : string;
-  /** ISO639-{1,2,3} code for the language of the track */
-  language? : string;
-  /**
-   * Same as `language`, but in an Array.
-   * Kept for compatibility with old API.
-   * @deprecated
-   */
-  languages? : string[];
-  /** If true, the track are closed captions. */
-  closedCaption : boolean;
-}
-
 /** Options given to the `Manifest` constructor. */
 interface IManifestParsingOptions {
   /* eslint-disable import/no-deprecated */
-  /** Text tracks to add manually to the Manifest instance. */
-  supplementaryTextTracks? : ISupplementaryTextTrack[];
   /** Image tracks to add manually to the Manifest instance. */
   supplementaryImageTracks? : ISupplementaryImageTrack[];
   /* eslint-enable import/no-deprecated */
@@ -326,8 +301,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   constructor(parsedManifest : IParsedManifest, options : IManifestParsingOptions) {
     super();
-    const { supplementaryTextTracks = [],
-            supplementaryImageTracks = [],
+    const { supplementaryImageTracks = [],
             representationFilter,
             manifestUpdateUrl } = options;
     this.contentWarnings = [];
@@ -365,9 +339,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.publishTime = parsedManifest.publishTime;
     if (supplementaryImageTracks.length > 0) {
       this._addSupplementaryImageAdaptations(supplementaryImageTracks);
-    }
-    if (supplementaryTextTracks.length > 0) {
-      this._addSupplementaryTextAdaptations(supplementaryTextTracks);
     }
   }
 
@@ -666,65 +637,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Add supplementary text Adaptation(s) to the manifest.
-   * @private
-   * @param {Object|Array.<Object>} textTracks
-   */
-  private _addSupplementaryTextAdaptations(
-    /* eslint-disable import/no-deprecated */
-    textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
-    /* eslint-enable import/no-deprecated */
-  ) : void {
-    const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
-    const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
-      mimeType,
-      codecs,
-      url,
-      language,
-      /* eslint-disable import/no-deprecated */
-      languages,
-      /* eslint-enable import/no-deprecated */
-      closedCaption,
-    }) => {
-      const langsToMapOn : string[] = language != null ? [language] :
-                                      languages != null ? languages :
-                                                          [];
-
-      return allSubs.concat(langsToMapOn.map((_language) => {
-        const adaptationID = "gen-text-ada-" + generateSupplementaryTrackID();
-        const representationID = "gen-text-rep-" + generateSupplementaryTrackID();
-        const newAdaptation = new Adaptation({ id: adaptationID,
-                                               type: "text",
-                                               language: _language,
-                                               closedCaption,
-                                               representations: [{
-                                                 bitrate: 0,
-                                                 id: representationID,
-                                                 mimeType,
-                                                 codecs,
-                                                 index: new StaticRepresentationIndex({
-                                                   media: url,
-                                                 }) }] },
-                                             { isManuallyAdded: true });
-        if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-          const error =
-            new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                           "An Adaptation contains only incompatible codecs.");
-          this.contentWarnings.push(error);
-        }
-        return newAdaptation;
-      }));
-    }, []);
-
-    if (newTextAdaptations.length > 0 && this.periods.length > 0) {
-      const { adaptations } = this.periods[0];
-      adaptations.text =
-        adaptations.text != null ? adaptations.text.concat(newTextAdaptations) :
-                                   newTextAdaptations;
-    }
-  }
-
-  /**
    * @param {Object} newManifest
    * @param {number} type
    */
@@ -817,5 +729,4 @@ function updateDeciperability(
 export {
   IManifestParsingOptions,
   ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
 };

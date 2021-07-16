@@ -23,7 +23,6 @@ import areSameContent from "./are_same_content";
 import Manifest, {
   IManifestParsingOptions,
   ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
 } from "./manifest";
 import Period from "./period";
 import Representation from "./representation";
@@ -61,7 +60,6 @@ export {
   IRepresentationIndex,
   ISegment,
   ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 };

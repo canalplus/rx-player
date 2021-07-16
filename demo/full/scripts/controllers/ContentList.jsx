@@ -88,7 +88,6 @@ function formatContent(content) {
            isLocalContent,
            isLowLatency: !!content.lowLatency,
            supplementaryImageTracks: content.supplementaryImageTracks,
-           supplementaryTextTracks: content.supplementaryTextTracks,
            transport: content.transport,
            url: content.url };
 }
@@ -299,7 +298,6 @@ class ContentList extends React.Component {
             fallbackKeyError,
             fallbackLicenseRequest,
             supplementaryImageTracks,
-            supplementaryTextTracks,
             isLowLatency,
             drmInfos = [] } = content;
 
@@ -310,7 +308,6 @@ class ContentList extends React.Component {
                     transport,
                     autoPlay,
                     supplementaryImageTracks,
-                    supplementaryTextTracks,
                     textTrackMode: "html",
                     lowLatencyMode: isLowLatency,
                     keySystems });

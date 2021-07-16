@@ -96,23 +96,6 @@ export interface ITransportOptions {
 }
 
 /**
- * External text track we have to add to the Manifest once downloaded.
- * @deprecated
- */
-export interface ISupplementaryTextTrackOption {
-  /** URL the external text track can be found at. */
-  url : string;
-  /** Language the text track is in. */
-  language : string;
-  /** If `true` the text track contains closed captions. */
-  closedCaption : boolean;
-  /** Mime-type used to know the container and/or format of the text track. */
-  mimeType : string;
-  /** Codec used to know the format of the text track. */
-  codecs? : string;
-}
-
-/**
  * External image (".bif") track we have to add to the Manifest once downloaded.
  * @deprecated
  */
@@ -222,7 +205,6 @@ export interface ILoadVideoOptions {
   onCodecSwitch? : "continue"|"reload";
 
   /* eslint-disable import/no-deprecated */
-  supplementaryTextTracks? : ISupplementaryTextTrackOption[];
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   /* eslint-enable import/no-deprecated */
 }
@@ -614,7 +596,6 @@ function parseLoadVideoOptions(
   const transportOptions = objectAssign({}, transportOptsArg, {
     /* eslint-disable import/no-deprecated */
     supplementaryImageTracks: [] as ISupplementaryImageTrackOption[],
-    supplementaryTextTracks: [] as ISupplementaryTextTrackOption[],
     /* eslint-enable import/no-deprecated */
     lowLatencyMode,
   });
@@ -623,24 +604,6 @@ function parseLoadVideoOptions(
   delete transportOptions.initialManifest;
   delete transportOptions.minimumManifestUpdateInterval;
 
-  if (options.supplementaryTextTracks !== undefined) {
-    warnOnce("The `supplementaryTextTracks` loadVideo option is deprecated.\n" +
-             "Please use the `TextTrackRenderer` tool instead.");
-    const supplementaryTextTracks =
-      Array.isArray(options.supplementaryTextTracks) ?
-        options.supplementaryTextTracks : [options.supplementaryTextTracks];
-
-    for (const supplementaryTextTrack of supplementaryTextTracks) {
-      if (typeof supplementaryTextTrack.language !== "string" ||
-          typeof supplementaryTextTrack.mimeType !== "string" ||
-          typeof supplementaryTextTrack.url !== "string"
-      ) {
-        throw new Error("Invalid supplementary text track given. " +
-                        "Missing either language, mimetype or url");
-      }
-    }
-    transportOptions.supplementaryTextTracks = supplementaryTextTracks;
-  }
   if (options.supplementaryImageTracks !== undefined) {
     warnOnce("The `supplementaryImageTracks` loadVideo option is deprecated.\n" +
              "Please use the `parseBifThumbnails` tool instead.");
