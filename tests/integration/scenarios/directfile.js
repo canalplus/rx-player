@@ -82,7 +82,7 @@ describe("basic playback use cases: direct file", function () {
     expect(player.getVideoLoadedTime()).to.be.above(0);
     expect(player.getVideoPlayedTime()).to.be.above(0);
     expect(player.getPlaybackRate()).to.equal(3);
-    expect(player.getVideoElement().playbackRate).to.equal(3);
+    expect(player.getMediaElement().playbackRate).to.equal(3);
   });
 
   it("should be able to seek when loaded", async function () {
