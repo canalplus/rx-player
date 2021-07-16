@@ -12,7 +12,7 @@ describe("initial idle state", () => {
   describe("constructor", () => {
     it("should create a video element if no videoElement option is given", () => {
       const player = new RxPlayer();
-      const videoElement = player.getVideoElement();
+      const videoElement = player.getMediaElement();
       expect(videoElement).to.exist;
       player.dispose();
     });
@@ -76,7 +76,7 @@ describe("initial idle state", () => {
 
         // ! HAHA ! NaN is not === to NaN
         expect(player.getVideoDuration()).to.eql(
-          player.getVideoElement().duration
+          player.getMediaElement().duration
         );
       });
     });
@@ -218,17 +218,17 @@ describe("initial idle state", () => {
         expect(player.setVolume(1)).to.equal(undefined);
         expect(player.setVolume(0.5)).to.equal(undefined);
         expect(player.getVolume()).to.equal(0.5);
-        expect(player.getVideoElement().volume).to.equal(0.5);
+        expect(player.getMediaElement().volume).to.equal(0.5);
 
         expect(player.setVolume(1)).to.equal(undefined);
         expect(player.getVolume()).to.equal(1);
-        expect(player.getVideoElement().volume).to.equal(1);
+        expect(player.getMediaElement().volume).to.equal(1);
       });
     });
 
     describe("mute/unMute/isMute", () => {
       it("should set the volume to 0 in mute by default", () => {
-        const videoElement = player.getVideoElement();
+        const videoElement = player.getMediaElement();
         if (videoElement.muted) {
           videoElement.muted = false;
         }
@@ -246,7 +246,7 @@ describe("initial idle state", () => {
       it("should unmute the volume at the previous value in unMute by default", () => {
         // back to a "normal" state.
         player.unMute();
-        const videoElement = player.getVideoElement();
+        const videoElement = player.getMediaElement();
         if (videoElement.muted) {
           videoElement.muted = false;
         }

@@ -127,10 +127,10 @@ As the state is a central focus of our API, we also heavily documented states in
 
 We're now ready to interact with the current content.
 
-There is [a huge list of APIs](../../api/Basic_Methods/play.md) you can use.
+There is [a huge list of APIs](../../api/Overview.md) you can use.
 Some are useful only when a content is currently loaded (like `play`,
 `pause`, `seekTo` or `setAudioTrack`) and others can be used in any case
-(like `setVolume`, `getVideoElement` or `loadVideo`).
+(like `setVolume`, `getMediaElement` or `loadVideo`).
 
 Here is a complete example where I:
 
