@@ -21,7 +21,6 @@
 
 import config from "../../config";
 import log from "../../log";
-import { ISupplementaryImageTrack } from "../../manifest";
 import {
   IAudioTrackPreference,
   IAudioTrackSwitchingMode,
@@ -34,7 +33,6 @@ import {
   IRepresentationFilter,
   ISegmentLoader,
   IServerSyncInfos,
-  ISupplementaryImageTrackOption,
   ITextTrackPreference,
   IVideoTrackPreference,
 } from "../../public_types";
@@ -60,10 +58,6 @@ export interface IParsedTransportOptions {
   representationFilter? : IRepresentationFilter | undefined;
   segmentLoader? : ISegmentLoader | undefined;
   serverSyncInfos? : IServerSyncInfos | undefined;
-  /* eslint-disable import/no-deprecated */
-  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
-  /* eslint-enable import/no-deprecated */
-
   __priv_patchLastSegmentInSidx? : boolean | undefined;
 }
 
@@ -508,32 +502,12 @@ function parseLoadVideoOptions(
   }
 
   const transportOptions = objectAssign({}, transportOptsArg, {
-    /* eslint-disable import/no-deprecated */
-    supplementaryImageTracks: [] as ISupplementaryImageTrackOption[],
-    /* eslint-enable import/no-deprecated */
     lowLatencyMode,
   });
 
   // remove already parsed data to simplify the `transportOptions` object
   delete transportOptions.initialManifest;
   delete transportOptions.minimumManifestUpdateInterval;
-
-  if (options.supplementaryImageTracks !== undefined) {
-    warnOnce("The `supplementaryImageTracks` loadVideo option is deprecated.\n" +
-             "Please use the `parseBifThumbnails` tool instead.");
-    const supplementaryImageTracks =
-      Array.isArray(options.supplementaryImageTracks) ?
-        options.supplementaryImageTracks : [options.supplementaryImageTracks];
-    for (const supplementaryImageTrack of supplementaryImageTracks) {
-      if (typeof supplementaryImageTrack.mimeType !== "string" ||
-          typeof supplementaryImageTrack.url !== "string"
-      ) {
-        throw new Error("Invalid supplementary image track given. " +
-                        "Missing either mimetype or url");
-      }
-    }
-    transportOptions.supplementaryImageTracks = supplementaryImageTracks;
-  }
 
   if (isNullOrUndefined(options.textTrackMode)) {
     textTrackMode = DEFAULT_TEXT_TRACK_MODE;

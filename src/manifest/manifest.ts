@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../errors";
 import { IParsedManifest } from "../parsers/manifest";
 import {
   IPlayerError,
@@ -23,14 +22,12 @@ import {
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
-import { getFilenameIndexInUrl } from "../utils/resolve_url";
 import warnOnce from "../utils/warn_once";
 import Adaptation from "./adaptation";
 import Period, {
   IManifestAdaptations,
 } from "./period";
 import Representation from "./representation";
-import { StaticRepresentationIndex } from "./representation_index";
 import {
   IAdaptationType,
   MANIFEST_UPDATE_TYPE,
@@ -41,25 +38,10 @@ import {
   updatePeriods,
 } from "./update_periods";
 
-const generateSupplementaryTrackID = idGenerator();
 const generateNewManifestId = idGenerator();
-
-/**
- * Interface a manually-added supplementary image track should respect.
- * @deprecated
- */
-interface ISupplementaryImageTrack {
-  /** mime-type identifying the type of container for the track. */
-  mimeType : string;
-  /** URL to the thumbnails file */
-  url : string;
-}
 
 /** Options given to the `Manifest` constructor. */
 interface IManifestParsingOptions {
-  /** Image tracks to add manually to the Manifest instance. */
-  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
-  /* eslint-enable import/no-deprecated */
   /** External callback peforming an automatic filtering of wanted Representations. */
   representationFilter? : IRepresentationFilter | undefined;
   /** Optional URL that points to a shorter version of the Manifest used
@@ -319,8 +301,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   constructor(parsedManifest : IParsedManifest, options : IManifestParsingOptions) {
     super();
-    const { supplementaryImageTracks = [],
-            representationFilter,
+    const { representationFilter,
             manifestUpdateUrl } = options;
     this.contentWarnings = [];
     this.id = generateNewManifestId();
@@ -355,9 +336,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
     this.publishTime = parsedManifest.publishTime;
-    if (supplementaryImageTracks.length > 0) {
-      this._addSupplementaryImageAdaptations(supplementaryImageTracks);
-    }
   }
 
   /**
@@ -572,50 +550,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Add supplementary image Adaptation(s) to the manifest.
-   * @private
-   * @param {Object|Array.<Object>} imageTracks
-   */
-  private _addSupplementaryImageAdaptations(
-    /* eslint-disable import/no-deprecated */
-    imageTracks : ISupplementaryImageTrack | ISupplementaryImageTrack[]
-  ) : void {
-    const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
-    const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
-      const adaptationID = "gen-image-ada-" + generateSupplementaryTrackID();
-      const representationID = "gen-image-rep-" + generateSupplementaryTrackID();
-      const indexOfFilename = getFilenameIndexInUrl(url);
-      const cdnUrl = url.substring(0, indexOfFilename);
-      const filename = url.substring(indexOfFilename);
-      const newAdaptation = new Adaptation({ id: adaptationID,
-                                             type: "image",
-                                             representations: [{
-                                               bitrate: 0,
-                                               cdnMetadata: [ { baseUrl: cdnUrl } ],
-                                               id: representationID,
-                                               mimeType,
-                                               index: new StaticRepresentationIndex({
-                                                 media: filename,
-                                               }) }] },
-                                           { isManuallyAdded: true });
-      if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-        const error =
-          new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                         "An Adaptation contains only incompatible codecs.");
-        this.contentWarnings.push(error);
-      }
-      return newAdaptation;
-    });
-
-    if (newImageTracks.length > 0 && this.periods.length > 0) {
-      const { adaptations } = this.periods[0];
-      adaptations.image =
-        adaptations.image != null ? adaptations.image.concat(newImageTracks) :
-                                    newImageTracks;
-    }
-  }
-
-  /**
    * @param {Object} newManifest
    * @param {number} type
    */
@@ -701,7 +635,4 @@ function updateDeciperability(
   return updates;
 }
 
-export {
-  IManifestParsingOptions,
-  ISupplementaryImageTrack,
-};
+export { IManifestParsingOptions };

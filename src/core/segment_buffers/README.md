@@ -31,24 +31,24 @@ Here's a simplified architecture schema of the code in that directory:
    +--------------------------------------------------------------------------+
    |                         SegmentBuffersStore                              |
    +--------------------------------------------------------------------------+
-          |                  |                  |                  |
-          | creates          | creates          | creates          | creates
-          | (if needed)      | (if needed)      | (if needed)      | (if needed)
-          |                  |                  |                  |
-          V                  V                  V                  V
-  +-------------+    +-------------+     +-------------+     +-------------+
-  |  AudioVideo |    |  AudioVideo |     |             |     |             |
-  |SegmentBuffer|    |SegmentBuffer|     |    Text     |     |    Image    |
-  |   (video)   |    |   (audio)   |     |SegmentBuffer|     |SegmentBuffer|
-  |             |    |             |     |             |     |             |
-  +-------------+    +-------------+     +-------------+     +-------------+
-     Uses both          Uses both             Uses                Uses
-      |      |           |      |               |                   |
-      |      |           |      |               |                   |
-      V      V           V      V               V                   V
-  +-----+ +-----+    +-----+ +-----+         +-----+             +-----+
-  | SI* | | SB* |    | SI* | | SB* |         | SI* |             | SI* |
-  +-----+ +-----+    +-----+ +-----+         +-----+             +-----+
+          |                  |                  |
+          | creates          | creates          | creates
+          | (if needed)      | (if needed)      | (if needed)
+          |                  |                  |
+          V                  V                  V
+  +-------------+    +-------------+     +-------------+
+  |  AudioVideo |    |  AudioVideo |     |             |
+  |SegmentBuffer|    |SegmentBuffer|     |    Text     |
+  |   (video)   |    |   (audio)   |     |SegmentBuffer|
+  |             |    |             |     |             |
+  +-------------+    +-------------+     +-------------+
+     Uses both          Uses both             Uses
+      |      |           |      |               |
+      |      |           |      |               |
+      V      V           V      V               V
+  +-----+ +-----+    +-----+ +-----+         +-----+
+  | SI* | | SB* |    | SI* | | SB* |         | SI* |
+  +-----+ +-----+    +-----+ +-----+         +-----+
 
   SI*: SegmentInventory. Store the metadata on every segments currently
        available in the associated media buffer.
