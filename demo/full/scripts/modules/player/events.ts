@@ -1,4 +1,4 @@
-import type { IBifThumbnail, IPlayerModuleState } from ".";
+import type { IPlayerModuleState } from ".";
 import type RxPlayer from "../../../../../src";
 import type { IPlayerError } from "../../../../../src/public_types";
 import type { IStateUpdater } from "../../lib/declareModule";
@@ -32,14 +32,6 @@ function linkPlayerEventsToState(
   linkPlayerEventToState("availableTextTracksChange", "availableSubtitles");
   linkPlayerEventToState("availableAudioBitratesChange", "availableAudioBitrates");
   linkPlayerEventToState("availableVideoBitratesChange", "availableVideoBitrates");
-
-  player.addEventListener("imageTrackUpdate", onImageTrackUpdate);
-  abortSignal.addEventListener("abort", () => {
-    player.removeEventListener("imageTrackUpdate", onImageTrackUpdate);
-  });
-  function onImageTrackUpdate({ data }: { data: IBifThumbnail[] }) {
-    state.update("images", data);
-  }
 
   let positionUpdatesInterval: number | null = null;
 
@@ -203,7 +195,6 @@ function linkPlayerEventsToState(
         stateUpdates.availableLanguages = [];
         stateUpdates.availableSubtitles = [];
         stateUpdates.lowLatencyMode = false;
-        stateUpdates.images = [];
         stateUpdates.subtitle = null;
         stateUpdates.language = null;
         stateUpdates.videoTrack = null;

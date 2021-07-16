@@ -61,28 +61,6 @@ export type INativeTextTracksBuffer =
 
 export type IMediaElementTrackChoiceManager = typeof MediaElementTrackChoiceManager;
 
-interface IBifThumbnail { index : number;
-                          duration : number;
-                          ts : number;
-                          data : Uint8Array; }
-
-interface IBifObject { fileFormat : string;
-                       version : string;
-                       imageCount : number;
-                       timescale : number;
-                       format : string;
-                       width : number;
-                       height : number;
-                       aspectRatio : string;
-                       isVod : boolean;
-                       thumbs : IBifThumbnail[]; }
-
-export type IImageBuffer =
-  new() => SegmentBuffer;
-
-export type IImageParser =
-  ((buffer : Uint8Array) => IBifObject);
-
 export type IDashJsParser = (
   document: Document,
   args : IMPDParserArguments
@@ -129,8 +107,6 @@ export interface IFeaturesObject {
    * Those parsers are specifically destined to be displayed in DOM elements.
    */
   htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
-  imageBuffer : IImageBuffer|null;
-  imageParser : IImageParser|null;
   /** Feature allowing to load contents through MediaSource API. */
   mediaSourceInit: typeof MediaSourceContentInitializer | null;
   /**
