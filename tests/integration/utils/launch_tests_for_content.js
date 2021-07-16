@@ -367,7 +367,7 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("getVideoDuration", () => {
+    describe("getMediaDuration", () => {
       if (isLive) {
         it("should return Math.MAX_NUMBER", async () => {
           player.loadVideo({
@@ -376,7 +376,7 @@ export default function launchTestsForContent(manifestInfos) {
             autoPlay: false,
           });
           await waitForLoadedStateAfterLoadVideo(player);
-          expect(player.getVideoDuration()).to.equal(Math.MAX_NUMBER);
+          expect(player.getMediaDuration()).to.equal(Math.MAX_NUMBER);
         });
       } else {
         it("should return the duration of the whole video", async () => {
@@ -386,7 +386,7 @@ export default function launchTestsForContent(manifestInfos) {
             autoPlay: false,
           });
           await waitForLoadedStateAfterLoadVideo(player);
-          expect(player.getVideoDuration()).to.be.closeTo(maximumPosition, 0.1);
+          expect(player.getMediaDuration()).to.be.closeTo(maximumPosition, 0.1);
         });
       }
     });

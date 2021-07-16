@@ -26,7 +26,7 @@
     - [seekTo](#meth-seekTo)
     - [getMinimumPosition](#meth-getMinimumPosition)
     - [getMaximumPosition](#meth-getMaximumPosition)
-    - [getVideoDuration](#meth-getVideoDuration)
+    - [getMediaDuration](#meth-getMediaDuration)
     - [getError](#meth-getError)
     - [getMediaElement](#meth-getMediaElement)
     - [dispose](#meth-dispose)
@@ -695,12 +695,12 @@ player.seekTo({
 ```
 
 
-<a name="meth-getVideoDuration"></a>
-### getVideoDuration ###########################################################
+<a name="meth-getMediaDuration"></a>
+### getMediaDuration ###########################################################
 
 --
 
-__syntax__: `const duration = player.getVideoDuration()`
+__syntax__: `const duration = player.getMediaDuration()`
 
 __return value__: ``Number``
 
@@ -719,7 +719,7 @@ normally be expected from a property named "duration".
 
 ```js
 const pos = player.getPosition();
-const dur = player.getVideoDuration();
+const dur = player.getMediaDuration();
 
 console.log(`current position: ${pos} / ${dur}`);
 ```
@@ -1683,7 +1683,7 @@ During this period of time:
       - ``seekTo`` will not work
       - ``getPosition`` will return 0
       - ``getWallClockTime`` will return 0
-      - ``getVideoDuration`` will return ``NaN``
+      - ``getMediaDuration`` will return ``NaN``
       - ``getAvailableAudioTracks`` will return an empty array
       - ``getAvailableTextTracks`` will return an empty array
       - ``getAvailableVideoTracks`` will return an empty array
