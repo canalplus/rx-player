@@ -81,26 +81,8 @@ export interface ILoadVideoOptions {
   onCodecSwitch? : "continue"|"reload";
 
   /* eslint-disable import/no-deprecated */
-  supplementaryTextTracks? : ISupplementaryTextTrackOption[];
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   /* eslint-enable import/no-deprecated */
-}
-
-/**
- * External text track we have to add to the Manifest once downloaded.
- * @deprecated
- */
-export interface ISupplementaryTextTrackOption {
-  /** URL the external text track can be found at. */
-  url : string;
-  /** Language the text track is in. */
-  language : string;
-  /** If `true` the text track contains closed captions. */
-  closedCaption : boolean;
-  /** Mime-type used to know the container and/or format of the text track. */
-  mimeType : string;
-  /** Codec used to know the format of the text track. */
-  codecs? : string;
 }
 
 /**
