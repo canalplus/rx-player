@@ -28,22 +28,16 @@ import { IABRFiltersObject } from "./representation_estimator";
  * @param {Observable} limitWidth$ - Emit the width at which the chosen
  * Representation should be limited.
  * @param {Observable} throttleBitrate$ - Emit the maximum bitrate authorized.
- * @param {Observable} throttle$ - Also emit the maximum bitrate authorized.
- * Here for legacy reasons.
  * @returns {Observable}
  */
 export default function createFilters(
   limitWidth$? : Observable<number>,
-  throttleBitrate$? : Observable<number>,
-  throttle$? : Observable<number>
+  throttleBitrate$? : Observable<number>
 ) : Observable<IABRFiltersObject> {
   const deviceEventsArray : Array<Observable<IABRFiltersObject>> = [];
 
   if (limitWidth$ != null) {
     deviceEventsArray.push(limitWidth$.pipe(map(width => ({ width }))));
-  }
-  if (throttle$ != null) {
-    deviceEventsArray.push(throttle$.pipe(map(bitrate => ({ bitrate }))));
   }
   if (throttleBitrate$ != null) {
     deviceEventsArray.push(throttleBitrate$.pipe(map(bitrate => ({ bitrate }))));

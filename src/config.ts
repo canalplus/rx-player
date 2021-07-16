@@ -272,14 +272,6 @@ export default {
   INACTIVITY_DELAY: 60 * 1000,
 
   /**
-   * If true, if the player is in a "hidden" state for a delay specified by the
-   * INACTIVITY DELAY config property, we throttle automatically to the video
-   * representation with the lowest bitrate.
-   * @type {Boolean}
-   */
-  DEFAULT_THROTTLE_WHEN_HIDDEN: false,
-
-  /**
    * If true, if the video is considered in a "hidden" state for a delay specified by
    * the INACTIVITY DELAY config property, we throttle automatically to the video
    * representation with the lowest bitrate.
