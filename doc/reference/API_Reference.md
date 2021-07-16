@@ -460,14 +460,6 @@ properties, methods, events and so on.
   - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
     Returns the last stored content position, in seconds.
 
-  - [`getVideoLoadedTime`](../api/Deprecated/getVideoLoadedTime.md):
-    [Deprecated] Returns in seconds the difference between the start and the end
-    of the current media time range.
-
-  - [`getVideoPlayedTime`](../api/Deprecated/getVideoPlayedTime.md):
-    [Deprecated] Returns in seconds the difference between the start of the
-    current media time range and the current position.
-
   - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
     [Deprecated] Returns the name of the current key system.
 
