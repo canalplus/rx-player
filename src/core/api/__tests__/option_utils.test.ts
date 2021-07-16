@@ -493,7 +493,6 @@ describe("API - parseLoadVideoOptions", () => {
     textTrackMode: "native",
     transportOptions: {
       lowLatencyMode: false,
-      supplementaryTextTracks: [],
       supplementaryImageTracks: [],
     },
     url: undefined,
@@ -603,8 +602,7 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
       transportOptions: { lowLatencyMode: false,
                           manifestLoader,
-                          supplementaryImageTracks: [],
-                          supplementaryTextTracks: [] },
+                          supplementaryImageTracks: [] },
     });
   });
 
@@ -788,8 +786,7 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
       url: "foo",
       transportOptions: { lowLatencyMode: true,
-                          supplementaryImageTracks: [],
-                          supplementaryTextTracks: [] },
+                          supplementaryImageTracks: [] },
     });
   });
 
@@ -808,7 +805,6 @@ describe("API - parseLoadVideoOptions", () => {
       transportOptions: {
         lowLatencyMode: false,
         supplementaryImageTracks: [],
-        supplementaryTextTracks: [],
       },
     });
   });
@@ -1117,7 +1113,6 @@ If badly set, continue will be used as default`);
       transportOptions: {
         lowLatencyMode: false,
         supplementaryImageTracks: [supplementaryImageTracks1],
-        supplementaryTextTracks: [],
       },
     });
     expect(parseLoadVideoOptions({
@@ -1132,7 +1127,6 @@ If badly set, continue will be used as default`);
         lowLatencyMode: false,
         supplementaryImageTracks: [ supplementaryImageTracks1,
                                     supplementaryImageTracks2 ],
-        supplementaryTextTracks: [],
       },
     });
   });
@@ -1206,145 +1200,6 @@ If badly set, continue will be used as default`);
     }
   });
 
-  it("should authorize setting a supplementaryTextTracks option", () => {
-    const supplementaryTextTracks1 = {
-      url: "foo",
-      mimeType: "bar/baz",
-      language: "fr",
-    };
-    const supplementaryTextTracks2 = {
-      url: "bar",
-      mimeType: "toto",
-      language: "en",
-    };
-    expect(parseLoadVideoOptions({
-      supplementaryTextTracks: supplementaryTextTracks1 as any,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-        supplementaryImageTracks: [],
-        supplementaryTextTracks: [supplementaryTextTracks1],
-      },
-    });
-    expect(parseLoadVideoOptions({
-      supplementaryTextTracks: [
-        supplementaryTextTracks1,
-        supplementaryTextTracks2,
-      ] as any,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-        supplementaryImageTracks: [],
-        supplementaryTextTracks: [supplementaryTextTracks1, supplementaryTextTracks2],
-      },
-    });
-  });
-
-  it("should throw when setting an invalid supplementaryTextTracks option", () => {
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryTextTracks: {} as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary text track given." +
-        " Missing either language, mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryTextTracks: { url: "test", language: "toto" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary text track given." +
-        " Missing either language, mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryTextTracks: { mimeType: "test", language: "toto" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary text track given." +
-        " Missing either language, mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryTextTracks: { url: "test", mimeType: "toto" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary text track given." +
-        " Missing either language, mimetype or url");
-    }
-  });
-
   it("should authorize setting a transportOptions option", () => {
     const func = jest.fn();
     expect(parseLoadVideoOptions({
@@ -1357,7 +1212,6 @@ If badly set, continue will be used as default`);
       transport: "bar",
       transportOptions: { lowLatencyMode: false,
                           supplementaryImageTracks: [],
-                          supplementaryTextTracks: [],
                           segmentLoader: func },
     });
   });
@@ -1500,8 +1354,7 @@ If badly set, continue will be used as default`);
       transport: "bar",
       transportOptions: { lowLatencyMode: false,
                           __priv_toto: 4,
-                          supplementaryImageTracks: [],
-                          supplementaryTextTracks: [] },
+                          supplementaryImageTracks: [] },
     });
   });
 });
