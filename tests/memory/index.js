@@ -7,7 +7,6 @@ import {
   manifestInfos,
   trickModeInfos,
 } from "../contents/DASH_static_SegmentTimeline";
-import imageInfos from "../contents/imagetracks";
 import sleep from "../utils/sleep.js";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
@@ -42,8 +41,6 @@ describe("Memory tests", () => {
 
     player.loadVideo({ url: manifestInfos.url,
                        transport: manifestInfos.transport,
-                       supplementaryImageTracks: [{ mimeType: "application/bif",
-                                                    url: imageInfos.url }],
                        autoPlay: true });
     player.setPlaybackRate(4);
     await waitForPlayerState(player, "ENDED");
@@ -87,8 +84,6 @@ describe("Memory tests", () => {
     for (let i = 0; i < 1000; i++) {
       player.loadVideo({ url: manifestInfos.url,
                          transport: manifestInfos.transport,
-                         supplementaryImageTracks: [{ mimeType: "application/bif",
-                                                      url: imageInfos.url }],
                          autoPlay: true });
       await waitForLoadedStateAfterLoadVideo(player);
     }

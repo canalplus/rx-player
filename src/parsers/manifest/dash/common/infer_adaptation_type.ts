@@ -22,8 +22,7 @@ import { IRepresentationIntermediateRepresentation } from "../node_parser_types"
 /** Different "type" a parsed Adaptation can be. */
 type IAdaptationType = "audio" |
                        "video" |
-                       "text" |
-                       "image";
+                       "text";
 
 /** Different `role`s a text Adaptation can be. */
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -49,7 +48,7 @@ interface IScheme {
  * @param {string|null} adaptationMimeType
  * @param {string|null} adaptationCodecs
  * @param {Array.<Object>|null} adaptationRoles
- * @returns {string} - "audio"|"video"|"text"|"image"|"metadata"|"unknown"
+ * @returns {string} - "audio"|"video"|"text"|"metadata"|"unknown"
  */
 export default function inferAdaptationType(
   representations: IRepresentationIntermediateRepresentation[],
@@ -65,9 +64,6 @@ export default function inferAdaptationType(
     if (arrayIncludes<IAdaptationType>(SUPPORTED_ADAPTATIONS_TYPE,
                                        topLevel as IAdaptationType)) {
       return topLevel as IAdaptationType;
-    }
-    if (mimeType === "application/bif") {
-      return "image";
     }
     if (mimeType === "application/ttml+xml") {
       return "text";
@@ -98,8 +94,6 @@ export default function inferAdaptationType(
         return "video";
       case "vtt":
         return "text";
-      case "bif":
-        return "image";
     }
     switch (codecs.substring(0, 4)) {
       case "mp4a":

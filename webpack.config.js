@@ -91,10 +91,6 @@ module.exports = (env) => {
         EME: +(isBarebone ?
           process.env.RXP_EME === "true" :
           process.env.RXP_EME !== "false"),
-
-        BIF_PARSER: +(isBarebone ?
-          process.env.RXP_BIF_PARSER === "true" :
-          process.env.RXP_BIF_PARSER !== "false"),
       },
       __ENVIRONMENT__: {
         PRODUCTION: 0,
