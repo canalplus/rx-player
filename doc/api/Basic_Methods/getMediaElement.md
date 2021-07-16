@@ -1,4 +1,4 @@
-# getVideoElement
+# getMediaElement
 
 ## Description
 
@@ -13,7 +13,7 @@ was instantiated with one.
 ## Syntax
 
 ```js
-const elt = player.getVideoElement();
+const elt = player.getMediaElement();
 ```
 
   - **return value** `HTMLMediaElement`: The media element attached to the
@@ -22,6 +22,6 @@ const elt = player.getVideoElement();
 ## Example
 
 ```js
-const videoElement = player.getVideoElement();
+const videoElement = player.getMediaElement();
 videoElement.className = "my-video-element";
 ```
