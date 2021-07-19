@@ -1,0 +1,778 @@
+{
+  "pluginId": "default",
+  "version": "current",
+  "label": "Next",
+  "banner": "none",
+  "isLast": true,
+  "docsSidebars": {
+    "api": [
+      {
+        "type": "link",
+        "label": "Player Options",
+        "href": "/docs/api/player_options"
+      },
+      {
+        "type": "link",
+        "label": "Player States",
+        "href": "/docs/api/states"
+      },
+      {
+        "type": "link",
+        "label": "Player events",
+        "href": "/docs/api/playerEvents"
+      },
+      {
+        "type": "link",
+        "label": "Player errors/warnings",
+        "href": "/docs/api/playerErrorsWarning"
+      },
+      {
+        "type": "link",
+        "label": "Dash WASM Parser",
+        "href": "/docs/api/dashWasmParser"
+      },
+      {
+        "type": "link",
+        "label": "HDR",
+        "href": "/docs/api/hdr"
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Basic methods",
+        "items": [
+          {
+            "type": "link",
+            "label": "loadVideo",
+            "href": "/docs/api/loadVideo"
+          },
+          {
+            "type": "link",
+            "label": "reload",
+            "href": "/docs/api/basicMethods/reload"
+          },
+          {
+            "type": "link",
+            "label": "getPlayerState",
+            "href": "/docs/api/basicMethods/getPlayerState"
+          },
+          {
+            "type": "link",
+            "label": "addEventListener",
+            "href": "/docs/api/basicMethods/addEventListener"
+          },
+          {
+            "type": "link",
+            "label": "removeEventListener",
+            "href": "/docs/api/basicMethods/removeEventListener"
+          },
+          {
+            "type": "link",
+            "label": "play",
+            "href": "/docs/api/basicMethods/play"
+          },
+          {
+            "type": "link",
+            "label": "pause",
+            "href": "/docs/api/basicMethods/pause"
+          },
+          {
+            "type": "link",
+            "label": "stop",
+            "href": "/docs/api/basicMethods/stop"
+          },
+          {
+            "type": "link",
+            "label": "getPosition",
+            "href": "/docs/api/basicMethods/getPosition"
+          },
+          {
+            "type": "link",
+            "label": "getWallClockTime",
+            "href": "/docs/api/basicMethods/getWallClockTime"
+          },
+          {
+            "type": "link",
+            "label": "seekTo",
+            "href": "/docs/api/basicMethods/seekTo"
+          },
+          {
+            "type": "link",
+            "label": "getMinimumPosition",
+            "href": "/docs/api/basicMethods/getMinimumPosition"
+          },
+          {
+            "type": "link",
+            "label": "getMaximumPosition",
+            "href": "/docs/api/basicMethods/getMaximumPosition"
+          },
+          {
+            "type": "link",
+            "label": "getVideoDuration",
+            "href": "/docs/api/basicMethods/getVideoDuration"
+          },
+          {
+            "type": "link",
+            "label": "getError",
+            "href": "/docs/api/basicMethods/getError"
+          },
+          {
+            "type": "link",
+            "label": "getVideoElement",
+            "href": "/docs/api/basicMethods/getVideoElement"
+          },
+          {
+            "type": "link",
+            "label": "dispose",
+            "href": "/docs/api/basicMethods/dispose"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Speed Control",
+        "items": [
+          {
+            "type": "link",
+            "label": "setPlaybackRate",
+            "href": "/docs/api/speedControlTrickModes/setPlaybackRate"
+          },
+          {
+            "type": "link",
+            "label": "getPlaybackRate",
+            "href": "/docs/api/speedControlTrickModes/getPlaybackRate"
+          },
+          {
+            "type": "link",
+            "label": "areTrickModeTracksEnabled",
+            "href": "/docs/api/speedControlTrickModes/areTrickModeTracksEnabled"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Volume Control",
+        "items": [
+          {
+            "type": "link",
+            "label": "setVolume",
+            "href": "/docs/api/volumeControl/setVolume"
+          },
+          {
+            "type": "link",
+            "label": "getVolume",
+            "href": "/docs/api/volumeControl/getVolume"
+          },
+          {
+            "type": "link",
+            "label": "mute",
+            "href": "/docs/api/volumeControl/mute"
+          },
+          {
+            "type": "link",
+            "label": "unMute",
+            "href": "/docs/api/volumeControl/unMute"
+          },
+          {
+            "type": "link",
+            "label": "isMute",
+            "href": "/docs/api/volumeControl/isMute"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Track Selection",
+        "items": [
+          {
+            "type": "link",
+            "label": "getAudioTrack",
+            "href": "/docs/api/trackSelection/getAudioTrack"
+          },
+          {
+            "type": "link",
+            "label": "getTextTrack",
+            "href": "/docs/api/trackSelection/getTextTrack"
+          },
+          {
+            "type": "link",
+            "label": "getVideoTrack",
+            "href": "/docs/api/trackSelection/getVideoTrack"
+          },
+          {
+            "type": "link",
+            "label": "getAvailableAudioTracks",
+            "href": "/docs/api/trackSelection/getAvailableAudioTracks"
+          },
+          {
+            "type": "link",
+            "label": "getAvailableTextTracks",
+            "href": "/docs/api/trackSelection/getAvailableTextTracks"
+          },
+          {
+            "type": "link",
+            "label": "getAvailableVideoTracks",
+            "href": "/docs/api/trackSelection/getAvailableVideoTracks"
+          },
+          {
+            "type": "link",
+            "label": "setAudioTrack",
+            "href": "/docs/api/trackSelection/setAudioTrack"
+          },
+          {
+            "type": "link",
+            "label": "setTextTrack",
+            "href": "/docs/api/trackSelection/setTextTrack"
+          },
+          {
+            "type": "link",
+            "label": "disableTextTrack",
+            "href": "/docs/api/trackSelection/disableTextTrack"
+          },
+          {
+            "type": "link",
+            "label": "setVideoTrack",
+            "href": "/docs/api/trackSelection/setVideoTrack"
+          },
+          {
+            "type": "link",
+            "label": "disableVideoTrack",
+            "href": "/docs/api/trackSelection/disableVideoTrack"
+          },
+          {
+            "type": "link",
+            "label": "setPreferredAudioTracks",
+            "href": "/docs/api/trackSelection/setPreferredAudioTracks"
+          },
+          {
+            "type": "link",
+            "label": "getPreferredAudioTracks",
+            "href": "/docs/api/trackSelection/getPreferredAudioTracks"
+          },
+          {
+            "type": "link",
+            "label": "setPreferredTextTracks",
+            "href": "/docs/api/trackSelection/setPreferredTextTracks"
+          },
+          {
+            "type": "link",
+            "label": "getPreferredTextTracks",
+            "href": "/docs/api/trackSelection/getPreferredTextTracks"
+          },
+          {
+            "type": "link",
+            "label": "setPreferredVideoTracks",
+            "href": "/docs/api/trackSelection/setPreferredVideoTracks"
+          },
+          {
+            "type": "link",
+            "label": "getPreferredVideoTracks",
+            "href": "/docs/api/trackSelection/getPreferredVideoTracks"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Bitrate selection",
+        "items": [
+          {
+            "type": "link",
+            "label": "getAvailableVideoBitrates",
+            "href": "/docs/api/bitrateSelection/getAvailableVideoBitrates"
+          },
+          {
+            "type": "link",
+            "label": "getAvailableAudioBitrates",
+            "href": "/docs/api/bitrateSelection/getAvailableAudioBitrates"
+          },
+          {
+            "type": "link",
+            "label": "getVideoBitrate",
+            "href": "/docs/api/bitrateSelection/getVideoBitrate"
+          },
+          {
+            "type": "link",
+            "label": "getAudioBitrate",
+            "href": "/docs/api/bitrateSelection/getAudioBitrate"
+          },
+          {
+            "type": "link",
+            "label": "setMinVideoBitrate",
+            "href": "/docs/api/bitrateSelection/setMinVideoBitrate"
+          },
+          {
+            "type": "link",
+            "label": "setMinAudioBitrate",
+            "href": "/docs/api/bitrateSelection/setMinAudioBitrate"
+          },
+          {
+            "type": "link",
+            "label": "getMinVideoBitrate",
+            "href": "/docs/api/bitrateSelection/getMinVideoBitrate"
+          },
+          {
+            "type": "link",
+            "label": "getMinAudioBitrate",
+            "href": "/docs/api/bitrateSelection/getMinAudioBitrate"
+          },
+          {
+            "type": "link",
+            "label": "setMaxVideoBitrate",
+            "href": "/docs/api/bitrateSelection/setMaxVideoBitrate"
+          },
+          {
+            "type": "link",
+            "label": "setMaxAudioBitrate",
+            "href": "/docs/api/bitrateSelection/setMaxAudioBitrate"
+          },
+          {
+            "type": "link",
+            "label": "getMaxVideoBitrate",
+            "href": "/docs/api/bitrateSelection/getMaxVideoBitrate"
+          },
+          {
+            "type": "link",
+            "label": "getMaxAudioBitrate",
+            "href": "/docs/api/bitrateSelection/getMaxAudioBitrate"
+          },
+          {
+            "type": "link",
+            "label": "setVideoBitrate",
+            "href": "/docs/api/bitrateSelection/setVideoBitrate"
+          },
+          {
+            "type": "link",
+            "label": "setAudioBitrate",
+            "href": "/docs/api/bitrateSelection/setAudioBitrate"
+          },
+          {
+            "type": "link",
+            "label": "getManualVideoBitrate",
+            "href": "/docs/api/bitrateSelection/getManualVideoBitrate"
+          },
+          {
+            "type": "link",
+            "label": "getManualAudioBitrate",
+            "href": "/docs/api/bitrateSelection/getManualAudioBitrate"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Buffer control",
+        "items": [
+          {
+            "type": "link",
+            "label": "setWantedBufferAhead",
+            "href": "/docs/api/bufferControl/setWantedBufferAhead"
+          },
+          {
+            "type": "link",
+            "label": "getWantedBufferAhead",
+            "href": "/docs/api/bufferControl/getWantedBufferAhead"
+          },
+          {
+            "type": "link",
+            "label": "setMaxBufferBehind",
+            "href": "/docs/api/bufferControl/setMaxBufferBehind"
+          },
+          {
+            "type": "link",
+            "label": "getMaxBufferBehind",
+            "href": "/docs/api/bufferControl/getMaxBufferBehind"
+          },
+          {
+            "type": "link",
+            "label": "setMaxBufferAhead",
+            "href": "/docs/api/bufferControl/setMaxBufferAhead"
+          },
+          {
+            "type": "link",
+            "label": "getMaxBufferAhead",
+            "href": "/docs/api/bufferControl/getMaxBufferAhead"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Buffer information",
+        "items": [
+          {
+            "type": "link",
+            "label": "getVideoLoadedTime",
+            "href": "/docs/api/bufferInformation/getVideoLoadedTime"
+          },
+          {
+            "type": "link",
+            "label": "getVideoPlayedTime",
+            "href": "/docs/api/bufferInformation/getVideoPlayedTime"
+          },
+          {
+            "type": "link",
+            "label": "getVideoBufferGap",
+            "href": "/docs/api/bufferInformation/getVideoBufferGap"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Content information",
+        "items": [
+          {
+            "type": "link",
+            "label": "isLive",
+            "href": "/docs/api/contentInformation/isLive"
+          },
+          {
+            "type": "link",
+            "label": "getUrl",
+            "href": "/docs/api/contentInformation/getUrl"
+          },
+          {
+            "type": "link",
+            "label": "getCurrentKeySystem",
+            "href": "/docs/api/contentInformation/getCurrentKeySystem"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Deprecated",
+        "items": [
+          {
+            "type": "link",
+            "label": "getManifest",
+            "href": "/docs/api/deprecated/getManifest"
+          },
+          {
+            "type": "link",
+            "label": "getCurrentAdaptations",
+            "href": "/docs/api/deprecated/getCurrentAdaptations"
+          },
+          {
+            "type": "link",
+            "label": "getCurrentRepresentations",
+            "href": "/docs/api/deprecated/getCurrentRepresentations"
+          },
+          {
+            "type": "link",
+            "label": "getImageTrackData",
+            "href": "/docs/api/deprecated/getImageTrackData"
+          },
+          {
+            "type": "link",
+            "label": "setFullscreen",
+            "href": "/docs/api/deprecated/setFullscreen"
+          },
+          {
+            "type": "link",
+            "label": "exitFullscreen",
+            "href": "/docs/api/deprecated/exitFullscreen"
+          },
+          {
+            "type": "link",
+            "label": "isFullscreen",
+            "href": "/docs/api/deprecated/isFullscreen"
+          },
+          {
+            "type": "link",
+            "label": "getNativeTextTrack",
+            "href": "/docs/api/deprecated/getNativeTextTrack"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Static properties",
+        "items": [
+          {
+            "type": "link",
+            "label": "version",
+            "href": "/docs/api/staticProperties/version"
+          },
+          {
+            "type": "link",
+            "label": "ErrorTypes",
+            "href": "/docs/api/staticProperties/ErrorTypes"
+          },
+          {
+            "type": "link",
+            "label": "ErrorCodes",
+            "href": "/docs/api/staticProperties/ErrorCodes"
+          },
+          {
+            "type": "link",
+            "label": "LogLevel",
+            "href": "/docs/api/staticProperties/LogLevel"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Exported Tools",
+        "items": [
+          {
+            "type": "link",
+            "label": "StringUtils",
+            "href": "/docs/api/tools/tools/string-utils"
+          },
+          {
+            "type": "link",
+            "label": "TextTrackRenderer",
+            "href": "/docs/api/tools/tools/text-track-renderer"
+          },
+          {
+            "type": "link",
+            "label": "MediaCapabilitiesProber",
+            "href": "/docs/api/tools/media-capabilities-prober"
+          },
+          {
+            "type": "link",
+            "label": "parseBifThumbnails",
+            "href": "/docs/api/tools/tools/parse-bif-thumbnails"
+          },
+          {
+            "type": "link",
+            "label": "createMetaplaylist",
+            "href": "/docs/api/tools/tools/create-metaplaylist"
+          },
+          {
+            "type": "link",
+            "label": "VideoThumbnailLoader",
+            "href": "/docs/api/tools/tools/video-thumbnail-loader"
+          }
+        ]
+      },
+      {
+        "type": "link",
+        "label": "Images",
+        "href": "/docs/api/images"
+      },
+      {
+        "type": "link",
+        "label": "Plugins",
+        "href": "/docs/api/plugins"
+      }
+    ],
+    "getstarted": [
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Tutorials",
+        "items": [
+          {
+            "type": "link",
+            "label": "Quick Start",
+            "href": "/docs/tutorials/quick_start"
+          },
+          {
+            "type": "link",
+            "label": "Playing contents with DRMs",
+            "href": "/docs/tutorials/playing-contents-with-drms"
+          },
+          {
+            "type": "link",
+            "label": "Selecting a track",
+            "href": "/docs/tutorials/selecting-a-track"
+          },
+          {
+            "type": "link",
+            "label": "Listening to stream events",
+            "href": "/docs/tutorials/listening-to-stream-events"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Additional ressources",
+        "items": [
+          {
+            "type": "link",
+            "label": "Manifest Object",
+            "href": "/docs/additional_ressources/manifest"
+          },
+          {
+            "type": "link",
+            "label": "Text Tracks",
+            "href": "/docs/additional_ressources/text_tracks"
+          },
+          {
+            "type": "link",
+            "label": "DASH' AdaptationSets vs rx-player \"Adaptation\"",
+            "href": "/docs/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference"
+          },
+          {
+            "type": "link",
+            "label": "MetaPlaylist v0.1",
+            "href": "/docs/additional_ressources/metaplaylist"
+          },
+          {
+            "type": "link",
+            "label": "Local contents",
+            "href": "/docs/additional_ressources/local_contents"
+          },
+          {
+            "type": "link",
+            "label": "Local Manifest",
+            "href": "/docs/additional_ressources/local_manifest_v0.1"
+          },
+          {
+            "type": "link",
+            "label": "Minimal player",
+            "href": "/docs/additional_ressources/minimal_player"
+          },
+          {
+            "type": "link",
+            "label": "Low Latency",
+            "href": "/docs/additional_ressources/low_latency"
+          },
+          {
+            "type": "link",
+            "label": "Initial Position",
+            "href": "/docs/additional_ressources/initial_position"
+          },
+          {
+            "type": "link",
+            "label": "Presentation Time Offset",
+            "href": "/docs/additional_ressources/presentation_time_offset"
+          },
+          {
+            "type": "link",
+            "label": "Deprecated APIs",
+            "href": "/docs/additional_ressources/deprecated_api"
+          }
+        ]
+      },
+      {
+        "type": "link",
+        "label": "Glossary",
+        "href": "/docs/glossary"
+      }
+    ]
+  },
+  "permalinkToSidebar": {
+    "/docs/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference": "getstarted",
+    "/docs/additional_ressources/deprecated_api": "getstarted",
+    "/docs/additional_ressources/initial_position": "getstarted",
+    "/docs/additional_ressources/local_contents": "getstarted",
+    "/docs/additional_ressources/local_manifest_v0.1": "getstarted",
+    "/docs/additional_ressources/low_latency": "getstarted",
+    "/docs/additional_ressources/manifest": "getstarted",
+    "/docs/additional_ressources/metaplaylist": "getstarted",
+    "/docs/additional_ressources/minimal_player": "getstarted",
+    "/docs/additional_ressources/presentation_time_offset": "getstarted",
+    "/docs/additional_ressources/text_tracks": "getstarted",
+    "/docs/api/basicMethods/addEventListener": "api",
+    "/docs/api/basicMethods/dispose": "api",
+    "/docs/api/basicMethods/getError": "api",
+    "/docs/api/basicMethods/getMaximumPosition": "api",
+    "/docs/api/basicMethods/getMinimumPosition": "api",
+    "/docs/api/basicMethods/getPlayerState": "api",
+    "/docs/api/basicMethods/getPosition": "api",
+    "/docs/api/basicMethods/getVideoDuration": "api",
+    "/docs/api/basicMethods/getVideoElement": "api",
+    "/docs/api/basicMethods/getWallClockTime": "api",
+    "/docs/api/loadVideo": "api",
+    "/docs/api/basicMethods/pause": "api",
+    "/docs/api/basicMethods/play": "api",
+    "/docs/api/basicMethods/reload": "api",
+    "/docs/api/basicMethods/removeEventListener": "api",
+    "/docs/api/basicMethods/seekTo": "api",
+    "/docs/api/basicMethods/stop": "api",
+    "/docs/api/bitrateSelection/getAudioBitrate": "api",
+    "/docs/api/bitrateSelection/getAvailableAudioBitrates": "api",
+    "/docs/api/bitrateSelection/getAvailableVideoBitrates": "api",
+    "/docs/api/bitrateSelection/getManualAudioBitrate": "api",
+    "/docs/api/bitrateSelection/getManualVideoBitrate": "api",
+    "/docs/api/bitrateSelection/getMaxAudioBitrate": "api",
+    "/docs/api/bitrateSelection/getMaxVideoBitrate": "api",
+    "/docs/api/bitrateSelection/getMinAudioBitrate": "api",
+    "/docs/api/bitrateSelection/getMinVideoBitrate": "api",
+    "/docs/api/bitrateSelection/getVideoBitrate": "api",
+    "/docs/api/bitrateSelection/setAudioBitrate": "api",
+    "/docs/api/bitrateSelection/setMaxAudioBitrate": "api",
+    "/docs/api/bitrateSelection/setMaxVideoBitrate": "api",
+    "/docs/api/bitrateSelection/setMinAudioBitrate": "api",
+    "/docs/api/bitrateSelection/setMinVideoBitrate": "api",
+    "/docs/api/bitrateSelection/setVideoBitrate": "api",
+    "/docs/api/bufferControl/getMaxBufferAhead": "api",
+    "/docs/api/bufferControl/getMaxBufferBehind": "api",
+    "/docs/api/bufferControl/getWantedBufferAhead": "api",
+    "/docs/api/bufferControl/setMaxBufferAhead": "api",
+    "/docs/api/bufferControl/setMaxBufferBehind": "api",
+    "/docs/api/bufferControl/setWantedBufferAhead": "api",
+    "/docs/api/bufferInformation/getVideoBufferGap": "api",
+    "/docs/api/bufferInformation/getVideoLoadedTime": "api",
+    "/docs/api/bufferInformation/getVideoPlayedTime": "api",
+    "/docs/api/contentInformation/getCurrentKeySystem": "api",
+    "/docs/api/contentInformation/getUrl": "api",
+    "/docs/api/contentInformation/isLive": "api",
+    "/docs/api/dashWasmParser": "api",
+    "/docs/api/deprecated/exitFullscreen": "api",
+    "/docs/api/deprecated/getCurrentAdaptations": "api",
+    "/docs/api/deprecated/getCurrentRepresentations": "api",
+    "/docs/api/deprecated/getImageTrackData": "api",
+    "/docs/api/deprecated/getManifest": "api",
+    "/docs/api/deprecated/getNativeTextTrack": "api",
+    "/docs/api/deprecated/isFullscreen": "api",
+    "/docs/api/deprecated/setFullscreen": "api",
+    "/docs/api/hdr": "api",
+    "/docs/api/images": "api",
+    "/docs/api/playerErrorsWarning": "api",
+    "/docs/api/playerEvents": "api",
+    "/docs/api/player_options": "api",
+    "/docs/api/states": "api",
+    "/docs/api/plugins": "api",
+    "/docs/api/speedControlTrickModes/areTrickModeTracksEnabled": "api",
+    "/docs/api/speedControlTrickModes/getPlaybackRate": "api",
+    "/docs/api/speedControlTrickModes/setPlaybackRate": "api",
+    "/docs/api/staticProperties/ErrorCodes": "api",
+    "/docs/api/staticProperties/ErrorTypes": "api",
+    "/docs/api/staticProperties/LogLevel": "api",
+    "/docs/api/staticProperties/version": "api",
+    "/docs/api/tools/tools/create-metaplaylist": "api",
+    "/docs/api/tools/media-capabilities-prober": "api",
+    "/docs/api/tools/tools/parse-bif-thumbnails": "api",
+    "/docs/api/tools/tools/string-utils": "api",
+    "/docs/api/tools/tools/text-track-renderer": "api",
+    "/docs/api/tools/tools/video-thumbnail-loader": "api",
+    "/docs/api/trackSelection/disableTextTrack": "api",
+    "/docs/api/trackSelection/disableVideoTrack": "api",
+    "/docs/api/trackSelection/getAudioTrack": "api",
+    "/docs/api/trackSelection/getAvailableAudioTracks": "api",
+    "/docs/api/trackSelection/getAvailableTextTracks": "api",
+    "/docs/api/trackSelection/getAvailableVideoTracks": "api",
+    "/docs/api/trackSelection/getPreferredAudioTracks": "api",
+    "/docs/api/trackSelection/getPreferredTextTracks": "api",
+    "/docs/api/trackSelection/getPreferredVideoTracks": "api",
+    "/docs/api/trackSelection/getTextTrack": "api",
+    "/docs/api/trackSelection/getVideoTrack": "api",
+    "/docs/api/trackSelection/setAudioTrack": "api",
+    "/docs/api/trackSelection/setPreferredAudioTracks": "api",
+    "/docs/api/trackSelection/setPreferredTextTracks": "api",
+    "/docs/api/trackSelection/setPreferredVideoTracks": "api",
+    "/docs/api/trackSelection/setTextTrack": "api",
+    "/docs/api/trackSelection/setVideoTrack": "api",
+    "/docs/api/volumeControl/getVolume": "api",
+    "/docs/api/volumeControl/isMute": "api",
+    "/docs/api/volumeControl/mute": "api",
+    "/docs/api/volumeControl/setVolume": "api",
+    "/docs/api/volumeControl/unMute": "api",
+    "/docs/glossary": "getstarted",
+    "/docs/tutorials/playing-contents-with-drms": "getstarted",
+    "/docs/tutorials/listening-to-stream-events": "getstarted",
+    "/docs/tutorials/quick_start": "getstarted",
+    "/docs/tutorials/selecting-a-track": "getstarted"
+  }
+}

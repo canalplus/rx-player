@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bufferInformation/getVideoBufferGap-api",
+  "id": "api/bufferInformation/getVideoBufferGap-api",
+  "isDocsHomePage": false,
+  "title": "getVideoBufferGap method",
+  "description": "---",
+  "source": "@site/docs/api/bufferInformation/getVideoBufferGap.md",
+  "sourceDirName": "api/bufferInformation",
+  "slug": "/api/bufferInformation/getVideoBufferGap",
+  "permalink": "/docs/api/bufferInformation/getVideoBufferGap",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferInformation/getVideoBufferGap.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getVideoBufferGap-api",
+    "title": "getVideoBufferGap method",
+    "sidebar_label": "getVideoBufferGap",
+    "slug": "getVideoBufferGap"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getVideoPlayedTime",
+    "permalink": "/docs/api/bufferInformation/getVideoPlayedTime"
+  },
+  "next": {
+    "title": "isLive",
+    "permalink": "/docs/api/contentInformation/isLive"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "unversionedId": "additional_ressources/local_contents",
+  "id": "additional_ressources/local_contents",
+  "isDocsHomePage": false,
+  "title": "Local contents (offline playback)",
+  "description": "Preamble",
+  "source": "@site/docs/additional_ressources/local_contents.md",
+  "sourceDirName": "additional_ressources",
+  "slug": "/additional_ressources/local_contents",
+  "permalink": "/docs/additional_ressources/local_contents",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/local_contents.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "local_contents",
+    "title": "Local contents (offline playback)",
+    "sidebar_label": "Local contents",
+    "slug": "local_contents"
+  },
+  "sidebar": "getstarted",
+  "previous": {
+    "title": "MetaPlaylist v0.1",
+    "permalink": "/docs/additional_ressources/metaplaylist"
+  },
+  "next": {
+    "title": "Local Manifest",
+    "permalink": "/docs/additional_ressources/local_manifest_v0.1"
+  }
+}

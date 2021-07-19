@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/tools/createMetaplaylist-tool",
+  "id": "api/tools/createMetaplaylist-tool",
+  "isDocsHomePage": false,
+  "title": "createMetaplaylist",
+  "description": "Overview",
+  "source": "@site/docs/api/tools/createMetaplaylist.md",
+  "sourceDirName": "api/tools",
+  "slug": "/api/tools/tools/create-metaplaylist",
+  "permalink": "/docs/api/tools/tools/create-metaplaylist",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/tools/createMetaplaylist.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "createMetaplaylist-tool",
+    "title": "createMetaplaylist",
+    "sidebar_label": "createMetaplaylist",
+    "slug": "tools/create-metaplaylist"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "parseBifThumbnails",
+    "permalink": "/docs/api/tools/tools/parse-bif-thumbnails"
+  },
+  "next": {
+    "title": "VideoThumbnailLoader",
+    "permalink": "/docs/api/tools/tools/video-thumbnail-loader"
+  }
+}

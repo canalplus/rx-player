@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/basicMethods/getMaximumPosition-api",
+  "id": "api/basicMethods/getMaximumPosition-api",
+  "isDocsHomePage": false,
+  "title": "getMaximumPosition method",
+  "description": "---",
+  "source": "@site/docs/api/basicMethods/getMaximumPosition.md",
+  "sourceDirName": "api/basicMethods",
+  "slug": "/api/basicMethods/getMaximumPosition",
+  "permalink": "/docs/api/basicMethods/getMaximumPosition",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getMaximumPosition.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getMaximumPosition-api",
+    "title": "getMaximumPosition method",
+    "sidebar_label": "getMaximumPosition",
+    "slug": "getMaximumPosition"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getMinimumPosition",
+    "permalink": "/docs/api/basicMethods/getMinimumPosition"
+  },
+  "next": {
+    "title": "getVideoDuration",
+    "permalink": "/docs/api/basicMethods/getVideoDuration"
+  }
+}

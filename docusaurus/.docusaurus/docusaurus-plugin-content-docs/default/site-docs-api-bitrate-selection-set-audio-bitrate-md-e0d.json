@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bitrateSelection/setAudioBitrate-api",
+  "id": "api/bitrateSelection/setAudioBitrate-api",
+  "isDocsHomePage": false,
+  "title": "setAudioBitrate method",
+  "description": "---",
+  "source": "@site/docs/api/bitrateSelection/setAudioBitrate.md",
+  "sourceDirName": "api/bitrateSelection",
+  "slug": "/api/bitrateSelection/setAudioBitrate",
+  "permalink": "/docs/api/bitrateSelection/setAudioBitrate",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/setAudioBitrate.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "setAudioBitrate-api",
+    "title": "setAudioBitrate method",
+    "sidebar_label": "setAudioBitrate",
+    "slug": "setAudioBitrate"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setVideoBitrate",
+    "permalink": "/docs/api/bitrateSelection/setVideoBitrate"
+  },
+  "next": {
+    "title": "getManualVideoBitrate",
+    "permalink": "/docs/api/bitrateSelection/getManualVideoBitrate"
+  }
+}

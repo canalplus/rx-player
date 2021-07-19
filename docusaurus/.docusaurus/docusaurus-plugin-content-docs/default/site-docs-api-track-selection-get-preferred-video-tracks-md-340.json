@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/trackSelection/getPreferredVideoTracks-api",
+  "id": "api/trackSelection/getPreferredVideoTracks-api",
+  "isDocsHomePage": false,
+  "title": "getPreferredVideoTracks method",
+  "description": "---",
+  "source": "@site/docs/api/trackSelection/getPreferredVideoTracks.md",
+  "sourceDirName": "api/trackSelection",
+  "slug": "/api/trackSelection/getPreferredVideoTracks",
+  "permalink": "/docs/api/trackSelection/getPreferredVideoTracks",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getPreferredVideoTracks.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getPreferredVideoTracks-api",
+    "title": "getPreferredVideoTracks method",
+    "sidebar_label": "getPreferredVideoTracks",
+    "slug": "getPreferredVideoTracks"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setPreferredVideoTracks",
+    "permalink": "/docs/api/trackSelection/setPreferredVideoTracks"
+  },
+  "next": {
+    "title": "getAvailableVideoBitrates",
+    "permalink": "/docs/api/bitrateSelection/getAvailableVideoBitrates"
+  }
+}

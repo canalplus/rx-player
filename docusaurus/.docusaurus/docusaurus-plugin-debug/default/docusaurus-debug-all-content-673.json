@@ -1,0 +1,3875 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "loadedVersions": [
+        {
+          "versionName": "current",
+          "versionLabel": "Next",
+          "versionPath": "/docs",
+          "versionEditUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs",
+          "versionEditUrlLocalized": "https://github.com/facebook/docusaurus/edit/master/website/i18n/en/docusaurus-plugin-content-docs/current",
+          "versionBanner": "none",
+          "isLast": true,
+          "routePriority": -1,
+          "sidebarFilePath": "/home/prosset/Documents/Canal+/rx-player-c+/docusaurus/sidebars.js",
+          "contentPath": "/home/prosset/Documents/Canal+/rx-player-c+/docusaurus/docs",
+          "contentPathLocalized": "/home/prosset/Documents/Canal+/rx-player-c+/docusaurus/i18n/en/docusaurus-plugin-content-docs/current",
+          "mainDocId": "api/player_options",
+          "sidebars": {
+            "api": [
+              {
+                "type": "doc",
+                "id": "api/player_options"
+              },
+              {
+                "type": "doc",
+                "id": "api/player_states"
+              },
+              {
+                "type": "doc",
+                "id": "api/player_events"
+              },
+              {
+                "type": "doc",
+                "id": "api/player_errors_warning"
+              },
+              {
+                "type": "doc",
+                "id": "api/dash_wasm_parser"
+              },
+              {
+                "type": "doc",
+                "id": "api/hdr"
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Basic methods",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/loadVideo-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/reload-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/getPlayerState-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/addEventListener-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/removeEventListener-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/play-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/pause-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/stop-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/getPosition-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/getWallClockTime-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/seekTo-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/getMinimumPosition-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/getMaximumPosition-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/getVideoDuration-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/getError-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/getVideoElement-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/basicMethods/dispose-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Speed Control",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/speedControlTrickModes/setPlaybackRate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/speedControlTrickModes/getPlaybackRate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/speedControlTrickModes/areTrickModeTracksEnabled-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Volume Control",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/volumeControl/setVolume-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/volumeControl/getVolume-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/volumeControl/mute-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/volumeControl/unMute-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/volumeControl/isMute-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Track Selection",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/getAudioTrack-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/getTextTrack-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/getVideoTrack-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/getAvailableAudioTracks-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/getAvailableTextTracks-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/getAvailableVideoTracks-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/setAudioTrack-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/setTextTrack-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/disableTextTrack-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/setVideoTrack-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/disableVideoTrack-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/setPreferredAudioTracks-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/getPreferredAudioTracks-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/setPreferredTextTracks-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/getPreferredTextTracks-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/setPreferredVideoTracks-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/trackSelection/getPreferredVideoTracks-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Bitrate selection",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getAvailableVideoBitrates-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getAvailableAudioBitrates-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getVideoBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getAudioBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/setMinVideoBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/setMinAudioBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getMinVideoBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getMinAudioBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/setMaxVideoBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/setMaxAudioBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getMaxVideoBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getMaxAudioBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/setVideoBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/setAudioBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getManualVideoBitrate-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bitrateSelection/getManualAudioBitrate-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Buffer control",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/bufferControl/setWantedBufferAhead-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bufferControl/getWantedBufferAhead-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bufferControl/setMaxBufferBehind-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bufferControl/getMaxBufferBehind-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bufferControl/setMaxBufferAhead-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bufferControl/getMaxBufferAhead-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Buffer information",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/bufferInformation/getVideoLoadedTime-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bufferInformation/getVideoPlayedTime-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/bufferInformation/getVideoBufferGap-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Content information",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/contentInformation/isLive-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/contentInformation/getUrl-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/contentInformation/getCurrentKeySystem-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Deprecated",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/deprecated/getManifest-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/deprecated/getCurrentAdaptations-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/deprecated/getCurrentRepresentations-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/deprecated/getImageTrackData-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/deprecated/setFullscreen-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/deprecated/exitFullscreen-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/deprecated/isFullscreen-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/deprecated/getNativeTextTrack-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Static properties",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/staticProperties/version-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/staticProperties/ErrorTypes-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/staticProperties/ErrorCodes-api"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/staticProperties/LogLevel-api"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Exported Tools",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "api/tools/StringUtils-tool"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/tools/TextTrackRenderer-tool"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/tools/MediaCapabilitiesProber-tool"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/tools/parseBifThumbnails-tool"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/tools/createMetaplaylist-tool"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "api/tools/VideoThumbnailLoader-tool"
+                  }
+                ]
+              },
+              {
+                "type": "doc",
+                "id": "api/images"
+              },
+              {
+                "type": "doc",
+                "id": "api/plugins"
+              }
+            ],
+            "getstarted": [
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Tutorials",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "tutorials/quickStart-tutorials"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "tutorials/drm-tutorials"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "tutorials/selectingTrack-tutorials"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "tutorials/listenSteamEvents-tutorials"
+                  }
+                ]
+              },
+              {
+                "collapsed": true,
+                "type": "category",
+                "label": "Additional ressources",
+                "items": [
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/manifest"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/text_tracks"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/dash_rxplayer_adaptation_difference"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/metaplaylist"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/local_contents"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/local_manifest_v0.1"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/minimal_player"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/low_latency"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/initial_position"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/presentation_time_offset"
+                  },
+                  {
+                    "type": "doc",
+                    "id": "additional_ressources/deprecated_api"
+                  }
+                ]
+              },
+              {
+                "type": "doc",
+                "id": "glossary"
+              }
+            ]
+          },
+          "permalinkToSidebar": {
+            "/docs/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference": "getstarted",
+            "/docs/additional_ressources/deprecated_api": "getstarted",
+            "/docs/additional_ressources/initial_position": "getstarted",
+            "/docs/additional_ressources/local_contents": "getstarted",
+            "/docs/additional_ressources/local_manifest_v0.1": "getstarted",
+            "/docs/additional_ressources/low_latency": "getstarted",
+            "/docs/additional_ressources/manifest": "getstarted",
+            "/docs/additional_ressources/metaplaylist": "getstarted",
+            "/docs/additional_ressources/minimal_player": "getstarted",
+            "/docs/additional_ressources/presentation_time_offset": "getstarted",
+            "/docs/additional_ressources/text_tracks": "getstarted",
+            "/docs/api/basicMethods/addEventListener": "api",
+            "/docs/api/basicMethods/dispose": "api",
+            "/docs/api/basicMethods/getError": "api",
+            "/docs/api/basicMethods/getMaximumPosition": "api",
+            "/docs/api/basicMethods/getMinimumPosition": "api",
+            "/docs/api/basicMethods/getPlayerState": "api",
+            "/docs/api/basicMethods/getPosition": "api",
+            "/docs/api/basicMethods/getVideoDuration": "api",
+            "/docs/api/basicMethods/getVideoElement": "api",
+            "/docs/api/basicMethods/getWallClockTime": "api",
+            "/docs/api/loadVideo": "api",
+            "/docs/api/basicMethods/pause": "api",
+            "/docs/api/basicMethods/play": "api",
+            "/docs/api/basicMethods/reload": "api",
+            "/docs/api/basicMethods/removeEventListener": "api",
+            "/docs/api/basicMethods/seekTo": "api",
+            "/docs/api/basicMethods/stop": "api",
+            "/docs/api/bitrateSelection/getAudioBitrate": "api",
+            "/docs/api/bitrateSelection/getAvailableAudioBitrates": "api",
+            "/docs/api/bitrateSelection/getAvailableVideoBitrates": "api",
+            "/docs/api/bitrateSelection/getManualAudioBitrate": "api",
+            "/docs/api/bitrateSelection/getManualVideoBitrate": "api",
+            "/docs/api/bitrateSelection/getMaxAudioBitrate": "api",
+            "/docs/api/bitrateSelection/getMaxVideoBitrate": "api",
+            "/docs/api/bitrateSelection/getMinAudioBitrate": "api",
+            "/docs/api/bitrateSelection/getMinVideoBitrate": "api",
+            "/docs/api/bitrateSelection/getVideoBitrate": "api",
+            "/docs/api/bitrateSelection/setAudioBitrate": "api",
+            "/docs/api/bitrateSelection/setMaxAudioBitrate": "api",
+            "/docs/api/bitrateSelection/setMaxVideoBitrate": "api",
+            "/docs/api/bitrateSelection/setMinAudioBitrate": "api",
+            "/docs/api/bitrateSelection/setMinVideoBitrate": "api",
+            "/docs/api/bitrateSelection/setVideoBitrate": "api",
+            "/docs/api/bufferControl/getMaxBufferAhead": "api",
+            "/docs/api/bufferControl/getMaxBufferBehind": "api",
+            "/docs/api/bufferControl/getWantedBufferAhead": "api",
+            "/docs/api/bufferControl/setMaxBufferAhead": "api",
+            "/docs/api/bufferControl/setMaxBufferBehind": "api",
+            "/docs/api/bufferControl/setWantedBufferAhead": "api",
+            "/docs/api/bufferInformation/getVideoBufferGap": "api",
+            "/docs/api/bufferInformation/getVideoLoadedTime": "api",
+            "/docs/api/bufferInformation/getVideoPlayedTime": "api",
+            "/docs/api/contentInformation/getCurrentKeySystem": "api",
+            "/docs/api/contentInformation/getUrl": "api",
+            "/docs/api/contentInformation/isLive": "api",
+            "/docs/api/dashWasmParser": "api",
+            "/docs/api/deprecated/exitFullscreen": "api",
+            "/docs/api/deprecated/getCurrentAdaptations": "api",
+            "/docs/api/deprecated/getCurrentRepresentations": "api",
+            "/docs/api/deprecated/getImageTrackData": "api",
+            "/docs/api/deprecated/getManifest": "api",
+            "/docs/api/deprecated/getNativeTextTrack": "api",
+            "/docs/api/deprecated/isFullscreen": "api",
+            "/docs/api/deprecated/setFullscreen": "api",
+            "/docs/api/hdr": "api",
+            "/docs/api/images": "api",
+            "/docs/api/playerErrorsWarning": "api",
+            "/docs/api/playerEvents": "api",
+            "/docs/api/player_options": "api",
+            "/docs/api/states": "api",
+            "/docs/api/plugins": "api",
+            "/docs/api/speedControlTrickModes/areTrickModeTracksEnabled": "api",
+            "/docs/api/speedControlTrickModes/getPlaybackRate": "api",
+            "/docs/api/speedControlTrickModes/setPlaybackRate": "api",
+            "/docs/api/staticProperties/ErrorCodes": "api",
+            "/docs/api/staticProperties/ErrorTypes": "api",
+            "/docs/api/staticProperties/LogLevel": "api",
+            "/docs/api/staticProperties/version": "api",
+            "/docs/api/tools/tools/create-metaplaylist": "api",
+            "/docs/api/tools/media-capabilities-prober": "api",
+            "/docs/api/tools/tools/parse-bif-thumbnails": "api",
+            "/docs/api/tools/tools/string-utils": "api",
+            "/docs/api/tools/tools/text-track-renderer": "api",
+            "/docs/api/tools/tools/video-thumbnail-loader": "api",
+            "/docs/api/trackSelection/disableTextTrack": "api",
+            "/docs/api/trackSelection/disableVideoTrack": "api",
+            "/docs/api/trackSelection/getAudioTrack": "api",
+            "/docs/api/trackSelection/getAvailableAudioTracks": "api",
+            "/docs/api/trackSelection/getAvailableTextTracks": "api",
+            "/docs/api/trackSelection/getAvailableVideoTracks": "api",
+            "/docs/api/trackSelection/getPreferredAudioTracks": "api",
+            "/docs/api/trackSelection/getPreferredTextTracks": "api",
+            "/docs/api/trackSelection/getPreferredVideoTracks": "api",
+            "/docs/api/trackSelection/getTextTrack": "api",
+            "/docs/api/trackSelection/getVideoTrack": "api",
+            "/docs/api/trackSelection/setAudioTrack": "api",
+            "/docs/api/trackSelection/setPreferredAudioTracks": "api",
+            "/docs/api/trackSelection/setPreferredTextTracks": "api",
+            "/docs/api/trackSelection/setPreferredVideoTracks": "api",
+            "/docs/api/trackSelection/setTextTrack": "api",
+            "/docs/api/trackSelection/setVideoTrack": "api",
+            "/docs/api/volumeControl/getVolume": "api",
+            "/docs/api/volumeControl/isMute": "api",
+            "/docs/api/volumeControl/mute": "api",
+            "/docs/api/volumeControl/setVolume": "api",
+            "/docs/api/volumeControl/unMute": "api",
+            "/docs/glossary": "getstarted",
+            "/docs/tutorials/playing-contents-with-drms": "getstarted",
+            "/docs/tutorials/listening-to-stream-events": "getstarted",
+            "/docs/tutorials/quick_start": "getstarted",
+            "/docs/tutorials/selecting-a-track": "getstarted"
+          },
+          "docs": [
+            {
+              "unversionedId": "additional_ressources/dash_rxplayer_adaptation_difference",
+              "id": "additional_ressources/dash_rxplayer_adaptation_difference",
+              "isDocsHomePage": false,
+              "title": "Differences between DASH' AdaptationSets and the rx-player \"Adaptation\"",
+              "description": "The RxPlayer defines an Adaptation object (also sometimes called Track)",
+              "source": "@site/docs/additional_ressources/dash_rxplayer_adaptation_difference.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference",
+              "permalink": "/docs/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/dash_rxplayer_adaptation_difference.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "dash_rxplayer_adaptation_difference",
+                "title": "Differences between DASH' AdaptationSets and the rx-player \"Adaptation\"",
+                "sidebar_label": "DASH' AdaptationSets vs rx-player \"Adaptation\"",
+                "slug": "additional_ressources/dash_rxplayer_adaptation_difference"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Text Tracks",
+                "permalink": "/docs/additional_ressources/text_tracks"
+              },
+              "next": {
+                "title": "MetaPlaylist v0.1",
+                "permalink": "/docs/additional_ressources/metaplaylist"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/deprecated_api",
+              "id": "additional_ressources/deprecated_api",
+              "isDocsHomePage": false,
+              "title": "Deprecated APIs",
+              "description": "This documentation lists APIs deprecated in the v3.x.x.",
+              "source": "@site/docs/additional_ressources/deprecated.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/deprecated_api",
+              "permalink": "/docs/additional_ressources/deprecated_api",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/deprecated.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "deprecated_api",
+                "title": "Deprecated APIs",
+                "sidebar_label": "Deprecated APIs",
+                "slug": "deprecated_api"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Presentation Time Offset",
+                "permalink": "/docs/additional_ressources/presentation_time_offset"
+              },
+              "next": {
+                "title": "Glossary",
+                "permalink": "/docs/glossary"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/initial_position",
+              "id": "additional_ressources/initial_position",
+              "isDocsHomePage": false,
+              "title": "Initial Position",
+              "description": "Overview",
+              "source": "@site/docs/additional_ressources/initial_position.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/initial_position",
+              "permalink": "/docs/additional_ressources/initial_position",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/initial_position.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "initial_position",
+                "title": "Initial Position",
+                "sidebar_label": "Initial Position",
+                "slug": "initial_position"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Low Latency",
+                "permalink": "/docs/additional_ressources/low_latency"
+              },
+              "next": {
+                "title": "Presentation Time Offset",
+                "permalink": "/docs/additional_ressources/presentation_time_offset"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/local_contents",
+              "id": "additional_ressources/local_contents",
+              "isDocsHomePage": false,
+              "title": "Local contents (offline playback)",
+              "description": "Preamble",
+              "source": "@site/docs/additional_ressources/local_contents.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/local_contents",
+              "permalink": "/docs/additional_ressources/local_contents",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/local_contents.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "local_contents",
+                "title": "Local contents (offline playback)",
+                "sidebar_label": "Local contents",
+                "slug": "local_contents"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "MetaPlaylist v0.1",
+                "permalink": "/docs/additional_ressources/metaplaylist"
+              },
+              "next": {
+                "title": "Local Manifest",
+                "permalink": "/docs/additional_ressources/local_manifest_v0.1"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/local_manifest_v0.1",
+              "id": "additional_ressources/local_manifest_v0.1",
+              "isDocsHomePage": false,
+              "title": "Local Manifest format version 0.1",
+              "description": "The 0.1 version of the local Manifest format is an old version which",
+              "source": "@site/docs/additional_ressources/local_manifest_v0.1.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/local_manifest_v0.1",
+              "permalink": "/docs/additional_ressources/local_manifest_v0.1",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/local_manifest_v0.1.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "local_manifest_v0.1",
+                "title": "Local Manifest format version 0.1",
+                "sidebar_label": "Local Manifest",
+                "slug": "local_manifest_v0.1"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Local contents",
+                "permalink": "/docs/additional_ressources/local_contents"
+              },
+              "next": {
+                "title": "Minimal player",
+                "permalink": "/docs/additional_ressources/minimal_player"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/low_latency",
+              "id": "additional_ressources/low_latency",
+              "isDocsHomePage": false,
+              "title": "Playing Low-Latency contents",
+              "description": "Overview",
+              "source": "@site/docs/additional_ressources/low_latency.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/low_latency",
+              "permalink": "/docs/additional_ressources/low_latency",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/low_latency.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "low_latency",
+                "title": "Playing Low-Latency contents",
+                "sidebar_label": "Low Latency",
+                "slug": "low_latency"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Minimal player",
+                "permalink": "/docs/additional_ressources/minimal_player"
+              },
+              "next": {
+                "title": "Initial Position",
+                "permalink": "/docs/additional_ressources/initial_position"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/manifest",
+              "id": "additional_ressources/manifest",
+              "isDocsHomePage": false,
+              "title": "Manifest Object",
+              "description": "Overview",
+              "source": "@site/docs/additional_ressources/manifest.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/manifest",
+              "permalink": "/docs/additional_ressources/manifest",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/manifest.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "manifest",
+                "title": "Manifest Object",
+                "sidebar_label": "Manifest Object",
+                "slug": "manifest"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Listening to stream events",
+                "permalink": "/docs/tutorials/listening-to-stream-events"
+              },
+              "next": {
+                "title": "Text Tracks",
+                "permalink": "/docs/additional_ressources/text_tracks"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/metaplaylist",
+              "id": "additional_ressources/metaplaylist",
+              "isDocsHomePage": false,
+              "title": "MetaPlaylist v0.1",
+              "description": "Overview",
+              "source": "@site/docs/additional_ressources/metaplaylist.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/metaplaylist",
+              "permalink": "/docs/additional_ressources/metaplaylist",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/metaplaylist.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "metaplaylist",
+                "title": "MetaPlaylist v0.1",
+                "sidebar_label": "MetaPlaylist v0.1",
+                "slug": "metaplaylist"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "DASH' AdaptationSets vs rx-player \"Adaptation\"",
+                "permalink": "/docs/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference"
+              },
+              "next": {
+                "title": "Local contents",
+                "permalink": "/docs/additional_ressources/local_contents"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/minimal_player",
+              "id": "additional_ressources/minimal_player",
+              "isDocsHomePage": false,
+              "title": "Minimal player with Feature selection",
+              "description": "Overview",
+              "source": "@site/docs/additional_ressources/minimal_player.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/minimal_player",
+              "permalink": "/docs/additional_ressources/minimal_player",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/minimal_player.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "minimal_player",
+                "title": "Minimal player with Feature selection",
+                "sidebar_label": "Minimal player",
+                "slug": "minimal_player"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Local Manifest",
+                "permalink": "/docs/additional_ressources/local_manifest_v0.1"
+              },
+              "next": {
+                "title": "Low Latency",
+                "permalink": "/docs/additional_ressources/low_latency"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/presentation_time_offset",
+              "id": "additional_ressources/presentation_time_offset",
+              "isDocsHomePage": false,
+              "title": "Presentation Time Offset",
+              "description": "The presentationTimeOffset is an attribute which can be encountered in an MPD",
+              "source": "@site/docs/additional_ressources/presentationTimeOffset.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/presentation_time_offset",
+              "permalink": "/docs/additional_ressources/presentation_time_offset",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/presentationTimeOffset.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "presentation_time_offset",
+                "title": "Presentation Time Offset",
+                "sidebar_label": "Presentation Time Offset",
+                "slug": "presentation_time_offset"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Initial Position",
+                "permalink": "/docs/additional_ressources/initial_position"
+              },
+              "next": {
+                "title": "Deprecated APIs",
+                "permalink": "/docs/additional_ressources/deprecated_api"
+              }
+            },
+            {
+              "unversionedId": "additional_ressources/text_tracks",
+              "id": "additional_ressources/text_tracks",
+              "isDocsHomePage": false,
+              "title": "Text Tracks",
+              "description": "Overview",
+              "source": "@site/docs/additional_ressources/text_tracks.md",
+              "sourceDirName": "additional_ressources",
+              "slug": "/additional_ressources/text_tracks",
+              "permalink": "/docs/additional_ressources/text_tracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/text_tracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "text_tracks",
+                "title": "Text Tracks",
+                "sidebar_label": "Text Tracks",
+                "slug": "text_tracks"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Manifest Object",
+                "permalink": "/docs/additional_ressources/manifest"
+              },
+              "next": {
+                "title": "DASH' AdaptationSets vs rx-player \"Adaptation\"",
+                "permalink": "/docs/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/addEventListener-api",
+              "id": "api/basicMethods/addEventListener-api",
+              "isDocsHomePage": false,
+              "title": "addEventListener method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/addEventListener.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/addEventListener",
+              "permalink": "/docs/api/basicMethods/addEventListener",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/addEventListener.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "addEventListener-api",
+                "title": "addEventListener method",
+                "sidebar_label": "addEventListener",
+                "slug": "addEventListener"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getPlayerState",
+                "permalink": "/docs/api/basicMethods/getPlayerState"
+              },
+              "next": {
+                "title": "removeEventListener",
+                "permalink": "/docs/api/basicMethods/removeEventListener"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/dispose-api",
+              "id": "api/basicMethods/dispose-api",
+              "isDocsHomePage": false,
+              "title": "dispose method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/dispose.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/dispose",
+              "permalink": "/docs/api/basicMethods/dispose",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/dispose.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "dispose-api",
+                "title": "dispose method",
+                "sidebar_label": "dispose",
+                "slug": "dispose"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getVideoElement",
+                "permalink": "/docs/api/basicMethods/getVideoElement"
+              },
+              "next": {
+                "title": "setPlaybackRate",
+                "permalink": "/docs/api/speedControlTrickModes/setPlaybackRate"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/getError-api",
+              "id": "api/basicMethods/getError-api",
+              "isDocsHomePage": false,
+              "title": "getError method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/getError.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/getError",
+              "permalink": "/docs/api/basicMethods/getError",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getError.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getError-api",
+                "title": "getError method",
+                "sidebar_label": "getError",
+                "slug": "getError"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getVideoDuration",
+                "permalink": "/docs/api/basicMethods/getVideoDuration"
+              },
+              "next": {
+                "title": "getVideoElement",
+                "permalink": "/docs/api/basicMethods/getVideoElement"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/getMaximumPosition-api",
+              "id": "api/basicMethods/getMaximumPosition-api",
+              "isDocsHomePage": false,
+              "title": "getMaximumPosition method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/getMaximumPosition.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/getMaximumPosition",
+              "permalink": "/docs/api/basicMethods/getMaximumPosition",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getMaximumPosition.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getMaximumPosition-api",
+                "title": "getMaximumPosition method",
+                "sidebar_label": "getMaximumPosition",
+                "slug": "getMaximumPosition"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getMinimumPosition",
+                "permalink": "/docs/api/basicMethods/getMinimumPosition"
+              },
+              "next": {
+                "title": "getVideoDuration",
+                "permalink": "/docs/api/basicMethods/getVideoDuration"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/getMinimumPosition-api",
+              "id": "api/basicMethods/getMinimumPosition-api",
+              "isDocsHomePage": false,
+              "title": "getMinimumPosition method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/getMinimumPosition.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/getMinimumPosition",
+              "permalink": "/docs/api/basicMethods/getMinimumPosition",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getMinimumPosition.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getMinimumPosition-api",
+                "title": "getMinimumPosition method",
+                "sidebar_label": "getMinimumPosition",
+                "slug": "getMinimumPosition"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "seekTo",
+                "permalink": "/docs/api/basicMethods/seekTo"
+              },
+              "next": {
+                "title": "getMaximumPosition",
+                "permalink": "/docs/api/basicMethods/getMaximumPosition"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/getPlayerState-api",
+              "id": "api/basicMethods/getPlayerState-api",
+              "isDocsHomePage": false,
+              "title": "getPlayerState method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/getPlayerState.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/getPlayerState",
+              "permalink": "/docs/api/basicMethods/getPlayerState",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getPlayerState.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getPlayerState-api",
+                "title": "getPlayerState method",
+                "sidebar_label": "getPlayerState",
+                "slug": "getPlayerState"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "reload",
+                "permalink": "/docs/api/basicMethods/reload"
+              },
+              "next": {
+                "title": "addEventListener",
+                "permalink": "/docs/api/basicMethods/addEventListener"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/getPosition-api",
+              "id": "api/basicMethods/getPosition-api",
+              "isDocsHomePage": false,
+              "title": "getPosition method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/getPosition.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/getPosition",
+              "permalink": "/docs/api/basicMethods/getPosition",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getPosition.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getPosition-api",
+                "title": "getPosition method",
+                "sidebar_label": "getPosition",
+                "slug": "getPosition"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "stop",
+                "permalink": "/docs/api/basicMethods/stop"
+              },
+              "next": {
+                "title": "getWallClockTime",
+                "permalink": "/docs/api/basicMethods/getWallClockTime"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/getVideoDuration-api",
+              "id": "api/basicMethods/getVideoDuration-api",
+              "isDocsHomePage": false,
+              "title": "getVideoDuration method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/getVideoDuration.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/getVideoDuration",
+              "permalink": "/docs/api/basicMethods/getVideoDuration",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getVideoDuration.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getVideoDuration-api",
+                "title": "getVideoDuration method",
+                "sidebar_label": "getVideoDuration",
+                "slug": "getVideoDuration"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getMaximumPosition",
+                "permalink": "/docs/api/basicMethods/getMaximumPosition"
+              },
+              "next": {
+                "title": "getError",
+                "permalink": "/docs/api/basicMethods/getError"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/getVideoElement-api",
+              "id": "api/basicMethods/getVideoElement-api",
+              "isDocsHomePage": false,
+              "title": "getVideoElement method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/getVideoElement.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/getVideoElement",
+              "permalink": "/docs/api/basicMethods/getVideoElement",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getVideoElement.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getVideoElement-api",
+                "title": "getVideoElement method",
+                "sidebar_label": "getVideoElement",
+                "slug": "getVideoElement"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getError",
+                "permalink": "/docs/api/basicMethods/getError"
+              },
+              "next": {
+                "title": "dispose",
+                "permalink": "/docs/api/basicMethods/dispose"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/getWallClockTime-api",
+              "id": "api/basicMethods/getWallClockTime-api",
+              "isDocsHomePage": false,
+              "title": "getWallClockTime method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/getWallClockTime.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/getWallClockTime",
+              "permalink": "/docs/api/basicMethods/getWallClockTime",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getWallClockTime.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getWallClockTime-api",
+                "title": "getWallClockTime method",
+                "sidebar_label": "getWallClockTime",
+                "slug": "getWallClockTime"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getPosition",
+                "permalink": "/docs/api/basicMethods/getPosition"
+              },
+              "next": {
+                "title": "seekTo",
+                "permalink": "/docs/api/basicMethods/seekTo"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/loadVideo-api",
+              "id": "api/basicMethods/loadVideo-api",
+              "isDocsHomePage": false,
+              "title": "loadVideo method",
+              "description": "Overview",
+              "source": "@site/docs/api/basicMethods/loadVideo.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/loadVideo",
+              "permalink": "/docs/api/loadVideo",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/loadVideo.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "loadVideo-api",
+                "title": "loadVideo method",
+                "sidebar_label": "loadVideo",
+                "slug": "/api/loadVideo"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "HDR",
+                "permalink": "/docs/api/hdr"
+              },
+              "next": {
+                "title": "reload",
+                "permalink": "/docs/api/basicMethods/reload"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/pause-api",
+              "id": "api/basicMethods/pause-api",
+              "isDocsHomePage": false,
+              "title": "pause method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/pause.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/pause",
+              "permalink": "/docs/api/basicMethods/pause",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/pause.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "pause-api",
+                "title": "pause method",
+                "sidebar_label": "pause",
+                "slug": "pause"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "play",
+                "permalink": "/docs/api/basicMethods/play"
+              },
+              "next": {
+                "title": "stop",
+                "permalink": "/docs/api/basicMethods/stop"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/play-api",
+              "id": "api/basicMethods/play-api",
+              "isDocsHomePage": false,
+              "title": "play method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/play.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/play",
+              "permalink": "/docs/api/basicMethods/play",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/play.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "play-api",
+                "title": "play method",
+                "sidebar_label": "play",
+                "slug": "play"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "removeEventListener",
+                "permalink": "/docs/api/basicMethods/removeEventListener"
+              },
+              "next": {
+                "title": "pause",
+                "permalink": "/docs/api/basicMethods/pause"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/reload-api",
+              "id": "api/basicMethods/reload-api",
+              "isDocsHomePage": false,
+              "title": "reload method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/reload.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/reload",
+              "permalink": "/docs/api/basicMethods/reload",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/reload.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "reload-api",
+                "title": "reload method",
+                "sidebar_label": "reload",
+                "slug": "reload"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "loadVideo",
+                "permalink": "/docs/api/loadVideo"
+              },
+              "next": {
+                "title": "getPlayerState",
+                "permalink": "/docs/api/basicMethods/getPlayerState"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/removeEventListener-api",
+              "id": "api/basicMethods/removeEventListener-api",
+              "isDocsHomePage": false,
+              "title": "removeEventListener method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/removeEventListener.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/removeEventListener",
+              "permalink": "/docs/api/basicMethods/removeEventListener",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/removeEventListener.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "removeEventListener-api",
+                "title": "removeEventListener method",
+                "sidebar_label": "removeEventListener",
+                "slug": "removeEventListener"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "addEventListener",
+                "permalink": "/docs/api/basicMethods/addEventListener"
+              },
+              "next": {
+                "title": "play",
+                "permalink": "/docs/api/basicMethods/play"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/seekTo-api",
+              "id": "api/basicMethods/seekTo-api",
+              "isDocsHomePage": false,
+              "title": "seekTo method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/seekTo.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/seekTo",
+              "permalink": "/docs/api/basicMethods/seekTo",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/seekTo.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "seekTo-api",
+                "title": "seekTo method",
+                "sidebar_label": "seekTo",
+                "slug": "seekTo"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getWallClockTime",
+                "permalink": "/docs/api/basicMethods/getWallClockTime"
+              },
+              "next": {
+                "title": "getMinimumPosition",
+                "permalink": "/docs/api/basicMethods/getMinimumPosition"
+              }
+            },
+            {
+              "unversionedId": "api/basicMethods/stop-api",
+              "id": "api/basicMethods/stop-api",
+              "isDocsHomePage": false,
+              "title": "stop method",
+              "description": "---",
+              "source": "@site/docs/api/basicMethods/stop.md",
+              "sourceDirName": "api/basicMethods",
+              "slug": "/api/basicMethods/stop",
+              "permalink": "/docs/api/basicMethods/stop",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/stop.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "stop-api",
+                "title": "stop method",
+                "sidebar_label": "stop",
+                "slug": "stop"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "pause",
+                "permalink": "/docs/api/basicMethods/pause"
+              },
+              "next": {
+                "title": "getPosition",
+                "permalink": "/docs/api/basicMethods/getPosition"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getAudioBitrate-api",
+              "id": "api/bitrateSelection/getAudioBitrate-api",
+              "isDocsHomePage": false,
+              "title": "getAudioBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getAudioBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getAudioBitrate",
+              "permalink": "/docs/api/bitrateSelection/getAudioBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getAudioBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getAudioBitrate-api",
+                "title": "getAudioBitrate method",
+                "sidebar_label": "getAudioBitrate",
+                "slug": "getAudioBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/getVideoBitrate"
+              },
+              "next": {
+                "title": "setMinVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/setMinVideoBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getAvailableAudioBitrates-api",
+              "id": "api/bitrateSelection/getAvailableAudioBitrates-api",
+              "isDocsHomePage": false,
+              "title": "getAvailableAudioBitrates method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getAvailableAudioBitrates.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getAvailableAudioBitrates",
+              "permalink": "/docs/api/bitrateSelection/getAvailableAudioBitrates",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getAvailableAudioBitrates.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getAvailableAudioBitrates-api",
+                "title": "getAvailableAudioBitrates method",
+                "sidebar_label": "getAvailableAudioBitrates",
+                "slug": "getAvailableAudioBitrates"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getAvailableVideoBitrates",
+                "permalink": "/docs/api/bitrateSelection/getAvailableVideoBitrates"
+              },
+              "next": {
+                "title": "getVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/getVideoBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getAvailableVideoBitrates-api",
+              "id": "api/bitrateSelection/getAvailableVideoBitrates-api",
+              "isDocsHomePage": false,
+              "title": "getAvailableVideoBitrates method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getAvailableVideoBitrates.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getAvailableVideoBitrates",
+              "permalink": "/docs/api/bitrateSelection/getAvailableVideoBitrates",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getAvailableVideoBitrates.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getAvailableVideoBitrates-api",
+                "title": "getAvailableVideoBitrates method",
+                "sidebar_label": "getAvailableVideoBitrates",
+                "slug": "getAvailableVideoBitrates"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getPreferredVideoTracks",
+                "permalink": "/docs/api/trackSelection/getPreferredVideoTracks"
+              },
+              "next": {
+                "title": "getAvailableAudioBitrates",
+                "permalink": "/docs/api/bitrateSelection/getAvailableAudioBitrates"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getManualAudioBitrate-api",
+              "id": "api/bitrateSelection/getManualAudioBitrate-api",
+              "isDocsHomePage": false,
+              "title": "getManualAudioBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getManualAudioBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getManualAudioBitrate",
+              "permalink": "/docs/api/bitrateSelection/getManualAudioBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getManualAudioBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getManualAudioBitrate-api",
+                "title": "getManualAudioBitrate method",
+                "sidebar_label": "getManualAudioBitrate",
+                "slug": "getManualAudioBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getManualVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/getManualVideoBitrate"
+              },
+              "next": {
+                "title": "setWantedBufferAhead",
+                "permalink": "/docs/api/bufferControl/setWantedBufferAhead"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getManualVideoBitrate-api",
+              "id": "api/bitrateSelection/getManualVideoBitrate-api",
+              "isDocsHomePage": false,
+              "title": "getManualVideoBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getManualVideoBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getManualVideoBitrate",
+              "permalink": "/docs/api/bitrateSelection/getManualVideoBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getManualVideoBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getManualVideoBitrate-api",
+                "title": "getManualVideoBitrate method",
+                "sidebar_label": "getManualVideoBitrate",
+                "slug": "getManualVideoBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/setAudioBitrate"
+              },
+              "next": {
+                "title": "getManualAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/getManualAudioBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getMaxAudioBitrate-api",
+              "id": "api/bitrateSelection/getMaxAudioBitrate-api",
+              "isDocsHomePage": false,
+              "title": "getMaxAudioBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getMaxAudioBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getMaxAudioBitrate",
+              "permalink": "/docs/api/bitrateSelection/getMaxAudioBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getMaxAudioBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getMaxAudioBitrate-api",
+                "title": "getMaxAudioBitrate method",
+                "sidebar_label": "getMaxAudioBitrate",
+                "slug": "getMaxAudioBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getMaxVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/getMaxVideoBitrate"
+              },
+              "next": {
+                "title": "setVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/setVideoBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getMaxVideoBitrate-api",
+              "id": "api/bitrateSelection/getMaxVideoBitrate-api",
+              "isDocsHomePage": false,
+              "title": "getMaxVideoBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getMaxVideoBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getMaxVideoBitrate",
+              "permalink": "/docs/api/bitrateSelection/getMaxVideoBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getMaxVideoBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getMaxVideoBitrate-api",
+                "title": "getMaxVideoBitrate method",
+                "sidebar_label": "getMaxVideoBitrate",
+                "slug": "getMaxVideoBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setMaxAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/setMaxAudioBitrate"
+              },
+              "next": {
+                "title": "getMaxAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/getMaxAudioBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getMinAudioBitrate-api",
+              "id": "api/bitrateSelection/getMinAudioBitrate-api",
+              "isDocsHomePage": false,
+              "title": "getMinAudioBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getMinAudioBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getMinAudioBitrate",
+              "permalink": "/docs/api/bitrateSelection/getMinAudioBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getMinAudioBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getMinAudioBitrate-api",
+                "title": "getMinAudioBitrate method",
+                "sidebar_label": "getMinAudioBitrate",
+                "slug": "getMinAudioBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getMinVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/getMinVideoBitrate"
+              },
+              "next": {
+                "title": "setMaxVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/setMaxVideoBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getMinVideoBitrate-api",
+              "id": "api/bitrateSelection/getMinVideoBitrate-api",
+              "isDocsHomePage": false,
+              "title": "getMinVideoBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getMinVideoBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getMinVideoBitrate",
+              "permalink": "/docs/api/bitrateSelection/getMinVideoBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getMinVideoBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getMinVideoBitrate-api",
+                "title": "getMinVideoBitrate method",
+                "sidebar_label": "getMinVideoBitrate",
+                "slug": "getMinVideoBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setMinAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/setMinAudioBitrate"
+              },
+              "next": {
+                "title": "getMinAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/getMinAudioBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/getVideoBitrate-api",
+              "id": "api/bitrateSelection/getVideoBitrate-api",
+              "isDocsHomePage": false,
+              "title": "getVideoBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/getVideoBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/getVideoBitrate",
+              "permalink": "/docs/api/bitrateSelection/getVideoBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getVideoBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getVideoBitrate-api",
+                "title": "getVideoBitrate method",
+                "sidebar_label": "getVideoBitrate",
+                "slug": "getVideoBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getAvailableAudioBitrates",
+                "permalink": "/docs/api/bitrateSelection/getAvailableAudioBitrates"
+              },
+              "next": {
+                "title": "getAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/getAudioBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/setAudioBitrate-api",
+              "id": "api/bitrateSelection/setAudioBitrate-api",
+              "isDocsHomePage": false,
+              "title": "setAudioBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/setAudioBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/setAudioBitrate",
+              "permalink": "/docs/api/bitrateSelection/setAudioBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/setAudioBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setAudioBitrate-api",
+                "title": "setAudioBitrate method",
+                "sidebar_label": "setAudioBitrate",
+                "slug": "setAudioBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/setVideoBitrate"
+              },
+              "next": {
+                "title": "getManualVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/getManualVideoBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/setMaxAudioBitrate-api",
+              "id": "api/bitrateSelection/setMaxAudioBitrate-api",
+              "isDocsHomePage": false,
+              "title": "setMaxAudioBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/setMaxAudioBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/setMaxAudioBitrate",
+              "permalink": "/docs/api/bitrateSelection/setMaxAudioBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/setMaxAudioBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setMaxAudioBitrate-api",
+                "title": "setMaxAudioBitrate method",
+                "sidebar_label": "setMaxAudioBitrate",
+                "slug": "setMaxAudioBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setMaxVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/setMaxVideoBitrate"
+              },
+              "next": {
+                "title": "getMaxVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/getMaxVideoBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/setMaxVideoBitrate-api",
+              "id": "api/bitrateSelection/setMaxVideoBitrate-api",
+              "isDocsHomePage": false,
+              "title": "setMaxVideoBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/setMaxVideoBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/setMaxVideoBitrate",
+              "permalink": "/docs/api/bitrateSelection/setMaxVideoBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/setMaxVideoBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setMaxVideoBitrate-api",
+                "title": "setMaxVideoBitrate method",
+                "sidebar_label": "setMaxVideoBitrate",
+                "slug": "setMaxVideoBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getMinAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/getMinAudioBitrate"
+              },
+              "next": {
+                "title": "setMaxAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/setMaxAudioBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/setMinAudioBitrate-api",
+              "id": "api/bitrateSelection/setMinAudioBitrate-api",
+              "isDocsHomePage": false,
+              "title": "setMinAudioBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/setMinAudioBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/setMinAudioBitrate",
+              "permalink": "/docs/api/bitrateSelection/setMinAudioBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/setMinAudioBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setMinAudioBitrate-api",
+                "title": "setMinAudioBitrate method",
+                "sidebar_label": "setMinAudioBitrate",
+                "slug": "setMinAudioBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setMinVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/setMinVideoBitrate"
+              },
+              "next": {
+                "title": "getMinVideoBitrate",
+                "permalink": "/docs/api/bitrateSelection/getMinVideoBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/setMinVideoBitrate-api",
+              "id": "api/bitrateSelection/setMinVideoBitrate-api",
+              "isDocsHomePage": false,
+              "title": "setMinVideoBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/setMinVideoBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/setMinVideoBitrate",
+              "permalink": "/docs/api/bitrateSelection/setMinVideoBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/setMinVideoBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setMinVideoBitrate-api",
+                "title": "setMinVideoBitrate method",
+                "sidebar_label": "setMinVideoBitrate",
+                "slug": "setMinVideoBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/getAudioBitrate"
+              },
+              "next": {
+                "title": "setMinAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/setMinAudioBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bitrateSelection/setVideoBitrate-api",
+              "id": "api/bitrateSelection/setVideoBitrate-api",
+              "isDocsHomePage": false,
+              "title": "setVideoBitrate method",
+              "description": "---",
+              "source": "@site/docs/api/bitrateSelection/setVideoBitrate.md",
+              "sourceDirName": "api/bitrateSelection",
+              "slug": "/api/bitrateSelection/setVideoBitrate",
+              "permalink": "/docs/api/bitrateSelection/setVideoBitrate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/setVideoBitrate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setVideoBitrate-api",
+                "title": "setVideoBitrate method",
+                "sidebar_label": "setVideoBitrate",
+                "slug": "setVideoBitrate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getMaxAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/getMaxAudioBitrate"
+              },
+              "next": {
+                "title": "setAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/setAudioBitrate"
+              }
+            },
+            {
+              "unversionedId": "api/bufferControl/getMaxBufferAhead-api",
+              "id": "api/bufferControl/getMaxBufferAhead-api",
+              "isDocsHomePage": false,
+              "title": "getMaxBufferAhead method",
+              "description": "---",
+              "source": "@site/docs/api/bufferControl/getMaxBufferAhead.md",
+              "sourceDirName": "api/bufferControl",
+              "slug": "/api/bufferControl/getMaxBufferAhead",
+              "permalink": "/docs/api/bufferControl/getMaxBufferAhead",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferControl/getMaxBufferAhead.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getMaxBufferAhead-api",
+                "title": "getMaxBufferAhead method",
+                "sidebar_label": "getMaxBufferAhead",
+                "slug": "getMaxBufferAhead"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setMaxBufferAhead",
+                "permalink": "/docs/api/bufferControl/setMaxBufferAhead"
+              },
+              "next": {
+                "title": "getVideoLoadedTime",
+                "permalink": "/docs/api/bufferInformation/getVideoLoadedTime"
+              }
+            },
+            {
+              "unversionedId": "api/bufferControl/getMaxBufferBehind-api",
+              "id": "api/bufferControl/getMaxBufferBehind-api",
+              "isDocsHomePage": false,
+              "title": "getMaxBufferBehind method",
+              "description": "---",
+              "source": "@site/docs/api/bufferControl/getMaxBufferBehind.md",
+              "sourceDirName": "api/bufferControl",
+              "slug": "/api/bufferControl/getMaxBufferBehind",
+              "permalink": "/docs/api/bufferControl/getMaxBufferBehind",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferControl/getMaxBufferBehind.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getMaxBufferBehind-api",
+                "title": "getMaxBufferBehind method",
+                "sidebar_label": "getMaxBufferBehind",
+                "slug": "getMaxBufferBehind"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setMaxBufferBehind",
+                "permalink": "/docs/api/bufferControl/setMaxBufferBehind"
+              },
+              "next": {
+                "title": "setMaxBufferAhead",
+                "permalink": "/docs/api/bufferControl/setMaxBufferAhead"
+              }
+            },
+            {
+              "unversionedId": "api/bufferControl/getWantedBufferAhead-api",
+              "id": "api/bufferControl/getWantedBufferAhead-api",
+              "isDocsHomePage": false,
+              "title": "getWantedBufferAhead method",
+              "description": "---",
+              "source": "@site/docs/api/bufferControl/getWantedBufferAhead.md",
+              "sourceDirName": "api/bufferControl",
+              "slug": "/api/bufferControl/getWantedBufferAhead",
+              "permalink": "/docs/api/bufferControl/getWantedBufferAhead",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferControl/getWantedBufferAhead.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getWantedBufferAhead-api",
+                "title": "getWantedBufferAhead method",
+                "sidebar_label": "getWantedBufferAhead",
+                "slug": "getWantedBufferAhead"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setWantedBufferAhead",
+                "permalink": "/docs/api/bufferControl/setWantedBufferAhead"
+              },
+              "next": {
+                "title": "setMaxBufferBehind",
+                "permalink": "/docs/api/bufferControl/setMaxBufferBehind"
+              }
+            },
+            {
+              "unversionedId": "api/bufferControl/setMaxBufferAhead-api",
+              "id": "api/bufferControl/setMaxBufferAhead-api",
+              "isDocsHomePage": false,
+              "title": "setMaxBufferAhead method",
+              "description": "---",
+              "source": "@site/docs/api/bufferControl/setMaxBufferAhead.md",
+              "sourceDirName": "api/bufferControl",
+              "slug": "/api/bufferControl/setMaxBufferAhead",
+              "permalink": "/docs/api/bufferControl/setMaxBufferAhead",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferControl/setMaxBufferAhead.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setMaxBufferAhead-api",
+                "title": "setMaxBufferAhead method",
+                "sidebar_label": "setMaxBufferAhead",
+                "slug": "setMaxBufferAhead"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getMaxBufferBehind",
+                "permalink": "/docs/api/bufferControl/getMaxBufferBehind"
+              },
+              "next": {
+                "title": "getMaxBufferAhead",
+                "permalink": "/docs/api/bufferControl/getMaxBufferAhead"
+              }
+            },
+            {
+              "unversionedId": "api/bufferControl/setMaxBufferBehind-api",
+              "id": "api/bufferControl/setMaxBufferBehind-api",
+              "isDocsHomePage": false,
+              "title": "setMaxBufferBehind method",
+              "description": "---",
+              "source": "@site/docs/api/bufferControl/setMaxBufferBehind.md",
+              "sourceDirName": "api/bufferControl",
+              "slug": "/api/bufferControl/setMaxBufferBehind",
+              "permalink": "/docs/api/bufferControl/setMaxBufferBehind",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferControl/setMaxBufferBehind.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setMaxBufferBehind-api",
+                "title": "setMaxBufferBehind method",
+                "sidebar_label": "setMaxBufferBehind",
+                "slug": "setMaxBufferBehind"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getWantedBufferAhead",
+                "permalink": "/docs/api/bufferControl/getWantedBufferAhead"
+              },
+              "next": {
+                "title": "getMaxBufferBehind",
+                "permalink": "/docs/api/bufferControl/getMaxBufferBehind"
+              }
+            },
+            {
+              "unversionedId": "api/bufferControl/setWantedBufferAhead-api",
+              "id": "api/bufferControl/setWantedBufferAhead-api",
+              "isDocsHomePage": false,
+              "title": "setWantedBufferAhead method",
+              "description": "---",
+              "source": "@site/docs/api/bufferControl/setWantedBufferAhead.md",
+              "sourceDirName": "api/bufferControl",
+              "slug": "/api/bufferControl/setWantedBufferAhead",
+              "permalink": "/docs/api/bufferControl/setWantedBufferAhead",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferControl/setWantedBufferAhead.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setWantedBufferAhead-api",
+                "title": "setWantedBufferAhead method",
+                "sidebar_label": "setWantedBufferAhead",
+                "slug": "setWantedBufferAhead"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getManualAudioBitrate",
+                "permalink": "/docs/api/bitrateSelection/getManualAudioBitrate"
+              },
+              "next": {
+                "title": "getWantedBufferAhead",
+                "permalink": "/docs/api/bufferControl/getWantedBufferAhead"
+              }
+            },
+            {
+              "unversionedId": "api/bufferInformation/getVideoBufferGap-api",
+              "id": "api/bufferInformation/getVideoBufferGap-api",
+              "isDocsHomePage": false,
+              "title": "getVideoBufferGap method",
+              "description": "---",
+              "source": "@site/docs/api/bufferInformation/getVideoBufferGap.md",
+              "sourceDirName": "api/bufferInformation",
+              "slug": "/api/bufferInformation/getVideoBufferGap",
+              "permalink": "/docs/api/bufferInformation/getVideoBufferGap",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferInformation/getVideoBufferGap.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getVideoBufferGap-api",
+                "title": "getVideoBufferGap method",
+                "sidebar_label": "getVideoBufferGap",
+                "slug": "getVideoBufferGap"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getVideoPlayedTime",
+                "permalink": "/docs/api/bufferInformation/getVideoPlayedTime"
+              },
+              "next": {
+                "title": "isLive",
+                "permalink": "/docs/api/contentInformation/isLive"
+              }
+            },
+            {
+              "unversionedId": "api/bufferInformation/getVideoLoadedTime-api",
+              "id": "api/bufferInformation/getVideoLoadedTime-api",
+              "isDocsHomePage": false,
+              "title": "getVideoLoadedTime method",
+              "description": "---",
+              "source": "@site/docs/api/bufferInformation/getVideoLoadedTime.md",
+              "sourceDirName": "api/bufferInformation",
+              "slug": "/api/bufferInformation/getVideoLoadedTime",
+              "permalink": "/docs/api/bufferInformation/getVideoLoadedTime",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferInformation/getVideoLoadedTime.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getVideoLoadedTime-api",
+                "title": "getVideoLoadedTime method",
+                "sidebar_label": "getVideoLoadedTime",
+                "slug": "getVideoLoadedTime"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getMaxBufferAhead",
+                "permalink": "/docs/api/bufferControl/getMaxBufferAhead"
+              },
+              "next": {
+                "title": "getVideoPlayedTime",
+                "permalink": "/docs/api/bufferInformation/getVideoPlayedTime"
+              }
+            },
+            {
+              "unversionedId": "api/bufferInformation/getVideoPlayedTime-api",
+              "id": "api/bufferInformation/getVideoPlayedTime-api",
+              "isDocsHomePage": false,
+              "title": "getVideoPlayedTime method",
+              "description": "---",
+              "source": "@site/docs/api/bufferInformation/getVideoPlayedTime.md",
+              "sourceDirName": "api/bufferInformation",
+              "slug": "/api/bufferInformation/getVideoPlayedTime",
+              "permalink": "/docs/api/bufferInformation/getVideoPlayedTime",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferInformation/getVideoPlayedTime.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getVideoPlayedTime-api",
+                "title": "getVideoPlayedTime method",
+                "sidebar_label": "getVideoPlayedTime",
+                "slug": "getVideoPlayedTime"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getVideoLoadedTime",
+                "permalink": "/docs/api/bufferInformation/getVideoLoadedTime"
+              },
+              "next": {
+                "title": "getVideoBufferGap",
+                "permalink": "/docs/api/bufferInformation/getVideoBufferGap"
+              }
+            },
+            {
+              "unversionedId": "api/contentInformation/getCurrentKeySystem-api",
+              "id": "api/contentInformation/getCurrentKeySystem-api",
+              "isDocsHomePage": false,
+              "title": "getCurrentKeySystem method",
+              "description": "---",
+              "source": "@site/docs/api/contentInformation/getCurrentKeySystem.md",
+              "sourceDirName": "api/contentInformation",
+              "slug": "/api/contentInformation/getCurrentKeySystem",
+              "permalink": "/docs/api/contentInformation/getCurrentKeySystem",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/contentInformation/getCurrentKeySystem.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getCurrentKeySystem-api",
+                "title": "getCurrentKeySystem method",
+                "sidebar_label": "getCurrentKeySystem",
+                "slug": "getCurrentKeySystem"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getUrl",
+                "permalink": "/docs/api/contentInformation/getUrl"
+              },
+              "next": {
+                "title": "getManifest",
+                "permalink": "/docs/api/deprecated/getManifest"
+              }
+            },
+            {
+              "unversionedId": "api/contentInformation/getUrl-api",
+              "id": "api/contentInformation/getUrl-api",
+              "isDocsHomePage": false,
+              "title": "getUrl method",
+              "description": "---",
+              "source": "@site/docs/api/contentInformation/getUrl.md",
+              "sourceDirName": "api/contentInformation",
+              "slug": "/api/contentInformation/getUrl",
+              "permalink": "/docs/api/contentInformation/getUrl",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/contentInformation/getUrl.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getUrl-api",
+                "title": "getUrl method",
+                "sidebar_label": "getUrl",
+                "slug": "getUrl"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "isLive",
+                "permalink": "/docs/api/contentInformation/isLive"
+              },
+              "next": {
+                "title": "getCurrentKeySystem",
+                "permalink": "/docs/api/contentInformation/getCurrentKeySystem"
+              }
+            },
+            {
+              "unversionedId": "api/contentInformation/isLive-api",
+              "id": "api/contentInformation/isLive-api",
+              "isDocsHomePage": false,
+              "title": "isLive method",
+              "description": "---",
+              "source": "@site/docs/api/contentInformation/isLive.md",
+              "sourceDirName": "api/contentInformation",
+              "slug": "/api/contentInformation/isLive",
+              "permalink": "/docs/api/contentInformation/isLive",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/contentInformation/isLive.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "isLive-api",
+                "title": "isLive method",
+                "sidebar_label": "isLive",
+                "slug": "isLive"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getVideoBufferGap",
+                "permalink": "/docs/api/bufferInformation/getVideoBufferGap"
+              },
+              "next": {
+                "title": "getUrl",
+                "permalink": "/docs/api/contentInformation/getUrl"
+              }
+            },
+            {
+              "unversionedId": "api/dash_wasm_parser",
+              "id": "api/dash_wasm_parser",
+              "isDocsHomePage": false,
+              "title": "Dash WASM parser",
+              "description": "The RxPlayer provides two different \"parsers\" for DASH's Manifest format, a.k.a.",
+              "source": "@site/docs/api/dash_wasm_parser.md",
+              "sourceDirName": "api",
+              "slug": "/api/dashWasmParser",
+              "permalink": "/docs/api/dashWasmParser",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/dash_wasm_parser.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "dash_wasm_parser",
+                "title": "Dash WASM parser",
+                "sidebar_label": "Dash WASM Parser",
+                "slug": "dashWasmParser"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "Player errors/warnings",
+                "permalink": "/docs/api/playerErrorsWarning"
+              },
+              "next": {
+                "title": "HDR",
+                "permalink": "/docs/api/hdr"
+              }
+            },
+            {
+              "unversionedId": "api/deprecated/exitFullscreen-api",
+              "id": "api/deprecated/exitFullscreen-api",
+              "isDocsHomePage": false,
+              "title": "exitFullscreen method",
+              "description": "---",
+              "source": "@site/docs/api/deprecated/exitFullscreen.md",
+              "sourceDirName": "api/deprecated",
+              "slug": "/api/deprecated/exitFullscreen",
+              "permalink": "/docs/api/deprecated/exitFullscreen",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/exitFullscreen.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "exitFullscreen-api",
+                "title": "exitFullscreen method",
+                "sidebar_label": "exitFullscreen",
+                "slug": "exitFullscreen"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setFullscreen",
+                "permalink": "/docs/api/deprecated/setFullscreen"
+              },
+              "next": {
+                "title": "isFullscreen",
+                "permalink": "/docs/api/deprecated/isFullscreen"
+              }
+            },
+            {
+              "unversionedId": "api/deprecated/getCurrentAdaptations-api",
+              "id": "api/deprecated/getCurrentAdaptations-api",
+              "isDocsHomePage": false,
+              "title": "getCurrentAdaptations method",
+              "description": "---",
+              "source": "@site/docs/api/deprecated/getCurrentAdaptations.md",
+              "sourceDirName": "api/deprecated",
+              "slug": "/api/deprecated/getCurrentAdaptations",
+              "permalink": "/docs/api/deprecated/getCurrentAdaptations",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/getCurrentAdaptations.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getCurrentAdaptations-api",
+                "title": "getCurrentAdaptations method",
+                "sidebar_label": "getCurrentAdaptations",
+                "slug": "getCurrentAdaptations"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getManifest",
+                "permalink": "/docs/api/deprecated/getManifest"
+              },
+              "next": {
+                "title": "getCurrentRepresentations",
+                "permalink": "/docs/api/deprecated/getCurrentRepresentations"
+              }
+            },
+            {
+              "unversionedId": "api/deprecated/getCurrentRepresentations-api",
+              "id": "api/deprecated/getCurrentRepresentations-api",
+              "isDocsHomePage": false,
+              "title": "getCurrentRepresentations method",
+              "description": "---",
+              "source": "@site/docs/api/deprecated/getCurrentRepresentations.md",
+              "sourceDirName": "api/deprecated",
+              "slug": "/api/deprecated/getCurrentRepresentations",
+              "permalink": "/docs/api/deprecated/getCurrentRepresentations",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/getCurrentRepresentations.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getCurrentRepresentations-api",
+                "title": "getCurrentRepresentations method",
+                "sidebar_label": "getCurrentRepresentations",
+                "slug": "getCurrentRepresentations"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getCurrentAdaptations",
+                "permalink": "/docs/api/deprecated/getCurrentAdaptations"
+              },
+              "next": {
+                "title": "getImageTrackData",
+                "permalink": "/docs/api/deprecated/getImageTrackData"
+              }
+            },
+            {
+              "unversionedId": "api/deprecated/getImageTrackData-api",
+              "id": "api/deprecated/getImageTrackData-api",
+              "isDocsHomePage": false,
+              "title": "getImageTrackData method",
+              "description": "---",
+              "source": "@site/docs/api/deprecated/getImageTrackData.md",
+              "sourceDirName": "api/deprecated",
+              "slug": "/api/deprecated/getImageTrackData",
+              "permalink": "/docs/api/deprecated/getImageTrackData",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/getImageTrackData.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getImageTrackData-api",
+                "title": "getImageTrackData method",
+                "sidebar_label": "getImageTrackData",
+                "slug": "getImageTrackData"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getCurrentRepresentations",
+                "permalink": "/docs/api/deprecated/getCurrentRepresentations"
+              },
+              "next": {
+                "title": "setFullscreen",
+                "permalink": "/docs/api/deprecated/setFullscreen"
+              }
+            },
+            {
+              "unversionedId": "api/deprecated/getManifest-api",
+              "id": "api/deprecated/getManifest-api",
+              "isDocsHomePage": false,
+              "title": "getManifest method",
+              "description": "---",
+              "source": "@site/docs/api/deprecated/getManifest.md",
+              "sourceDirName": "api/deprecated",
+              "slug": "/api/deprecated/getManifest",
+              "permalink": "/docs/api/deprecated/getManifest",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/getManifest.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getManifest-api",
+                "title": "getManifest method",
+                "sidebar_label": "getManifest",
+                "slug": "getManifest"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getCurrentKeySystem",
+                "permalink": "/docs/api/contentInformation/getCurrentKeySystem"
+              },
+              "next": {
+                "title": "getCurrentAdaptations",
+                "permalink": "/docs/api/deprecated/getCurrentAdaptations"
+              }
+            },
+            {
+              "unversionedId": "api/deprecated/getNativeTextTrack-api",
+              "id": "api/deprecated/getNativeTextTrack-api",
+              "isDocsHomePage": false,
+              "title": "getNativeTextTrack method",
+              "description": "---",
+              "source": "@site/docs/api/deprecated/getNativeTextTrack.md",
+              "sourceDirName": "api/deprecated",
+              "slug": "/api/deprecated/getNativeTextTrack",
+              "permalink": "/docs/api/deprecated/getNativeTextTrack",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/getNativeTextTrack.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getNativeTextTrack-api",
+                "title": "getNativeTextTrack method",
+                "sidebar_label": "getNativeTextTrack",
+                "slug": "getNativeTextTrack"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "isFullscreen",
+                "permalink": "/docs/api/deprecated/isFullscreen"
+              },
+              "next": {
+                "title": "version",
+                "permalink": "/docs/api/staticProperties/version"
+              }
+            },
+            {
+              "unversionedId": "api/deprecated/isFullscreen-api",
+              "id": "api/deprecated/isFullscreen-api",
+              "isDocsHomePage": false,
+              "title": "isFullscreen method",
+              "description": "---",
+              "source": "@site/docs/api/deprecated/isFullscreen.md",
+              "sourceDirName": "api/deprecated",
+              "slug": "/api/deprecated/isFullscreen",
+              "permalink": "/docs/api/deprecated/isFullscreen",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/isFullscreen.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "isFullscreen-api",
+                "title": "isFullscreen method",
+                "sidebar_label": "isFullscreen",
+                "slug": "isFullscreen"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "exitFullscreen",
+                "permalink": "/docs/api/deprecated/exitFullscreen"
+              },
+              "next": {
+                "title": "getNativeTextTrack",
+                "permalink": "/docs/api/deprecated/getNativeTextTrack"
+              }
+            },
+            {
+              "unversionedId": "api/deprecated/setFullscreen-api",
+              "id": "api/deprecated/setFullscreen-api",
+              "isDocsHomePage": false,
+              "title": "setFullscreen method",
+              "description": "---",
+              "source": "@site/docs/api/deprecated/setFullscreen.md",
+              "sourceDirName": "api/deprecated",
+              "slug": "/api/deprecated/setFullscreen",
+              "permalink": "/docs/api/deprecated/setFullscreen",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/setFullscreen.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setFullscreen-api",
+                "title": "setFullscreen method",
+                "sidebar_label": "setFullscreen",
+                "slug": "setFullscreen"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getImageTrackData",
+                "permalink": "/docs/api/deprecated/getImageTrackData"
+              },
+              "next": {
+                "title": "exitFullscreen",
+                "permalink": "/docs/api/deprecated/exitFullscreen"
+              }
+            },
+            {
+              "unversionedId": "api/hdr",
+              "id": "api/hdr",
+              "isDocsHomePage": false,
+              "title": "High Dynamic Range",
+              "description": "Overview",
+              "source": "@site/docs/api/hdr.md",
+              "sourceDirName": "api",
+              "slug": "/api/hdr",
+              "permalink": "/docs/api/hdr",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/hdr.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "hdr",
+                "title": "High Dynamic Range",
+                "sidebar_label": "HDR",
+                "slug": "hdr"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "Dash WASM Parser",
+                "permalink": "/docs/api/dashWasmParser"
+              },
+              "next": {
+                "title": "loadVideo",
+                "permalink": "/docs/api/loadVideo"
+              }
+            },
+            {
+              "unversionedId": "api/images",
+              "id": "api/images",
+              "isDocsHomePage": false,
+              "title": "Images",
+              "description": "Overview",
+              "source": "@site/docs/api/images.md",
+              "sourceDirName": "api",
+              "slug": "/api/images",
+              "permalink": "/docs/api/images",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/images.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "images",
+                "title": "Images",
+                "sidebar_label": "Images",
+                "slug": "images"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "VideoThumbnailLoader",
+                "permalink": "/docs/api/tools/tools/video-thumbnail-loader"
+              },
+              "next": {
+                "title": "Plugins",
+                "permalink": "/docs/api/plugins"
+              }
+            },
+            {
+              "unversionedId": "api/player_errors_warning",
+              "id": "api/player_errors_warning",
+              "isDocsHomePage": false,
+              "title": "Player errors and warnings",
+              "description": "Overview",
+              "source": "@site/docs/api/errors.md",
+              "sourceDirName": "api",
+              "slug": "/api/playerErrorsWarning",
+              "permalink": "/docs/api/playerErrorsWarning",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/errors.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "player_errors_warning",
+                "title": "Player errors and warnings",
+                "sidebar_label": "Player errors/warnings",
+                "slug": "playerErrorsWarning"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "Player events",
+                "permalink": "/docs/api/playerEvents"
+              },
+              "next": {
+                "title": "Dash WASM Parser",
+                "permalink": "/docs/api/dashWasmParser"
+              }
+            },
+            {
+              "unversionedId": "api/player_events",
+              "id": "api/player_events",
+              "isDocsHomePage": false,
+              "title": "Player events",
+              "description": "Overview",
+              "source": "@site/docs/api/events.md",
+              "sourceDirName": "api",
+              "slug": "/api/playerEvents",
+              "permalink": "/docs/api/playerEvents",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/events.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "player_events",
+                "title": "Player events",
+                "sidebar_label": "Player events",
+                "slug": "playerEvents"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "Player States",
+                "permalink": "/docs/api/states"
+              },
+              "next": {
+                "title": "Player errors/warnings",
+                "permalink": "/docs/api/playerErrorsWarning"
+              }
+            },
+            {
+              "unversionedId": "api/player_options",
+              "id": "api/player_options",
+              "isDocsHomePage": false,
+              "title": "Player Options",
+              "description": "Overview",
+              "source": "@site/docs/api/player_options.md",
+              "sourceDirName": "api",
+              "slug": "/api/player_options",
+              "permalink": "/docs/api/player_options",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/player_options.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "player_options",
+                "title": "Player Options",
+                "sidebar_label": "Player Options",
+                "slug": "player_options"
+              },
+              "sidebar": "api",
+              "next": {
+                "title": "Player States",
+                "permalink": "/docs/api/states"
+              }
+            },
+            {
+              "unversionedId": "api/player_states",
+              "id": "api/player_states",
+              "isDocsHomePage": false,
+              "title": "Player states",
+              "description": "The player state, that you can obtain either with the",
+              "source": "@site/docs/api/states.md",
+              "sourceDirName": "api",
+              "slug": "/api/states",
+              "permalink": "/docs/api/states",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/states.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "player_states",
+                "title": "Player states",
+                "sidebar_label": "Player States",
+                "slug": "states"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "Player Options",
+                "permalink": "/docs/api/player_options"
+              },
+              "next": {
+                "title": "Player events",
+                "permalink": "/docs/api/playerEvents"
+              }
+            },
+            {
+              "unversionedId": "api/plugins",
+              "id": "api/plugins",
+              "isDocsHomePage": false,
+              "title": "Plugins",
+              "description": "Overview",
+              "source": "@site/docs/api/plugins.md",
+              "sourceDirName": "api",
+              "slug": "/api/plugins",
+              "permalink": "/docs/api/plugins",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/plugins.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "plugins",
+                "title": "Plugins",
+                "sidebar_label": "Plugins",
+                "slug": "plugins"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "Images",
+                "permalink": "/docs/api/images"
+              }
+            },
+            {
+              "unversionedId": "api/speedControlTrickModes/areTrickModeTracksEnabled-api",
+              "id": "api/speedControlTrickModes/areTrickModeTracksEnabled-api",
+              "isDocsHomePage": false,
+              "title": "areTrickModeTracksEnabled method",
+              "description": "---",
+              "source": "@site/docs/api/speedControlTrickModes/areTrickModeTracksEnabled.md",
+              "sourceDirName": "api/speedControlTrickModes",
+              "slug": "/api/speedControlTrickModes/areTrickModeTracksEnabled",
+              "permalink": "/docs/api/speedControlTrickModes/areTrickModeTracksEnabled",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/speedControlTrickModes/areTrickModeTracksEnabled.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "areTrickModeTracksEnabled-api",
+                "title": "areTrickModeTracksEnabled method",
+                "sidebar_label": "areTrickModeTracksEnabled",
+                "slug": "areTrickModeTracksEnabled"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getPlaybackRate",
+                "permalink": "/docs/api/speedControlTrickModes/getPlaybackRate"
+              },
+              "next": {
+                "title": "setVolume",
+                "permalink": "/docs/api/volumeControl/setVolume"
+              }
+            },
+            {
+              "unversionedId": "api/speedControlTrickModes/getPlaybackRate-api",
+              "id": "api/speedControlTrickModes/getPlaybackRate-api",
+              "isDocsHomePage": false,
+              "title": "getPlaybackRate method",
+              "description": "---",
+              "source": "@site/docs/api/speedControlTrickModes/getPlaybackRate.md",
+              "sourceDirName": "api/speedControlTrickModes",
+              "slug": "/api/speedControlTrickModes/getPlaybackRate",
+              "permalink": "/docs/api/speedControlTrickModes/getPlaybackRate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/speedControlTrickModes/getPlaybackRate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getPlaybackRate-api",
+                "title": "getPlaybackRate method",
+                "sidebar_label": "getPlaybackRate",
+                "slug": "getPlaybackRate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setPlaybackRate",
+                "permalink": "/docs/api/speedControlTrickModes/setPlaybackRate"
+              },
+              "next": {
+                "title": "areTrickModeTracksEnabled",
+                "permalink": "/docs/api/speedControlTrickModes/areTrickModeTracksEnabled"
+              }
+            },
+            {
+              "unversionedId": "api/speedControlTrickModes/setPlaybackRate-api",
+              "id": "api/speedControlTrickModes/setPlaybackRate-api",
+              "isDocsHomePage": false,
+              "title": "setPlaybackRate method",
+              "description": "---",
+              "source": "@site/docs/api/speedControlTrickModes/setPlaybackRate.md",
+              "sourceDirName": "api/speedControlTrickModes",
+              "slug": "/api/speedControlTrickModes/setPlaybackRate",
+              "permalink": "/docs/api/speedControlTrickModes/setPlaybackRate",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/speedControlTrickModes/setPlaybackRate.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setPlaybackRate-api",
+                "title": "setPlaybackRate method",
+                "sidebar_label": "setPlaybackRate",
+                "slug": "setPlaybackRate"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "dispose",
+                "permalink": "/docs/api/basicMethods/dispose"
+              },
+              "next": {
+                "title": "getPlaybackRate",
+                "permalink": "/docs/api/speedControlTrickModes/getPlaybackRate"
+              }
+            },
+            {
+              "unversionedId": "api/staticProperties/ErrorCodes-api",
+              "id": "api/staticProperties/ErrorCodes-api",
+              "isDocsHomePage": false,
+              "title": "ErrorCodes method",
+              "description": "---",
+              "source": "@site/docs/api/staticProperties/ErrorCodes.md",
+              "sourceDirName": "api/staticProperties",
+              "slug": "/api/staticProperties/ErrorCodes",
+              "permalink": "/docs/api/staticProperties/ErrorCodes",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/staticProperties/ErrorCodes.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "ErrorCodes-api",
+                "title": "ErrorCodes method",
+                "sidebar_label": "ErrorCodes",
+                "slug": "ErrorCodes"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "ErrorTypes",
+                "permalink": "/docs/api/staticProperties/ErrorTypes"
+              },
+              "next": {
+                "title": "LogLevel",
+                "permalink": "/docs/api/staticProperties/LogLevel"
+              }
+            },
+            {
+              "unversionedId": "api/staticProperties/ErrorTypes-api",
+              "id": "api/staticProperties/ErrorTypes-api",
+              "isDocsHomePage": false,
+              "title": "ErrorTypes method",
+              "description": "---",
+              "source": "@site/docs/api/staticProperties/ErrorTypes.md",
+              "sourceDirName": "api/staticProperties",
+              "slug": "/api/staticProperties/ErrorTypes",
+              "permalink": "/docs/api/staticProperties/ErrorTypes",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/staticProperties/ErrorTypes.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "ErrorTypes-api",
+                "title": "ErrorTypes method",
+                "sidebar_label": "ErrorTypes",
+                "slug": "ErrorTypes"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "version",
+                "permalink": "/docs/api/staticProperties/version"
+              },
+              "next": {
+                "title": "ErrorCodes",
+                "permalink": "/docs/api/staticProperties/ErrorCodes"
+              }
+            },
+            {
+              "unversionedId": "api/staticProperties/LogLevel-api",
+              "id": "api/staticProperties/LogLevel-api",
+              "isDocsHomePage": false,
+              "title": "LogLevel method",
+              "description": "---",
+              "source": "@site/docs/api/staticProperties/LogLevel.md",
+              "sourceDirName": "api/staticProperties",
+              "slug": "/api/staticProperties/LogLevel",
+              "permalink": "/docs/api/staticProperties/LogLevel",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/staticProperties/LogLevel.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "LogLevel-api",
+                "title": "LogLevel method",
+                "sidebar_label": "LogLevel",
+                "slug": "LogLevel"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "ErrorCodes",
+                "permalink": "/docs/api/staticProperties/ErrorCodes"
+              },
+              "next": {
+                "title": "StringUtils",
+                "permalink": "/docs/api/tools/tools/string-utils"
+              }
+            },
+            {
+              "unversionedId": "api/staticProperties/version-api",
+              "id": "api/staticProperties/version-api",
+              "isDocsHomePage": false,
+              "title": "version method",
+              "description": "---",
+              "source": "@site/docs/api/staticProperties/version.md",
+              "sourceDirName": "api/staticProperties",
+              "slug": "/api/staticProperties/version",
+              "permalink": "/docs/api/staticProperties/version",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/staticProperties/version.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "version-api",
+                "title": "version method",
+                "sidebar_label": "version",
+                "slug": "version"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getNativeTextTrack",
+                "permalink": "/docs/api/deprecated/getNativeTextTrack"
+              },
+              "next": {
+                "title": "ErrorTypes",
+                "permalink": "/docs/api/staticProperties/ErrorTypes"
+              }
+            },
+            {
+              "unversionedId": "api/tools/createMetaplaylist-tool",
+              "id": "api/tools/createMetaplaylist-tool",
+              "isDocsHomePage": false,
+              "title": "createMetaplaylist",
+              "description": "Overview",
+              "source": "@site/docs/api/tools/createMetaplaylist.md",
+              "sourceDirName": "api/tools",
+              "slug": "/api/tools/tools/create-metaplaylist",
+              "permalink": "/docs/api/tools/tools/create-metaplaylist",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/tools/createMetaplaylist.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "createMetaplaylist-tool",
+                "title": "createMetaplaylist",
+                "sidebar_label": "createMetaplaylist",
+                "slug": "tools/create-metaplaylist"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "parseBifThumbnails",
+                "permalink": "/docs/api/tools/tools/parse-bif-thumbnails"
+              },
+              "next": {
+                "title": "VideoThumbnailLoader",
+                "permalink": "/docs/api/tools/tools/video-thumbnail-loader"
+              }
+            },
+            {
+              "unversionedId": "api/tools/MediaCapabilitiesProber-tool",
+              "id": "api/tools/MediaCapabilitiesProber-tool",
+              "isDocsHomePage": false,
+              "title": "MediaCapabilitiesProber",
+              "description": "Overview",
+              "source": "@site/docs/api/tools/MediaCapabilitiesProber.md",
+              "sourceDirName": "api/tools",
+              "slug": "/api/tools/media-capabilities-prober",
+              "permalink": "/docs/api/tools/media-capabilities-prober",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/tools/MediaCapabilitiesProber.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "MediaCapabilitiesProber-tool",
+                "title": "MediaCapabilitiesProber",
+                "sidebar_label": "MediaCapabilitiesProber",
+                "slug": "media-capabilities-prober"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "TextTrackRenderer",
+                "permalink": "/docs/api/tools/tools/text-track-renderer"
+              },
+              "next": {
+                "title": "parseBifThumbnails",
+                "permalink": "/docs/api/tools/tools/parse-bif-thumbnails"
+              }
+            },
+            {
+              "unversionedId": "api/tools/parseBifThumbnails-tool",
+              "id": "api/tools/parseBifThumbnails-tool",
+              "isDocsHomePage": false,
+              "title": "parseBifThumbnails",
+              "description": "Overview",
+              "source": "@site/docs/api/tools/parseBifThumbnails.md",
+              "sourceDirName": "api/tools",
+              "slug": "/api/tools/tools/parse-bif-thumbnails",
+              "permalink": "/docs/api/tools/tools/parse-bif-thumbnails",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/tools/parseBifThumbnails.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "parseBifThumbnails-tool",
+                "title": "parseBifThumbnails",
+                "sidebar_label": "parseBifThumbnails",
+                "slug": "tools/parse-bif-thumbnails"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "MediaCapabilitiesProber",
+                "permalink": "/docs/api/tools/media-capabilities-prober"
+              },
+              "next": {
+                "title": "createMetaplaylist",
+                "permalink": "/docs/api/tools/tools/create-metaplaylist"
+              }
+            },
+            {
+              "unversionedId": "api/tools/StringUtils-tool",
+              "id": "api/tools/StringUtils-tool",
+              "isDocsHomePage": false,
+              "title": "StringUtils",
+              "description": "Overview",
+              "source": "@site/docs/api/tools/StringUtils.md",
+              "sourceDirName": "api/tools",
+              "slug": "/api/tools/tools/string-utils",
+              "permalink": "/docs/api/tools/tools/string-utils",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/tools/StringUtils.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "StringUtils-tool",
+                "title": "StringUtils",
+                "sidebar_label": "StringUtils",
+                "slug": "tools/string-utils"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "LogLevel",
+                "permalink": "/docs/api/staticProperties/LogLevel"
+              },
+              "next": {
+                "title": "TextTrackRenderer",
+                "permalink": "/docs/api/tools/tools/text-track-renderer"
+              }
+            },
+            {
+              "unversionedId": "api/tools/TextTrackRenderer-tool",
+              "id": "api/tools/TextTrackRenderer-tool",
+              "isDocsHomePage": false,
+              "title": "TextTrackRenderer",
+              "description": "Overview",
+              "source": "@site/docs/api/tools/TextTrackRenderer.md",
+              "sourceDirName": "api/tools",
+              "slug": "/api/tools/tools/text-track-renderer",
+              "permalink": "/docs/api/tools/tools/text-track-renderer",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/tools/TextTrackRenderer.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "TextTrackRenderer-tool",
+                "title": "TextTrackRenderer",
+                "sidebar_label": "TextTrackRenderer",
+                "slug": "tools/text-track-renderer"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "StringUtils",
+                "permalink": "/docs/api/tools/tools/string-utils"
+              },
+              "next": {
+                "title": "MediaCapabilitiesProber",
+                "permalink": "/docs/api/tools/media-capabilities-prober"
+              }
+            },
+            {
+              "unversionedId": "api/tools/VideoThumbnailLoader-tool",
+              "id": "api/tools/VideoThumbnailLoader-tool",
+              "isDocsHomePage": false,
+              "title": "VideoThumbnailLoader",
+              "description": "Overview",
+              "source": "@site/docs/api/tools/VideoThumbnailLoader.md",
+              "sourceDirName": "api/tools",
+              "slug": "/api/tools/tools/video-thumbnail-loader",
+              "permalink": "/docs/api/tools/tools/video-thumbnail-loader",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/tools/VideoThumbnailLoader.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "VideoThumbnailLoader-tool",
+                "title": "VideoThumbnailLoader",
+                "sidebar_label": "VideoThumbnailLoader",
+                "slug": "tools/video-thumbnail-loader"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "createMetaplaylist",
+                "permalink": "/docs/api/tools/tools/create-metaplaylist"
+              },
+              "next": {
+                "title": "Images",
+                "permalink": "/docs/api/images"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/disableTextTrack-api",
+              "id": "api/trackSelection/disableTextTrack-api",
+              "isDocsHomePage": false,
+              "title": "disableTextTrack method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/disableTextTrack.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/disableTextTrack",
+              "permalink": "/docs/api/trackSelection/disableTextTrack",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/disableTextTrack.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "disableTextTrack-api",
+                "title": "disableTextTrack method",
+                "sidebar_label": "disableTextTrack",
+                "slug": "disableTextTrack"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setTextTrack",
+                "permalink": "/docs/api/trackSelection/setTextTrack"
+              },
+              "next": {
+                "title": "setVideoTrack",
+                "permalink": "/docs/api/trackSelection/setVideoTrack"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/disableVideoTrack-api",
+              "id": "api/trackSelection/disableVideoTrack-api",
+              "isDocsHomePage": false,
+              "title": "disableVideoTrack method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/disableVideoTrack.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/disableVideoTrack",
+              "permalink": "/docs/api/trackSelection/disableVideoTrack",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/disableVideoTrack.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "disableVideoTrack-api",
+                "title": "disableVideoTrack method",
+                "sidebar_label": "disableVideoTrack",
+                "slug": "disableVideoTrack"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setVideoTrack",
+                "permalink": "/docs/api/trackSelection/setVideoTrack"
+              },
+              "next": {
+                "title": "setPreferredAudioTracks",
+                "permalink": "/docs/api/trackSelection/setPreferredAudioTracks"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/getAudioTrack-api",
+              "id": "api/trackSelection/getAudioTrack-api",
+              "isDocsHomePage": false,
+              "title": "getAudioTrack method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/getAudioTrack.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/getAudioTrack",
+              "permalink": "/docs/api/trackSelection/getAudioTrack",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getAudioTrack.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getAudioTrack-api",
+                "title": "getAudioTrack method",
+                "sidebar_label": "getAudioTrack",
+                "slug": "getAudioTrack"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "isMute",
+                "permalink": "/docs/api/volumeControl/isMute"
+              },
+              "next": {
+                "title": "getTextTrack",
+                "permalink": "/docs/api/trackSelection/getTextTrack"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/getAvailableAudioTracks-api",
+              "id": "api/trackSelection/getAvailableAudioTracks-api",
+              "isDocsHomePage": false,
+              "title": "getAvailableAudioTracks method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/getAvailableAudioTracks.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/getAvailableAudioTracks",
+              "permalink": "/docs/api/trackSelection/getAvailableAudioTracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getAvailableAudioTracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getAvailableAudioTracks-api",
+                "title": "getAvailableAudioTracks method",
+                "sidebar_label": "getAvailableAudioTracks",
+                "slug": "getAvailableAudioTracks"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getVideoTrack",
+                "permalink": "/docs/api/trackSelection/getVideoTrack"
+              },
+              "next": {
+                "title": "getAvailableTextTracks",
+                "permalink": "/docs/api/trackSelection/getAvailableTextTracks"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/getAvailableTextTracks-api",
+              "id": "api/trackSelection/getAvailableTextTracks-api",
+              "isDocsHomePage": false,
+              "title": "getAvailableTextTracks method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/getAvailableTextTracks.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/getAvailableTextTracks",
+              "permalink": "/docs/api/trackSelection/getAvailableTextTracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getAvailableTextTracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getAvailableTextTracks-api",
+                "title": "getAvailableTextTracks method",
+                "sidebar_label": "getAvailableTextTracks",
+                "slug": "getAvailableTextTracks"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getAvailableAudioTracks",
+                "permalink": "/docs/api/trackSelection/getAvailableAudioTracks"
+              },
+              "next": {
+                "title": "getAvailableVideoTracks",
+                "permalink": "/docs/api/trackSelection/getAvailableVideoTracks"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/getAvailableVideoTracks-api",
+              "id": "api/trackSelection/getAvailableVideoTracks-api",
+              "isDocsHomePage": false,
+              "title": "getAvailableVideoTracks method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/getAvailableVideoTracks.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/getAvailableVideoTracks",
+              "permalink": "/docs/api/trackSelection/getAvailableVideoTracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getAvailableVideoTracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getAvailableVideoTracks-api",
+                "title": "getAvailableVideoTracks method",
+                "sidebar_label": "getAvailableVideoTracks",
+                "slug": "getAvailableVideoTracks"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getAvailableTextTracks",
+                "permalink": "/docs/api/trackSelection/getAvailableTextTracks"
+              },
+              "next": {
+                "title": "setAudioTrack",
+                "permalink": "/docs/api/trackSelection/setAudioTrack"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/getPreferredAudioTracks-api",
+              "id": "api/trackSelection/getPreferredAudioTracks-api",
+              "isDocsHomePage": false,
+              "title": "getPreferredAudioTracks method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/getPreferredAudioTracks.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/getPreferredAudioTracks",
+              "permalink": "/docs/api/trackSelection/getPreferredAudioTracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getPreferredAudioTracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getPreferredAudioTracks-api",
+                "title": "getPreferredAudioTracks method",
+                "sidebar_label": "getPreferredAudioTracks",
+                "slug": "getPreferredAudioTracks"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setPreferredAudioTracks",
+                "permalink": "/docs/api/trackSelection/setPreferredAudioTracks"
+              },
+              "next": {
+                "title": "setPreferredTextTracks",
+                "permalink": "/docs/api/trackSelection/setPreferredTextTracks"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/getPreferredTextTracks-api",
+              "id": "api/trackSelection/getPreferredTextTracks-api",
+              "isDocsHomePage": false,
+              "title": "getPreferredTextTracks method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/getPreferredTextTracks.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/getPreferredTextTracks",
+              "permalink": "/docs/api/trackSelection/getPreferredTextTracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getPreferredTextTracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getPreferredTextTracks-api",
+                "title": "getPreferredTextTracks method",
+                "sidebar_label": "getPreferredTextTracks",
+                "slug": "getPreferredTextTracks"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setPreferredTextTracks",
+                "permalink": "/docs/api/trackSelection/setPreferredTextTracks"
+              },
+              "next": {
+                "title": "setPreferredVideoTracks",
+                "permalink": "/docs/api/trackSelection/setPreferredVideoTracks"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/getPreferredVideoTracks-api",
+              "id": "api/trackSelection/getPreferredVideoTracks-api",
+              "isDocsHomePage": false,
+              "title": "getPreferredVideoTracks method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/getPreferredVideoTracks.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/getPreferredVideoTracks",
+              "permalink": "/docs/api/trackSelection/getPreferredVideoTracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getPreferredVideoTracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getPreferredVideoTracks-api",
+                "title": "getPreferredVideoTracks method",
+                "sidebar_label": "getPreferredVideoTracks",
+                "slug": "getPreferredVideoTracks"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setPreferredVideoTracks",
+                "permalink": "/docs/api/trackSelection/setPreferredVideoTracks"
+              },
+              "next": {
+                "title": "getAvailableVideoBitrates",
+                "permalink": "/docs/api/bitrateSelection/getAvailableVideoBitrates"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/getTextTrack-api",
+              "id": "api/trackSelection/getTextTrack-api",
+              "isDocsHomePage": false,
+              "title": "getTextTrack method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/getTextTrack.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/getTextTrack",
+              "permalink": "/docs/api/trackSelection/getTextTrack",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getTextTrack.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getTextTrack-api",
+                "title": "getTextTrack method",
+                "sidebar_label": "getTextTrack",
+                "slug": "getTextTrack"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getAudioTrack",
+                "permalink": "/docs/api/trackSelection/getAudioTrack"
+              },
+              "next": {
+                "title": "getVideoTrack",
+                "permalink": "/docs/api/trackSelection/getVideoTrack"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/getVideoTrack-api",
+              "id": "api/trackSelection/getVideoTrack-api",
+              "isDocsHomePage": false,
+              "title": "getVideoTrack method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/getVideoTrack.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/getVideoTrack",
+              "permalink": "/docs/api/trackSelection/getVideoTrack",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getVideoTrack.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getVideoTrack-api",
+                "title": "getVideoTrack method",
+                "sidebar_label": "getVideoTrack",
+                "slug": "getVideoTrack"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getTextTrack",
+                "permalink": "/docs/api/trackSelection/getTextTrack"
+              },
+              "next": {
+                "title": "getAvailableAudioTracks",
+                "permalink": "/docs/api/trackSelection/getAvailableAudioTracks"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/setAudioTrack-api",
+              "id": "api/trackSelection/setAudioTrack-api",
+              "isDocsHomePage": false,
+              "title": "setAudioTrack method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/setAudioTrack.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/setAudioTrack",
+              "permalink": "/docs/api/trackSelection/setAudioTrack",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/setAudioTrack.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setAudioTrack-api",
+                "title": "setAudioTrack method",
+                "sidebar_label": "setAudioTrack",
+                "slug": "setAudioTrack"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getAvailableVideoTracks",
+                "permalink": "/docs/api/trackSelection/getAvailableVideoTracks"
+              },
+              "next": {
+                "title": "setTextTrack",
+                "permalink": "/docs/api/trackSelection/setTextTrack"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/setPreferredAudioTracks-api",
+              "id": "api/trackSelection/setPreferredAudioTracks-api",
+              "isDocsHomePage": false,
+              "title": "setPreferredAudioTracks method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/setPreferredAudioTracks.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/setPreferredAudioTracks",
+              "permalink": "/docs/api/trackSelection/setPreferredAudioTracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/setPreferredAudioTracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setPreferredAudioTracks-api",
+                "title": "setPreferredAudioTracks method",
+                "sidebar_label": "setPreferredAudioTracks",
+                "slug": "setPreferredAudioTracks"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "disableVideoTrack",
+                "permalink": "/docs/api/trackSelection/disableVideoTrack"
+              },
+              "next": {
+                "title": "getPreferredAudioTracks",
+                "permalink": "/docs/api/trackSelection/getPreferredAudioTracks"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/setPreferredTextTracks-api",
+              "id": "api/trackSelection/setPreferredTextTracks-api",
+              "isDocsHomePage": false,
+              "title": "setPreferredTextTracks method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/setPreferredTextTracks.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/setPreferredTextTracks",
+              "permalink": "/docs/api/trackSelection/setPreferredTextTracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/setPreferredTextTracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setPreferredTextTracks-api",
+                "title": "setPreferredTextTracks method",
+                "sidebar_label": "setPreferredTextTracks",
+                "slug": "setPreferredTextTracks"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getPreferredAudioTracks",
+                "permalink": "/docs/api/trackSelection/getPreferredAudioTracks"
+              },
+              "next": {
+                "title": "getPreferredTextTracks",
+                "permalink": "/docs/api/trackSelection/getPreferredTextTracks"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/setPreferredVideoTracks-api",
+              "id": "api/trackSelection/setPreferredVideoTracks-api",
+              "isDocsHomePage": false,
+              "title": "setPreferredVideoTracks method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/setPreferredVideoTracks.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/setPreferredVideoTracks",
+              "permalink": "/docs/api/trackSelection/setPreferredVideoTracks",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/setPreferredVideoTracks.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setPreferredVideoTracks-api",
+                "title": "setPreferredVideoTracks method",
+                "sidebar_label": "setPreferredVideoTracks",
+                "slug": "setPreferredVideoTracks"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getPreferredTextTracks",
+                "permalink": "/docs/api/trackSelection/getPreferredTextTracks"
+              },
+              "next": {
+                "title": "getPreferredVideoTracks",
+                "permalink": "/docs/api/trackSelection/getPreferredVideoTracks"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/setTextTrack-api",
+              "id": "api/trackSelection/setTextTrack-api",
+              "isDocsHomePage": false,
+              "title": "setTextTrack method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/setTextTrack.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/setTextTrack",
+              "permalink": "/docs/api/trackSelection/setTextTrack",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/setTextTrack.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setTextTrack-api",
+                "title": "setTextTrack method",
+                "sidebar_label": "setTextTrack",
+                "slug": "setTextTrack"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setAudioTrack",
+                "permalink": "/docs/api/trackSelection/setAudioTrack"
+              },
+              "next": {
+                "title": "disableTextTrack",
+                "permalink": "/docs/api/trackSelection/disableTextTrack"
+              }
+            },
+            {
+              "unversionedId": "api/trackSelection/setVideoTrack-api",
+              "id": "api/trackSelection/setVideoTrack-api",
+              "isDocsHomePage": false,
+              "title": "setVideoTrack method",
+              "description": "---",
+              "source": "@site/docs/api/trackSelection/setVideoTrack.md",
+              "sourceDirName": "api/trackSelection",
+              "slug": "/api/trackSelection/setVideoTrack",
+              "permalink": "/docs/api/trackSelection/setVideoTrack",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/setVideoTrack.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setVideoTrack-api",
+                "title": "setVideoTrack method",
+                "sidebar_label": "setVideoTrack",
+                "slug": "setVideoTrack"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "disableTextTrack",
+                "permalink": "/docs/api/trackSelection/disableTextTrack"
+              },
+              "next": {
+                "title": "disableVideoTrack",
+                "permalink": "/docs/api/trackSelection/disableVideoTrack"
+              }
+            },
+            {
+              "unversionedId": "api/volumeControl/getVolume-api",
+              "id": "api/volumeControl/getVolume-api",
+              "isDocsHomePage": false,
+              "title": "getVolume method",
+              "description": "---",
+              "source": "@site/docs/api/volumeControl/getVolume.md",
+              "sourceDirName": "api/volumeControl",
+              "slug": "/api/volumeControl/getVolume",
+              "permalink": "/docs/api/volumeControl/getVolume",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/getVolume.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "getVolume-api",
+                "title": "getVolume method",
+                "sidebar_label": "getVolume",
+                "slug": "getVolume"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "setVolume",
+                "permalink": "/docs/api/volumeControl/setVolume"
+              },
+              "next": {
+                "title": "mute",
+                "permalink": "/docs/api/volumeControl/mute"
+              }
+            },
+            {
+              "unversionedId": "api/volumeControl/isMute-api",
+              "id": "api/volumeControl/isMute-api",
+              "isDocsHomePage": false,
+              "title": "isMute method",
+              "description": "---",
+              "source": "@site/docs/api/volumeControl/isMute.md",
+              "sourceDirName": "api/volumeControl",
+              "slug": "/api/volumeControl/isMute",
+              "permalink": "/docs/api/volumeControl/isMute",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/isMute.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "isMute-api",
+                "title": "isMute method",
+                "sidebar_label": "isMute",
+                "slug": "isMute"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "unMute",
+                "permalink": "/docs/api/volumeControl/unMute"
+              },
+              "next": {
+                "title": "getAudioTrack",
+                "permalink": "/docs/api/trackSelection/getAudioTrack"
+              }
+            },
+            {
+              "unversionedId": "api/volumeControl/mute-api",
+              "id": "api/volumeControl/mute-api",
+              "isDocsHomePage": false,
+              "title": "mute method",
+              "description": "---",
+              "source": "@site/docs/api/volumeControl/mute.md",
+              "sourceDirName": "api/volumeControl",
+              "slug": "/api/volumeControl/mute",
+              "permalink": "/docs/api/volumeControl/mute",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/mute.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "mute-api",
+                "title": "mute method",
+                "sidebar_label": "mute",
+                "slug": "mute"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "getVolume",
+                "permalink": "/docs/api/volumeControl/getVolume"
+              },
+              "next": {
+                "title": "unMute",
+                "permalink": "/docs/api/volumeControl/unMute"
+              }
+            },
+            {
+              "unversionedId": "api/volumeControl/setVolume-api",
+              "id": "api/volumeControl/setVolume-api",
+              "isDocsHomePage": false,
+              "title": "setVolume method",
+              "description": "---",
+              "source": "@site/docs/api/volumeControl/setVolume.md",
+              "sourceDirName": "api/volumeControl",
+              "slug": "/api/volumeControl/setVolume",
+              "permalink": "/docs/api/volumeControl/setVolume",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/setVolume.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "setVolume-api",
+                "title": "setVolume method",
+                "sidebar_label": "setVolume",
+                "slug": "setVolume"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "areTrickModeTracksEnabled",
+                "permalink": "/docs/api/speedControlTrickModes/areTrickModeTracksEnabled"
+              },
+              "next": {
+                "title": "getVolume",
+                "permalink": "/docs/api/volumeControl/getVolume"
+              }
+            },
+            {
+              "unversionedId": "api/volumeControl/unMute-api",
+              "id": "api/volumeControl/unMute-api",
+              "isDocsHomePage": false,
+              "title": "unMute method",
+              "description": "---",
+              "source": "@site/docs/api/volumeControl/unMute.md",
+              "sourceDirName": "api/volumeControl",
+              "slug": "/api/volumeControl/unMute",
+              "permalink": "/docs/api/volumeControl/unMute",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/unMute.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "unMute-api",
+                "title": "unMute method",
+                "sidebar_label": "unMute",
+                "slug": "unMute"
+              },
+              "sidebar": "api",
+              "previous": {
+                "title": "mute",
+                "permalink": "/docs/api/volumeControl/mute"
+              },
+              "next": {
+                "title": "isMute",
+                "permalink": "/docs/api/volumeControl/isMute"
+              }
+            },
+            {
+              "unversionedId": "glossary",
+              "id": "glossary",
+              "isDocsHomePage": false,
+              "title": "Glossary",
+              "description": "Overview",
+              "source": "@site/docs/glossary.md",
+              "sourceDirName": ".",
+              "slug": "/glossary",
+              "permalink": "/docs/glossary",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/glossary.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "glossary",
+                "title": "Glossary",
+                "sidebar_label": "Glossary",
+                "slug": "glossary"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Deprecated APIs",
+                "permalink": "/docs/additional_ressources/deprecated_api"
+              }
+            },
+            {
+              "unversionedId": "tutorials/drm-tutorials",
+              "id": "tutorials/drm-tutorials",
+              "isDocsHomePage": false,
+              "title": "Playing contents with DRMs",
+              "description": "Because different applications and different devices can work completely",
+              "source": "@site/docs/tutorials/drm.md",
+              "sourceDirName": "tutorials",
+              "slug": "/tutorials/playing-contents-with-drms",
+              "permalink": "/docs/tutorials/playing-contents-with-drms",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/tutorials/drm.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "drm-tutorials",
+                "title": "Playing contents with DRMs",
+                "sidebar_label": "Playing contents with DRMs",
+                "slug": "playing-contents-with-drms"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Quick Start",
+                "permalink": "/docs/tutorials/quick_start"
+              },
+              "next": {
+                "title": "Selecting a track",
+                "permalink": "/docs/tutorials/selecting-a-track"
+              }
+            },
+            {
+              "unversionedId": "tutorials/listenSteamEvents-tutorials",
+              "id": "tutorials/listenSteamEvents-tutorials",
+              "isDocsHomePage": false,
+              "title": "Listening to stream events",
+              "description": "Some contents contain events a player will need to send at a particular point",
+              "source": "@site/docs/tutorials/listen_stream_events.md",
+              "sourceDirName": "tutorials",
+              "slug": "/tutorials/listening-to-stream-events",
+              "permalink": "/docs/tutorials/listening-to-stream-events",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/tutorials/listen_stream_events.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "listenSteamEvents-tutorials",
+                "title": "Listening to stream events",
+                "sidebar_label": "Listening to stream events",
+                "slug": "listening-to-stream-events"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Selecting a track",
+                "permalink": "/docs/tutorials/selecting-a-track"
+              },
+              "next": {
+                "title": "Manifest Object",
+                "permalink": "/docs/additional_ressources/manifest"
+              }
+            },
+            {
+              "unversionedId": "tutorials/quickStart-tutorials",
+              "id": "tutorials/quickStart-tutorials",
+              "isDocsHomePage": false,
+              "title": "Quick Start",
+              "description": "Because the RxPlayer exports a lot of functionnalities, you might want to",
+              "source": "@site/docs/tutorials/quick_start.md",
+              "sourceDirName": "tutorials",
+              "slug": "/tutorials/quick_start",
+              "permalink": "/docs/tutorials/quick_start",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/tutorials/quick_start.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "quickStart-tutorials",
+                "title": "Quick Start",
+                "sidebar_label": "Quick Start",
+                "slug": "quick_start"
+              },
+              "sidebar": "getstarted",
+              "next": {
+                "title": "Playing contents with DRMs",
+                "permalink": "/docs/tutorials/playing-contents-with-drms"
+              }
+            },
+            {
+              "unversionedId": "tutorials/selectingTrack-tutorials",
+              "id": "tutorials/selectingTrack-tutorials",
+              "isDocsHomePage": false,
+              "title": "Selecting a track",
+              "description": "The goal of this tutorial",
+              "source": "@site/docs/tutorials/selecting_track.md",
+              "sourceDirName": "tutorials",
+              "slug": "/tutorials/selecting-a-track",
+              "permalink": "/docs/tutorials/selecting-a-track",
+              "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/tutorials/selecting_track.md",
+              "version": "current",
+              "frontMatter": {
+                "id": "selectingTrack-tutorials",
+                "title": "Selecting a track",
+                "sidebar_label": "Selecting a track",
+                "slug": "selecting-a-track"
+              },
+              "sidebar": "getstarted",
+              "previous": {
+                "title": "Playing contents with DRMs",
+                "permalink": "/docs/tutorials/playing-contents-with-drms"
+              },
+              "next": {
+                "title": "Listening to stream events",
+                "permalink": "/docs/tutorials/listening-to-stream-events"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "docusaurus-plugin-content-blog": {
+    "default": {
+      "blogPosts": [
+        {
+          "id": "why-typescript",
+          "metadata": {
+            "permalink": "/blog/why-typescript",
+            "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/blog/blog/2018-06-13-why-typescript.md",
+            "source": "@site/blog/2018-06-13-why-typescript.md",
+            "title": "Why Typescript?",
+            "description": "We recently (as from v3.0.1) have chosen to switch the rx-player codebase",
+            "date": "2018-06-13T00:00:00.000Z",
+            "formattedDate": "June 13, 2018",
+            "tags": [
+              {
+                "label": "typescript",
+                "permalink": "/blog/tags/typescript"
+              }
+            ],
+            "readingTime": 5.13,
+            "truncated": true
+          }
+        }
+      ],
+      "blogListPaginated": [
+        {
+          "metadata": {
+            "permalink": "/blog",
+            "page": 1,
+            "postsPerPage": 10,
+            "totalPages": 1,
+            "totalCount": 1,
+            "previousPage": null,
+            "nextPage": null,
+            "blogDescription": "Blog",
+            "blogTitle": "Blog"
+          },
+          "items": [
+            "why-typescript"
+          ]
+        }
+      ],
+      "blogTags": {
+        "typescript": {
+          "name": "typescript",
+          "items": [
+            "why-typescript"
+          ],
+          "permalink": "/blog/tags/typescript"
+        }
+      },
+      "blogTagsListPath": "/blog/tags"
+    }
+  },
+  "docusaurus-plugin-content-pages": {
+    "default": [
+      {
+        "type": "jsx",
+        "permalink": "/",
+        "source": "@site/src/pages/index.js"
+      }
+    ]
+  },
+  "docusaurus-plugin-debug": {
+    "default": null
+  },
+  "docusaurus-theme-classic": {
+    "default": null
+  },
+  "docusaurus-theme-search-algolia": {
+    "default": null
+  }
+}

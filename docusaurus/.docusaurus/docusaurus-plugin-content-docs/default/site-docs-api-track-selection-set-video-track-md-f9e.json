@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/trackSelection/setVideoTrack-api",
+  "id": "api/trackSelection/setVideoTrack-api",
+  "isDocsHomePage": false,
+  "title": "setVideoTrack method",
+  "description": "---",
+  "source": "@site/docs/api/trackSelection/setVideoTrack.md",
+  "sourceDirName": "api/trackSelection",
+  "slug": "/api/trackSelection/setVideoTrack",
+  "permalink": "/docs/api/trackSelection/setVideoTrack",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/setVideoTrack.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "setVideoTrack-api",
+    "title": "setVideoTrack method",
+    "sidebar_label": "setVideoTrack",
+    "slug": "setVideoTrack"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "disableTextTrack",
+    "permalink": "/docs/api/trackSelection/disableTextTrack"
+  },
+  "next": {
+    "title": "disableVideoTrack",
+    "permalink": "/docs/api/trackSelection/disableVideoTrack"
+  }
+}

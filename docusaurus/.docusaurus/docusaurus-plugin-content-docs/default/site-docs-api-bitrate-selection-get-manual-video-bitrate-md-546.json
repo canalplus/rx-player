@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bitrateSelection/getManualVideoBitrate-api",
+  "id": "api/bitrateSelection/getManualVideoBitrate-api",
+  "isDocsHomePage": false,
+  "title": "getManualVideoBitrate method",
+  "description": "---",
+  "source": "@site/docs/api/bitrateSelection/getManualVideoBitrate.md",
+  "sourceDirName": "api/bitrateSelection",
+  "slug": "/api/bitrateSelection/getManualVideoBitrate",
+  "permalink": "/docs/api/bitrateSelection/getManualVideoBitrate",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getManualVideoBitrate.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getManualVideoBitrate-api",
+    "title": "getManualVideoBitrate method",
+    "sidebar_label": "getManualVideoBitrate",
+    "slug": "getManualVideoBitrate"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setAudioBitrate",
+    "permalink": "/docs/api/bitrateSelection/setAudioBitrate"
+  },
+  "next": {
+    "title": "getManualAudioBitrate",
+    "permalink": "/docs/api/bitrateSelection/getManualAudioBitrate"
+  }
+}

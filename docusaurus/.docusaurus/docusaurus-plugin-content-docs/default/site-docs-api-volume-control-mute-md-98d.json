@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/volumeControl/mute-api",
+  "id": "api/volumeControl/mute-api",
+  "isDocsHomePage": false,
+  "title": "mute method",
+  "description": "---",
+  "source": "@site/docs/api/volumeControl/mute.md",
+  "sourceDirName": "api/volumeControl",
+  "slug": "/api/volumeControl/mute",
+  "permalink": "/docs/api/volumeControl/mute",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/mute.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "mute-api",
+    "title": "mute method",
+    "sidebar_label": "mute",
+    "slug": "mute"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getVolume",
+    "permalink": "/docs/api/volumeControl/getVolume"
+  },
+  "next": {
+    "title": "unMute",
+    "permalink": "/docs/api/volumeControl/unMute"
+  }
+}

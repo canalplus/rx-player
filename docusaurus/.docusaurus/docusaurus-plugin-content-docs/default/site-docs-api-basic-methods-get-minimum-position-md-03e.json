@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/basicMethods/getMinimumPosition-api",
+  "id": "api/basicMethods/getMinimumPosition-api",
+  "isDocsHomePage": false,
+  "title": "getMinimumPosition method",
+  "description": "---",
+  "source": "@site/docs/api/basicMethods/getMinimumPosition.md",
+  "sourceDirName": "api/basicMethods",
+  "slug": "/api/basicMethods/getMinimumPosition",
+  "permalink": "/docs/api/basicMethods/getMinimumPosition",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getMinimumPosition.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getMinimumPosition-api",
+    "title": "getMinimumPosition method",
+    "sidebar_label": "getMinimumPosition",
+    "slug": "getMinimumPosition"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "seekTo",
+    "permalink": "/docs/api/basicMethods/seekTo"
+  },
+  "next": {
+    "title": "getMaximumPosition",
+    "permalink": "/docs/api/basicMethods/getMaximumPosition"
+  }
+}

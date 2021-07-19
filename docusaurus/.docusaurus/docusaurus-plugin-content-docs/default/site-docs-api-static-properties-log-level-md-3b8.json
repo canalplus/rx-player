@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/staticProperties/LogLevel-api",
+  "id": "api/staticProperties/LogLevel-api",
+  "isDocsHomePage": false,
+  "title": "LogLevel method",
+  "description": "---",
+  "source": "@site/docs/api/staticProperties/LogLevel.md",
+  "sourceDirName": "api/staticProperties",
+  "slug": "/api/staticProperties/LogLevel",
+  "permalink": "/docs/api/staticProperties/LogLevel",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/staticProperties/LogLevel.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "LogLevel-api",
+    "title": "LogLevel method",
+    "sidebar_label": "LogLevel",
+    "slug": "LogLevel"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "ErrorCodes",
+    "permalink": "/docs/api/staticProperties/ErrorCodes"
+  },
+  "next": {
+    "title": "StringUtils",
+    "permalink": "/docs/api/tools/tools/string-utils"
+  }
+}

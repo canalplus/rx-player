@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/basicMethods/removeEventListener-api",
+  "id": "api/basicMethods/removeEventListener-api",
+  "isDocsHomePage": false,
+  "title": "removeEventListener method",
+  "description": "---",
+  "source": "@site/docs/api/basicMethods/removeEventListener.md",
+  "sourceDirName": "api/basicMethods",
+  "slug": "/api/basicMethods/removeEventListener",
+  "permalink": "/docs/api/basicMethods/removeEventListener",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/removeEventListener.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "removeEventListener-api",
+    "title": "removeEventListener method",
+    "sidebar_label": "removeEventListener",
+    "slug": "removeEventListener"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "addEventListener",
+    "permalink": "/docs/api/basicMethods/addEventListener"
+  },
+  "next": {
+    "title": "play",
+    "permalink": "/docs/api/basicMethods/play"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/player_events",
+  "id": "api/player_events",
+  "isDocsHomePage": false,
+  "title": "Player events",
+  "description": "Overview",
+  "source": "@site/docs/api/events.md",
+  "sourceDirName": "api",
+  "slug": "/api/playerEvents",
+  "permalink": "/docs/api/playerEvents",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/events.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "player_events",
+    "title": "Player events",
+    "sidebar_label": "Player events",
+    "slug": "playerEvents"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "Player States",
+    "permalink": "/docs/api/states"
+  },
+  "next": {
+    "title": "Player errors/warnings",
+    "permalink": "/docs/api/playerErrorsWarning"
+  }
+}

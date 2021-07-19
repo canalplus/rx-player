@@ -1,0 +1,28 @@
+{
+  "unversionedId": "additional_ressources/metaplaylist",
+  "id": "additional_ressources/metaplaylist",
+  "isDocsHomePage": false,
+  "title": "MetaPlaylist v0.1",
+  "description": "Overview",
+  "source": "@site/docs/additional_ressources/metaplaylist.md",
+  "sourceDirName": "additional_ressources",
+  "slug": "/additional_ressources/metaplaylist",
+  "permalink": "/docs/additional_ressources/metaplaylist",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/metaplaylist.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "metaplaylist",
+    "title": "MetaPlaylist v0.1",
+    "sidebar_label": "MetaPlaylist v0.1",
+    "slug": "metaplaylist"
+  },
+  "sidebar": "getstarted",
+  "previous": {
+    "title": "DASH' AdaptationSets vs rx-player \"Adaptation\"",
+    "permalink": "/docs/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference"
+  },
+  "next": {
+    "title": "Local contents",
+    "permalink": "/docs/additional_ressources/local_contents"
+  }
+}

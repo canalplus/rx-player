@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bitrateSelection/setMinAudioBitrate-api",
+  "id": "api/bitrateSelection/setMinAudioBitrate-api",
+  "isDocsHomePage": false,
+  "title": "setMinAudioBitrate method",
+  "description": "---",
+  "source": "@site/docs/api/bitrateSelection/setMinAudioBitrate.md",
+  "sourceDirName": "api/bitrateSelection",
+  "slug": "/api/bitrateSelection/setMinAudioBitrate",
+  "permalink": "/docs/api/bitrateSelection/setMinAudioBitrate",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/setMinAudioBitrate.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "setMinAudioBitrate-api",
+    "title": "setMinAudioBitrate method",
+    "sidebar_label": "setMinAudioBitrate",
+    "slug": "setMinAudioBitrate"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setMinVideoBitrate",
+    "permalink": "/docs/api/bitrateSelection/setMinVideoBitrate"
+  },
+  "next": {
+    "title": "getMinVideoBitrate",
+    "permalink": "/docs/api/bitrateSelection/getMinVideoBitrate"
+  }
+}

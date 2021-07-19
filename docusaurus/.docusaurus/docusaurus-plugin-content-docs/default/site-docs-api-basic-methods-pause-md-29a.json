@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/basicMethods/pause-api",
+  "id": "api/basicMethods/pause-api",
+  "isDocsHomePage": false,
+  "title": "pause method",
+  "description": "---",
+  "source": "@site/docs/api/basicMethods/pause.md",
+  "sourceDirName": "api/basicMethods",
+  "slug": "/api/basicMethods/pause",
+  "permalink": "/docs/api/basicMethods/pause",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/pause.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "pause-api",
+    "title": "pause method",
+    "sidebar_label": "pause",
+    "slug": "pause"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "play",
+    "permalink": "/docs/api/basicMethods/play"
+  },
+  "next": {
+    "title": "stop",
+    "permalink": "/docs/api/basicMethods/stop"
+  }
+}

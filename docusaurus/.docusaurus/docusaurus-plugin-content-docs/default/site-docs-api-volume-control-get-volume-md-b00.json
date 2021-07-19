@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/volumeControl/getVolume-api",
+  "id": "api/volumeControl/getVolume-api",
+  "isDocsHomePage": false,
+  "title": "getVolume method",
+  "description": "---",
+  "source": "@site/docs/api/volumeControl/getVolume.md",
+  "sourceDirName": "api/volumeControl",
+  "slug": "/api/volumeControl/getVolume",
+  "permalink": "/docs/api/volumeControl/getVolume",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/getVolume.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getVolume-api",
+    "title": "getVolume method",
+    "sidebar_label": "getVolume",
+    "slug": "getVolume"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setVolume",
+    "permalink": "/docs/api/volumeControl/setVolume"
+  },
+  "next": {
+    "title": "mute",
+    "permalink": "/docs/api/volumeControl/mute"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "unversionedId": "additional_ressources/initial_position",
+  "id": "additional_ressources/initial_position",
+  "isDocsHomePage": false,
+  "title": "Initial Position",
+  "description": "Overview",
+  "source": "@site/docs/additional_ressources/initial_position.md",
+  "sourceDirName": "additional_ressources",
+  "slug": "/additional_ressources/initial_position",
+  "permalink": "/docs/additional_ressources/initial_position",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/initial_position.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "initial_position",
+    "title": "Initial Position",
+    "sidebar_label": "Initial Position",
+    "slug": "initial_position"
+  },
+  "sidebar": "getstarted",
+  "previous": {
+    "title": "Low Latency",
+    "permalink": "/docs/additional_ressources/low_latency"
+  },
+  "next": {
+    "title": "Presentation Time Offset",
+    "permalink": "/docs/additional_ressources/presentation_time_offset"
+  }
+}

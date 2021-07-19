@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/trackSelection/getAvailableTextTracks-api",
+  "id": "api/trackSelection/getAvailableTextTracks-api",
+  "isDocsHomePage": false,
+  "title": "getAvailableTextTracks method",
+  "description": "---",
+  "source": "@site/docs/api/trackSelection/getAvailableTextTracks.md",
+  "sourceDirName": "api/trackSelection",
+  "slug": "/api/trackSelection/getAvailableTextTracks",
+  "permalink": "/docs/api/trackSelection/getAvailableTextTracks",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getAvailableTextTracks.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getAvailableTextTracks-api",
+    "title": "getAvailableTextTracks method",
+    "sidebar_label": "getAvailableTextTracks",
+    "slug": "getAvailableTextTracks"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getAvailableAudioTracks",
+    "permalink": "/docs/api/trackSelection/getAvailableAudioTracks"
+  },
+  "next": {
+    "title": "getAvailableVideoTracks",
+    "permalink": "/docs/api/trackSelection/getAvailableVideoTracks"
+  }
+}

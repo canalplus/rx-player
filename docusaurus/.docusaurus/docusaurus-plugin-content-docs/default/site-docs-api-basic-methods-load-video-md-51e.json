@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/basicMethods/loadVideo-api",
+  "id": "api/basicMethods/loadVideo-api",
+  "isDocsHomePage": false,
+  "title": "loadVideo method",
+  "description": "Overview",
+  "source": "@site/docs/api/basicMethods/loadVideo.md",
+  "sourceDirName": "api/basicMethods",
+  "slug": "/api/loadVideo",
+  "permalink": "/docs/api/loadVideo",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/loadVideo.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "loadVideo-api",
+    "title": "loadVideo method",
+    "sidebar_label": "loadVideo",
+    "slug": "/api/loadVideo"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "HDR",
+    "permalink": "/docs/api/hdr"
+  },
+  "next": {
+    "title": "reload",
+    "permalink": "/docs/api/basicMethods/reload"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/trackSelection/setAudioTrack-api",
+  "id": "api/trackSelection/setAudioTrack-api",
+  "isDocsHomePage": false,
+  "title": "setAudioTrack method",
+  "description": "---",
+  "source": "@site/docs/api/trackSelection/setAudioTrack.md",
+  "sourceDirName": "api/trackSelection",
+  "slug": "/api/trackSelection/setAudioTrack",
+  "permalink": "/docs/api/trackSelection/setAudioTrack",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/setAudioTrack.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "setAudioTrack-api",
+    "title": "setAudioTrack method",
+    "sidebar_label": "setAudioTrack",
+    "slug": "setAudioTrack"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getAvailableVideoTracks",
+    "permalink": "/docs/api/trackSelection/getAvailableVideoTracks"
+  },
+  "next": {
+    "title": "setTextTrack",
+    "permalink": "/docs/api/trackSelection/setTextTrack"
+  }
+}

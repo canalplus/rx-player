@@ -1,0 +1,28 @@
+{
+  "unversionedId": "tutorials/selectingTrack-tutorials",
+  "id": "tutorials/selectingTrack-tutorials",
+  "isDocsHomePage": false,
+  "title": "Selecting a track",
+  "description": "The goal of this tutorial",
+  "source": "@site/docs/tutorials/selecting_track.md",
+  "sourceDirName": "tutorials",
+  "slug": "/tutorials/selecting-a-track",
+  "permalink": "/docs/tutorials/selecting-a-track",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/tutorials/selecting_track.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "selectingTrack-tutorials",
+    "title": "Selecting a track",
+    "sidebar_label": "Selecting a track",
+    "slug": "selecting-a-track"
+  },
+  "sidebar": "getstarted",
+  "previous": {
+    "title": "Playing contents with DRMs",
+    "permalink": "/docs/tutorials/playing-contents-with-drms"
+  },
+  "next": {
+    "title": "Listening to stream events",
+    "permalink": "/docs/tutorials/listening-to-stream-events"
+  }
+}

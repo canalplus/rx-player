@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bitrateSelection/getManualAudioBitrate-api",
+  "id": "api/bitrateSelection/getManualAudioBitrate-api",
+  "isDocsHomePage": false,
+  "title": "getManualAudioBitrate method",
+  "description": "---",
+  "source": "@site/docs/api/bitrateSelection/getManualAudioBitrate.md",
+  "sourceDirName": "api/bitrateSelection",
+  "slug": "/api/bitrateSelection/getManualAudioBitrate",
+  "permalink": "/docs/api/bitrateSelection/getManualAudioBitrate",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getManualAudioBitrate.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getManualAudioBitrate-api",
+    "title": "getManualAudioBitrate method",
+    "sidebar_label": "getManualAudioBitrate",
+    "slug": "getManualAudioBitrate"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getManualVideoBitrate",
+    "permalink": "/docs/api/bitrateSelection/getManualVideoBitrate"
+  },
+  "next": {
+    "title": "setWantedBufferAhead",
+    "permalink": "/docs/api/bufferControl/setWantedBufferAhead"
+  }
+}

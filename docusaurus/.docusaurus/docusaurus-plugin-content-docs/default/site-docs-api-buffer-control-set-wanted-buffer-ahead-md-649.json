@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bufferControl/setWantedBufferAhead-api",
+  "id": "api/bufferControl/setWantedBufferAhead-api",
+  "isDocsHomePage": false,
+  "title": "setWantedBufferAhead method",
+  "description": "---",
+  "source": "@site/docs/api/bufferControl/setWantedBufferAhead.md",
+  "sourceDirName": "api/bufferControl",
+  "slug": "/api/bufferControl/setWantedBufferAhead",
+  "permalink": "/docs/api/bufferControl/setWantedBufferAhead",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferControl/setWantedBufferAhead.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "setWantedBufferAhead-api",
+    "title": "setWantedBufferAhead method",
+    "sidebar_label": "setWantedBufferAhead",
+    "slug": "setWantedBufferAhead"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getManualAudioBitrate",
+    "permalink": "/docs/api/bitrateSelection/getManualAudioBitrate"
+  },
+  "next": {
+    "title": "getWantedBufferAhead",
+    "permalink": "/docs/api/bufferControl/getWantedBufferAhead"
+  }
+}

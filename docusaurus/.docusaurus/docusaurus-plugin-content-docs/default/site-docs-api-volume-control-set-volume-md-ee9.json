@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/volumeControl/setVolume-api",
+  "id": "api/volumeControl/setVolume-api",
+  "isDocsHomePage": false,
+  "title": "setVolume method",
+  "description": "---",
+  "source": "@site/docs/api/volumeControl/setVolume.md",
+  "sourceDirName": "api/volumeControl",
+  "slug": "/api/volumeControl/setVolume",
+  "permalink": "/docs/api/volumeControl/setVolume",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/setVolume.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "setVolume-api",
+    "title": "setVolume method",
+    "sidebar_label": "setVolume",
+    "slug": "setVolume"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "areTrickModeTracksEnabled",
+    "permalink": "/docs/api/speedControlTrickModes/areTrickModeTracksEnabled"
+  },
+  "next": {
+    "title": "getVolume",
+    "permalink": "/docs/api/volumeControl/getVolume"
+  }
+}

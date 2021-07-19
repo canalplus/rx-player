@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bufferControl/getMaxBufferBehind-api",
+  "id": "api/bufferControl/getMaxBufferBehind-api",
+  "isDocsHomePage": false,
+  "title": "getMaxBufferBehind method",
+  "description": "---",
+  "source": "@site/docs/api/bufferControl/getMaxBufferBehind.md",
+  "sourceDirName": "api/bufferControl",
+  "slug": "/api/bufferControl/getMaxBufferBehind",
+  "permalink": "/docs/api/bufferControl/getMaxBufferBehind",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferControl/getMaxBufferBehind.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getMaxBufferBehind-api",
+    "title": "getMaxBufferBehind method",
+    "sidebar_label": "getMaxBufferBehind",
+    "slug": "getMaxBufferBehind"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setMaxBufferBehind",
+    "permalink": "/docs/api/bufferControl/setMaxBufferBehind"
+  },
+  "next": {
+    "title": "setMaxBufferAhead",
+    "permalink": "/docs/api/bufferControl/setMaxBufferAhead"
+  }
+}

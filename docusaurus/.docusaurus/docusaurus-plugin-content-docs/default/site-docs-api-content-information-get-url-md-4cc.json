@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/contentInformation/getUrl-api",
+  "id": "api/contentInformation/getUrl-api",
+  "isDocsHomePage": false,
+  "title": "getUrl method",
+  "description": "---",
+  "source": "@site/docs/api/contentInformation/getUrl.md",
+  "sourceDirName": "api/contentInformation",
+  "slug": "/api/contentInformation/getUrl",
+  "permalink": "/docs/api/contentInformation/getUrl",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/contentInformation/getUrl.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getUrl-api",
+    "title": "getUrl method",
+    "sidebar_label": "getUrl",
+    "slug": "getUrl"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "isLive",
+    "permalink": "/docs/api/contentInformation/isLive"
+  },
+  "next": {
+    "title": "getCurrentKeySystem",
+    "permalink": "/docs/api/contentInformation/getCurrentKeySystem"
+  }
+}

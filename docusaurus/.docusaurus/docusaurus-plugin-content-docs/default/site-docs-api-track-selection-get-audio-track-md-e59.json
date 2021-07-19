@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/trackSelection/getAudioTrack-api",
+  "id": "api/trackSelection/getAudioTrack-api",
+  "isDocsHomePage": false,
+  "title": "getAudioTrack method",
+  "description": "---",
+  "source": "@site/docs/api/trackSelection/getAudioTrack.md",
+  "sourceDirName": "api/trackSelection",
+  "slug": "/api/trackSelection/getAudioTrack",
+  "permalink": "/docs/api/trackSelection/getAudioTrack",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getAudioTrack.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getAudioTrack-api",
+    "title": "getAudioTrack method",
+    "sidebar_label": "getAudioTrack",
+    "slug": "getAudioTrack"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "isMute",
+    "permalink": "/docs/api/volumeControl/isMute"
+  },
+  "next": {
+    "title": "getTextTrack",
+    "permalink": "/docs/api/trackSelection/getTextTrack"
+  }
+}

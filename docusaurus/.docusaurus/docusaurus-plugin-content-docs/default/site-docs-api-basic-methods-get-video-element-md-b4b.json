@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/basicMethods/getVideoElement-api",
+  "id": "api/basicMethods/getVideoElement-api",
+  "isDocsHomePage": false,
+  "title": "getVideoElement method",
+  "description": "---",
+  "source": "@site/docs/api/basicMethods/getVideoElement.md",
+  "sourceDirName": "api/basicMethods",
+  "slug": "/api/basicMethods/getVideoElement",
+  "permalink": "/docs/api/basicMethods/getVideoElement",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/getVideoElement.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getVideoElement-api",
+    "title": "getVideoElement method",
+    "sidebar_label": "getVideoElement",
+    "slug": "getVideoElement"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getError",
+    "permalink": "/docs/api/basicMethods/getError"
+  },
+  "next": {
+    "title": "dispose",
+    "permalink": "/docs/api/basicMethods/dispose"
+  }
+}

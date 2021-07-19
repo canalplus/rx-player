@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/deprecated/isFullscreen-api",
+  "id": "api/deprecated/isFullscreen-api",
+  "isDocsHomePage": false,
+  "title": "isFullscreen method",
+  "description": "---",
+  "source": "@site/docs/api/deprecated/isFullscreen.md",
+  "sourceDirName": "api/deprecated",
+  "slug": "/api/deprecated/isFullscreen",
+  "permalink": "/docs/api/deprecated/isFullscreen",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/isFullscreen.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "isFullscreen-api",
+    "title": "isFullscreen method",
+    "sidebar_label": "isFullscreen",
+    "slug": "isFullscreen"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "exitFullscreen",
+    "permalink": "/docs/api/deprecated/exitFullscreen"
+  },
+  "next": {
+    "title": "getNativeTextTrack",
+    "permalink": "/docs/api/deprecated/getNativeTextTrack"
+  }
+}

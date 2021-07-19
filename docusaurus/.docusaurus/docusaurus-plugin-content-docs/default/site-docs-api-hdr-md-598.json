@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/hdr",
+  "id": "api/hdr",
+  "isDocsHomePage": false,
+  "title": "High Dynamic Range",
+  "description": "Overview",
+  "source": "@site/docs/api/hdr.md",
+  "sourceDirName": "api",
+  "slug": "/api/hdr",
+  "permalink": "/docs/api/hdr",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/hdr.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "hdr",
+    "title": "High Dynamic Range",
+    "sidebar_label": "HDR",
+    "slug": "hdr"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "Dash WASM Parser",
+    "permalink": "/docs/api/dashWasmParser"
+  },
+  "next": {
+    "title": "loadVideo",
+    "permalink": "/docs/api/loadVideo"
+  }
+}

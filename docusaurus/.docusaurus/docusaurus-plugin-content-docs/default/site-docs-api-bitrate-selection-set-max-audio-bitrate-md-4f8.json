@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bitrateSelection/setMaxAudioBitrate-api",
+  "id": "api/bitrateSelection/setMaxAudioBitrate-api",
+  "isDocsHomePage": false,
+  "title": "setMaxAudioBitrate method",
+  "description": "---",
+  "source": "@site/docs/api/bitrateSelection/setMaxAudioBitrate.md",
+  "sourceDirName": "api/bitrateSelection",
+  "slug": "/api/bitrateSelection/setMaxAudioBitrate",
+  "permalink": "/docs/api/bitrateSelection/setMaxAudioBitrate",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/setMaxAudioBitrate.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "setMaxAudioBitrate-api",
+    "title": "setMaxAudioBitrate method",
+    "sidebar_label": "setMaxAudioBitrate",
+    "slug": "setMaxAudioBitrate"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setMaxVideoBitrate",
+    "permalink": "/docs/api/bitrateSelection/setMaxVideoBitrate"
+  },
+  "next": {
+    "title": "getMaxVideoBitrate",
+    "permalink": "/docs/api/bitrateSelection/getMaxVideoBitrate"
+  }
+}

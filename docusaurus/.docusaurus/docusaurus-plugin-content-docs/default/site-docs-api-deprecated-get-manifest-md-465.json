@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/deprecated/getManifest-api",
+  "id": "api/deprecated/getManifest-api",
+  "isDocsHomePage": false,
+  "title": "getManifest method",
+  "description": "---",
+  "source": "@site/docs/api/deprecated/getManifest.md",
+  "sourceDirName": "api/deprecated",
+  "slug": "/api/deprecated/getManifest",
+  "permalink": "/docs/api/deprecated/getManifest",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/deprecated/getManifest.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getManifest-api",
+    "title": "getManifest method",
+    "sidebar_label": "getManifest",
+    "slug": "getManifest"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getCurrentKeySystem",
+    "permalink": "/docs/api/contentInformation/getCurrentKeySystem"
+  },
+  "next": {
+    "title": "getCurrentAdaptations",
+    "permalink": "/docs/api/deprecated/getCurrentAdaptations"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/speedControl/setPlaybackRate-api",
+  "id": "api/speedControl/setPlaybackRate-api",
+  "isDocsHomePage": false,
+  "title": "setPlaybackRate method",
+  "description": "---",
+  "source": "@site/docs/api/speedControl/setPlaybackRate.md",
+  "sourceDirName": "api/speedControl",
+  "slug": "/api/speedControl/setPlaybackRate",
+  "permalink": "/docs/api/speedControl/setPlaybackRate",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/speedControl/setPlaybackRate.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "setPlaybackRate-api",
+    "title": "setPlaybackRate method",
+    "sidebar_label": "setPlaybackRate",
+    "slug": "setPlaybackRate"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "dispose",
+    "permalink": "/docs/api/basicMethods/dispose"
+  },
+  "next": {
+    "title": "getPlaybackRate",
+    "permalink": "/docs/api/speedControl/getPlaybackRate"
+  }
+}

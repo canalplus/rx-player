@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/player_states",
+  "id": "api/player_states",
+  "isDocsHomePage": false,
+  "title": "Player states",
+  "description": "The player state, that you can obtain either with the",
+  "source": "@site/docs/api/states.md",
+  "sourceDirName": "api",
+  "slug": "/api/states",
+  "permalink": "/docs/api/states",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/states.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "player_states",
+    "title": "Player states",
+    "sidebar_label": "Player States",
+    "slug": "states"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "Player Options",
+    "permalink": "/docs/api/player_options"
+  },
+  "next": {
+    "title": "Player events",
+    "permalink": "/docs/api/playerEvents"
+  }
+}

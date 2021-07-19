@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/basicMethods/stop-api",
+  "id": "api/basicMethods/stop-api",
+  "isDocsHomePage": false,
+  "title": "stop method",
+  "description": "---",
+  "source": "@site/docs/api/basicMethods/stop.md",
+  "sourceDirName": "api/basicMethods",
+  "slug": "/api/basicMethods/stop",
+  "permalink": "/docs/api/basicMethods/stop",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/stop.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "stop-api",
+    "title": "stop method",
+    "sidebar_label": "stop",
+    "slug": "stop"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "pause",
+    "permalink": "/docs/api/basicMethods/pause"
+  },
+  "next": {
+    "title": "getPosition",
+    "permalink": "/docs/api/basicMethods/getPosition"
+  }
+}

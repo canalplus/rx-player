@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/volumeControl/unMute-api",
+  "id": "api/volumeControl/unMute-api",
+  "isDocsHomePage": false,
+  "title": "unMute method",
+  "description": "---",
+  "source": "@site/docs/api/volumeControl/unMute.md",
+  "sourceDirName": "api/volumeControl",
+  "slug": "/api/volumeControl/unMute",
+  "permalink": "/docs/api/volumeControl/unMute",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/unMute.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "unMute-api",
+    "title": "unMute method",
+    "sidebar_label": "unMute",
+    "slug": "unMute"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "mute",
+    "permalink": "/docs/api/volumeControl/mute"
+  },
+  "next": {
+    "title": "isMute",
+    "permalink": "/docs/api/volumeControl/isMute"
+  }
+}

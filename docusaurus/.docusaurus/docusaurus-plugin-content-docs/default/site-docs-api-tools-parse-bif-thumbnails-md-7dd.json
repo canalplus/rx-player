@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/tools/parseBifThumbnails-tool",
+  "id": "api/tools/parseBifThumbnails-tool",
+  "isDocsHomePage": false,
+  "title": "parseBifThumbnails",
+  "description": "Overview",
+  "source": "@site/docs/api/tools/parseBifThumbnails.md",
+  "sourceDirName": "api/tools",
+  "slug": "/api/tools/tools/parse-bif-thumbnails",
+  "permalink": "/docs/api/tools/tools/parse-bif-thumbnails",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/tools/parseBifThumbnails.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "parseBifThumbnails-tool",
+    "title": "parseBifThumbnails",
+    "sidebar_label": "parseBifThumbnails",
+    "slug": "tools/parse-bif-thumbnails"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "MediaCapabilitiesProber",
+    "permalink": "/docs/api/tools/media-capabilities-prober"
+  },
+  "next": {
+    "title": "createMetaplaylist",
+    "permalink": "/docs/api/tools/tools/create-metaplaylist"
+  }
+}

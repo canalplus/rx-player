@@ -1,0 +1,28 @@
+{
+  "unversionedId": "additional_ressources/manifest",
+  "id": "additional_ressources/manifest",
+  "isDocsHomePage": false,
+  "title": "Manifest Object",
+  "description": "Overview",
+  "source": "@site/docs/additional_ressources/manifest.md",
+  "sourceDirName": "additional_ressources",
+  "slug": "/additional_ressources/manifest",
+  "permalink": "/docs/additional_ressources/manifest",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/manifest.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "manifest",
+    "title": "Manifest Object",
+    "sidebar_label": "Manifest Object",
+    "slug": "manifest"
+  },
+  "sidebar": "getstarted",
+  "previous": {
+    "title": "Listening to stream events",
+    "permalink": "/docs/tutorials/listening-to-stream-events"
+  },
+  "next": {
+    "title": "Text Tracks",
+    "permalink": "/docs/additional_ressources/text_tracks"
+  }
+}

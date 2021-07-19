@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bufferControl/getMaxBufferAhead-api",
+  "id": "api/bufferControl/getMaxBufferAhead-api",
+  "isDocsHomePage": false,
+  "title": "getMaxBufferAhead method",
+  "description": "---",
+  "source": "@site/docs/api/bufferControl/getMaxBufferAhead.md",
+  "sourceDirName": "api/bufferControl",
+  "slug": "/api/bufferControl/getMaxBufferAhead",
+  "permalink": "/docs/api/bufferControl/getMaxBufferAhead",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bufferControl/getMaxBufferAhead.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getMaxBufferAhead-api",
+    "title": "getMaxBufferAhead method",
+    "sidebar_label": "getMaxBufferAhead",
+    "slug": "getMaxBufferAhead"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setMaxBufferAhead",
+    "permalink": "/docs/api/bufferControl/setMaxBufferAhead"
+  },
+  "next": {
+    "title": "getVideoLoadedTime",
+    "permalink": "/docs/api/bufferInformation/getVideoLoadedTime"
+  }
+}

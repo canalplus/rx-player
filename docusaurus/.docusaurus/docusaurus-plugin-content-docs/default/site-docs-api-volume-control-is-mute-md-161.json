@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/volumeControl/isMute-api",
+  "id": "api/volumeControl/isMute-api",
+  "isDocsHomePage": false,
+  "title": "isMute method",
+  "description": "---",
+  "source": "@site/docs/api/volumeControl/isMute.md",
+  "sourceDirName": "api/volumeControl",
+  "slug": "/api/volumeControl/isMute",
+  "permalink": "/docs/api/volumeControl/isMute",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/volumeControl/isMute.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "isMute-api",
+    "title": "isMute method",
+    "sidebar_label": "isMute",
+    "slug": "isMute"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "unMute",
+    "permalink": "/docs/api/volumeControl/unMute"
+  },
+  "next": {
+    "title": "getAudioTrack",
+    "permalink": "/docs/api/trackSelection/getAudioTrack"
+  }
+}

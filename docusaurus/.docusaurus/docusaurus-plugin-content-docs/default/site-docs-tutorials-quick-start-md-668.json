@@ -1,0 +1,24 @@
+{
+  "unversionedId": "tutorials/quickStart-tutorials",
+  "id": "tutorials/quickStart-tutorials",
+  "isDocsHomePage": false,
+  "title": "Quick Start",
+  "description": "Because the RxPlayer exports a lot of functionnalities, you might want to",
+  "source": "@site/docs/tutorials/quick_start.md",
+  "sourceDirName": "tutorials",
+  "slug": "/tutorials/quick_start",
+  "permalink": "/docs/tutorials/quick_start",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/tutorials/quick_start.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "quickStart-tutorials",
+    "title": "Quick Start",
+    "sidebar_label": "Quick Start",
+    "slug": "quick_start"
+  },
+  "sidebar": "getstarted",
+  "next": {
+    "title": "Playing contents with DRMs",
+    "permalink": "/docs/tutorials/playing-contents-with-drms"
+  }
+}

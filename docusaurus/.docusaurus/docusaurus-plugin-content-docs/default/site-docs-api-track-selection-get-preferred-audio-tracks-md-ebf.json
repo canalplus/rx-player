@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/trackSelection/getPreferredAudioTracks-api",
+  "id": "api/trackSelection/getPreferredAudioTracks-api",
+  "isDocsHomePage": false,
+  "title": "getPreferredAudioTracks method",
+  "description": "---",
+  "source": "@site/docs/api/trackSelection/getPreferredAudioTracks.md",
+  "sourceDirName": "api/trackSelection",
+  "slug": "/api/trackSelection/getPreferredAudioTracks",
+  "permalink": "/docs/api/trackSelection/getPreferredAudioTracks",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/trackSelection/getPreferredAudioTracks.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getPreferredAudioTracks-api",
+    "title": "getPreferredAudioTracks method",
+    "sidebar_label": "getPreferredAudioTracks",
+    "slug": "getPreferredAudioTracks"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setPreferredAudioTracks",
+    "permalink": "/docs/api/trackSelection/setPreferredAudioTracks"
+  },
+  "next": {
+    "title": "setPreferredTextTracks",
+    "permalink": "/docs/api/trackSelection/setPreferredTextTracks"
+  }
+}

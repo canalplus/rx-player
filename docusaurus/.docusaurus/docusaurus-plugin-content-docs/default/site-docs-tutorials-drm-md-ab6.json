@@ -1,0 +1,28 @@
+{
+  "unversionedId": "tutorials/drm-tutorials",
+  "id": "tutorials/drm-tutorials",
+  "isDocsHomePage": false,
+  "title": "Playing contents with DRMs",
+  "description": "Because different applications and different devices can work completely",
+  "source": "@site/docs/tutorials/drm.md",
+  "sourceDirName": "tutorials",
+  "slug": "/tutorials/playing-contents-with-drms",
+  "permalink": "/docs/tutorials/playing-contents-with-drms",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/tutorials/drm.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "drm-tutorials",
+    "title": "Playing contents with DRMs",
+    "sidebar_label": "Playing contents with DRMs",
+    "slug": "playing-contents-with-drms"
+  },
+  "sidebar": "getstarted",
+  "previous": {
+    "title": "Quick Start",
+    "permalink": "/docs/tutorials/quick_start"
+  },
+  "next": {
+    "title": "Selecting a track",
+    "permalink": "/docs/tutorials/selecting-a-track"
+  }
+}

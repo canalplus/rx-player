@@ -1,0 +1,578 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/docs",
+          "mainDocId": "api/player_options",
+          "docs": [
+            {
+              "id": "additional_ressources/dash_rxplayer_adaptation_difference",
+              "path": "/docs/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/deprecated_api",
+              "path": "/docs/additional_ressources/deprecated_api",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/initial_position",
+              "path": "/docs/additional_ressources/initial_position",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/local_contents",
+              "path": "/docs/additional_ressources/local_contents",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/local_manifest_v0.1",
+              "path": "/docs/additional_ressources/local_manifest_v0.1",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/low_latency",
+              "path": "/docs/additional_ressources/low_latency",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/manifest",
+              "path": "/docs/additional_ressources/manifest",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/metaplaylist",
+              "path": "/docs/additional_ressources/metaplaylist",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/minimal_player",
+              "path": "/docs/additional_ressources/minimal_player",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/presentation_time_offset",
+              "path": "/docs/additional_ressources/presentation_time_offset",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "additional_ressources/text_tracks",
+              "path": "/docs/additional_ressources/text_tracks",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "api/basicMethods/addEventListener-api",
+              "path": "/docs/api/basicMethods/addEventListener",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/dispose-api",
+              "path": "/docs/api/basicMethods/dispose",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/getError-api",
+              "path": "/docs/api/basicMethods/getError",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/getMaximumPosition-api",
+              "path": "/docs/api/basicMethods/getMaximumPosition",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/getMinimumPosition-api",
+              "path": "/docs/api/basicMethods/getMinimumPosition",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/getPlayerState-api",
+              "path": "/docs/api/basicMethods/getPlayerState",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/getPosition-api",
+              "path": "/docs/api/basicMethods/getPosition",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/getVideoDuration-api",
+              "path": "/docs/api/basicMethods/getVideoDuration",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/getVideoElement-api",
+              "path": "/docs/api/basicMethods/getVideoElement",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/getWallClockTime-api",
+              "path": "/docs/api/basicMethods/getWallClockTime",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/loadVideo-api",
+              "path": "/docs/api/loadVideo",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/pause-api",
+              "path": "/docs/api/basicMethods/pause",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/play-api",
+              "path": "/docs/api/basicMethods/play",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/reload-api",
+              "path": "/docs/api/basicMethods/reload",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/removeEventListener-api",
+              "path": "/docs/api/basicMethods/removeEventListener",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/seekTo-api",
+              "path": "/docs/api/basicMethods/seekTo",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/basicMethods/stop-api",
+              "path": "/docs/api/basicMethods/stop",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getAudioBitrate-api",
+              "path": "/docs/api/bitrateSelection/getAudioBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getAvailableAudioBitrates-api",
+              "path": "/docs/api/bitrateSelection/getAvailableAudioBitrates",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getAvailableVideoBitrates-api",
+              "path": "/docs/api/bitrateSelection/getAvailableVideoBitrates",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getManualAudioBitrate-api",
+              "path": "/docs/api/bitrateSelection/getManualAudioBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getManualVideoBitrate-api",
+              "path": "/docs/api/bitrateSelection/getManualVideoBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getMaxAudioBitrate-api",
+              "path": "/docs/api/bitrateSelection/getMaxAudioBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getMaxVideoBitrate-api",
+              "path": "/docs/api/bitrateSelection/getMaxVideoBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getMinAudioBitrate-api",
+              "path": "/docs/api/bitrateSelection/getMinAudioBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getMinVideoBitrate-api",
+              "path": "/docs/api/bitrateSelection/getMinVideoBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/getVideoBitrate-api",
+              "path": "/docs/api/bitrateSelection/getVideoBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/setAudioBitrate-api",
+              "path": "/docs/api/bitrateSelection/setAudioBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/setMaxAudioBitrate-api",
+              "path": "/docs/api/bitrateSelection/setMaxAudioBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/setMaxVideoBitrate-api",
+              "path": "/docs/api/bitrateSelection/setMaxVideoBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/setMinAudioBitrate-api",
+              "path": "/docs/api/bitrateSelection/setMinAudioBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/setMinVideoBitrate-api",
+              "path": "/docs/api/bitrateSelection/setMinVideoBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bitrateSelection/setVideoBitrate-api",
+              "path": "/docs/api/bitrateSelection/setVideoBitrate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bufferControl/getMaxBufferAhead-api",
+              "path": "/docs/api/bufferControl/getMaxBufferAhead",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bufferControl/getMaxBufferBehind-api",
+              "path": "/docs/api/bufferControl/getMaxBufferBehind",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bufferControl/getWantedBufferAhead-api",
+              "path": "/docs/api/bufferControl/getWantedBufferAhead",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bufferControl/setMaxBufferAhead-api",
+              "path": "/docs/api/bufferControl/setMaxBufferAhead",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bufferControl/setMaxBufferBehind-api",
+              "path": "/docs/api/bufferControl/setMaxBufferBehind",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bufferControl/setWantedBufferAhead-api",
+              "path": "/docs/api/bufferControl/setWantedBufferAhead",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bufferInformation/getVideoBufferGap-api",
+              "path": "/docs/api/bufferInformation/getVideoBufferGap",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bufferInformation/getVideoLoadedTime-api",
+              "path": "/docs/api/bufferInformation/getVideoLoadedTime",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/bufferInformation/getVideoPlayedTime-api",
+              "path": "/docs/api/bufferInformation/getVideoPlayedTime",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/contentInformation/getCurrentKeySystem-api",
+              "path": "/docs/api/contentInformation/getCurrentKeySystem",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/contentInformation/getUrl-api",
+              "path": "/docs/api/contentInformation/getUrl",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/contentInformation/isLive-api",
+              "path": "/docs/api/contentInformation/isLive",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/dash_wasm_parser",
+              "path": "/docs/api/dashWasmParser",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/deprecated/exitFullscreen-api",
+              "path": "/docs/api/deprecated/exitFullscreen",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/deprecated/getCurrentAdaptations-api",
+              "path": "/docs/api/deprecated/getCurrentAdaptations",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/deprecated/getCurrentRepresentations-api",
+              "path": "/docs/api/deprecated/getCurrentRepresentations",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/deprecated/getImageTrackData-api",
+              "path": "/docs/api/deprecated/getImageTrackData",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/deprecated/getManifest-api",
+              "path": "/docs/api/deprecated/getManifest",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/deprecated/getNativeTextTrack-api",
+              "path": "/docs/api/deprecated/getNativeTextTrack",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/deprecated/isFullscreen-api",
+              "path": "/docs/api/deprecated/isFullscreen",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/deprecated/setFullscreen-api",
+              "path": "/docs/api/deprecated/setFullscreen",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/hdr",
+              "path": "/docs/api/hdr",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/images",
+              "path": "/docs/api/images",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/player_errors_warning",
+              "path": "/docs/api/playerErrorsWarning",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/player_events",
+              "path": "/docs/api/playerEvents",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/player_options",
+              "path": "/docs/api/player_options",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/player_states",
+              "path": "/docs/api/states",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/plugins",
+              "path": "/docs/api/plugins",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/speedControlTrickModes/areTrickModeTracksEnabled-api",
+              "path": "/docs/api/speedControlTrickModes/areTrickModeTracksEnabled",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/speedControlTrickModes/getPlaybackRate-api",
+              "path": "/docs/api/speedControlTrickModes/getPlaybackRate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/speedControlTrickModes/setPlaybackRate-api",
+              "path": "/docs/api/speedControlTrickModes/setPlaybackRate",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/staticProperties/ErrorCodes-api",
+              "path": "/docs/api/staticProperties/ErrorCodes",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/staticProperties/ErrorTypes-api",
+              "path": "/docs/api/staticProperties/ErrorTypes",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/staticProperties/LogLevel-api",
+              "path": "/docs/api/staticProperties/LogLevel",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/staticProperties/version-api",
+              "path": "/docs/api/staticProperties/version",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/tools/createMetaplaylist-tool",
+              "path": "/docs/api/tools/tools/create-metaplaylist",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/tools/MediaCapabilitiesProber-tool",
+              "path": "/docs/api/tools/media-capabilities-prober",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/tools/parseBifThumbnails-tool",
+              "path": "/docs/api/tools/tools/parse-bif-thumbnails",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/tools/StringUtils-tool",
+              "path": "/docs/api/tools/tools/string-utils",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/tools/TextTrackRenderer-tool",
+              "path": "/docs/api/tools/tools/text-track-renderer",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/tools/VideoThumbnailLoader-tool",
+              "path": "/docs/api/tools/tools/video-thumbnail-loader",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/disableTextTrack-api",
+              "path": "/docs/api/trackSelection/disableTextTrack",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/disableVideoTrack-api",
+              "path": "/docs/api/trackSelection/disableVideoTrack",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/getAudioTrack-api",
+              "path": "/docs/api/trackSelection/getAudioTrack",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/getAvailableAudioTracks-api",
+              "path": "/docs/api/trackSelection/getAvailableAudioTracks",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/getAvailableTextTracks-api",
+              "path": "/docs/api/trackSelection/getAvailableTextTracks",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/getAvailableVideoTracks-api",
+              "path": "/docs/api/trackSelection/getAvailableVideoTracks",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/getPreferredAudioTracks-api",
+              "path": "/docs/api/trackSelection/getPreferredAudioTracks",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/getPreferredTextTracks-api",
+              "path": "/docs/api/trackSelection/getPreferredTextTracks",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/getPreferredVideoTracks-api",
+              "path": "/docs/api/trackSelection/getPreferredVideoTracks",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/getTextTrack-api",
+              "path": "/docs/api/trackSelection/getTextTrack",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/getVideoTrack-api",
+              "path": "/docs/api/trackSelection/getVideoTrack",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/setAudioTrack-api",
+              "path": "/docs/api/trackSelection/setAudioTrack",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/setPreferredAudioTracks-api",
+              "path": "/docs/api/trackSelection/setPreferredAudioTracks",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/setPreferredTextTracks-api",
+              "path": "/docs/api/trackSelection/setPreferredTextTracks",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/setPreferredVideoTracks-api",
+              "path": "/docs/api/trackSelection/setPreferredVideoTracks",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/setTextTrack-api",
+              "path": "/docs/api/trackSelection/setTextTrack",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/trackSelection/setVideoTrack-api",
+              "path": "/docs/api/trackSelection/setVideoTrack",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/volumeControl/getVolume-api",
+              "path": "/docs/api/volumeControl/getVolume",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/volumeControl/isMute-api",
+              "path": "/docs/api/volumeControl/isMute",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/volumeControl/mute-api",
+              "path": "/docs/api/volumeControl/mute",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/volumeControl/setVolume-api",
+              "path": "/docs/api/volumeControl/setVolume",
+              "sidebar": "api"
+            },
+            {
+              "id": "api/volumeControl/unMute-api",
+              "path": "/docs/api/volumeControl/unMute",
+              "sidebar": "api"
+            },
+            {
+              "id": "glossary",
+              "path": "/docs/glossary",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "tutorials/drm-tutorials",
+              "path": "/docs/tutorials/playing-contents-with-drms",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "tutorials/listenSteamEvents-tutorials",
+              "path": "/docs/tutorials/listening-to-stream-events",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "tutorials/quickStart-tutorials",
+              "path": "/docs/tutorials/quick_start",
+              "sidebar": "getstarted"
+            },
+            {
+              "id": "tutorials/selectingTrack-tutorials",
+              "path": "/docs/tutorials/selecting-a-track",
+              "sidebar": "getstarted"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

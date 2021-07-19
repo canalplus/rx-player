@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/basicMethods/seekTo-api",
+  "id": "api/basicMethods/seekTo-api",
+  "isDocsHomePage": false,
+  "title": "seekTo method",
+  "description": "---",
+  "source": "@site/docs/api/basicMethods/seekTo.md",
+  "sourceDirName": "api/basicMethods",
+  "slug": "/api/basicMethods/seekTo",
+  "permalink": "/docs/api/basicMethods/seekTo",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/basicMethods/seekTo.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "seekTo-api",
+    "title": "seekTo method",
+    "sidebar_label": "seekTo",
+    "slug": "seekTo"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "getWallClockTime",
+    "permalink": "/docs/api/basicMethods/getWallClockTime"
+  },
+  "next": {
+    "title": "getMinimumPosition",
+    "permalink": "/docs/api/basicMethods/getMinimumPosition"
+  }
+}

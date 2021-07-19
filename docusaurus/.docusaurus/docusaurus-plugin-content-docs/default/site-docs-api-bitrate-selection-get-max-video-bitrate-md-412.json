@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/bitrateSelection/getMaxVideoBitrate-api",
+  "id": "api/bitrateSelection/getMaxVideoBitrate-api",
+  "isDocsHomePage": false,
+  "title": "getMaxVideoBitrate method",
+  "description": "---",
+  "source": "@site/docs/api/bitrateSelection/getMaxVideoBitrate.md",
+  "sourceDirName": "api/bitrateSelection",
+  "slug": "/api/bitrateSelection/getMaxVideoBitrate",
+  "permalink": "/docs/api/bitrateSelection/getMaxVideoBitrate",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/bitrateSelection/getMaxVideoBitrate.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "getMaxVideoBitrate-api",
+    "title": "getMaxVideoBitrate method",
+    "sidebar_label": "getMaxVideoBitrate",
+    "slug": "getMaxVideoBitrate"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "setMaxAudioBitrate",
+    "permalink": "/docs/api/bitrateSelection/setMaxAudioBitrate"
+  },
+  "next": {
+    "title": "getMaxAudioBitrate",
+    "permalink": "/docs/api/bitrateSelection/getMaxAudioBitrate"
+  }
+}

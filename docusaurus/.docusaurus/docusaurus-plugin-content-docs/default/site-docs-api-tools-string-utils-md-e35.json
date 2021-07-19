@@ -1,0 +1,28 @@
+{
+  "unversionedId": "api/tools/StringUtils-tool",
+  "id": "api/tools/StringUtils-tool",
+  "isDocsHomePage": false,
+  "title": "StringUtils",
+  "description": "Overview",
+  "source": "@site/docs/api/tools/StringUtils.md",
+  "sourceDirName": "api/tools",
+  "slug": "/api/tools/tools/string-utils",
+  "permalink": "/docs/api/tools/tools/string-utils",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/api/tools/StringUtils.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "StringUtils-tool",
+    "title": "StringUtils",
+    "sidebar_label": "StringUtils",
+    "slug": "tools/string-utils"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "LogLevel",
+    "permalink": "/docs/api/staticProperties/LogLevel"
+  },
+  "next": {
+    "title": "TextTrackRenderer",
+    "permalink": "/docs/api/tools/tools/text-track-renderer"
+  }
+}

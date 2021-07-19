@@ -1,0 +1,28 @@
+{
+  "unversionedId": "additional_ressources/text_tracks",
+  "id": "additional_ressources/text_tracks",
+  "isDocsHomePage": false,
+  "title": "Text Tracks",
+  "description": "Overview",
+  "source": "@site/docs/additional_ressources/text_tracks.md",
+  "sourceDirName": "additional_ressources",
+  "slug": "/additional_ressources/text_tracks",
+  "permalink": "/docs/additional_ressources/text_tracks",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/docs/additional_ressources/text_tracks.md",
+  "version": "current",
+  "frontMatter": {
+    "id": "text_tracks",
+    "title": "Text Tracks",
+    "sidebar_label": "Text Tracks",
+    "slug": "text_tracks"
+  },
+  "sidebar": "getstarted",
+  "previous": {
+    "title": "Manifest Object",
+    "permalink": "/docs/additional_ressources/manifest"
+  },
+  "next": {
+    "title": "DASH' AdaptationSets vs rx-player \"Adaptation\"",
+    "permalink": "/docs/additional_ressources/additional_ressources/dash_rxplayer_adaptation_difference"
+  }
+}
