@@ -16,7 +16,6 @@ RxPlayer-related question or to propose new features.
 Here is the list of current maintainers:
 
 - Paul Berberian <paul.berberian@canal-plus.com>
-- Guillaume Renault <guillaume.renault@canal-plus.com>
 - Paul Rosset <paul.rosset@canal-plus.com>
 
 
@@ -28,4 +27,5 @@ anymore:
 - Alexandre Duros <alexandre.duros@canal-plus.com>
 - Antoine Maillard <antoine.maillard@canal-plus.com>
 - Guillaume Bentaieb <guillaume.bentaieb@canal-plus.com>
+- Guillaume Renault <guillaume.renault@canal-plus.com>
 - Pierre Guilleminot <pierre.guilleminot@canal-plus.com>
