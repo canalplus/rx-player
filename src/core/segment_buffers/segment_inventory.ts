@@ -347,7 +347,6 @@ export default class SegmentInventory {
 
     const inventory = this._inventory;
     const newSegment = { partiallyPushed: true,
-                         estimatedStart: start,
                          start,
                          end,
                          precizeStart: false,
