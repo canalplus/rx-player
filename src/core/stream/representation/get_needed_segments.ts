@@ -26,6 +26,10 @@ import Manifest, {
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import { IBufferedChunk } from "../../segment_buffers";
+import {
+  IBufferedHistoryEntry,
+  IChunkContext,
+} from "../../segment_buffers/inventory";
 
 const { CONTENT_REPLACEMENT_PADDING,
         BITRATE_REBUFFERING_RATIO,
@@ -71,6 +75,8 @@ export interface IGetNeededSegmentsArguments {
    * re-requested.
    */
   bufferedSegments : IBufferedChunk[];
+
+  getBufferedHistory : (context : IChunkContext) => IBufferedHistoryEntry[];
 }
 
 /**
@@ -90,12 +96,13 @@ const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
  * @returns {Array.<Object>}
  */
 export default function getNeededSegments({
+  bufferedSegments,
   content,
   currentPlaybackTime,
   fastSwitchThreshold,
+  getBufferedHistory,
   neededRange,
   segmentsBeingPushed,
-  bufferedSegments,
 } : IGetNeededSegmentsArguments) : ISegment[] {
   const { representation } = content;
 
@@ -115,8 +122,23 @@ export default function getNeededSegments({
                                 consideredSegments[i - 1];
       const nextSeg = i >= consideredSegments.length - 1 ? null :
                                                            consideredSegments[i + 1];
-      return !isStartGarbageCollected(currentSeg, prevSeg, neededRange.start) &&
-             !isEndGarbageCollected(currentSeg, nextSeg, neededRange.end);
+
+      let lazySegmentHistory : IBufferedHistoryEntry[] | null = null;
+      if (isStartGarbageCollected(currentSeg, prevSeg, neededRange.start)) {
+        lazySegmentHistory = getBufferedHistory(currentSeg.infos);
+        if (shouldReloadSegmentGCedAtTheStart(lazySegmentHistory)) {
+          return false;
+        }
+        log.debug("Stream: skipping segment gc-ed at the start", currentSeg);
+      }
+      if (isEndGarbageCollected(currentSeg, nextSeg, neededRange.start)) {
+        lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
+        if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory)) {
+          return false;
+        }
+        log.debug("Stream: skipping segment gc-ed at the end", currentSeg);
+      }
+      return true;
     });
 
   const segmentsToDownload = availableSegmentsForRange.filter(segment => {
@@ -368,4 +390,72 @@ function isEndGarbageCollected(
   }
 
   return false;
+}
+
+/**
+ * Returns `true` if a segment that has been garbage-coolected at the start
+ * might profit from being re-loaded.
+ *
+ * Returns `false` if we have a high chance of staying in the same situation
+ * after re-loading the segment.
+ *
+ * This function takes in argument the entries of a SegmentBuffer's history
+ * related to the corresponding asegment and check if the segment appeared
+ * garbage-collected at the start directly after the last few times it was
+ * pushed, indicating that the issue might be sourced at a browser issue instead
+ * of classical garbage collection.
+ *
+ * @param {Array.<Object>} segmentEntries
+ * @returns {boolean}
+ */
+function shouldReloadSegmentGCedAtTheStart(
+  segmentEntries : IBufferedHistoryEntry[]
+) : boolean {
+  let prevSegmentBufferStart : IBufferedHistoryEntry | null = null;
+  for (let entryIdx = segmentEntries.length - 1; entryIdx >= 0; entryIdx--) {
+    const entry = segmentEntries[entryIdx];
+    if (prevSegmentBufferStart !== null) {
+      const prevBufferedStart = prevSegmentBufferStart.bufferedStart;
+      if (Math.abs(prevBufferedStart - entry.bufferedStart) <= 0.01) {
+        return false;
+      }
+    } else {
+      prevSegmentBufferStart = entry;
+    }
+  }
+  return true;
+}
+
+/**
+ * Returns `true` if a segment that has been garbage-coolected at the end
+ * might profit from being re-loaded.
+ *
+ * Returns `false` if we have a high chance of staying in the same situation
+ * after re-loading the segment.
+ *
+ * This function takes in argument the entries of a SegmentBuffer's history
+ * related to the corresponding asegment and check if the segment appeared
+ * garbage-collected at the end directly after the last few times it was
+ * pushed, indicating that the issue might be sourced at a browser issue instead
+ * of classical garbage collection.
+ *
+ * @param {Array.<Object>} segmentEntries
+ * @returns {boolean}
+ */
+function shouldReloadSegmentGCedAtTheEnd(
+  segmentEntries : IBufferedHistoryEntry[]
+) : boolean {
+  let prevSegmentBufferEnd : IBufferedHistoryEntry | null = null;
+  for (let entryIdx = segmentEntries.length - 1; entryIdx >= 0; entryIdx--) {
+    const entry = segmentEntries[entryIdx];
+    if (prevSegmentBufferEnd !== null) {
+      const prevBufferedEnd = prevSegmentBufferEnd.bufferedEnd;
+      if (Math.abs(prevBufferedEnd - entry.bufferedEnd) <= 0.01) {
+        return false;
+      }
+    } else {
+      prevSegmentBufferEnd = entry;
+    }
+  }
+  return true;
 }

@@ -234,7 +234,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
    */
   public endOfSegment(_infos : IEndOfSegmentInfos) : Observable<void> {
     return observableDefer(() => {
-      this._segmentInventory.completeSegment(_infos);
+      this._segmentInventory.completeSegment(_infos, this._buffered);
       return observableOf(undefined);
     });
   }

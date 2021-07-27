@@ -14,32 +14,26 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import log from "../../log";
+import config from "../../../config";
+import log from "../../../log";
 import {
   Adaptation,
   areSameContent,
   ISegment,
   Period,
   Representation,
-} from "../../manifest";
-import takeFirstSet from "../../utils/take_first_set";
+} from "../../../manifest";
+import takeFirstSet from "../../../utils/take_first_set";
+import BufferedHistory, {
+  IBufferedHistoryEntry,
+} from "./buffered_history";
+import { IChunkContext } from "./types";
 
-const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+const { BUFFERED_HISTORY_RETENTION_TIME,
+        BUFFERED_HISTORY_MAXIMUM_ENTRIES,
+        MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
         MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
         MINIMUM_SEGMENT_SIZE } = config;
-
-/** Content information for a single buffered chunk */
-interface IBufferedChunkInfos {
-  /** Adaptation this chunk is related to. */
-  adaptation : Adaptation;
-  /** Period this chunk is related to. */
-  period : Period;
-  /** Representation this chunk is related to. */
-  representation : Representation;
-  /** Segment this chunk is related to. */
-  segment : ISegment;
-}
 
 /** Information stored on a single chunk by the SegmentInventory. */
 export interface IBufferedChunk {
@@ -60,14 +54,12 @@ export interface IBufferedChunk {
   /**
    * Supposed end, in seconds, the chunk is expected to end at.
    *
-   * It can correspond either to the end of the chunk or to the end of the whole
-   * segment the chunk is linked to. This should not matter as chunks linked to
-   * the same segment will all be merged once all chunks have been pushed and
-   * the `completeSegment` API call is done. Until then, this property should
-   * not be relied on.
-   *
-   * You can know whether the `completeSegment` API has been called by checking
-   * the `partiallyPushed` property.
+   * If the current `chunk` is part of a "partially pushed" segment (see
+   * `partiallyPushed`), the definition of this property is flexible in the way
+   * that it can correspond either to the end of the chunk or to the end of the
+   * whole segment the chunk is linked to.
+   * As such, this property should not be relied on until the segment has been
+   * fully-pushed.
    */
   end : number;
   /**
@@ -89,11 +81,11 @@ export interface IBufferedChunk {
    */
   precizeStart : boolean;
   /** Information on what that chunk actually contains. */
-  infos : IBufferedChunkInfos;
+  infos : IChunkContext;
   /**
    * If `true`, this chunk is only a partial chunk of a whole segment.
-   * In this condition, `start` and `end` may be ignored, as they may either
-   * refer to the chunk or to the whole segment.
+   * In this condition, the `start` and `end` properties may be ignored, as it
+   * is unclear if they refer to the chunk or to the whole segment.
    *
    * Inversely, if `false`, this chunk is a whole segment whose inner chunks
    * have all been fully pushed.
@@ -102,16 +94,23 @@ export interface IBufferedChunk {
    */
   partiallyPushed : boolean;
   /**
+   * If `true`, the segment as a whole is divided into multiple parts in the
+   * buffer, with other segment(s) between them.
+   * If `false`, it is contiguous.
+   *
+   * Splitted segments are a rare occurence that is more complicated to handle
+   * than contiguous ones.
+   */
+  splitted : boolean;
+  /**
    * Supposed start, in seconds, the chunk is expected to start at.
    *
-   * It can correspond either to the start of the chunk or to the start of the
-   * whole segment the chunk is linked to. This should not matter as chunks
-   * linked to the same segment will all be merged once all chunks have been
-   * pushed and the `completeSegment` API call is done. Until then, this
-   * property should not be relied on.
-   *
-   * You can know whether the `completeSegment` API has been called by checking
-   * the `partiallyPushed` property.
+   * If the current `chunk` is part of a "partially pushed" segment (see
+   * `partiallyPushed`), the definition of this property is flexible in the way
+   * that it can correspond either to the start of the chunk or to the start of
+   * the whole segment the chunk is linked to.
+   * As such, this property should not be relied on until the segment has been
+   * fully-pushed.
    */
   start : number; // Supposed start the segment should start from, in seconds
 }
@@ -161,8 +160,12 @@ export default class SegmentInventory {
    */
   private _inventory : IBufferedChunk[];
 
+  private _bufferedHistory : BufferedHistory;
+
   constructor() {
     this._inventory = [];
+    this._bufferedHistory = new BufferedHistory(BUFFERED_HISTORY_RETENTION_TIME,
+                                                BUFFERED_HISTORY_MAXIMUM_ENTRIES);
   }
 
   /**
@@ -173,8 +176,8 @@ export default class SegmentInventory {
   }
 
   /**
-   * Infer each segment's bufferedStart and bufferedEnd from the TimeRanges
-   * given.
+   * Infer each segment's `bufferedStart` and `bufferedEnd` properties from the
+   * TimeRanges given.
    *
    * The TimeRanges object given should come from the media buffer linked to
    * that SegmentInventory.
@@ -227,7 +230,7 @@ export default class SegmentInventory {
                                     null = null;
 
       // remove garbage-collected segments
-      // (not in that TimeRange nor in the previous one)
+      // (Those not in that TimeRange nor in the previous one)
       const numberOfSegmentToDelete = inventoryIndex - indexBefore;
       if (numberOfSegmentToDelete > 0) {
         const lastDeletedSegment = // last garbage-collected segment
@@ -259,6 +262,8 @@ export default class SegmentInventory {
                                          bufferType);
 
         if (inventoryIndex === inventory.length - 1) {
+          // This is the last segment in the inventory.
+          // We can directly update the end as the end of the current range.
           guessBufferedEndFromRangeEnd(thisSegment, rangeEnd, bufferType);
           return;
         }
@@ -347,6 +352,7 @@ export default class SegmentInventory {
 
     const inventory = this._inventory;
     const newSegment = { partiallyPushed: true,
+                         splitted: false,
                          start,
                          end,
                          precizeStart: false,
@@ -553,6 +559,7 @@ export default class SegmentInventory {
               log.debug("SI: Segment pushed is contained in a previous one",
                         bufferType, start, end, segmentI.start, segmentI.end);
               const nextSegment = { partiallyPushed: segmentI.partiallyPushed,
+                                    splitted: true,
                                     start: newSegment.end,
                                     end: segmentI.end,
                                     precizeStart: segmentI.precizeStart &&
@@ -563,6 +570,7 @@ export default class SegmentInventory {
                                     bufferedEnd: segmentI.end,
                                     infos: segmentI.infos };
               segmentI.end = newSegment.start;
+              segmentI.splitted = true;
               segmentI.bufferedEnd = undefined;
               segmentI.precizeEnd = segmentI.precizeEnd &&
                                     newSegment.precizeStart;
@@ -676,20 +684,27 @@ export default class SegmentInventory {
     content : { period: Period;
                 adaptation: Adaptation;
                 representation: Representation;
-                segment: ISegment; }
+                segment: ISegment; },
+    newBuffered : TimeRanges
   ) : void {
     if (content.segment.isInit) {
       return;
     }
     const inventory = this._inventory;
 
-    let foundIt = false;
+
+    const resSegments : IBufferedChunk[] = [];
+
     for (let i = 0; i < inventory.length; i++) {
       if (areSameContent(inventory[i].infos, content)) {
-        if (foundIt) {
-          log.warn("SI: Completed Segment is splitted.", content);
+        let splitted = false;
+        if (resSegments.length > 0) {
+          splitted = true;
+          if (resSegments.length === 1) {
+            log.warn("SI: Completed Segment is splitted.", content);
+            resSegments[0].splitted = true;
+          }
         }
-        foundIt = true;
 
         const firstI = i;
         i += 1;
@@ -710,11 +725,25 @@ export default class SegmentInventory {
         this._inventory[firstI].partiallyPushed = false;
         this._inventory[firstI].end = lastEnd;
         this._inventory[firstI].bufferedEnd = lastBufferedEnd;
+        this._inventory[firstI].splitted = splitted;
+        resSegments.push(this._inventory[firstI]);
       }
     }
 
-    if (!foundIt) {
+    if (resSegments.length === 0) {
       log.warn("SI: Completed Segment not found", content);
+    } else {
+      this.synchronizeBuffered(newBuffered);
+      for (const seg of resSegments) {
+        if (seg.bufferedStart !== undefined && seg.bufferedEnd !== undefined) {
+          this._bufferedHistory.addBufferedSegment(seg.infos,
+                                                   seg.bufferedStart,
+                                                   seg.bufferedEnd);
+        } else {
+          log.debug("SI: buffered range not known after sync. Skipping history.",
+                    seg);
+        }
+      }
     }
   }
 
@@ -727,6 +756,23 @@ export default class SegmentInventory {
    */
   public getInventory() : IBufferedChunk[] {
     return this._inventory;
+  }
+
+  /**
+   * Returns a recent history of registered operations performed and event
+   * received linked to the segment given in argument.
+   *
+   * Not all operations and events are registered in the returned history.
+   * Please check the return type for more information on what is available.
+   *
+   * Note that history is short-lived for memory usage and performance reasons.
+   * You may not receive any information on operations that happened too long
+   * ago.
+   * @param {Object} context
+   * @returns {Array.<Object>}
+   */
+  public getHistoryFor(context : IChunkContext) : IBufferedHistoryEntry[] {
+    return this._bufferedHistory.getHistoryFor(context);
   }
 }
 
@@ -792,7 +838,7 @@ function guessBufferedStartFromRangeStart(
   rangeStart : number,
   lastDeletedSegmentInfos : { end : number; precizeEnd : boolean } |
                             null,
-  bufferType? : string
+  bufferType : string
 ) : void {
   if (firstSegmentInRange.bufferedStart !== undefined) {
     if (firstSegmentInRange.bufferedStart < rangeStart) {
@@ -941,7 +987,7 @@ function prettyPrintInventory(inventory : IBufferedChunk[]) : string {
   let lastChunk : IBufferedChunk | null = null;
   let lastLetter : string | null = null;
 
-  function generateNewLetter(infos : IBufferedChunkInfos) : string {
+  function generateNewLetter(infos : IChunkContext) : string {
     const currentLetter = String.fromCharCode(letters.length + 65);
     letters.push({ letter: currentLetter,
                    periodId: infos.period.id,

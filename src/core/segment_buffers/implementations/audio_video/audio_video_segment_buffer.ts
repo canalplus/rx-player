@@ -36,7 +36,7 @@ import assertUnreachable from "../../../../utils/assert_unreachable";
 import { toUint8Array } from "../../../../utils/byte_parsing";
 import hashBuffer from "../../../../utils/hash_buffer";
 import objectAssign from "../../../../utils/object_assign";
-import { IInsertedChunkInfos } from "../../segment_inventory";
+import { IInsertedChunkInfos } from "../../inventory";
 import {
   IEndOfSegmentInfos,
   IEndOfSegmentOperation,
@@ -399,7 +399,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
             }
             break;
           case SegmentBufferOperation.EndOfSegment:
-            this._segmentInventory.completeSegment(task.value);
+            this._segmentInventory.completeSegment(task.value, this.getBufferedRanges());
             break;
           case SegmentBufferOperation.Remove:
             this.synchronizeInventory();
