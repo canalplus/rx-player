@@ -123,7 +123,8 @@ export default function createMediaSourceLoader(
       filter((hasPlayed) => hasPlayed),
       mergeMap(() => streamEventsEmitter(manifest, mediaElement, observation$)));
 
-    const streamObserver = createStreamPlaybackObserver(playbackObserver,
+    const streamObserver = createStreamPlaybackObserver(manifest,
+                                                        playbackObserver,
                                                         { autoPlay,
                                                           initialPlayPerformed,
                                                           initialSeekPerformed,

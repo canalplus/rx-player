@@ -20,13 +20,13 @@ be the most adapted, that is the quality which:
     be not as pleasant to watch)
 
 In order to estimate the quality that maximizes the playback experience, the ABR
-relies on two "estimators":
-  1. The bandwidth estimator picks a quality from network conditions.
-  2. The buffer based chooser relies on buffering conditions to make its
-     choices.
+relies on multiple algorithms:
+  1. One which picks a quality from network conditions.
+  2. Another relies on buffering conditions to make its choices.
+  3. A third, only used in very rare conditions, "guess" the right quality by
+     progressively raising the quality until an un-maintainable one is found.
 
-
-## Bandwidth estimator #########################################################
+## Bandwidth-based algorithm ###################################################
 
 ```
                  Long
@@ -85,7 +85,7 @@ The quality's bitrate ceiling relies on it to return the chosen quality.
 
 
 
-## Buffer based estimator ######################################################
+## Buffer-based algorithm ######################################################
 
 ```
                               Qualities

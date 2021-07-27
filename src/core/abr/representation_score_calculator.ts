@@ -49,7 +49,9 @@ import EWMA from "./ewma";
  */
 export default class RepresentationScoreCalculator {
   private _currentRepresentationData : { representation : Representation;
-                                         ewma : EWMA; } |
+                                         ewma : EWMA;
+                                         loadedSegments : number;
+                                         loadedDuration : number; } |
                                        null;
 
   private _lastRepresentationWithGoodScore : Representation | null;
@@ -73,15 +75,20 @@ export default class RepresentationScoreCalculator {
     segmentDuration : number
   ) : void {
     const ratio = segmentDuration / requestDuration;
-    const oldEwma = this._getEWMA(representation);
+    const currentRep = this._currentRepresentationData;
     let currentEWMA : EWMA;
-    if (oldEwma != null) {
-      currentEWMA = oldEwma;
-      oldEwma.addSample(requestDuration, ratio);
+    if (currentRep !== null && currentRep.representation.id === representation.id) {
+      currentEWMA = currentRep.ewma;
+      currentRep.ewma.addSample(requestDuration, ratio);
+      currentRep.loadedDuration += segmentDuration;
+      currentRep.loadedSegments++;
     } else {
       currentEWMA = new EWMA(5);
       currentEWMA.addSample(requestDuration, ratio);
-      this._currentRepresentationData = { representation, ewma: currentEWMA };
+      this._currentRepresentationData = { representation,
+                                          ewma: currentEWMA,
+                                          loadedDuration: segmentDuration,
+                                          loadedSegments: 0 };
     }
 
     if (currentEWMA.getEstimate() > 1 &&
@@ -98,11 +105,21 @@ export default class RepresentationScoreCalculator {
    * @param {Representation} representation
    * @returns {number|undefined}
    */
-  public getEstimate(representation : Representation) : number | undefined {
-    const ewma = this._getEWMA(representation);
-    if (ewma != null) {
-      return ewma.getEstimate();
+  public getEstimate(
+    representation : Representation
+  ) : [number, ScoreConfidenceLevel] | undefined {
+    if (this._currentRepresentationData === null ||
+        this._currentRepresentationData.representation.id !== representation.id)
+    {
+      return undefined;
     }
+    const { ewma, loadedSegments, loadedDuration } = this._currentRepresentationData;
+    const estimate = ewma.getEstimate();
+    const confidenceLevel = loadedSegments >= 5 &&
+                            loadedDuration >= 10 ? ScoreConfidenceLevel.HIGH :
+                                                   ScoreConfidenceLevel.LOW;
+
+    return [estimate, confidenceLevel];
   }
 
   /**
@@ -116,19 +133,9 @@ export default class RepresentationScoreCalculator {
   public getLastStableRepresentation() : Representation | null {
     return this._lastRepresentationWithGoodScore;
   }
+}
 
-  /**
-   * Returns EWMA for the given Representation.
-   * null if no EWMA is currently stored for it.
-   * @param {Representation} representation
-   * @returns {EWMA|null}
-   */
-  private _getEWMA(representation : Representation) : EWMA | null {
-    if (this._currentRepresentationData != null &&
-        this._currentRepresentationData.representation.id === representation.id)
-    {
-      return this._currentRepresentationData.ewma;
-    }
-    return null;
-  }
+export const enum ScoreConfidenceLevel {
+  HIGH = 1,
+  LOW = 0,
 }

@@ -21,7 +21,7 @@ import arrayFind from "../../utils/array_find";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
 import {
-  IProgressEventValue,
+  IPendingRequestStoreProgress,
   IRequestInfo,
 } from "./pending_requests_store";
 
@@ -63,7 +63,7 @@ function getConcernedRequests(
   /** Index of the request for the next needed segment, in `requests`. */
   let nextSegmentIndex = -1;
   for (let i = 0; i < requests.length; i++) {
-    const { segment } = requests[i];
+    const { segment } = requests[i].content;
     if (segment.duration <= 0) {
       continue;
     }
@@ -85,12 +85,12 @@ function getConcernedRequests(
   }
 
   const nextRequest = requests[nextSegmentIndex];
-  const segmentTime = nextRequest.segment.time;
+  const segmentTime = nextRequest.content.segment.time;
   const filteredRequests = [nextRequest];
 
   // Get the possibly multiple requests for that segment's position
   for (let i = nextSegmentIndex + 1; i < requests.length; i++) {
-    if (requests[i].segment.time === segmentTime) {
+    if (requests[i].content.segment.time === segmentTime) {
       filteredRequests.push(requests[i]);
     } else {
       break;
@@ -106,7 +106,7 @@ function getConcernedRequests(
  * @param {Object} request
  * @returns {number|undefined}
  */
-function estimateRequestBandwidth(request : IRequestInfo) : number|undefined {
+export function estimateRequestBandwidth(request : IRequestInfo) : number|undefined {
   if (request.progress.length < 5) { // threshold from which we can consider
                                      // progress events reliably
     return undefined;
@@ -132,7 +132,7 @@ function estimateRequestBandwidth(request : IRequestInfo) : number|undefined {
  * @returns {number}
  */
 function estimateRemainingTime(
-  lastProgressEvent: IProgressEventValue,
+  lastProgressEvent: IPendingRequestStoreProgress,
   bandwidthEstimate : number
 ) : number {
   const remainingData = (lastProgressEvent.totalSize - lastProgressEvent.size) * 8;
@@ -200,11 +200,11 @@ function estimateStarvationModeBitrate(
     }
   }
 
-  if (!concernedRequest.segment.complete) {
+  if (!concernedRequest.content.segment.complete) {
     return undefined;
   }
 
-  const chunkDuration = concernedRequest.segment.duration;
+  const chunkDuration = concernedRequest.content.segment.duration;
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const reasonableElapsedTime = requestElapsedTime <=
     ((chunkDuration * 1.5 + 2) / speed);
@@ -246,9 +246,9 @@ function shouldDirectlySwitchToLowBitrate(
   const realBufferGap = isFinite(playbackInfo.bufferGap) ? playbackInfo.bufferGap :
                                                            0;
   const nextNeededPosition = playbackInfo.position + realBufferGap;
-  const nextRequest = arrayFind(requests, (r) =>
-    r.segment.duration > 0 &&
-    (r.segment.time + r.segment.duration) > nextNeededPosition);
+  const nextRequest = arrayFind(requests, ({ content }) =>
+    content.segment.duration > 0 &&
+    (content.segment.time + content.segment.duration) > nextNeededPosition);
 
   if (nextRequest === undefined) {
     return true;

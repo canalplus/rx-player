@@ -19,6 +19,7 @@ import {
   map,
   Observable,
 } from "rxjs";
+import Manifest from "../../manifest";
 import { IReadOnlySharedReference } from "../../utils/reference";
 import {
   IPlaybackObservation,
@@ -48,6 +49,7 @@ export interface IStreamPlaybackObserverArguments {
  * @returns {Observable}
  */
 export default function createStreamPlaybackObserver(
+  manifest : Manifest,
   playbackObserver : PlaybackObserver,
   { autoPlay,
     initialPlayPerformed,
@@ -61,6 +63,9 @@ export default function createStreamPlaybackObserver(
     return observableCombineLatest([observation$, speed.asObservable()]).pipe(
       map(([observation, lastSpeed]) => {
         return {
+          liveGap: manifest.isLive ?
+            manifest.getMaximumPosition() - observation.position :
+            undefined,
           position: observation.position,
           duration: observation.duration,
           isPaused: initialPlayPerformed.getValue() ? observation.paused :

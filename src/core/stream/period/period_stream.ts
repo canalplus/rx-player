@@ -64,16 +64,31 @@ import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
 const { DELTA_POSITION_AFTER_RELOAD } = config;
 
+/** Playback observation required by the `PeriodStream`. */
 export interface IPeriodStreamPlaybackObservation {
-  position : number; // the position we are in the video in s at the time of the tic
-  duration : number; // duration of the HTMLMediaElement
-  isPaused: boolean; // If true, the player is on pause
-  readyState : number; // readyState of the HTMLMediaElement
-  speed : number; // playback rate at which the content plays
-  wantedTimeOffset : number; // offset in s to add to the time to obtain the
-                             // position we actually want to download from
+  /** The position we are in the video in seconds at the time of the observation. */
+  position : number;
+  /** `duration` property of the HTMLMediaElement. */
+  duration : number;
+  /** If `true`, the player is currently paused. */
+  isPaused: boolean;
+  /** `readyState` property of the HTMLMediaElement. */
+  readyState : number;
+  /** Target playback rate at which we want to play the content. */
+  speed : number;
+  /**
+   * Offset, in seconds to add to `position` to obtain the starting position at
+   * which we actually want to download segments for.
+   */
+  wantedTimeOffset : number;
+  /**
+   * Only set for live contents.
+   * Difference between the live edge and the current position, in seconds.
+   */
+  liveGap : number | undefined;
 }
 
+/** Arguments required by the `PeriodStream`. */
 export interface IPeriodStreamArguments {
   abrManager : ABRManager;
   bufferType : IBufferType;

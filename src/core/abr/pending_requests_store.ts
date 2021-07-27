@@ -15,52 +15,13 @@
  */
 
 import log from "../../log";
-import { ISegment } from "../../manifest";
+import Manifest, {
+  Adaptation,
+  ISegment,
+  Period,
+  Representation,
+} from "../../manifest";
 import objectValues from "../../utils/object_values";
-
-export interface IProgressEventValue {
-  /** Current duration for the request, in ms. */
-  duration : number;
-  /** Unique ID for the request. */
-  id: string|number;
-  /** Current downloaded size, in bytes. */
-  size : number;
-  /** Timestamp of the progress event since unix epoch, in ms. */
-  timestamp : number;
-  /** Total size to download, in bytes. */
-  totalSize : number;
-}
-
-export interface IBeginRequestValue {
-  /** Unique ID for the request. */
-  id: string|number;
-  /** Metadata on the requested segment. */
-  segment: ISegment;
-  /** Unix timestamp at which the request began, in ms. */
-  requestTimestamp: number;
-}
-
-export interface IRequestInfo {
-  /** Metadata on the requested segment. */
-  segment: ISegment;
-  /** Progress events for this request. */
-  progress: IProgressEventValue[];
-  /** Unix timestamp at which the request began, in ms. */
-  requestTimestamp: number;
-}
-
-export interface IProgressEventValue {
-  /** Current duration for the request, in ms. */
-  duration : number;
-  /** Unique ID for the request. */
-  id: string|number;
-  /** Current downloaded size, in bytes. */
-  size : number;
-  /** Timestamp of the progress event since unix epoch, in ms. */
-  timestamp : number;
-  /** Total size to download, in bytes. */
-  totalSize : number;
-}
 
 /**
  * Store information about pending requests, like information about:
@@ -80,18 +41,18 @@ export default class PendingRequestsStore {
    * @param {string} id
    * @param {Object} payload
    */
-  public add(payload : IBeginRequestValue) : void {
-    const { id, segment, requestTimestamp } = payload;
-    this._currentRequests[id] = { segment,
-                                  requestTimestamp,
-                                  progress: [] };
+  public add(payload : IPendingRequestStoreBegin) : void {
+    const { id, requestTimestamp, content } = payload;
+    this._currentRequests[id] = { requestTimestamp,
+                                  progress: [],
+                                  content };
   }
 
   /**
    * Notify of the progress of a currently pending request.
    * @param {Object} progress
    */
-  public addProgress(progress : IProgressEventValue) : void {
+  public addProgress(progress : IPendingRequestStoreProgress) : void {
     const request = this._currentRequests[progress.id];
     if (request == null) {
       if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
@@ -125,6 +86,63 @@ export default class PendingRequestsStore {
   public getRequests() : IRequestInfo[] {
     return objectValues(this._currentRequests)
       .filter((x) : x is IRequestInfo => x != null)
-      .sort((reqA, reqB) => reqA.segment.time - reqB.segment.time);
+      .sort((reqA, reqB) => reqA.content.segment.time - reqB.content.segment.time);
   }
+}
+
+/**
+ * Payload needed to add progress information for a request to the
+ * PendingRequestsStore.
+ */
+export interface IPendingRequestStoreProgress {
+  /** Amount of time since the request has started, in seconds. */
+  duration : number;
+  /**
+   * Same `id` value used to identify that request at the time the corresponding
+   * `IABRRequestBeginEventValue` was sent.
+   */
+  id: string;
+  /** Current downloaded size, in bytes. */
+  size : number;
+  /** Value of `performance.now` at the time this progression report was available. */
+  timestamp : number;
+  /**
+   * Total size of the segment to download (including already-loaded data),
+   * in bytes.
+   */
+  totalSize : number;
+}
+
+/** Payload needed to add a request to the PendingRequestsStore. */
+export interface IPendingRequestStoreBegin {
+  /**
+   * String identifying this request.
+   *
+   * Only one request communicated to the current `RepresentationEstimator`
+   * should have this `id` at the same time.
+   */
+  id: string;
+  /** Value of `performance.now` at the time the request began.  */
+  requestTimestamp: number;
+  /** Context associated to the segment. */
+  content: IRequestInfoContent;
+}
+
+/** Information linked to a segment request, stored in the PendingRequestsStore. */
+export interface IRequestInfo {
+  /** Information on the current progress made by this request. */
+  progress: IPendingRequestStoreProgress[];
+  /** `Performance.now()` corresponding to the time at which the request began. */
+  requestTimestamp: number;
+  /** Context associated to the segment. */
+  content: IRequestInfoContent;
+}
+
+/** Content linked to a segment request. */
+export interface IRequestInfoContent {
+  manifest : Manifest;
+  period : Period;
+  adaptation : Adaptation;
+  representation : Representation;
+  segment : ISegment;
 }

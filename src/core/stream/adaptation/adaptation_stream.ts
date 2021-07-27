@@ -92,6 +92,11 @@ export interface IAdaptationStreamPlaybackObservation extends
     isPaused: boolean;
     /** Last "playback rate" asked by the user. */
     speed : number;
+    /**
+     * Only set for live contents.
+     * Difference between the live edge and the current position, in seconds.
+     */
+    liveGap : number | undefined;
   }
 
 /** Arguments given when creating a new `AdaptationStream`. */
