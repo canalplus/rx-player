@@ -1,10 +1,6 @@
 /* eslint-env node */
 
 /**
- * This file is a node module. It should not be run directly.
- */
-
-/**
  * Return the current date into a more readable `HH:mm:ss.fff`
  * (hours:minutes:seconds.milliseconds) format.
  * @returns {string}

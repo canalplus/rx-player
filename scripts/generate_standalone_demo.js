@@ -14,8 +14,8 @@
 
 const Webpack = require("webpack");
 const path = require("path");
-const displayWebpackErrors = require("./display_webpack_errors");
-const getHumanReadableHours = require("./get_human_readable_hours");
+const displayWebpackErrors = require("./utils/display_webpack_errors");
+const getHumanReadableHours = require("./utils/get_human_readable_hours");
 
 const webpackConfig = require("../webpack.config.js");
 

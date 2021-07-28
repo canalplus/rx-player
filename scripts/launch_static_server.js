@@ -18,7 +18,7 @@ const express = require("express");
 const fs = require("fs");
 const { promisify } = require("util");
 const https = require("https");
-const getHumanReadableHours = require("./get_human_readable_hours");
+const getHumanReadableHours = require("./utils/get_human_readable_hours");
 
 module.exports = function launchStaticServer(path, config) {
   const app = express();

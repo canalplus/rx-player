@@ -1,10 +1,6 @@
 /* eslint-env node */
 
 /**
- * This file is a node module. It should not be run directly.
- */
-
-/**
  * Format errors returned by webpack and display it through a `console.log`
  * call.
  * @param {Array.<Object>} errors
