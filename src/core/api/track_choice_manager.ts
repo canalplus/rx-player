@@ -38,12 +38,14 @@ export type IAudioTrackPreference = null |
                                     { language? : string;
                                       audioDescription? : boolean;
                                       codec? : { all: boolean;
-                                                 test: RegExp; }; };
+                                                 test: RegExp; };
+                                      customSelector? : (audioAdaptation: Adaptation) => boolean; };
 
 /** Single preference for a text track Adaptation. */
 export type ITextTrackPreference = null |
                                    { language : string;
-                                     closedCaption : boolean; };
+                                     closedCaption : boolean;
+                                     customSelector? : (textAdaptation: Adaptation) => boolean; };
 
 /** Single preference for a video track Adaptation. */
 export type IVideoTrackPreference = null |
@@ -143,6 +145,7 @@ interface INormalizedPreferredAudioTrackObject {
   audioDescription? : boolean;
   codec? : { all: boolean;
              test: RegExp; };
+  customSelector? : (audioAdaptation : Adaptation) => boolean;
 }
 
 /** Text track preference once normalized by the TrackChoiceManager. */
@@ -153,6 +156,7 @@ type INormalizedPreferredTextTrack = null |
 interface INormalizedPreferredTextTrackObject {
   normalized : string;
   closedCaption : boolean;
+  customSelector? : (textAdaptation : Adaptation) => boolean;
 }
 
 /**
@@ -169,7 +173,8 @@ function normalizeAudioTracks(
     { normalized: t.language === undefined ? undefined :
                                              normalizeLanguage(t.language),
       audioDescription: t.audioDescription,
-      codec: t.codec });
+      codec: t.codec,
+      customSelector: t.customSelector });
 }
 
 /**
@@ -184,7 +189,8 @@ function normalizeTextTracks(
   return tracks.map(t => t == null ?
     t :
     { normalized: normalizeLanguage(t.language),
-      closedCaption: t.closedCaption });
+      closedCaption: t.closedCaption,
+      customSelector: t.customSelector });
 }
 
 /**
@@ -1144,6 +1150,9 @@ function createAudioPreferenceMatcher(
    * @returns {boolean}
    */
   return function matchAudioPreference(audioAdaptation : Adaptation) : boolean {
+    if (preferredAudioTrack.customSelector !== undefined) {
+      return preferredAudioTrack.customSelector(audioAdaptation);
+    }
     if (preferredAudioTrack.normalized !== undefined) {
       const language = audioAdaptation.normalizedLanguage ?? "";
       if (language !== preferredAudioTrack.normalized) {
@@ -1231,6 +1240,9 @@ function createTextPreferenceMatcher(
    * @returns {boolean}
    */
   return function matchTextPreference(textAdaptation : Adaptation) : boolean {
+    if (preferredTextTrack.customSelector !== undefined) {
+      return preferredTextTrack.customSelector(textAdaptation);
+    }
     return takeFirstSet<string>(textAdaptation.normalizedLanguage,
                                 "") === preferredTextTrack.normalized &&
     (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true :
