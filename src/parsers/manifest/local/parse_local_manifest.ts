@@ -122,6 +122,8 @@ function parseAdaptation(
     audioDescription: adaptation.audioDescription,
     closedCaption: adaptation.closedCaption,
     language: adaptation.language,
+    accessibilities: adaptation.accessibilities,
+    roles: adaptation.roles,
     representations: adaptation.representations.map((representation) =>
       parseRepresentation(representation, { representationIdGenerator,
                                             isFinished })),

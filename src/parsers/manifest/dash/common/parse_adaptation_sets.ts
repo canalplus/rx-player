@@ -174,6 +174,43 @@ function hasSignLanguageInterpretation(
     accessibility.value === "sign");
 }
 
+
+/**
+ * Returns the Accessibility value for schemeIdUri "urn:mpeg:dash:role:2011"
+ * @param {Object} accessibility
+ * @returns {string}
+ */
+function getAccessibilityValue(
+  accessibility? : { schemeIdUri? : string; value? : string }
+) : string|null {
+  if (accessibility == null || accessibility.schemeIdUri !== "urn:mpeg:dash:role:2011") {
+    return null;
+  }
+
+  return (accessibility.value != null)
+    ? accessibility.value
+    : null;
+}
+
+
+/**
+ * Returns the Role value for schemeIdUri "urn:mpeg:dash:role:2011"
+ * @param {Object} role
+ * @returns {string|null}
+ */
+function getRoleValue(
+  role? : { schemeIdUri? : string; value? : string }
+) : string|null {
+  if (role == null || role.schemeIdUri !== "urn:mpeg:dash:role:2011") {
+    return null;
+  }
+
+  return (role.value != null)
+    ? role.value
+    : null;
+}
+
+
 /**
  * Contruct Adaptation ID from the information we have.
  * @param {Object} adaptation
@@ -436,9 +473,27 @@ export default function parseAdaptationSets(
         { id: adaptationID,
           representations,
           type,
-          isTrickModeTrack };
+          isTrickModeTrack,
+          accessibilities: [],
+          roles: [] };
       if (adaptation.attributes.language != null) {
         parsedAdaptationSet.language = adaptation.attributes.language;
+      }
+      if (accessibilities !== undefined) {
+        accessibilities.forEach(accessibility => {
+          const accessibilityValue = getAccessibilityValue(accessibility);
+          if (accessibilityValue !== null && parsedAdaptationSet.accessibilities) {
+            parsedAdaptationSet.accessibilities.push(accessibilityValue);
+          }
+        });
+      }
+      if (roles !== undefined) {
+        roles.forEach(role => {
+          const roleValue = getRoleValue(role);
+          if (roleValue !== null && parsedAdaptationSet.roles) {
+            parsedAdaptationSet.roles.push(roleValue);
+          }
+        });
       }
       if (isClosedCaption != null) {
         parsedAdaptationSet.closedCaption = isClosedCaption;

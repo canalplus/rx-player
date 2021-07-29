@@ -201,6 +201,10 @@ export interface ILocalAdaptation {
   closedCaption? : boolean;
   /** The ISO 639-3, ISO 639-2 or ISO 639-1 language code for that track. */
   language? : string;
+  /** Contains the accessibilities found for this track */
+  accessibilities? : string[];
+  /** Contains the roles found for this track */
+  roles? : string[];
   /** The different qualities this track is available in. */
   representations: ILocalRepresentation[];
 }

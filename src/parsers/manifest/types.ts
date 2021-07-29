@@ -178,11 +178,19 @@ export interface IParsedAdaptation {
    * Language the `Adaptation` is in.
    * Not set if unknown or if it makes no sense for the current track.
    */
-  language?: string;
+  language? : string;
+  /**
+   * Accessibilities defined by Accessibility descriptors in adaptation
+   */
+  accessibilities? : string[];
+  /**
+   * Roles defined by Role descriptors in adaptation
+   */
+  roles? : string[];
   /**
    * TrickMode tracks attached to the adaptation.
    */
-  trickModeTracks?: IParsedAdaptation[];
+  trickModeTracks? : IParsedAdaptation[];
 }
 
 /** Information on a given period of time in the Manifest */

@@ -69,6 +69,8 @@ export interface ITMAudioTrack { language : string;
                                  normalized : string;
                                  audioDescription : boolean;
                                  dub? : boolean;
+                                 accessibilities?: string[];
+                                 roles?: string[];
                                  id : number|string;
                                  representations: ITMAudioRepresentation[]; }
 
@@ -76,6 +78,8 @@ export interface ITMAudioTrack { language : string;
 export interface ITMTextTrack { language : string;
                                 normalized : string;
                                 closedCaption : boolean;
+                                accessibilities?: string[];
+                                roles?: string[];
                                 id : number|string; }
 
 /**
@@ -95,6 +99,8 @@ export interface ITMVideoTrack { id : number|string;
                                  signInterpreted?: boolean;
                                  isTrickModeTrack?: boolean;
                                  trickModeTracks?: ITMVideoTrack[];
+                                 accessibilities?: string[];
+                                 roles?: string[];
                                  representations: ITMVideoRepresentation[]; }
 
 /** Audio track from a list of audio tracks returned by the TrackChoiceManager. */
@@ -799,6 +805,8 @@ export default class TrackChoiceManager {
           language: takeFirstSet<string>(adaptation.language, ""),
           normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
           audioDescription: adaptation.isAudioDescription === true,
+          accessibilities: adaptation.accessibilities,
+          roles: adaptation.roles,
           id: adaptation.id,
           active: currentId == null ? false : currentId === adaptation.id,
           representations: adaptation.representations.map(parseAudioRepresentation),
@@ -834,6 +842,8 @@ export default class TrackChoiceManager {
         language: takeFirstSet<string>(adaptation.language, ""),
         normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
         closedCaption: adaptation.isClosedCaption === true,
+        accessibilities: adaptation.accessibilities,
+        roles: adaptation.roles,
         id: adaptation.id,
         active: currentId == null ? false :
                                     currentId === adaptation.id,
@@ -882,6 +892,8 @@ export default class TrackChoiceManager {
           id: adaptation.id,
           active: currentId === null ? false :
                                        currentId === adaptation.id,
+          accessibilities: adaptation.accessibilities,
+          roles: adaptation.roles,
           representations: adaptation.representations.map(parseVideoRepresentation),
         };
         if (adaptation.isSignInterpreted === true) {

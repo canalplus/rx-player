@@ -42,6 +42,8 @@ export interface IMetaPlaylistTextTrack {
   closedCaption : boolean;
   mimeType : string;
   codecs? : string;
+  accessibilities : string[];
+  roles : string[];
 }
 
 export interface IMetaPlaylist {
@@ -229,6 +231,8 @@ function createManifest(
               closedCaption: currentAdaptation.isClosedCaption,
               isDub: currentAdaptation.isDub,
               language: currentAdaptation.language,
+              accessibilities: currentAdaptation.accessibilities,
+              roles: currentAdaptation.roles,
               isSignInterpreted: currentAdaptation.isSignInterpreted,
             });
             acc[type] = adaptationsForCurrentType;
@@ -248,6 +252,8 @@ function createManifest(
           type: "text",
           language: track.language,
           closedCaption: track.closedCaption,
+          accessibilities: track.accessibilities,
+          roles: track.roles,
           manuallyAdded: true,
           representations: [
             { bitrate: 0,

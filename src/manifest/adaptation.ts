@@ -55,7 +55,9 @@ export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         isClosedCaption? : boolean;
                                         isDub? : boolean;
                                         isSignInterpreted?: boolean;
-                                        normalizedLanguage? : string; }
+                                        normalizedLanguage? : string;
+                                        accessibilities?: string[];
+                                        roles?: string[]; }
 
 /** Type for the `representationFilter` API. */
 export type IRepresentationFilter = (representation: Representation,
@@ -103,6 +105,12 @@ export default class Adaptation {
   /** Language this Adaptation is in, when translated into an ISO639-3 code. */
   public normalizedLanguage? : string;
 
+  /** Adaptation accessibilities as announced in the original Manifest. */
+  public accessibilities?: string[];
+
+  /** Adaptation roles as announced in the original Manifest. */
+  public roles?: string[];
+
   /**
    * `true` if this Adaptation was not present in the original Manifest, but was
    * manually added after through the corresponding APIs.
@@ -137,6 +145,8 @@ export default class Adaptation {
     this.parsingErrors = [];
     this.id = parsedAdaptation.id;
     this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
+    this.accessibilities = parsedAdaptation.accessibilities;
+    this.roles = parsedAdaptation.roles;
 
     if (!isSupportedAdaptationType(parsedAdaptation.type)) {
       log.info("Manifest: Not supported adaptation type", parsedAdaptation.type);
@@ -165,6 +175,12 @@ export default class Adaptation {
     if (parsedAdaptation.isSignInterpreted !== undefined) {
       this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
     }
+    if (parsedAdaptation.accessibilities !== undefined) {
+      this.accessibilities = parsedAdaptation.accessibilities;
+    }
+    if (parsedAdaptation.roles !== undefined) {
+      this.roles = parsedAdaptation.roles;
+    }
 
     if (trickModeTracks !== undefined &&
         trickModeTracks.length > 0) {
@@ -180,13 +196,15 @@ export default class Adaptation {
       const shouldAdd =
         isNullOrUndefined(representationFilter) ||
         representationFilter(representation,
-                             { bufferType: this.type,
-                               language: this.language,
-                               normalizedLanguage: this.normalizedLanguage,
-                               isClosedCaption: this.isClosedCaption,
-                               isDub: this.isDub,
-                               isAudioDescription: this.isAudioDescription,
-                               isSignInterpreted: this.isSignInterpreted });
+          { bufferType: this.type,
+            language: this.language,
+            normalizedLanguage: this.normalizedLanguage,
+            isClosedCaption: this.isClosedCaption,
+            isDub: this.isDub,
+            isAudioDescription: this.isAudioDescription,
+            isSignInterpreted: this.isSignInterpreted,
+            accessibilities: this.accessibilities,
+            roles: this.roles });
       if (shouldAdd) {
         representations.push(representation);
         if (!isSupported && representation.isSupported) {
