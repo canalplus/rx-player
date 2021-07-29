@@ -196,15 +196,15 @@ export default class Adaptation {
       const shouldAdd =
         isNullOrUndefined(representationFilter) ||
         representationFilter(representation,
-          { bufferType: this.type,
-            language: this.language,
-            normalizedLanguage: this.normalizedLanguage,
-            isClosedCaption: this.isClosedCaption,
-            isDub: this.isDub,
-            isAudioDescription: this.isAudioDescription,
-            isSignInterpreted: this.isSignInterpreted,
-            accessibilities: this.accessibilities,
-            roles: this.roles });
+                            { bufferType: this.type,
+                              language: this.language,
+                              normalizedLanguage: this.normalizedLanguage,
+                              isClosedCaption: this.isClosedCaption,
+                              isDub: this.isDub,
+                              isAudioDescription: this.isAudioDescription,
+                              isSignInterpreted: this.isSignInterpreted,
+                              accessibilities: this.accessibilities,
+                              roles: this.roles });
       if (shouldAdd) {
         representations.push(representation);
         if (!isSupported && representation.isSupported) {
