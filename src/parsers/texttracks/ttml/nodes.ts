@@ -19,7 +19,8 @@
  * @returns {Element}
  */
 function getBodyNode(tt : Element) : Element|null {
-  return tt.getElementsByTagName("body")[0];
+  const bodyNodes = tt.getElementsByTagName("body");
+  return bodyNodes.length ? bodyNodes[0] : null;
 }
 
 /**
