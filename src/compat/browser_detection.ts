@@ -16,15 +16,20 @@
 
 import isNode from "./is_node";
 
+interface IIE11WindowObject extends Window {
+  MSInputMethodContext? : unknown;
+}
+
+interface IIE11Document extends Document {
+  documentMode? : unknown;
+}
+
 // true on IE11
 // false on Edge and other IEs/browsers.
-/* eslint-disable @typescript-eslint/strict-boolean-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-const isIE11 : boolean = !isNode &&
-                         !!(window as any).MSInputMethodContext &&
-                         !!(document as any).documentMode;
-/* eslint-enable @typescript-eslint/strict-boolean-expressions */
-/* eslint-enable @typescript-eslint/no-unsafe-member-access */
+const isIE11 : boolean =
+  !isNode &&
+  typeof (window as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
+  typeof (document as IIE11Document).documentMode !== "undefined";
 
 // true for IE / Edge
 const isIEOrEdge : boolean = isNode ?
@@ -45,16 +50,16 @@ const isSamsungBrowser : boolean = !isNode &&
 const isTizen : boolean = !isNode &&
                           /Tizen/.test(navigator.userAgent);
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+interface ISafariWindowObject extends Window {
+  safari? : { pushNotification? : { toString() : string } };
+}
+
 const isSafari : boolean =
   !isNode && (
     Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
-    (window as any).safari?.pushNotification.toString() ===
+    (window as ISafariWindowObject).safari?.pushNotification?.toString() ===
       "[object SafariRemoteNotification]"
   );
-/* eslint-enable @typescript-eslint/no-unsafe-member-access */
-/* eslint-enable @typescript-eslint/no-unsafe-call */
 
 const isSafariMobile : boolean = !isNode &&
                                  typeof navigator.platform === "string" &&

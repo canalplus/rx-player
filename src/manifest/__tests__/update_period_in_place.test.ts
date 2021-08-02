@@ -15,8 +15,11 @@
  */
 
 import log from "../../log";
+import type Period from "../period";
 import { MANIFEST_UPDATE_TYPE } from "../types";
 import updatePeriodInPlace from "../update_period_in_place";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 const oldVideoRepresentation1 = { contentWarnings: [],
                                   id: "rep-video-1",
@@ -206,7 +209,9 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newPeriodAdaptationsSpy = jest.spyOn(newPeriod, "getAdaptations");
     const logSpy = jest.spyOn(log, "warn");
 
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Full);
 
     expect(oldPeriod.start).toEqual(500);
     expect(oldPeriod.end).toEqual(520);
@@ -317,7 +322,9 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newPeriodAdaptationsSpy = jest.spyOn(newPeriod, "getAdaptations");
     const logSpy = jest.spyOn(log, "warn");
 
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Partial);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Partial);
 
     expect(oldPeriod.start).toEqual(500);
     expect(oldPeriod.end).toEqual(520);
@@ -417,10 +424,14 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Full);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldPeriod.adaptations.video).toHaveLength(1);
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Partial);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Partial);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldPeriod.adaptations.video).toHaveLength(1);
     logSpy.mockRestore();
@@ -472,14 +483,18 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Full);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
       "Manifest: Adaptation \"ada-video-2\" not found when merging."
     );
     expect(oldPeriod.adaptations.video).toHaveLength(2);
     logSpy.mockClear();
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Partial);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Partial);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
       "Manifest: Adaptation \"ada-video-2\" not found when merging."
@@ -524,10 +539,14 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Full);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Partial);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Partial);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
     logSpy.mockRestore();
@@ -568,14 +587,18 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Full);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Full);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
       "Manifest: Representation \"rep-video-2\" not found when merging."
     );
     expect(oldVideoAdaptation1.representations).toHaveLength(2);
     logSpy.mockClear();
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any, MANIFEST_UPDATE_TYPE.Partial);
+    updatePeriodInPlace(oldPeriod as unknown as Period,
+                        newPeriod as unknown as Period,
+                        MANIFEST_UPDATE_TYPE.Partial);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
       "Manifest: Representation \"rep-video-2\" not found when merging."

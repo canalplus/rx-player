@@ -53,7 +53,7 @@ describe("compat - play", () => {
     const fakeMediaElement = { play: mockPlay };
 
     const play$ = require("../play").default;
-    play$(fakeMediaElement).subscribe(() => null, (err: any) => {
+    play$(fakeMediaElement).subscribe(() => null, (err: unknown) => {
       expect(err).toBe(notAllowedError);
       done();
     });
@@ -67,7 +67,7 @@ describe("compat - play", () => {
     const fakeMediaElement = { play: mockPlay };
 
     const play$ = require("../play").default;
-    play$(fakeMediaElement).subscribe(() => null, (err: any) => {
+    play$(fakeMediaElement).subscribe(() => null, (err: unknown) => {
       expect(err).toBe(notAllowedError);
       done();
     });

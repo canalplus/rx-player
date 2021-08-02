@@ -111,9 +111,7 @@ function getElementResolution(
  * HTML element.
  * @class HTMLTextSegmentBuffer
  */
-export default class HTMLTextSegmentBuffer
-  extends SegmentBuffer<ITextTrackSegmentData>
-{
+export default class HTMLTextSegmentBuffer extends SegmentBuffer {
   readonly bufferType : "text";
 
   /**
@@ -205,7 +203,7 @@ export default class HTMLTextSegmentBuffer
    * @param {Object} infos
    * @returns {Observable}
    */
-  public pushChunk(infos : IPushChunkInfos<ITextTrackSegmentData>) : Observable<void> {
+  public pushChunk(infos : IPushChunkInfos<unknown>) : Observable<void> {
     return observableDefer(() => {
       this.pushChunkSync(infos);
       return observableOf(undefined);
@@ -273,7 +271,7 @@ export default class HTMLTextSegmentBuffer
    * @param {Object} data
    * @returns {boolean}
    */
-  public pushChunkSync(infos : IPushChunkInfos<ITextTrackSegmentData>) : void {
+  public pushChunkSync(infos : IPushChunkInfos<unknown>) : void {
     log.debug("HTSB: Appending new html text tracks");
     const { timestampOffset,
             appendWindow,
@@ -282,6 +280,7 @@ export default class HTMLTextSegmentBuffer
       return;
     }
 
+    assertChunkIsTextTrackSegmentData(chunk);
     const { start: startTime,
             end: endTime,
             data: dataString,
@@ -435,4 +434,81 @@ export default class HTMLTextSegmentBuffer
         });
     }
   }
+}
+
+/** Data of chunks that should be pushed to the NativeTextSegmentBuffer. */
+export interface INativeTextTracksBufferSegmentData {
+  /** The text track data, in the format indicated in `type`. */
+  data : string;
+  /** The format of `data` (examples: "ttml", "srt" or "vtt") */
+  type : string;
+  /**
+   * Language in which the text track is, as a language code.
+   * This is mostly needed for "sami" subtitles, to know which cues can / should
+   * be parsed.
+   */
+  language? : string;
+  /** start time from which the segment apply, in seconds. */
+  start? : number;
+  /** end time until which the segment apply, in seconds. */
+  end? : number;
+}
+
+/**
+ * Throw if the given input is not in the expected format.
+ * Allows to enforce runtime type-checking as compile-time type-checking here is
+ * difficult to enforce.
+ * @param {Object} chunk
+ */
+function assertChunkIsTextTrackSegmentData(
+  chunk : unknown
+) : asserts chunk is INativeTextTracksBufferSegmentData {
+  if (!__DEV__) {
+    return;
+  }
+  if (
+    typeof chunk !== "object" ||
+    chunk === null ||
+    typeof (chunk as INativeTextTracksBufferSegmentData).data !== "string" ||
+    typeof (chunk as INativeTextTracksBufferSegmentData).type !== "string" ||
+    (
+      (chunk as INativeTextTracksBufferSegmentData).language !== undefined &&
+      typeof (chunk as INativeTextTracksBufferSegmentData).language !== "string"
+    ) ||
+    (
+      (chunk as INativeTextTracksBufferSegmentData).start !== undefined &&
+      typeof (chunk as INativeTextTracksBufferSegmentData).start !== "string"
+    ) ||
+    (
+      (chunk as INativeTextTracksBufferSegmentData).end !== undefined &&
+      typeof (chunk as INativeTextTracksBufferSegmentData).end !== "string"
+    )
+  ) {
+    throw new Error("Invalid format given to a NativeTextSegmentBuffer");
+  }
+}
+
+/*
+ * The following ugly code is here to provide a compile-time check that an
+ * `INativeTextTracksBufferSegmentData` (type of data pushed to a
+ * `NativeTextSegmentBuffer`) can be derived from a `ITextTrackSegmentData`
+ * (text track data parsed from a segment).
+ *
+ * It doesn't correspond at all to real code that will be called. This is just
+ * a hack to tell TypeScript to perform that check.
+ */
+if (__DEV__) {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  /* eslint-disable @typescript-eslint/ban-ts-comment */
+  // @ts-ignore
+  function _checkType(
+    input : ITextTrackSegmentData
+  ) : void {
+    function checkEqual(_arg : INativeTextTracksBufferSegmentData) : void {
+      /* nothing */
+    }
+    checkEqual(input);
+  }
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+  /* eslint-enable @typescript-eslint/ban-ts-comment */
 }

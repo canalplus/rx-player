@@ -24,16 +24,18 @@ interface IMSMediaKeysConstructor {
 
 let MSMediaKeysConstructor: IMSMediaKeysConstructor|undefined;
 if (!isNode) {
-  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  const { MSMediaKeys } = (window as any);
-  if (MSMediaKeys !== undefined &&
-      MSMediaKeys.prototype !== undefined &&
-      typeof MSMediaKeys.isTypeSupported === "function" &&
-      typeof MSMediaKeys.prototype.createSession === "function") {
+  const { MSMediaKeys } = (window as Window & {
+    MSMediaKeys? : IMSMediaKeysConstructor;
+  });
+  if (
+    MSMediaKeys !== undefined &&
+    MSMediaKeys.prototype !== undefined &&
+    typeof MSMediaKeys.isTypeSupported === "function" &&
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    typeof MSMediaKeys.prototype.createSession === "function"
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  ) {
     MSMediaKeysConstructor = MSMediaKeys;
   }
-  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }
 export { MSMediaKeysConstructor };

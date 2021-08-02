@@ -264,16 +264,8 @@ export default class VideoThumbnailLoader {
         }),
         catchError((err: unknown) => {
           let message = "Unknown error.";
-          if ((err as { message?: string; toString(): string }).message !== undefined ||
-            /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-            /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-            /* eslint-disable @typescript-eslint/no-unsafe-call */
-              typeof (err as { message?: string;
-                               toString(): string; }).toString === "function") {
-            message = (err as any).message ?? (err as any).toString();
-            /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-            /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-            /* eslint-enable @typescript-eslint/no-unsafe-call */
+          if (err instanceof Error) {
+            message = err.message ?? err.toString();
           }
           throw new VideoThumbnailLoaderError("LOADING_ERROR", message);
         })

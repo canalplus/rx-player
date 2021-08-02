@@ -43,7 +43,7 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
  */
 export default function forceGarbageCollection(
   timings$ : Observable<{ position : number }>,
-  bufferingQueue : SegmentBuffer<unknown>
+  bufferingQueue : SegmentBuffer
 ) : Observable<unknown> {
   // wait for next timing event
   return timings$.pipe(

@@ -16,7 +16,10 @@
 
 import { Subject } from "rxjs";
 import config from "../../../config";
-import { ITransportPipelines } from "../../../transports";
+import {
+  ISegmentPipeline,
+  ITransportPipelines,
+} from "../../../transports";
 import {
   IABRMetricsEvent,
   IABRRequestBeginEvent,
@@ -90,7 +93,7 @@ export default class SegmentFetcherCreator {
    * about it, but typing as any just in select places, like here, looks like
    * a good compromise.
    */
-  private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<any>>;
+  private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<unknown>>;
   /**
    * Options used by the SegmentFetcherCreator, e.g. to allow configuration on
    * segment retries (number of retries maximum, default delay and so on).
@@ -126,16 +129,18 @@ export default class SegmentFetcherCreator {
                         IABRRequestProgressEvent |
                         IABRRequestEndEvent |
                         IABRMetricsEvent>
-  ) : IPrioritizedSegmentFetcher<any> {
+  ) : IPrioritizedSegmentFetcher<unknown> {
     const backoffOptions = getSegmentFetcherOptions(bufferType, this._backoffOptions);
     const pipelines = this._transport[bufferType];
 
     // Types are very complicated here as they are per-type of buffer.
     // This is the reason why `any` is used instead.
-    const segmentFetcher = createSegmentFetcher<any, any>(bufferType,
-                                                          pipelines,
-                                                          requests$,
-                                                          backoffOptions);
+    const segmentFetcher = createSegmentFetcher<unknown, unknown>(
+      bufferType,
+      pipelines as ISegmentPipeline<unknown, unknown>,
+      requests$,
+      backoffOptions
+    );
     return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
   }
 }

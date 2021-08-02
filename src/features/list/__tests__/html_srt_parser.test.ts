@@ -26,6 +26,7 @@ jest.mock("../../../parsers/texttracks/srt/html", () => ({
 
 describe("Features list - HTML srt Parser", () => {
   it("should add an HTML srt Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { htmlTextTracksParsers: {} };
     addHTMLsrtFeature(featureObject);
     expect(featureObject).toEqual({

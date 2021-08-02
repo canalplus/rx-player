@@ -63,7 +63,8 @@ describe("core - eme - initMediaKeys", () => {
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
     initMediaKeys(mediaElement, keySystemsConfigs)
       .pipe(take(1))
-      .subscribe((result : any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .subscribe((result : { type : string; value : any }) => {
         expect(result.type).toEqual("created-media-keys");
         expect(result.value.mediaKeys).toEqual(fakeResult.mediaKeys);
         expect(result.value.mediaKeySystemAccess)
@@ -112,7 +113,8 @@ describe("core - eme - initMediaKeys", () => {
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
     initMediaKeys(mediaElement, keySystemsConfigs)
       .pipe(
-        tap((evt: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        tap((evt: { type : string; value : any }) => {
           if (evt.type === "created-media-keys") {
             evt.value.attachMediaKeys$.next();
           }
@@ -206,7 +208,8 @@ describe("core - eme - initMediaKeys", () => {
 
     let eventReceived = false;
     initMediaKeys(mediaElement, keySystemsConfigs)
-      .subscribe((evt : any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .subscribe((evt : { type : string; value : any }) => {
         expect(evt.type).toEqual("created-media-keys");
         expect(evt.value.mediaKeys).toEqual(fakeResult.mediaKeys);
         expect(evt.value.mediaKeySystemAccess).toEqual(fakeResult.mediaKeySystemAccess);

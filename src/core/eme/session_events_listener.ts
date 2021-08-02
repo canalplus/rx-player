@@ -138,7 +138,7 @@ export default function SessionEventsListener(
         const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
           10 * 1000 :
           getLicenseConfig.timeout;
-        return (castToObservable(getLicense) as Observable<BufferSource|null>)
+        return castToObservable(getLicense)
           .pipe(getLicenseTimeout >= 0 ? timeout(getLicenseTimeout) :
                                          identity /* noop */);
       });
@@ -310,7 +310,7 @@ function handleKeyStatusesChangeEvent(
       }
       return castToObservable(keySystemOptions.onKeyStatusesChange(keyStatusesEvent,
                                                                    session));
-    }, undefined) as Observable< BufferSource | null >;
+    }, undefined);
   }).pipe(
     map(licenseObject => ({ type: "key-status-change-handled" as const,
                             value : { session, license: licenseObject } })),

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -29,7 +28,7 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should empty the src and remove the Attribute for a given Element", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
     };
@@ -47,7 +46,7 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should throw if failed to remove the Attribute for a given Element", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { throw new Error("Oups, can't remove attribute."); },
     };
@@ -65,7 +64,7 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should disable text tracks and remove childs if on firefox", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
       textTracks: [
@@ -80,7 +79,7 @@ describe("Compat - clearElementSrc", () => {
       hasChildNodes: () => true,
       removeChild: (node: { nodeName: string }) => {
         const { childNodes } = fakeElement;
-        const idx = arrayFindIndex(childNodes, (n: any) => n.nodeName === node.nodeName);
+        const idx = arrayFindIndex(childNodes, (n) => n.nodeName === node.nodeName);
         childNodes.splice(idx, 1);
       },
     };
@@ -109,7 +108,7 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should log when failed to remove text track child node if on firefox", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
       textTracks: [
@@ -163,7 +162,7 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should not remove audio child node if on firefox and no text tracks", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
       textTracks: [],
@@ -195,7 +194,7 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should not handle text tracks nodes is has no child nodes if on firefox", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
       textTracks: [],

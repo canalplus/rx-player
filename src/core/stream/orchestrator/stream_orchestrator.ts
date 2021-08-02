@@ -123,7 +123,7 @@ export default function StreamOrchestrator(
   // Keep track of a unique BufferGarbageCollector created per
   // SegmentBuffer.
   const garbageCollectors =
-    new WeakMapMemory((segmentBuffer : SegmentBuffer<unknown>) => {
+    new WeakMapMemory((segmentBuffer : SegmentBuffer) => {
       const { bufferType } = segmentBuffer;
       const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ?
                                  MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number :

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import isNode from "../../is_node";
 import { ICustomMediaKeys } from "./types";
 
@@ -24,17 +25,19 @@ interface IMozMediaKeysConstructor {
 
 let MozMediaKeysConstructor: IMozMediaKeysConstructor|undefined;
 if (!isNode) {
-  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  const { MozMediaKeys } = (window as any);
-  if (MozMediaKeys !== undefined &&
-      MozMediaKeys.prototype !== undefined &&
-      typeof MozMediaKeys.isTypeSupported === "function" &&
-      typeof MozMediaKeys.prototype.createSession === "function") {
+  const { MozMediaKeys } = (window as Window & {
+    MozMediaKeys? : IMozMediaKeysConstructor;
+  });
+  if (
+    MozMediaKeys !== undefined &&
+    MozMediaKeys.prototype !== undefined &&
+    typeof MozMediaKeys.isTypeSupported === "function" &&
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    typeof MozMediaKeys.prototype.createSession === "function"
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  ) {
     MozMediaKeysConstructor = MozMediaKeys;
   }
-  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }
 export { MozMediaKeysConstructor };
 
@@ -62,20 +65,14 @@ export default function getMozMediaKeysCallbacks() : {
     return new MozMediaKeysConstructor(keyType);
   };
   const setMediaKeys = (
-    elt: HTMLMediaElement,
+    mediaElement: HTMLMediaElement,
     mediaKeys: MediaKeys|ICustomMediaKeys|null
   ): void => {
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    if ((elt as any).mozSetMediaKeys === undefined ||
-        typeof (elt as any).mozSetMediaKeys !== "function") {
+    const elt : ICompatHTMLMediaElement = mediaElement;
+    if (elt.mozSetMediaKeys === undefined || typeof elt.mozSetMediaKeys !== "function") {
       throw new Error("Can't set video on MozMediaKeys.");
     }
-    return (elt as any).mozSetMediaKeys(mediaKeys);
-    /* eslint-enable @typescript-eslint/no-unsafe-return */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
+    return elt.mozSetMediaKeys(mediaKeys);
   };
   return {
     isTypeSupported,

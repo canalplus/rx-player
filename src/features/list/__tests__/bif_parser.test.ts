@@ -26,6 +26,7 @@ jest.mock("../../../parsers/images/bif", () => ({
 
 describe("Features list - BIF Parser", () => {
   it("should add the BIF Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addBIFParserFeature(featureObject);
     expect(featureObject).toEqual({ imageParser: bifParser });

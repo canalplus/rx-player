@@ -33,7 +33,7 @@ import Prioritizer, {
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 /* eslint-disable no-restricted-properties */
 
-function assert(condition: any, msg?: string): asserts condition {
+function assert(condition: boolean, msg?: string): asserts condition {
   if (!condition) {
     throw new Error(msg ?? "The asserted condition turned out to be false.");
   }

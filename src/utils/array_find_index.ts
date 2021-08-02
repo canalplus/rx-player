@@ -20,6 +20,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable no-restricted-properties */
 
+// Ugly transitory type to make duck typing work
+type ArrayWithFindIndex<T> = T[] & {
+  findIndex(predicate: (value: T,
+                        index: number,
+                        obj: T[]) => unknown,
+            thisArg?: unknown): number;
+};
+
 /**
  * Array.prototype.find ponyfill.
  * @param {Array} arr
@@ -30,10 +38,10 @@
 export default function arrayFindIndex<T>(
   arr : T[],
   predicate : (arg: T, index : number, fullArray : T[]) => boolean,
-  thisArg? : any
+  thisArg? : unknown
 ) : number {
-  if (typeof (Array.prototype as any).findIndex === "function") {
-    return (arr as any).findIndex(predicate, thisArg);
+  if (typeof (Array.prototype as ArrayWithFindIndex<T>).findIndex === "function") {
+    return (arr as ArrayWithFindIndex<T>).findIndex(predicate, thisArg);
   }
 
   const len = arr.length >>> 0;

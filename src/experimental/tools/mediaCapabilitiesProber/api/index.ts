@@ -115,7 +115,7 @@ const mediaCapabilitiesProber = {
   },
 
   /**
-   * From an array of given configurations (type  and key system configuration), return
+   * From an array of given configurations (type and key system configuration), return
    * supported ones.
    * @param {Array.<Object>} configurations
    * @returns {Promise}
@@ -126,7 +126,8 @@ const mediaCapabilitiesProber = {
       configuration: IMediaKeySystemConfiguration;
     }>
   ) : Promise<ICompatibleKeySystem[]> {
-    const promises: Array<Promise<any>> = [];
+    const promises: Array<Promise<{ globalStatus: ProberStatus;
+                                    result? : ICompatibleKeySystem; }>> = [];
     configurations.forEach((configuration) => {
       const globalConfig = {
         keySystem: configuration,
@@ -152,8 +153,15 @@ const mediaCapabilitiesProber = {
       );
     });
     return PPromise.all(promises)
-      .then((supportedConfigs) => {
-        return supportedConfigs
+      .then((configs) => {
+        // TODO I added those lines to work-around a type issue but does it
+        // really correspond to the original intent? I find it hard to
+        // understand and shouldn't we also rely on things like `globalStatus`
+        // here?
+        return configs
+          .filter((x) : x is { globalStatus : ProberStatus;
+                               result : ICompatibleKeySystem; } =>
+            x.result !== undefined)
           .map(({ result }: { result: ICompatibleKeySystem }) => result);
       });
   },

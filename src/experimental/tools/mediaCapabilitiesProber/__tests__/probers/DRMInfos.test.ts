@@ -89,7 +89,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
     const probeDRMInfos = require("../../probers/DRMInfos").default;
     expect.assertions(2);
     probeDRMInfos(configuration)
-      .then((res: any) => {
+      .then((res: unknown) => {
         expect(res).toEqual(
           [
             ProberStatus.Supported,
@@ -126,7 +126,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
     const probeDRMInfos = require("../../probers/DRMInfos").default;
     expect.assertions(2);
     probeDRMInfos(configuration)
-      .then((res: any) => {
+      .then((res: unknown) => {
         expect(res).toEqual(
           [
             ProberStatus.NotSupported,

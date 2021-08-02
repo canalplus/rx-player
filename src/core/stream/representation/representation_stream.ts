@@ -128,7 +128,7 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
              period : Period;
              representation : Representation; };
   /** The `SegmentBuffer` on which segments will be pushed. */
-  segmentBuffer : SegmentBuffer<TSegmentDataType>;
+  segmentBuffer : SegmentBuffer;
   /** Interface used to load new segments. */
   segmentFetcher : IPrioritizedSegmentFetcher<TSegmentDataType>;
   /**
@@ -209,7 +209,7 @@ export default function RepresentationStream<TSegmentDataType>({
   terminate$,
   options,
 } : IRepresentationStreamArguments<TSegmentDataType>
-) : Observable<IRepresentationStreamEvent<TSegmentDataType>> {
+) : Observable<IRepresentationStreamEvent> {
   const { manifest, period, adaptation, representation } = content;
   const { bufferGoal$, drmSystemId, fastSwitchThreshold$ } = options;
   const bufferType = adaptation.type;

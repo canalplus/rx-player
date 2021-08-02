@@ -74,7 +74,7 @@ describe("Manifest - Period", () => {
     let period = null;
     let errorReceived = null;
     try {
-      period = new Period(args as any);
+      period = new Period(args);
     } catch (e) {
       errorReceived = e;
     }
@@ -155,7 +155,7 @@ describe("Manifest - Period", () => {
     let period = null;
     let errorReceived = null;
     try {
-      period = new Period(args as any);
+      period = new Period(args);
     } catch (e) {
       errorReceived = e;
     }
@@ -204,7 +204,7 @@ describe("Manifest - Period", () => {
     let period = null;
     let errorReceived = null;
     try {
-      period = new Period(args as any);
+      period = new Period(args);
     } catch (e) {
       errorReceived = e;
     }
@@ -253,7 +253,7 @@ describe("Manifest - Period", () => {
     let period = null;
     let errorReceived = null;
     try {
-      period = new Period(args as any);
+      period = new Period(args);
     } catch (e) {
       errorReceived = e;
     }
@@ -302,7 +302,7 @@ describe("Manifest - Period", () => {
     let period = null;
     let errorReceived = null;
     try {
-      period = new Period(args as any);
+      period = new Period(args);
     } catch (e) {
       errorReceived = e;
     }
@@ -338,7 +338,7 @@ describe("Manifest - Period", () => {
                         representations: [{}] };
     const video2 = [videoAda2];
     const args = { id: "12", adaptations: { video, video2 }, start: 0 };
-    const period = new Period(args as any);
+    const period = new Period(args);
     expect(period.contentWarnings).toHaveLength(1);
 
     expect(adaptationSpy).toHaveBeenCalledTimes(2);
@@ -370,7 +370,7 @@ describe("Manifest - Period", () => {
     const video = [videoAda1];
     const bar = undefined;
     const args = { id: "12", adaptations: { bar, video }, start: 0 };
-    const period = new Period(args as any);
+    const period = new Period(args);
     expect(period.adaptations).toEqual({
       video: video.map(v => ({ ...v, contentWarnings: [] })),
     });
@@ -400,7 +400,7 @@ describe("Manifest - Period", () => {
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0 };
-    const period = new Period(args as any, representationFilter);
+    const period = new Period(args, representationFilter);
 
     expect(period.contentWarnings).toHaveLength(0);
     expect(period.adaptations.video).toHaveLength(2);
@@ -435,7 +435,7 @@ describe("Manifest - Period", () => {
     const video = [videoAda1, videoAda2];
     const foo = [fooAda1];
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
-    const period = new Period(args as any);
+    const period = new Period(args);
 
     expect(period.contentWarnings).toHaveLength(2);
     const error = period.contentWarnings[0];
@@ -471,7 +471,7 @@ describe("Manifest - Period", () => {
     const video = [videoAda1, videoAda2];
     const foo = [fooAda1];
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
-    const period = new Period(args as any);
+    const period = new Period(args);
 
     expect(period.contentWarnings).toHaveLength(0);
   });
@@ -495,7 +495,7 @@ describe("Manifest - Period", () => {
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 72 };
-    const period = new Period(args as any);
+    const period = new Period(args);
     expect(period.start).toEqual(72);
     expect(period.duration).toEqual(undefined);
     expect(period.end).toEqual(undefined);
@@ -520,7 +520,7 @@ describe("Manifest - Period", () => {
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0, duration: 12 };
-    const period = new Period(args as any);
+    const period = new Period(args);
     expect(period.start).toEqual(0);
     expect(period.duration).toEqual(12);
     expect(period.end).toEqual(12);
@@ -545,7 +545,7 @@ describe("Manifest - Period", () => {
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 50, duration: 12 };
-    const period = new Period(args as any);
+    const period = new Period(args);
     expect(period.start).toEqual(50);
     expect(period.duration).toEqual(12);
     expect(period.end).toEqual(62);
@@ -577,7 +577,7 @@ describe("Manifest - Period", () => {
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
-    const period = new Period(args as any);
+    const period = new Period(args);
 
     expect(period.getAdaptations()).toHaveLength(3);
     expect(period.getAdaptations()).toContain(period.adaptations.video[0]);
@@ -613,7 +613,7 @@ describe("Manifest - Period", () => {
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
-    const period = new Period(args as any);
+    const period = new Period(args);
 
     expect(period.getAdaptationsForType("video")).toHaveLength(2);
     expect(period.getAdaptationsForType("video"))
@@ -660,7 +660,7 @@ describe("Manifest - Period", () => {
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
-    const period = new Period(args as any);
+    const period = new Period(args);
 
     expect(period.getAdaptation("54")).toEqual(period.adaptations.video[0]);
     expect(period.getAdaptation("55")).toEqual(period.adaptations.video[1]);

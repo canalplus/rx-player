@@ -21,6 +21,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import PPromise from "../../../../../utils/promise";
 
@@ -31,6 +32,7 @@ import {
 } from "../../types";
 
 const origDecodingInfo = (navigator as any).mediaCapabilities;
+const origMediaCapabilities = (navigator as any).mediaCapabilities;
 
 /**
  * Stub decodingInfo API to resolve.
@@ -66,6 +68,9 @@ function resetDecodingInfos(): void {
 describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   beforeEach(() => {
     jest.resetModules();
+  });
+  afterEach(() => {
+    (navigator as any).mediaCapabilities = origMediaCapabilities;
   });
 
   it("should throw if no video and audio config", (done) => {
@@ -179,14 +184,12 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   });
 
   it("should throw if API mediaCapabilities not available", () => {
-    const origMediaCapabilities = (navigator as any).mediaCapabilities;
     delete (navigator as any).mediaCapabilities;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDecodingInfos({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: MediaCapabilities API not available"
     );
     /* eslint-enable @typescript-eslint/no-floating-promises */
-    (navigator as any).mediaCapabilities = origMediaCapabilities;
   });
 
   it("should throw if API decodingInfo not available", () => {
@@ -200,11 +203,6 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
       "MediaCapabilitiesProber >>> API_CALL: Decoding Info not available"
     );
     /* eslint-enable @typescript-eslint/no-floating-promises */
-    if ((navigator as any).mediaCapabilities) {
-      (navigator as any).mediaCapabilities.decodingInfo = origDecodingInfo;
-    } else {
-      (navigator as any).mediaCapabilities = undefined;
-    }
   });
 
   it("should resolve with `Supported` if decodingInfo supports (video only)", (done) => {

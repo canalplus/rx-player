@@ -118,7 +118,7 @@ export class MediaKeyStatusMapImpl {
       parent: MediaKeyStatusMapImpl
     ) => void,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    thisArg?: any
+    thisArg?: unknown
   ): void {
     this._map.forEach((value, key) => callbackfn.bind(thisArg, value, key, this));
   }
@@ -138,13 +138,15 @@ export class MediaKeyStatusMapImpl {
  * Custom implementation of an EME-compliant MediaKeySession.
  * @class MediaKeySessionImpl
  */
-export class MediaKeySessionImpl extends EventEmitter<any> {
+export class MediaKeySessionImpl extends EventEmitter<Record<string, unknown>> {
   public readonly closed : Promise<void>;
   public readonly expiration: number;
   public readonly keyStatuses : MediaKeyStatusMapImpl;
   public readonly sessionId: string;
-  public onkeystatuseschange: ((this: MediaKeySessionImpl, ev: Event) => any) | null;
-  public onmessage: ((this: MediaKeySessionImpl, ev: MediaKeyMessageEvent) => any) | null;
+  public onkeystatuseschange: ((this: MediaKeySessionImpl, ev: Event) => unknown) | null;
+  public onmessage: (
+    (this: MediaKeySessionImpl, ev: MediaKeyMessageEvent) => unknown
+  ) | null;
 
   private _currentKeyId : number;
   private _close? : () => void;
@@ -317,8 +319,10 @@ export function mockCompat(exportedFunctions = {}) {
  */
 export function testEMEManagerImmediateError(
   /* eslint-disable @typescript-eslint/naming-convention */
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   EMEManager : any,
+  /* eslint-enable @typescript-eslint/no-explicit-any */
   /* eslint-enable @typescript-eslint/naming-convention */
   mediaElement : HTMLMediaElement,
   keySystemsConfigs : unknown[],
@@ -328,6 +332,7 @@ export function testEMEManagerImmediateError(
     EMEManager(mediaElement, keySystemsConfigs, contentProtections$)
       .subscribe(
         (evt : unknown) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const eventStr = JSON.stringify(evt as any);
           rej(new Error("Received an EMEManager event: " + eventStr));
         },
@@ -344,7 +349,8 @@ export function testEMEManagerImmediateError(
  * @param {Object} initDataVal
  */
 export function expectLicenseRequestMessage(
-  evt : { type : string; value : any},
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  evt : { type : string; value : any },
   initDataVal : { type : string | undefined;
                   values : Array<{ systemId : string | unknown;
                                    data : Uint8Array; }>; }
@@ -360,7 +366,8 @@ export function expectLicenseRequestMessage(
  * @param {string|undefined} initDataType
  */
 export function expectInitDataIgnored(
-  evt : { type : string; value : any},
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  evt : { type : string; value : any },
   initDataVal : { type : string | undefined;
                   values : Array<{ systemId : string | undefined;
                                    data : Uint8Array; }>; }
@@ -375,7 +382,8 @@ export function expectInitDataIgnored(
  * @param {string|undefined} initDataType
  */
 export function expectEncryptedEventReceived(
-  evt : { type : string; value : any},
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  evt : { type : string; value : any },
   initData : IEncryptedEventData
 ) : void {
   expect(evt.type).toEqual("encrypted-event-received");

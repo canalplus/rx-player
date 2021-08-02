@@ -379,22 +379,22 @@ describe("Manifest - Manifest", () => {
     const newAdaptations = {};
     const newPeriod1 = { id: "foo0", start: 4, adaptations: {} };
     const newPeriod2 = { id: "foo1", start: 12, adaptations: {} };
-    const newManifest : any = { adaptations: newAdaptations,
-                                availabilityStartTime: 6,
-                                id: "man2",
-                                isDynamic: true,
-                                isLive: true,
-                                lifetime: 14,
-                                contentWarnings: [new Error("c"), new Error("d")],
-                                suggestedPresentationDelay: 100,
-                                timeShiftBufferDepth: 3,
-                                _timeBounds: { absoluteMinimumTime: 7,
-                                               timeshiftDepth: 5,
-                                               maximumTimeData: { isLinear: false,
-                                                                  value: 40,
-                                                                  time: 30000 } },
-                                periods: [newPeriod1, newPeriod2],
-                                uris: ["url3", "url4"] };
+    const newManifest = { adaptations: newAdaptations,
+                          availabilityStartTime: 6,
+                          id: "man2",
+                          isDynamic: true,
+                          isLive: true,
+                          lifetime: 14,
+                          contentWarnings: [new Error("c"), new Error("d")],
+                          suggestedPresentationDelay: 100,
+                          timeShiftBufferDepth: 3,
+                          _timeBounds: { absoluteMinimumTime: 7,
+                                         timeshiftDepth: 5,
+                                         maximumTimeData: { isLinear: false,
+                                                            value: 40,
+                                                            time: 30000 } },
+                          periods: [newPeriod1, newPeriod2],
+                          uris: ["url3", "url4"] };
 
     manifest.replace(newManifest);
     expect(manifest.adaptations).toEqual(newAdaptations);
@@ -499,7 +499,7 @@ describe("Manifest - Manifest", () => {
                                                            time: 10 } },
                           uris: ["url3", "url4"] };
 
-    manifest.replace(newManifest as any);
+    manifest.replace(newManifest);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -552,7 +552,7 @@ describe("Manifest - Manifest", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs as any, {});
+    const manifest = new Manifest(oldManifestArgs, {});
     const [oldPeriod1] = manifest.periods;
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
@@ -576,7 +576,7 @@ describe("Manifest - Manifest", () => {
                                                            time: 10 } },
                           uris: ["url3", "url4"] };
 
-    manifest.replace(newManifest as any);
+    manifest.replace(newManifest);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -627,7 +627,7 @@ describe("Manifest - Manifest", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs as any, {});
+    const manifest = new Manifest(oldManifestArgs, {});
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
@@ -650,7 +650,7 @@ describe("Manifest - Manifest", () => {
                                                            time: 10 } },
                           uris: ["url3", "url4"] };
 
-    manifest.replace(newManifest as any);
+    manifest.replace(newManifest);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -701,7 +701,7 @@ describe("Manifest - Manifest", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs as any, {});
+    const manifest = new Manifest(oldManifestArgs, {});
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
@@ -731,7 +731,7 @@ describe("Manifest - Manifest", () => {
                                                            time: 10 } },
                           uris: ["url3", "url4"] };
 
-    manifest.replace(newManifest as any);
+    manifest.replace(newManifest);
 
     expect(manifest.periods).toEqual([ newPeriod1,
                                        newPeriod2,

@@ -90,7 +90,7 @@ export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTi
 }
 
 /** Arguments given when creating a new `AdaptationStream`. */
-export interface IAdaptationStreamArguments<T> {
+export interface IAdaptationStreamArguments {
   /**
    * Module allowing to find the best Representation depending on the current
    * conditions like the current network bandwidth.
@@ -107,7 +107,7 @@ export interface IAdaptationStreamArguments<T> {
               adaptation : Adaptation; };
   options: IAdaptationStreamOptions;
   /** SourceBuffer wrapper - needed to push media segments. */
-  segmentBuffer : SegmentBuffer<T>;
+  segmentBuffer : SegmentBuffer;
   /** Module used to fetch the wanted media segments. */
   segmentFetcherCreator : SegmentFetcherCreator;
   /**
@@ -174,7 +174,7 @@ export interface IAdaptationStreamOptions {
  * @param {Object} args
  * @returns {Observable}
  */
-export default function AdaptationStream<T>({
+export default function AdaptationStream({
   abrManager,
   clock$,
   content,
@@ -182,7 +182,7 @@ export default function AdaptationStream<T>({
   segmentBuffer,
   segmentFetcherCreator,
   wantedBufferAhead$,
-} : IAdaptationStreamArguments<T>) : Observable<IAdaptationStreamEvent<T>> {
+} : IAdaptationStreamArguments) : Observable<IAdaptationStreamEvent> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
 
@@ -229,7 +229,7 @@ export default function AdaptationStream<T>({
 
   /** Recursively create `RepresentationStream`s according to the last estimate. */
   const representationStreams$ = abrEstimate$
-    .pipe(exhaustMap((estimate, i) : Observable<IAdaptationStreamEvent<T>> => {
+    .pipe(exhaustMap((estimate, i) : Observable<IAdaptationStreamEvent> => {
       return recursivelyCreateRepresentationStreams(estimate, i === 0);
     }));
 
@@ -250,7 +250,7 @@ export default function AdaptationStream<T>({
   function recursivelyCreateRepresentationStreams(
     fromEstimate : IABREstimate,
     isFirstEstimate : boolean
-  ) : Observable<IAdaptationStreamEvent<T>> {
+  ) : Observable<IAdaptationStreamEvent> {
     const { representation } = fromEstimate;
 
     // A manual bitrate switch might need an immediate feedback.
@@ -341,7 +341,7 @@ export default function AdaptationStream<T>({
     representation : Representation,
     terminateCurrentStream$ : Observable<ITerminationOrder>,
     fastSwitchThreshold$ : Observable<number | undefined>
-  ) : Observable<IRepresentationStreamEvent<T>> {
+  ) : Observable<IRepresentationStreamEvent> {
     return observableDefer(() => {
       const oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
       const bufferGoalRatio = oldBufferGoalRatio != null ? oldBufferGoalRatio :

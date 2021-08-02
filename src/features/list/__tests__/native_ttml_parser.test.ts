@@ -26,6 +26,7 @@ jest.mock("../../../parsers/texttracks/ttml/native", () => ({
 
 describe("Features list - native ttml Parser", () => {
   it("should add an native ttml Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { nativeTextTracksParsers: {} };
     addNativettmlFeature(featureObject);
     expect(featureObject).toEqual({

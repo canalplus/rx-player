@@ -36,7 +36,7 @@ describe("core - init - refreshScheduledEventsList", () => {
                                                    { start: 13,
                                                      end: 13.1,
                                                      id: "4" }] } ] };
-    const oldScheduledEvents: any[] = [
+    const oldScheduledEvents = [
       { start: 1000,
         end: 1000000,
         id: "must-disapear",

@@ -44,7 +44,7 @@ function objectAssign<T, U>(target : T, ...sources : U[]) : T & U {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
         /* eslint-disable @typescript-eslint/no-unsafe-member-access */
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-        (to as any)[key] = source[key];
+        to[key] = source[key];
         /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       }
     }

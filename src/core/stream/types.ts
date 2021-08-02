@@ -396,30 +396,30 @@ export interface INeedsDecipherabilityFlush {
 }
 
 /** Event sent by a `RepresentationStream`. */
-export type IRepresentationStreamEvent<T> = IStreamStatusEvent |
-                                            IStreamEventAddedSegment<T> |
-                                            IEncryptionDataEncounteredEvent |
-                                            IStreamManifestMightBeOutOfSync |
-                                            IStreamTerminatingEvent |
-                                            IStreamNeedsManifestRefresh |
-                                            IStreamWarningEvent |
-                                            IInbandEventsEvent;
+export type IRepresentationStreamEvent = IStreamStatusEvent |
+                                         IStreamEventAddedSegment<unknown> |
+                                         IEncryptionDataEncounteredEvent |
+                                         IStreamManifestMightBeOutOfSync |
+                                         IStreamTerminatingEvent |
+                                         IStreamNeedsManifestRefresh |
+                                         IStreamWarningEvent |
+                                         IInbandEventsEvent;
 
 /** Event sent by an `AdaptationStream`. */
-export type IAdaptationStreamEvent<T> = IBitrateEstimationChangeEvent |
-                                        INeedsMediaSourceReload |
-                                        INeedsDecipherabilityFlush |
-                                        IRepresentationChangeEvent |
+export type IAdaptationStreamEvent = IBitrateEstimationChangeEvent |
+                                     INeedsMediaSourceReload |
+                                     INeedsDecipherabilityFlush |
+                                     IRepresentationChangeEvent |
 
-                                        // From a RepresentationStream
+                                     // From a RepresentationStream
 
-                                        IStreamStatusEvent |
-                                        IStreamEventAddedSegment<T> |
-                                        IEncryptionDataEncounteredEvent |
-                                        IStreamManifestMightBeOutOfSync |
-                                        IStreamNeedsManifestRefresh |
-                                        IStreamWarningEvent |
-                                        IInbandEventsEvent;
+                                     IStreamStatusEvent |
+                                     IStreamEventAddedSegment<unknown> |
+                                     IEncryptionDataEncounteredEvent |
+                                     IStreamManifestMightBeOutOfSync |
+                                     IStreamNeedsManifestRefresh |
+                                     IStreamWarningEvent |
+                                     IInbandEventsEvent;
 
 /** Event sent by a `PeriodStream`. */
 export type IPeriodStreamEvent = IPeriodStreamReadyEvent |

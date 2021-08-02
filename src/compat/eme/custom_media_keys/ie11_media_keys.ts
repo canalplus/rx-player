@@ -21,6 +21,7 @@ import {
 import { takeUntil } from "rxjs/operators";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
+import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import * as events from "../../event_listeners";
 import { MSMediaKeysConstructor } from "./ms_media_keys_constructor";
 import {
@@ -40,7 +41,7 @@ class IE11MediaKeySession
   public keyStatuses: ICustomMediaKeyStatusMap;
   private readonly _mk: MSMediaKeys;
   private readonly _closeSession$: Subject<void>;
-  private _ss?: MediaKeySession;
+  private _ss?: MSMediaKeySession;
   constructor(mk: MSMediaKeys) {
     super();
     this.expiration = NaN;
@@ -56,27 +57,25 @@ class IE11MediaKeySession
           return reject("MediaKeySession not set.");
         }
         try {
-          /* eslint-disable @typescript-eslint/no-unsafe-call */
-          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
           resolve(
-            (this._ss as any).update(license, /* sessionId */ "")
+            (this._ss.update as (
+              license : Uint8Array,
+              sessionId : string
+            ) => void)(license, "")
           );
-          /* eslint-enable @typescript-eslint/no-unsafe-call */
-          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         } catch (err) {
           reject(err);
         }
       });
     };
   }
-  generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
+  generateRequest(_initDataType: string, initData: BufferSource): Promise<void> {
     return new PPromise((resolve) => {
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      this._ss = (this._mk as any).createSession("video/mp4",
-                                                 initData) as MediaKeySession;
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      const initDataU8 =
+        initData instanceof Uint8Array  ? initData :
+        initData instanceof ArrayBuffer ? new Uint8Array(initData) :
+                                          new Uint8Array(initData.buffer);
+      this._ss = this._mk.createSession("video/mp4", initDataU8);
       observableMerge(events.onKeyMessage$(this._ss),
                       events.onKeyAdded$(this._ss),
                       events.onKeyError$(this._ss)
@@ -88,9 +87,7 @@ class IE11MediaKeySession
   close(): Promise<void> {
     return new PPromise((resolve) => {
       if (this._ss != null) {
-        /* eslint-disable @typescript-eslint/no-floating-promises */
         this._ss.close();
-        /* eslint-enable @typescript-eslint/no-floating-promises */
         this._ss = undefined;
       }
       this._closeSession$.next();
@@ -110,7 +107,7 @@ class IE11MediaKeySession
 }
 
 class IE11CustomMediaKeys implements ICustomMediaKeys {
-  private _videoElement?: HTMLMediaElement;
+  private _videoElement?: ICompatHTMLMediaElement;
   private _mediaKeys?: MSMediaKeys;
 
   constructor(keyType: string) {
@@ -121,15 +118,10 @@ class IE11CustomMediaKeys implements ICustomMediaKeys {
   }
 
   _setVideo(videoElement: HTMLMediaElement): void {
-    this._videoElement = videoElement;
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    if ((this._videoElement as any).msSetMediaKeys !== undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return (this._videoElement as any).msSetMediaKeys(this._mediaKeys);
+    this._videoElement = videoElement as ICompatHTMLMediaElement;
+    if (this._videoElement.msSetMediaKeys !== undefined) {
+      return this._videoElement.msSetMediaKeys(this._mediaKeys);
     }
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
   }
 
   createSession(/* sessionType */): ICustomMediaKeySession {

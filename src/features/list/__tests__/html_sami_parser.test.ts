@@ -26,6 +26,7 @@ jest.mock("../../../parsers/texttracks/sami/html", () => ({
 
 describe("Features list - HTML SAMI Parser", () => {
   it("should add an HTML SAMI Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { htmlTextTracksParsers: {} };
     addHTMLSAMIFeature(featureObject);
     expect(featureObject).toEqual({

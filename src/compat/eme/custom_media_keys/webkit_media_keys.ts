@@ -21,6 +21,7 @@ import {
 import { takeUntil } from "rxjs/operators";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
+import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import * as events from "../../event_listeners";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import {
@@ -56,17 +57,15 @@ function isFairplayKeyType(keyType: string): boolean {
  * @param {HTMLMediaElement} videoElement
  * @param {Object|null} mediaKeys
  */
-function setWebKitMediaKeys(videoElement: HTMLMediaElement,
-                            mediaKeys: IWebKitMediaKeys|null): void {
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  if ((videoElement as any).webkitSetMediaKeys === undefined) {
+function setWebKitMediaKeys(
+  videoElement: HTMLMediaElement,
+  mediaKeys: IWebKitMediaKeys|null
+): void {
+  const elt : ICompatHTMLMediaElement = videoElement;
+  if (elt.webkitSetMediaKeys === undefined) {
     throw new Error("No webKitMediaKeys API.");
   }
-  /* eslint-disable @typescript-eslint/no-unsafe-return */
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  return (videoElement as any).webkitSetMediaKeys(mediaKeys);
-  /* eslint-enable @typescript-eslint/no-unsafe-return */
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  return elt.webkitSetMediaKeys(mediaKeys);
 }
 
 /**
@@ -89,7 +88,7 @@ class WebkitMediaKeySession
   private readonly _videoElement: HTMLMediaElement;
   private readonly _closeSession$: Subject<void>;
   private readonly _keyType: string;
-  private _nativeSession: undefined | any;
+  private _nativeSession: undefined | MediaKeySession;
   private _serverCertificate: Uint8Array | undefined;
 
   /**
@@ -135,7 +134,7 @@ class WebkitMediaKeySession
     };
   }
 
-  listenEvent(session: any) {
+  listenEvent(session: MediaKeySession) {
     observableMerge(events.onKeyMessage$(session),
                     events.onKeyAdded$(session),
                     events.onKeyError$(session))
@@ -150,12 +149,10 @@ class WebkitMediaKeySession
     initData: ArrayBuffer
   ): Promise<void> {
     return new PPromise((resolve) => {
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      if ((this._videoElement as any).webkitKeys === undefined ||
-        (this._videoElement as any).webkitKeys.createSession === undefined) {
+      const elt = this._videoElement as ICompatHTMLMediaElement;
+      if (elt.webkitKeys?.createSession === undefined) {
         throw new Error("No WebKitMediaKeys API.");
       }
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
       let formattedInitData;
       if (isFairplayKeyType(this._keyType)) {
@@ -168,15 +165,8 @@ class WebkitMediaKeySession
         formattedInitData = initData;
       }
 
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
       const keySession =
-        (this._videoElement as any).webkitKeys.createSession("video/mp4",
-                                                             formattedInitData);
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
+        elt.webkitKeys.createSession("video/mp4", formattedInitData);
       if (keySession === undefined || keySession === null) {
         throw new Error("Impossible to get the key sessions");
       }
@@ -193,12 +183,11 @@ class WebkitMediaKeySession
       this._closeSession$.complete();
       if (this._nativeSession === undefined) {
         reject("No session to close.");
+        return;
       }
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
+      /* eslint-disable @typescript-eslint/no-floating-promises */
       this._nativeSession.close();
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
+      /* eslint-enable @typescript-eslint/no-floating-promises */
       resolve();
     });
   }

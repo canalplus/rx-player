@@ -43,8 +43,8 @@ import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";
 import isNonEmptyString from "../utils/is_non_empty_string";
 import {
-  HTMLElement_,
   ICompatDocument,
+  ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
 import isNode from "./is_node";
@@ -74,8 +74,9 @@ function isEventSupported(
     return true;
   } else {
     clone.setAttribute(eventName, "return;");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    return typeof (clone as any)[eventName] === "function";
+    return typeof (
+      clone as HTMLElement & Partial<Record<string, unknown>>
+    )[eventName] === "function";
   }
 }
 
@@ -112,7 +113,7 @@ export interface IEventEmitterLike {
 
 export type IEventTargetLike = HTMLElement |
                                IEventEmitterLike |
-                               IEventEmitter<any>;
+                               IEventEmitter<unknown>;
 
 /**
  * @param {Array.<string>} eventNames
@@ -128,7 +129,7 @@ function compatibleListener<T extends Event>(
   return (element : IEventTargetLike) => {
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
-    if (element instanceof HTMLElement_) {
+    if (element instanceof HTMLElement) {
       if (typeof mem === "undefined") {
         mem = findSupportedEvent(element, prefixedEvents);
       }
@@ -240,44 +241,38 @@ export interface IPictureInPictureEvent {
  * @returns {Observable}
  */
 function onPictureInPictureEvent$(
-  mediaElement: HTMLMediaElement
+  elt: HTMLMediaElement
 ): Observable<IPictureInPictureEvent> {
   return observableDefer(() => {
-    /* eslint-disable @typescript-eslint/strict-boolean-expressions */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    if ((mediaElement as any).webkitSupportsPresentationMode &&
-        typeof (mediaElement as any).webkitSetPresentationMode === "function")
+    const mediaElement = elt as ICompatHTMLMediaElement;
+    if (mediaElement.webkitSupportsPresentationMode === true &&
+        typeof mediaElement.webkitSetPresentationMode === "function")
     {
       const isWebKitPIPEnabled =
-        (mediaElement as any).webkitPresentationMode === "picture-in-picture";
+        mediaElement.webkitPresentationMode === "picture-in-picture";
       return observableFromEvent(mediaElement, "webkitpresentationmodechanged").pipe(
         map(() => ({
-          isEnabled: (mediaElement as any)
-            .webkitPresentationMode === "picture-in-picture",
+          isEnabled: mediaElement.webkitPresentationMode === "picture-in-picture",
           pipWindow: null,
         })),
         startWith({ isEnabled: isWebKitPIPEnabled, pipWindow: null }));
     }
 
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     const isPIPEnabled = (
-      (document as any).pictureInPictureElement &&
-      (document as any).pictureInPictureElement === mediaElement
+      (document as ICompatDocument).pictureInPictureElement === mediaElement
     );
     const initialState = { isEnabled: isPIPEnabled, pipWindow: null };
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     return observableMerge(
       observableFromEvent(mediaElement, "enterpictureinpicture")
-        .pipe(map((evt: any) => ({
+        .pipe(map((evt) => ({
           isEnabled: true,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          pipWindow: evt.pictureInPictureWindow,
+          pipWindow: (evt as Event & {
+            pictureInPictureWindow? : ICompatPictureInPictureWindow;
+          }).pictureInPictureWindow ?? null,
         }))),
       observableFromEvent(mediaElement, "leavepictureinpicture")
         .pipe(mapTo({ isEnabled: false, pipWindow: null }))
     ).pipe(startWith(initialState));
-    /* eslint-enable @typescript-eslint/strict-boolean-expressions */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
   });
 }
 
@@ -323,9 +318,7 @@ function videoWidth$(
       } else if (pip.pipWindow != null) {
         const { pipWindow } = pip;
         const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
-
-        // RxJS typing issue (for the "as any")
-        return observableFromEvent(pipWindow as any, "resize").pipe(
+        return observableFromEvent(pipWindow, "resize").pipe(
           startWith(firstWidth * pixelRatio),
           map(() => getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio)
         );

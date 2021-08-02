@@ -23,7 +23,7 @@ const oldNumberDef = window.Number;
 describe("utils - idGenerator", () => {
   afterEach(() => {
     // There's an ugly test in here that changes the Number object
-    (window as any).Number = oldNumberDef;
+    window.Number = oldNumberDef;
   });
 
   it("should increment an ID", () => {
@@ -54,8 +54,8 @@ describe("utils - idGenerator", () => {
   });
   it ("should preprend a 0 after A LOT of ID generation", () => {
     // Ugly but I don't care
-    (window as any).Number = { MAX_SAFE_INTEGER: 3,
-                               isSafeInteger: (x : number) => x <= 3 };
+    window.Number = { MAX_SAFE_INTEGER: 3,
+                      isSafeInteger: (x : number) => x <= 3 } as typeof window.Number;
     const generateNewID1 = idGenerator();
     const generateNewID2 = idGenerator();
     const generateNewID3 = idGenerator();

@@ -23,16 +23,16 @@
 import arrayFindIndex from "../array_find_index";
 
 /* eslint-disable @typescript-eslint/unbound-method */
-const initialArrayFindIndex = (Array.prototype as any).findIndex;
+const initialArrayFindIndex = (Array.prototype as { findIndex : unknown }).findIndex;
 /* eslint-enable @typescript-eslint/unbound-method */
 
 describe("utils - arrayFindIndex", () => {
   beforeEach(() => {
-    (Array.prototype as any).findIndex = undefined;
+    (Array.prototype as { findIndex : unknown }).findIndex = undefined;
   });
 
   afterEach(() => {
-    (Array.prototype as any).findIndex = initialArrayFindIndex;
+    (Array.prototype as { findIndex : unknown }).findIndex = initialArrayFindIndex;
   });
 
   it("should return -1 for an empty array", () => {
@@ -83,12 +83,13 @@ describe("utils - arrayFindIndex", () => {
 
   if (typeof initialArrayFindIndex === "function") {
     it("should call the original array.findIndex function if it exists", () => {
-      (Array.prototype as any).findIndex = initialArrayFindIndex;
+      (Array.prototype as { findIndex : unknown }).findIndex = initialArrayFindIndex;
       const obj1 = {};
       const obj2 = {};
       const context = {};
       const arr = [obj2, obj1, obj2, obj1];
-      const spy = jest.spyOn(arr as any, "findIndex");
+      const spy = jest
+        .spyOn(arr as unknown as { findIndex : () => unknown }, "findIndex");
 
       let currentIndex = 0;
       const predicate = function(

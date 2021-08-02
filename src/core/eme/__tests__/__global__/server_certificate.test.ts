@@ -23,7 +23,6 @@
 /* eslint-disable no-restricted-properties */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
-
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import { IContentProtection } from "../../types";
@@ -79,7 +78,8 @@ describe("core - eme - global tests - server certificate", () => {
     const EMEManager = require("../../eme_manager").default;
     EMEManager(videoElt, ksConfigCert, initDataSubject)
       .pipe(takeUntil(kill$))
-      .subscribe((evt : any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .subscribe((evt : { type : string; value : any }) => {
 
         switch (++eventsReceived) {
           case 1:
@@ -148,7 +148,8 @@ describe("core - eme - global tests - server certificate", () => {
     const EMEManager = require("../../eme_manager").default;
     EMEManager(videoElt, ksConfigCert, initDataSubject)
       .pipe(takeUntil(kill$))
-      .subscribe((evt : any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .subscribe((evt : { type : string; value : any }) => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
@@ -228,7 +229,8 @@ describe("core - eme - global tests - server certificate", () => {
     const EMEManager = require("../../eme_manager").default;
     EMEManager(videoElt, ksConfigCert, initDataSubject)
       .pipe(takeUntil(kill$))
-      .subscribe((evt : any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .subscribe((evt : { type : string; value : any }) => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
@@ -293,7 +295,8 @@ describe("core - eme - global tests - server certificate", () => {
     jest.spyOn(MediaKeySystemAccessImpl.prototype, "createMediaKeys")
       .mockImplementation(() => {
         const mediaKeys = new MediaKeysImpl();
-        (mediaKeys as any).setServerCertificate = undefined;
+        (mediaKeys as { setServerCertificate? : unknown })
+          .setServerCertificate = undefined;
         return Promise.resolve(mediaKeys);
       });
     const serverCertificateSpy =
@@ -313,7 +316,8 @@ describe("core - eme - global tests - server certificate", () => {
     const EMEManager = require("../../eme_manager").default;
     EMEManager(videoElt, ksConfigCert, initDataSubject)
       .pipe(takeUntil(kill$))
-      .subscribe((evt : any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .subscribe((evt : { type : string; value : any }) => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");

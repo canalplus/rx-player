@@ -21,7 +21,9 @@ import {
   throwError as observableThrow,
 } from "rxjs";
 import { MediaError } from "../../../errors";
+import assert from "../../../utils/assert";
 import castToObservable from "../../../utils/cast_to_observable";
+import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import { isIE11 } from "../../browser_detection";
 import isNode from "../../is_node";
 import shouldFavourCustomSafariEME from "../../should_favour_custom_safari_EME";
@@ -52,38 +54,30 @@ let requestMediaKeySystemAccess : null |
 let _setMediaKeys :
 ((elt: HTMLMediaElement, mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =
   function defaultSetMediaKeys(
-    elt: HTMLMediaElement,
+    mediaElement: HTMLMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null
   ) {
+    const elt : ICompatHTMLMediaElement = mediaElement;
     /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof elt.setMediaKeys === "function") {
       return elt.setMediaKeys(mediaKeys as MediaKeys);
     }
     /* eslint-enable @typescript-eslint/unbound-method */
 
-    /* eslint-disable @typescript-eslint/strict-boolean-expressions */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-
     // If we get in the following code, it means that no compat case has been
     // found and no standard setMediaKeys API exists. This case is particulary
     // rare. We will try to call each API with native media keys.
-    if ((elt as any).webkitSetMediaKeys) {
-      return (elt as any).webkitSetMediaKeys(mediaKeys);
+    if (typeof elt.webkitSetMediaKeys === "function") {
+      return elt.webkitSetMediaKeys(mediaKeys);
     }
 
-    if ((elt as any).mozSetMediaKeys) {
-      return (elt as any).mozSetMediaKeys(mediaKeys);
+    if (typeof elt.mozSetMediaKeys === "function") {
+      return elt.mozSetMediaKeys(mediaKeys);
     }
 
-    if ((elt as any).msSetMediaKeys && mediaKeys !== null) {
-      return (elt as any).msSetMediaKeys(mediaKeys);
+    if (typeof elt.msSetMediaKeys === "function" && mediaKeys !== null) {
+      return elt.msSetMediaKeys(mediaKeys);
     }
-    /* eslint-enable @typescript-eslint/strict-boolean-expressions */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-return */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
   };
 
 /**
@@ -130,17 +124,17 @@ if (isNode ||
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
     _setMediaKeys = callbacks.setMediaKeys;
   } else {
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
-    const { MediaKeys } = window as any;
+    const MK = window.MediaKeys as unknown as typeof MediaKeys & {
+      isTypeSupported? : (keyType : string) => boolean;
+      new(keyType? : string) : ICustomMediaKeys;
+    };
     const checkForStandardMediaKeys = () => {
-      if (MediaKeys === undefined) {
+      if (MK === undefined) {
         throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
                              "No `MediaKeys` implementation found " +
                              "in the current browser.");
       }
-      if (MediaKeys.isTypeSupported === undefined) {
+      if (typeof MK.isTypeSupported === "undefined") {
         const message = "This browser seems to be unable to play encrypted contents " +
                         "currently. Note: Some browsers do not allow decryption " +
                         "in some situations, like when not using HTTPS.";
@@ -149,17 +143,13 @@ if (isNode ||
     };
     isTypeSupported = (keyType: string): boolean => {
       checkForStandardMediaKeys();
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-call */
-      return MediaKeys.isTypeSupported(keyType);
+      assert(typeof MK.isTypeSupported === "function");
+      return MK.isTypeSupported(keyType);
     };
     createCustomMediaKeys = (keyType: string) => {
       checkForStandardMediaKeys();
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-call */
-      return new MediaKeys(keyType);
+      return new MK(keyType);
     };
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-return */
   }
 
   requestMediaKeySystemAccess = function(

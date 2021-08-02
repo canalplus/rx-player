@@ -31,7 +31,7 @@ import { SegmentBuffer } from "./implementations";
 
 export interface IGarbageCollectorArgument {
   /** SegmentBuffer implementation */
-  segmentBuffer : SegmentBuffer<unknown>;
+  segmentBuffer : SegmentBuffer;
   /** Emit current position in seconds regularly */
   clock$ : Observable<number>;
   /** Maximum time to keep behind current time position, in seconds */
@@ -80,7 +80,7 @@ export default function BufferGarbageCollector({
  * @returns {Observable}
  */
 function clearBuffer(
-  segmentBuffer : SegmentBuffer<unknown>,
+  segmentBuffer : SegmentBuffer,
   position : number,
   maxBufferBehind : number,
   maxBufferAhead : number

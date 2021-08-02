@@ -21,7 +21,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-
 function createPersistentSessionsStore() {
   return {
     getLength() : number {
@@ -30,7 +29,7 @@ function createPersistentSessionsStore() {
     deleteOldSessions() : void {
       return ;
     },
-  } as any;
+  };
 }
 
 const emptyPersistentSessionsStore = {
@@ -45,6 +44,7 @@ const emptyPersistentSessionsStore = {
  * @param {Object} persistentSessionsStore
  * @param {number} limit
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function checkNothingHappen(persistentSessionsStore : any, limit : number) {
   const deleteLastSpy = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
   const logInfoSpy = jest.fn();
@@ -66,6 +66,7 @@ function checkNothingHappen(persistentSessionsStore : any, limit : number) {
  * @param {number} numberToRemove
  */
 function checkRemoved(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   persistentSessionsStore : any,
   limit : number,
   numberToRemove : number

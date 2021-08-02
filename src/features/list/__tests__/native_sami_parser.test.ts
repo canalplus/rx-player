@@ -26,6 +26,7 @@ jest.mock("../../../parsers/texttracks/sami/native", () => ({
 
 describe("Features list - native SAMI Parser", () => {
   it("should add an native SAMI Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { nativeTextTracksParsers: {} };
     addNativeSAMIFeature(featureObject);
     expect(featureObject).toEqual({

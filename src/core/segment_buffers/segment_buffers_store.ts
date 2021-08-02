@@ -91,16 +91,7 @@ export default class SegmentBuffersStore {
    * disabled. This means that the corresponding type (e.g. audio, video etc.)
    * won't be needed when playing the current content.
    */
-  private _initializedSegmentBuffers : {
-    audio? : SegmentBuffer<BufferSource | null> |
-             null;
-    video? : SegmentBuffer<BufferSource | null> |
-              null;
-    text? : SegmentBuffer<unknown> |
-            null;
-    image? : SegmentBuffer<unknown> |
-             null;
-  };
+  private _initializedSegmentBuffers : Partial<Record<IBufferType, SegmentBuffer | null>>;
 
   /**
    * Callbacks called after a SourceBuffer is either created or disabled.
@@ -172,7 +163,7 @@ export default class SegmentBuffersStore {
    * @returns {Object|null}
    */
   public getStatus(bufferType : IBufferType) : { type : "initialized";
-                                                 value : SegmentBuffer<any>; } |
+                                                 value : SegmentBuffer; } |
                                                { type : "uninitialized" } |
                                                { type : "disabled" }
   {
@@ -251,7 +242,7 @@ export default class SegmentBuffersStore {
     bufferType : IBufferType,
     codec : string,
     options : ISegmentBufferOptions = {}
-  ) : SegmentBuffer<any> {
+  ) : SegmentBuffer {
     const memorizedSegmentBuffer = this._initializedSegmentBuffers[bufferType];
     if (shouldHaveNativeBuffer(bufferType)) {
       if (memorizedSegmentBuffer != null) {
@@ -279,7 +270,7 @@ export default class SegmentBuffersStore {
       return memorizedSegmentBuffer;
     }
 
-    let segmentBuffer : SegmentBuffer<unknown>;
+    let segmentBuffer : SegmentBuffer;
     if (bufferType === "text") {
       log.info("SB: Creating a new text SegmentBuffer");
 

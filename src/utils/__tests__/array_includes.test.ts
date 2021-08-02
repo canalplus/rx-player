@@ -24,6 +24,7 @@ const initialArrayIncludes = Array.prototype.includes;
 /* eslint-enable @typescript-eslint/unbound-method */
 describe("utils - array-includes", () => {
   beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Array.prototype as any).includes = undefined;
   });
 

@@ -206,6 +206,7 @@ describe("utils - assertInterface", () => {
       e: true,
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Object.prototype as any).f = "number";
 
     const objIface = {

@@ -47,7 +47,7 @@ export interface ICustomMediaKeys {
 
 export interface ICustomMediaKeyStatusMap {
   readonly size: number;
-  forEach(callback: (status : MediaKeyStatus) => void, thisArg?: any): void;
+  forEach(callback: (status : MediaKeyStatus) => void, thisArg?: unknown): void;
   get(
     keyId: BufferSource |
            null
