@@ -20,7 +20,7 @@
  */
 function getBodyNode(tt : Element) : Element|null {
   const bodyNodes = tt.getElementsByTagName("body");
-  return bodyNodes.length ? bodyNodes[0] : null;
+  return bodyNodes.length > 0 ? bodyNodes[0] : null;
 }
 
 /**
