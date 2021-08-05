@@ -32,3 +32,9 @@ npm install
 npm run build
 npm run build:min
 ./scripts/generate_builds
+
+echo "creating types for legacy code bases..."
+rm -f dist/rx-player.d.ts rx-player.min.d.ts
+echo "${copyright_text}
+import RxPlayer from \"./_esm5.processed/index\";
+export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts > /dev/null
