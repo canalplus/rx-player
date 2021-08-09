@@ -734,7 +734,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     initializer.addEventListener("streamEventSkip", (streamEventSkip) =>
       this.trigger("streamEventSkip", streamEventSkip));
     initializer.addEventListener("decipherabilityUpdate", (decipherabilityUpdate) =>
-      this.trigger("decipherabilityUpdate", decipherabilityUpdate));
+      this.trigger("decipherabilityUpdate", decipherabilityUpdate.map((i) => {
+        return { periodStart: i.period.start,
+                 periodEnd: i.period.end,
+                 trackType: i.adaptation.type,
+                 trackId: i.adaptation.id,
+                 representationId: i.representation.id,
+                 isDecipherable: i.representation.decipherable };
+      })));
     initializer.addEventListener("activePeriodChanged", (periodInfo) =>
       this._priv_onActivePeriodChanged(contentInfos, periodInfo));
     initializer.addEventListener("periodStreamReady", (periodReadyInfo) =>
