@@ -483,25 +483,45 @@ Following this event, the RxPlayer might remove from the current buffers any
 data linked to undecipherable Representation(s) (the video might twitch a little
 or reload) and update the list of available bitrates.
 
-The payload of this event is an Array of objects, each representating a
+The payload of this event is an Array of objects, each describing a
 Representation whose decipherability's status has been updated.
 
-Each of those objects have the following properties:
+Each of those objects have the following keys:
 
-- `representation`: The Representation concerned (more information on its
-  structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_representation_object)).
-- `adaptation`: The Adaptation linked to that Representation (more information
-  on its structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure_of_an_adaptation_object)).
-- `period`: The Period linked to that Representation (more information on its
-  structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_period_object)).
-- `manifest`: The current Manifest (more information on its structure [in the
-  Manifest documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_manifest_object)).
+  - `isDecipherable` (`boolean` | `undefined`): Whether the corresponding
+    Representation is now considered decipherable or not.
 
-You can then know if any of those Representations are becoming decipherable or
-not through their `decipherable` property.
+    It is set to either:
+
+      - `true` if the Representation can be deciphered under the current
+        conditions.
+
+      - `false` if it cannot
+
+      - `undefined` if this is not known
+
+  - `representationId` (`string`): The `id` of the corresponding property,
+    uniquely identifying this Representation amongst all other Representations
+    of the same track.
+
+    This is the same `id` value that can be retrieved in APIs such as
+    `getAvailableVideoTracks` (for its `representations` property).
+
+  - `trackType` (`string`): The type of the corresponding track.
+    Can be for example: "video" / "audio" / "text".
+
+  - `trackId` (`string`): The `id` of the corresponding track, which can be used
+    to identify the track with methods such as `getAvailableAudioTracks` /
+    `getVideoTrack` and so on...
+
+  - `periodStart` (`number`): The starting position at which the corresponding
+    Period starts, in seconds.
+
+  - `periodEnd` (`number|undefined`): The position at which the corresponding
+    Period ends, in seconds.
+
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see

@@ -2160,7 +2160,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this._priv_contentInfos.segmentBuffersStore = event.value.segmentBuffersStore;
         break;
       case "decipherabilityUpdate":
-        this.trigger("decipherabilityUpdate", event.value);
+        this.trigger("decipherabilityUpdate", event.value.map((i) => {
+          return { periodStart: i.period.start,
+                   periodEnd: i.period.end,
+                   trackType: i.adaptation.type,
+                   trackId: i.adaptation.id,
+                   representationId: i.representation.id,
+                   isDecipherable: i.representation.decipherable };
+        }));
         break;
     }
   }

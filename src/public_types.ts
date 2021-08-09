@@ -527,10 +527,12 @@ export interface IBitrateEstimate {
 }
 
 export interface IDecipherabilityUpdateContent {
-  manifest : IManifest;
-  period : IPeriod;
-  adaptation : IAdaptation;
-  representation : IRepresentation;
+  periodStart : number;
+  periodEnd? : number | undefined;
+  trackType : IBufferType;
+  trackId : string;
+  representationId : string;
+  isDecipherable? : boolean | undefined;
 }
 
 /** Payload emitted with a `positionUpdate` event. */
