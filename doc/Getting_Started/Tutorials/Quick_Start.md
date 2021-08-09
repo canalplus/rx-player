@@ -130,7 +130,7 @@ We're now ready to interact with the current content.
 There is [a huge list of APIs](../../api/Overview.md) you can use.
 Some are useful only when a content is currently loaded (like `play`,
 `pause`, `seekTo` or `setAudioTrack`) and others can be used in any case
-(like `setVolume`, `getMediaElement` or `loadVideo`).
+(like `setVolume`, `getVideoElement` or `loadVideo`).
 
 Here is a complete example where I:
 
