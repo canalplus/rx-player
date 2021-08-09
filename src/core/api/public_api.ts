@@ -55,7 +55,7 @@ import {
   IDecipherabilityUpdateContent,
   IKeySystemConfigurationOutput,
   ILoadVideoOptions,
-  IPeriod,
+  IPeriodChangeEvent,
   IPlayerError,
   IPlayerState,
   IPositionUpdate,
@@ -2325,7 +2325,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const cancelSignal = contentInfos.currentContentCanceller.signal;
     if (this._priv_contentEventsMemory.periodChange !== period) {
       this._priv_contentEventsMemory.periodChange = period;
-      this._priv_triggerEventIfNotStopped("periodChange", period, cancelSignal);
+      this.trigger("periodChange", { start: period.start, end: period.end });
+      this._priv_triggerEventIfNotStopped("periodChange",
+                                          { start: period.start,
+                                            end: period.end },
+                                          cancelSignal);
     }
 
     this._priv_triggerEventIfNotStopped("availableAudioTracksChange",
@@ -2838,7 +2842,7 @@ interface IPublicAPIEvent {
   volumeChange : number;
   error : IPlayerError | Error;
   warning : IPlayerError | Error;
-  periodChange : IPeriod;
+  periodChange : IPeriodChangeEvent;
   availableAudioBitratesChange : number[];
   availableVideoBitratesChange : number[];
   availableAudioTracksChange : IAvailableAudioTrack[];
