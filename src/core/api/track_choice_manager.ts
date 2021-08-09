@@ -29,6 +29,7 @@ import {
 import { IHDRInformation } from "../../manifest/types";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
 import SortedList from "../../utils/sorted_list";
 import takeFirstSet from "../../utils/take_first_set";
@@ -158,7 +159,7 @@ interface INormalizedPreferredTextTrackObject {
 function normalizeAudioTracks(
   tracks : IAudioTrackPreference[]
 ) : INormalizedPreferredAudioTrack[] {
-  return tracks.map(t => t == null ?
+  return tracks.map(t => t === null ?
     t :
     { normalized: t.language === undefined ? undefined :
                                              normalizeLanguage(t.language),
@@ -175,7 +176,7 @@ function normalizeAudioTracks(
 function normalizeTextTracks(
   tracks : ITextTrackPreference[]
 ) : INormalizedPreferredTextTrack[] {
-  return tracks.map(t => t == null ?
+  return tracks.map(t => t === null ?
     t :
     { normalized: normalizeLanguage(t.language),
       closedCaption: t.closedCaption });
@@ -322,8 +323,8 @@ export default class TrackChoiceManager {
   ) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const adaptations = period.getSupportedAdaptations(bufferType);
-    if (periodItem != null) {
-      if (periodItem[bufferType] != null) {
+    if (periodItem !== undefined) {
+      if (periodItem[bufferType] !== undefined) {
         log.warn(`TrackChoiceManager: ${bufferType} already added for period`, period);
         return;
       } else {
@@ -346,20 +347,20 @@ export default class TrackChoiceManager {
     period : Period
   ) : void {
     const periodIndex = findPeriodIndex(this._periods, period);
-    if (periodIndex == null) {
+    if (periodIndex === undefined) {
       log.warn(`TrackChoiceManager: ${bufferType} not found for period`, period);
       return;
     }
 
     const periodItem = this._periods.get(periodIndex);
-    if (periodItem[bufferType] == null) {
+    if (periodItem[bufferType] === undefined) {
       log.warn(`TrackChoiceManager: ${bufferType} already removed for period`, period);
       return;
     }
     delete periodItem[bufferType];
-    if (periodItem.audio == null &&
-        periodItem.text == null &&
-        periodItem.video == null)
+    if (periodItem.audio === undefined &&
+        periodItem.text === undefined &&
+        periodItem.video === undefined)
     {
       this._periods.removeElement(periodItem);
     }
@@ -390,9 +391,9 @@ export default class TrackChoiceManager {
    */
   public setInitialAudioTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    const audioInfos = periodItem != null ? periodItem.audio :
-                                            null;
-    if (audioInfos == null || periodItem == null) {
+    const audioInfos = periodItem !== undefined ? periodItem.audio :
+                                                  null;
+    if (isNullOrUndefined(audioInfos) || periodItem === undefined) {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
@@ -426,9 +427,9 @@ export default class TrackChoiceManager {
    */
   public setInitialTextTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    const textInfos = periodItem != null ? periodItem.text :
-                                           null;
-    if (textInfos == null || periodItem == null) {
+    const textInfos = periodItem !== undefined ? periodItem.text :
+                                                 null;
+    if (isNullOrUndefined(textInfos) || periodItem === undefined) {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
@@ -460,9 +461,9 @@ export default class TrackChoiceManager {
    */
   public setInitialVideoTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    const videoInfos = periodItem != null ? periodItem.video :
-                                            null;
-    if (videoInfos == null || periodItem == null) {
+    const videoInfos = periodItem !== undefined ? periodItem.video :
+                                                 null;
+    if (isNullOrUndefined(videoInfos) || periodItem === undefined) {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
@@ -506,9 +507,9 @@ export default class TrackChoiceManager {
    */
   public setAudioTrackByID(period : Period, wantedId : string) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    const audioInfos = periodItem != null ? periodItem.audio :
-                                            null;
-    if (audioInfos == null) {
+    const audioInfos = periodItem !== undefined ? periodItem.audio :
+                                                  null;
+    if (isNullOrUndefined(audioInfos)) {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
@@ -534,9 +535,9 @@ export default class TrackChoiceManager {
    */
   public setTextTrackByID(period : Period, wantedId : string) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    const textInfos = periodItem != null ? periodItem.text :
-                                           null;
-    if (textInfos == null) {
+    const textInfos = periodItem !== undefined ? periodItem.text :
+                                                 null;
+    if (isNullOrUndefined(textInfos)) {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
     const wantedAdaptation = arrayFind(textInfos.adaptations,
@@ -565,9 +566,9 @@ export default class TrackChoiceManager {
    */
   public setVideoTrackByID(period : Period, wantedId : string) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    const videoInfos = periodItem != null ? periodItem.video :
-                                            null;
-    if (videoInfos == null) {
+    const videoInfos = periodItem !== undefined ? periodItem.video :
+                                                  null;
+    if (isNullOrUndefined(videoInfos)) {
       throw new Error("LanguageManager: Given Period not found.");
     }
 
@@ -594,9 +595,9 @@ export default class TrackChoiceManager {
    */
   public disableTextTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    const textInfos = periodItem != null ? periodItem.text :
-                                           null;
-    if (textInfos == null) {
+    const textInfos = periodItem !== undefined ? periodItem.text :
+                                                 null;
+    if (isNullOrUndefined(textInfos)) {
       throw new Error("TrackChoiceManager: Given Period not found.");
     }
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
@@ -662,14 +663,14 @@ export default class TrackChoiceManager {
    */
   public getChosenAudioTrack(period : Period) : ITMAudioTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
-    const audioInfos = periodItem != null ? periodItem.audio :
-                                            null;
-    if (audioInfos == null) {
+    const audioInfos = periodItem !== undefined ? periodItem.audio :
+                                                  null;
+    if (isNullOrUndefined(audioInfos)) {
       return null;
     }
 
     const chosenTrack = this._audioChoiceMemory.get(period);
-    if (chosenTrack == null) {
+    if (isNullOrUndefined(chosenTrack)) {
       return null;
     }
 
@@ -698,14 +699,14 @@ export default class TrackChoiceManager {
    */
   public getChosenTextTrack(period : Period) : ITMTextTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
-    const textInfos = periodItem != null ? periodItem.text :
-                                           null;
-    if (textInfos == null) {
+    const textInfos = periodItem !== undefined ? periodItem.text :
+                                                 null;
+    if (isNullOrUndefined(textInfos)) {
       return null;
     }
 
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
-    if (chosenTextAdaptation == null) {
+    if (isNullOrUndefined(chosenTextAdaptation)) {
       return null;
     }
 
@@ -729,18 +730,14 @@ export default class TrackChoiceManager {
    */
   public getChosenVideoTrack(period : Period) : ITMVideoTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
-    const videoInfos = periodItem != null ? periodItem.video :
-                                            null;
-    if (videoInfos == null) {
+    const videoInfos = periodItem !== undefined ? periodItem.video :
+                                                  null;
+    if (isNullOrUndefined(videoInfos)) {
       return null;
     }
 
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
-    if (chosenVideoAdaptation === undefined) {
-      return null; // not set yet
-    }
-
-    if (chosenVideoAdaptation === null) {
+    if (isNullOrUndefined(chosenVideoAdaptation)) {
       return null;
     }
     const currAdaptation = chosenVideoAdaptation.adaptation;
@@ -783,15 +780,16 @@ export default class TrackChoiceManager {
    */
   public getAvailableAudioTracks(period : Period) : ITMAudioTrackListItem[] {
     const periodItem = getPeriodItem(this._periods, period);
-    const audioInfos = periodItem != null ? periodItem.audio :
-                                           null;
-    if (audioInfos == null) {
+    const audioInfos = periodItem !== undefined ? periodItem.audio :
+                                                  null;
+    if (isNullOrUndefined(audioInfos)) {
       return [];
     }
 
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
-    const currentId = chosenAudioAdaptation != null ? chosenAudioAdaptation.id :
-                                                      null;
+    const currentId = !isNullOrUndefined(chosenAudioAdaptation) ?
+      chosenAudioAdaptation.id :
+      null;
 
     return audioInfos.adaptations
       .map((adaptation) => {
@@ -800,7 +798,8 @@ export default class TrackChoiceManager {
           normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
           audioDescription: adaptation.isAudioDescription === true,
           id: adaptation.id,
-          active: currentId == null ? false : currentId === adaptation.id,
+          active: currentId === null ? false :
+                                       currentId === adaptation.id,
           representations: adaptation.representations.map(parseAudioRepresentation),
         };
         if (adaptation.isDub === true) {
@@ -819,15 +818,16 @@ export default class TrackChoiceManager {
    */
   public getAvailableTextTracks(period : Period) : ITMTextTrackListItem[] {
     const periodItem = getPeriodItem(this._periods, period);
-    const textInfos = periodItem != null ? periodItem.text :
-                                           null;
-    if (textInfos == null) {
+    const textInfos = periodItem !== undefined ? periodItem.text :
+                                                 null;
+    if (isNullOrUndefined(textInfos)) {
       return [];
     }
 
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
-    const currentId = chosenTextAdaptation != null ? chosenTextAdaptation.id :
-                                                    null;
+    const currentId = !isNullOrUndefined(chosenTextAdaptation) ?
+      chosenTextAdaptation.id :
+      null;
 
     return textInfos.adaptations
       .map((adaptation) => ({
@@ -835,8 +835,8 @@ export default class TrackChoiceManager {
         normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
         closedCaption: adaptation.isClosedCaption === true,
         id: adaptation.id,
-        active: currentId == null ? false :
-                                    currentId === adaptation.id,
+        active: currentId === null ? false :
+                                     currentId === adaptation.id,
       }));
   }
 
@@ -848,9 +848,9 @@ export default class TrackChoiceManager {
    */
   public getAvailableVideoTracks(period : Period) : ITMVideoTrackListItem[] {
     const periodItem = getPeriodItem(this._periods, period);
-    const videoInfos = periodItem != null ? periodItem.video :
-                                            null;
-    if (videoInfos == null) {
+    const videoInfos = periodItem !== undefined ? periodItem.video :
+                                                  null;
+    if (isNullOrUndefined(videoInfos)) {
       return [];
     }
 
@@ -940,7 +940,7 @@ export default class TrackChoiceManager {
       }
 
       const periodItem = this._periods.get(index);
-      if (periodItem.audio == null) {
+      if (isNullOrUndefined(periodItem.audio)) {
         // No audio choice for this period, check next one
         recursiveUpdateAudioTrack(index + 1);
         return;
@@ -994,7 +994,7 @@ export default class TrackChoiceManager {
       }
 
       const periodItem = this._periods.get(index);
-      if (periodItem.text == null) {
+      if (isNullOrUndefined(periodItem.text)) {
         // No text choice for this period, check next one
         recursiveUpdateTextTrack(index + 1);
         return;
@@ -1046,7 +1046,7 @@ export default class TrackChoiceManager {
       }
 
       const periodItem = this._periods.get(index);
-      if (periodItem.video == null) {
+      if (isNullOrUndefined(periodItem.video)) {
         // No video choice for this period, check next one
         recursiveUpdateVideoTrack(index + 1);
         return;
