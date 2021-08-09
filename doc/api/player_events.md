@@ -559,31 +559,50 @@ updated. Which means either:
   - A Representation is found to be decipherable
   - A Representation's decipherability becomes undefined
 
-At this time, this event is only triggered if:
-  - the current content is an encrypted content
-  - Either the `fallbackOnLastTry` property was set to `true` on a rejected
-    `getLicense` call or one of the `fallbackOn` properties was set to true in
-    the `keySystems` loadVideo option.
-
-Following this event, the RxPlayer might remove from the current buffers any
+The RxPlayer is usually able to continue playback after this event is sent (if
+the right options have been set): it might remove from the current buffers any
 data linked to undecipherable Representation(s) (the video might twitch a little
 or reload) and update the list of available bitrates.
 
-The payload of this event is an Array of objects, each representating a
+The payload of this event is an Array of objects, each describing a
 Representation whose decipherability's status has been updated.
 
-Each of those objects have the following properties:
-  - `representation`: The Representation concerned (more information on its
-    structure [in the Manifest documentation](./manifest.md#representation)).
-  - `adaptation`: The Adaptation linked to that Representation (more information
-    on its structure [in the Manifest documentation](./manifest.md#adaptation)).
-  - `period`: The Period linked to that Representation (more information on its
-    structure [in the Manifest documentation](./manifest.md#period)).
-  - `manifest`: The current Manifest (more information on its structure [in the
-    Manifest documentation](./manifest.md#manifest)).
+Each of those objects have the following keys:
 
-You can then know if any of those Representations are becoming decipherable or
-not through their `decipherable` property.
+  - `isDecipherable` (`boolean` | `undefined`): Whether the corresponding
+    Representation is now considered decipherable or not.
+
+    It is set to either:
+
+      - `true` if the Representation can be deciphered under the current
+        conditions.
+
+      - `false` if it cannot
+
+      - `undefined` if this is not known
+
+  - `representationId` (`string`): The `id` of the corresponding property,
+    uniquely identifying this Representation amongst all other Representations
+    of the same track.
+
+    This is the same `id` value that can be retrieved in APIs such as
+    `getAvailableVideoTracks` (for its `representations` property).
+
+  - `trackType` (`string`): The type of the corresponding track.
+    Can be for example: "video" / "audio" / "text".
+
+  - `trackId` (`string`): The `id` of the corresponding track, which can be used
+    to identify the track with methods such as `getAvailableAudioTracks` /
+    `getVideoTrack` and so on...
+
+  - `periodStart` (`number`): The starting position at which the corresponding
+    Period starts, in seconds.
+
+  - `periodEnd` (`number|undefined`): The position at which the corresponding
+    Period ends, in seconds.
+
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
 
 
 <a name="events-inbandEvents"></a>
