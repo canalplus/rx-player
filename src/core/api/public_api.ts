@@ -74,7 +74,7 @@ import {
   IConstructorOptions,
   IDecipherabilityUpdateContent,
   ILoadVideoOptions,
-  IPeriod,
+  IPeriodChangeEvent,
   IPlayerError,
   IPlayerState,
   IPositionUpdate,
@@ -2257,7 +2257,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (this._priv_contentEventsMemory.periodChange !== period) {
       this._priv_contentEventsMemory.periodChange = period;
-      this.trigger("periodChange", period);
+      this.trigger("periodChange", { start: period.start, end: period.end });
     }
 
     this.trigger("availableAudioTracksChange", this.getAvailableAudioTracks());
@@ -2662,7 +2662,7 @@ interface IPublicAPIEvent {
   volumeChange : number;
   error : IPlayerError | Error;
   warning : IPlayerError | Error;
-  periodChange : IPeriod;
+  periodChange : IPeriodChangeEvent;
   availableAudioBitratesChange : number[];
   availableVideoBitratesChange : number[];
   availableAudioTracksChange : IAvailableAudioTrack[];

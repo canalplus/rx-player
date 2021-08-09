@@ -563,6 +563,11 @@ export type IPlayerState = "STOPPED" |
                            "SEEKING" |
                            "RELOADING";
 
+export interface IPeriodChangeEvent {
+  start : number;
+  end? : number | undefined;
+}
+
 export type IStreamEvent = { data: IStreamEventData;
                              start: number;
                              end: number;
