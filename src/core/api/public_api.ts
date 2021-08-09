@@ -986,7 +986,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {HTMLMediaElement|null} - The HTMLMediaElement used (`null` when
    * disposed)
    */
-  getMediaElement() : HTMLMediaElement|null {
+  getVideoElement() : HTMLMediaElement|null {
     return this.videoElement;
   }
 
