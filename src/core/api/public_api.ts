@@ -140,7 +140,7 @@ const { isVideoVisible,
         videoWidth$ } = events;
 
 /** Payload emitted with a `positionUpdate` event. */
-interface IPositionUpdateItem {
+export interface IPositionUpdateItem {
   /** current position the player is in, in seconds. */
   position : number;
   /** Last position set for the current media currently, in seconds. */
@@ -160,11 +160,16 @@ interface IPositionUpdateItem {
 }
 
 /** Payload emitted with a `bitrateEstimationChange` event. */
-interface IBitrateEstimate {
+export interface IBitrateEstimate {
   /** The type of buffer this estimate was done for (e.g. "audio). */
   type : IBufferType;
   /** The calculated bitrate, in bits per seconds. */
   bitrate : number | undefined;
+}
+
+export interface IPeriodAttributes {
+  start : number;
+  end? : number;
 }
 
 export type IStreamEvent = { data: IStreamEventData;
@@ -187,7 +192,7 @@ interface IPublicAPIEvent {
   volumeChange : number;
   error : ICustomError | Error;
   warning : ICustomError | Error;
-  periodChange : Period;
+  periodChange : IPeriodAttributes;
   availableAudioBitratesChange : number[];
   availableVideoBitratesChange : number[];
   availableAudioTracksChange : ITMAudioTrackListItem[];
@@ -2279,7 +2284,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (this._priv_contentEventsMemory.periodChange !== period) {
       this._priv_contentEventsMemory.periodChange = period;
-      this.trigger("periodChange", period);
+      this.trigger("periodChange", { start: period.start, end: period.end });
     }
 
     this.trigger("availableAudioTracksChange", this.getAvailableAudioTracks());

@@ -528,8 +528,16 @@ options](./loadVideo_options.md#prop-transport)).
 
 Triggered when the current [Period](../terms.md#period) being seen changes.
 
-The payload is the corresponding Period. See [the Manifest
-documentation](./manifest.md#period) for more information.
+The payload of this event is an object containing two properties:
+
+  - `start` (`number`): The starting position at which the Period starts, in
+    seconds.
+
+  - `end` (`number|undefined`): The position at which the Period ends, in
+    seconds.
+
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
 
 
 <a name="events-decipherabilityUpdate"></a>
