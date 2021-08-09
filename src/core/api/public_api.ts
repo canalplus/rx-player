@@ -170,6 +170,15 @@ export interface IPeriodAttributes {
   end? : number;
 }
 
+export interface IDecipherabilityUpdateInfo {
+  periodStart : number;
+  periodEnd? : number;
+  trackType : IBufferType;
+  trackId : string;
+  representationId : string;
+  isDecipherable? : boolean;
+}
+
 export type IStreamEvent = { data: IStreamEventData;
                              start: number;
                              end: number;
@@ -196,10 +205,7 @@ interface IPublicAPIEvent {
   availableAudioTracksChange : ITMAudioTrackListItem[];
   availableTextTracksChange : ITMTextTrackListItem[];
   availableVideoTracksChange : ITMVideoTrackListItem[];
-  decipherabilityUpdate : Array<{ manifest : Manifest;
-                                  period : Period;
-                                  adaptation : Adaptation;
-                                  representation : Representation; }>;
+  decipherabilityUpdate : IDecipherabilityUpdateInfo[];
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
@@ -2169,7 +2175,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this._priv_contentInfos.segmentBuffersStore = event.value.segmentBuffersStore;
         break;
       case "decipherabilityUpdate":
-        this.trigger("decipherabilityUpdate", event.value);
+        this.trigger("decipherabilityUpdate", event.value.map((i) => {
+          return { periodStart: i.period.start,
+                   periodEnd: i.period.end,
+                   trackType: i.adaptation.type,
+                   trackId: i.adaptation.id,
+                   representationId: i.representation.id,
+                   isDecipherable: i.representation.decipherable };
+        }));
         break;
     }
   }
