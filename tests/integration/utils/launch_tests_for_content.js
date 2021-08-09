@@ -490,7 +490,7 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("getMediaElement", () => {
+    describe("getVideoElement", () => {
       it("should return a video element", async () => {
         player.loadVideo({
           url: manifestInfos.url,
@@ -498,9 +498,9 @@ export default function launchTestsForContent(manifestInfos) {
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getMediaElement()).to.not.be.null;
-        expect(player.getMediaElement().nodeType).to.eql(Element.ELEMENT_NODE);
-        expect(player.getMediaElement().nodeName.toLowerCase()).to.eql("video");
+        expect(player.getVideoElement()).to.not.be.null;
+        expect(player.getVideoElement().nodeType).to.eql(Element.ELEMENT_NODE);
+        expect(player.getVideoElement().nodeName.toLowerCase()).to.eql("video");
       });
     });
 
@@ -1099,7 +1099,7 @@ export default function launchTestsForContent(manifestInfos) {
 
     describe("getVolume", () => {
       it("should return the current media elment volume", async () => {
-        const initialVolume = player.getMediaElement().volume;
+        const initialVolume = player.getVideoElement().volume;
         expect(player.getVolume()).to.equal(initialVolume);
 
         player.loadVideo({
@@ -1112,7 +1112,7 @@ export default function launchTestsForContent(manifestInfos) {
       });
 
       it("should be updated when the volume is updated", async () => {
-        const initialVolume = player.getMediaElement().volume;
+        const initialVolume = player.getVideoElement().volume;
         expect(player.getVolume()).to.equal(initialVolume);
         player.setVolume(0.54);
         expect(player.getVolume()).to.equal(0.54);
@@ -1135,7 +1135,7 @@ export default function launchTestsForContent(manifestInfos) {
       });
 
       it("should return 0 if muted", async () => {
-        const initialVolume = player.getMediaElement().volume;
+        const initialVolume = player.getVideoElement().volume;
         expect(player.getVolume()).to.equal(initialVolume);
         player.mute();
         expect(player.getVolume()).to.equal(0);
@@ -1248,11 +1248,11 @@ export default function launchTestsForContent(manifestInfos) {
 
     describe("mute", () => {
       it("should set the volume to 0", async () => {
-        const initialVolume = player.getMediaElement().volume;
+        const initialVolume = player.getVideoElement().volume;
         player.mute();
         expect(player.isMute()).to.equal(true);
         expect(player.getVolume()).to.equal(0);
-        expect(player.getMediaElement().volume).to.equal(0);
+        expect(player.getVideoElement().volume).to.equal(0);
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1262,34 +1262,34 @@ export default function launchTestsForContent(manifestInfos) {
 
         expect(player.isMute()).to.equal(true);
         expect(player.getVolume()).to.equal(0);
-        expect(player.getMediaElement().volume).to.equal(0);
+        expect(player.getVideoElement().volume).to.equal(0);
         player.unMute();
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
-        expect(player.getMediaElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
-        expect(player.getMediaElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
 
         player.mute();
         expect(player.isMute()).to.equal(true);
         expect(player.getVolume()).to.equal(0);
-        expect(player.getMediaElement().volume).to.equal(0);
+        expect(player.getVideoElement().volume).to.equal(0);
         player.setVolume(1);
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
-        expect(player.getMediaElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
       });
     });
 
     describe("unMute", async () => {
       it("should unmute when the volume is muted", async () => {
-        const initialVolume = player.getMediaElement().volume;
+        const initialVolume = player.getVideoElement().volume;
         player.mute();
         expect(player.isMute()).to.equal(true);
         expect(player.getVolume()).to.equal(0);
-        expect(player.getMediaElement().volume).to.equal(0);
+        expect(player.getVideoElement().volume).to.equal(0);
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1299,24 +1299,24 @@ export default function launchTestsForContent(manifestInfos) {
 
         expect(player.isMute()).to.equal(true);
         expect(player.getVolume()).to.equal(0);
-        expect(player.getMediaElement().volume).to.equal(0);
+        expect(player.getVideoElement().volume).to.equal(0);
         player.unMute();
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
-        expect(player.getMediaElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
-        expect(player.getMediaElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
 
         player.mute();
         expect(player.isMute()).to.equal(true);
         expect(player.getVolume()).to.equal(0);
-        expect(player.getMediaElement().volume).to.equal(0);
+        expect(player.getVideoElement().volume).to.equal(0);
         player.setVolume(1);
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
-        expect(player.getMediaElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
       });
     });
 
@@ -1657,7 +1657,7 @@ export default function launchTestsForContent(manifestInfos) {
         });
         await waitForLoadedStateAfterLoadVideo(player);
         await sleep(3000);
-        let buffered = player.getMediaElement().buffered;
+        let buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
         let endOfCurrentRange = buffered.end(0);
@@ -1669,7 +1669,7 @@ export default function launchTestsForContent(manifestInfos) {
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
         await sleep(3000);
-        buffered = player.getMediaElement().buffered;
+        buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
         endOfCurrentRange = buffered.end(0);
@@ -1680,7 +1680,7 @@ export default function launchTestsForContent(manifestInfos) {
 
         player.seekTo(minimumPosition + 10);
         await sleep(3000);
-        buffered = player.getMediaElement().buffered;
+        buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
@@ -1695,7 +1695,7 @@ export default function launchTestsForContent(manifestInfos) {
 
         player.seekTo(minimumPosition + 10 + 20 + 10 + 10);
         await sleep(3000);
-        buffered = player.getMediaElement().buffered;
+        buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(2);
         expect(buffered.start(1)).to.be
@@ -1712,7 +1712,7 @@ export default function launchTestsForContent(manifestInfos) {
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
         await sleep(3000);
-        buffered = player.getMediaElement().buffered;
+        buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(2);
         expect(buffered.start(1)).to.be
           .at.most(minimumPosition + 10 + 20 + 10 + 10);
