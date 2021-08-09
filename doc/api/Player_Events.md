@@ -444,9 +444,16 @@ _payload type_: `Object`
 
 Triggered when the current [Period](../Getting_Started/Glossary.md#period) being seen changes.
 
-The payload is the corresponding Period. See [the Manifest
-documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_period_object)
-for more information.
+The payload of this event is an object containing two properties:
+
+  - `start` (`number`): The starting position at which the Period starts, in
+    seconds.
+
+  - `end` (`number|undefined`): The position at which the Period ends, in
+    seconds.
+
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
