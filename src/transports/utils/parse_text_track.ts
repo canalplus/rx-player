@@ -15,15 +15,12 @@
  */
 
 import log from "../../log";
-import {
-  Adaptation,
-  ISegment,
-  Representation,
-} from "../../manifest";
+import { ISegment } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
 import { utf8ToStr } from "../../utils/string_parsing";
 import {
   IChunkTimeInfo,
+  ISegmentContext,
   ITextTrackSegmentData,
 } from "../types";
 
@@ -45,13 +42,12 @@ export function extractTextTrackFromISOBMFF(chunkBytes : Uint8Array) : string {
  * @returns {string}
  */
 export function getISOBMFFTextTrackFormat(
-  representation : Representation
+  codecs : string | undefined
 ) : "ttml" | "vtt" {
-  const codec = representation.codec;
-  if (codec === undefined) {
+  if (codecs === undefined) {
     throw new Error("Cannot parse subtitles: unknown format");
   }
-  switch (codec.toLowerCase()) {
+  switch (codecs.toLowerCase()) {
     case "stpp": // stpp === TTML in MP4
     case "stpp.ttml.im1t":
       return "ttml";
@@ -59,7 +55,7 @@ export function getISOBMFFTextTrackFormat(
       return "vtt";
   }
   throw new Error("The codec used for the subtitles " +
-                  `"${codec}" is not managed yet.`);
+                  `"${codecs}" is not managed yet.`);
 }
 
 /**
@@ -68,10 +64,10 @@ export function getISOBMFFTextTrackFormat(
  * @returns {string}
  */
 export function getPlainTextTrackFormat(
-  representation : Representation
+  codecs : string | undefined,
+  mimeType : string | undefined
 ) : "ttml" | "sami" | "vtt" | "srt" {
-  const { mimeType = "" } = representation;
-  switch (representation.mimeType) {
+  switch (mimeType) {
     case "application/ttml+xml":
       return "ttml";
     case "application/x-sami":
@@ -81,12 +77,13 @@ export function getPlainTextTrackFormat(
       return "vtt";
   }
 
-  const { codec = "" } = representation;
-  const codeLC = codec.toLowerCase();
-  if (codeLC === "srt") {
-    return "srt";
+  if (codecs !== undefined) {
+    const codeLC = codecs.toLowerCase();
+    if (codeLC === "srt") {
+      return "srt";
+    }
   }
-  throw new Error(`could not find a text-track parser for the type ${mimeType}`);
+  throw new Error(`could not find a text-track parser for the type ${mimeType ?? ""}`);
 }
 
 /**
@@ -98,10 +95,10 @@ export function getPlainTextTrackFormat(
  */
 export function getISOBMFFEmbeddedTextTrackData(
   { segment,
-    adaptation,
-    representation } : { segment : ISegment;
-                         adaptation : Adaptation;
-                         representation : Representation; },
+    language,
+    codecs } : { segment : ISegment;
+                 codecs? : string | undefined;
+                 language? : string | undefined; },
   chunkBytes : Uint8Array,
   chunkInfos : IChunkTimeInfo | null,
   isChunked : boolean
@@ -127,11 +124,11 @@ export function getISOBMFFEmbeddedTextTrackData(
     }
   }
 
-  const type = getISOBMFFTextTrackFormat(representation);
+  const type = getISOBMFFTextTrackFormat(codecs);
   const textData = extractTextTrackFromISOBMFF(chunkBytes);
   return { data: textData,
            type,
-           language: adaptation.language,
+           language,
            start: startTime,
            end: endTime } ;
 }
@@ -144,14 +141,11 @@ export function getISOBMFFEmbeddedTextTrackData(
  * @returns {Object|null}
  */
 export function getPlainTextTrackData(
-  { segment,
-    adaptation,
-    representation } : { segment : ISegment;
-                         adaptation : Adaptation;
-                         representation : Representation; },
+  context : ISegmentContext,
   textTrackData : string,
   isChunked : boolean
 ) : ITextTrackSegmentData | null {
+  const { segment } = context;
   if (segment.isInit) {
     return null;
   }
@@ -167,10 +161,10 @@ export function getPlainTextTrackData(
     }
   }
 
-  const type = getPlainTextTrackFormat(representation);
+  const type = getPlainTextTrackFormat(context.codecs, context.mimeType);
   return { data: textTrackData,
            type,
-           language: adaptation.language,
+           language: context.language,
            start,
            end };
 }
