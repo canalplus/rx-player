@@ -17,6 +17,7 @@
 import log from "../log";
 import { IParsedManifest } from "../parsers/manifest";
 import {
+  IAdaptationType,
   IPlayerError,
   IRepresentationFilter,
 } from "../public_types";
@@ -29,10 +30,7 @@ import Period, {
   IManifestAdaptations,
 } from "./period";
 import Representation from "./representation";
-import {
-  IAdaptationType,
-  MANIFEST_UPDATE_TYPE,
-} from "./types";
+import { MANIFEST_UPDATE_TYPE } from "./types";
 import {
   IPeriodsUpdateResult,
   replacePeriods,
