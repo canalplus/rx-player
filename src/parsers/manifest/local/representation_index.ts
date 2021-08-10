@@ -198,6 +198,10 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     return true;
   }
 
+  initialize() : void {
+    log.error("A `LocalRepresentationIndex` does not need to be initialized");
+  }
+
   _replace(newIndex : LocalRepresentationIndex) : void {
     this._index.segments = newIndex._index.segments;
     this._index.loadSegment = newIndex._index.loadSegment;
