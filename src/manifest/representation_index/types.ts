@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../manifest";
 import { IEMSG } from "../../parsers/containers/isobmff";
 import {
   ILocalIndexSegment,
@@ -26,6 +21,7 @@ import {
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
 import { IPlayerError } from "../../public_types";
+import { IIndexSegmentListItem } from "../../transports";
 
 /**
  * Supplementary information specific to Smooth Initialization segments.
@@ -44,6 +40,8 @@ export interface ISmoothInitSegmentPrivateInfos {
   packetSize? : number | undefined;
   samplingRate? : number | undefined;
   protection? : { keyId : Uint8Array } | undefined;
+  height? : number | undefined;
+  width? : number | undefined;
 }
 
 /**
@@ -63,22 +61,20 @@ export interface ISmoothMediaSegmentPrivateInfos {
   duration : number;
 }
 
-/** Describes a given "real" Manifest for MetaPlaylist's segments. */
-export interface IBaseContentInfos { manifest: Manifest;
-                                     period: Period;
-                                     adaptation: Adaptation;
-                                     representation: Representation; }
-
 /** Supplementary information needed for segments in the "metaplaylist" transport. */
 export interface IMetaPlaylistPrivateInfos {
   /** The original transport protocol (e.g. "dash", "smooth" etc.) */
   transportType : string;
-  /** The context this segment is in. */
-  baseContent : IBaseContentInfos;
-  /** The segment originally created by this transport's RepresentationIndex. */
-  originalSegment : ISegment;
   contentStart : number;
   contentEnd? : number | undefined;
+
+  /** The segment originally created by this transport's RepresentationIndex. */
+  originalSegment : ISegment;
+
+  isLive : boolean;
+  manifestPublishTime? : number | undefined;
+  periodEnd? : number | undefined;
+  periodStart : number;
 }
 
 /**
@@ -109,7 +105,8 @@ export interface ILocalManifestSegmentPrivateInfos {
  * tranport logic used.
  * Called "private" as it won't be read or exploited by any code in the core
  * logic of the player. That information is only here to be retrieved and
- * exploited by the corresponding transport logic.
+ * exploited by the corresponding transport logic when loading or parsing the
+ * corresponding segment.
  */
 export interface IPrivateInfos {
   /** Smooth-specific information allowing to generate an initialization segment. */
@@ -401,20 +398,36 @@ export interface IRepresentationIndex {
    *
    * Most index don't rely on the initialization segment to give an index and
    * as such, this method should return `true` directly.
-   * However in some index, the segment lists might only be known after the
-   * initialization has been loaded. In those case, it should return `false`
-   * until the corresponding segment list is known, at which point it can return
-   * `true`.
    *
-   * You can use any ad-hoc mean you want to "initialize" an index.
-   * This is usually done by adding supplementary methods (like one named
-   * `initialize`) to that `RepresentationIndex` and calling it directly in the
-   * segment parsing code.
+   * However in some index, the segment list might only be known after the
+   * initialization has been loaded and parsed. In those case, it should return
+   * `false` until the corresponding segment list is known, at which point you
+   * can call the `initialize` method with that list so the `isInitialized` can
+   * return `true`.
    * @returns {boolean}
    */
   isInitialized() : boolean;
 
   awaitSegmentBetween(start : number, end : number) : boolean | undefined;
+
+  /**
+   * Some `RepresentationIndex` do not have the list of media segments known in
+   * advance.
+   * Instead, those are only known once the initialization segment is loaded and
+   * parsed.
+   *
+   * Such `RepresentationIndex` whose list of media segments is still unknown
+   * are called "uninitialized". You can know if a `RepresentationIndex` is
+   * uninitialized by checking if its `isInitialized` method returns `false`.
+   *
+   * To initialize those `RepresentationIndex` and thus be able to obtain the
+   * list of its linked media segments through its corresponding methods, you
+   * have to initialize it with the list of segments once it is known
+   * (presumably, after parsing the initialization segment) by giving them to
+   * this `initialize` method.
+   * @param {Array.<Object>} segmentList
+   */
+  initialize(segmentList : IIndexSegmentListItem[]) : void;
 
   /**
    * Replace the index with another one, such as after a Manifest update.
