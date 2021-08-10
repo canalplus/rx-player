@@ -16,13 +16,11 @@
 
 import { IInbandEvent } from "../core/stream";
 import Manifest, {
-  Adaptation,
   ISegment,
-  Period,
-  Representation,
 } from "../manifest";
 import { ICdnMetadata } from "../parsers/manifest";
 import {
+  IAdaptationType,
   ILoadedManifestFormat,
   IManifestLoader,
   IRepresentationFilter,
@@ -188,7 +186,7 @@ export interface ISegmentPipeline<
  * segment should be downloaded.
  * `null` if we do not have such CDN (in which case the segment should be loaded
  * through other means, such as information taken from the segment's content).
- * @param {Object} content - Content linked to the wanted segment.
+ * @param {Object} context - Context linked to the wanted segment.
  * @param {CancellationSignal} cancelSignal - Cancellation signal which will
  * allow to cancel the loading operation if the segment is not needed anymore.
  *
@@ -201,7 +199,7 @@ export interface ISegmentPipeline<
  */
 export type ISegmentLoader<TLoadedFormat> = (
   wantedCdn : ICdnMetadata | null,
-  content : ISegmentContext,
+  context : ISegmentContext,
   options : ISegmentLoaderOptions,
   cancelSignal : CancellationSignal,
   callbacks : ISegmentLoaderCallbacks<TLoadedFormat>
@@ -242,7 +240,7 @@ export type ISegmentParser<
     isChunked : boolean;
   },
   /** Context about the wanted segment. */
-  content : ISegmentContext,
+  context : ISegmentContext,
   /**
    * "Timescale" obtained from parsing the wanted representation's initialization
    * segment.
@@ -457,16 +455,30 @@ export type ITransportPipeline = ITransportManifestPipeline |
                                  ITransportSegmentPipeline;
 
 export interface ISegmentContext {
-  /** Manifest object related to this segment. */
-  manifest : Manifest;
-  /** Period object related to this segment. */
-  period : Period;
-  /** Adaptation object related to this segment. */
-  adaptation : Adaptation;
-  /** Representation Object related to this segment. */
-  representation : Representation;
-  /** Segment we want to load. */
+  /** Metadata about the wanted segment. */
   segment : ISegment;
+  /** Type of the corresponding track. */
+  type : IAdaptationType;
+  /** Language of the corresponding track. */
+  language? : string | undefined;
+  /** If `true`, the corresponding `Manifest` if for a live content. */
+  isLive : boolean;
+  /** Start position in seconds of the Period in which that segment plays. */
+  periodStart : number;
+  /** End position in seconds of the Period in which that segment plays. */
+  periodEnd : number | undefined;
+  /** Mimetype of the corresponding Representation. */
+  mimeType? : string | undefined;
+  /** Codec(s) of the corresponding Representation. */
+  codecs? : string | undefined;
+  /**
+   * Last published time for the Manifest file in which this segment has been
+   * defined.
+   *
+   * This can be useful in cases where a loaded segment contains metadata that
+   * could indicate a newer version of the Manifest.
+   */
+  manifestPublishTime? : number | undefined;
 }
 
 export interface ISegmentLoaderCallbacks<T> {
@@ -603,17 +615,10 @@ export interface ISegmentParserParsedInitChunk<DataType> {
    */
   initTimescale? : number | undefined;
   /**
-   * If set to `true`, some protection information has been found in this
-   * initialization segment and lead the corresponding `Representation`
-   * object to be updated with that new information.
-   *
-   * In that case, you can re-check any encryption-related information with the
-   * `Representation` linked to that segment.
-   *
-   * In the great majority of cases, this is set to `true` when new content
-   * protection initialization data to have been encountered.
+   * Information on encryption that has been found in this segment.
+   * Empty array if no such information was found.
    */
-  protectionDataUpdate : boolean;
+  protectionData : IProtectionDataInfo[];
   /**
    * Size in bytes of `initializationData`.
    * `undefined` if unknown.
@@ -625,6 +630,15 @@ export interface ISegmentParserParsedInitChunk<DataType> {
    * data, `initializationDataSize` may refer to that binary data only).
    */
   initializationDataSize : number | undefined;
+  /**
+   * When this property is set, a list of segments linked to this
+   * `Representation` has been obtained when parsing this initialization
+   * segment.
+   *
+   * This might then be used to communicate it to the corresponding
+   * `RepresentationIndex`.
+   */
+  segmentList? : IIndexSegmentListItem[] | undefined;
 }
 
 /**
@@ -660,42 +674,76 @@ export interface ISegmentParserParsedMediaChunk<DataType> {
    *
    * For example:
    *   If `chunkData` announces (when parsed by the demuxer or decoder) that the
-   *   segment begins at 32 seconds, and `chunkOffset` equals to `4`, then the
-   *   segment should really begin at 36 seconds (32 + 4).
+   *   chunk begins at 32 seconds, and `chunkOffset` equals to `4`, then the
+   *   chunk should really begin at 36 seconds (32 + 4).
    *
    * Note that `chunkInfos` needs not to be offseted as it should already
    * contain the correct time information.
    */
   chunkOffset : number;
   /**
-   * start and end windows for the segment (part of the chunk respectively
+   * start and end windows for the chunk (part of the chunk respectively
    * before and after that time will be ignored).
    * `undefined` when their is no such limitation.
    */
   appendWindow : [ number | undefined,
                    number | undefined ];
   /**
-   * If set and not empty, then "events" have been encountered in this parsed
-   * chunks.
+   * If set and not empty, then this property contains "events" have been
+   * encountered in this parsed chunk.
    */
   inbandEvents? : IInbandEvent[] | undefined;
   /**
    * If set to `true`, then parsing this chunk revealed that the current
    * Manifest instance needs to be refreshed.
    */
-  needsManifestRefresh?: boolean;
+  needsManifestRefresh?: boolean | undefined;
   /**
-   * If set to `true`, some protection information has been found in this
-   * media segment and lead the corresponding `Representation` object to be
-   * updated with that new information.
-   *
-   * In that case, you can re-check any encryption-related information with the
-   * `Representation` linked to that segment.
-   *
-   * In the great majority of cases, this is set to `true` when new content
-   * protection initialization data to have been encountered.
+   * Information on encryption that has been found in this chunk.
+   * Empty array if no such information was found.
    */
-  protectionDataUpdate : boolean;
+  protectionData : IProtectionDataInfo[];
+}
+
+/** Format of protection data found in a segment/chunk. */
+export interface IProtectionDataInfo {
+  /**
+   * Format of the protection data.
+   * "cenc" is the standart format for ISOBMFF-embedded protection information -
+   * like in a PSSH box.
+   */
+  initDataType : "cenc";
+
+  /** Optional key id found in the segment. */
+  keyId: Uint8Array | undefined;
+
+  /**
+   * The protection data.
+   */
+  initData : Array<{
+    /** Hex string identifying the key system concerned by this protection data. */
+    systemId : string;
+    /** The protection data itself. */
+    data : Uint8Array;
+  }>;
+}
+
+/**
+ * Some `RepresentationIndex` await the initialization segment to be parsed before
+ * knowing the list of media segments linked to it.
+ *
+ * This type describes the information obtained on a single segment when the
+ * initialization segment has been parsed.
+ */
+export interface IIndexSegmentListItem {
+  /** This segment start time, timescaled. */
+  time : number;
+  /** This segment difference between its end and start time, timescaled. */
+  duration : number;
+  /** Dividing `time` or `duration` with this value allows to obtain seconds. */
+  timescale : number;
+  /** Optional byte-range at which the segment should be loaded. */
+  range? : [number, number];
 }
 
 /** Describe data loaded through a request. */

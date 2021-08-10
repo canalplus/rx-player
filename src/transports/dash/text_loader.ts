@@ -52,7 +52,7 @@ export default function generateTextTrackLoader(
 
   /**
    * @param {Object|null} wantedCdn
-   * @param {Object} content
+   * @param {Object} context
    * @param {Object} options
    * @param {Object} cancelSignal
    * @param {Object} callbacks
@@ -60,7 +60,7 @@ export default function generateTextTrackLoader(
    */
   function textTrackLoader(
     wantedCdn : ICdnMetadata | null,
-    content : ISegmentContext,
+    context : ISegmentContext,
     options : ISegmentLoaderOptions,
     cancelSignal : CancellationSignal,
     callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
@@ -68,7 +68,7 @@ export default function generateTextTrackLoader(
               ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat> |
               ISegmentLoaderResultChunkedComplete>
   {
-    const { adaptation, representation, segment } = content;
+    const { segment } = context;
     const { range } = segment;
 
     const url = constructSegmentUrl(wantedCdn, segment);
@@ -81,11 +81,11 @@ export default function generateTextTrackLoader(
       return initSegmentLoader(url, segment, options, cancelSignal, callbacks);
     }
 
-    const containerType = inferSegmentContainer(adaptation.type, representation);
+    const containerType = inferSegmentContainer(context.type, context.mimeType);
     const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
     if (lowLatencyMode && seemsToBeMP4) {
       if (fetchIsSupported()) {
-        return lowLatencySegmentLoader(url, content, options, callbacks, cancelSignal);
+        return lowLatencySegmentLoader(url, context, options, callbacks, cancelSignal);
       } else {
         warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                  "a higher chance of rebuffering when playing close to the live edge");

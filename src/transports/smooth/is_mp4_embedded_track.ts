@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../manifest";
-
 /**
  * Returns `true` if the given Representation refers to segments in an MP4
  * container
  * @param {Representation} representation
  * @returns {Boolean}
  */
-export default function isMP4EmbeddedTrack(
-  representation : Representation
-) : boolean {
-  return typeof representation.mimeType === "string" &&
-         representation.mimeType.indexOf("mp4") >= 0;
+export default function isMP4EmbeddedTrack(mimeType : string | undefined) : boolean {
+  return typeof mimeType === "string" && mimeType.indexOf("mp4") >= 0;
 }
