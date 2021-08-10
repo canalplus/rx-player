@@ -19,6 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../../manifest";
+import { IIndexSegmentListItem } from "../../../../../transports";
 import { IEMSG } from "../../../../containers/isobmff";
 import {
   fromIndexTime,
@@ -327,26 +328,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * No segment in a `BaseRepresentationIndex` are known initially.
-   * It is only defined generally in an "index segment" that will thus need to
-   * be first loaded and parsed.
-   * Until then, this `BaseRepresentationIndex` is considered as `uninitialized`
-   * (@see isInitialized).
-   *
-   * Once that those information are available, the present
-   * `BaseRepresentationIndex` can be "initialized" by adding that parsed
-   * segment information through this method.
-   * @param {Array.<Object>} indexSegments
-   * @returns {Array.<Object>}
-   */
-  initializeIndex(indexSegments : IAddedIndexSegment[]) : void {
-    for (let i = 0; i < indexSegments.length; i++) {
-      _addSegmentInfos(this._index, indexSegments[i]);
-    }
-    this._isInitialized = true;
-  }
-
-  /**
    * Returns `false` as a `BaseRepresentationIndex` should not be dynamic and as
    * such segments should never fall out-of-sync.
    * @returns {Boolean}
@@ -382,6 +363,30 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * No segment in a `BaseRepresentationIndex` are known initially.
+   *
+   * It is only defined generally in an "index segment" that will thus need to
+   * be first loaded and parsed.
+   * Until then, this `BaseRepresentationIndex` is considered as `uninitialized`
+   * (@see isInitialized).
+   *
+   * Once that those information are available, the present
+   * `BaseRepresentationIndex` can be "initialized" by adding that parsed
+   * segment information through this method.
+   * @param {Array.<Object>} indexSegments
+   * @returns {Array.<Object>}
+   */
+  initialize(indexSegments : IIndexSegmentListItem[]) : void {
+    if (this._isInitialized) {
+      return ;
+    }
+    for (let i = 0; i < indexSegments.length; i++) {
+      _addSegmentInfos(this._index, indexSegments[i]);
+    }
+    this._isInitialized = true;
+  }
+
+  /**
    * Replace in-place this `BaseRepresentationIndex` information by the
    * information from another one.
    * @param {Object} newIndex
@@ -396,22 +401,4 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   _update() : void {
     log.error("Base RepresentationIndex: Cannot update a SegmentList");
   }
-}
-
-/**
- * Format of a segment received through the `initialize` method, allowing  to
- * add segments to a BaseRepresentationIndex.
- */
-export interface IAddedIndexSegment {
-  /** This segment start time, timescaled. */
-  time : number;
-  /** This segment difference between its end and start time, timescaled. */
-  duration : number;
-  /** Dividing `time` or `duration` with this value allows to obtain seconds. */
-  timescale : number;
-  /**
-   * Start and ending bytes (included) for the segment in the whole ISOBMFF
-   * buffer.
-   */
-  range : [number, number];
 }

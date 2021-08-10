@@ -23,13 +23,11 @@ import Manifest, {
 import Period from "./period";
 import Representation from "./representation";
 import {
-  IBaseContentInfos,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   ISegment,
   StaticRepresentationIndex,
 } from "./representation_index";
-import { IAdaptationType } from "./types";
 import {
   areSameContent,
   getLoggableSegmentId,
@@ -50,8 +48,6 @@ export {
   Representation,
 
   // types
-  IAdaptationType,
-  IBaseContentInfos,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,

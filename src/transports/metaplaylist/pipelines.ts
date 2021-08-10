@@ -17,11 +17,8 @@
 import config from "../../config";
 import features from "../../features";
 import Manifest, {
-  Adaptation,
   IMetaPlaylistPrivateInfos,
   ISegment,
-  Period,
-  Representation,
 } from "../../manifest";
 import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
@@ -57,25 +54,27 @@ import generateManifestLoader from "./manifest_loader";
  * @param {Object} segment
  * @returns {Object}
  */
-function getOriginalContent(segment : ISegment) : { manifest : Manifest;
-                                                    period : Period;
-                                                    adaptation : Adaptation;
-                                                    representation : Representation;
-                                                    segment : ISegment; }
-{
+function getOriginalContext(
+  mplContext : ISegmentContext
+) : ISegmentContext {
+  const { segment } = mplContext;
   if (segment.privateInfos?.metaplaylistInfos === undefined) {
     throw new Error("MetaPlaylist: missing private infos");
   }
-  const { manifest,
-          period,
-          adaptation,
-          representation } = segment.privateInfos.metaplaylistInfos.baseContent;
+  const { isLive,
+          periodStart,
+          periodEnd,
+          manifestPublishTime } = segment.privateInfos.metaplaylistInfos;
   const { originalSegment } = segment.privateInfos.metaplaylistInfos;
-  return  { manifest,
-            period,
-            adaptation,
-            representation,
-            segment: originalSegment };
+  return  { segment: originalSegment,
+            type: mplContext.type,
+            language: mplContext.language,
+            mimeType: mplContext.mimeType,
+            codecs: mplContext.codecs,
+            isLive,
+            periodStart,
+            periodEnd,
+            manifestPublishTime };
 }
 
 /**
@@ -245,7 +244,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
   const audioPipeline = {
     loadSegment(
       url : string | null,
-      content : ISegmentContext,
+      context : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>
@@ -253,25 +252,26 @@ export default function(options : ITransportOptions): ITransportPipelines {
                 ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
                 ISegmentLoaderResultChunkedComplete>
     {
-      const { segment } = content;
+      const { segment } = context;
       const { audio } = getTransportPipelinesFromSegment(segment);
-      const ogContent = getOriginalContent(segment);
-      return audio.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
+
+      const ogContext = getOriginalContext(context);
+      return audio.loadSegment(url, ogContext, loaderOptions, cancelToken, callbacks);
     },
 
     parseSegment(
       loadedSegment : { data : ILoadedAudioVideoSegmentFormat; isChunked : boolean },
-      content : ISegmentContext,
+      context : ISegmentContext,
       initTimescale : number | undefined
     ) : ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null> |
         ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null>
     {
-      const { segment } = content;
+      const { segment } = context;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { audio } = getTransportPipelinesFromSegment(segment);
-      const ogContent = getOriginalContent(segment);
 
-      const parsed = audio.parseSegment(loadedSegment, ogContent, initTimescale);
+      const ogContext = getOriginalContext(context);
+      const parsed = audio.parseSegment(loadedSegment, ogContext, initTimescale);
       if (parsed.segmentType === "init") {
         return parsed;
       }
@@ -283,7 +283,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
   const videoPipeline = {
     loadSegment(
       url : string | null,
-      content : ISegmentContext,
+      context : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>
@@ -291,25 +291,24 @@ export default function(options : ITransportOptions): ITransportPipelines {
                 ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
                 ISegmentLoaderResultChunkedComplete>
     {
-      const { segment } = content;
+      const { segment } = context;
       const { video } = getTransportPipelinesFromSegment(segment);
-      const ogContent = getOriginalContent(segment);
-      return video.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
+      const ogContext = getOriginalContext(context);
+      return video.loadSegment(url, ogContext, loaderOptions, cancelToken, callbacks);
     },
 
     parseSegment(
       loadedSegment : { data : ILoadedAudioVideoSegmentFormat; isChunked : boolean },
-      content : ISegmentContext,
+      context : ISegmentContext,
       initTimescale : number | undefined
     ) : ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null> |
         ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null>
     {
-      const { segment } = content;
+      const { segment } = context;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { video } = getTransportPipelinesFromSegment(segment);
-      const ogContent = getOriginalContent(segment);
-
-      const parsed = video.parseSegment(loadedSegment, ogContent, initTimescale);
+      const ogContext = getOriginalContext(context);
+      const parsed = video.parseSegment(loadedSegment, ogContext, initTimescale);
       if (parsed.segmentType === "init") {
         return parsed;
       }
@@ -321,7 +320,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
   const textTrackPipeline = {
     loadSegment(
       url : string | null,
-      content : ISegmentContext,
+      context : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
@@ -329,25 +328,26 @@ export default function(options : ITransportOptions): ITransportPipelines {
                 ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat> |
                 ISegmentLoaderResultChunkedComplete>
     {
-      const { segment } = content;
+      const { segment } = context;
       const { text } = getTransportPipelinesFromSegment(segment);
-      const ogContent = getOriginalContent(segment);
-      return text.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
+
+      const ogContext = getOriginalContext(context);
+      return text.loadSegment(url, ogContext, loaderOptions, cancelToken, callbacks);
     },
 
     parseSegment(
       loadedSegment : { data : ILoadedTextSegmentFormat; isChunked : boolean },
-      content : ISegmentContext,
+      context : ISegmentContext,
       initTimescale : number | undefined
     ) : ISegmentParserParsedInitChunk<ITextTrackSegmentData | null> |
         ISegmentParserParsedMediaChunk<ITextTrackSegmentData>
     {
-      const { segment } = content;
+      const { segment } = context;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { text } = getTransportPipelinesFromSegment(segment);
-      const ogContent = getOriginalContent(segment);
 
-      const parsed = text.parseSegment(loadedSegment, ogContent, initTimescale);
+      const ogContext = getOriginalContext(context);
+      const parsed = text.parseSegment(loadedSegment, ogContext, initTimescale);
       if (parsed.segmentType === "init") {
         return parsed;
       }

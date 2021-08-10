@@ -20,12 +20,12 @@ import {
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
-import { IHDRInformation } from "../public_types";
-import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
-import { IRepresentationIndex } from "./representation_index";
 import {
   IAdaptationType,
-} from "./types";
+  IHDRInformation,
+} from "../public_types";
+import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
+import { IRepresentationIndex } from "./representation_index";
 
 /**
  * Normalized Representation structure.
@@ -245,7 +245,7 @@ class Representation {
    * @param {Uint8Array} data
    * @returns {boolean}
    */
-  public _addProtectionData(
+  public addProtectionData(
     initDataType : string,
     keyId: Uint8Array | undefined,
     data : Array<{
