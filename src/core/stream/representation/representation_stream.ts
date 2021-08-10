@@ -337,21 +337,42 @@ export default function RepresentationStream<TSegmentDataType>(
       // is not running anymore.
       return ;
     }
-    if (evt.segmentType === "init") {
-      initSegmentState.segmentData = evt.initializationData;
-      initSegmentState.isLoaded = true;
 
-      // Now that the initialization segment has been parsed - which may have
-      // included encryption information - take care of the encryption event
-      // if not already done.
-      if (!hasSentEncryptionData) {
-        const allEncryptionData = representation.getAllEncryptionData();
-        if (allEncryptionData.length > 0) {
-          callbacks.encryptionDataEncountered(
-            allEncryptionData.map(p => objectAssign({ content }, p))
-          );
+    // Supplementary encryption information might have been parsed.
+    for (const protInfo of evt.protectionData) {
+      // TODO better handle use cases like key rotation by not always grouping
+      // every protection data together? To check.
+      representation.addProtectionData(protInfo.initDataType,
+                                       protInfo.keyId,
+                                       protInfo.initData);
+    }
+
+    // Now that the initialization segment has been parsed - which may have
+    // included encryption information - take care of the encryption event
+    // if not already done.
+    if (!hasSentEncryptionData) {
+      const allEncryptionData = representation.getAllEncryptionData();
+      if (allEncryptionData.length > 0) {
+        callbacks.encryptionDataEncountered(
+          allEncryptionData.map(p => objectAssign({ content }, p))
+        );
+        hasSentEncryptionData = true;
+
+        // previous callback could have lead to cancellation
+        if (globalCanceller.isUsed) {
+          return ;
         }
       }
+    }
+
+    if (evt.segmentType === "init") {
+      if (!representation.index.isInitialized() &&
+          evt.segmentList !== undefined)
+      {
+        representation.index.initialize(evt.segmentList);
+      }
+      initSegmentState.segmentData = evt.initializationData;
+      initSegmentState.isLoaded = true;
 
       pushInitSegment({ playbackObserver,
                         content,
@@ -369,24 +390,10 @@ export default function RepresentationStream<TSegmentDataType>(
       // Sometimes the segment list is only known once the initialization segment
       // is parsed. Thus we immediately re-check if there's new segments to load.
       checkStatus();
+      return;
     } else {
       const { inbandEvents,
-              needsManifestRefresh,
-              protectionDataUpdate } = evt;
-
-      // TODO better handle use cases like key rotation by not always grouping
-      // every protection data together? To check.
-      if (!hasSentEncryptionData && protectionDataUpdate) {
-        const allEncryptionData = representation.getAllEncryptionData();
-        if (allEncryptionData.length > 0) {
-          callbacks.encryptionDataEncountered(
-            allEncryptionData.map(p => objectAssign({ content }, p))
-          );
-          if (globalCanceller.isUsed) {
-            return ; // previous callback has stopped everything by side-effect
-          }
-        }
-      }
+              needsManifestRefresh } = evt;
 
       if (needsManifestRefresh === true) {
         callbacks.needsManifestRefresh();
