@@ -107,7 +107,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   return function fetchSegment(
     content : ISegmentLoaderContent
   ) : Observable<ISegmentFetcherEvent<TSegmentDataType>> {
-    const { segment } = content;
+    const { segment, adaptation, representation, manifest, period } = content;
 
     // used by logs
     const segmentIdString = getLoggableSegmentId(content);
@@ -174,6 +174,16 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
                      parse: generateParserFunction(chunkData, true) });
         },
       };
+      /** Segment context given to the transport pipelines. */
+      const context = { segment,
+                        type: adaptation.type,
+                        language: adaptation.language,
+                        isLive: manifest.isLive,
+                        periodStart: period.start,
+                        periodEnd: period.end,
+                        mimeType: representation.mimeType,
+                        codecs: representation.codec,
+                        manifestPublishTime: manifest.publishTime };
 
       // Retrieve from cache if it exists
       const cached = cache !== undefined ? cache.get(content) :
@@ -260,7 +270,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         url : string | null,
         cancellationSignal: CancellationSignal
       ) {
-        return loadSegment(url, content, cancellationSignal, loaderCallbacks);
+        return loadSegment(url, context, cancellationSignal, loaderCallbacks);
       }
 
       /**
@@ -279,7 +289,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
           const loaded = { data, isChunked };
 
           try {
-            const parsed = parseSegment(loaded, content, initTimescale);
+            const parsed = parseSegment(loaded, context, initTimescale);
 
             if (!parsedChunks[parsedChunkId]) {
               segmentDurationAcc = segmentDurationAcc !== undefined &&

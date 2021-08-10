@@ -129,6 +129,10 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return true;
   }
 
+  initialize() : void {
+    log.error("A `StaticRepresentationIndex` does not need to be initialized");
+  }
+
   _replace() : void {
     log.warn("Tried to replace a static RepresentationIndex");
   }

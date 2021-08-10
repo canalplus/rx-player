@@ -32,6 +32,7 @@ function generateRepresentationIndex(
     isFinished() { return false; },
     canBeOutOfSyncError() : true { return true; },
     isInitialized() : true { return true; },
+    initialize() : void { return ; },
     _replace() { /* noop */ },
     _update() { /* noop */ },
   };

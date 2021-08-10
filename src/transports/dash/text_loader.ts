@@ -57,14 +57,14 @@ export default function generateTextTrackLoader(
    */
   function textTrackLoader(
     url : string | null,
-    content : ISegmentContext,
+    context : ISegmentContext,
     cancelSignal : CancellationSignal,
     callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
   ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
               ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat> |
               ISegmentLoaderResultChunkedComplete>
   {
-    const { adaptation, representation, segment } = content;
+    const { segment } = context;
     const { range } = segment;
 
     if (url === null) {
@@ -76,11 +76,11 @@ export default function generateTextTrackLoader(
       return initSegmentLoader(url, segment, cancelSignal, callbacks);
     }
 
-    const containerType = inferSegmentContainer(adaptation.type, representation);
+    const containerType = inferSegmentContainer(context.type, context.mimeType);
     const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
     if (lowLatencyMode && seemsToBeMP4) {
       if (fetchIsSupported()) {
-        return lowLatencySegmentLoader(url, content, callbacks, cancelSignal);
+        return lowLatencySegmentLoader(url, context, callbacks, cancelSignal);
       } else {
         warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                  "a higher chance of rebuffering when playing close to the live edge");

@@ -199,17 +199,17 @@ function createManifest(
             for (let iRep = 0; iRep < currentAdaptation.representations.length; iRep++) {
               const currentRepresentation = currentAdaptation.representations[iRep];
 
-              const contentInfos = {
-                manifest: currentManifest,
-                period: currentPeriod,
-                adaptation: currentAdaptation,
-                representation: currentRepresentation,
+              const baseContentMetadata = {
+                isLive: currentManifest.isLive,
+                manifestPublishTime: currentManifest.publishTime,
+                periodStart: currentPeriod.start,
+                periodEnd: currentPeriod.end,
               };
 
               const newIndex = new MetaRepresentationIndex(currentRepresentation.index,
                                                            [contentOffset, contentEnd],
                                                            content.transport,
-                                                           contentInfos);
+                                                           baseContentMetadata);
               representations.push({
                 bitrate: currentRepresentation.bitrate,
                 index: newIndex,

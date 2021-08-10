@@ -246,7 +246,7 @@ class Representation {
    * @param {Uint8Array} data
    * @returns {boolean}
    */
-  public _addProtectionData(
+  public addProtectionData(
     initDataType : string,
     data : Array<{
       systemId : string;

@@ -43,7 +43,7 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
  * @param {string} uri
- * @param {Object} content
+ * @param {Object} context
  * @param {boolean} lowLatencyMode
  * @param {Object} callbacks
  * @param {Object} cancelSignal
@@ -51,7 +51,7 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
  */
 export function regularSegmentLoader(
   url : string,
-  content : ISegmentContext,
+  context : ISegmentContext,
   lowLatencyMode : boolean,
   callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>,
   cancelSignal : CancellationSignal
@@ -59,22 +59,21 @@ export function regularSegmentLoader(
             ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
             ISegmentLoaderResultChunkedComplete>
 {
-  if (content.segment.isInit) {
-    return initSegmentLoader(url, content.segment, cancelSignal, callbacks);
+  if (context.segment.isInit) {
+    return initSegmentLoader(url, context.segment, cancelSignal, callbacks);
   }
 
-  const containerType = inferSegmentContainer(content.adaptation.type,
-                                              content.representation);
+  const containerType = inferSegmentContainer(context.type, context.mimeType);
   if (lowLatencyMode && (containerType === "mp4" || containerType === undefined)) {
     if (fetchIsSupported()) {
-      return lowLatencySegmentLoader(url, content, callbacks, cancelSignal);
+      return lowLatencySegmentLoader(url, context, callbacks, cancelSignal);
     } else {
       warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                "a higher chance of rebuffering when playing close to the live edge");
     }
   }
 
-  const { segment } = content;
+  const { segment } = context;
   return request({ url,
                    responseType: "arraybuffer",
                    headers: segment.range !== undefined ?
@@ -101,12 +100,12 @@ export default function generateSegmentLoader(
                                                addSegmentIntegrityChecks(segmentLoader);
 
   /**
-   * @param {Object} content
+   * @param {Object} context
    * @returns {Observable}
    */
   function segmentLoader(
     url : string | null,
-    content : ISegmentContext,
+    context : ISegmentContext,
     cancelSignal : CancellationSignal,
     callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>
   ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
@@ -119,16 +118,8 @@ export default function generateSegmentLoader(
     }
 
     if (lowLatencyMode || customSegmentLoader === undefined) {
-      return regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal);
+      return regularSegmentLoader(url, context, lowLatencyMode, callbacks, cancelSignal);
     }
-
-    const args = { adaptation: content.adaptation,
-                   manifest: content.manifest,
-                   period: content.period,
-                   representation: content.representation,
-                   segment: content.segment,
-                   transport: "dash",
-                   url };
 
     return new Promise((res, rej) => {
       /** `true` when the custom segmentLoader should not be active anymore. */
@@ -203,11 +194,16 @@ export default function generateSegmentLoader(
         }
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
-        regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal)
+        regularSegmentLoader(url, context, lowLatencyMode, callbacks, cancelSignal)
           .then(res, rej);
       };
 
       const customCallbacks = { reject, resolve, progress, fallback };
+
+      const args = { context: { segment: context.segment,
+                                type: context.type },
+                     transport: "dash",
+                     url };
       const abort = customSegmentLoader(args, customCallbacks);
 
       cancelSignal.register(abortCustomLoader);

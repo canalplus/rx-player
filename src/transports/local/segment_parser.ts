@@ -21,6 +21,7 @@ import {
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
 import {
+  IProtectionDataInfo,
   ISegmentContext,
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
@@ -31,40 +32,40 @@ import inferSegmentContainer from "../utils/infer_segment_container";
 export default function segmentParser(
   loadedSegment : { data : ArrayBuffer | Uint8Array | null;
                     isChunked : boolean; },
-  content : ISegmentContext,
+  context : ISegmentContext,
   initTimescale : number | undefined
 ) : ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null> |
     ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null>
 {
-  const { period, adaptation, representation, segment } = content;
+  const { segment, periodStart, periodEnd } = context;
   const { data } = loadedSegment;
-  const appendWindow : [ number, number | undefined ] = [ period.start, period.end ];
+  const appendWindow : [ number, number | undefined ] = [ periodStart, periodEnd ];
 
   if (data === null) {
     if (segment.isInit) {
       return { segmentType: "init",
                initializationData: null,
-               protectionDataUpdate: false,
+               protectionData: [],
                initTimescale: undefined };
     }
     return { segmentType: "media",
              chunkData: null,
              chunkInfos: null,
              chunkOffset: 0,
-             protectionDataUpdate: false,
+             protectionData: [],
              appendWindow };
   }
 
   const chunkData = new Uint8Array(data);
-  const containerType = inferSegmentContainer(adaptation.type, representation);
+  const containerType = inferSegmentContainer(context.type, context.mimeType);
 
   // TODO take a look to check if this is an ISOBMFF/webm?
   const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
-  let protectionDataUpdate = false;
+  const protectionData : IProtectionDataInfo[] = [];
   if (seemsToBeMP4) {
     const psshInfo = takePSSHOut(chunkData);
     if (psshInfo.length > 0) {
-      protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
+      protectionData.push({ initDataType: "cenc", initData: psshInfo });
     }
   }
 
@@ -75,7 +76,7 @@ export default function segmentParser(
     return { segmentType: "init",
              initializationData: chunkData,
              initTimescale: timescale ?? undefined,
-             protectionDataUpdate };
+             protectionData };
   }
 
   const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData,
@@ -88,6 +89,6 @@ export default function segmentParser(
            chunkData,
            chunkInfos,
            chunkOffset,
-           protectionDataUpdate: false,
+           protectionData,
            appendWindow };
 }
