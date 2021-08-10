@@ -351,40 +351,43 @@ export default function RepresentationStream<TSegmentDataType>({
                  IStreamNeedsManifestRefresh |
                  IStreamManifestMightBeOutOfSync>
   {
+    // Supplementary encryption information might have been parsed.
+    for (const protInfo of evt.protectionData) {
+      // TODO better handle use cases like key rotation by not always grouping
+      // every protection data together? To check.
+      representation.addProtectionData(protInfo.initDataType,
+                                       protInfo.keyId,
+                                       protInfo.initData);
+    }
+
+    let segmentEncryptionEvent$ : Observable<IEncryptionDataEncounteredEvent> = EMPTY;
+    if (!hasSentEncryptionData) {
+      const protData = representation.getAllEncryptionData().map(p =>
+        EVENTS.encryptionDataEncountered(p, content));
+      if (protData.length > 0) {
+        segmentEncryptionEvent$ = observableOf(...protData);
+        hasSentEncryptionData = true;
+      }
+    }
+
     if (evt.segmentType === "init") {
-      nextTick(() => {
-        reCheckNeededSegments$.next();
-      });
+      if (!representation.index.isInitialized() &&
+          evt.segmentList !== undefined)
+      {
+        representation.index.initialize(evt.segmentList);
+        nextTick(() => { reCheckNeededSegments$.next(); });
+      }
       initSegmentState.segmentData = evt.initializationData;
       initSegmentState.isLoaded = true;
-
-      // Now that the initialization segment has been parsed - which may have
-      // included encryption information - take care of the encryption event
-      // if not already done.
-      const allEncryptionData = representation.getAllEncryptionData();
-      const initEncEvt$ = !hasSentEncryptionData &&
-                          allEncryptionData.length > 0 ?
-        observableOf(...allEncryptionData.map(p =>
-          EVENTS.encryptionDataEncountered(p, content))) :
-        EMPTY;
       const pushEvent$ = pushInitSegment({ playbackObserver,
                                            content,
                                            segment: evt.segment,
                                            segmentData: evt.initializationData,
                                            segmentBuffer });
-      return observableMerge(initEncEvt$, pushEvent$);
+      return observableMerge(segmentEncryptionEvent$, pushEvent$);
     } else {
       const { inbandEvents,
-              needsManifestRefresh,
-              protectionDataUpdate } = evt;
-
-      // TODO better handle use cases like key rotation by not always grouping
-      // every protection data together? To check.
-      const segmentEncryptionEvent$ = protectionDataUpdate &&
-                                     !hasSentEncryptionData ?
-        observableOf(...representation.getAllEncryptionData().map(p =>
-          EVENTS.encryptionDataEncountered(p, content))) :
-        EMPTY;
+              needsManifestRefresh } = evt;
 
       const manifestRefresh$ =  needsManifestRefresh === true ?
         observableOf(EVENTS.needsManifestRefresh()) :

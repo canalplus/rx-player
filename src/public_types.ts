@@ -311,12 +311,10 @@ export interface INetworkConfigOption {
 
 export type ISegmentLoader = (
   // first argument: infos on the segment
-  infos : { url : string;
-            manifest : IManifest;
-            period : IPeriod;
-            adaptation : IAdaptation;
-            representation : IRepresentation;
-            segment : IExposedSegment; },
+  args : { context : ISegmentLoaderContext;
+           transport : string;
+           url : string; },
+
 
   // second argument: callbacks
   callbacks : { resolve : (rArgs : { data : ArrayBuffer | Uint8Array;
@@ -336,6 +334,51 @@ export type ISegmentLoader = (
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
+
+/** Context given to a segment loader and parser. */
+export interface ISegmentLoaderContext {
+  /** Metadata about the wanted segment. */
+  segment : {
+    /**
+     * If true, this segment is an initialization segment with no decodable data.
+     *
+     * Those types of segment contain no decodable data and are only there for
+     * initialization purposes, such as giving initial infos to the decoder on
+     * subsequent media segments that will be pushed.
+     *
+     * Note that if `isInit` is false, it only means that the segment contains
+     * decodable media, it can also contain important initialization information.
+     *
+     * Also, a segment which would contain both all initialization data and the
+     * decodable data would have `isInit` set to `false` as it is not purely an
+     * initialization segment.
+     *
+     * Segments which are not purely an initialization segments are called "media
+     * segments" in the code.
+     */
+    isInit : boolean;
+    /**
+     * URLs where this segment is available. From the most to least prioritary.
+     * `null` if the concept of URL does not apply here.
+     */
+    mediaURLs : string[]|null;
+    /**
+     * If set, the corresponding byte-range in the downloaded segment will
+     * contain an index describing other Segments.
+     */
+    indexRange? : [number, number] | undefined;
+    /**
+     * If set, the corresponding byte-range is the subset in bytes of the loaded
+     * data where the segment actually is.
+     */
+    range? : [number, number] | undefined;
+  };
+  /** Type of the corresponding track. */
+  type : IAdaptationType;
+}
+
+/** Every possible value for the Adaptation's `type` property. */
+export type IAdaptationType = "video" | "audio" | "text";
 
 export type ILoadedManifestFormat = IInitialManifest;
 

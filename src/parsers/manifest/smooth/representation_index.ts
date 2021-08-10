@@ -182,6 +182,8 @@ interface ISmoothInitSegmentPrivateInfos {
   packetSize? : number | undefined;
   samplingRate? : number | undefined;
   protection? : { keyId : Uint8Array } | undefined;
+  height? : number | undefined;
+  width? : number | undefined;
 }
 
 /**
@@ -202,6 +204,8 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
                                 packetSize? : number | undefined;
                                 samplingRate? : number | undefined;
                                 timescale : number;
+                                height? : number | undefined;
+                                width? : number | undefined;
                                 protection? : { keyId : Uint8Array } | undefined; };
 
   /**
@@ -281,6 +285,8 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
                                packetSize: segmentPrivateInfos.packetSize,
                                samplingRate: segmentPrivateInfos.samplingRate,
                                timescale: index.timescale,
+                               height: segmentPrivateInfos.height,
+                               width: segmentPrivateInfos.width,
                                protection: segmentPrivateInfos.protection };
 
     this._isAggressiveMode = aggressiveMode;
@@ -622,6 +628,10 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    */
   isInitialized() : true {
     return true;
+  }
+
+  initialize() : void {
+    log.error("A `SmoothRepresentationIndex` does not need to be initialized");
   }
 
   /**
