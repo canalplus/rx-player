@@ -39,7 +39,7 @@ import {
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
  * @param {string} url
- * @param {Object} content
+ * @param {Object} context
  * @param {Object} callbacks
  * @param {Object} cancelSignal
  * @param {boolean} checkMediaSegmentIntegrity
@@ -47,13 +47,13 @@ import {
  */
 function regularSegmentLoader(
   url : string,
-  content : ISegmentContext,
+  context : ISegmentContext,
   callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>,
   cancelSignal : CancellationSignal,
   checkMediaSegmentIntegrity? : boolean | undefined
 ) : Promise<ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null>> {
   let headers;
-  const range = content.segment.range;
+  const range = context.segment.range;
   if (Array.isArray(range)) {
     headers = { Range: byteRange(range) };
   }
@@ -64,13 +64,13 @@ function regularSegmentLoader(
                    cancelSignal,
                    onProgress: callbacks.onProgress })
     .then((data) => {
-      const isMP4 = isMP4EmbeddedTrack(content.representation);
+      const isMP4 = isMP4EmbeddedTrack(context.mimeType);
       if (!isMP4 || checkMediaSegmentIntegrity !== true) {
         return { resultType: "segment-loaded" as const,
                  resultData: data };
       }
       const dataU8 = new Uint8Array(data.responseData);
-      checkISOBMFFIntegrity(dataU8, content.segment.isInit);
+      checkISOBMFFIntegrity(dataU8, context.segment.isInit);
       return { resultType: "segment-loaded" as const,
                resultData: { ...data, responseData: dataU8 } };
     });
@@ -88,12 +88,12 @@ const generateSegmentLoader = ({
   customSegmentLoader? : ICustomSegmentLoader | undefined;
 }) => (
   url : string | null,
-  content : ISegmentContext,
+  context : ISegmentContext,
   cancelSignal : CancellationSignal,
   callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>
 ) : Promise<ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null> |
             ISegmentLoaderResultSegmentCreated<Uint8Array | ArrayBuffer | null>> => {
-  const { segment, manifest, period, adaptation, representation } = content;
+  const { segment } = context;
   if (segment.isInit) {
     if (segment.privateInfos === undefined ||
         segment.privateInfos.smoothInitSegment === undefined)
@@ -104,18 +104,19 @@ const generateSegmentLoader = ({
     let responseData : Uint8Array;
     const { codecPrivateData,
             timescale,
+            height,
+            width,
             protection = { keyId: undefined,
                            keySystems: undefined } } = smoothInitPrivateInfos;
 
     if (codecPrivateData === undefined) {
       throw new Error("Smooth: no codec private data.");
     }
-    switch (adaptation.type) {
+    switch (context.type) {
       case "video": {
-        const { width = 0, height = 0 } = representation;
         responseData = createVideoInitSegment(timescale,
-                                              width,
-                                              height,
+                                              width ?? 0,
+                                              height ?? 0,
                                               72, 72, 4, // vRes, hRes, nal
                                               codecPrivateData,
                                               protection.keyId);
@@ -148,17 +149,9 @@ const generateSegmentLoader = ({
     return Promise.resolve({ resultType: "segment-created" as const,
                              resultData: null });
   } else {
-    const args = { adaptation,
-                   manifest,
-                   period,
-                   representation,
-                   segment,
-                   transport: "smooth",
-                   url };
-
     if (typeof customSegmentLoader !== "function") {
       return regularSegmentLoader(url,
-                                  content,
+                                  context,
                                   callbacks,
                                   cancelSignal,
                                   checkMediaSegmentIntegrity);
@@ -184,7 +177,7 @@ const generateSegmentLoader = ({
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
 
-        const isMP4 = isMP4EmbeddedTrack(content.representation);
+        const isMP4 = isMP4EmbeddedTrack(context.mimeType);
         if (!isMP4 || checkMediaSegmentIntegrity !== true) {
           res({ resultType: "segment-loaded" as const,
                 resultData: { responseData: _args.data,
@@ -194,7 +187,7 @@ const generateSegmentLoader = ({
 
         const dataU8 = _args.data instanceof Uint8Array ? _args.data :
                                                           new Uint8Array(_args.data);
-        checkISOBMFFIntegrity(dataU8, content.segment.isInit);
+        checkISOBMFFIntegrity(dataU8, context.segment.isInit);
         res({ resultType: "segment-loaded" as const,
               resultData: { responseData: dataU8,
                             size: _args.size,
@@ -247,7 +240,7 @@ const generateSegmentLoader = ({
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
         regularSegmentLoader(url,
-                             content,
+                             context,
                              callbacks,
                              cancelSignal,
                              checkMediaSegmentIntegrity)
@@ -255,6 +248,10 @@ const generateSegmentLoader = ({
       };
 
       const customCallbacks = { reject, resolve, fallback, progress };
+      const args = { context,
+                     transport: "smooth",
+                     url };
+
       const abort = customSegmentLoader(args, customCallbacks);
 
       cancelSignal.register(abortCustomLoader);

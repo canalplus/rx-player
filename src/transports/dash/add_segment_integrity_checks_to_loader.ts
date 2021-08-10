@@ -29,7 +29,7 @@ import inferSegmentContainer from "../utils/infer_segment_container";
 export default function addSegmentIntegrityChecks<T>(
   segmentLoader : ISegmentLoader<T>
 ) : ISegmentLoader<T> {
-  return (url, content, initialCancelSignal, callbacks) => {
+  return (url, context, initialCancelSignal, callbacks) => {
     return new Promise((resolve, reject) => {
       const requestCanceller = new TaskCanceller({ cancelOn: initialCancelSignal });
 
@@ -37,7 +37,7 @@ export default function addSegmentIntegrityChecks<T>(
       // `stopRejectingOnCancel` here is a function allowing to stop this mechanism
       const stopRejectingOnCancel = requestCanceller.signal.register(reject);
 
-      segmentLoader(url, content, requestCanceller.signal, {
+      segmentLoader(url, context, requestCanceller.signal, {
         ...callbacks,
         onNewChunk(data) {
           try {
@@ -78,12 +78,11 @@ export default function addSegmentIntegrityChecks<T>(
      */
     function trowOnIntegrityError(data : T) : void {
       if (!(data instanceof ArrayBuffer) && !(data instanceof Uint8Array) ||
-          inferSegmentContainer(content.adaptation.type,
-                                content.representation) !== "mp4")
+          inferSegmentContainer(context.type, context.mimeType) !== "mp4")
       {
         return;
       }
-      checkISOBMFFIntegrity(new Uint8Array(data), content.segment.isInit);
+      checkISOBMFFIntegrity(new Uint8Array(data), context.segment.isInit);
     }
   };
 }

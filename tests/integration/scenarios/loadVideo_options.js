@@ -339,7 +339,7 @@ describe("loadVideo Options", () => {
         numberOfTimeCustomSegmentLoaderWasCalled++;
 
         // we will only use this custom loader for videos segments.
-        if (infos.adaptation.type !== "video") {
+        if (infos.context.type !== "video") {
           callbacks.fallback();
           return;
         }
@@ -370,7 +370,7 @@ describe("loadVideo Options", () => {
         xhr.open("GET", infos.url);
         xhr.responseType = "arraybuffer";
 
-        const range = infos.segment.range;
+        const range = infos.context.segment.range;
         if (range) {
           if (range[1] && range[1] !== Infinity) {
             xhr.setRequestHeader("Range", `bytes=${range[0]}-${range[1]}`);
@@ -457,7 +457,7 @@ describe("loadVideo Options", () => {
         };
       };
 
-      it("should pass through the custom segmentLoader for segment requests", async () => {
+      it("should pass through the custom manifestLoader for manifest requests", async () => {
         player.loadVideo({
           transport: manifestInfos.transport,
           url: manifestInfos.url,

@@ -15,6 +15,7 @@
  */
 
 import config from "../../../../../config";
+import log from "../../../../../log";
 import {
   IRepresentationIndex,
   ISegment,
@@ -425,6 +426,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   isInitialized() : true {
     return true;
+  }
+
+  initialize() : void {
+    log.error("A `TemplateRepresentationIndex` does not need to be initialized");
   }
 
   /**
