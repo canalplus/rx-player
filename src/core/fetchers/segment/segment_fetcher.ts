@@ -117,6 +117,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     fetcherCallbacks : ISegmentFetcherCallbacks<TSegmentDataType>,
     cancellationSignal : CancellationSignal
   ) : Promise<void> {
+    const { segment, adaptation, representation, manifest, period } = content;
+
     // used by logs
     const segmentIdString = getLoggableSegmentId(content);
     const requestId = generateRequestID();
@@ -151,6 +153,17 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
 
     /** Set to `true` once network metrics have been sent. */
     let metricsSent = false;
+
+    /** Segment context given to the transport pipelines. */
+    const context = { segment,
+                      type: adaptation.type,
+                      language: adaptation.language,
+                      isLive: manifest.isLive,
+                      periodStart: period.start,
+                      periodEnd: period.end,
+                      mimeType: representation.mimeType,
+                      codecs: representation.codec,
+                      manifestPublishTime: manifest.publishTime };
 
     const loaderCallbacks = {
       /**
@@ -262,7 +275,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
       cdnMetadata : ICdnMetadata | null
     ) : ReturnType<ISegmentLoader<TLoadedFormat>> {
       return loadSegment(cdnMetadata,
-                         content,
+                         context,
                          requestOptions,
                          cancellationSignal,
                          loaderCallbacks);
@@ -289,7 +302,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         const loaded = { data, isChunked };
 
         try {
-          const parsed = parseSegment(loaded, content, initTimescale);
+          const parsed = parseSegment(loaded, context, initTimescale);
 
           if (!parsedChunks[parsedChunkId]) {
             segmentDurationAcc = segmentDurationAcc !== undefined &&

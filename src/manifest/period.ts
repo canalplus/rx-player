@@ -19,13 +19,13 @@ import {
   IParsedPeriod,
 } from "../parsers/manifest";
 import {
+  IAdaptationType,
   IPlayerError,
   IRepresentationFilter,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
 import Adaptation from "./adaptation";
-import { IAdaptationType } from "./types";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
