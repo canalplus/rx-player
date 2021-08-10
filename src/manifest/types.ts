@@ -28,6 +28,3 @@ export enum MANIFEST_UPDATE_TYPE {
    */
   Partial,
 }
-
-/** Every possible value for the Adaptation's `type` property. */
-export type IAdaptationType = "video" | "audio" | "text";

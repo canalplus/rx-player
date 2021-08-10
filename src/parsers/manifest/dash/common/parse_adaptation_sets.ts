@@ -16,10 +16,10 @@
 
 import log from "../../../../log";
 import {
-  IAdaptationType,
   Period,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "../../../../manifest";
+import { IAdaptationType } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import arrayFindIndex from "../../../../utils/array_find_index";
 import arrayIncludes from "../../../../utils/array_includes";

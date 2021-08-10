@@ -385,6 +385,8 @@ function createSmoothStreamingParser(
                                     codecPrivateData: qualityLevel.codecPrivateData,
                                     packetSize: qualityLevel.packetSize,
                                     samplingRate: qualityLevel.samplingRate,
+                                    height: qualityLevel.height,
+                                    width: qualityLevel.width,
 
                                     // TODO set multiple protections here
                                     // instead of the first one
