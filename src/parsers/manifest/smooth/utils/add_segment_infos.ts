@@ -20,27 +20,25 @@ export interface IIndexSegment { start : number;
                                  duration : number;
                                  repeatCount: number; }
 
-export interface ITimelineIndex { timescale : number;
-                                  timeline : IIndexSegment[]; }
-
 /**
  * Add a new segment to the index.
  *
  * /!\ Mutate the given index
- * @param {Object} index
+ * @param {Array.<Object>} timeline
+ * @param {number} timescale
  * @param {Object} newSegment
  * @param {Object} currentSegment
  * @returns {Boolean} - true if the segment has been added
  */
 export default function _addSegmentInfos(
-  index : ITimelineIndex,
+  timeline : IIndexSegment[],
+  timescale : number,
   newSegment : { time : number;
                  duration : number;
                  timescale : number; },
   currentSegment : { time : number;
                      duration : number; }
 ) : boolean {
-  const { timeline, timescale } = index;
   const timelineLength = timeline.length;
   const last = timeline[timelineLength - 1];
 
@@ -66,9 +64,9 @@ export default function _addSegmentInfos(
     if (last.duration === scaledNewSegment.duration) {
       last.repeatCount++;
     } else {
-      index.timeline.push({ duration: scaledNewSegment.duration,
-                            start: scaledNewSegment.time,
-                            repeatCount: 0 });
+      timeline.push({ duration: scaledNewSegment.duration,
+                      start: scaledNewSegment.time,
+                      repeatCount: 0 });
     }
     return true;
   }
