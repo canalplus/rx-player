@@ -214,10 +214,11 @@ export default function generateSegmentLoader(
 
       const customCallbacks = { reject, resolve, progress, fallback };
 
-      const args = { context: { segment: context.segment,
-                                type: context.type },
+      const args = { isInit: context.segment.isInit,
                      timeout: options.timeout,
-                     transport: "dash",
+                     range: context.segment.range,
+                     indexRange: context.segment.indexRange,
+                     type: context.type,
                      url };
       const abort = customSegmentLoader(args, customCallbacks);
 
