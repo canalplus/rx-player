@@ -387,7 +387,11 @@ export default function RepresentationStream<TSegmentDataType>({
       return observableMerge(segmentEncryptionEvent$, pushEvent$);
     } else {
       const { inbandEvents,
+              predictedSegments,
               needsManifestRefresh } = evt;
+      if (predictedSegments !== undefined) {
+        representation.index.addPredictedSegments(predictedSegments, evt.segment);
+      }
 
       const manifestRefresh$ =  needsManifestRefresh === true ?
         observableOf(EVENTS.needsManifestRefresh()) :

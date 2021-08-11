@@ -532,6 +532,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     log.error("A `TimelineRepresentationIndex` does not need to be initialized");
   }
 
+  addPredictedSegments() : void {
+    log.warn("Cannot add predicted segments to a `TimelineRepresentationIndex`");
+  }
+
   /**
    * Returns `true` if the given object can be used as an "index" argument to
    * create a new `TimelineRepresentationIndex`.
