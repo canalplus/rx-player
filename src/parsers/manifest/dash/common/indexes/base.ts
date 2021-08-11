@@ -19,7 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../../manifest";
-import { IIndexSegmentListItem } from "../../../../../transports";
+import { ISegmentInformation } from "../../../../../transports";
 import { IEMSG } from "../../../../containers/isobmff";
 import {
   fromIndexTime,
@@ -392,7 +392,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @param {Array.<Object>} indexSegments
    * @returns {Array.<Object>}
    */
-  initialize(indexSegments : IIndexSegmentListItem[]) : void {
+  initialize(indexSegments : ISegmentInformation[]) : void {
     if (this._isInitialized) {
       return ;
     }
@@ -400,6 +400,10 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
       _addSegmentInfos(this._index, indexSegments[i]);
     }
     this._isInitialized = true;
+  }
+
+  addPredictedSegments() : void {
+    log.warn("Cannot add predicted segments to a `BaseRepresentationIndex`");
   }
 
   /**

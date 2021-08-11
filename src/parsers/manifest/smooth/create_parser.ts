@@ -48,6 +48,7 @@ import parseProtectionNode, {
   IKeySystem,
 } from "./parse_protection_node";
 import RepresentationIndex from "./representation_index";
+import SharedSmoothSegmentTimeline from "./shared_smooth_segment_timeline";
 import parseBoolean from "./utils/parseBoolean";
 import reduceChildren from "./utils/reduceChildren";
 import { replaceRepresentationSmoothTokens } from "./utils/tokens";
@@ -333,8 +334,12 @@ function createSmoothStreamingParser(
         return res;
       }, { qualityLevels: [], cNodes: [] });
 
-    const index = { timeline: parseCNodes(cNodes),
-                    timescale: _timescale };
+    const sharedSmoothTimeline = new SharedSmoothSegmentTimeline({
+      timeline: parseCNodes(cNodes),
+      timescale: _timescale,
+      timeShiftBufferDepth,
+      manifestReceivedTime,
+    });
 
     // we assume that all qualityLevels have the same
     // codec and mimeType
@@ -347,13 +352,9 @@ function createSmoothStreamingParser(
 
     const representations = qualityLevels.map((qualityLevel) => {
       const path = resolveURL(rootURL, baseURL);
-      const repIndex = {
-        timeline: index.timeline,
-        timescale: index.timescale,
-        media: replaceRepresentationSmoothTokens(path,
-                                                 qualityLevel.bitrate,
-                                                 qualityLevel.customAttributes),
-      };
+      const media = replaceRepresentationSmoothTokens(path,
+                                                      qualityLevel.bitrate,
+                                                      qualityLevel.customAttributes);
       const mimeType = isNonEmptyString(qualityLevel.mimeType) ?
         qualityLevel.mimeType :
         DEFAULT_MIME_TYPES[adaptationType];
@@ -397,11 +398,11 @@ function createSmoothStreamingParser(
       const aggressiveMode = parserOptions.aggressiveMode == null ?
         DEFAULT_AGGRESSIVE_MODE :
         parserOptions.aggressiveMode;
-      const reprIndex = new RepresentationIndex(repIndex, { aggressiveMode,
-                                                            isLive,
-                                                            manifestReceivedTime,
-                                                            segmentPrivateInfos,
-                                                            timeShiftBufferDepth });
+      const reprIndex = new RepresentationIndex({ aggressiveMode,
+                                                  isLive,
+                                                  sharedSmoothTimeline,
+                                                  media,
+                                                  segmentPrivateInfos });
       const representation : IParsedRepresentation = objectAssign({},
                                                                   qualityLevel,
                                                                   { index: reprIndex,
