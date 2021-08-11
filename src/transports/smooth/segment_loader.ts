@@ -255,11 +255,12 @@ const generateSegmentLoader = ({
       };
 
       const customCallbacks = { reject, resolve, fallback, progress };
-      const args = { context,
-                     transport: "smooth",
+      const args = { isInit: context.segment.isInit,
                      timeout: loaderOptions.timeout,
+                     range: context.segment.range,
+                     indexRange: context.segment.indexRange,
+                     type: context.type,
                      url };
-
       const abort = customSegmentLoader(args, customCallbacks);
 
       cancelSignal.register(abortCustomLoader);

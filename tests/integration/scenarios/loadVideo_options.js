@@ -335,11 +335,11 @@ describe("loadVideo Options", () => {
         numberOfTimeCustomSegmentLoaderWentThrough = 0;
       });
 
-      const customSegmentLoader = (infos, callbacks) => {
+      const customSegmentLoader = (info, callbacks) => {
         numberOfTimeCustomSegmentLoaderWasCalled++;
 
         // we will only use this custom loader for videos segments.
-        if (infos.context.type !== "video") {
+        if (info.type !== "video") {
           callbacks.fallback();
           return;
         }
@@ -367,10 +367,10 @@ describe("loadVideo Options", () => {
           callbacks.reject(err);
         };
 
-        xhr.open("GET", infos.url);
+        xhr.open("GET", info.url);
         xhr.responseType = "arraybuffer";
 
-        const range = infos.context.segment.range;
+        const range = info.range;
         if (range) {
           if (range[1] && range[1] !== Infinity) {
             xhr.setRequestHeader("Range", `bytes=${range[0]}-${range[1]}`);
