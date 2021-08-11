@@ -33,6 +33,7 @@ function generateRepresentationIndex(
     canBeOutOfSyncError() : true { return true; },
     isInitialized() : true { return true; },
     initialize() : void { return ; },
+    addPredictedSegments() : void { return ; },
     _replace() { /* noop */ },
     _update() { /* noop */ },
   };

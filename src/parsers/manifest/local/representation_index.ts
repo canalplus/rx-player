@@ -165,6 +165,10 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     log.error("A `LocalRepresentationIndex` does not need to be initialized");
   }
 
+  addPredictedSegments() : void {
+    log.warn("Cannot add predicted segments to a `LocalRepresentationIndex`");
+  }
+
   _replace(newIndex : LocalRepresentationIndex) : void {
     this._isFinished = newIndex._isFinished;
     this._index.segments = newIndex._index.segments;
