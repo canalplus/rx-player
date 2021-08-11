@@ -24,7 +24,7 @@ an XMLHttpRequest (it has no use, as our implementation does the same thing and
 more):
 ```js
 /**
- * @param {Object} infos - infos about the segment to download
+ * @param {Object} segmentInfo - Information about the segment to download
  * @param {Object} callbacks - Object containing several callbacks to indicate
  * that the segment has been loaded, the loading operation has failed or to
  * fallback to our default implementation. More information on this object below
@@ -32,10 +32,11 @@ more):
  * @returns {Function|undefined} - If a function is defined in the return value,
  * it will be called if and when the request is canceled.
  */
-const customSegmentLoader = (infos, callbacks) => {
+const customSegmentLoader = (segmentInfo, callbacks) => {
 
   // we will only use this custom loader for videos segments.
-  if (infos.adaptation.type !== "video") {
+  // we will also ignore edge cases where the URL is undefined.
+  if (segmentInfo.type !== "video" || segmentInfo.url === undefined) {
     callbacks.fallback();
     return;
   }
@@ -68,10 +69,10 @@ const customSegmentLoader = (infos, callbacks) => {
     callbacks.reject(err);
   };
 
-  xhr.open("GET", infos.url);
+  xhr.open("GET", segmentInfo.url);
   xhr.responseType = "arraybuffer";
 
-  const range = infos.segment.range;
+  const range = segmentInfo.range;
   if (range) {
     if (range[1] && range[1] !== Infinity) {
       xhr.setRequestHeader("Range", `bytes=${range[0]}-${range[1]}`);
@@ -90,42 +91,50 @@ const customSegmentLoader = (infos, callbacks) => {
 
 As you can see, this function takes two arguments:
 
-  1. **infos**: An Object giving information about the wanted segments.
-     This object contains the following properties:
+  1. **segmentInfo** (`object`): An Object giving information about the wanted
+     segments.  This object contains the following properties:
 
-       - *url* (`string`): The URL the segment request should normally be
-         performed at.
+       - **url** (`string|undefined`): The URL the segment request should
+         normally be performed at.
 
-       - *manifest* (`Object`) - the Manifest object containing the segment.
-         More information on its structure can be found on the documentation
-         linked below [1].
+         This property can be `undefined` in a condition where the segment URL
+         either doesn't exist or has not been communicated by the Manifest.
+         This case is not currently possible but may be in future versions.
 
-       - *period* (`Object`) - the Period object containing the segment.
-         More information on its structure can be found on the documentation
-         linked below [2].
+       - *isInit* (`boolean|undefined`): If true this segment is an
+         initialization segment which contains no decodable data.
 
-       - *adaptation* (`Object`) - the Adaptation object containing the segment.
-         More information on its structure can be found on the documentation
-         linked below [3].
+         Those types of segment are mainly there for initialization
+         purposes, such as giving initial infos to the decoder on
+         subsequent media segments that will be pushed.
 
-       - *representation* (`Object`) - the Representation object containing the
-         segment.
-         More information on its structure can be found on the documentation
-         linked below [4].
+         Note that if `isInit` is false, it only means that the segment
+         contains decodable media, it can also contain important
+         initialization information.
 
-       - *segment* (`Object`) - the segment object related to this segment.
-         More information on its structure can be found on the documentation
-         linked below [5].
+         If `undefined`, we could not determine whether this segment was an
+         initialization segment.
+         This case is not currently possible but may be in future versions.
 
-     [1] [Manifest structure](./Manifest_Object.md#manifest)
+       - `range` (`Array.<number>|undefined`): If defined, it means that the
+         segment data is actually defined in a specific byte-range of the given
+         URL.
 
-     [2] [Period structure](./Manifest_Object.md#period)
+         Segment loaders are expected to only communicate that range of data
+         to the RxPlayer (if both a `range` and `indexRange` property
+         exists, it should communicate both).
 
-     [3] [Adaptation structure](./Manifest_Object.md#adaptation)
+       - `indexRange` (`Array.<number>|undefined`): If defined, it means that a
+         segment index can be retrieved at the associated URL by the byte range
+         expressed by this value.
 
-     [4] [Representation structure](./Manifest_Object.md#representation)
+         When this values is set - which is only done for specific contents
+         it is expected that the loader load both the segment's data and
+         this index.
 
-     [5] [Segment structure](./Manifest_Object.md#segment)
+         How to perform that last operation can be format-specific.
+         For ISOBMFF segments, both the data and the segment index can just
+         be concatenated.
 
   2. **callbacks**: An object containing multiple callbacks to allow this
      `segmentLoader` to communicate various events to the RxPlayer.
@@ -144,9 +153,10 @@ As you can see, this function takes two arguments:
 
              This value may be used to estimate the ideal user bandwidth.
 
-
            - *size* (`Number|undefined`) size, in bytes, of the total downloaded
              response.
+
+             This value may be used to estimate the ideal user bandwidth.
 
        - **progress** - Callback to call when progress information is available
          on the current request. This callback allows to improve our adaptive
