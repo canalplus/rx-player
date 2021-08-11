@@ -156,7 +156,7 @@ describe("core - eme - global tests - getLicense", () => {
                       ignoreLicenseRequests: false }, done);
   });
 
-  it("should be able to retry two times and succeed after a time with a resolved null", (done) => {
+  it("should be able to retry one time and succeed after a time with a resolved null", (done) => {
     checkGetLicense({ isGetLicensePromiseBased: true,
                       configuredRetries: undefined,
                       configuredTimeout: undefined,
@@ -165,7 +165,7 @@ describe("core - eme - global tests - getLicense", () => {
                       ignoreLicenseRequests: true }, done);
   });
 
-  it("should be able to retry two times and succeed after a time with a returned null", (done) => {
+  it("should be able to retry one time and succeed after a time with a returned null", (done) => {
     checkGetLicense({ isGetLicensePromiseBased: false,
                       configuredRetries: undefined,
                       configuredTimeout: undefined,
