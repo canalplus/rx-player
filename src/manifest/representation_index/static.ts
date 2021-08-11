@@ -133,6 +133,10 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     log.error("A `StaticRepresentationIndex` does not need to be initialized");
   }
 
+  addPredictedSegments() : void {
+    log.warn("Cannot add predicted segments to a `StaticRepresentationIndex`");
+  }
+
   _replace() : void {
     log.warn("Tried to replace a static RepresentationIndex");
   }

@@ -303,6 +303,10 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     log.error("A `ListRepresentationIndex` does not need to be initialized");
   }
 
+  addPredictedSegments() : void {
+    log.warn("Cannot add predicted segments to a `ListRepresentationIndex`");
+  }
+
   /**
    * @param {Object} newIndex
    */

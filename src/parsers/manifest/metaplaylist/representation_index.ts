@@ -19,7 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
-import { IIndexSegmentListItem } from "../../../transports";
+import { ISegmentInformation } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
 
 export interface IBaseContentMetadata {
@@ -194,8 +194,15 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
     return this._wrappedIndex.isInitialized();
   }
 
-  public initialize(indexSegments : IIndexSegmentListItem[]) : void {
+  public initialize(indexSegments : ISegmentInformation[]) : void {
     return this._wrappedIndex.initialize(indexSegments);
+  }
+
+  public addPredictedSegments(
+    nextSegments : ISegmentInformation[],
+    currentSegment : ISegment
+  ) : void {
+    return this._wrappedIndex.addPredictedSegments(nextSegments, currentSegment);
   }
 
   /**

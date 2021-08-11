@@ -21,7 +21,7 @@ import {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
-import { IIndexSegmentListItem } from "../../transports";
+import { ISegmentInformation } from "../../transports";
 
 /**
  * Supplementary information specific to Smooth Initialization segments.
@@ -388,7 +388,19 @@ export interface IRepresentationIndex {
    * this `initialize` method.
    * @param {Array.<Object>} segmentList
    */
-  initialize(segmentList : IIndexSegmentListItem[]) : void;
+  initialize(segmentList : ISegmentInformation[]) : void;
+
+  /**
+   * Add segments to a RepresentationIndex that were predicted after parsing the
+   * segment linked to `currentSegment`.
+   * @param {Array.<Object>} nextSegments - The segment information parsed.
+   * @param {Object} segment - Information on the segment which contained that
+   * new segment information.
+   */
+  addPredictedSegments(
+    nextSegments : ISegmentInformation[],
+    currentSegment : ISegment
+  ) : void;
 
   /**
    * Replace the index with another one, such as after a Manifest update.

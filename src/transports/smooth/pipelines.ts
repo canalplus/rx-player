@@ -49,32 +49,6 @@ import isMP4EmbeddedTrack from "./is_mp4_embedded_track";
 import { patchSegment } from "./isobmff";
 import generateSegmentLoader from "./segment_loader";
 
-// XXX TODO
-// /**
-//  * @param {Object} adaptation
-//  * @param {Object} dlSegment
-//  * @param {Object} nextSegments
-//  */
-// function addNextSegments(
-//   adaptation : Adaptation,
-//   nextSegments : INextSegmentsInfos[],
-//   dlSegment : ISegment
-// ) : void {
-//   log.debug("Smooth Parser: update segments information.");
-//   const representations = adaptation.representations;
-//   for (let i = 0; i < representations.length; i++) {
-//     const representation = representations[i];
-//     if (representation.index instanceof SmoothRepresentationIndex &&
-//         dlSegment?.privateInfos?.smoothMediaSegment !== undefined)
-//     {
-//       representation.index.addNewSegments(nextSegments,
-//                                           dlSegment.privateInfos.smoothMediaSegment);
-//     } else {
-//       log.warn("Smooth Parser: should only encounter SmoothRepresentationIndex");
-//     }
-//   }
-// }
-
 export default function(options : ITransportOptions) : ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options);
@@ -185,15 +159,14 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       }
       const { nextSegments, chunkInfos, scaledSegmentTime } = timingInfos;
       const chunkData = patchSegment(responseBuffer, scaledSegmentTime);
-      if (nextSegments.length > 0) {
-        // XXX TODO
-        // addNextSegments(adaptation, nextSegments, segment);
-      }
+      const predictedSegments = nextSegments.length > 0 ? nextSegments :
+                                                          undefined;
       return { segmentType: "media",
                chunkData,
                chunkInfos,
                chunkOffset: 0,
                protectionData: [],
+               predictedSegments,
                appendWindow: [undefined, undefined] };
     },
   };
@@ -357,13 +330,9 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         _sdData = chunkString;
       }
 
-      if (chunkInfos !== null &&
-          Array.isArray(nextSegments) && nextSegments.length > 0)
-      {
-        // XXX TODO
-        // addNextSegments(adaptation, nextSegments, segment);
-      }
-
+      const predictedSegments = Array.isArray(nextSegments) &&
+                                nextSegments.length > 0 ? nextSegments :
+                                                          undefined;
       const chunkOffset = segmentStart ?? 0;
       return { segmentType: "media",
                chunkData: { type: _sdType,
@@ -374,6 +343,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                chunkInfos,
                chunkOffset,
                protectionData: [],
+               predictedSegments,
                appendWindow: [undefined, undefined] };
     },
   };
