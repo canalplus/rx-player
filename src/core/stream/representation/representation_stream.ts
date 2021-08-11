@@ -393,7 +393,11 @@ export default function RepresentationStream<TSegmentDataType>(
       return;
     } else {
       const { inbandEvents,
+              predictedSegments,
               needsManifestRefresh } = evt;
+      if (predictedSegments !== undefined) {
+        representation.index.addPredictedSegments(predictedSegments, evt.segment);
+      }
 
       if (needsManifestRefresh === true) {
         callbacks.needsManifestRefresh();
