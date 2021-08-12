@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  ICustomError,
-  MediaError,
-} from "../errors";
-import log from "../log";
 import { IParsedAdaptation } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
-import arrayIncludes from "../utils/array_includes";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
 import uniq from "../utils/uniq";
@@ -33,17 +27,6 @@ export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
                                                                "video",
                                                                "text",
                                                                "image" ];
-
-/**
- * Returns true if the given Adaptation's `type` is a valid `type` property.
- * @param {string} adaptationType
- * @returns {boolean}
- */
-function isSupportedAdaptationType(
-  adaptationType : string
-) : adaptationType is IAdaptationType {
-  return arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptationType);
-}
 
 /**
  * Information describing a single Representation from an Adaptation, to be used
@@ -115,12 +98,6 @@ export default class Adaptation {
   /** Tells if the track is a trick mode track. */
   public isTrickModeTrack? : boolean;
 
-  /**
-   * Array containing every errors that happened when the Adaptation has been
-   * created, in the order they have happened.
-   */
-  public readonly parsingErrors : ICustomError[];
-
   public readonly trickModeTracks? : Adaptation[];
 
   /**
@@ -134,18 +111,9 @@ export default class Adaptation {
   } = {}) {
     const { trickModeTracks } = parsedAdaptation;
     const { representationFilter, isManuallyAdded } = options;
-    this.parsingErrors = [];
     this.id = parsedAdaptation.id;
     this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
 
-    if (!isSupportedAdaptationType(parsedAdaptation.type)) {
-      log.info("Manifest: Not supported adaptation type", parsedAdaptation.type);
-      /* eslint-disable @typescript-eslint/restrict-template-expressions */
-      throw new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
-                           `"${parsedAdaptation.type}" is not a valid ` +
-                           "Adaptation type.");
-      /* eslint-enable @typescript-eslint/restrict-template-expressions */
-    }
     this.type = parsedAdaptation.type;
 
     if (parsedAdaptation.language !== undefined) {
@@ -201,13 +169,6 @@ export default class Adaptation {
 
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = isManuallyAdded === true;
-
-    if (this.representations.length > 0 && !isSupported) {
-      log.warn("Incompatible codecs for adaptation", parsedAdaptation);
-      const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                                   "An Adaptation contains only incompatible codecs.");
-      this.parsingErrors.push(error);
-    }
   }
 
   /**

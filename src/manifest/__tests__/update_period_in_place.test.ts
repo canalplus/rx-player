@@ -18,44 +18,44 @@ import log from "../../log";
 import { MANIFEST_UPDATE_TYPE } from "../types";
 import updatePeriodInPlace from "../update_period_in_place";
 
-const oldVideoRepresentation1 = { parsingErrors: [],
+const oldVideoRepresentation1 = { contentWarnings: [],
                                   id: "rep-video-1",
                                   index: { _update() { /* noop */ },
                                            _replace() { /* noop */ } } };
-const oldVideoRepresentation2 = { parsingErrors: [],
+const oldVideoRepresentation2 = { contentWarnings: [],
                                   id: "rep-video-2",
                                   index: { _update() { /* noop */ },
                                            _replace() { /* noop */ } } };
-const oldVideoRepresentation3 = { parsingErrors: [],
+const oldVideoRepresentation3 = { contentWarnings: [],
                                   id: "rep-video-3",
                                   index: { _update() { /* noop */ },
                                            _replace() { /* noop */ } } };
-const oldVideoRepresentation4 = { parsingErrors: [],
+const oldVideoRepresentation4 = { contentWarnings: [],
                                   id: "rep-video-4",
                                   index: { _update() { /* noop */ },
                                            _replace() { /* noop */ } } };
-const oldAudioRepresentation = { parsingErrors: [],
+const oldAudioRepresentation = { contentWarnings: [],
                                  id: "rep-audio-1",
                                  index: { _update() { /* noop */ },
                                           _replace() { /* noop */ } } };
 
-const newVideoRepresentation1 = { parsingErrors: [],
+const newVideoRepresentation1 = { contentWarnings: [],
                                   id: "rep-video-1",
                                   index: { _update() { /* noop */ },
                                            _replace() { /* noop */ } } };
-const newVideoRepresentation2 = { parsingErrors: [],
+const newVideoRepresentation2 = { contentWarnings: [],
                                   id: "rep-video-2",
                                   index: { _update() { /* noop */ },
                                            _replace() { /* noop */ } } };
-const newVideoRepresentation3 = { parsingErrors: [],
+const newVideoRepresentation3 = { contentWarnings: [],
                                   id: "rep-video-3",
                                   index: { _update() { /* noop */ },
                                            _replace() { /* noop */ } } };
-const newVideoRepresentation4 = { parsingErrors: [],
+const newVideoRepresentation4 = { contentWarnings: [],
                                   id: "rep-video-4",
                                   index: { _update() { /* noop */ },
                                            _replace() { /* noop */ } } };
-const newAudioRepresentation = { parsingErrors: [],
+const newAudioRepresentation = { contentWarnings: [],
                                  id: "rep-audio-1",
                                  index: { _update() { /* noop */ },
                                           _replace() { /* noop */ } } };
@@ -151,19 +151,19 @@ describe("Manifest - updatePeriodInPlace", () => {
 /* eslint-disable max-len */
   it("should fully update the first Period given by the second one in a full update", () => {
 /* eslint-enable max-len */
-    const oldVideoAdaptation1 = { parsingErrors: [],
+    const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
-    const oldVideoAdaptation2 = { parsingErrors: [],
+    const oldVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
                                   representations: [oldVideoRepresentation3,
                                                     oldVideoRepresentation4] };
-    const oldAudioAdaptation = { parsingErrors: [],
+    const oldAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = {
-      parsingErrors: [],
+      contentWarnings: [],
       start: 5,
       end: 15,
       duration: 10,
@@ -176,19 +176,19 @@ describe("Manifest - updatePeriodInPlace", () => {
                 oldAudioAdaptation];
       },
     };
-    const newVideoAdaptation1 = { parsingErrors: [],
+    const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
-    const newVideoAdaptation2 = { parsingErrors: [],
+    const newVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
                                   representations: [newVideoRepresentation3,
                                                     newVideoRepresentation4] };
-    const newAudioAdaptation = { parsingErrors: [],
+    const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
-      parsingErrors: [],
+      contentWarnings: [],
       start: 500,
       end: 520,
       duration: 20,
@@ -262,19 +262,19 @@ describe("Manifest - updatePeriodInPlace", () => {
 /* eslint-disable max-len */
   it("should partially update the first Period given by the second one in a partial update", () => {
 /* eslint-enable max-len */
-    const oldVideoAdaptation1 = { parsingErrors: [],
+    const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
-    const oldVideoAdaptation2 = { parsingErrors: [],
+    const oldVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
                                   representations: [oldVideoRepresentation3,
                                                     oldVideoRepresentation4] };
-    const oldAudioAdaptation = { parsingErrors: [],
+    const oldAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = {
-      parsingErrors: [],
+      contentWarnings: [],
       start: 5,
       end: 15,
       duration: 10,
@@ -287,19 +287,19 @@ describe("Manifest - updatePeriodInPlace", () => {
                 oldAudioAdaptation];
       },
     };
-    const newVideoAdaptation1 = { parsingErrors: [],
+    const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
-    const newVideoAdaptation2 = { parsingErrors: [],
+    const newVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
                                   representations: [newVideoRepresentation3,
                                                     newVideoRepresentation4] };
-    const newAudioAdaptation = { parsingErrors: [],
+    const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
-      parsingErrors: [],
+      contentWarnings: [],
       start: 500,
       end: 520,
       duration: 20,
@@ -371,15 +371,15 @@ describe("Manifest - updatePeriodInPlace", () => {
   });
 
   it("should do nothing with new Adaptations", () => {
-    const oldVideoAdaptation1 = { parsingErrors: [],
+    const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
-    const oldAudioAdaptation = { parsingErrors: [],
+    const oldAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = {
-      parsingErrors: [],
+      contentWarnings: [],
       start: 5,
       end: 15,
       duration: 10,
@@ -390,19 +390,19 @@ describe("Manifest - updatePeriodInPlace", () => {
                 oldAudioAdaptation];
       },
     };
-    const newVideoAdaptation1 = { parsingErrors: [],
+    const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
-    const newVideoAdaptation2 = { parsingErrors: [],
+    const newVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
                                   representations: [newVideoRepresentation3,
                                                     newVideoRepresentation4] };
-    const newAudioAdaptation = { parsingErrors: [],
+    const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
-      parsingErrors: [],
+      contentWarnings: [],
       start: 500,
       end: 520,
       duration: 20,
@@ -427,19 +427,19 @@ describe("Manifest - updatePeriodInPlace", () => {
   });
 
   it("should warn if an old Adaptation is not found", () => {
-    const oldVideoAdaptation1 = { parsingErrors: [],
+    const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
-    const oldVideoAdaptation2 = { parsingErrors: [],
+    const oldVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
                                   representations: [oldVideoRepresentation3,
                                                     oldVideoRepresentation4] };
-    const oldAudioAdaptation = { parsingErrors: [],
+    const oldAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = {
-      parsingErrors: [],
+      contentWarnings: [],
       start: 500,
       end: 520,
       duration: 20,
@@ -452,15 +452,15 @@ describe("Manifest - updatePeriodInPlace", () => {
                 oldAudioAdaptation];
       },
     };
-    const newVideoAdaptation1 = { parsingErrors: [],
+    const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
-    const newAudioAdaptation = { parsingErrors: [],
+    const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
-      parsingErrors: [],
+      contentWarnings: [],
       start: 5,
       end: 15,
       duration: 10,
@@ -489,13 +489,13 @@ describe("Manifest - updatePeriodInPlace", () => {
   });
 
   it("should do nothing with new Representations", () => {
-    const oldVideoAdaptation1 = { parsingErrors: [],
+    const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1] };
-    const oldAudioAdaptation = { parsingErrors: [],
+    const oldAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
-    const oldPeriod = { parsingErrors: [],
+    const oldPeriod = { contentWarnings: [],
                         start: 5,
                         end: 15,
                         duration: 10,
@@ -504,15 +504,15 @@ describe("Manifest - updatePeriodInPlace", () => {
                         getAdaptations() { return [oldVideoAdaptation1,
                                                    oldAudioAdaptation]; } };
 
-    const newVideoAdaptation1 = { parsingErrors: [],
+    const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
-    const newAudioAdaptation = { parsingErrors: [],
+    const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
-      parsingErrors: [],
+      contentWarnings: [],
       start: 500,
       end: 520,
       duration: 20,
@@ -534,14 +534,14 @@ describe("Manifest - updatePeriodInPlace", () => {
   });
 
   it("should warn if an old Representation is not found", () => {
-    const oldVideoAdaptation1 = { parsingErrors: [],
+    const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
-    const oldAudioAdaptation = { parsingErrors: [],
+    const oldAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
-    const oldPeriod = { parsingErrors: [],
+    const oldPeriod = { contentWarnings: [],
                         start: 500,
                         end: 520,
                         duration: 20,
@@ -549,13 +549,13 @@ describe("Manifest - updatePeriodInPlace", () => {
                                        audio: [oldAudioAdaptation] },
                         getAdaptations() { return [oldVideoAdaptation1,
                                                    oldAudioAdaptation]; } };
-    const newVideoAdaptation1 = { parsingErrors: [],
+    const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1] };
-    const newAudioAdaptation = { parsingErrors: [],
+    const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
-    const newPeriod = { parsingErrors: [],
+    const newPeriod = { contentWarnings: [],
                         start: 5,
                         end: 15,
                         duration: 10,

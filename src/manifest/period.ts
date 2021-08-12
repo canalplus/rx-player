@@ -15,7 +15,6 @@
  */
 import {
   ICustomError,
-  isKnownError,
   MediaError,
 } from "../errors";
 import {
@@ -63,7 +62,7 @@ export default class Period {
    * Array containing every errors that happened when the Period has been
    * created, in the order they have happened.
    */
-  public readonly parsingErrors : ICustomError[];
+  public readonly contentWarnings : ICustomError[];
 
   /** Array containing every stream event happening on the period */
   public streamEvents : IManifestStreamEvent[];
@@ -77,7 +76,7 @@ export default class Period {
     args : IParsedPeriod,
     representationFilter? : IRepresentationFilter
   ) {
-    this.parsingErrors = [];
+    this.contentWarnings = [];
     this.id = args.id;
     this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
       .reduce<IManifestAdaptations>((acc, type) => {
@@ -86,24 +85,18 @@ export default class Period {
           return acc;
         }
         const filteredAdaptations = adaptationsForType
-          .map((adaptation) : Adaptation|null => {
-            let newAdaptation : Adaptation|null = null;
-            try {
-              newAdaptation = new Adaptation(adaptation, { representationFilter });
-            } catch (err) {
-              if (isKnownError(err) &&
-                  err.code === "MANIFEST_UNSUPPORTED_ADAPTATION_TYPE")
-              {
-                this.parsingErrors.push(err);
-                return null;
-              }
-              throw err;
+          .map((adaptation) : Adaptation => {
+            const newAdaptation = new Adaptation(adaptation, { representationFilter });
+            if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
+              const error =
+                new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+                               "An Adaptation contains only incompatible codecs.");
+              this.contentWarnings.push(error);
             }
-            this.parsingErrors.push(...newAdaptation.parsingErrors);
             return newAdaptation;
           })
           .filter((adaptation) : adaptation is Adaptation =>
-            adaptation !== null && adaptation.representations.length > 0
+            adaptation.representations.length > 0
           );
         if (filteredAdaptations.every(adaptation => !adaptation.isSupported) &&
             adaptationsForType.length > 0 &&

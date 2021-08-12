@@ -15,7 +15,10 @@
  */
 
 import { IInitializationDataInfo } from "../core/eme";
-import { ICustomError } from "../errors";
+import {
+  ICustomError,
+  MediaError,
+} from "../errors";
 import { IParsedManifest } from "../parsers/manifest";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../utils/array_find";
@@ -231,7 +234,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * Array containing every minor errors that happened when the Manifest has
    * been created, in the order they have happened.
    */
-  public parsingErrors : ICustomError[];
+  public contentWarnings : ICustomError[];
 
   /*
    * Difference between the server's clock in milliseconds and the return of the
@@ -316,7 +319,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * Construct a Manifest instance from a parsed Manifest object (as returned by
    * Manifest parsers) and options.
    *
-   * Some minor errors can arise during that construction. `this.parsingErrors`
+   * Some minor errors can arise during that construction. `this.contentWarnings`
    * will contain all such errors, in the order they have been encountered.
    * @param {Object} parsedManifest
    * @param {Object} options
@@ -327,7 +330,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
             supplementaryImageTracks = [],
             representationFilter,
             manifestUpdateUrl } = options;
-    this.parsingErrors = [];
+    this.contentWarnings = [];
     this.id = generateNewManifestId();
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
@@ -335,7 +338,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
     this.periods = parsedManifest.periods.map((parsedPeriod) => {
       const period = new Period(parsedPeriod, representationFilter);
-      this.parsingErrors.push(...period.parsingErrors);
+      this.contentWarnings.push(...period.contentWarnings);
       return period;
     }).sort((a, b) => a.start - b.start);
 
@@ -645,7 +648,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                  media: url,
                                                }) }] },
                                            { isManuallyAdded: true });
-      this.parsingErrors.push(...newAdaptation.parsingErrors);
+      if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
+        const error =
+          new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+                         "An Adaptation contains only incompatible codecs.");
+        this.contentWarnings.push(error);
+      }
       return newAdaptation;
     });
 
@@ -698,7 +706,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                    media: url,
                                                  }) }] },
                                              { isManuallyAdded: true });
-        this.parsingErrors.push(...newAdaptation.parsingErrors);
+        if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
+          const error =
+            new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+                           "An Adaptation contains only incompatible codecs.");
+          this.contentWarnings.push(error);
+        }
         return newAdaptation;
       }));
     }, []);
@@ -725,7 +738,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.isLive = newManifest.isLive;
     this.isLastPeriodKnown = newManifest.isLastPeriodKnown;
     this.lifetime = newManifest.lifetime;
-    this.parsingErrors = newManifest.parsingErrors;
+    this.contentWarnings = newManifest.contentWarnings;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
     this.publishTime = newManifest.publishTime;

@@ -70,32 +70,10 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.language).toBe(undefined);
     expect(adaptation.normalizedLanguage).toBe(undefined);
     expect(adaptation.manuallyAdded).toBe(false);
-    expect(adaptation.parsingErrors).toEqual([]);
     expect(adaptation.getAvailableBitrates()).toEqual([]);
     expect(adaptation.getRepresentation("")).toBe(undefined);
 
     expect(defaultRepresentationSpy).not.toHaveBeenCalled();
-  });
-
-  it("should throw if the given adaptation type is not supported", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
-
-    const Adaptation = require("../adaptation").default;
-    const args = { id: "12",
-                   representations: [],
-                   type: "foo" };
-    let adaptation = null;
-    let error = null;
-    try {
-      adaptation = new Adaptation(args);
-    } catch (err) {
-      error = err;
-    }
-    expect(adaptation).toBe(null);
-    expect(error).not.toBe(null);
-    expect(error.code).toEqual("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE");
-    expect(error.type).toEqual("MEDIA_ERROR");
   });
 
   it("should normalize a given language", () => {
@@ -171,7 +149,6 @@ describe("Manifest - Adaptation", () => {
     expect(defaultRepresentationSpy).toHaveBeenNthCalledWith(2, rep2, { type: "text" });
     expect(defaultRepresentationSpy).toHaveBeenNthCalledWith(3, rep3, { type: "text" });
 
-    expect(adaptation.parsingErrors).toEqual([]);
     expect(parsedRepresentations.length).toBe(3);
     expect(parsedRepresentations[0].id).toEqual("rep1");
     expect(parsedRepresentations[1].id).toEqual("rep3");
@@ -230,7 +207,6 @@ describe("Manifest - Adaptation", () => {
 
     const parsedRepresentations = adaptation.representations;
     expect(representationFilter).toHaveBeenCalledTimes(6);
-    expect(adaptation.parsingErrors).toEqual([]);
     expect(parsedRepresentations.length).toBe(3);
 
     expect(parsedRepresentations[0].id).toEqual("rep4");
@@ -240,59 +216,6 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.getAvailableBitrates()).toEqual([40, 50, 60]);
     expect(adaptation.getRepresentation("rep2")).toBe(undefined);
     expect(adaptation.getRepresentation("rep4").id).toEqual("rep4");
-  });
-
-  it("should set a parsing error if no Representation is supported", () => {
-    const representationSpy = jest.fn(arg => {
-      return { bitrate: arg.bitrate,
-               id: arg.id,
-               isSupported: false,
-               index: arg.index };
-    });
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: representationSpy }));
-    const Adaptation = require("../adaptation").default;
-    const rep1 = { bitrate: 10,
-                   id: "rep1",
-                   index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
-    const representations = [rep1, rep2];
-    const args = { id: "12",
-                   representations,
-                   type: "text" as const };
-    const adaptation = new Adaptation(args);
-
-    const parsedRepresentations = adaptation.representations;
-    expect(parsedRepresentations.length).toBe(2);
-
-    expect(adaptation.parsingErrors).toHaveLength(1);
-    const error = adaptation.parsingErrors[0];
-    expect(error.code).toEqual("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
-    expect(error.type).toEqual("MEDIA_ERROR");
-  });
-
-  it("should not set a parsing error if we had no Representation", () => {
-    const representationSpy = jest.fn(arg => {
-      return { bitrate: arg.bitrate,
-               id: arg.id,
-               isSupported: false,
-               index: arg.index };
-    });
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: representationSpy }));
-
-    const Adaptation = require("../adaptation").default;
-    const args = { id: "12",
-                   representations: [],
-                   type: "text" as const };
-    const adaptation = new Adaptation(args);
-
-    const parsedRepresentations = adaptation.representations;
-    expect(parsedRepresentations.length).toBe(0);
-    expect(adaptation.parsingErrors).toEqual([]);
-    expect(representationSpy).not.toHaveBeenCalled();
   });
 
   it("should set an isDub value if one", () => {
@@ -441,7 +364,6 @@ describe("Manifest - Adaptation", () => {
     const adaptation = new Adaptation(args);
 
     const parsedRepresentations = adaptation.representations;
-    expect(adaptation.parsingErrors).toEqual([]);
     expect(parsedRepresentations.length).toBe(3);
 
     expect(adaptation.getAvailableBitrates()).toEqual([45, 92]);
@@ -557,6 +479,5 @@ describe("Manifest - Adaptation", () => {
     expect(playableRepresentations[2].id).toEqual("rep4");
     expect(playableRepresentations[3].id).toEqual("rep5");
     expect(playableRepresentations[4].id).toEqual("rep7");
-    expect(adaptation.parsingErrors).toEqual([]);
   });
 });
