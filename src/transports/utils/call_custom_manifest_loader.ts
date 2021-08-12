@@ -122,9 +122,9 @@ export default function callCustomManifestLoader(
       };
 
       const callbacks = { reject, resolve, fallback };
-      const abort = customManifestLoader(url,
-                                         callbacks,
-                                         { timeout: loaderOptions.timeout });
+      const abort = customManifestLoader({ url,
+                                           timeout: loaderOptions.timeout },
+                                         callbacks);
 
       cancelSignal.register(abortCustomLoader);
 
