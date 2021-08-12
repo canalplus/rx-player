@@ -264,15 +264,15 @@ async function replaceTokensWithBsdSed() {
     "sed -i.DELETE -E \"" +
     REPLACED_TOKENS_SED_REGXP.reduce((acc, val, idx) => {
       const escapedToken = val[0]
-        .replaceAll("\<", "[[:<:]]") // starting word boundary
-        .replaceAll("\>", "[[:>:]]") // ending word boundary
-        .replaceAll("\\", "\\\\") // \ by \\ (double escape because in string)
-        .replaceAll("/", "\\\\/") // / by \\/ (/ is the sed separator)
-        .replaceAll("\"", "\\\""); // " by \"
+        .replace(/\</g, "[[:<:]]") // starting word boundary
+        .replace(/\>/g, "[[:>:]]") // ending word boundary
+        .replace(/\\/g, "\\\\") // \ by \\ (double escape because in string)
+        .replace(/\//g, "\\\\/") // / by \\/ (/ is the sed separator)
+        .replace(/"/g, "\\\""); // " by \"
       const escapedReplacement = val[1]
-        .replaceAll("\\", "\\\\")
-        .replaceAll("/", "\\\\/")
-        .replaceAll("\"", "\\\"");
+        .replace(/\\/g, "\\\\")
+        .replace(/\//g, "\\\\/")
+        .replace(/"/g, "\\\"");
       if (idx < REPLACED_TOKENS_SED_REGXP.length - 1) {
         return acc + `s/${escapedToken}/${escapedReplacement}/g; `
       } else {
@@ -299,15 +299,15 @@ async function replaceTokensWithGnuSed() {
     "sed -i -E \"" +
     REPLACED_TOKENS_SED_REGXP.reduce((acc, val, idx) => {
       const escapedToken = val[0]
-        .replaceAll("\<", "\\b") // starting word boundary
-        .replaceAll("\>", "\\b") // ending word boundary
-        .replaceAll("\\", "\\\\") // \ by \\ (double escape because in string)
-        .replaceAll("/", "\\\\/") // / by \\/ (/ is the sed separator)
-        .replaceAll("\"", "\\\""); // " by \"
+        .replace(/\</g, "\\b") // starting word boundary
+        .replace(/\>/g, "\\b") // ending word boundary
+        .replace(/\\/g, "\\\\") // \ by \\ (double escape because in string)
+        .replace(/\//g, "\\\\/") // / by \\/ (/ is the sed separator)
+        .replace(/"/g, "\\\""); // " by \"
       const escapedReplacement = val[1]
-        .replaceAll("\\", "\\\\")
-        .replaceAll("/", "\\\\/")
-        .replaceAll("\"", "\\\"");
+        .replace(/\\/g, "\\\\")
+        .replace(/\//g, "\\\\/")
+        .replace(/"/g, "\\\"");
       if (idx < REPLACED_TOKENS_SED_REGXP.length - 1) {
         return acc + `s/${escapedToken}/${escapedReplacement}/g; `
       } else {
@@ -360,7 +360,7 @@ async function copyDir(src, dest) {
  * @returns {Promise}
  */
 async function replaceTokensInTemplates(fileDest) {
-  const sedDir = BUILD_DIR_FROM_ROOT.replaceAll("/", "\\/");
+  const sedDir = BUILD_DIR_FROM_ROOT.replace(/\//g, "\\/");
   switch (os.type()) {
     case "Darwin":
       await spawnProm(
