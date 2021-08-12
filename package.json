@@ -24,46 +24,6 @@
   "bugs": "https://github.com/canalplus/rx-player/issues",
   "license": "Apache-2.0",
   "sideEffects": false,
-  "scripts-info": {
-    "build": "Build the player in dist/rx-player.js",
-    "build:all": "Perform all possible builds of the player (regular RxPlayer builds and the WebAssembly DASH MPD parser release build).",
-    "build:min": "Build the player and minify it in dist/rx-player.min.js",
-    "build:min:report": "Build the player then minify it in dist/rx-player.min.js and display a report on its size",
-    "build:modular": "Build the modular build of the rx-player and create corresponding files and directories.",
-    "build:report": "Build the player in dist/rx-player.js and display a report on its size",
-    "build:rxp:all": "Perform all possible builds of the RxPlayer main code (that is, excluding the WebAssembly DASH MPD parser build).",
-    "build:watch": "Build the player as a minified version in dist/rx-player.min.js each times the files update",
-    "build:min:watch": "Build the player in dist/rx-player.js each times the files update",
-    "build:wasm:debug": "Build the DASH MPD parser written in rust as WebAssembly into debug mode, and output the result as dist/mpd-parser.wasm",
-    "build:wasm:release": "Build the DASH MPD parser written in rust as WebAssembly into release mode, and output the result as dist/mpd-parser.wasm",
-    "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` and `npm run standalone` will then listen to HTTPS requests through a communicated port)",
-    "check": "Check the validity of the src directory by running the linter, type checker and unit tests",
-    "check:all": "Check the validity of the whole project by running linters, type checkers and every tests",
-    "check:types": "Check TypeScript typings in src",
-    "demo": "Build the demo in demo/bundle.js",
-    "demo:min": "Build the demo and minify it in demo/bundle.js",
-    "demo:watch": "Build the demo in demo/bundle.js each times the files update.",
-    "doc": "Generate the HTML documentation in doc/generated/pages",
-    "info": "Display the description of all npm scripts for this project",
-    "lint": "Lint rx-player source files",
-    "lint:demo": "Lint demo source files",
-    "lint:tests": "Lint integration tests source files",
-    "standalone": "Build and launch the \"standalone\" demo (without any UI) on a local server. Re-build on file updates.",
-    "start": "Build and launch the \"full\" demo (with a UI) with the non-minified RxPlayer on a local server. Re-build on file updates.",
-    "start:min": "Build and launch the \"full\" demo (with a UI) with the minified RxPlayer on a local server. Re-build on file updates.",
-    "test": "Launch unit and integration tests in multiple browser environments",
-    "test:integration": "Launch integration tests in multiple browser environments",
-    "test:integration:chrome": "Launch integration tests in a Chrome browser.",
-    "test:integration:chrome:watch": "Launch integration tests in Chrome each times the files update",
-    "test:integration:coverage": "Launch integration tests in multiple browser environments and produce a coverage report in tests/integration/coverage",
-    "test:integration:firefox": "Launch integration tests in a Firefox browser.",
-    "test:integration:firefox:watch": "Launch integration tests in Firefox each times the files update",
-    "test:memory": "Launch memory tests",
-    "test:memory:chrome:watch": "Launch memory tests in Chrome each times the files update",
-    "test:unit": "Launch unit tests",
-    "test:unit:coverage": "Launch unit tests and produce a coverage report",
-    "update-version": "Update the version to the string given in argument (example: `npm run update-version 3.8.0`). Will update the codebase and perform every builds."
-  },
   "scripts": {
     "build": "webpack --progress --config webpack.config.js",
     "build:all": "npm run build && npm run build:min && npm run build:wasm:release && npm run build:modular",
@@ -86,16 +46,15 @@
     "demo:min": "cross-env RXP_METAPLAYLIST=true RXP_MINIFY=true node ./scripts/generate_full_demo.js",
     "demo:watch": "cross-env RXP_METAPLAYLIST=true node ./scripts/generate_full_demo.js --watch",
     "doc": "rm -rf doc/generated; node ./scripts/doc-generator/index.js doc/ doc/generated",
-    "info": "node scripts/list-npm-scripts-info.js",
     "lint": "eslint src -c .eslintrc.js",
     "lint:demo": "eslint demo/full/scripts",
     "lint:tests": "eslint tests/**/*.js",
+    "list": "node scripts/list-npm-scripts.js",
     "prepublishOnly": "npm run build:modular",
     "standalone": "cross-env RXP_METAPLAYLIST=true RXP_ENV=development node ./scripts/run_standalone_demo.js",
     "start": "cross-env RXP_METAPLAYLIST=true RXP_ENV=development node ./scripts/run_full_demo.js",
     "start:min": "cross-env RXP_METAPLAYLIST=true RXP_MINIFY=true node ./scripts/run_full_demo.js",
     "wasm-strip": "node scripts/wasm-strip.js dist/mpd-parser.wasm",
-    "test": "npm run test:unit && npm run test:integration",
     "test:appveyor": "npm run test:unit && npm run test:memory",
     "test:integration": "node tests/integration/run.js --bchromehl --bfirefoxhl",
     "test:integration:appveyor": "node --max-old-space-size=2048 ./tests/integration/run.js --bchromehl",
@@ -181,5 +140,69 @@
     "webpack": "5.38.1",
     "webpack-bundle-analyzer": "4.4.2",
     "webpack-cli": "4.7.2"
+  },
+  "scripts-list": {
+    "Build a demo page (e.g. to test a code change)": {
+      "start": "Build and launch the \"full\" demo (with a UI) with the non-minified RxPlayer on a local server. Re-build on file updates.",
+      "start:min": "Build and launch the \"full\" demo (with a UI) with the minified RxPlayer on a local server. Re-build on file updates.",
+      "demo": "Build the demo in demo/bundle.js",
+      "demo:min": "Build the demo and minify it in demo/bundle.js",
+      "demo:watch": "Build the demo in demo/bundle.js each times the files update.",
+      "standalone": "Build and launch the \"standalone\" demo (without any UI) on a local server. Re-build on file updates.",
+      "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` and `npm run standalone` will then listen to HTTPS requests through a communicated port)"
+    },
+    "Type-check or lint the current code": {
+      "check": "Check the validity of the src directory by running the linter, type checker and unit tests",
+      "check:all": "Check the validity of the whole project by running linters, type checkers and every tests",
+      "check:types": "Check TypeScript typings in src",
+      "lint": "Lint rx-player source files",
+      "lint:demo": "Lint demo source files",
+      "lint:tests": "Lint integration tests source files"
+    },
+    "Run tests": {
+      "Integration tests (test the whole API)": {
+        "test:integration": "Launch integration tests in multiple browser environments",
+        "test:integration:chrome": "Launch integration tests in a Chrome browser.",
+        "test:integration:chrome:watch": "Launch integration tests in Chrome each times the files update",
+        "test:integration:coverage": "Launch integration tests in multiple browser environments and produce a coverage report in tests/integration/coverage",
+        "test:integration:firefox": "Launch integration tests in a Firefox browser.",
+        "test:integration:firefox:watch": "Launch integration tests in Firefox each times the files update"
+      },
+      "Unit tests (test particular functions)": {
+        "test:unit": "Launch unit tests",
+        "test:unit:coverage": "Launch unit tests and produce a coverage report"
+      },
+      "Memory tests (test memory usage to avoid memory leaks)": {
+        "test:memory": "Launch memory tests",
+        "test:memory:chrome:watch": "Launch memory tests in Chrome each times the files update"
+      }
+    },
+    "Build the player or one of its sub-parts": {
+      "Modular builds (then imported through the rx-player/minimal path)": {
+        "build:modular": "Build the modular build of the rx-player and create corresponding files and directories."
+      },
+      "Legacy builds (bundles)": {
+        "build": "Build the player in dist/rx-player.js",
+        "build:min": "Build the player and minify it in dist/rx-player.min.js",
+        "build:min:report": "Build the player then minify it in dist/rx-player.min.js and display a report on its size",
+        "build:min:watch": "Build the player in dist/rx-player.js each times the files update",
+        "build:report": "Build the player in dist/rx-player.js and display a report on its size",
+        "build:watch": "Build the player as a minified version in dist/rx-player.min.js each times the files update"
+      },
+      "WebAssembly MPD parser builds (needs Rust, Cargo and binaryen)": {
+        "build:wasm:debug": "Build the DASH MPD parser written in rust as WebAssembly into debug mode, and output the result as dist/mpd-parser.wasm",
+        "build:wasm:release": "Build the DASH MPD parser written in rust as WebAssembly into release mode, and output the result as dist/mpd-parser.wasm"
+      },
+      "Combinations of multiple builds": {
+        "build:all": "Perform all possible builds of the player (regular RxPlayer builds and the WebAssembly DASH MPD parser release build).",
+        "build:rxp:all": "Perform all possible builds of the RxPlayer main code (that is, excluding the WebAssembly DASH MPD parser build)."
+      }
+    },
+    "Build the documentation pages": {
+      "doc": "Generate the HTML documentation in doc/generated/pages"
+    },
+    "Update the RxPlayer's version": {
+      "update-version": "Update the version to the string given in argument (example: `npm run update-version 3.8.0`). Will update the codebase and perform every builds."
+    }
   }
 }

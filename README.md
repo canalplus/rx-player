@@ -220,7 +220,7 @@ npm run start
 npm run test
 
 # list all available npm scripts
-npm run info
+npm run list
 ```
 
 Builds are included in the ``dist/`` directory (builds based on the last version
