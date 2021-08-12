@@ -398,8 +398,8 @@ export type IAdaptationType = "video" | "audio" | "text";
 export type ILoadedManifestFormat = IInitialManifest;
 
 export type IManifestLoader = (
-  // first argument: url of the manifest
-  url : string | undefined,
+  /** Information on the wanted Manifest. */
+  info : IManifestLoaderInfo,
 
   // second argument: callbacks
   callbacks : { resolve : (args : { data : ILoadedManifestFormat;
@@ -412,13 +412,14 @@ export type IManifestLoader = (
 
                  reject : (err? : Error) => void;
                  fallback : () => void; },
-
-  options : {
-    timeout : number | undefined;
-  }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
+
+export interface IManifestLoaderInfo {
+  url : string | undefined;
+  timeout : number | undefined;
+}
 
 /** Options related to a single key system. */
 export interface IKeySystemOption {
