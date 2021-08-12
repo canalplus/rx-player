@@ -221,11 +221,7 @@ an XMLHttpRequest (it has no use, as our implementation does the same thing and
 more):
 ```js
 /**
- * @param {string|undefined} url - the url the Manifest request should normally
- * be on.
- * Can be undefined in very specific conditions, like in cases when the
- * `loadVideo` call had no defined URL (e.g. "local" manifest, playing a locally
- * crafted "Metaplaylist" content).
+ * @param {Object} manifestInfo - Information about the Manifest to download
  * @param {Object} callbacks - Object containing several callbacks to indicate
  * that the manifest has been loaded, the loading operation has failed or to
  * fallback to our default implementation. More information on this object below
@@ -233,7 +229,8 @@ more):
  * @returns {Function|undefined} - If a function is defined in the return value,
  * it will be called if and when the request is canceled.
  */
-const customManifestLoader = (url, callbacks) => {
+const customManifestLoader = (manifestInfo, callbacks) => {
+  const { url } = manifestInfo;
   const xhr = new XMLHttpRequest();
   const baseTime = performance.now();
 
@@ -293,11 +290,14 @@ const customManifestLoader = (url, callbacks) => {
 
 As you can see, this function takes two arguments:
 
-  1. **url**: The URL the Manifest request should normally be performed at.
+  1. **manifestInfo** (`object`): An Object giving information about the wanted
+     Manifest. This object contains the following properties:
 
-     This argument can be `undefined` in very rare and specific conditions where
-     the Manifest URL doesn't exist or has not been communicated by the
-     application.
+     - **url**: The URL the Manifest request should normally be performed at.
+
+       This argument can be `undefined` in very rare and specific conditions
+       where the Manifest URL doesn't exist or has not been communicated by the
+       application.
 
   2. **callbacks**: An object containing multiple callbacks to allow this
      `manifestLoader` to communicate the loaded Manifest or an encountered error

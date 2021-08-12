@@ -118,7 +118,7 @@ export default function callCustomManifestLoader(
       };
 
       const callbacks = { reject, resolve, fallback };
-      const abort = customManifestLoader(url, callbacks);
+      const abort = customManifestLoader({ url }, callbacks);
 
       cancelSignal.register(abortCustomLoader);
 
