@@ -233,7 +233,8 @@ The array emitted contains object describing each available video track:
     - ``codec`` (``string|undefined``): The codec given in standard MIME type
       format.
 
-    - ``frameRate`` (``string|undefined``): The video framerate.
+    - ``frameRate`` (``number|undefined``): The video frame rate, in frame per
+      seconds.
 
 This event only concerns the currently-playing Period.
 
@@ -351,7 +352,8 @@ properties:
     - ``codec`` (``string|undefined``): The codec given in standard MIME type
       format.
 
-    - ``frameRate`` (``string|undefined``): The video framerate.
+    - ``frameRate`` (``number|undefined``): The video frame rate, in frame per
+      seconds.
 
     - ``hdrInfo`` (``Object|undefined``) Information about the hdr
       characteristics of the track.

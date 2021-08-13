@@ -109,9 +109,8 @@ function parseMPDFloat(
   const toInt = parseFloat(val);
   if (isNaN(toInt)) {
     const error = new MPDError(
-      `\`${displayName}\` property is not an integer value but "${val}"`);
+      `\`${displayName}\` property is invalid: "${val}"`);
     return [null, error];
-
   }
   return [toInt, null];
 }
@@ -277,6 +276,26 @@ function parseBase64(
 }
 
 /**
+ * Some values in the MPD can be expressed as divisions of integers (e.g. frame
+ * rates).
+ * This function tries to convert it to a floating point value.
+ * @param {string} val
+ * @param {string} displayName
+ * @returns {Array.<number | Error | null>}
+ */
+function parseMaybeDividedNumber(
+  val : string,
+  displayName : string
+) : [ number | null, MPDError | null ] {
+  const matches = /^(\d+)\/(\d+)$/.exec(val);
+  if (matches !== null) {
+    // No need to check, we know both are numbers
+    return [ +matches[1] / +matches[2], null ];
+  }
+  return parseMPDFloat(val, displayName);
+}
+
+/**
  * @param {Element} root
  * @returns {Object}
  */
@@ -375,6 +394,7 @@ export {
   parseDateTime,
   parseDuration,
   parseIntOrBoolean,
+  parseMaybeDividedNumber,
   parseMPDFloat,
   parseMPDInteger,
   parseScheme,

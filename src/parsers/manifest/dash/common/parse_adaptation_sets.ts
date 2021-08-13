@@ -225,8 +225,8 @@ function getAdaptationID(
   if (isNonEmptyString(adaptation.attributes.mimeType)) {
     idString += `-${adaptation.attributes.mimeType}`;
   }
-  if (isNonEmptyString(adaptation.attributes.frameRate)) {
-    idString += `-${adaptation.attributes.frameRate}`;
+  if (adaptation.attributes.frameRate !== undefined) {
+    idString += `-${String(adaptation.attributes.frameRate)}`;
   }
   return idString;
 }
