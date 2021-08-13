@@ -40,7 +40,7 @@ return an object with the following properties:
     - `codec` (`string|undefined`): The video codec the Representation is
       in, as announced in the corresponding Manifest.
 
-    - `frameRate` (`string|undefined`): The video frame rate.
+    - `frameRate` (`number|undefined`): The video frame rate.
 
     - `hdrInfo` (`Object|undefined`) Information about the hdr
       characteristics of the track.
