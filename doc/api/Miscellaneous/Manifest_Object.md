@@ -310,10 +310,9 @@ a RepresentationIndex's structure.
 
 #### frameRate
 
-_type_: `string|undefined`
+_type_: `number|undefined`
 
-The represesentation frame rate for this Representation. It defines either the
-number of frames per second as an integer (24), or as a ratio (24000 / 1000).
+The represesentation frame rate for this Representation, as frames per seconds.
 
 #### hdrInfo
 
