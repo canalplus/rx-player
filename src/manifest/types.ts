@@ -128,7 +128,7 @@ export interface IExposedRepresentation {
    * the number of frames per second as an integer (24), or as a ratio
    * (24000 / 1000).
    */
-  frameRate? : string | undefined;
+  frameRate? : number | undefined;
   /** If the track is HDR, gives the HDR characteristics of the content */
   hdrInfo? : IHDRInformation;
   index : IExposedRepresentationIndex;

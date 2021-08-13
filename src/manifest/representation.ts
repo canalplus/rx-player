@@ -49,7 +49,7 @@ class Representation {
    * Frame-rate, when it can be applied, of this Representation, in any textual
    * indication possible (often under a ratio form).
    */
-  public frameRate? : string;
+  public frameRate? : number;
 
   /**
    * A string describing the codec used for this Representation.

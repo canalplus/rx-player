@@ -260,12 +260,10 @@ export function generateAdaptationSetAttrParser(
         adaptationAttrs.maxHeight = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.MinFrameRate:
-        adaptationAttrs.minFrameRate =
-          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        adaptationAttrs.minFrameRate = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.MaxFrameRate:
-        adaptationAttrs.maxFrameRate =
-          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        adaptationAttrs.maxFrameRate = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.SelectionPriority:
         adaptationAttrs.selectionPriority = dataView.getFloat64(ptr, true);
@@ -305,8 +303,7 @@ export function generateAdaptationSetAttrParser(
         adaptationAttrs.codingDependency = dataView.getFloat64(ptr, true) !== 0;
         break;
       case AttributeName.FrameRate:
-        adaptationAttrs.frameRate =
-          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        adaptationAttrs.frameRate = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.Height:
         adaptationAttrs.height = dataView.getFloat64(ptr, true);

@@ -158,8 +158,7 @@ export function generateRepresentationAttrParser(
           new DataView(linearMemory.buffer).getUint8(0) === 0;
         break;
       case AttributeName.FrameRate:
-        representationAttrs.frameRate =
-          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        representationAttrs.frameRate = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.Height:
         representationAttrs.height = dataView.getFloat64(ptr, true);

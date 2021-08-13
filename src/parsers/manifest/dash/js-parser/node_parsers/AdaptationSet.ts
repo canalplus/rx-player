@@ -31,6 +31,7 @@ import parseSegmentTemplate from "./SegmentTemplate";
 import {
   parseBoolean,
   parseIntOrBoolean,
+  parseMaybeDividedNumber,
   parseMPDFloat,
   parseMPDInteger,
   parseScheme,
@@ -247,13 +248,16 @@ function parseAdaptationSetAttributes(
                                       dashName: "maxHeight" });
         break;
 
-      case "minFrameRate": {
-        parsedAdaptation.minFrameRate = attribute.value;
-      }
+      case "minFrameRate":
+        parseValue(attribute.value, { asKey: "minFrameRate",
+                                      parser: parseMaybeDividedNumber,
+                                      dashName: "minFrameRate" });
         break;
 
       case "maxFrameRate":
-        parsedAdaptation.maxFrameRate = attribute.value;
+        parseValue(attribute.value, { asKey: "maxFrameRate",
+                                      parser: parseMaybeDividedNumber,
+                                      dashName: "maxFrameRate" });
         break;
 
       case "selectionPriority":
@@ -295,7 +299,9 @@ function parseAdaptationSetAttributes(
         break;
 
       case "frameRate":
-        parsedAdaptation.frameRate = attribute.value;
+        parseValue(attribute.value, { asKey: "frameRate",
+                                      parser: parseMaybeDividedNumber,
+                                      dashName: "frameRate" });
         break;
 
       case "height":
