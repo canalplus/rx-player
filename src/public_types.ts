@@ -227,12 +227,8 @@ export interface IRepresentation {
    * It defines the height of the video, in pixels.
    */
   width? : number | undefined;
-  /**
-   * The represesentation frame rate for this Representation. It defines either
-   * the number of frames per second as an integer (24), or as a ratio
-   * (24000 / 1000).
-   */
-  frameRate? : string | undefined;
+  /** The frame rate for this Representation, in frame per seconds. */
+  frameRate? : number | undefined;
   /** If the track is HDR, gives the HDR characteristics of the content */
   hdrInfo? : IHDRInformation;
   index : IRepresentationIndex;
@@ -634,7 +630,7 @@ export interface IVideoRepresentation { id : string|number;
                                         width? : number | undefined;
                                         height? : number | undefined;
                                         codec? : string | undefined;
-                                        frameRate? : string | undefined;
+                                        frameRate? : number | undefined;
                                         hdrInfo?: IHDRInformation | undefined; }
 
 /** Video track returned by the RxPlayer. */
