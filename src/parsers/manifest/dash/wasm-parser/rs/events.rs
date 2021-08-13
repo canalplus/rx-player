@@ -132,7 +132,7 @@ pub enum AttributeName {
     AudioSamplingRate = 3,
     Codecs = 4, // String
     CodingDependency = 5,
-    FrameRate = 6,
+    FrameRate = 6, // f64
     Height = 7, // f64
     Width = 8, // f64
     MaxPlayoutRate = 9,
@@ -336,6 +336,16 @@ impl AttributeName {
         attr : &quick_xml::events::attributes::Attribute
     ) {
         match utils::parse_iso_8601_duration(&attr.value) {
+            Ok(val) => self.report(val),
+            Err(error) => error.report_err(),
+        }
+    }
+
+    pub fn try_report_as_maybe_division(
+        self,
+        attr : &quick_xml::events::attributes::Attribute
+    ) {
+        match utils::parse_maybe_division(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }

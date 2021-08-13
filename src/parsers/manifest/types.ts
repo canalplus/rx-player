@@ -105,9 +105,9 @@ export interface IParsedRepresentation {
   contentProtections? : IContentProtections | undefined;
   /**
    * Frame rate (images per seconds) associated with this Representation.
-   * Not set if unknown or if it makes no sense (e.g. for subtitles).
+   * Not set if unknown or if it makes no sense.
    */
-  frameRate?: string | undefined;
+  frameRate?: number | undefined;
   /**
    * Height (top to bottom) in pixels this Representation has.
    * Not set if unknown or if it makes no sense (e.g. for audio).
