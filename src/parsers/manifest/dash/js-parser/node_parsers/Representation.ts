@@ -27,6 +27,7 @@ import parseSegmentTemplate from "./SegmentTemplate";
 import {
   MPDError,
   parseBoolean,
+  parseMaybeDividedNumber,
   parseMPDFloat,
   parseMPDInteger,
   parseScheme,
@@ -138,7 +139,9 @@ function parseRepresentationAttributes(
         break;
 
       case "frameRate":
-        attributes.frameRate = attr.value;
+        parseValue(attr.value, { asKey: "frameRate",
+                                 parser: parseMaybeDividedNumber,
+                                 dashName: "frameRate" });
         break;
 
       case "height":
