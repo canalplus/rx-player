@@ -60,6 +60,9 @@ pub fn parse_bool(value : &[u8]) -> Result<bool> {
     }
 }
 
+// TODO Is something like 5- also valid here?
+// It seems to be but it's not yet handled here
+// (We could use e.g. the `INFINITY` float value)
 pub fn parse_byte_range(value : &[u8]) -> Result<(f64, f64)> {
     let mut cursor = 0usize;
     let start;
@@ -85,7 +88,7 @@ pub fn parse_byte_range(value : &[u8]) -> Result<(f64, f64)> {
 /// to, mainly because I didn't want to incur the size cost of importing regex
 /// code in here
 pub fn parse_iso_8601_duration(value : &[u8]) -> Result<f64> {
-    if value[0] != b'P' {
+    if value.is_empty() || value[0] != b'P' {
         let err = ParsingError("Unexpected duration. Should start with \"P\"".to_owned());
         return Err(err);
     }
@@ -175,4 +178,32 @@ fn read_next_float(
     };
     let val_f64 = val_str.parse::<f64>()?;
     Ok((val_f64, i))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_8601_duration() {
+        assert_eq!(parse_iso_8601_duration(b"P1Y10M43DT22H8M3S").unwrap(), 61250883.);
+        assert_eq!(parse_iso_8601_duration(b"P1Y10M43DT22H8M3S").unwrap(), 61250883.);
+        assert_eq!(parse_iso_8601_duration(b"PT3S").unwrap(), 3.);
+        assert_eq!(parse_iso_8601_duration(b"PT1M3.4S").unwrap(), 63.4);
+
+        assert!(parse_iso_8601_duration(b"").err().is_some());
+        assert!(parse_iso_8601_duration(b"3S").err().is_some());
+        assert!(parse_iso_8601_duration(b"T3S").err().is_some());
+        assert!(parse_iso_8601_duration(b"P3S").err().is_some());
+    }
+
+    #[test]
+    fn test_parse_byte_range() {
+        assert_eq!(parse_byte_range(b"1-2").unwrap(), (1., 2.));
+        assert_eq!(parse_byte_range(b"100-200").unwrap(), (100., 200.));
+
+        assert!(parse_byte_range(b"").err().is_some());
+        assert!(parse_byte_range(b"A").err().is_some());
+        assert!(parse_byte_range(b"15-A").err().is_some());
+    }
 }
