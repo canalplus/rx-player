@@ -194,7 +194,7 @@ The array emitted contains object describing each available video track:
   - `codec` (`string|undefined`): The codec given in standard MIME type
     format.
 
-  - `frameRate` (`string|undefined`): The video framerate.
+  - `frameRate` (`number|undefined`): The video framerate.
 
 This event only concerns the currently-playing Period.
 
@@ -333,7 +333,7 @@ properties:
   - `codec` (`string|undefined`): The codec given in standard MIME type
     format.
 
-  - `frameRate` (`string|undefined`): The video framerate.
+  - `frameRate` (`number|undefined`): The video framerate.
 
 - `isTrickModeTrack` (`Boolean|undefined`): If set to `true`, this track
   is a trick mode track. This type of tracks proposes video content that is

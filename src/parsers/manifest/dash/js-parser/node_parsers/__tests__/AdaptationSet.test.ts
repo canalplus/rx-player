@@ -105,7 +105,172 @@ function testStringAttribute(attributeName : string, variableName? : string) : v
   });
 }
 
-function testNumberAttribute(attributeName : string, variableName? : string) : void {
+function testMaybeDividedNumber(attributeName : string, variableName? : string) : void {
+  const _variableName = variableName == null ? attributeName : variableName;
+
+  /* eslint-disable max-len */
+  it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
+  /* eslint-enable max-len */
+    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const element1 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="12.4" />`, "text/xml")
+      .childNodes[0] as Element;
+    expect(createAdaptationSetIntermediateRepresentation(element1))
+      .toEqual([ { attributes: { [_variableName]: 12.4 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
+    const element2 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="0" />`, "text/xml")
+      .childNodes[0] as Element;
+    expect(createAdaptationSetIntermediateRepresentation(element2))
+      .toEqual([ { attributes: { [_variableName]: 0 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
+    const element3 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="27/2" />`, "text/xml")
+      .childNodes[0] as Element;
+    expect(createAdaptationSetIntermediateRepresentation(element3))
+      .toEqual([ { attributes: { [_variableName]: 13.5 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
+    expect(spyLog).not.toHaveBeenCalled();
+    spyLog.mockRestore();
+  });
+
+  /* eslint-disable max-len */
+  it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
+  /* eslint-enable max-len */
+    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const element1 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="toto" />`, "text/xml")
+      .childNodes[0] as Element;
+    const error1 = new MPDError(
+      `\`${attributeName}\` property is invalid: "toto"`);
+    expect(createAdaptationSetIntermediateRepresentation(element1))
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error1] ]);
+
+    expect(spyLog).toHaveBeenCalledTimes(1);
+    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
+
+    const element2 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="PT5M" />`, "text/xml")
+      .childNodes[0] as Element;
+    const error2 = new MPDError(
+      `\`${attributeName}\` property is invalid: "PT5M"`);
+    expect(createAdaptationSetIntermediateRepresentation(element2))
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error2] ]);
+
+    expect(spyLog).toHaveBeenCalledTimes(2);
+    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
+
+    const element3 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="" />`, "text/xml")
+      .childNodes[0] as Element;
+    const error3 = new MPDError(
+      `\`${attributeName}\` property is invalid: ""`);
+
+    expect(createAdaptationSetIntermediateRepresentation(element3))
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error3] ]);
+
+    expect(spyLog).toHaveBeenCalledTimes(3);
+    expect(spyLog).toHaveBeenNthCalledWith(3, error3.message);
+    spyLog.mockRestore();
+  });
+}
+
+function testFloatAttribute(attributeName : string, variableName? : string) : void {
+  const _variableName = variableName == null ? attributeName : variableName;
+
+  /* eslint-disable max-len */
+  it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
+  /* eslint-enable max-len */
+    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const element1 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="012" />`, "text/xml")
+      .childNodes[0] as Element;
+    expect(createAdaptationSetIntermediateRepresentation(element1))
+      .toEqual([ { attributes: { [_variableName]: 12 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
+    const element2 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="0" />`, "text/xml")
+      .childNodes[0] as Element;
+    expect(createAdaptationSetIntermediateRepresentation(element2))
+      .toEqual([ { attributes: { [_variableName]: 0 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
+    const element3 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="-50.12" />`, "text/xml")
+      .childNodes[0] as Element;
+    expect(createAdaptationSetIntermediateRepresentation(element3))
+      .toEqual([ { attributes: { [_variableName]: -50.12 },
+                   children: { baseURLs: [], representations: [] } },
+                 [] ]);
+
+    expect(spyLog).not.toHaveBeenCalled();
+    spyLog.mockRestore();
+  });
+
+  /* eslint-disable max-len */
+  it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
+  /* eslint-enable max-len */
+    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const element1 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="toto" />`, "text/xml")
+      .childNodes[0] as Element;
+    const error1 = new MPDError(
+      `\`${attributeName}\` property is invalid: "toto"`);
+    expect(createAdaptationSetIntermediateRepresentation(element1))
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error1] ]);
+
+    expect(spyLog).toHaveBeenCalledTimes(1);
+    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
+
+    const element2 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="PT5M" />`, "text/xml")
+      .childNodes[0] as Element;
+    const error2 = new MPDError(
+      `\`${attributeName}\` property is invalid: "PT5M"`);
+    expect(createAdaptationSetIntermediateRepresentation(element2))
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error2] ]);
+
+    expect(spyLog).toHaveBeenCalledTimes(2);
+    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
+
+    const element3 = new DOMParser()
+      .parseFromString(`<AdaptationSet ${attributeName}="" />`, "text/xml")
+      .childNodes[0] as Element;
+    const error3 = new MPDError(
+      `\`${attributeName}\` property is invalid: ""`);
+
+    expect(createAdaptationSetIntermediateRepresentation(element3))
+      .toEqual([ { attributes: {},
+                   children: { baseURLs: [], representations: [] } },
+                 [error3] ]);
+
+    expect(spyLog).toHaveBeenCalledTimes(3);
+    expect(spyLog).toHaveBeenNthCalledWith(3, error3.message);
+    spyLog.mockRestore();
+  });
+}
+
+
+function testIntegerAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
   /* eslint-disable max-len */
@@ -315,28 +480,29 @@ describe("DASH Node Parsers - AdaptationSet", () => {
   testStringAttribute("codecs");
   testBooleanAttribute("codingDependency");
   testStringAttribute("contentType");
-  testStringAttribute("frameRate");
-  testNumberAttribute("group");
-  testNumberAttribute("height");
+  testMaybeDividedNumber("frameRate");
+  testIntegerAttribute("group");
+  testIntegerAttribute("height");
   testStringAttribute("id");
   testStringAttribute("lang", "language");
-  testNumberAttribute("maxBandwidth", "maxBitrate");
-  testStringAttribute("maxFrameRate");
-  testNumberAttribute("maxHeight");
-  testNumberAttribute("maxPlayoutRate");
-  testNumberAttribute("maxWidth");
-  testNumberAttribute("maximumSAPPeriod");
+  testIntegerAttribute("maxBandwidth", "maxBitrate");
+  testMaybeDividedNumber("maxFrameRate");
+  testIntegerAttribute("maxHeight");
+  testFloatAttribute("maxPlayoutRate");
+  testIntegerAttribute("maxWidth");
+  testFloatAttribute("maximumSAPPeriod");
   testStringAttribute("mimeType");
-  testNumberAttribute("minBandwidth", "minBitrate");
-  testStringAttribute("minFrameRate");
-  testNumberAttribute("minHeight");
-  testNumberAttribute("minWidth");
+  testIntegerAttribute("minBandwidth", "minBitrate");
+  testMaybeDividedNumber("minFrameRate");
+  testIntegerAttribute("minHeight");
+  testIntegerAttribute("minWidth");
   testStringAttribute("par");
   testStringAttribute("profiles");
   testNumberOrBooleanAttribute("segmentAlignment");
   testStringAttribute("segmentProfiles");
   testNumberOrBooleanAttribute("subsegmentAlignment");
-  testNumberAttribute("width");
+  testIntegerAttribute("width");
+  testFloatAttribute("availabilityTimeOffset");
 
   it("should correctly parse an empty baseURLs", () => {
     const element1 = new DOMParser()

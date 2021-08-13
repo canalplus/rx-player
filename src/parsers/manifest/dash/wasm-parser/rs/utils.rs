@@ -144,6 +144,39 @@ pub fn parse_iso_8601_duration(value : &[u8]) -> Result<f64> {
     }
 }
 
+/// Some values in the MPD can be expressed as divisions of integers (e.g. frame
+/// rates).
+/// This function tries to convert it to a floating point value.
+pub fn parse_maybe_division(value : &[u8]) -> Result<f64> {
+    let mut i = 0;
+    while value.len() > i && value[i] == b' ' {
+        i += 1;
+    }
+    if i == value.len() {
+        let e = ParsingError("Invalid number found in the MPD.".to_owned());
+        return Err(e);
+    }
+    let (number1, mut i) = read_next_float(value, i)?;
+    while value.len() > i && value[i] == b' ' {
+        i += 1;
+    }
+    while value.len() > i && value[i] == b'/' {
+        i += 1;
+    }
+    while value.len() > i && value[i] == b' ' {
+        i += 1;
+    }
+    if i == value.len() {
+        return Ok(number1);
+    }
+    let (number2, _) = read_next_float(value, i)?;
+    if number2 == 0. {
+        let e = ParsingError("Invalid value MPD in the MPD: Denominator set to `0`.".to_owned());
+        return Err(e);
+    }
+    return Ok(number1 / number2);
+}
+
 /// Parse a floating point number, represented by `value` in ASCII, starting at
 /// the position `base_offset`.
 /// The decimal separator can either a be a point ('.') or a colon (',').
@@ -191,6 +224,22 @@ pub fn u32_to_u8_slice_be(x:u32) -> [u8;4] {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_parse_maybe_division() {
+        assert_eq!(parse_maybe_division(b" 100 / 50 ").unwrap(), 100. / 50.);
+        assert_eq!(parse_maybe_division(b" 100 /50 ").unwrap(), 100. / 50.);
+        assert_eq!(parse_maybe_division(b"100 / 50 ").unwrap(), 100. / 50.);
+        assert_eq!(parse_maybe_division(b"100/ 50").unwrap(), 100. / 50.);
+        assert_eq!(parse_maybe_division(b"100/2").unwrap(), 100. / 2.);
+        assert_eq!(parse_maybe_division(b" 50 ").unwrap(), 50.);
+        assert_eq!(parse_maybe_division(b"50 ").unwrap(), 50.);
+        assert_eq!(parse_maybe_division(b"50").unwrap(), 50.);
+
+        assert!(parse_maybe_division(b"").err().is_some());
+        assert!(parse_maybe_division(b"A").err().is_some());
+        assert!(parse_maybe_division(b"15/B A").err().is_some());
+    }
 
     #[test]
     fn test_parse_8601_duration() {
