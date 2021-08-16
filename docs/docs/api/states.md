@@ -282,8 +282,8 @@ set to `true` or not set:
 From `ENDED` if the `stopAtEnd` [player option](./player_options.md) has been
 set to `false`:
 
-- `PLAYING`: The `play` method was called.
-  The content plays back from the beginning.
+- `PLAYING`: The user replays the video by calling `rxPlayer.play()` usually
+  restarting the content from the start.
 
 - `PAUSED`: A user seeked into a part of the content already-downloaded.
   The content is paused after the seek, regardless of if you were paused

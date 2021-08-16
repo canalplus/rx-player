@@ -279,6 +279,23 @@ properties:
 
   - `frameRate` (`string|undefined`): The video framerate.
 
+- `isTrickModeTrack` (`Boolean|undefined`): If set to `true`, this track
+  is a trick mode track. This type of tracks proposes video content that is
+  often encoded with a very low framerate with the purpose to be played more
+  efficiently at a much higher speed.
+
+  To enter or exit a mode where trickmode tracks are used instead of regular
+  non-trickmode ones, you can use the `setPlaybackRate` function.
+
+- `trickModeTracks` (`Object | undefined`): Trick mode video tracks
+  attached to this video track.
+
+  Each of those objects contain the same properties that a regular video track
+  (same properties than what is documented here).
+
+  It this property is either `undefined` or not set, then this track has no
+  linked trickmode video track.
+
 A `null` payload means that video track has been disabled.
 
 This event only concerns the currently-playing Period.
@@ -560,6 +577,36 @@ All possible formats are described in the [stream event tutorial](../tutorials/l
 Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
 was not entered, and will thus not be exited.
+
+### trickModeStart
+
+_payload type_: `undefined`
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Event triggered when the trick mode starts. It means that it will be triggered
+when the trick mode is enabled by the user.
+
+### trickModeStop
+
+_payload type_: `undefined`
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Event triggered when the trick mode stops. It means that it will be triggered
+when the trick mode is disabled by the user. Also, it can be emitted when
+changing track and trick mode is enabled, but no trick mode track exists on the
+wanted track.
 
 ## Deprecated
 

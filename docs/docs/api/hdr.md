@@ -11,7 +11,7 @@ slug: hdr
 
 HDR (High Dynamic Range) is a video technology that improves the way light is
 represented by permitting to render brighter highlights, darker shadows and
-more details beetwen both ends. Sometimes, it allows to reproduce richer colors
+more details between both ends. Sometimes, it allows to reproduce richer colors
 than with the standard dynamic range.
 
 ## API

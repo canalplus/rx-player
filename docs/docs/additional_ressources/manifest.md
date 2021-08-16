@@ -227,7 +227,7 @@ _type_: `Boolean|undefined`
 This property only makes sense for text Adaptations. In this case, if `true`
 it means that the text track has added hints for the hard of hearing.
 
-#### isTrickModeTrack
+#### isTrickMode
 
 _type_ : `Boolean|undefined`
 

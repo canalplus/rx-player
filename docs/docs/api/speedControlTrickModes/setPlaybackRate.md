@@ -7,8 +7,7 @@ slug: setPlaybackRate
 
 ---
 
-**syntax**: `player.setPlaybackRate(speed)` /
-`player.setPlaybackRate(speed, { preferTrickModeTracks })`
+**syntax**: `player.setPlaybackRate(speed)` / `player.setPlaybackRate(speed, { preferTrickModeTracks })`
 
 **arguments**:
 
