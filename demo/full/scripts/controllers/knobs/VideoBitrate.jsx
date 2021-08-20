@@ -27,8 +27,7 @@ const VideoBitrateKnobBase = ({
     selectedIndex = 0;
   }
 
-  const onVideoBitrateChange = (evt) => {
-    const index = +evt.target.value;
+  const onVideoBitrateChange = ({ index }) => {
     if (index > 0) {
       const bitrate = availableVideoBitrates[index - 1];
       player.dispatch("SET_VIDEO_BITRATE", bitrate);
@@ -45,7 +44,7 @@ const VideoBitrateKnobBase = ({
       disabled={availableVideoBitrates.length < 2}
       onChange={onVideoBitrateChange}
       options={options}
-      selected={selectedIndex}
+      selected={{ index: selectedIndex }}
     />
   );
 };

@@ -28,8 +28,7 @@ const VideoTrackKnobBase = ({
     }
   }
 
-  const onTrackChange = (evt) => {
-    const index = +evt.target.value;
+  const onTrackChange = ({ index }) => {
     if (index === 0) {
       player.dispatch("DISABLE_VIDEO_TRACK");
     } else {
@@ -46,7 +45,7 @@ const VideoTrackKnobBase = ({
       disabled={options.length <= 1}
       onChange={onTrackChange}
       options={options}
-      selected={selectedIndex}
+      selected={{ index: selectedIndex }}
     />
   );
 };

@@ -29,8 +29,7 @@ const SubtitlesKnobBase = ({
     findLanguageIndex(currentSubtitle, availableSubtitles) + 1
     : 0;
 
-  const onLanguageChange = (evt) => {
-    const index = +evt.target.value;
+  const onLanguageChange = ({ index }) => {
     if (index > 0) {
       const sub = availableSubtitles[index - 1];
       player.dispatch("SET_SUBTITLES_TRACK", sub);
@@ -47,7 +46,7 @@ const SubtitlesKnobBase = ({
       disabled={options.length <= 1}
       onChange={onLanguageChange}
       options={options}
-      selected={currentLanguageIndex}
+      selected={{ index: currentLanguageIndex }}
     />
   );
 };

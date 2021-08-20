@@ -90,16 +90,15 @@ const withModulesState = (modulesState) => (Comp) => {
 
     UNSAFE_componentWillReceiveProps(nextProps) {
       modulesProps.forEach(moduleProp => {
-        if (!nextProps[moduleProp]) {
+        if (!nextProps.hasOwnProperty(moduleProp) || nextProps[moduleProp] !== this.props[moduleProp]) {
           if (modulesSubscriptions[moduleProp]) {
             modulesSubscriptions[moduleProp]
               .forEach(sub => sub.unsubscribe());
             delete modulesSubscriptions[moduleProp];
           }
-          return;
         }
 
-        if (!modulesSubscriptions[moduleProp]) {
+        if (nextProps.hasOwnProperty(moduleProp) && !modulesSubscriptions[moduleProp]) {
           modulesSubscriptions[moduleProp] = [];
           const translations = modulesState[modulesProps];
           const module = nextProps[moduleProp];
