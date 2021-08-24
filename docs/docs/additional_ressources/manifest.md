@@ -327,7 +327,7 @@ number of frames per second as an integer (24), or as a ratio (24000 / 1000).
 _type_: `Object|undefined`
 
 Information about the hdr characteristics of the track.
-(see [HDR support documentation](./hdr.md#hdrinfo))
+(see [HDR support documentation](../api/hdr.md#hdrinfo))
 
 ## Structure of a RepresentationIndex Object
 

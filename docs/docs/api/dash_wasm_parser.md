@@ -146,7 +146,7 @@ import RxPlayer from "rx-player/minimal";
 If you weren't using the minimal RxPlayer before, note that it necessitates that
 you add the features you want to it.
 More information about any of that can be found in the [minimal player
-documentation](./minimal_player.md).
+documentation](../additional_ressources/minimal_player.md).
 
 This documentation will especially dive into the `DASH_WASM` feature, which is
 the WebAssembly parser for MPDs.

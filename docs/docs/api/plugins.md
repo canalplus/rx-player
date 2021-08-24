@@ -133,9 +133,9 @@ As you can see, this function takes two arguments:
      More information on its structure can be found on the documentation
      linked below [5].
 
-[1] [Manifest structure](./manifest.md#manifest)
+[1] [Manifest structure](../additional_ressources/manifest.md#manifest)
 
-[2] [Period structure](./manifest.md#period)
+[2] [Period structure](../additional_ressources/manifest.md#period)
 
 [3] [Adaptation structure](../additional_ressources/manifest.md#adaptation)
 

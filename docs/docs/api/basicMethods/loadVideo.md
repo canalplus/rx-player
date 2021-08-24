@@ -41,16 +41,16 @@ Can be either:
 
 - **`"dash"` - for DASH contents.**
 
-  If you're using the [minimal build of the player](./minimal_player.md), you
+  If you're using the [minimal build of the player](../../additional_ressources/minimal_player.md), you
   will need to add at least either one of the following features to be able
   to play DASH contents: - the `DASH` feature (rely on a generally-sufficient JavaScript parser) - the `DASH_WASM` experimental feature (backed by a WebAssembly parser,
   more efficient when handling very large MPDs).
   More information in the [`DASH_WASM` experimental feature
-  documentation](./dash_wasm_parser.md). - or both (which will use the latter only when available)
+  documentation](../dash_wasm_parser.md). - or both (which will use the latter only when available)
 
 - **`"smooth"` - for Microsoft Smooth Streaming contents**
 
-  If you're using the [minimal build of the player](./minimal_player.md), you
+  If you're using the [minimal build of the player](../../additional_ressources/minimal_player.md), you
   will need to add at least the `SMOOTH` feature to be able to play Smooth
   contents.
 
@@ -59,7 +59,7 @@ Can be either:
   using a transport protocol. With that option, you can even play HLS
   contents on multiple browsers (mainly safari and iOS browsers).
 
-  If you're using the [minimal build of the player](./minimal_player.md), you
+  If you're using the [minimal build of the player](../../additional_ressources/minimal_player.md), you
   will need to add at least the `DIRECTFILE` feature to be able to play those
   contents.
 
@@ -72,14 +72,14 @@ Can be either:
 - `"metaplaylist"` for [MetaPlaylist](../../additional_ressources/metaplaylist.md) streams, which are
   a concatenation of multiple smooth and DASH contents
 
-  If you're using the [minimal build of the player](./minimal_player.md), you
+  If you're using the [minimal build of the player](../../additional_ressources/minimal_player.md), you
   will need to add at least the `METAPLAYLIST` experimental feature to be able
   to play those contents.
 
 - `"local"` for [local manifests](../../additional_ressources/local_contents.md), which allows to play
   downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
 
-  If you're using the [minimal build of the player](./minimal_player.md), you
+  If you're using the [minimal build of the player](../../additional_ressources/minimal_player.md), you
   will need to add at least the `METAPLAYLIST` experimental feature to be able
   to play those contents.
 
@@ -138,7 +138,7 @@ decrypted but unnecessary if the content is not encrypted.
 
 There's a lot of configuration possible here.
 In the case you find this documentation hard to grasp, we've written a [tutorial
-on DRM configuration here](../tutorials/contents_with_DRM.md).
+on DRM configuration here](../../tutorials/contents_with_DRM.md).
 
 --
 
@@ -150,8 +150,8 @@ element in that array to the last) and only consider the first one compatible
 with the current device.
 
 If none of those configurations are compatible with the current device, an
-[`INCOMPATIBLE_KEYSYSTEMS` error](./errors.md#types-encrypted_media_error) might
-be sent through an [`"error"` event](./player_events.md#events-error).
+[`INCOMPATIBLE_KEYSYSTEMS` error](../errors.md#types-encrypted_media_error) might
+be sent through an [`"error"` event](../events.md#error).
 
 Here's the list of all possible options, (note that only `type` and
 `getLicense` are required, other properties are optional yet might be very
@@ -231,7 +231,7 @@ useful depending on your needs):
 
     If we have no Representation to fallback to anymore, we will throw a
     MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
-    the errors documentation](./errors.md#types-media_error).
+    the errors documentation](../errors.md#types-media_error).
 
   If the `getLicense` call throws/rejects, you can add any of the following
   properties (none are mandatory) to configure the behavior of the RxPlayer
@@ -259,19 +259,19 @@ useful depending on your needs):
     Representations (e.g. qualities) which might have a different decryption
     key. If no Representation is left, we will throw a MediaError with a
     `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
-    documentation](./errors.md#types-media_error).
+    documentation](../errors.md#types-media_error).
 
     You will receive a `decipherabilityUpdate` event when we fallback from
     a given Representation. You can find documentation on this event [in
     the corresponding chapter of the events
-    documentation](./player_events.md#events-decipherabilityUpdate).
+    documentation](../events.md#decipherabilityupdate).
 
     This option is thus only useful for contents depending on multiple
     licenses.
 
     When fallbacking, we might need to reload the current MediaSource,
     leading to a black screen during a brief instant. When reloading, the
-    RxPlayer will have the `"RELOADING"` [player state](./states.md).
+    RxPlayer will have the `"RELOADING"` [player state](../states.md).
     on most situations, we will however not reload the media source but
     only perform a very little seek (of some milliseconds). you might see
     the stream stutter for a very brief instant at that point.
@@ -311,7 +311,7 @@ useful depending on your needs):
 
   If set, we will try to set this certificate on the CDM. If it fails, we will
   still continue to try deciphering the content (albeit a
-  [warning](./errors.md) will be emitted in that case with the code
+  [warning](../errors.md) will be emitted in that case with the code
   `"LICENSE_SERVER_CERTIFICATE_ERROR"`).
 
 - **persistentLicense** (`Boolean|undefined`): Set it to `true` if you
@@ -370,15 +370,15 @@ useful depending on your needs):
   You will receive a `decipherabilityUpdate` event when we fallback from
   a given Representation. You can find documentation on this event
   [in the corresponding chapter of the events
-  documentation](./player_events.md#events-decipherabilityUpdate).
+  documentation](../events.md#decipherabilityupdate).
 
   When fallbacking, we might need to reload the current MediaSource, leading
   to a black screen during a brief instant. When reloading, the RxPlayer
-  will have the `"RELOADING"` [player state](./states.md).
+  will have the `"RELOADING"` [player state](../states.md).
 
   If we have no Representation to fallback to anymore, we will throw a
   MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
-  the errors documentation](./errors.md#types-media_error).
+  the errors documentation](../errors.md#types-media_error).
 
 - **maxSessionCacheSize** (`number|undefined`): The RxPlayer maintains a cache
   of recently opened `MediaKeySession` (and consequently of recently fetched
@@ -439,7 +439,7 @@ useful depending on your needs):
     _Note that while fallbacking, it is possible that the player goes into
     the `"RELOADING"` state (during which the video will disappear and many
     APIs will become unavailable). More information about the `"RELOADING"`
-    state can be found in [the player states documentation](./states)._
+    state can be found in [the player states documentation](../states)._
 
     You can set this option as an optimization (to only perform a single
     license requests instead of many while playing contents encrypted with
@@ -497,7 +497,7 @@ useful depending on your needs):
 
   If set to `true` or not set, the playback will be interrupted as soon as one
   of the current licenses expires. In that situation, you will be warned with
-  an [`error` event](./errors.md) with, as a payload, an error with the code
+  an [`error` event](../errors.md) with, as a payload, an error with the code
   `KEY_STATUS_CHANGE_ERROR`.
 
   If set to `false`, the playback of the current content will not be
@@ -1115,7 +1115,7 @@ There are two possible values:
   will become unavailable) to be able to switch to the new track.
 
   More information about the `"RELOADING"` state can be found in [the
-  player states documentation](./states).
+  player states documentation](../states).
 
 ### manualBitrateSwitchingMode
 
@@ -1160,7 +1160,7 @@ There is two possible values:
   - you will only have content with the new quality
 
   [1] More information about the `"RELOADING"` state can be found in [the
-  player states documentation](./states).
+  player states documentation](../states).
 
 ### onCodecSwitch
 
@@ -1204,7 +1204,7 @@ Can be set to one of those two values:
   Use it if you have issues with codec switching on some platforms.
 
   _More information about the `"RELOADING"` state can be found in [the
-  player states documentation](./states)._
+  player states documentation](../states)._
 
 ### lowLatencyMode
 

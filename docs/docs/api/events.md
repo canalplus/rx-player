@@ -471,7 +471,7 @@ _payload type_: `Object`
 
 :::warning
 This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
+options](./api/loadVideo.md#transport)).
 :::
 
 ---
@@ -585,7 +585,7 @@ _payload type_: `undefined`
 ---
 
 :warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
+options](./api/loadVideo.md#transport)).
 
 ---
 
@@ -599,7 +599,7 @@ _payload type_: `undefined`
 ---
 
 :warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
+options](./api/loadVideo.md#transport)).
 
 ---
 
