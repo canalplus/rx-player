@@ -327,11 +327,11 @@ function createMDHDBox(timescale : number) : Uint8Array {
   return createBox("mdhd", concat(12, itobe4(timescale), 8));
 }
 
-  /**
-   * @param {Number} timescale
-   * @param {Number} trackId
-   * @returns {Uint8Array}
-   */
+/**
+ * @param {Number} timescale
+ * @param {Number} trackId
+ * @returns {Uint8Array}
+ */
 function createMVHDBox(timescale : number, trackId : number) : Uint8Array {
   return createBox("mvhd", concat(
     12,

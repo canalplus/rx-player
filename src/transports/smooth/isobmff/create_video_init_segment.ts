@@ -38,10 +38,7 @@ import createInitSegment from "./create_init_segment";
  * @param {Number} vRes
  * @param {Number} nalLength (1, 2 or 4)
  * @param {string} codecPrivateData
- * @param {Uint8Array} keyId - hex string representing the key Id,
- * 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b
- * @param {Array.<Object>} [pssList] - List of dict, example:
- * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
+ * @param {Uint8Array} [keyId]
  * @returns {Uint8Array}
  */
 export default function createVideoInitSegment(
