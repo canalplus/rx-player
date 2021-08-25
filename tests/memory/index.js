@@ -32,9 +32,7 @@ describe("Memory tests", () => {
     }
     this.timeout(5 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
-                            initialAudioBitrate: Infinity,
-                            preferredTextTracks: [{ language: "fra",
-                                                    closedCaption: true }] });
+                            initialAudioBitrate: Infinity });
     window.gc();
     await sleep(1000);
     const initialMemory = window.performance.memory;
@@ -74,9 +72,7 @@ describe("Memory tests", () => {
     }
     this.timeout(5 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
-                            initialAudiobitrate: Infinity,
-                            preferredtexttracks: [{ language: "fra",
-                                                    closedcaption: true }] });
+                            initialAudiobitrate: Infinity });
     window.gc();
     await sleep(1000);
     const initialMemory = window.performance.memory;
@@ -117,9 +113,7 @@ describe("Memory tests", () => {
     }
     this.timeout(5 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
-                            initialAudiobitrate: Infinity,
-                            preferredtexttracks: [{ language: "fra",
-                                                    closedcaption: true }] });
+                            initialAudiobitrate: Infinity });
     const vtlVideoElement = document.createElement("video");
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const videoThumbnailLoader =

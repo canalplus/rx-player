@@ -37,10 +37,6 @@ export {
   ITMTextTrack as ITextTrack,
   ITMVideoTrack as IVideoTrack,
 
-  IAudioTrackPreference,
-  ITextTrackPreference,
-  IVideoTrackPreference,
-
   IStreamEvent,
   IStreamEventData,
 } from "./core/api";

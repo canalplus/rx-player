@@ -51,14 +51,6 @@ const player = new RxPlayer(options);
 export default player;
 ```
 
-Two constructor options have also their type definition exported, those are:
-
-  - `IAudioTrackPreference`: which is the type of a single element in the
-    `preferredAudioTracks` array.
-
-  - `ITextTrackPreference`: which is the type of a single element in the
-    `preferredTextTracks` array.
-
 
 ### loadVideo ##################################################################
 
