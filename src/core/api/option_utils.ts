@@ -22,7 +22,6 @@
 import config from "../../config";
 import log from "../../log";
 import {
-  IAudioTrackPreference,
   IAudioTrackSwitchingMode,
   IConstructorOptions,
   IKeySystemOption,
@@ -33,13 +32,10 @@ import {
   IRepresentationFilter,
   ISegmentLoader,
   IServerSyncInfos,
-  ITextTrackPreference,
-  IVideoTrackPreference,
 } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
-import warnOnce from "../../utils/warn_once";
 
 /** Value once parsed for the `startAt` option of the `loadVideo` method. */
 export type IParsedStartAtOption = { position : number } |
@@ -68,10 +64,6 @@ export interface IParsedConstructorOptions {
   maxVideoBufferSize : number;
   limitVideoWidth : boolean;
   throttleVideoBitrateWhenHidden : boolean;
-
-  preferredAudioTracks : IAudioTrackPreference[];
-  preferredTextTracks : ITextTrackPreference[];
-  preferredVideoTracks : IVideoTrackPreference[];
 
   videoElement : HTMLMediaElement;
   initialVideoBitrate : number;
@@ -145,10 +137,6 @@ function parseConstructorOptions(
   let wantedBufferAhead : number;
   let maxVideoBufferSize : number;
 
-  let preferredAudioTracks : IAudioTrackPreference[];
-  let preferredTextTracks : ITextTrackPreference[];
-  let preferredVideoTracks : IVideoTrackPreference[];
-
   let videoElement : HTMLMediaElement;
   let initialVideoBitrate : number;
   let initialAudioBitrate : number;
@@ -216,39 +204,6 @@ function parseConstructorOptions(
     isNullOrUndefined(options.throttleVideoBitrateWhenHidden) ?
       DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
       !!options.throttleVideoBitrateWhenHidden;
-
-  if (options.preferredTextTracks !== undefined) {
-    if (!Array.isArray(options.preferredTextTracks)) {
-      warnOnce("Invalid `preferredTextTracks` option, it should be an Array");
-      preferredTextTracks = [];
-    } else {
-      preferredTextTracks = options.preferredTextTracks;
-    }
-  } else {
-    preferredTextTracks = [];
-  }
-
-  if (options.preferredAudioTracks !== undefined) {
-    if (!Array.isArray(options.preferredAudioTracks)) {
-      warnOnce("Invalid `preferredAudioTracks` option, it should be an Array");
-      preferredAudioTracks = [];
-    } else {
-      preferredAudioTracks = options.preferredAudioTracks;
-    }
-  } else {
-    preferredAudioTracks = [];
-  }
-
-  if (options.preferredVideoTracks !== undefined) {
-    if (!Array.isArray(options.preferredVideoTracks)) {
-      warnOnce("Invalid `preferredVideoTracks` option, it should be an Array");
-      preferredVideoTracks = [];
-    } else {
-      preferredVideoTracks = options.preferredVideoTracks;
-    }
-  } else {
-    preferredVideoTracks = [];
-  }
 
   if (isNullOrUndefined(options.videoElement)) {
     videoElement = document.createElement("video");
@@ -333,9 +288,6 @@ function parseConstructorOptions(
            wantedBufferAhead,
            maxVideoBufferSize,
            throttleVideoBitrateWhenHidden,
-           preferredAudioTracks,
-           preferredTextTracks,
-           preferredVideoTracks,
            initialAudioBitrate,
            initialVideoBitrate,
            minAudioBitrate,
