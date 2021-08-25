@@ -49,7 +49,7 @@ export default {
                 width: 640,
                 codec: "avc1.64001e",
                 mimeType: "video/mp4",
-                frameRate: "60/2",
+                frameRate: 30,
                 index: {
                   init: {
                     mediaURLs: [BASE_URL + "V300/init.mp4"],
