@@ -41,15 +41,6 @@ properties, methods, events and so on.
   - [`wantedBufferAhead`](../api/Creating_a_Player.md#wantedbufferahead):
     Set the default buffering goal.
 
-  - [`preferredAudioTracks`](../api/Creating_a_Player.md#preferredaudiotracks):
-    Set default audio tracks preferences based on tracks characteristics.
-
-  - [`preferredTextTracks`](../api/Creating_a_Player.md#preferredtexttracks):
-    Set default text tracks preferences based on tracks characteristics.
-
-  - [`preferredVideoTracks`](../api/Creating_a_Player.md#preferredvideotracks):
-    Set default video tracks preferences based on tracks characteristics.
-
   - [`maxBufferAhead`](../api/Creating_a_Player.md#maxbufferahead):
     Set the default maximum kept buffer ahead of the current position, in seconds.
 
