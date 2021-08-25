@@ -42,23 +42,6 @@ During this period of time:
   - `setAudioTrack` will throw
   - `setTextTrack` will throw
 
-<div class="note">
-Note for multi-Period contents:
-<br>
-This method will only have an effect on the
-<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
-playing.  If you want to update the track for other Periods as well, you might
-want to either:
-<br>
-<ul>
-  <li>update the current video track once a `"periodChange"` event has been
-  received.</li>
-  <li>update first the preferred video tracks through the
-  <a href="./setPreferredVideoTracks.md">setPreferredVideoTracks</a> method.
-  </li>
-</ul>
-</div>
-
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
 href="../Loading_a_Content.md#transport">loadVideo options</a>),

@@ -22,7 +22,7 @@ import {
   IParsedRepresentation,
 } from "../parsers/manifest";
 import {
-  IAdaptationType,
+  ITrackType,
   IAudioRepresentation,
   IHDRInformation,
   IVideoRepresentation,
@@ -140,7 +140,7 @@ class Representation {
   /**
    * @param {Object} args
    */
-  constructor(args : IParsedRepresentation, opts : { type : IAdaptationType }) {
+  constructor(args : IParsedRepresentation, opts : { type : ITrackType }) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
