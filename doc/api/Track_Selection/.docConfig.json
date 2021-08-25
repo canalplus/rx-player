@@ -45,30 +45,6 @@
       "displayName": "disableVideoTrack"
     },
     {
-      "path": "./setPreferredAudioTracks.md",
-      "displayName": "setPreferredAudioTracks"
-    },
-    {
-      "path": "./setPreferredTextTracks.md",
-      "displayName": "setPreferredTextTracks"
-    },
-    {
-      "path": "./setPreferredVideoTracks.md",
-      "displayName": "setPreferredVideoTracks"
-    },
-    {
-      "path": "./getPreferredAudioTracks.md",
-      "displayName": "getPreferredAudioTracks"
-    },
-    {
-      "path": "./getPreferredTextTracks.md",
-      "displayName": "getPreferredTextTracks"
-    },
-    {
-      "path": "./getPreferredVideoTracks.md",
-      "displayName": "getPreferredVideoTracks"
-    },
-    {
       "path": "./isTrickModeEnabled.md",
       "displayName": "isTrickModeEnabled"
     }
