@@ -9,13 +9,6 @@ The RxPlayer has an advanced API when it comes to track selection:
 
 - You can disable the current video and / or text track
 
-- You can also give to the RxPlayer a set of preferences so it can make the
-  best choice by itself without manually having to choose the right track
-  for every contents.
-
-  Those preferences can even be applied retro-actively (for example, to the
-  content currently being played), depending on your need.
-
 Because the RxPlayer declares multiple APIs to allow those different use cases,
 the track selection API can seem intimidating and confusing at first.
 
@@ -374,16 +367,6 @@ It's important to consider that those APIs only allow to change the current
 track and will have no impact on the other contents you will encounter in the
 future.
 
-Depending on your application, you might also want to set a global preference at
-some point, such as saying that the final user will prefer english audio
-tracks for now on.
-
-Although `setAudioTrack` can be used for this use case - by just setting an
-english audio track every times the available audio tracks list change (we can
-know that through the `availableAudioTracksChange` event) - it is much more
-efficient and less cumbersome to use audio track preference APIs for that.
-Those will be described later in this tutorial, so stay with me!
-
 After manually setting a track through the `set...Track` methods, you will
 receive the corresponding `...TrackChange` event when the change is applied.
 
@@ -422,197 +405,10 @@ out of that usually requires a short but visible "re-loading" step by the
 RxPlayer. You want thus to limit the need to call `disableVideoTrack` every
 times a new content is encountered.
 
-Thankfully, the RxPlayer has another set of API to let you choose a track even
-for future contents: the "track preferences APIs".
+XXX TODO
 
-## Track preferences APIs
 
-All methods and events discussed until now only have an effect for the current
-content being played.
-
-This has multiple disadvantages:
-
-- that code has to be run each time a new content is loaded (and each time the
-  track list changes, if there are multiple track lists for a single
-  contents).
-
-- it is inefficient:
-  In some cases the RxPlayer pre-load new content to allow a smooth transition
-  between the current content and that new one.
-  To do that, it chooses a track itself and begin to download it.
-
-  If when reaching the new content a totally other track is finally chosen,
-  we might have wasted network bandwidth for nothing as we would have to
-  re-download a completely different track.
-
-  Even more important, the transition won't be smooth at all because we
-  will have to stop to build some buffer with the wanted track instead.
-
-Thankfully, there exists another set of APIs we call the "track preferences".
-
-With those, you can tell the RxPlayer that you might always prefer the audio
-track to be in english - for example - or that you would prefer the video track
-to be in a given codec.
-
-Bear in mind that track preferences APIs are for a different use case than the
-classic track selection APIs:
-
-- the "classic" track selection APIs are here to select a precize track
-  amongst available ones.
-
-  This is probably the APIs you will use when displaying a list of available
-  tracks to the final user and choosing one.
-
-- the track preferences APIs give hints of what the finally user generally
-  wants, so that the right track is automatically chosen by the RxPlayer. It
-  is also useful for optimizations such as when pre-loading the next content.
-
-  This is the APIs you will use in most other use cases, where you want to
-  give the general track settings the user wants to the RxPlayer.
-
-The track preferences can be set in two manners:
-
-1. During instanciation of the RxPlayer
-2. At any time, through specific methods
-
-### Setting a track preference on instanciation
-
-There are three options you can give to the RxPlayer on instanciation to set the
-track preferences:
-
-- [`preferredAudioTracks`](../../api/Creating_a_Player.md#preferredaudiotracks):
-  set the preferences for the audio tracks
-- [`preferredTextTracks`](../../api/Creating_a_Player.md#preferredtexttracks):
-  for the text tracks
-- [`preferredVideoTracks`](../../api/Creating_a_Player.md#preferredvideotracks):
-  for the video tracks
-
-You can click on the name of the option to be redirected to its corresponding
-API documentation.
-
-Each of those take an array of object which will define which track you want the
-RxPlayer to choose by default.
-
-As a simple example, to choose french audio tracks without audio description by
-default you could do:
-
-```js
-const rxPlayer = new RxPlayer({
-  preferredAudioTracks: [{ language: "fra", audioDescription: false }],
-});
-```
-
-Because not all contents could have a track matching that preferences, you can
-add even more elements in that array. For example, if you want to fallback to
-english if no french audio track is found you can do:
-
-```js
-const rxPlayer = new RxPlayer({
-  preferredAudioTracks: [
-    { language: "fra", audioDescription: false },
-    { language: "eng", audioDescription: false },
-  ],
-});
-```
-
-Here, the RxPlayer will enable a french audio track if it finds one, but if it
-does not, it will enable the english one instead.
-
-If none of your preferences is found for a given content, the RxPlayer will
-choose the content's default (or first, if no default is announced in the
-content) track itself.
-
-Those options allow much more powerful configurations. You can refer to the API
-documentation for that.
-
-### track preferences methods
-
-You can also update at any time those track preferences - even when no content
-is playing - by calling the following methods: - [`setPreferredAudioTracks`](../../api/Track_Selection/setPreferredAudioTracks.md):
-update the audio preferences - [`setPreferredTextTracks`](../../api/Track_Selection/setPreferredTextTracks.md)
-update the text preferences - [`setPreferredVideoTracks`](../../api/Track_Selection/setPreferredVideoTracks.md)
-update the video preferences
-
-Those methods mostly work the same way than the constructor options. You give
-them an array of the wanted track configurations and the RxPlayer will try to
-choose a track that match with the earliest possible configuration in that
-array:
-
-```js
-rxPlayer.setPreferredAudioTracks([
-  { language: "fra", audioDescription: false },
-  { language: "eng", audioDescription: false },
-]);
-```
-
-But there's another element to consider here.
-When calling the method (unlike when giving an option to the constructor), the
-RxPlayer may already be playing a content. So here, there's a dilemma:
-
-- should the RxPlayer apply the new preferences to the current content? It
-  could, but it might be unexpected if a track chosen explicitely by the user
-  for the current content changes because it does not match the preferences.
-
-- or should the RxPlayer only apply it to new contents? In that case, it could
-  also be an unexpected behavior.
-  Especially for contents with multiple track lists - here you could inversely
-  want your new preferences to be considered when seeking back to an
-  already-played content.
-
-There's no good answer here, it all depends on the implementation you want to
-do.
-
-Because of that, those methods all can take a boolean as a second argument.
-When this second argument is set to `true`, the RxPlayer will also apply that
-preference to the already-loaded content:
-
-```js
-// disable the text tracks from every contents - the current one included
-rxPlayer.setPreferredTextTracks([null], true);
-```
-
-If not set or set to `false`, it will only be applied for content that have not
-been loaded yet.
-
-```js
-// Only disable the text tracks from the next encountered contents.
-rxPlayer.setPreferredTextTracks([null]);
-```
-
-### Obtaining the last set preferences
-
-The RxPlayer also has three methods which will return the last set preferences:
-
-- [`getPreferredAudioTracks`](../../api/Track_Selection/getPreferredAudioTracks.md):
-  return the audio preferences
-- [`getPreferredTextTracks`](../../api/Track_Selection/getPreferredTextTracks.md):
-  return the text preferences
-- [`getPreferredVideoTracks`](../../api/Track_Selection/getPreferredVideoTracks.md):
-  return the video preferences
-
-The format of the returned array will be the exact same than the array given to
-the corresponding `setPreferred...Tracks` method (or the value of the
-`preferred...Tracks` constructor option if the method was never called - or
-just an empty array by default when neither was used).
-
-## What set of APIs should you use
-
-The "classic" track selection APIs (`getAvailable...Tracks`, `get...Track` and
-`set...Track`) are the APIs you should use when explicitely exposing the current
-available tracks and selecting one precizely.
-
-The track preferences APIs should be used for anything else.
-
-This is because the track preferences APIs allow to completely move the task
-of selecting a track out of your code and into the RxPlayer and will allow
-some optimizations to take place.
-
-The "classic" track selection APIs still allow to make a much more precize
-choice and allow to know which tracks are currently available.
-Due to that, they are a perfect fit when you want to propose a track choice menu
-to the final user.
-
-## Notes about the "textTrackMode" option
+## Notes about the "textTrackMode" option ######################################
 
 This tutorial was focused on track selection but there's still a last point I
 want to approach, which is how subtitles will be displayed to the user.

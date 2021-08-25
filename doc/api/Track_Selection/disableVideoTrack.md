@@ -6,20 +6,6 @@ Disable the current video track, if one.
 
 Might enter in `RELOADING` state for a short period after calling this API.
 
-Note for multi-Period contents:
-
-This method will only have an effect on the [Period](../../Getting_Started/Glossary.md#period) that is
-currently playing.
-
-If you want to disable the video track for other Periods as well, you might want
-to call [setPreferredVideoTracks](./setPreferredVideoTracks.md) instead. With
-this method, you can globally apply a `null` video track preference - which means
-that you would prefer having no video track - by setting its second argument to
-`true`.
-
-More information can be found on that API's documentation.
-
-
 <div class="warning">
 This option may have no effect in <i>DirectFile</i> mode (see <a
 href="../Loading_a_Content.md#transport">loadVideo options</a>).
