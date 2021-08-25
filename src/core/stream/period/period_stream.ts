@@ -55,12 +55,12 @@ import AdaptationStream, {
   IAdaptationStreamOptions,
 } from "../adaptation";
 import EVENTS from "../events_generators";
+import reloadAfterSwitch from "../reload_after_switch";
 import {
   IAdaptationStreamEvent,
   IPeriodStreamEvent,
   IStreamWarningEvent,
 } from "../types";
-import reloadAfterSwitch from "../utils";
 import createEmptyStream from "./create_empty_adaptation_stream";
 import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
@@ -167,7 +167,7 @@ export default function PeriodStream({
         if (segmentBufferStatus.type === "initialized") {
           log.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
           if (SegmentBuffersStore.isNative(bufferType)) {
-            return reloadAfterSwitch(period, clock$, relativePosAfterSwitch);
+            return reloadAfterSwitch(period, clock$, 0);
           }
           cleanBuffer$ = segmentBufferStatus.value
             .removeBuffer(period.start,

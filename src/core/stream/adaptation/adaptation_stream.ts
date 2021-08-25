@@ -59,6 +59,7 @@ import ABRManager, {
 import { SegmentFetcherCreator } from "../../fetchers";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
+import reloadAfterSwitch from "../reload_after_switch";
 import RepresentationStream, {
   IRepresentationStreamClockTick,
   ITerminationOrder,
@@ -67,7 +68,6 @@ import {
   IAdaptationStreamEvent,
   IRepresentationStreamEvent,
 } from "../types";
-import reloadAfterSwitch from "../utils";
 import createRepresentationEstimator from "./create_representation_estimator";
 
 const { DELTA_POSITION_AFTER_RELOAD } = config;
