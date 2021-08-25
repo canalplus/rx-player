@@ -63,7 +63,7 @@ import SegmentInventory, {
  * If operations happens synchronously, this method will just return an empty
  * array.
  */
-export abstract class SegmentBuffer<T> {
+export abstract class SegmentBuffer {
   /** "Type" of the buffer (e.g. "audio", "video", "text", "image"). */
   public readonly abstract bufferType : IBufferType;
 
@@ -112,7 +112,7 @@ export abstract class SegmentBuffer<T> {
    * @param {Object} infos
    * @returns {Observable}
    */
-  public abstract pushChunk(infos : IPushChunkInfos<T>) : Observable<void>;
+  public abstract pushChunk(infos : IPushChunkInfos<unknown>) : Observable<void>;
 
   /**
    * Remove buffered data (added to the same FIFO queue than `pushChunk`).
@@ -171,7 +171,7 @@ export abstract class SegmentBuffer<T> {
    * processed)
    * @returns {Array.<Object>}
    */
-  public getPendingOperations() : Array<ISBOperation<T>> {
+  public getPendingOperations() : Array<ISBOperation<unknown>> {
     // Return no pending operation by default (for synchronous SegmentBuffers)
     return [];
   }

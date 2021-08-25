@@ -28,19 +28,25 @@ interface IWebKitSourceBuffer { append(data : ArrayBuffer) : void;
 export default function patchWebkitSourceBuffer() : void {
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   /* eslint-disable @typescript-eslint/no-unsafe-call */
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
-  if (!isNode && (window as any).WebKitSourceBuffer != null &&
-      (window as any).WebKitSourceBuffer.prototype.addEventListener === undefined)
+  if (
+    !isNode && (window as any).WebKitSourceBuffer != null &&
+    (window as any).WebKitSourceBuffer.prototype.addEventListener === undefined)
   {
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
     /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     const sourceBufferWebkitRef : IWebKitSourceBufferConstructor =
-      (window as any).WebKitSourceBuffer;
+      (window as unknown as {
+        WebKitSourceBuffer : IWebKitSourceBufferConstructor;
+      }).WebKitSourceBuffer;
     const sourceBufferWebkitProto = sourceBufferWebkitRef.prototype;
 
     for (const fnName in EventEmitter.prototype) {
       if (EventEmitter.prototype.hasOwnProperty(fnName)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sourceBufferWebkitProto[fnName] = (EventEmitter.prototype as any)[fnName];
       }
     }
@@ -49,7 +55,7 @@ export default function patchWebkitSourceBuffer() : void {
     sourceBufferWebkitProto._listeners = [];
 
     sourceBufferWebkitProto._emitUpdate =
-      function(eventName : string, val : any) {
+      function(eventName : string, val : unknown) {
         nextTick(() => {
           /* eslint-disable no-invalid-this */
           this.trigger(eventName, val);
@@ -60,7 +66,7 @@ export default function patchWebkitSourceBuffer() : void {
       };
 
     sourceBufferWebkitProto.appendBuffer =
-      function(data : any) {
+      function(data : unknown) {
         /* eslint-disable no-invalid-this */
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (this.updating) {

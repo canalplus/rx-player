@@ -25,6 +25,7 @@ describe("Features list - HTML Text Buffer", () => {
   });
 
   it("should add an Image Buffer in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addImageBufferFeature(featureObject);
     expect(featureObject).toEqual({ imageBuffer });

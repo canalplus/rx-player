@@ -56,7 +56,7 @@ describe("compat - removeCue", () => {
     }));
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, { id: "1" } as any);
+    removeCue(fakeTrack, { id: "1" });
 
     expect(fakeTrack.cues.length).toBe(0);
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
@@ -100,7 +100,7 @@ describe("compat - removeCue", () => {
     }));
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, fakeCue as any);
+    removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(0);
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
@@ -144,7 +144,7 @@ describe("compat - removeCue", () => {
     }));
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, fakeCue as any);
+    removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(0);
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
@@ -181,7 +181,7 @@ describe("compat - removeCue", () => {
     };
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, fakeCue as any);
+    removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(1);
     expect(fakeTrack.mode).toBe("showing");
@@ -217,7 +217,7 @@ describe("compat - removeCue", () => {
     };
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, { id: "1" } as any);
+    removeCue(fakeTrack, { id: "1" });
 
     expect(fakeTrack.cues.length).toBe(1);
     expect(fakeTrack.mode).toBe("showing");

@@ -64,10 +64,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as any).name).toEqual("OtherError");
-    expect((error as any).type).toEqual("OTHER_ERROR");
-    expect((error as any).code).toEqual("INTEGRITY_ERROR");
-    expect((error as any).message)
+    expect((error as typeof OtherError).name).toEqual("OtherError");
+    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
+    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as typeof OtherError).message)
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `ftyp` box");
   });
 
@@ -85,10 +85,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as any).name).toEqual("OtherError");
-    expect((error as any).type).toEqual("OTHER_ERROR");
-    expect((error as any).code).toEqual("INTEGRITY_ERROR");
-    expect((error as any).message)
+    expect((error as typeof OtherError).name).toEqual("OtherError");
+    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
+    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as typeof OtherError).message)
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `moov` box");
   });
 
@@ -108,10 +108,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as any).name).toEqual("OtherError");
-    expect((error as any).type).toEqual("OTHER_ERROR");
-    expect((error as any).code).toEqual("INTEGRITY_ERROR");
-    expect((error as any).message)
+    expect((error as typeof OtherError).name).toEqual("OtherError");
+    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
+    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as typeof OtherError).message)
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `moof` box");
   });
 
@@ -131,10 +131,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as any).name).toEqual("OtherError");
-    expect((error as any).type).toEqual("OTHER_ERROR");
-    expect((error as any).code).toEqual("INTEGRITY_ERROR");
-    expect((error as any).message)
+    expect((error as typeof OtherError).name).toEqual("OtherError");
+    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
+    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as typeof OtherError).message)
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `mdat` box");
   });
 });

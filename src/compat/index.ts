@@ -20,7 +20,6 @@ import {
   ICompatTextTrack,
   ICompatVTTCue,
   MediaSource_,
-  VTTCue_,
 } from "./browser_compatibility_types";
 import canPatchISOBMFFSegment from "./can_patch_isobmff";
 import tryToChangeSourceBufferType, {
@@ -109,7 +108,6 @@ export {
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,
   tryToChangeSourceBufferType,
-  VTTCue_,
   whenLoadedMetadata$,
   whenMediaSourceOpen$,
 };

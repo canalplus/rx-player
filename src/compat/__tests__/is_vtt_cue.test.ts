@@ -22,6 +22,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 describe("Compat - isVTTCue", () => {
+  interface IFakeWindow {
+    VTTCue? : VTTCue | typeof MockVTTCue;
+  }
   class MockVTTCue {
     public startTime : number;
     public endTime : number;
@@ -32,19 +35,20 @@ describe("Compat - isVTTCue", () => {
       this.text = text;
     }
   }
+  const win = window as IFakeWindow;
 
   it("should return true if the given cue is an instance of a vtt cue", () => {
-    const originalVTTCue = (window as any).VTTCue;
-    (window as any).VTTCue = MockVTTCue;
+    const originalVTTCue = window.VTTCue;
+    win.VTTCue = MockVTTCue;
     const cue = new VTTCue(0, 10, "");
     const isVTTCue = require("../is_vtt_cue").default;
     expect(isVTTCue(cue)).toEqual(true);
-    (window as any).VTTCue = originalVTTCue;
+    window.VTTCue = originalVTTCue;
   });
 
   it("should return false if the given cue is not an instance of a vtt cue", () => {
-    const originalVTTCue = (window as any).VTTCue;
-    (window as any).VTTCue = MockVTTCue;
+    const originalVTTCue = window.VTTCue;
+    win.VTTCue = MockVTTCue;
     const cue = {
       startTime: 0,
       endTime: 10,
@@ -52,16 +56,16 @@ describe("Compat - isVTTCue", () => {
     };
     const isVTTCue = require("../is_vtt_cue").default;
     expect(isVTTCue(cue)).toEqual(false);
-    (window as any).VTTCue = originalVTTCue;
+    window.VTTCue = originalVTTCue;
   });
 
   it("should return false in any case if window does not define a VTTCue", () => {
-    const originalVTTCue = (window as any).VTTCue;
-    (window as any).VTTCue = MockVTTCue;
+    const originalVTTCue = window.VTTCue;
+    win.VTTCue = MockVTTCue;
     const cue = new VTTCue(0, 10, "");
-    (window as any).VTTCue = undefined;
+    win.VTTCue = undefined;
     const isVTTCue = require("../is_vtt_cue").default;
     expect(isVTTCue(cue)).toEqual(false);
-    (window as any).VTTCue = originalVTTCue;
+    window.VTTCue = originalVTTCue;
   });
 });

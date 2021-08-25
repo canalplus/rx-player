@@ -191,11 +191,7 @@ export default class DashWasmParser {
         this._instance = instanceWasm;
 
         // TODO better types?
-        /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-        this._linearMemory = (this._instance.instance.exports as any).memory;
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-        /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+        this._linearMemory = this._instance.instance.exports.memory as WebAssembly.Memory;
 
         this.status = "initialized";
       }).catch((err : Error) => {
@@ -350,11 +346,7 @@ export default class DashWasmParser {
 
     try {
       // TODO better type this
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      (this._instance.instance.exports as any).parse();
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      (this._instance.instance.exports.parse as () => void)();
     } catch (err) {
       this._parsersStack.reset();
       this._warnings = [];
@@ -399,11 +391,7 @@ export default class DashWasmParser {
 
     try {
       // TODO better type this
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      (this._instance.instance.exports as any).parse_xlink();
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      (this._instance.instance.exports.parse_xlink as () => void)();
     } catch (err) {
       this._parsersStack.reset();
       this._warnings = [];

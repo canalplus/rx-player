@@ -28,6 +28,7 @@ jest.mock("../../../core/segment_buffers/implementations/text/html", () => ({
 
 describe("Features list - HTML Text Buffer", () => {
   it("should add an HTML Text Buffer in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addHTMLTextBuffer(featureObject);
     expect(featureObject).toEqual({ htmlTextTracksBuffer });

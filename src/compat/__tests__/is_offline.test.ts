@@ -21,37 +21,45 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
+interface IFakeNavigator {
+  onLine? : boolean | null;
+}
+interface IFakeWindow {
+  navigator : IFakeNavigator;
+}
+const win = window as IFakeWindow;
+
 // FIXME We cannot mock navigator.onLine easily, sadly
 xdescribe("Compat - isOffline", () => {
   it("should return true if navigator.onLine is `false`", () => {
-    const oldNavigator = window.navigator;
-    (window as any).navigator = { onLine: false };
+    const oldNavigator = win.navigator;
+    win.navigator = { onLine: false };
     const isOffline = require("../is_offline").default;
     expect(isOffline()).toEqual(true);
-    (window as any).navigator = oldNavigator;
+    win.navigator = oldNavigator;
   });
 
   it("should return false if navigator.onLine is `true`", () => {
-    const oldNavigator = window.navigator;
-    (window as any).navigator = { onLine: true };
+    const oldNavigator = win.navigator;
+    win.navigator = { onLine: true };
     const isOffline = require("../is_offline").default;
     expect(isOffline()).toEqual(false);
-    (window as any).navigator = oldNavigator;
+    win.navigator = oldNavigator;
   });
 
   it("should return false if navigator.onLine is `undefined`", () => {
-    const oldNavigator = window.navigator;
-    (window as any).navigator = {};
+    const oldNavigator = win.navigator;
+    win.navigator = {};
     const isOffline = require("../is_offline").default;
     expect(isOffline()).toEqual(false);
-    (window as any).navigator = oldNavigator;
+    win.navigator = oldNavigator;
   });
 
   it("should return false if navigator.onLine is `null`", () => {
-    const oldNavigator = window.navigator;
-    (window as any).navigator = { onLine: null };
+    const oldNavigator = win.navigator;
+    win.navigator = { onLine: null };
     const isOffline = require("../is_offline").default;
     expect(isOffline()).toEqual(false);
-    (window as any).navigator = oldNavigator;
+    win.navigator = oldNavigator;
   });
 });

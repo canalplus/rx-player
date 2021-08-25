@@ -28,6 +28,7 @@ jest.mock("../../../core/init/initialize_directfile", () => ({
 
 describe("Features list - Directfile", () => {
   it("should add Directfile in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addDirectfileFeature(featureObject);
     expect(featureObject).toEqual({

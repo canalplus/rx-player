@@ -26,6 +26,7 @@ jest.mock("../../../parsers/texttracks/srt/native", () => ({
 
 describe("Features list - native srt Parser", () => {
   it("should add an native srt Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { nativeTextTracksParsers: {} };
     addNativesrtFeature(featureObject);
     expect(featureObject).toEqual({

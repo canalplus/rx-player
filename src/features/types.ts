@@ -48,11 +48,11 @@ export type IEMEManager = (mediaElement : HTMLMediaElement,
 
 export type IHTMLTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
-      textTrackElement : HTMLElement) => SegmentBuffer<unknown>;
+      textTrackElement : HTMLElement) => SegmentBuffer;
 
 export type INativeTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
-      hideNativeSubtitle : boolean) => SegmentBuffer<unknown>;
+      hideNativeSubtitle : boolean) => SegmentBuffer;
 
 export type IMediaElementTrackChoiceManager = typeof MediaElementTrackChoiceManager;
 
@@ -60,14 +60,6 @@ interface IBifThumbnail { index : number;
                           duration : number;
                           ts : number;
                           data : Uint8Array; }
-
-interface IImageTrackSegmentData {
-  data : IBifThumbnail[]; // image track data, in the given type
-  end : number; // end time time until which the segment apply
-  start : number; // start time from which the segment apply
-  timescale : number; // timescale to convert the start and end into seconds
-  type : string; // the type of the data (example: "bif")
-}
 
 interface IBifObject { fileFormat : string;
                        version : string;
@@ -81,7 +73,7 @@ interface IBifObject { fileFormat : string;
                        thumbs : IBifThumbnail[]; }
 
 export type IImageBuffer =
-  new() => SegmentBuffer<IImageTrackSegmentData>;
+  new() => SegmentBuffer;
 
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);

@@ -25,6 +25,7 @@ import {
   IParsedAdaptations,
   IParsedManifest,
   IParsedPeriod,
+  IParsedRepresentation,
 } from "../types";
 import MetaRepresentationIndex from "./representation_index";
 
@@ -194,7 +195,7 @@ function createManifest(
           for (let iAda = 0; iAda < currentAdaptations.length; iAda++) {
             const currentAdaptation = currentAdaptations[iAda];
 
-            const representations : any[] = [];
+            const representations : IParsedRepresentation[] = [];
             for (let iRep = 0; iRep < currentAdaptation.representations.length; iRep++) {
               const currentRepresentation = currentAdaptation.representations[iRep];
 

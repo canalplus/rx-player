@@ -177,16 +177,11 @@ export default function getOldWebKitMediaKeysCallbacks() : {
     if (videoElement == null) {
       videoElement = document.createElement("video");
     }
-    /* eslint-disable @typescript-eslint/unbound-method */
     if (videoElement != null && typeof videoElement.canPlayType === "function") {
-      /* eslint-enable @typescript-eslint/unbound-method */
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-disable @typescript-eslint/strict-boolean-expressions */
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-      return !!(videoElement as any).canPlayType("video/mp4", keyType);
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-enable @typescript-eslint/strict-boolean-expressions */
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
+      return !!(videoElement.canPlayType as unknown as (
+        mimeType : string,
+        keyType? : string
+      ) => boolean)("video/mp4", keyType);
     } else {
       return false;
     }

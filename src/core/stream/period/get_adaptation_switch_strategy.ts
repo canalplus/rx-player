@@ -68,7 +68,7 @@ export interface IAdaptationSwitchOptions {
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
-  segmentBuffer : SegmentBuffer<unknown>,
+  segmentBuffer : SegmentBuffer,
   period : Period,
   adaptation : Adaptation,
   playbackInfo : { currentTime : number; readyState : number },

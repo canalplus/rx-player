@@ -63,13 +63,13 @@ export default function checkManifestIDs(
         } else {
           adaptationIDs.push(adaptationID);
         }
-        const representationIDs : string[] = [];
+        const representationIDs : Array<number|string> = [];
         adaptation.representations.forEach(representation => {
           const representationID = representation.id;
           if (arrayIncludes(representationIDs, representationID)) {
             log.warn("Two representations with the same ID found. Updating.",
                      representationID);
-            const newID =  representationID + "-dup";
+            const newID = `${representationID}-dup`;
             representation.id = newID;
             checkManifestIDs(manifest);
             representationIDs.push(newID);

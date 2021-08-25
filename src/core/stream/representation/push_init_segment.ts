@@ -54,7 +54,7 @@ export default function pushInitSegment<T>(
                                    representation : Representation; };
                         segmentData : T | null;
                         segment : ISegment;
-                        segmentBuffer : SegmentBuffer<T>; }
+                        segmentBuffer : SegmentBuffer; }
 ) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (segmentData === null) {

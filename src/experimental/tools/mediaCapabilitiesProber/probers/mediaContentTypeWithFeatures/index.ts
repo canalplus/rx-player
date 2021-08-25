@@ -38,8 +38,11 @@ function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MSMediaKeys API not available");
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     if (!("isTypeSupportedWithFeatures" in (window as any).MSMediaKeys)) {
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "isTypeSupportedWithFeatures not available");
     }
@@ -72,8 +75,10 @@ export default function probeTypeWithFeatures(
     /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     /* eslint-disable @typescript-eslint/no-unsafe-call */
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     const result: ISupportWithFeatures =
       (window as any).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
+    /* eslint-enable @typescript-eslint/no-explicit-any */
     /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     /* eslint-enable @typescript-eslint/no-unsafe-call */

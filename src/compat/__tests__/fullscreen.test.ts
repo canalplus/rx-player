@@ -21,251 +21,266 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
+interface IFakeDocument {
+  createElement(eltType: string) : HTMLElement;
+  fullscreenElement? : Element | null;
+  mozCancelFullScreen? : () => void;
+  mozFullScreenElement? : HTMLElement;
+  msExitFullscreen? : () => void;
+  exitFullscreen? : () => void;
+  msFullscreenElement? : Element | null;
+  webkitExitFullscreen : () => void;
+  webkitFullscreenElement : Element | null | undefined;
+  webkitHidden? : boolean;
+}
+
+const doc = document as unknown as IFakeDocument;
+
 describe("compat - isFullScreen", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
   it("should return false when is not fullscreen", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    const origmozFullScreenElement = (document as any).mozFullScreenElement;
-    const origWebkitFullscreenElement = (document as any).webkitFullscreenElement;
-    const origMsFullscreenElement = (document as any).msFullscreenElement;
+    const origFullscreenElement = doc.fullscreenElement;
+    const origmozFullScreenElement = doc.mozFullScreenElement;
+    const origWebkitFullscreenElement = doc.webkitFullscreenElement;
+    const origMsFullscreenElement = doc.msFullscreenElement;
 
-    (document as any).fullscreenElement = undefined;
-    (document as any).mozFullScreenElement = undefined;
-    (document as any).webkitFullscreenElement = undefined;
-    (document as any).msFullscreenElement = undefined;
+    doc.fullscreenElement = undefined;
+    doc.mozFullScreenElement = undefined;
+    doc.webkitFullscreenElement = undefined;
+    doc.msFullscreenElement = undefined;
 
     const { isFullscreen } = require("../fullscreen");
     expect(isFullscreen()).toBe(false);
 
-    (document as any).fullscreenElement = origFullscreenElement;
-    (document as any).mozFullScreenElement = origmozFullScreenElement;
-    (document as any).webkitFullscreenElement = origWebkitFullscreenElement;
-    (document as any).msFullscreenElement = origMsFullscreenElement;
+    doc.fullscreenElement = origFullscreenElement;
+    doc.mozFullScreenElement = origmozFullScreenElement;
+    doc.webkitFullscreenElement = origWebkitFullscreenElement;
+    doc.msFullscreenElement = origMsFullscreenElement;
   });
 
   it("should return true when is fullscreen", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    const origmozFullScreenElement = (document as any).mozFullScreenElement;
-    const origWebkitFullscreenElement = (document as any).webkitFullscreenElement;
-    const origMsFullscreenElement = (document as any).msFullscreenElement;
+    const origFullscreenElement = doc.fullscreenElement;
+    const origmozFullScreenElement = doc.mozFullScreenElement;
+    const origWebkitFullscreenElement = doc.webkitFullscreenElement;
+    const origMsFullscreenElement = doc.msFullscreenElement;
 
-    (document as any).fullscreenElement = document.createElement("video");
-    (document as any).mozFullScreenElement = undefined;
-    (document as any).webkitFullscreenElement = undefined;
-    (document as any).msFullscreenElement = undefined;
+    doc.fullscreenElement = doc.createElement("video");
+    doc.mozFullScreenElement = undefined;
+    doc.webkitFullscreenElement = undefined;
+    doc.msFullscreenElement = undefined;
 
     const { isFullscreen } = require("../fullscreen");
     expect(isFullscreen()).toBe(true);
 
-    (document as any).fullscreenElement = origFullscreenElement;
-    (document as any).mozFullScreenElement = origmozFullScreenElement;
-    (document as any).webkitFullscreenElement = origWebkitFullscreenElement;
-    (document as any).msFullscreenElement = origMsFullscreenElement;
+    doc.fullscreenElement = origFullscreenElement;
+    doc.mozFullScreenElement = origmozFullScreenElement;
+    doc.webkitFullscreenElement = origWebkitFullscreenElement;
+    doc.msFullscreenElement = origMsFullscreenElement;
   });
 });
 
 describe("compat - requestFullscreen", () => {
   it("should request full screen with requestFullscreen API", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    (document as any).fullscreenElement = undefined;
+    const origFullscreenElement = doc.fullscreenElement;
+    doc.fullscreenElement = undefined;
 
     const { requestFullscreen } = require("../fullscreen");
-    const videoElt = document.createElement("video");
+    const videoElt = doc.createElement("video");
     const mockRequestFullscreen = jest.fn(() =>
-      (document as any).fullscreenElement = videoElt);
+      doc.fullscreenElement = videoElt);
     const fakeElement = {
       requestFullscreen: mockRequestFullscreen,
     };
 
     requestFullscreen(fakeElement);
-    expect((document as any).fullscreenElement).toBe(videoElt);
+    expect(doc.fullscreenElement).toBe(videoElt);
 
-    (document as any).fullscreenElement = origFullscreenElement;
+    doc.fullscreenElement = origFullscreenElement;
   });
 
   it("should request full screen with msRequestFullscreen API", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    const origMsFullscreenElement = (document as any).msFullscreenElement;
+    const origFullscreenElement = doc.fullscreenElement;
+    const origMsFullscreenElement = doc.msFullscreenElement;
 
-    (document as any).fullscreenElement = undefined;
-    (document as any).msFullscreenElement = undefined;
+    doc.fullscreenElement = undefined;
+    doc.msFullscreenElement = undefined;
 
     const { requestFullscreen } = require("../fullscreen");
-    const videoElt = document.createElement("video");
+    const videoElt = doc.createElement("video");
     const mockRequestFullscreen =
-      jest.fn(() => (document as any).msFullscreenElement = videoElt);
+      jest.fn(() => doc.msFullscreenElement = videoElt);
     const fakeElement = {
       msRequestFullscreen: mockRequestFullscreen,
     };
 
     requestFullscreen(fakeElement);
-    expect((document as any).msFullscreenElement).toBe(videoElt);
+    expect(doc.msFullscreenElement).toBe(videoElt);
 
-    (document as any).fullscreenElement = origFullscreenElement;
-    (document as any).msFullscreenElement = origMsFullscreenElement;
+    doc.fullscreenElement = origFullscreenElement;
+    doc.msFullscreenElement = origMsFullscreenElement;
   });
 
   it("should request full screen with mozRequestFullScreen API", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    const origMsFullscreenElement = (document as any).msFullscreenElement;
-    const origmozFullScreenElement = (document as any).mozFullScreenElement;
+    const origFullscreenElement = doc.fullscreenElement;
+    const origMsFullscreenElement = doc.msFullscreenElement;
+    const origmozFullScreenElement = doc.mozFullScreenElement;
 
-    (document as any).fullscreenElement = undefined;
-    (document as any).msFullscreenElement = undefined;
-    (document as any).mozFullScreenElement = undefined;
+    doc.fullscreenElement = undefined;
+    doc.msFullscreenElement = undefined;
+    doc.mozFullScreenElement = undefined;
 
     const { requestFullscreen } = require("../fullscreen");
-    const videoElt = document.createElement("video");
+    const videoElt = doc.createElement("video");
     const mockRequestFullscreen =
-      jest.fn(() => (document as any).mozFullScreenElement = videoElt);
+      jest.fn(() => doc.mozFullScreenElement = videoElt);
     const fakeElement = {
       mozRequestFullScreen: mockRequestFullscreen,
     };
 
     requestFullscreen(fakeElement);
-    expect((document as any).mozFullScreenElement).toBe(videoElt);
+    expect(doc.mozFullScreenElement).toBe(videoElt);
 
-    (document as any).fullscreenElement = origFullscreenElement;
-    (document as any).msFullscreenElement = origMsFullscreenElement;
-    (document as any).mozFullScreenElement = origmozFullScreenElement;
+    doc.fullscreenElement = origFullscreenElement;
+    doc.msFullscreenElement = origMsFullscreenElement;
+    doc.mozFullScreenElement = origmozFullScreenElement;
   });
 
   it("should request full screen with webkitRequestFullscreen API", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    const origMsFullscreenElement = (document as any).msFullscreenElement;
-    const origmozFullScreenElement = (document as any).mozFullScreenElement;
-    const origWebkitFullscreenElement = (document as any).webkitFullscreenElement;
+    const origFullscreenElement = doc.fullscreenElement;
+    const origMsFullscreenElement = doc.msFullscreenElement;
+    const origmozFullScreenElement = doc.mozFullScreenElement;
+    const origWebkitFullscreenElement = doc.webkitFullscreenElement;
 
-    (document as any).fullscreenElement = undefined;
-    (document as any).msFullscreenElement = undefined;
-    (document as any).mozFullScreenElement = undefined;
-    (document as any).webkitFullscreenElement = undefined;
+    doc.fullscreenElement = undefined;
+    doc.msFullscreenElement = undefined;
+    doc.mozFullScreenElement = undefined;
+    doc.webkitFullscreenElement = undefined;
 
     const { requestFullscreen } = require("../fullscreen");
-    const videoElt = document.createElement("video");
+    const videoElt = doc.createElement("video");
     const mockRequestFullscreen =
-      jest.fn(() => (document as any).webkitFullscreenElement = videoElt);
+      jest.fn(() => doc.webkitFullscreenElement = videoElt);
     const fakeElement = {
       webkitRequestFullscreen: mockRequestFullscreen,
     };
 
     requestFullscreen(fakeElement);
-    expect((document as any).webkitFullscreenElement).toBe(videoElt);
+    expect(doc.webkitFullscreenElement).toBe(videoElt);
 
-    (document as any).fullscreenElement = origFullscreenElement;
-    (document as any).msFullscreenElement = origMsFullscreenElement;
-    (document as any).mozFullScreenElement = origmozFullScreenElement;
-    (document as any).webkitFullscreenElement = origWebkitFullscreenElement;
+    doc.fullscreenElement = origFullscreenElement;
+    doc.msFullscreenElement = origMsFullscreenElement;
+    doc.mozFullScreenElement = origmozFullScreenElement;
+    doc.webkitFullscreenElement = origWebkitFullscreenElement;
   });
 });
 
 describe("compat - exitFullScreen", () => {
   it("should exit full screen with exitFullscreen API", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    const origExitFullscreen = (document as any).exitFullscreen;
+    const origFullscreenElement = doc.fullscreenElement;
+    const origExitFullscreen = doc.exitFullscreen;
 
-    (document as any).fullscreenElement = document.createElement("video");
-    (document as any).exitFullscreen = jest.fn(() => {
-      (document as any).fullscreenElement = undefined;
+    doc.fullscreenElement = doc.createElement("video");
+    doc.exitFullscreen = jest.fn(() => {
+      doc.fullscreenElement = undefined;
     });
 
     const { exitFullscreen } = require("../fullscreen");
 
     exitFullscreen();
-    expect((document as any).fullscreenElement).toBe(undefined);
+    expect(doc.fullscreenElement).toBe(undefined);
 
-    (document as any).fullscreenElement = origFullscreenElement;
-    (document as any).exitFullscreen = origExitFullscreen;
+    doc.fullscreenElement = origFullscreenElement;
+    doc.exitFullscreen = origExitFullscreen;
   });
 
   it("should exit full screen with msExitFullscreen API", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    const origMsFullscreenElement = (document as any).msFullscreenElement;
-    const origExitFullscreen = (document as any).exitFullscreen;
-    const origMsExitFullscreen = (document as any).msExitFullscreen;
+    const origFullscreenElement = doc.fullscreenElement;
+    const origMsFullscreenElement = doc.msFullscreenElement;
+    const origExitFullscreen = doc.exitFullscreen;
+    const origMsExitFullscreen = doc.msExitFullscreen;
 
-    (document as any).fullscreenElement = undefined;
-    (document as any).msFullscreenElement = document.createElement("video");
-    (document as any).exitFullscreen = undefined;
-    (document as any).msExitFullscreen = jest.fn(() => {
-      (document as any).msFullscreenElement = undefined;
+    doc.fullscreenElement = undefined;
+    doc.msFullscreenElement = doc.createElement("video");
+    doc.exitFullscreen = undefined;
+    doc.msExitFullscreen = jest.fn(() => {
+      doc.msFullscreenElement = undefined;
     });
 
     const { exitFullscreen } = require("../fullscreen");
 
     exitFullscreen();
-    expect((document as any).msFullscreenElement).toBe(undefined);
+    expect(doc.msFullscreenElement).toBe(undefined);
 
-    (document as any).fullscreenElement = origFullscreenElement;
-    (document as any).msFullscreenElement = origMsFullscreenElement;
-    (document as any).exitFullscreen = origExitFullscreen;
-    (document as any).msExitFullscreen = origMsExitFullscreen;
+    doc.fullscreenElement = origFullscreenElement;
+    doc.msFullscreenElement = origMsFullscreenElement;
+    doc.exitFullscreen = origExitFullscreen;
+    doc.msExitFullscreen = origMsExitFullscreen;
   });
 
   it("should exit full screen with mozCancelFullScreen API", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    const origMsFullscreenElement = (document as any).msFullscreenElement;
-    const origmozFullScreenElement = (document as any).mozFullScreenElement;
-    const origExitFullscreen = (document as any).exitFullscreen;
-    const origMsExitFullscreen = (document as any).msExitFullscreen;
-    const origmozCancelFullScreen = (document as any).mozCancelFullScreen;
+    const origFullscreenElement = doc.fullscreenElement;
+    const origMsFullscreenElement = doc.msFullscreenElement;
+    const origmozFullScreenElement = doc.mozFullScreenElement;
+    const origExitFullscreen = doc.exitFullscreen;
+    const origMsExitFullscreen = doc.msExitFullscreen;
+    const origmozCancelFullScreen = doc.mozCancelFullScreen;
 
-    (document as any).fullscreenElement = undefined;
-    (document as any).msFullscreenElement = undefined;
-    (document as any).mozFullScreenElement = document.createElement("video");
-    (document as any).exitFullscreen = undefined;
-    (document as any).msExitFullscreen = undefined;
-    (document as any).mozCancelFullScreen = jest.fn(() =>
-      (document as any).mozFullScreenElement = undefined);
+    doc.fullscreenElement = undefined;
+    doc.msFullscreenElement = undefined;
+    doc.mozFullScreenElement = doc.createElement("video");
+    doc.exitFullscreen = undefined;
+    doc.msExitFullscreen = undefined;
+    doc.mozCancelFullScreen = jest.fn(() =>
+      doc.mozFullScreenElement = undefined);
 
     const { exitFullscreen } = require("../fullscreen");
 
     exitFullscreen();
-    expect((document as any).mozFullScreenElement).toBe(undefined);
+    expect(doc.mozFullScreenElement).toBe(undefined);
 
-    (document as any).fullscreenElement = origFullscreenElement;
-    (document as any).msFullscreenElement = origMsFullscreenElement;
-    (document as any).mozFullScreenElement = origmozFullScreenElement;
-    (document as any).exitFullscreen = origExitFullscreen;
-    (document as any).msExitFullscreen = origMsExitFullscreen;
-    (document as any).mozCancelFullScreen = origmozCancelFullScreen;
+    doc.fullscreenElement = origFullscreenElement;
+    doc.msFullscreenElement = origMsFullscreenElement;
+    doc.mozFullScreenElement = origmozFullScreenElement;
+    doc.exitFullscreen = origExitFullscreen;
+    doc.msExitFullscreen = origMsExitFullscreen;
+    doc.mozCancelFullScreen = origmozCancelFullScreen;
   });
 
   it("should exit full screen with webkitExitFullscreen API", () => {
-    const origFullscreenElement = (document as any).fullscreenElement;
-    const origMsFullscreenElement = (document as any).msFullscreenElement;
-    const origmozFullScreenElement = (document as any).mozFullScreenElement;
-    const origWebkitFullscreenElement = (document as any).webkitFullscreenElement;
-    const origExitFullscreen = (document as any).exitFullscreen;
-    const origMsExitFullscreen = (document as any).msExitFullscreen;
-    const origmozCancelFullScreen = (document as any).mozCancelFullScreen;
-    const origwebkitExitFullscreen = (document as any).webkitExitFullscreen;
+    const origFullscreenElement = doc.fullscreenElement;
+    const origMsFullscreenElement = doc.msFullscreenElement;
+    const origmozFullScreenElement = doc.mozFullScreenElement;
+    const origWebkitFullscreenElement = doc.webkitFullscreenElement;
+    const origExitFullscreen = doc.exitFullscreen;
+    const origMsExitFullscreen = doc.msExitFullscreen;
+    const origmozCancelFullScreen = doc.mozCancelFullScreen;
+    const origwebkitExitFullscreen = doc.webkitExitFullscreen;
 
-    (document as any).fullscreenElement = undefined;
-    (document as any).msFullscreenElement = undefined;
-    (document as any).mozFullScreenElement = undefined;
-    (document as any).webkitFullscreenElement = document.createElement("video");
-    (document as any).exitFullscreen = undefined;
-    (document as any).msExitFullscreen = undefined;
-    (document as any).mozCancelFullScreen = undefined;
-    (document as any).webkitExitFullscreen = jest.fn(() =>
-      (document as any).webkitFullscreenElement = undefined);
+    doc.fullscreenElement = undefined;
+    doc.msFullscreenElement = undefined;
+    doc.mozFullScreenElement = undefined;
+    doc.webkitFullscreenElement = doc.createElement("video");
+    doc.exitFullscreen = undefined;
+    doc.msExitFullscreen = undefined;
+    doc.mozCancelFullScreen = undefined;
+    doc.webkitExitFullscreen = jest.fn(() =>
+      doc.webkitFullscreenElement = undefined);
 
     const { exitFullscreen } = require("../fullscreen");
 
     exitFullscreen();
-    expect((document as any).webkitFullscreenElement).toBe(undefined);
+    expect(doc.webkitFullscreenElement).toBe(undefined);
 
-    (document as any).fullscreenElement = origFullscreenElement;
-    (document as any).msFullscreenElement = origMsFullscreenElement;
-    (document as any).mozFullScreenElement = origmozFullScreenElement;
-    (document as any).webkitFullscreenElement = origWebkitFullscreenElement;
-    (document as any).exitFullscreen = origExitFullscreen;
-    (document as any).msExitFullscreen = origMsExitFullscreen;
-    (document as any).mozCancelFullScreen = origmozCancelFullScreen;
-    (document as any).webkitExitFullscreen = origwebkitExitFullscreen;
+    doc.fullscreenElement = origFullscreenElement;
+    doc.msFullscreenElement = origMsFullscreenElement;
+    doc.mozFullScreenElement = origmozFullScreenElement;
+    doc.webkitFullscreenElement = origWebkitFullscreenElement;
+    doc.exitFullscreen = origExitFullscreen;
+    doc.msExitFullscreen = origMsExitFullscreen;
+    doc.mozCancelFullScreen = origmozCancelFullScreen;
+    doc.webkitExitFullscreen = origwebkitExitFullscreen;
   });
 });

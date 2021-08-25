@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
+import type { IPeriodIntermediateRepresentation } from "../../node_parser_types";
+import type { IParsedPeriodsContext } from "../get_periods_time_infos";
+// https://github.com/typescript-eslint/typescript-eslint/issues/2315
+/* eslint-disable no-duplicate-imports */
 import getPeriodsTimeInformation from "../get_periods_time_infos";
+/* eslint-enable no-duplicate-imports */
 
 describe("DASH Parser - getPeriodsTimeInformation", () => {
   it("should guess duration and end from next period.", () => {
@@ -22,7 +27,10 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
       { attributes: { start: 0 } },
       { attributes: { start: 10 } },
     ];
-    const timeInfos = getPeriodsTimeInformation(periodsInfos as any, {} as any);
+    const timeInfos = getPeriodsTimeInformation(
+      periodsInfos as IPeriodIntermediateRepresentation[],
+      {} as IParsedPeriodsContext
+    );
     expect(timeInfos[0].periodDuration).toBe(10);
     expect(timeInfos[0].periodEnd).toBe(10);
     expect(timeInfos[1].periodDuration).toBe(undefined);
@@ -34,7 +42,10 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
       { attributes: { start: 0, duration: 10 } },
       { attributes: { duration: 10 } },
     ];
-    const timeInfos = getPeriodsTimeInformation(periodsInfos as any, {} as any);
+    const timeInfos = getPeriodsTimeInformation(
+      periodsInfos as IPeriodIntermediateRepresentation[],
+      {} as IParsedPeriodsContext
+    );
     expect(timeInfos[0].periodEnd).toBe(10);
     expect(timeInfos[1].periodStart).toBe(10);
     expect(timeInfos[1].periodEnd).toBe(20);
@@ -45,7 +56,10 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
       { attributes: { start: 0, duration: 5 } },
       { attributes: { start: 5, duration: 10 } },
     ];
-    const timeInfos = getPeriodsTimeInformation(periodsInfos as any, {} as any);
+    const timeInfos = getPeriodsTimeInformation(
+      periodsInfos as IPeriodIntermediateRepresentation[],
+      {} as IParsedPeriodsContext
+    );
     expect(timeInfos[0].periodStart).toEqual(periodsInfos[0].attributes.start);
     expect(timeInfos[0].periodDuration).toEqual(periodsInfos[0].attributes.duration);
     expect(timeInfos[1].periodStart).toEqual(periodsInfos[1].attributes.start);
@@ -60,7 +74,10 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
       duration: 20,
     };
     const timeInfos =
-      getPeriodsTimeInformation(periodsInfos as any, manifestInfos as any);
+      getPeriodsTimeInformation(
+        periodsInfos as IPeriodIntermediateRepresentation[],
+        manifestInfos as IParsedPeriodsContext
+      );
     expect(timeInfos[0].periodDuration).toEqual(manifestInfos.duration);
   });
 
@@ -73,7 +90,10 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
       availabilityStartTime: 500,
     };
     const timeInfos =
-      getPeriodsTimeInformation(periodsInfos as any, manifestInfos as any);
+      getPeriodsTimeInformation(
+        periodsInfos as IPeriodIntermediateRepresentation[],
+        manifestInfos as IParsedPeriodsContext
+      );
     expect(timeInfos[0].periodStart).toBe(500);
     expect(timeInfos[0].periodDuration).toBe(10);
     expect(timeInfos[0].periodEnd).toBe(510);
@@ -87,7 +107,10 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
       isDynamic: false,
     };
     const timeInfos =
-      getPeriodsTimeInformation(periodsInfos as any, manifestInfos as any);
+      getPeriodsTimeInformation(
+        periodsInfos as IPeriodIntermediateRepresentation[],
+        manifestInfos as IParsedPeriodsContext
+      );
     expect(timeInfos[0].periodStart).toBe(0);
     expect(timeInfos[0].periodDuration).toBe(10);
     expect(timeInfos[0].periodEnd).toBe(10);

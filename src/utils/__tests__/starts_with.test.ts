@@ -24,8 +24,10 @@ const initialStartsWith = String.prototype.startsWith;
 
 describe("utils - starts-with", () => {
   beforeEach(() => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     (String.prototype as any).startsWith = undefined;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
   });
 
   afterEach(() => {

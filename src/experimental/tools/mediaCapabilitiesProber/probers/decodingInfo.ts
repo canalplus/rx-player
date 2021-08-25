@@ -36,8 +36,11 @@ function isMediaCapabilitiesAPIAvailable(): Promise<void> {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaCapabilities API not available");
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     if (!("decodingInfo" in (navigator as any).mediaCapabilities)) {
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "Decoding Info not available");
     }
@@ -78,8 +81,15 @@ export default function probeDecodingInfos(
       "Not enough arguments for calling mediaCapabilites.");
     }
 
-    // eslint-disable-next-line
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-disable @typescript-eslint/no-unsafe-return */
     return (navigator as any).mediaCapabilities.decodingInfo(config)
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable @typescript-eslint/no-unsafe-return */
       .then((result: IDecodingInfos) => {
         return [
           result.supported ? ProberStatus.Supported : ProberStatus.NotSupported,

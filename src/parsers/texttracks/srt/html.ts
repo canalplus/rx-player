@@ -151,18 +151,12 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
         const spanChild = _loop(currentNode);
         spanChild.style.textDecoration = "underline";
         span.appendChild(spanChild);
-      } else if (
-        currentNode.nodeName === "FONT" &&
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (currentNode as any).color != null
-      ) {
+      } else if (isNodeFontWithColorProp(currentNode) &&
+                 typeof currentNode.color === "string")
+      {
         // TODO loop through attributes to find color?
-        /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
         const spanChild = _loop(currentNode);
-        spanChild.style.color = (currentNode as any).color;
-        /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+        spanChild.style.color = currentNode.color;
         span.appendChild(spanChild);
       } else {
         const spanChild = _loop(currentNode);
@@ -173,4 +167,16 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
   };
 
   return _loop(secureDiv);
+}
+
+/**
+ * Returns `true` if the given node is a `<font>` element which contains a
+ * `color` attribute.
+ * @param {Node} node
+ * @returns {boolean}
+ */
+function isNodeFontWithColorProp(
+  node : Node
+) : node is Node & { color : unknown } {
+  return node.nodeName === "FONT" && "color" in node;
 }

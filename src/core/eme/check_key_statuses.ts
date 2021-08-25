@@ -47,6 +47,17 @@ export interface IKeyStatusesCheckingOptions {
 }
 
 /**
+ * MediaKeyStatusMap's iterator seems to be quite peculiar and wrongly defined
+ * by TypeScript.
+ */
+type IKeyStatusesForEach = (
+  callback: (
+    ((arg1 : MediaKeyStatus, arg2 : ArrayBuffer) => void) |
+    ((arg1 : ArrayBuffer, arg2 : MediaKeyStatus) => void)
+  )
+) => void;
+
+/**
  * Look at the current key statuses in the sessions and construct the
  * appropriate warnings, whitelisted and blacklisted key ids.
  *
@@ -70,11 +81,9 @@ export default function checkKeyStatuses(
   const whitelistedKeyIds : Uint8Array[] = [];
   const { fallbackOn = {}, throwOnLicenseExpiration } = options;
 
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  /* eslint-disable @typescript-eslint/no-unsafe-call */
-  (session.keyStatuses as any).forEach((_arg1 : unknown, _arg2 : unknown) => {
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-  /* eslint-enable @typescript-eslint/no-unsafe-call */
+  (session.keyStatuses.forEach as IKeyStatusesForEach)((
+    _arg1 : unknown,
+    _arg2 : unknown) => {
     // Hack present because the order of the arguments has changed in spec
     // and is not the same between some versions of Edge and Chrome.
     const [keyStatus, keyStatusKeyId] = (() => {

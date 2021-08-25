@@ -60,7 +60,7 @@ interface IDOMRectReadOnly { readonly x: number;
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 const _ResizeObserver : IResizeObserverConstructor |
                         undefined = isNode ? undefined :
-                                            (window as any).ResizeObserver;
+                                             window.ResizeObserver;
 /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 

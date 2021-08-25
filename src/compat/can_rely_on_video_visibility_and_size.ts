@@ -39,7 +39,6 @@ import { getFirefoxVersion } from "./browser_version";
  * @returns {boolean}
  */
 export default function canRelyOnVideoVisibilityAndSize(): boolean {
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   if (!isFirefox) {
     return true;
   }
@@ -47,6 +46,7 @@ export default function canRelyOnVideoVisibilityAndSize(): boolean {
   if (firefoxVersion === null || firefoxVersion < 67) {
     return true;
   }
-  return (HTMLVideoElement as any)?.prototype?.requirePictureInPicture !== undefined;
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  const proto : (HTMLVideoElement & { requirePictureInPicture? : () => void }) |
+                undefined = HTMLVideoElement?.prototype;
+  return proto?.requirePictureInPicture !== undefined;
 }

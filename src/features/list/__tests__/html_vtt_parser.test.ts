@@ -26,6 +26,7 @@ jest.mock("../../../parsers/texttracks/webvtt/html", () => ({
 
 describe("Features list - HTML VTT Parser", () => {
   it("should add an HTML VTT Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { htmlTextTracksParsers: {} };
     addHTMLVTTFeature(featureObject);
     expect(featureObject).toEqual({

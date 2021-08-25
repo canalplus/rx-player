@@ -52,14 +52,14 @@ function createLoadedSessionsStore() : LoadedSessionsStore {
     closeSession() {
       return timer(Math.random() * 50);
     },
-  } as any;
+  } as unknown as LoadedSessionsStore;
 }
 
 const emptyLoadedSessionsStore = {
   getLength() { return 0; },
   getAll() { return []; },
   closeSession() { throw new Error("closeSession should not have been called"); },
-} as any as LoadedSessionsStore;
+} as unknown as LoadedSessionsStore;
 
 /**
  * Call `cleanOldLoadedSessions` with the given loadedSessionsStore and
@@ -108,12 +108,12 @@ function checkNothingHappen(
 function checkEntriesCleaned(
   loadedSessionsStore : LoadedSessionsStore,
   limit : number,
-  entries : any[],
+  entries : Array<{ initializationData: unknown }>,
   done : () => void
 ) {
   const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
   let itemNb = 0;
-  const pendingEntries : any[] = [];
+  const pendingEntries : unknown[] = [];
   cleanOldLoadedSessions(loadedSessionsStore, limit).subscribe({
     next: (evt) => {
       if (evt.type === "cleaning-old-session") {

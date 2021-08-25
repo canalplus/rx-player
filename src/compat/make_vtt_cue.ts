@@ -15,10 +15,8 @@
  */
 
 import log from "../log";
-import {
-  ICompatVTTCue,
-  VTTCue_,
-} from "./browser_compatibility_types";
+import isNullOrUndefined from "../utils/is_null_or_undefined";
+import { ICompatVTTCue } from "./browser_compatibility_types";
 
 /**
  * Creates a cue using the best platform-specific interface available.
@@ -34,9 +32,6 @@ export default function makeCue(
   endTime : number,
   payload : string
 ) : ICompatVTTCue|TextTrackCue|null {
-  if (VTTCue_ == null) {
-    throw new Error("VTT cues not supported in your target");
-  }
   if (startTime >= endTime) {
 
     // IE/Edge will throw in this case.
@@ -45,5 +40,12 @@ export default function makeCue(
     return null;
   }
 
-  return new VTTCue_(startTime, endTime, payload);
+  if (isNullOrUndefined(window.VTTCue)) {
+    if (isNullOrUndefined(window.TextTrackCue)) {
+      throw new Error("VTT cues not supported in your target");
+    }
+    return new (TextTrackCue as unknown as typeof VTTCue)(startTime, endTime, payload);
+  } else {
+    return new VTTCue(startTime, endTime, payload);
+  }
 }

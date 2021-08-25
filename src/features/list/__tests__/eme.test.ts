@@ -26,6 +26,7 @@ jest.mock("../../../core/eme", () => ({
 
 describe("Features list - EME", () => {
   it("should add EME in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addEMEFeature(featureObject);
     expect(featureObject).toEqual({ emeManager });

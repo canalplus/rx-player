@@ -58,7 +58,7 @@ export default function pushMediaSegment<T>(
                         initSegmentData : T | null;
                         parsedSegment : ISegmentParserParsedSegment<T>;
                         segment : ISegment;
-                        segmentBuffer : SegmentBuffer<T>; }
+                        segmentBuffer : SegmentBuffer; }
 ) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (parsedSegment.chunkData === null) {

@@ -59,16 +59,19 @@ interface ICompatTextTrack extends TextTrack {
  * Browser implementation of the `document` object with added optional vendored
  * functions for some "old" browsers.
  */
-interface ICompatDocument extends Document { mozCancelFullScreen? : () => void;
-                                             mozFullScreenElement? : HTMLElement;
-                                             mozHidden? : boolean;
-                                             msExitFullscreen? : () => void;
-                                             webkitExitFullscreen : () => void;
-                                             fullscreenElement : Element | null;
-                                             msFullscreenElement? : Element | null;
-                                             webkitFullscreenElement : Element | null;
-                                             msHidden? : boolean;
-                                             webkitHidden? : boolean; }
+interface ICompatDocument extends Document {
+  fullscreenElement : Element | null;
+  mozCancelFullScreen? : () => void;
+  mozFullScreenElement? : HTMLElement;
+  mozHidden? : boolean;
+  msExitFullscreen? : () => void;
+  msFullscreenElement? : Element | null;
+  msHidden? : boolean;
+  pictureInPictureElement? : HTMLElement | null | undefined;
+  webkitExitFullscreen : () => void;
+  webkitFullscreenElement : Element | null;
+  webkitHidden? : boolean;
+}
 
 /**
  * HTMLMediaElement with added optional vendored functions used by "old"
@@ -84,7 +87,19 @@ interface ICompatDocument extends Document { mozCancelFullScreen? : () => void;
 interface ICompatHTMLMediaElement extends HTMLMediaElement {
   mozRequestFullScreen? : () => void;
   msRequestFullscreen? : () => void;
-  webkitRequestFullscreen : () => void;
+  webkitRequestFullscreen? : () => void;
+  webkitSupportsPresentationMode? : boolean;
+  webkitSetPresentationMode? : () => void;
+  webkitPresentationMode? : string;
+  mozSetMediaKeys? : (mediaKeys: unknown) => void;
+  msSetMediaKeys? : (mediaKeys: unknown) => void;
+  webkitSetMediaKeys? : (mediaKeys: unknown) => void;
+  webkitKeys? : {
+    createSession? : (
+      mimeType : string,
+      initData : BufferSource
+    ) => MediaKeySession;
+  };
   readonly audioTracks? : ICompatAudioTrackList;
   readonly videoTracks? : ICompatVideoTrackList;
 }
@@ -157,33 +172,23 @@ export interface ICompatPictureInPictureWindow
   extends EventTarget { width: number;
                         height: number; }
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+interface WindowsWithMediaSourceImplems extends Window {
+  MediaSource? : typeof MediaSource;
+  MozMediaSource? : typeof MediaSource;
+  WebKitMediaSource? : typeof MediaSource;
+  MSMediaSource? : typeof MediaSource;
+}
 
-/**
- * Shortcut to the global browser object `window`. Set to an empty object in
- * non-browser platforms
- */
-const win = isNode ? {} :
-                     window as any;
-
-/** Browser implementation of an HTMLElement. */
-const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
-
-/** TextTrack cue constructor, as implemented by the browser. */
-const VTTCue_ : ICompatVTTCueConstructor | undefined =
-  !isNullOrUndefined(win.VTTCue) ? win.VTTCue :
-                                   win.TextTrackCue;
+const win : WindowsWithMediaSourceImplems | undefined = isNode ? undefined :
+                                                                 window;
 
 /** MediaSource implementation, including vendored implementations. */
 const MediaSource_ : typeof MediaSource | undefined =
-  !isNullOrUndefined(win.MediaSource)       ? win.MediaSource :
-  !isNullOrUndefined(win.MozMediaSource)    ? win.MozMediaSource :
-  !isNullOrUndefined(win.WebKitMediaSource) ? win.WebKitMediaSource :
-                                              win.MSMediaSource;
-
-/* eslint-enable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  win === undefined                            ? undefined :
+  !isNullOrUndefined(win.MediaSource)          ? win.MediaSource :
+  !isNullOrUndefined(win.MozMediaSource)       ? win.MozMediaSource :
+  !isNullOrUndefined(win.WebKitMediaSource)    ? win.WebKitMediaSource :
+                                                 win.MSMediaSource;
 
 /** List an HTMLMediaElement's possible values for its readyState property. */
 const READY_STATES = { HAVE_NOTHING: 0,
@@ -203,7 +208,6 @@ export interface ICompatTextTrackList extends TextTrackList {
 }
 
 export {
-  HTMLElement_,
   ICompatDocument,
   ICompatHTMLMediaElement,
   ICompatAudioTrackList,
@@ -216,5 +220,4 @@ export {
   ICompatVTTCueConstructor,
   MediaSource_,
   READY_STATES,
-  VTTCue_,
 };

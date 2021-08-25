@@ -72,7 +72,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
 
     expect.assertions(3);
     probeHDCPPolicy({ hdcp: "1.1" })
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Unknown);
         expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
         expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
@@ -102,7 +102,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
 
     expect.assertions(3);
     probeHDCPPolicy({ hdcp: "1.1" })
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Supported);
         expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
         expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
@@ -132,7 +132,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
 
     expect.assertions(3);
     probeHDCPPolicy({ hdcp: "1.1" })
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
         expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);

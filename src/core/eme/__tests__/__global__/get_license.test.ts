@@ -25,6 +25,7 @@
 
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
+import { ICustomError } from "../../../../errors";
 import { concat } from "../../../../utils/byte_parsing";
 import { IContentProtection } from "../../types";
 import {
@@ -337,17 +338,19 @@ function checkGetLicense(
   const initDataEvent = { type: "cenc", values: [ { systemId: "15", data: initData } ] };
   const kill$ = new Subject<void>();
   const challenge = formatFakeChallengeFromInitData(initData, "cenc");
-  function checkKeyLoadError(error : any) {
-    expect(error.name).toEqual("EncryptedMediaError");
-    expect(error.type).toEqual("ENCRYPTED_MEDIA_ERROR");
-    expect(error.code).toEqual("KEY_LOAD_ERROR");
-    expect(error.message).toEqual("AAAA");
+  function checkKeyLoadError(error : unknown) {
+    expect(error).toBeInstanceOf(Error);
+    expect((error as ICustomError).name).toEqual("EncryptedMediaError");
+    expect((error as ICustomError).type).toEqual("ENCRYPTED_MEDIA_ERROR");
+    expect((error as ICustomError).code).toEqual("KEY_LOAD_ERROR");
+    expect((error as ICustomError).message).toEqual("AAAA");
   }
 
   // == test ==
   const EMEManager = require("../../eme_manager").default;
   EMEManager(videoElt, ksConfig, initDataSubject)
     .pipe(takeUntil(kill$))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .subscribe((evt : any) => {
       if (evt.type === "created-media-keys") {
         evt.value.attachMediaKeys$.next();
@@ -393,7 +396,7 @@ function checkGetLicense(
         return;
       }
       throw new Error(`Unexpected event: ${evt.type}`);
-    }, (error : any) => {
+    }, (error : unknown) => {
       if (shouldFail) {
         checkKeyLoadError(error);
         expect(eventsReceived).toEqual(5);

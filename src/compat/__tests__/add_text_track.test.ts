@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// Needed for calling require (which itself is needed to mock properly) because
+// it is not type-checked:
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 
 describe("compat - addTextTrack", () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe("compat - addTextTrack", () => {
       id: "textTrack1",
       HIDDEN: "hidden",
       SHOWING: "showing",
-    };
+    } as unknown as TextTrack;
     const mockAddTextTrack = jest.fn(() => null);
     const fakeMediaElement = {
       textTracks: [ fakeTextTrack ],
@@ -56,8 +56,8 @@ describe("compat - addTextTrack", () => {
       id: "textTrack1",
       HIDDEN: "hidden",
       SHOWING: "showing",
-    };
-    const fakeTextTracks: any[] = [];
+    } as unknown as TextTrack;
+    const fakeTextTracks: TextTrack[] = [];
     const mockAddTextTrack = jest.fn(() => {
       fakeTextTracks.push(fakeTextTrack);
       return fakeTextTrack;
@@ -99,8 +99,8 @@ describe("compat - addTextTrack", () => {
       kind: undefined,
     };
 
-    const fakeTextTracks: any[] = [];
-    const fakeChildNodes: any[] = [];
+    const fakeTextTracks: TextTrack[] = [];
+    const fakeChildNodes: ChildNode[] = [];
 
     const mockAppendChild = jest.fn((_trackElement) => {
       fakeChildNodes.push(_trackElement);
@@ -138,14 +138,14 @@ describe("compat - addTextTrack", () => {
       id: "textTrack1",
       HIDDEN: "hidden",
       SHOWING: "showing",
-    };
+    } as unknown as TextTrack;
     const fakeTextTrackElement = {
       track: fakeTextTrack,
       kind: undefined,
-    };
+    } as unknown as HTMLTrackElement;
 
-    const fakeTextTracks: any[] = [];
-    const fakeChildNodes: any[] = [];
+    const fakeTextTracks: TextTrack[] = [];
+    const fakeChildNodes: HTMLTrackElement[] = [];
 
     const mockAppendChild = jest.fn((_trackElement) => {
       fakeChildNodes.push(_trackElement);

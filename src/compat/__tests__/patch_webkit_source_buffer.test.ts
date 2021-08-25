@@ -21,34 +21,36 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import nextTick from "next-tick";
 import EventEmitter from "../../utils/event_emitter";
 import patchWebkitSourceBuffer from "../patch_webkit_source_buffer";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const win = window as any;
+
 describe("compat - parseWebkitSourceBuffer", () => {
   it("should do nothing if no WebkitSourceBuffer", () => {
-    const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
-    (window as any).WebKitSourceBuffer = undefined;
+    const origWebKitSourceBuffer = win.WebKitSourceBuffer;
+    win.WebKitSourceBuffer = undefined;
     patchWebkitSourceBuffer();
-    expect((window as any).WebKitSourceBuffer).toBe(undefined);
-    (window as any).WebKitSourceBuffer = origWebKitSourceBuffer;
+    expect(win.WebKitSourceBuffer).toBe(undefined);
+    win.WebKitSourceBuffer = origWebKitSourceBuffer;
   });
 
   it("should do nothing if has WebkitSourceBuffer with addEventListener", () => {
-    const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
+    const origWebKitSourceBuffer = win.WebKitSourceBuffer;
     const mockWebKitSourceBuffer = {
       prototype: {
         addEventListener: () => null,
       },
     };
-    (window as any).WebKitSourceBuffer = mockWebKitSourceBuffer;
+    win.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
-    expect((window as any).WebKitSourceBuffer).toEqual(mockWebKitSourceBuffer);
-    (window as any).WebKitSourceBuffer = origWebKitSourceBuffer;
+    expect(win.WebKitSourceBuffer).toEqual(mockWebKitSourceBuffer);
+    win.WebKitSourceBuffer = origWebKitSourceBuffer;
   });
 
   it("should assign EventEmitter funcs to WebKitSourceBuffer", () => {
-    const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
+    const origWebKitSourceBuffer = win.WebKitSourceBuffer;
     const mockWebKitSourceBuffer = {
       prototype: {},
     };
@@ -60,29 +62,32 @@ describe("compat - parseWebkitSourceBuffer", () => {
       },
     };
     const origEventEmitter = EventEmitter;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (EventEmitter as any) = mockEventEmitter;
-    (window as any).WebKitSourceBuffer = mockWebKitSourceBuffer;
+    win.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
-    const protoWebkitSourceBuffer = (window as any).WebKitSourceBuffer.prototype;
+    const protoWebkitSourceBuffer = win.WebKitSourceBuffer.prototype;
     expect(protoWebkitSourceBuffer.test1).not.toBeUndefined();
     expect(protoWebkitSourceBuffer.test2).not.toBeUndefined();
     expect(protoWebkitSourceBuffer.addEventListener).not.toBeUndefined();
-    (window as any).WebKitSourceBuffer = origWebKitSourceBuffer;
+    win.WebKitSourceBuffer = origWebKitSourceBuffer;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (EventEmitter as any) = origEventEmitter;
   });
 
   it("(appendBuffer) should update buffer", () => {
-    const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
+    const origWebKitSourceBuffer = win.WebKitSourceBuffer;
     const mockWebKitSourceBuffer = { prototype: {} };
 
     const mockTrigger = jest.fn(() => ({}));
     const _mockEmitUpdate = jest.fn(() => ({}));
     const mockAppend = jest.fn(() => ({}));
 
-    (window as any).WebKitSourceBuffer = mockWebKitSourceBuffer;
+    win.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    (window as any).WebKitSourceBuffer.prototype.appendBuffer.call(
+    win.WebKitSourceBuffer.prototype.appendBuffer.call(
       {
         updating: false,
         trigger: mockTrigger,
@@ -95,20 +100,20 @@ describe("compat - parseWebkitSourceBuffer", () => {
     expect(mockTrigger).toHaveBeenCalledWith("updatestart");
     expect(_mockEmitUpdate).toHaveBeenCalledTimes(1);
     expect(_mockEmitUpdate).toHaveBeenCalledWith("update");
-    (window as any).WebKitSourceBuffer = origWebKitSourceBuffer;
+    win.WebKitSourceBuffer = origWebKitSourceBuffer;
   });
 
   it("(appendBuffer) should fail to update buffer if no append function", () => {
-    const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
+    const origWebKitSourceBuffer = win.WebKitSourceBuffer;
     const mockWebKitSourceBuffer = { prototype: {} };
 
     const mockTrigger = jest.fn(() => ({}));
     const _mockEmitUpdate = jest.fn(() => ({}));
 
-    (window as any).WebKitSourceBuffer = mockWebKitSourceBuffer;
+    win.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    (window as any).WebKitSourceBuffer.prototype.appendBuffer.call(
+    win.WebKitSourceBuffer.prototype.appendBuffer.call(
       {
         updating: false,
         trigger: mockTrigger,
@@ -122,41 +127,18 @@ describe("compat - parseWebkitSourceBuffer", () => {
 
     const err = new TypeError("this.append is not a function");
     expect(_mockEmitUpdate).toHaveBeenCalledWith("error", err);
-    (window as any).WebKitSourceBuffer = origWebKitSourceBuffer;
+    win.WebKitSourceBuffer = origWebKitSourceBuffer;
   });
 
   it("(appendBuffer) should fail to update buffer if updating", () => {
-    const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
+    const origWebKitSourceBuffer = win.WebKitSourceBuffer;
     const mockWebKitSourceBuffer = { prototype: {} };
-    (window as any).WebKitSourceBuffer = mockWebKitSourceBuffer;
+    win.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    expect(() => (window as any).WebKitSourceBuffer.prototype.appendBuffer.call(
+    expect(() => win.WebKitSourceBuffer.prototype.appendBuffer.call(
       { updating: true }
     )).toThrowError("updating");
-    (window as any).WebKitSourceBuffer = origWebKitSourceBuffer;
-  });
-
-  // FIXME
-  xit("(_emitUpdate) should behave normally (trigger two events)", () => {
-    const origNextTick = nextTick;
-    (nextTick as any) = (func: any) => func();
-    const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
-    const mockWebKitSourceBuffer = { prototype: {} };
-
-    const mockTrigger = jest.fn(() => ({}));
-
-    (window as any).WebKitSourceBuffer = mockWebKitSourceBuffer;
-    patchWebkitSourceBuffer();
-
-    (window as any).WebKitSourceBuffer.prototype._emitUpdate.call(
-      {
-        updating: false,
-        trigger: mockTrigger,
-      }
-    );
-    expect(mockTrigger).toHaveBeenCalledTimes(2);
-    (window as any).WebKitSourceBuffer = origWebKitSourceBuffer;
-    (nextTick as any) = origNextTick;
+    win.WebKitSourceBuffer = origWebKitSourceBuffer;
   });
 });

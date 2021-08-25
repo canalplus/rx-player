@@ -104,7 +104,7 @@ type IPushTask = IPushOperation<BufferSource> & {
  *
  * @class AudioVideoSegmentBuffer
  */
-export default class AudioVideoSegmentBuffer extends SegmentBuffer<BufferSource> {
+export default class AudioVideoSegmentBuffer extends SegmentBuffer {
   /** "Type" of the buffer concerned. */
   public readonly bufferType : "audio" | "video";
 
@@ -220,7 +220,8 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer<BufferSource>
    * @param {Object} infos
    * @returns {Observable}
    */
-  public pushChunk(infos : IPushChunkInfos<BufferSource>) : Observable<void> {
+  public pushChunk(infos : IPushChunkInfos<unknown>) : Observable<void> {
+    assertPushedDataIsBufferSource(infos);
     log.debug("AVSB: receiving order to push data to the SourceBuffer",
               this.bufferType,
               infos);
@@ -277,7 +278,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer<BufferSource>
   public getPendingOperations() : Array<ISBOperation<BufferSource>> {
     const parseQueuedOperation =
       (op : IAVSBQueueItem | IAVSBPendingTask) : ISBOperation<BufferSource> => {
-        // Had to be written that way for TypeScrypt
+        // Had to be written that way for TypeScript
         switch (op.type) {
           case SegmentBufferOperation.Push:
             return { type: op.type, value: op.value };
@@ -580,5 +581,36 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer<BufferSource>
       }
     }
     return false;
+  }
+}
+
+/**
+ * Throw if the given input is not in the expected format.
+ * Allows to enforce runtime type-checking as compile-time type-checking here is
+ * difficult to enforce.
+ * @param {Object} pushedData
+ */
+function assertPushedDataIsBufferSource(
+  pushedData : IPushChunkInfos<unknown>
+) : asserts pushedData is IPushChunkInfos<BufferSource> {
+  if (!__DEV__) {
+    return;
+  }
+  const { chunk, initSegment } = pushedData.data;
+  if (
+    typeof chunk !== "object" ||
+    typeof initSegment !== "object" ||
+    (
+      chunk !== null &&
+      !(chunk instanceof ArrayBuffer) &&
+      !((chunk as ArrayBufferView).buffer instanceof ArrayBuffer)
+    ) ||
+    (
+      initSegment !== null &&
+      !(initSegment instanceof ArrayBuffer) &&
+      !((initSegment as ArrayBufferView).buffer instanceof ArrayBuffer)
+    )
+  ) {
+    throw new Error("Invalid data given to the AudioVideoSegmentBuffer");
   }
 }

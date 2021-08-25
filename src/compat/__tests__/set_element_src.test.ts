@@ -29,7 +29,7 @@ describe("compat - setElementSrc", () => {
   });
 
   it("should set element src and clear it when unsubscribe", (done) => {
-    const fakeMediaElement: any = {
+    const fakeMediaElement = {
       src: "",
       removeAttribute: () => null,
     };

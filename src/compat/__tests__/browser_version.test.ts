@@ -30,7 +30,9 @@ describe("Compat - Browser version", () => {
                           /* eslint-enable no-param-reassign */
                         }))(navigator.userAgent));
 
-  const nav: any = navigator;
+  const nav = navigator as {
+    userAgent: string;
+  };
 
   afterEach(() => {
     nav.userAgent = origUserAgent;

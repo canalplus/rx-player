@@ -25,7 +25,6 @@ export default function isVTTCue(
   cue : ICompatVTTCue|TextTrackCue
 ) : cue is ICompatVTTCue {
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  return typeof (window as any).VTTCue === "function" &&
-         cue instanceof (window as any).VTTCue;
+  return typeof window.VTTCue === "function" && cue instanceof window.VTTCue;
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }

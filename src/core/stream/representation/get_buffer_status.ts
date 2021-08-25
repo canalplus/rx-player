@@ -88,7 +88,7 @@ export default function getBufferStatus(
            getCurrentTime() : number; },
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
-  segmentBuffer : SegmentBuffer<unknown>
+  segmentBuffer : SegmentBuffer
 ) : IBufferStatus {
   const { period, representation } = content;
   segmentBuffer.synchronizeInventory();

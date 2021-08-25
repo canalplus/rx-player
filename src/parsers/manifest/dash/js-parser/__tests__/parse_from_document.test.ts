@@ -34,7 +34,7 @@ describe("parseFromDocument", () => {
       });
     }).toThrow("document root should be MPD");
     expect(function() {
-      const prevManifest = {} as any as Manifest;
+      const prevManifest = {} as unknown as Manifest;
       parseFromDocument(doc, {
         url: "",
         aggressiveMode: false,

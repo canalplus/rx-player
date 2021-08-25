@@ -27,6 +27,7 @@ jest.mock("../../../core/segment_buffers/implementations/text/native", () => ({
 
 describe("Features list - native Text Buffer", () => {
   it("should add an native Text Buffer in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addNativeTextBuffer(featureObject);
     expect(featureObject).toEqual({ nativeTextTracksBuffer });

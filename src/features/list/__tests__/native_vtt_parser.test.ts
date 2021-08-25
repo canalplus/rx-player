@@ -26,6 +26,7 @@ jest.mock("../../../parsers/texttracks/webvtt/native", () => ({
 
 describe("Features list - native vtt Parser", () => {
   it("should add an native vtt Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { nativeTextTracksParsers: {} };
     addNativevttFeature(featureObject);
     expect(featureObject).toEqual({

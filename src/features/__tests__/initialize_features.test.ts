@@ -27,8 +27,15 @@ describe("Features - initializeFeaturesObject", () => {
     jest.resetModules();
   });
 
+  /* eslint-disable @typescript-eslint/naming-convention */
+  const win = window as unknown as {
+    __FEATURES__: unknown;
+    __RELATIVE_PATH__ : unknown;
+  };
+  /* eslint-enable @typescript-eslint/naming-convention */
+
   it("should set no feature if nothing is enabled", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get() { return false; },
     });
     const feat = {};
@@ -37,14 +44,14 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect<unknown>(feat).toEqual({});
-    delete (window as any).__FEATURES__;
+    delete win.__FEATURES__;
   });
 
   it("should set the right features when everything is enabled", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get() { return true; },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       EME_MANAGER: "../core/eme/index.ts",
       IMAGE_BUFFER: "../core/segment_buffers/implementations/image/index.ts",
       BIF_PARSER: "../parsers/images/bif.ts",
@@ -123,17 +130,17 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the html text buffer if the html vtt parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "HTML_VTT";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_VTT: "../parsers/texttracks/webvtt/html/index.ts",
     };
@@ -155,17 +162,17 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the html text buffer if the html sami parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "HTML_SAMI";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_SAMI: "../parsers/texttracks/sami/html",
     };
@@ -187,17 +194,17 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the html text buffer if the html ttml parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "HTML_TTML";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_TTML: "../parsers/texttracks/ttml/html/index",
     };
@@ -219,17 +226,17 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the html text buffer if the html srt parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "HTML_SRT";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_SRT: "../parsers/texttracks/srt/html",
     };
@@ -251,17 +258,17 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the native text buffer if the native vtt parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "NATIVE_VTT";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index",
       NATIVE_VTT: "../parsers/texttracks/webvtt/native/index",
     };
@@ -283,17 +290,17 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the native text buffer if the native sami parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "NATIVE_SAMI";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_SAMI: "../parsers/texttracks/sami/native",
     };
@@ -315,17 +322,17 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the native text buffer if the native ttml parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "NATIVE_TTML";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_TTML: "../parsers/texttracks/ttml/native/index",
     };
@@ -347,17 +354,17 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the native text buffer if the native srt parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "NATIVE_SRT";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_SRT: "../parsers/texttracks/srt/native",
     };
@@ -379,7 +386,7 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 });

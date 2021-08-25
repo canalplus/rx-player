@@ -39,6 +39,7 @@ describe("Features list - DASH WASM Parser", () => {
 
     expect(initializeSpy).toHaveBeenCalledTimes(1);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { transports: {},
                                   dashParsers: { js: null,
                                                  wasm: null } };

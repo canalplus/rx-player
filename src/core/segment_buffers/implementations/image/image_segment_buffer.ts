@@ -28,25 +28,11 @@ import {
 } from "../types";
 import ManualTimeRanges from "../utils/manual_time_ranges";
 
-/** Format of the data pushed to the `ImageSegmentBuffer`. */
-export interface IImageTrackSegmentData {
-  /** Image track data, in the given type */
-  data : IBifThumbnail[];
-  /** The type of the data (example: "bif") */
-  type : string;
-  /** End time until which the segment apply */
-  end : number;
-  /** Start time from which the segment apply */
-  start : number;
-  /** Timescale to convert the start and end into seconds */
-  timescale : number;
-}
-
 /**
  * Image SegmentBuffer implementation.
  * @class ImageSegmentBuffer
  */
-export default class ImageSegmentBuffer extends SegmentBuffer<IImageTrackSegmentData> {
+export default class ImageSegmentBuffer extends SegmentBuffer {
   public readonly bufferType : "image";
   private _buffered : ManualTimeRanges;
 
@@ -61,7 +47,7 @@ export default class ImageSegmentBuffer extends SegmentBuffer<IImageTrackSegment
    * @param {Object} data
    */
   public pushChunk(
-    infos : IPushChunkInfos<IImageTrackSegmentData>
+    infos : IPushChunkInfos<unknown>
   ) : Observable<void> {
     return observableDefer(() => {
       log.debug("ISB: appending new data.");
@@ -70,7 +56,10 @@ export default class ImageSegmentBuffer extends SegmentBuffer<IImageTrackSegment
       }
       const { appendWindow,
               chunk } = infos.data;
-      const { start, end, timescale } = chunk;
+
+      // The following check is ugly. I don't care, the image buffer is there
+      // due to an ugly deprecated API that will soon disappear
+      const { start, end, timescale } = chunk as IImageTrackSegmentData;
       const appendWindowStart = appendWindow[0] ?? 0;
       const appendWindowEnd = appendWindow[1] ?? Infinity;
 
@@ -135,4 +124,18 @@ export default class ImageSegmentBuffer extends SegmentBuffer<IImageTrackSegment
     log.debug("ISB: disposing image SegmentBuffer");
     this._buffered.remove(0, Infinity);
   }
+}
+
+/** Format of the data pushed to the `ImageSegmentBuffer`. */
+export interface IImageTrackSegmentData {
+  /** Image track data, in the given type */
+  data : IBifThumbnail[];
+  /** The type of the data (example: "bif") */
+  type : string;
+  /** End time until which the segment apply */
+  end : number;
+  /** Start time from which the segment apply */
+  start : number;
+  /** Timescale to convert the start and end into seconds */
+  timescale : number;
 }

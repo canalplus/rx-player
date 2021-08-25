@@ -38,10 +38,8 @@ function requestFullscreen(element : HTMLMediaElement) : void {
       elt.mozRequestFullScreen();
     } else if (typeof elt.webkitRequestFullscreen === "function") {
       (
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        elt.webkitRequestFullscreen as any
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      )((Element as any).ALLOW_KEYBOARD_INPUT);
+        elt.webkitRequestFullscreen as (allowKeybordInput? : boolean) => void
+      )((Element as { ALLOW_KEYBOARD_INPUT? : boolean }).ALLOW_KEYBOARD_INPUT);
     }
   }
 }

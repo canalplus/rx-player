@@ -23,7 +23,7 @@ describe("Compat - tryToChangeSourceBufferType", () => {
   /* eslint-enable max-len */
 
     const spy = jest.spyOn(log, "warn");
-    const fakeSourceBuffer : any = {};
+    const fakeSourceBuffer : SourceBuffer = {} as unknown as SourceBuffer;
     expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto"))
       .toBe(false);
     expect(spy).not.toHaveBeenCalled();
@@ -35,7 +35,7 @@ describe("Compat - tryToChangeSourceBufferType", () => {
 
     const spy = jest.spyOn(log, "warn");
     const changeTypeFn = jest.fn();
-    const fakeSourceBuffer : any = { changeType: changeTypeFn };
+    const fakeSourceBuffer = { changeType: changeTypeFn } as unknown as SourceBuffer;
     expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto"))
       .toBe(true);
     expect(spy).not.toHaveBeenCalled();
@@ -48,7 +48,7 @@ describe("Compat - tryToChangeSourceBufferType", () => {
     const spy = jest.spyOn(log, "warn");
     const err = new Error("bar");
     const changeTypeFn = jest.fn(() => { throw err; });
-    const fakeSourceBuffer : any = { changeType: changeTypeFn };
+    const fakeSourceBuffer = { changeType: changeTypeFn } as unknown as SourceBuffer;
     expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto"))
       .toBe(false);
     expect(spy).toHaveBeenCalledTimes(1);

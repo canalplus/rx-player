@@ -45,7 +45,7 @@ import forceGarbageCollection from "./force_garbage_collection";
  */
 export default function appendSegmentToBuffer<T>(
   clock$ : Observable<{ position : number }>,
-  segmentBuffer : SegmentBuffer<T>,
+  segmentBuffer : SegmentBuffer,
   dataInfos : IPushChunkInfos<T>
 ) : Observable<unknown> {
   const append$ = segmentBuffer.pushChunk(dataInfos);
