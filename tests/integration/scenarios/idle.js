@@ -675,54 +675,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getPreferredAudioTracks", () => {
-      it("should return an empty array through getPreferredAudioTracks by default", () => {
-        expect(player.getPreferredAudioTracks()).to.eql([]);
-      });
-    });
-
-    describe("getPreferredTextTracks", () => {
-      it("should return an empty array through getPreferredTextTracks by default", () => {
-        expect(player.getPreferredTextTracks()).to.eql([]);
-      });
-    });
-
-    describe("setPreferredAudioTracks", () => {
-      it("should allow setting preferred audio tracks by default", () => {
-        expect(player.getPreferredAudioTracks()).to.eql([]);
-        player.setPreferredAudioTracks(["fr", "en"]);
-        expect(player.getPreferredAudioTracks()).to.eql(["fr", "en"]);
-        player.setPreferredAudioTracks([
-          { language: "it", audioDescription: true },
-          { language: "pt", audioDescription: false },
-          { language: "pt", audioDescription: true },
-        ]);
-        expect(player.getPreferredAudioTracks()).to.eql([
-          { language: "it", audioDescription: true },
-          { language: "pt", audioDescription: false },
-          { language: "pt", audioDescription: true },
-        ]);
-      });
-    });
-
-    describe("setPreferredTextTracks", () => {
-      it("should return an empty array through getPreferredTextTracks by default", () => {
-        expect(player.getPreferredTextTracks()).to.eql([]);
-        player.setPreferredTextTracks(["fr", "en"]);
-        expect(player.getPreferredTextTracks()).to.eql(["fr", "en"]);
-        player.setPreferredTextTracks([
-          { language: "it", closedCaption: true },
-          { language: "pt", closedCaption: false },
-          { language: "pt", closedCaption: true },
-        ]);
-        expect(player.getPreferredTextTracks()).to.eql([
-          { language: "it", closedCaption: true },
-          { language: "pt", closedCaption: false },
-          { language: "pt", closedCaption: true },
-        ]);
-      });
-    });
-
     describe("getMinimumPosition", () => {
       it("should return null in getMinimumPosition by default", () => {
         expect(player.getMinimumPosition()).to.equal(null);
