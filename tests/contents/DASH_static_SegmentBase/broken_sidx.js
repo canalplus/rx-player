@@ -49,7 +49,7 @@ export default {
                 bitrate: 99529,
                 height: 144,
                 width: 192,
-                frameRate: "12800/512",
+                frameRate: 25,
                 codec: "avc1.42c01e",
                 mimeType: "video/mp4",
                 index: {
