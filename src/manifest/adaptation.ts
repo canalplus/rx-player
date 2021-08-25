@@ -17,7 +17,7 @@
 import log from "../log";
 import { IParsedAdaptation } from "../parsers/manifest";
 import {
-  IAdaptationType,
+  ITrackType,
   IAudioTrack,
   IRepresentationFilter,
   ITextTrack,
@@ -30,9 +30,9 @@ import uniq from "../utils/uniq";
 import Representation from "./representation";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
-export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
-                                                               "video",
-                                                               "text" ];
+export const SUPPORTED_ADAPTATIONS_TYPE: ITrackType[] = [ "audio",
+                                                          "video",
+                                                          "text" ];
 
 /**
  * Normalized Adaptation structure.
@@ -53,7 +53,7 @@ export default class Adaptation {
   public readonly representations : Representation[];
 
   /** Type of this Adaptation. */
-  public readonly type : IAdaptationType;
+  public readonly type : ITrackType;
 
   /** Whether this track contains an audio description for the visually impaired. */
   public isAudioDescription? : boolean;
