@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IAdaptationType } from "../../public_types";
+import { ITrackType } from "../../public_types";
 
 /**
  * Guess the type of container a segment is in based on Manifest information.
@@ -29,7 +29,7 @@ import { IAdaptationType } from "../../public_types";
  * @returns {string | undefined}
  */
 export default function inferSegmentContainer(
-  adaptationType : IAdaptationType,
+  adaptationType : ITrackType,
   mimeType : string | undefined
 ) : "webm" | "mp4" | undefined {
   if (adaptationType === "audio" || adaptationType === "video") {
