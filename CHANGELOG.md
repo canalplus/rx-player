@@ -1,5 +1,31 @@
 # Changelog
 
+## v3.26.1 (UNRELEASED)
+
+### Bug fixes
+
+  - ttml: Do not throw if a TTML subtitles file doesn't contain any `<body>` tag, just ignore it [#993]
+  - Auto-detect when playback is unexplicably frozen and try to unlock it through a small seek [#982]
+  - Properly send `available{Audio,Video}BitratesChange` event for multi-Period contents [#983]
+  - DASH/MetaPlaylist/Local: fix rare infinite rebuffering issue which could happen when changing or disabling the track of a future Period [#1000]
+  - compat: Prevent rare segment-loading loops by automatically detecting when segments are garbage collected by the browser immediately after being pushed [#987, #990]
+  - compat/DRM: In some Safari versions, communicating a license as a JS `ArrayBuffer` could throw, this is now fixed [#974]
+  - DASH_WASM: Don't stop with a fatal error if an expected ISO8601 duration value is empty in the MPD
+  - DASH_WASM: Parse `<Event>` elements which contain an XML namespace defined outside that element [#981]
+  - DASH_WASM: Drastically reduce wasm compilation time and file size [#980]
+
+### Other improvements
+
+  - Request initialization segment and the first media segments at the same time when possible, potentially reducing loading times [#973]
+  - Remove cached segment request detection in the adaptive logic, as it is sensible to false positives, leading to a poor bitrate in some short contents [#977]
+  - Export more needed types through the `rx-player/types` path [#972, #976]
+  - demo: Expose some player options in the demo page [#999]
+  - dev: Rewrite build logic from bash to node.js to improve its maintainability
+  - dev: Replace internal `info` script by more helpful and interactive `list` script [#991]
+  - dev/code: Forbid the usage of TypeScript's type `any` in most of the RxPlayer's code - performing runtime type-checking in some cases (in DEV mode only) [#994]
+  - dev/code: Remove RxJS from the transports code [#962]
+
+
 ## v3.26.0 (2021/06/10)
 
 ### Features
