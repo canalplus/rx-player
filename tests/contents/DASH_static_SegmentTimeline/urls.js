@@ -111,6 +111,16 @@ module.exports = [
     path: path.join(__dirname, "media/discontinuity.mpd"),
     contentType: "application/dash+xml",
   },
+  {
+    url: BASE_URL + "multi_period_different_choices.mpd",
+    path: path.join(__dirname, "media/multi_period_different_choices.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "multi_period_same_choices.mpd",
+    path: path.join(__dirname, "media/multi_period_same_choices.mpd"),
+    contentType: "application/dash+xml",
+  },
   // Audio initialization segment
   {
     url: BASE_URL + "dash/ateam-audio=128000.dash",

@@ -2940,7 +2940,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     newVal : number[]
   ) : void {
     const prevVal = this._priv_contentEventsMemory[event];
-    if (prevVal === undefined || areArraysOfNumbersEqual(newVal, prevVal)) {
+    if (prevVal === undefined || !areArraysOfNumbersEqual(newVal, prevVal)) {
       this._priv_contentEventsMemory[event] = newVal;
       this.trigger(event, newVal);
     }
