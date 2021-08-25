@@ -77,9 +77,6 @@ describe("API - parseConstructorOptions", () => {
     minVideoBitrate: DEFAULT_MIN_BITRATES.video,
     maxAudioBitrate: DEFAULT_MAX_BITRATES.audio,
     maxVideoBitrate: DEFAULT_MAX_BITRATES.video,
-    preferredAudioTracks: [],
-    preferredTextTracks: [],
-    preferredVideoTracks: [],
   };
 
   it("should create default values if no option is given", () => {
@@ -311,39 +308,6 @@ describe("API - parseConstructorOptions", () => {
       .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
                          "Its value, \"9999\", is inferior to the set " +
                          "minAudioBitrate, \"10000\""));
-  });
-
-  it("should authorize setting a preferredAudioTracks option", () => {
-    const preferredAudioTracks = [
-      { language: "fra", audioDescription: false },
-      null,
-    ];
-    expect(parseConstructorOptions({ preferredAudioTracks })).toEqual({
-      ...defaultConstructorOptions,
-      preferredAudioTracks,
-    });
-  });
-
-  it("should authorize setting a preferredTextTracks option", () => {
-    const preferredTextTracks = [
-      { language: "fra", closedCaption: false },
-      null,
-    ];
-    expect(parseConstructorOptions({ preferredTextTracks })).toEqual({
-      ...defaultConstructorOptions,
-      preferredTextTracks,
-    });
-  });
-
-  it("should authorize setting a preferredVideoTracks option", () => {
-    const preferredVideoTracks = [
-      { codec: { all: true, test: /hvc/ } },
-      null,
-    ];
-    expect(parseConstructorOptions({ preferredVideoTracks })).toEqual({
-      ...defaultConstructorOptions,
-      preferredVideoTracks,
-    });
   });
 
   it("should throw if the maxBufferAhead given is not a number", () => {
