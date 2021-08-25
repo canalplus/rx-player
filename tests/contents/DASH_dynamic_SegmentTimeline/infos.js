@@ -63,7 +63,7 @@ export default {
               {
                 id: "V300",
                 bitrate: 300000,
-                frameRate: "60/2",
+                frameRate: 30,
                 height: 360,
                 width: 640,
                 codec: "avc1.64001e",
