@@ -18,7 +18,7 @@ import Manifest, {
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "../../../manifest";
-import { IAdaptationType } from "../../../public_types";
+import { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import {
@@ -186,7 +186,7 @@ function createManifest(
     for (let iPer = 0; iPer < currentManifest.periods.length; iPer++) {
       const currentPeriod = currentManifest.periods[iPer];
       const adaptations = SUPPORTED_ADAPTATIONS_TYPE
-        .reduce<IParsedAdaptations>((acc, type : IAdaptationType) => {
+        .reduce<IParsedAdaptations>((acc, type : ITrackType) => {
           const currentAdaptations = currentPeriod.adaptations[type];
           if (currentAdaptations == null) {
             return acc;
