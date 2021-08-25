@@ -48,10 +48,6 @@ export interface IConstructorOptions {
   limitVideoWidth? : boolean;
   throttleVideoBitrateWhenHidden? : boolean;
 
-  preferredAudioTracks? : IAudioTrackPreference[];
-  preferredTextTracks? : ITextTrackPreference[];
-  preferredVideoTracks? : IVideoTrackPreference[];
-
   videoElement? : HTMLMediaElement;
   initialVideoBitrate? : number;
   initialAudioBitrate? : number;
@@ -490,29 +486,6 @@ export interface IPersistentSessionStorage {
   disableRetroCompatibility? : boolean;
 }
 
-/** Single preference for an audio track Adaptation. */
-export type IAudioTrackPreference = null |
-                                    { language? : string;
-                                      audioDescription? : boolean;
-                                      codec? : { all: boolean;
-                                                 test: RegExp; }; };
-
-/** Single preference for a text track Adaptation. */
-export type ITextTrackPreference = null |
-                                   { language : string;
-                                     closedCaption : boolean; };
-
-/** Single preference for a video track Adaptation. */
-export type IVideoTrackPreference = null |
-                                    IVideoTrackPreferenceObject;
-
-/** Preference for a video track Adaptation for when it is not set to `null`. */
-interface IVideoTrackPreferenceObject {
-  codec? : { all: boolean;
-             test: RegExp; };
-  signInterpreted? : boolean;
-}
-
 /** Payload emitted with a `bitrateEstimationChange` event. */
 export interface IBitrateEstimate {
   /** The type of buffer this estimate was done for (e.g. "audio). */
@@ -639,6 +612,19 @@ export interface IVideoTrack { id : number|string;
                                trickModeTracks?: IVideoTrack[];
                                label? : string | undefined;
                                representations: IVideoRepresentation[]; }
+
+/** Period from a list of Periods as returned by the RxPlayer. */
+export interface IPeriod {
+  /** Start time in seconds at which the Period starts. */
+  start : number;
+  /**
+   * End time in seconds at which the Period ends.
+   * `undefined` if that end is unknown for now.
+   */
+  end : number | undefined;
+  /** Identifier for this Period allowing to perform track modification for it. */
+  id : string;
+}
 
 /** Audio track from a list of audio tracks returned by the RxPlayer. */
 export interface IAvailableAudioTrack
