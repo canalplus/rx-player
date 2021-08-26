@@ -24,7 +24,6 @@ import {
 } from "../../manifest";
 import { IEMSG } from "../../parsers/containers/isobmff";
 import { IContentProtection } from "../eme";
-import { INeedsBufferFlush } from "../init";
 import { IBufferType } from "../segment_buffers";
 
 /** Information about a Segment waiting to be loaded by the Stream. */
@@ -395,6 +394,15 @@ export interface INeedsDecipherabilityFlush {
   };
 }
 
+/**
+ * Some situations might require the browser's buffers to be refreshed.
+ * This event is emitted when such situation arised.
+ */
+export interface INeedsBufferFlushEvent {
+  type: "needs-buffer-flush";
+  value: undefined;
+}
+
 /** Event sent by a `RepresentationStream`. */
 export type IRepresentationStreamEvent = IStreamStatusEvent |
                                          IStreamEventAddedSegment<unknown> |
@@ -410,6 +418,7 @@ export type IAdaptationStreamEvent = IBitrateEstimationChangeEvent |
                                      INeedsMediaSourceReload |
                                      INeedsDecipherabilityFlush |
                                      IRepresentationChangeEvent |
+                                     INeedsBufferFlushEvent |
 
                                      // From a RepresentationStream
 
@@ -430,7 +439,7 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
 
                                  IBitrateEstimationChangeEvent |
                                  INeedsMediaSourceReload |
-                                 INeedsBufferFlush |
+                                 INeedsBufferFlushEvent |
                                  INeedsDecipherabilityFlush |
                                  IRepresentationChangeEvent |
 
@@ -452,7 +461,7 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
 
                                           IPeriodStreamReadyEvent |
                                           INeedsMediaSourceReload |
-                                          INeedsBufferFlush |
+                                          INeedsBufferFlushEvent |
                                           IAdaptationChangeEvent |
 
                                           // From an AdaptationStream
@@ -489,7 +498,7 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
 
                                        IBitrateEstimationChangeEvent |
                                        INeedsMediaSourceReload |
-                                       INeedsBufferFlush |
+                                       INeedsBufferFlushEvent |
                                        INeedsDecipherabilityFlush |
                                        IRepresentationChangeEvent |
 

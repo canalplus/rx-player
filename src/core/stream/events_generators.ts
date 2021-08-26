@@ -23,7 +23,6 @@ import {
   Representation,
 } from "../../manifest";
 import { IContentProtection } from "../eme";
-import { INeedsBufferFlush } from "../init";
 import { IBufferType } from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
@@ -32,6 +31,7 @@ import {
   ICompletedStreamEvent,
   IEncryptionDataEncounteredEvent,
   IEndOfStreamEvent,
+  INeedsBufferFlushEvent,
   INeedsDecipherabilityFlush,
   INeedsMediaSourceReload,
   IPeriodStreamClearedEvent,
@@ -124,7 +124,7 @@ const EVENTS = {
                       period } };
   },
 
-  needsBufferFlush(): INeedsBufferFlush {
+  needsBufferFlush(): INeedsBufferFlushEvent {
     return { type: "needs-buffer-flush", value: undefined };
   },
 
