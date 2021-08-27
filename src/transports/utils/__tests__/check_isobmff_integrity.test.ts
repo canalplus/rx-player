@@ -57,10 +57,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : Error | null = null;
+    let error : unknown | null = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, true);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
@@ -78,10 +78,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : Error | null = null;
+    let error : unknown | null = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, true);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
@@ -101,10 +101,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : Error | null = null;
+    let error : unknown | null = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, false);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
@@ -124,10 +124,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : Error | null = null;
+    let error : unknown | null = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, false);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);

@@ -28,13 +28,13 @@ describe("utils - assert", () => {
       assert(false);
     } catch (e) {
       error = e;
-      /* eslint-disable @typescript-eslint/no-unused-expressions */
-      expect(e).toBeDefined();
-      /* eslint-enable @typescript-eslint/no-unused-expressions */
     }
-    /* eslint-disable @typescript-eslint/no-unused-expressions */
-    expect(error).toBeDefined();
-    /* eslint-enable @typescript-eslint/no-unused-expressions */
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(error.message).toBe("invalid assertion");
     expect(error.name).toBe("AssertionError");
   });
@@ -46,13 +46,13 @@ describe("utils - assert", () => {
       assert(false, myMessage);
     } catch (e) {
       error = e;
-      /* eslint-disable @typescript-eslint/no-unused-expressions */
-      expect(e).toBeDefined();
-      /* eslint-enable @typescript-eslint/no-unused-expressions */
     }
-    /* eslint-disable @typescript-eslint/no-unused-expressions */
-    expect(error).toBeDefined();
-    /* eslint-enable @typescript-eslint/no-unused-expressions */
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(error.message).toBe(myMessage);
     expect(error.name).toBe("AssertionError");
   });
@@ -78,9 +78,12 @@ describe("utils - assertInterface", () => {
     } catch (e) {
       error = e;
     }
-    /* eslint-disable @typescript-eslint/no-unused-expressions */
-    expect(error).toBeDefined();
-    /* eslint-enable @typescript-eslint/no-unused-expressions */
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(error.message).toBe(`${nameOfMyObj} should be an object`);
     expect(error.name).toBe("AssertionError");
 
@@ -91,9 +94,12 @@ describe("utils - assertInterface", () => {
     } catch (e) {
       error = e;
     }
-    /* eslint-disable @typescript-eslint/no-unused-expressions */
-    expect(error).toBeDefined();
-    /* eslint-enable @typescript-eslint/no-unused-expressions */
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(error.message).toBe(`${nameOfMyObj} should be an object`);
     expect(error.name).toBe("AssertionError");
   });
@@ -128,6 +134,13 @@ describe("utils - assertInterface", () => {
     /* eslint-disable @typescript-eslint/no-unused-expressions */
     expect(error).toBeDefined();
     /* eslint-enable @typescript-eslint/no-unused-expressions */
+
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(error.message)
       .toBe(`${nameOfMyObj} should have property f as a function`);
     expect(error.name).toBe("AssertionError");
@@ -159,9 +172,12 @@ describe("utils - assertInterface", () => {
     } catch (e) {
       error = e;
     }
-    /* eslint-disable @typescript-eslint/no-unused-expressions */
-    expect(error).toBeDefined();
-    /* eslint-enable @typescript-eslint/no-unused-expressions */
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(error.message)
       .toBe("object should have property f as a function");
     expect(error.name).toBe("AssertionError");

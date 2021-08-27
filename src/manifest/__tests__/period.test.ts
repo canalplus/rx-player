@@ -47,7 +47,13 @@ describe("Manifest - Period", () => {
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
-    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
+
+    // Impossible check to shut-up TypeScript
+    if (!(errorReceived instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+
+    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
     expect(errorReceived.message).toContain("No supported audio and video tracks.");
     expect(adaptationSpy).not.toHaveBeenCalled();
   });
@@ -82,8 +88,14 @@ describe("Manifest - Period", () => {
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
-    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
-    expect(errorReceived.type).toBe("MEDIA_ERROR");
+
+    // Impossible check to shut-up TypeScript
+    if (!(errorReceived instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+
+    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio and video tracks.");
 
     expect(adaptationSpy).toHaveBeenCalledTimes(2);
@@ -112,8 +124,14 @@ describe("Manifest - Period", () => {
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
-    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
-    expect(errorReceived.type).toBe("MEDIA_ERROR");
+
+    // Impossible check to shut-up TypeScript
+    if (!(errorReceived instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+
+    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio and video tracks.");
 
     expect(adaptationSpy).toHaveBeenCalledTimes(0);
@@ -163,8 +181,14 @@ describe("Manifest - Period", () => {
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
-    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
-    expect(errorReceived.type).toBe("MEDIA_ERROR");
+
+    // Impossible check to shut-up TypeScript
+    if (!(errorReceived instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+
+    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio adaptations");
   });
 
@@ -212,8 +236,14 @@ describe("Manifest - Period", () => {
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
-    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
-    expect(errorReceived.type).toBe("MEDIA_ERROR");
+
+    // Impossible check to shut-up TypeScript
+    if (!(errorReceived instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+
+    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio adaptations");
   });
 
@@ -261,8 +291,14 @@ describe("Manifest - Period", () => {
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
-    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
-    expect(errorReceived.type).toBe("MEDIA_ERROR");
+
+    // Impossible check to shut-up TypeScript
+    if (!(errorReceived instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+
+    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported video adaptation");
   });
 
@@ -310,8 +346,14 @@ describe("Manifest - Period", () => {
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
-    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
-    expect(errorReceived.type).toBe("MEDIA_ERROR");
+
+    // Impossible check to shut-up TypeScript
+    if (!(errorReceived instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+
+    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported video adaptation");
   });
 

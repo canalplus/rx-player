@@ -4,6 +4,8 @@
     "declaration": true,
     "target": "es5",
     "lib": ["es2017", "dom"],
+    // TODO
+    // "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
     "noImplicitAny": true,

@@ -534,8 +534,13 @@ describe("API - parseLoadVideoOptions", () => {
     } catch (e) {
       err = e;
     }
-    expect(err).toBeDefined();
     expect(opt).not.toBeDefined();
+    expect(err).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(err instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(err.message).toEqual("No option set on loadVideo");
   });
 
@@ -554,16 +559,26 @@ describe("API - parseLoadVideoOptions", () => {
     } catch (e) {
       err2 = e;
     }
-    expect(err1).toBeDefined();
     expect(opt1).not.toBeDefined();
+    expect(err1).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(err1 instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(err1.message).toEqual(
       "Unable to load a content: no url set on loadVideo.\n" +
       "Please provide at least either an `url` argument, a " +
       "`transportOptions.initialManifest` option or a " +
       "`transportOptions.manifestLoader` option so the RxPlayer can load the content."
     );
-    expect(err2).toBeDefined();
     expect(opt2).not.toBeDefined();
+    expect(err2).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(err2 instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(err2.message).toEqual(
       "Unable to load a content: no url set on loadVideo.\n" +
       "Please provide at least either an `url` argument, a " +
@@ -580,8 +595,13 @@ describe("API - parseLoadVideoOptions", () => {
     } catch (e) {
       err = e;
     }
-    expect(err).toBeDefined();
     expect(opt).not.toBeDefined();
+    expect(err).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(err instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(err.message).toEqual("No transport set on loadVideo");
   });
 
@@ -794,8 +814,13 @@ describe("API - parseLoadVideoOptions", () => {
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid key system given: Missing type string or getLicense callback");
     }
@@ -811,8 +836,13 @@ describe("API - parseLoadVideoOptions", () => {
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid key system given: Missing type string or getLicense callback");
     }
@@ -828,8 +858,13 @@ describe("API - parseLoadVideoOptions", () => {
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid key system given: Missing type string or getLicense callback");
     }
@@ -1206,8 +1241,13 @@ If badly set, continue will be used as default`);
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid supplementary image track given. Missing either mimetype or url");
     }
@@ -1223,8 +1263,13 @@ If badly set, continue will be used as default`);
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid supplementary image track given. Missing either mimetype or url");
     }
@@ -1240,8 +1285,13 @@ If badly set, continue will be used as default`);
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid supplementary image track given. Missing either mimetype or url");
     }
@@ -1304,8 +1354,13 @@ If badly set, continue will be used as default`);
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid supplementary text track given." +
         " Missing either language, mimetype or url");
@@ -1322,8 +1377,13 @@ If badly set, continue will be used as default`);
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid supplementary text track given." +
         " Missing either language, mimetype or url");
@@ -1340,8 +1400,13 @@ If badly set, continue will be used as default`);
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid supplementary text track given." +
         " Missing either language, mimetype or url");
@@ -1358,8 +1423,13 @@ If badly set, continue will be used as default`);
       } catch (e) {
         err = e;
       }
-      expect(err).toBeDefined();
       expect(opt).not.toBeDefined();
+      expect(err).toBeInstanceOf(Error);
+
+      // Impossible check to shut-up TypeScript
+      if (!(err instanceof Error)) {
+        throw new Error("Impossible: already checked it was an Error instance");
+      }
       expect(err.message).toEqual(
         "Invalid supplementary text track given." +
         " Missing either language, mimetype or url");
@@ -1422,8 +1492,13 @@ If badly set, continue will be used as default`);
     } catch (e) {
       err = e;
     }
-    expect(err).toBeDefined();
     expect(opt).not.toBeDefined();
+    expect(err).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(err instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(err.message).toEqual("Invalid textTrackMode.");
   });
 
@@ -1441,8 +1516,13 @@ If badly set, continue will be used as default`);
     } catch (e) {
       err = e;
     }
-    expect(err).toBeDefined();
     expect(opt).not.toBeDefined();
+    expect(err).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(err instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(err.message)
       .toEqual("You have to provide a textTrackElement in \"html\" textTrackMode.");
   });
@@ -1463,8 +1543,13 @@ If badly set, continue will be used as default`);
     } catch (e) {
       err = e;
     }
-    expect(err).toBeDefined();
     expect(opt).not.toBeDefined();
+    expect(err).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(err instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(err.message)
       .toEqual("textTrackElement should be an HTMLElement.");
   });

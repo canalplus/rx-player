@@ -305,9 +305,14 @@ describe("updatePeriods", () => {
       error = e;
     }
 
-    expect(error).not.toBeNull();
-    expect(error.type).toEqual("MEDIA_ERROR");
-    expect(error.code).toEqual("MANIFEST_UPDATE_ERROR");
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+    expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
+    expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
       "MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: not enough data"
     );
@@ -371,9 +376,14 @@ describe("updatePeriods", () => {
       error = e;
     }
 
-    expect(error).not.toBeNull();
-    expect(error.type).toEqual("MEDIA_ERROR");
-    expect(error.code).toEqual("MANIFEST_UPDATE_ERROR");
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+    expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
+    expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
       "MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: incoherent data"
     );
@@ -438,9 +448,14 @@ describe("updatePeriods", () => {
       error = e;
     }
 
-    expect(error).not.toBeNull();
-    expect(error.type).toEqual("MEDIA_ERROR");
-    expect(error.code).toEqual("MANIFEST_UPDATE_ERROR");
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+    expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
+    expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
       "MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: not enough data"
     );
@@ -494,9 +509,14 @@ describe("updatePeriods", () => {
       error = e;
     }
 
-    expect(error).not.toBeNull();
-    expect(error.type).toEqual("MEDIA_ERROR");
-    expect(error.code).toEqual("MANIFEST_UPDATE_ERROR");
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+    expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
+    expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
       "MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: incoherent data"
     );

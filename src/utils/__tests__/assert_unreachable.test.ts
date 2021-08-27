@@ -24,15 +24,16 @@ describe("utils - assert", () => {
     let error;
     try {
       assertUnreachable(4 as never);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
-      /* eslint-disable @typescript-eslint/no-unused-expressions */
-      expect(e).toBeDefined();
-      /* eslint-enable @typescript-eslint/no-unused-expressions */
     }
-    /* eslint-disable @typescript-eslint/no-unused-expressions */
-    expect(error).toBeDefined();
-    /* eslint-enable @typescript-eslint/no-unused-expressions */
+
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(error.message).toBe("Unreachable path taken");
     expect(error.name).toBe("AssertionError");
   });

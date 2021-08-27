@@ -23,7 +23,11 @@ import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import * as events from "../../event_listeners";
-import { MSMediaKeysConstructor } from "./ms_media_keys_constructor";
+import {
+  MSMediaKeysConstructor,
+  MSMediaKeys,
+  MSMediaKeySession,
+} from "./ms_media_keys_constructor";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,

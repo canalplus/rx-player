@@ -56,10 +56,10 @@ describe("Compat - makeVTTCue", () => {
     }));
     const makeCue = require("../make_vtt_cue").default;
     let result;
-    let error : Error|undefined;
+    let error;
     try {
       result = makeCue(5, 10, "toto");
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(Error);
