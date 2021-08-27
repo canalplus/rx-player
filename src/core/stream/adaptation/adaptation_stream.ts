@@ -38,13 +38,13 @@ import {
   distinctUntilChanged,
   exhaustMap,
   filter,
+  ignoreElements,
   map,
   mergeMap,
   share,
   take,
   tap,
 } from "rxjs/operators";
-import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
@@ -59,18 +59,16 @@ import ABRManager, {
 import { SegmentFetcherCreator } from "../../fetchers";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
-import reloadAfterSwitch from "../reload_after_switch";
 import RepresentationStream, {
   IRepresentationStreamClockTick,
   ITerminationOrder,
 } from "../representation";
 import {
   IAdaptationStreamEvent,
+  INeedsBufferFlushEvent,
   IRepresentationStreamEvent,
 } from "../types";
 import createRepresentationEstimator from "./create_representation_estimator";
-
-const { DELTA_POSITION_AFTER_RELOAD } = config;
 
 /** `Clock tick` information needed by the AdaptationStream. */
 export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTick {
@@ -229,8 +227,8 @@ export default function AdaptationStream({
 
   /** Recursively create `RepresentationStream`s according to the last estimate. */
   const representationStreams$ = abrEstimate$
-    .pipe(exhaustMap((estimate, i) : Observable<IAdaptationStreamEvent> => {
-      return recursivelyCreateRepresentationStreams(estimate, i === 0);
+    .pipe(exhaustMap((estimate) : Observable<IAdaptationStreamEvent> => {
+      return recursivelyCreateRepresentationStreams(estimate);
     }));
 
   return observableMerge(representationStreams$, bitrateEstimate$);
@@ -241,26 +239,12 @@ export default function AdaptationStream({
    * Each time a new estimate is made, this function will create a new
    * `RepresentationStream` corresponding to that new estimate.
    * @param {Object} fromEstimate - The first estimate we should start with
-   * @param {boolean} isFirstEstimate - Whether this is the first time we're
-   * creating a RepresentationStream in the corresponding `AdaptationStream`.
-   * This is important because manual quality switches might need a full reload
-   * of the MediaSource _except_ if we are talking about the first quality chosen.
    * @returns {Observable}
    */
   function recursivelyCreateRepresentationStreams(
-    fromEstimate : IABREstimate,
-    isFirstEstimate : boolean
+    fromEstimate : IABREstimate
   ) : Observable<IAdaptationStreamEvent> {
     const { representation } = fromEstimate;
-
-    // A manual bitrate switch might need an immediate feedback.
-    // To do that properly, we need to reload the MediaSource
-    if (directManualBitrateSwitching &&
-        fromEstimate.manual &&
-        !isFirstEstimate)
-    {
-      return reloadAfterSwitch(period, clock$, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
-    }
 
     /**
      * Emit when the current RepresentationStream should be terminated to make
@@ -308,7 +292,30 @@ export default function AdaptationStream({
                                                period,
                                                representation));
 
-    return observableConcat(representationChange$,
+    let optionalBufferFlush$ : Observable<INeedsBufferFlushEvent | never> = EMPTY;
+    if (directManualBitrateSwitching && fromEstimate.manual) {
+      segmentBuffer.synchronizeInventory();
+      const inventory = segmentBuffer.getInventory();
+      if (inventory.some(buf => buf.infos.period.id === period.id &&
+                                buf.infos.representation.id !== representation.id))
+      {
+        optionalBufferFlush$ = observableConcat(
+          segmentBuffer.removeBuffer(period.start, period.end ?? Infinity)
+            .pipe(ignoreElements()),
+          clock$.pipe(
+            take(1),
+            mergeMap((tick) => {
+              return period.containsPosition(tick.getCurrentTime()) ?
+                observableOf(EVENTS.needsBufferFlush()) :
+                EMPTY;
+            })
+          )
+        );
+      }
+    }
+
+    return observableConcat(optionalBufferFlush$,
+                            representationChange$,
                             createRepresentationStream(representation,
                                                        terminateCurrentStream$,
                                                        fastSwitchThreshold$)).pipe(
@@ -325,7 +332,7 @@ export default function AdaptationStream({
           if (lastEstimate === null) {
             return EMPTY;
           }
-          return recursivelyCreateRepresentationStreams(lastEstimate, false);
+          return recursivelyCreateRepresentationStreams(lastEstimate);
         }
         return observableOf(evt);
       }));

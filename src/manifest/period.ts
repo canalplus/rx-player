@@ -131,6 +131,17 @@ export default class Period {
   }
 
   /**
+   * Returns `true` if this Period contains the time indicated by `position`, in
+   * seconds.
+   * @param {number}
+   * @returns {boolean}
+   */
+  containsPosition(position : number) : boolean {
+    return position >= this.start &&
+           (this.end === undefined || position < this.end);
+  }
+
+  /**
    * Returns every `Adaptations` (or `tracks`) linked to that Period, in an
    * Array.
    * @returns {Array.<Object>}

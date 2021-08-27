@@ -212,7 +212,7 @@ export default function PeriodStream({
             return reloadAfterSwitch(period, clock$, relativePosAfterSwitch);
           }
 
-          const needsBufferFlush$ = strategy.type === "flush-buffer"
+          const optionalBufferFlush$ = strategy.type === "flush-buffer"
             ? observableOf(EVENTS.needsBufferFlush())
             : EMPTY;
 
@@ -227,7 +227,7 @@ export default function PeriodStream({
 
           return segmentBuffersStore.waitForUsableBuffers().pipe(mergeMap(() => {
             return observableConcat(cleanBuffer$,
-                                    needsBufferFlush$,
+                                    optionalBufferFlush$,
                                     observableMerge(adaptationStream$,
                                                     bufferGarbageCollector$));
           }));
