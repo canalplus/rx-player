@@ -27,6 +27,7 @@ import {
   finalize,
   ignoreElements,
   mergeMap,
+  switchMap,
   takeUntil,
 } from "rxjs/operators";
 import { MediaError } from "../../errors";
@@ -40,9 +41,9 @@ import StreamOrchestrator, {
 } from "../stream";
 import createStreamClock from "./create_stream_clock";
 import DurationUpdater from "./duration_updater";
+import emitLoadedEvent from "./emit_loaded_event";
 import { maintainEndOfStream } from "./end_of_stream";
-import EVENTS from "./events_generators";
-import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
+import initialSeekAndPlay from "./initial_seek_and_play";
 import StallAvoider, {
   IDiscontinuityEvent,
 } from "./stall_avoider";
@@ -103,7 +104,7 @@ export default function createMediaSourceLoader(
     mediaSource : MediaSource,
     initialTime : number,
     autoPlay : boolean
-  ) {
+  ) : Observable<IMediaSourceLoaderEvent> {
     /** Maintains the MediaSource's duration up-to-date with the Manifest */
     const durationUpdater$ = DurationUpdater(manifest, mediaSource);
 
@@ -118,21 +119,21 @@ export default function createMediaSourceLoader(
     /** Interface to create media buffers for loaded segments. */
     const segmentBuffersStore = new SegmentBuffersStore(mediaElement, mediaSource);
 
-    const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
-                                                        mediaElement,
-                                                        startTime: initialTime,
-                                                        mustAutoPlay: autoPlay,
-                                                        setCurrentTime,
-                                                        isDirectfile: false });
+    const { seek$, play$ } = initialSeekAndPlay({ clock$,
+                                                  mediaElement,
+                                                  startTime: initialTime,
+                                                  mustAutoPlay: autoPlay,
+                                                  setCurrentTime,
+                                                  isDirectfile: false });
 
-    const initialPlay$ = load$.pipe(filter((evt) => evt !== "not-loaded-metadata"));
+    const playDone$ = play$.pipe(filter((evt) => evt.type !== "warning"));
 
-    const streamEvents$ = initialPlay$.pipe(
+    const streamEvents$ = playDone$.pipe(
       mergeMap(() => streamEventsEmitter(manifest, mediaElement, clock$))
     );
 
     const streamClock$ = createStreamClock(clock$, { autoPlay,
-                                                     initialPlay$,
+                                                     initialPlay$: playDone$,
                                                      initialSeek$: seek$,
                                                      manifest,
                                                      speed$,
@@ -195,26 +196,20 @@ export default function createMediaSourceLoader(
                                        discontinuityUpdate$,
                                        setCurrentTime);
 
-    const loadedEvent$ = load$
-      .pipe(mergeMap((evt) => {
-        if (evt === "autoplay-blocked") {
-          const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
-                                       "Cannot trigger auto-play automatically: " +
-                                       "your browser does not allow it.");
-          return observableOf(EVENTS.warning(error),
-                              EVENTS.loaded(segmentBuffersStore));
-        } else if (evt === "not-loaded-metadata") {
-          const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
-                                       "Cannot load automatically: your browser " +
-                                       "falsely announced having loaded the content.");
-          return observableOf(EVENTS.warning(error));
-        }
-        log.debug("Init: The current content is loaded.");
-        return observableOf(EVENTS.loaded(segmentBuffersStore));
-      }));
+    /**
+     * Emit a "loaded" events once the initial play has been performed and the
+     * media can begin playback.
+     * Also emits warning events if issues arise when doing so.
+     */
+    const loadingEvts$ = play$.pipe(switchMap((evt) => {
+      if (evt.type === "warning") {
+        return observableOf(evt);
+      }
+      return emitLoadedEvent(clock$, mediaElement, segmentBuffersStore, false);
+    }));
 
     return observableMerge(durationUpdater$,
-                           loadedEvent$,
+                           loadingEvts$,
                            playbackRate$,
                            stallAvoider$,
                            streams$,

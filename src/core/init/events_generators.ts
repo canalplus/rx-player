@@ -20,7 +20,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { IStalledStatus } from "../api";
 import SegmentBuffersStore, {
   IBufferType,
 } from "../segment_buffers";
@@ -32,6 +31,7 @@ import {
   IManifestUpdateEvent,
   IReloadingMediaSourceEvent,
   IStalledEvent,
+  IStallingSituation,
   IUnstalledEvent,
   IWarningEvent,
 } from "./types";
@@ -46,16 +46,15 @@ function loaded(segmentBuffersStore : SegmentBuffersStore | null) : ILoadedEvent
 
 /**
  * Construct a "stalled" event.
- * @param {Object|null} stalling
+ * @param {Object|null} rebuffering
  * @returns {Object}
  */
-function stalled(stalling : IStalledStatus) : IStalledEvent {
-  return { type: "stalled", value: stalling };
+function stalled(rebuffering : IStallingSituation) : IStalledEvent {
+  return { type: "stalled", value: rebuffering };
 }
 
 /**
  * Construct a "stalled" event.
- * @param {Object|null} stalling
  * @returns {Object}
  */
 function unstalled() : IUnstalledEvent {

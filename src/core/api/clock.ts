@@ -89,28 +89,58 @@ interface IMediaInfos {
   /** Current `seeking` value on the mediaElement. */
   seeking : boolean;
    /** Event that triggered this clock tick. */
-  event : IClockMediaEventType; }
+  event : IClockMediaEventType;
+}
 
-/** Describes when the player is "stalled" and what event started that status. */
-export interface IStalledStatus {
-  /** What started the player to stall. */
+/**
+ * Describes when the player is "rebuffering" and what event started that
+ * status.
+ * "Rebuffering" is a status where the player has not enough buffer ahead to
+ * play reliably.
+ * The RxPlayer should pause playback when the clock indicates the rebuffering
+ * status.
+ */
+export interface IRebufferingStatus {
+  /** What started the player to rebuffer. */
   reason : "seeking" | // Building buffer after seeking
            "not-ready" | // Building buffer after low readyState
            "internal-seek" | // Building buffer after a seek happened inside the player
            "buffering"; // Other cases
-  /** `performance.now` at the time the stalling happened. */
+  /** `performance.now` at the time the rebuffering happened. */
   timestamp : number;
   /**
    * Position, in seconds, at which data is awaited.
-   * If `null` the player is stalled but not because it is awaiting future data.
+   * If `null` the player is rebuffering but not because it is awaiting future data.
    */
   position : number | null;
 }
 
+/**
+ * Describes when the player is "frozen".
+ * This status is reserved for when the player is stuck at the same position for
+ * an unknown reason.
+ */
+export interface IFreezingStatus {
+  /** `performance.now` at the time the freezing started to be detected. */
+  timestamp : number;
+}
+
 /** Information emitted on each clock tick. */
 export interface IClockTick extends IMediaInfos {
-  /** Set if the player is stalled, `null` if not. */
-  stalled : IStalledStatus | null;
+  /**
+   * Set if the player is short on audio and/or video media data and is a such,
+   * rebuffering.
+   * `null` if not.
+   */
+  rebuffering : IRebufferingStatus | null;
+  /**
+   * Set if the player is frozen, that is, stuck in place for unknown reason.
+   * Note that this reason can be a valid one, such as a necessary license not
+   * being obtained yet.
+   *
+   * `null` if the player is not frozen.
+   */
+  freezing : IFreezingStatus | null;
   getCurrentTime : () => number;
 }
 
@@ -126,7 +156,8 @@ const { SAMPLING_INTERVAL_MEDIASOURCE,
         RESUME_GAP_AFTER_SEEKING,
         RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
         RESUME_GAP_AFTER_BUFFERING,
-        STALL_GAP } = config;
+        REBUFFERING_GAP,
+        MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING } = config;
 
 /**
  * HTMLMediaElement Events for which timings are calculated and emitted.
@@ -141,20 +172,26 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS : IClockMediaEventType[] = [ "canplay",
 
 /**
  * Returns the amount of time in seconds the buffer should have ahead of the
- * current position before resuming playback. Based on the infos of the stall.
- * Waiting time differs between a "seeking" stall and a buffering stall.
- * @param {Object|null} stalled
+ * current position before resuming playback. Based on the infos of the
+ * rebuffering status.
+ *
+ * Waiting time differs between a rebuffering happening after a "seek" or one
+ * happening after a buffer starvation occured.
+ * @param {Object|null} rebufferingStatus
  * @param {Boolean} lowLatencyMode
  * @returns {Number}
  */
-function getResumeGap(stalled : IStalledStatus, lowLatencyMode : boolean) : number {
-  if (stalled === null) {
+function getRebufferingEndGap(
+  rebufferingStatus : IRebufferingStatus,
+  lowLatencyMode : boolean
+) : number {
+  if (rebufferingStatus === null) {
     return 0;
   }
   const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
                                                               "DEFAULT";
 
-  switch (stalled.reason) {
+  switch (rebufferingStatus.reason) {
     case "seeking":
     case "internal-seek":
       return RESUME_GAP_AFTER_SEEKING[suffix];
@@ -179,7 +216,7 @@ function hasLoadedUntilTheEnd(
   const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
                                                               "DEFAULT";
   return currentRange !== null &&
-         (duration - currentRange.end) <= STALL_GAP[suffix];
+         (duration - currentRange.end) <= REBUFFERING_GAP[suffix];
 }
 
 /**
@@ -220,7 +257,7 @@ function getMediaInfos(
 }
 
 /**
- * Infer stalled status of the media based on:
+ * Infer rebuffering status of the media based on:
  *   - the return of the function getMediaInfos
  *   - the previous timings object.
  *
@@ -231,11 +268,11 @@ function getMediaInfos(
  * @param {Object} options
  * @returns {Object|null}
  */
-function getStalledStatus(
+function getRebufferingStatus(
   prevTimings : IClockTick,
   currentTimings : IMediaInfos,
   { withMediaSource, lowLatencyMode } : IClockOptions
-) : IStalledStatus | null {
+) : IRebufferingStatus | null {
   const { event: currentEvt,
           position: currentTime,
           bufferGap,
@@ -245,44 +282,42 @@ function getStalledStatus(
           readyState,
           ended } = currentTimings;
 
-  const { stalled: prevStalled,
+  const { rebuffering: prevRebuffering,
           event: prevEvt,
           position: prevTime } = prevTimings;
 
   const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode);
 
-  const canStall = (readyState >= 1 &&
-                    currentEvt !== "loadedmetadata" &&
-                    prevStalled === null &&
-                    !(fullyLoaded || ended));
+  const canSwitchToRebuffering = (readyState >= 1 &&
+                                  currentEvt !== "loadedmetadata" &&
+                                  prevRebuffering === null &&
+                                  !(fullyLoaded || ended));
 
-  let stalledPosition : number | null = null;
-  let shouldStall : boolean | undefined;
-  let shouldUnstall : boolean | undefined;
+  let rebufferEndPosition : number | null = null;
+  let shouldRebuffer : boolean | undefined;
+  let shouldStopRebuffer : boolean | undefined;
 
-  const stallGap = lowLatencyMode ? STALL_GAP.LOW_LATENCY :
-                                    STALL_GAP.DEFAULT;
+  const rebufferGap = lowLatencyMode ? REBUFFERING_GAP.LOW_LATENCY :
+                                       REBUFFERING_GAP.DEFAULT;
 
   if (withMediaSource) {
-    if (canStall) {
-      if (bufferGap <= stallGap) {
-        shouldStall = true;
-        stalledPosition = currentTime + bufferGap;
+    if (canSwitchToRebuffering) {
+      if (bufferGap <= rebufferGap) {
+        shouldRebuffer = true;
+        rebufferEndPosition = currentTime + bufferGap;
       } else if (bufferGap === Infinity) {
-        shouldStall = true;
-        stalledPosition = currentTime;
-      } else if (readyState === 1) {
-        shouldStall = true;
+        shouldRebuffer = true;
+        rebufferEndPosition = currentTime;
       }
-    } else if (prevStalled !== null) {
-      const resumeGap = getResumeGap(prevStalled, lowLatencyMode);
-      if (shouldStall !== true && prevStalled !== null && readyState > 1 &&
+    } else if (prevRebuffering !== null) {
+      const resumeGap = getRebufferingEndGap(prevRebuffering, lowLatencyMode);
+      if (shouldRebuffer !== true && prevRebuffering !== null && readyState > 1 &&
           (fullyLoaded || ended || (bufferGap < Infinity && bufferGap > resumeGap)))
       {
-        shouldUnstall = true;
+        shouldStopRebuffer = true;
       } else if (bufferGap === Infinity || bufferGap <= resumeGap) {
-        stalledPosition = bufferGap === Infinity ? currentTime :
-                                                   currentTime + bufferGap;
+        rebufferEndPosition = bufferGap === Infinity ? currentTime :
+                                                       currentTime + bufferGap;
       }
     }
   }
@@ -291,33 +326,33 @@ function getStalledStatus(
   // own, so we only try to detect when the media timestamp has not changed
   // between two consecutive timeupdates
   else {
-    if (canStall &&
+    if (canSwitchToRebuffering &&
         (!paused && currentEvt === "timeupdate" &&
          prevEvt === "timeupdate" && currentTime === prevTime ||
          currentEvt === "seeking" && bufferGap === Infinity)
     ) {
-      shouldStall = true;
-    } else if (prevStalled !== null &&
+      shouldRebuffer = true;
+    } else if (prevRebuffering !== null &&
                (currentEvt !== "seeking" && currentTime !== prevTime ||
                 currentEvt === "canplay" ||
                 bufferGap < Infinity &&
-                (bufferGap > getResumeGap(prevStalled, lowLatencyMode) ||
+                (bufferGap > getRebufferingEndGap(prevRebuffering, lowLatencyMode) ||
                  fullyLoaded || ended))
     ) {
-      shouldUnstall = true;
+      shouldStopRebuffer = true;
     }
   }
 
-  if (shouldUnstall === true) {
+  if (shouldStopRebuffer === true) {
     return null;
-  } else if (shouldStall === true || prevStalled !== null) {
+  } else if (shouldRebuffer === true || prevRebuffering !== null) {
     let reason : "seeking" | "not-ready" | "buffering" | "internal-seek";
     if (currentEvt === "seeking" ||
-        prevStalled !== null && prevStalled.reason === "seeking") {
+        prevRebuffering !== null && prevRebuffering.reason === "seeking") {
       reason = "seeking";
     } else if (currentTimings.seeking &&
         ((currentEvt === "internal-seeking") ||
-        (prevStalled !== null && prevStalled.reason === "internal-seek"))) {
+        (prevRebuffering !== null && prevRebuffering.reason === "internal-seek"))) {
       reason = "internal-seek";
     } else if (currentTimings.seeking) {
       reason = "seeking";
@@ -326,16 +361,53 @@ function getStalledStatus(
     } else {
       reason = "buffering";
     }
-    if (prevStalled !== null && prevStalled.reason === reason) {
-      return { reason: prevStalled.reason,
-               timestamp: prevStalled.timestamp,
-               position: stalledPosition };
+    if (prevRebuffering !== null && prevRebuffering.reason === reason) {
+      return { reason: prevRebuffering.reason,
+               timestamp: prevRebuffering.timestamp,
+               position: rebufferEndPosition };
     }
     return { reason,
              timestamp: performance.now(),
-             position: stalledPosition };
+             position: rebufferEndPosition };
   }
   return null;
+}
+
+/**
+ * Detect if the current media can be considered as "freezing" (i.e. not
+ * advancing for unknown reasons).
+ *
+ * Returns a corresponding `IFreezingStatus` object if that's the case and
+ * `null` if not.
+ * @param {Object} prevTimings
+ * @param {Object} currentTimings
+ * @returns {Object|null}
+ */
+function getFreezingStatus(
+  prevTimings : IClockTick,
+  currentTimings : IMediaInfos
+) : IFreezingStatus | null {
+  if (prevTimings.freezing) {
+    if (currentTimings.ended ||
+        currentTimings.paused ||
+        currentTimings.readyState === 0 ||
+        currentTimings.playbackRate === 0 ||
+        prevTimings.position !== currentTimings.position)
+    {
+      return null; // Quit freezing status
+    }
+    return prevTimings.freezing; // Stay in it
+  }
+
+  return currentTimings.event === "timeupdate" &&
+         currentTimings.bufferGap > MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING &&
+         !currentTimings.ended &&
+         !currentTimings.paused &&
+         currentTimings.readyState >= 1 &&
+         currentTimings.playbackRate !== 0 &&
+         currentTimings.position === prevTimings.position ?
+           { timestamp: performance.now() } :
+           null;
 }
 
 export interface IClockOptions {
@@ -379,7 +451,9 @@ function createClock(
   const clock$ = observableDefer(() : Observable<IClockTick> => {
     let lastTimings : IClockTick = objectAssign(
       getMediaInfos(mediaElement, "init"),
-      { stalled: null, getCurrentTime: () => mediaElement.currentTime });
+      { rebuffering: null,
+        freezing: null,
+        getCurrentTime: () => mediaElement.currentTime });
 
     function getCurrentClockTick(event : IClockMediaEventType) : IClockTick {
       let tmpEvt: IClockMediaEventType = event;
@@ -388,9 +462,11 @@ function createClock(
         internalSeekingComingCounter -= 1;
       }
       const mediaTimings = getMediaInfos(mediaElement, tmpEvt);
-      const stalledState = getStalledStatus(lastTimings, mediaTimings, options);
+      const rebufferingStatus = getRebufferingStatus(lastTimings, mediaTimings, options);
+      const freezingStatus = getFreezingStatus(lastTimings, mediaTimings);
       const timings = objectAssign({},
-                                   { stalled: stalledState,
+                                   { rebuffering: rebufferingStatus,
+                                     freezing: freezingStatus,
                                      getCurrentTime: () => mediaElement.currentTime },
                                    mediaTimings);
       log.debug("API: current media element state", timings);

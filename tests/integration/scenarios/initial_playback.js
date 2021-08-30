@@ -316,7 +316,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(4);
   });
 
-  it("should be in SEEKING state when seeking to a buffered part when playing", async function() {
+  it("should stay in PLAYING state when seeking to a buffered part when playing", async function() {
     this.timeout(5000);
     player.setWantedBufferAhead(30);
     player.loadVideo({
@@ -330,7 +330,6 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getVideoBufferGap()).to.be.above(10);
 
     player.seekTo(10);
-    await waitForState(player, "SEEKING", ["PLAYING"]);
     expect(player.getVideoBufferGap()).to.be.above(10);
     await sleep(1000);
     expect(player.getVideoBufferGap()).to.be.above(10);

@@ -77,7 +77,6 @@ export default function createStreamClock(
                             Infinity,
           readyState: tick.readyState,
           speed,
-          stalled: tick.stalled,
 
           // wantedTimeOffset is an offset to add to the timing's current time to have
           // the "real" wanted position.

@@ -25,67 +25,57 @@ import {
   mapTo,
   mergeMap,
   shareReplay,
+  startWith,
   take,
   tap,
 } from "rxjs/operators";
 import {
-  play$,
+  play,
   shouldValidateMetadata,
-  shouldWaitForDataBeforeLoaded,
   whenLoadedMetadata$,
 } from "../../compat";
+import { MediaError } from "../../errors";
 import log from "../../log";
-import { IInitClockTick } from "./types";
+import EVENTS from "./events_generators";
+import {
+  IInitClockTick,
+  IWarningEvent,
+} from "./types";
 
-export type ILoadEvents =
-  "not-loaded-metadata" | // metadata are not loaded. Manual action required
-  "autoplay-blocked" | // loaded but autoplay is blocked by the browser
-  "autoplay" | // loaded and autoplayed succesfully
-  "loaded"; // loaded without autoplay enabled
+/** Event emitted when trying to perform the initial `play`. */
+export type IInitialPlayEvent =
+  /** Autoplay is not enabled, but all required steps to do so are there. */
+  { type: "skipped" } |
+  /**
+   * Tried to play, but autoplay is blocked by the browser.
+   * A corresponding warning should have already been sent.
+   */
+  { type: "autoplay-blocked" } |
+  /** Autoplay was done with success. */
+  { type: "autoplay" } |
+  /** Warnings preventing the initial play from happening normally. */
+  IWarningEvent;
 
 /**
- * Emit once a "can-play" message as soon as the clock$ announce that the content
- * can begin to be played.
+ * Emit once as soon as the clock$ announce that the content can begin to be
+ * played by calling the `play` method.
  *
- * Warn you if the metadata is not yet loaded metadata by emitting a
- * "not-loaded-metadata" message first.
+ * This depends on browser-defined criteria (e.g. the readyState status) as well
+ * as RxPlayer-defined ones (e.g.) not rebuffering.
+ *
  * @param {Observable} clock$
- * @returns {Observable}
+ * @returns {Observable.<undefined>}
  */
-function canPlay(
-  clock$ : Observable<IInitClockTick>,
-  mediaElement : HTMLMediaElement,
-  isDirectfile : boolean
-) : Observable<"can-play"|"not-loaded-metadata"> {
-  const isLoaded$ = clock$.pipe(
-    filter((tick) => {
-      const { seeking, stalled, readyState, currentRange } = tick;
-      if (seeking || stalled !== null) {
-        return false;
-      }
-      if (!shouldWaitForDataBeforeLoaded(
-        isDirectfile,
-        mediaElement.hasAttribute("playsinline"))) {
-        return readyState >= 1 && mediaElement.duration > 0;
-      }
-      if (readyState >= 4 || (readyState === 3 && currentRange !== null)) {
-        return shouldValidateMetadata() ? mediaElement.duration > 0 :
-                                          true;
-      }
-      return false;
-    }),
+export function waitUntilPlayable(
+  clock$ : Observable<IInitClockTick>
+) : Observable<undefined> {
+  return clock$.pipe(
+    filter(({ seeking, rebuffering, readyState }) => !seeking &&
+                                                     rebuffering === null &&
+                                                     readyState >= 1),
     take(1),
-    mapTo("can-play" as const)
+    mapTo(undefined)
   );
-
-  if (shouldValidateMetadata() && mediaElement.duration === 0) {
-    return observableConcat(
-      observableOf("not-loaded-metadata" as const),
-      isLoaded$
-    );
-  }
-
-  return isLoaded$;
 }
 
 /**
@@ -93,10 +83,10 @@ function canPlay(
  * @param {HTMLMediaElement} - mediaElement
  * @returns {Observable}
  */
-function autoPlay$(
+function autoPlay(
   mediaElement: HTMLMediaElement
 ): Observable<"autoplay"|"autoplay-blocked"> {
-  return play$(mediaElement).pipe(
+  return play(mediaElement).pipe(
     mapTo("autoplay" as const),
     catchError((error : unknown) => {
       if (error instanceof Error && error.name === "NotAllowedError") {
@@ -117,28 +107,34 @@ function autoPlay$(
  *   - seek$: when subscribed, will seek to the wanted started time as soon as
  *     it can. Emit and complete when done.
  *
- *   - load$: when subscribed, will play if and only if the `mustAutoPlay`
- *     option is set as soon as it can. Emit and complete when done.
- *     When this observable emits, it also means that the content is `loaded`
- *     and can begin to play the current content.
+ *   - play$: when subscribed, will autoplay if and only if the `mustAutoPlay`
+ *     option is set as soon as it can.
+ *     Emit and complete when done.
+ *     Might also emit some warning events if issues related to the initial
+ *     playback arised
+ *
+ * Both Observables are `shareReplay`, meaning that they re-emit everything on
+ * subscription.
+ *
+ * /!\ `play$` has a dependency on `seek$`, as such, the player will try to seek
+ * as soon as either Observable is subscribed to.
  *
  * @param {Object} args
  * @returns {Object}
  */
-export default function seekAndLoadOnMediaEvents(
+export default function initialSeekAndPlay(
   { clock$,
     mediaElement,
     startTime,
     mustAutoPlay,
-    setCurrentTime,
-    isDirectfile } : { clock$ : Observable<IInitClockTick>;
-                       isDirectfile : boolean;
-                       mediaElement : HTMLMediaElement;
-                       mustAutoPlay : boolean;
-                       /** Perform an internal seek. */
-                       setCurrentTime: (nb: number) => void;
-                       startTime : number|(() => number); }
-) : { seek$ : Observable<unknown>; load$ : Observable<ILoadEvents> } {
+    setCurrentTime } : { clock$ : Observable<IInitClockTick>;
+                         isDirectfile : boolean;
+                         mediaElement : HTMLMediaElement;
+                         mustAutoPlay : boolean;
+                         /** Perform an internal seek. */
+                         setCurrentTime: (nb: number) => void;
+                         startTime : number|(() => number); }
+) : { seek$ : Observable<unknown>; play$ : Observable<IInitialPlayEvent> } {
   const seek$ = whenLoadedMetadata$(mediaElement).pipe(
     take(1),
     tap(() => {
@@ -150,27 +146,47 @@ export default function seekAndLoadOnMediaEvents(
     shareReplay({ refCount: true })
   );
 
-  const load$ : Observable<ILoadEvents> = seek$.pipe(
-    mergeMap(() => {
-      return canPlay(clock$, mediaElement, isDirectfile).pipe(
-        tap(() => log.info("Init: Can begin to play content")),
-        mergeMap((evt) => {
-          if (evt === "can-play") {
-            if (!mustAutoPlay) {
-              if (mediaElement.autoplay) {
-                log.warn("Init: autoplay is enabled on HTML media element. " +
-                         "Media will play as soon as possible.");
-              }
-              return observableOf("loaded" as const);
-            }
-            return autoPlay$(mediaElement);
-          }
-          return observableOf(evt);
-        })
-      );
+  const play$ = seek$.pipe(
+    mergeMap(() : Observable<IWarningEvent | undefined> => {
+      if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+        return waitUntilPlayable(clock$);
+      } else {
+        const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
+                                     "Cannot load automatically: your browser " +
+                                     "falsely announced having loaded the content.");
+        return waitUntilPlayable(clock$)
+          .pipe(startWith(EVENTS.warning(error)));
+      }
+    }),
+
+    mergeMap((evt) : Observable<IInitialPlayEvent> => {
+      if (evt !== undefined) {
+        return observableOf(evt);
+      }
+      log.info("Init: Can begin to play content");
+      if (!mustAutoPlay) {
+        if (mediaElement.autoplay) {
+          log.warn("Init: autoplay is enabled on HTML media element. " +
+                   "Media will play as soon as possible.");
+        }
+        return observableOf({ type: "skipped" as const });
+      }
+      return autoPlay(mediaElement).pipe(mergeMap((autoplayEvt) => {
+        if (autoplayEvt === "autoplay") {
+          return observableOf({ type: "autoplay" as const });
+        } else {
+          const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
+                                       "Cannot trigger auto-play automatically: " +
+                                       "your browser does not allow it.");
+          return observableConcat(
+            observableOf(EVENTS.warning(error)),
+            observableOf({ type: "autoplay-blocked" as const })
+          );
+        }
+      }));
     }),
     shareReplay({ refCount: true })
   );
 
-  return { seek$, load$ };
+  return { seek$, play$ };
 }

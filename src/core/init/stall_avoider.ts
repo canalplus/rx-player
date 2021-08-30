@@ -20,7 +20,6 @@ import {
   scan,
   withLatestFrom,
 } from "rxjs/operators";
-import { isPlaybackStuck } from "../../compat";
 import isSeekingApproximate from "../../compat/is_seeking_approximate";
 import config from "../../config";
 import { MediaError } from "../../errors";
@@ -39,7 +38,10 @@ import {
 } from "./types";
 
 const { BUFFER_DISCONTINUITY_THRESHOLD,
-        FORCE_DISCONTINUITY_SEEK_DELAY } = config;
+        FORCE_DISCONTINUITY_SEEK_DELAY,
+        FREEZING_STALLED_DELAY,
+        UNFREEZING_SEEK_DELAY,
+        UNFREEZING_DELTA_POSITION } = config;
 
 /**
  * Work-around rounding errors with floating points by setting an acceptable,
@@ -106,7 +108,7 @@ interface IDiscontinuityStoredInfo {
 
 /**
  * Monitor situations where playback is stalled and try to get out of those.
- * Emit "stalled" then "unstalled" respectably when an unavoidable stall is
+ * Emit "stalled" then "unstalled" respectively when an unavoidable stall is
  * encountered and exited.
  * @param {Observable} clock$ - Observable emitting the current playback
  * conditions.
@@ -120,7 +122,7 @@ interface IDiscontinuityStoredInfo {
 export default function StallAvoider(
   clock$: Observable<IInitClockTick>,
   mediaElement : HTMLMediaElement,
-  manifest: Manifest,
+  manifest: Manifest | null,
   discontinuityUpdate$: Observable<IDiscontinuityEvent>,
   setCurrentTime: (nb: number) => void
 ) : Observable<IStalledEvent | IUnstalledEvent | IWarningEvent> {
@@ -164,11 +166,45 @@ export default function StallAvoider(
    */
   let ignoredStallTimeStamp : number | null = null;
 
+  let prevFreezingState : { attemptTimestamp : number } | null;
+
   return clock$.pipe(
     withLatestFrom(discontinuitiesStore$),
     map(([tick, discontinuitiesStore]) => {
-      const { buffered, currentRange, position, event, stalled } = tick;
-      if (stalled === null) {
+      const { buffered,
+              position,
+              readyState,
+              rebuffering,
+              freezing } = tick;
+
+      if (freezing !== null) {
+        const now = performance.now();
+
+        const referenceTimestamp = prevFreezingState === null ?
+          freezing.timestamp :
+          prevFreezingState.attemptTimestamp;
+
+        if (now - referenceTimestamp > UNFREEZING_SEEK_DELAY) {
+          log.warn("Init: trying to seek to un-freeze player");
+          setCurrentTime(tick.getCurrentTime() + UNFREEZING_DELTA_POSITION);
+          prevFreezingState = { attemptTimestamp: now };
+        }
+
+        if (now - freezing.timestamp > FREEZING_STALLED_DELAY) {
+          return { type: "stalled" as const,
+                   value: "freezing" as const };
+        }
+      } else {
+        prevFreezingState = null;
+      }
+
+      if (rebuffering === null) {
+        if (readyState === 1) {
+          // With a readyState set to 1, we should still be not able to play,
+          // anounce that we're stalled due to an unknown "freezing" status.
+          return { type: "stalled" as const,
+                   value: "freezing" as const };
+        }
         return { type: "unstalled" as const,
                  value: null };
       }
@@ -185,15 +221,20 @@ export default function StallAvoider(
             now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY)
         {
           return { type: "stalled" as const,
-                   value: stalled };
+                   value: rebuffering.reason };
         }
         lastSeekingPosition = null;
       }
 
       ignoredStallTimeStamp = null;
 
+      if (manifest === null) {
+        return { type: "stalled" as const,
+                 value: rebuffering.reason };
+      }
+
       /** Position at which data is awaited. */
-      const { position: stalledPosition } = stalled;
+      const { position: stalledPosition } = rebuffering;
 
       if (stalledPosition !== null) {
         const skippableDiscontinuity = findSeekableDiscontinuity(discontinuitiesStore,
@@ -212,19 +253,6 @@ export default function StallAvoider(
                                                              realSeekTime));
           }
         }
-      }
-
-      // Is it a browser bug? -> force seek at the same current time
-      if (isPlaybackStuck(position,
-                          currentRange,
-                          event,
-                          stalled !== null)
-      ) {
-        log.warn("Init: After freeze seek", position, currentRange);
-        setCurrentTime(position);
-        return EVENTS.warning(generateDiscontinuityError(position,
-                                                         position));
-
       }
 
       const freezePosition = stalledPosition ?? position;
@@ -266,7 +294,7 @@ export default function StallAvoider(
       }
 
       return { type: "stalled" as const,
-               value: stalled };
+               value: rebuffering.reason };
     }));
 }
 
