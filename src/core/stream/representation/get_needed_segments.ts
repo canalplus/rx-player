@@ -124,16 +124,18 @@ export default function getNeededSegments({
                                                            consideredSegments[i + 1];
 
       let lazySegmentHistory : IBufferedHistoryEntry[] | null = null;
-      if (isStartGarbageCollected(currentSeg, prevSeg, neededRange.start)) {
+      if (doesStartSeemGarbageCollected(currentSeg, prevSeg, neededRange.start)) {
         lazySegmentHistory = getBufferedHistory(currentSeg.infos);
-        if (shouldReloadSegmentGCedAtTheStart(lazySegmentHistory)) {
+        if (shouldReloadSegmentGCedAtTheStart(lazySegmentHistory,
+                                              currentSeg.bufferedStart)) {
           return false;
         }
         log.debug("Stream: skipping segment gc-ed at the start", currentSeg);
       }
-      if (isEndGarbageCollected(currentSeg, nextSeg, neededRange.start)) {
+      if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.start)) {
         lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
-        if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory)) {
+        if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory,
+                                            currentSeg.bufferedEnd)) {
           return false;
         }
         log.debug("Stream: skipping segment gc-ed at the end", currentSeg);
@@ -321,7 +323,7 @@ function canFastSwitch(
  * If `currentSeg` has only been garbage collected for some data which is before
  * that time, we will return `false`.
  */
-function isStartGarbageCollected(
+function doesStartSeemGarbageCollected(
   currentSeg : IBufferedChunk,
   prevSeg : IBufferedChunk | null,
   maximumStartTime : number
@@ -363,7 +365,7 @@ function isStartGarbageCollected(
  * If `currentSeg` has only been garbage collected for some data which is after
  * that time, we will return `false`.
  */
-function isEndGarbageCollected(
+function doesEndSeemGarbageCollected(
   currentSeg : IBufferedChunk,
   nextSeg : IBufferedChunk | null,
   minimumEndTime : number
@@ -393,60 +395,94 @@ function isEndGarbageCollected(
 }
 
 /**
- * Returns `true` if a segment that has been garbage-coolected at the start
+ * Returns `true` if a segment that has been garbage-collected at the start
  * might profit from being re-loaded.
  *
  * Returns `false` if we have a high chance of staying in the same situation
  * after re-loading the segment.
  *
  * This function takes in argument the entries of a SegmentBuffer's history
- * related to the corresponding asegment and check if the segment appeared
+ * related to the corresponding segment and check if the segment appeared
  * garbage-collected at the start directly after the last few times it was
  * pushed, indicating that the issue might be sourced at a browser issue instead
  * of classical garbage collection.
  *
  * @param {Array.<Object>} segmentEntries
+ * @param {number|undefined} currentBufferedStart
  * @returns {boolean}
  */
 function shouldReloadSegmentGCedAtTheStart(
-  segmentEntries : IBufferedHistoryEntry[]
+  segmentEntries : IBufferedHistoryEntry[],
+  currentBufferedStart : number | undefined
 ) : boolean {
-  let prevSegmentBufferStart : IBufferedHistoryEntry | null = null;
+  let prevSegEntry : IBufferedHistoryEntry | null = null;
   for (let entryIdx = segmentEntries.length - 1; entryIdx >= 0; entryIdx--) {
     const entry = segmentEntries[entryIdx];
-    if (prevSegmentBufferStart !== null) {
-      const prevBufferedStart = prevSegmentBufferStart.bufferedStart;
+
+    if (prevSegEntry !== null) {
+      // Compare `bufferedStart` from the last time this segment was pushed
+      // (`entry.bufferedStart`) to the previous time it was pushed
+      // (`prevSegEntry.bufferedStart`).
+      //
+      // If in both cases, we notice that their initial `bufferedStart` are close,
+      // it means that in recent history the same segment has been accused to be
+      // garbage collected two times at roughly the same positions just after being
+      // pushed.
+      // This is very unlikely and might be linked to either a content or browser
+      // issue. In that case, don't try to reload.
+      const prevBufferedStart = prevSegEntry.bufferedStart;
       if (Math.abs(prevBufferedStart - entry.bufferedStart) <= 0.01) {
         return false;
       }
     } else {
-      prevSegmentBufferStart = entry;
+      prevSegEntry = entry;
+
+      // If the current segment's buffered start is much higher than what it
+      // initially was when we pushed it, the segment has a very high chance of
+      // having been truly garbage-collected.
+      if (currentBufferedStart !== undefined &&
+          currentBufferedStart - entry.bufferedStart > 0.05)
+      {
+        return true;
+      }
     }
   }
   return true;
 }
 
 /**
- * Returns `true` if a segment that has been garbage-coolected at the end
+ * Returns `true` if a segment that has been garbage-collected at the end
  * might profit from being re-loaded.
  *
  * Returns `false` if we have a high chance of staying in the same situation
  * after re-loading the segment.
  *
  * This function takes in argument the entries of a SegmentBuffer's history
- * related to the corresponding asegment and check if the segment appeared
+ * related to the corresponding segment and check if the segment appeared
  * garbage-collected at the end directly after the last few times it was
  * pushed, indicating that the issue might be sourced at a browser issue instead
  * of classical garbage collection.
  *
  * @param {Array.<Object>} segmentEntries
+ * @param {number|undefined} currentBufferedStart
  * @returns {boolean}
  */
 function shouldReloadSegmentGCedAtTheEnd(
-  segmentEntries : IBufferedHistoryEntry[]
+  segmentEntries : IBufferedHistoryEntry[],
+  currentBufferedEnd : number | undefined
 ) : boolean {
   let prevSegmentBufferEnd : IBufferedHistoryEntry | null = null;
   for (let entryIdx = segmentEntries.length - 1; entryIdx >= 0; entryIdx--) {
+    // Compare `bufferedEnd` from the last time this segment was pushed
+    // (`entry.bufferedEnd`) to the previous time it was pushed
+    // (`prevSegEntry.bufferedEnd`).
+    //
+    // If in both cases, we notice that their initial `bufferedEnd` are close,
+    // it means that in recent history the same segment has been accused to be
+    // garbage collected two times at roughly the same positions just after being
+    // pushed.
+    // This is very unlikely and might be linked to either a content or browser
+    // issue. In that case, don't try to reload.
     const entry = segmentEntries[entryIdx];
     if (prevSegmentBufferEnd !== null) {
       const prevBufferedEnd = prevSegmentBufferEnd.bufferedEnd;
@@ -455,6 +491,15 @@ function shouldReloadSegmentGCedAtTheEnd(
       }
     } else {
       prevSegmentBufferEnd = entry;
+
+      // If the current segment's buffered end is much lower than what it
+      // initially was when we pushed it, the segment has a very high chance of
+      // having been truly garbage-collected.
+      if (currentBufferedEnd !== undefined &&
+          entry.bufferedEnd - currentBufferedEnd > 0.05)
+      {
+        return true;
+      }
     }
   }
   return true;
