@@ -344,21 +344,33 @@ export interface INeedsMediaSourceReload {
      * If `false`, we want to stay in a paused state at that point.
      */
     autoPlay : boolean;
+  };
+}
 
-    /**
-     * A `INeedsMediaSourceReload` is an event sent by a Stream (e.g. a
-     * `PeriodStream`, `AdaptationStream` or `RepresentationStream`) which is
-     * linked to a given `Period` in the `Manifest`.
-     *
-     * This property indicates the linked Period in question.
-     *
-     * This property is used internally by the Stream to filter out
-     * `INeedsMediaSourceReload` until the corresponding Period is the active
-     * one. Without it, we might reload the MediaSource too soon.
-     *
-     * Outside of the Stream's code, you probably don't need this information.
-     */
+/**
+ * The stream is unable to load segments for a particular Period and buffer
+ * type until that Period becomes the currently-played Period.
+ *
+ * This might be the case for example when a track change happened for an
+ * upcoming Period, which necessitates the reloading of the media source -
+ * through a `INeedsMediaSourceReload` event once the Period is the current one.
+ * Here, the stream might stay in a locked mode for segments linked to that
+ * Period and buffer type, meaning it will not load any such segment until that
+ * next Period becomes the current one (in which case it will probably ask to
+ * reload).
+ *
+ * This event can be useful when investigating rebuffering situation: one might
+ * be due to the next Period not loading segment of a certain type because of a
+ * locked stream. In that case, playing until or seeking at the start of the
+ * corresponding Period should be enough to "unlock" the stream.
+ */
+export interface ILockedStreamEvent {
+  type : "locked-stream";
+  value : {
+    /** Period concerned. */
     period : Period;
+    /** Buffer type concerned. */
+    bufferType : IBufferType;
   };
 }
 
@@ -419,6 +431,7 @@ export type IAdaptationStreamEvent = IBitrateEstimationChangeEvent |
                                      INeedsDecipherabilityFlush |
                                      IRepresentationChangeEvent |
                                      INeedsBufferFlushEvent |
+                                     ILockedStreamEvent |
 
                                      // From a RepresentationStream
 
@@ -434,6 +447,7 @@ export type IAdaptationStreamEvent = IBitrateEstimationChangeEvent |
 export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
                                  INeedsMediaSourceReload |
                                  IAdaptationChangeEvent |
+                                 ILockedStreamEvent |
 
                                  // From an AdaptationStream
 
@@ -463,6 +477,7 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
                                           INeedsMediaSourceReload |
                                           INeedsBufferFlushEvent |
                                           IAdaptationChangeEvent |
+                                          ILockedStreamEvent |
 
                                           // From an AdaptationStream
 
@@ -493,6 +508,7 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
 
                                        IPeriodStreamReadyEvent |
                                        IAdaptationChangeEvent |
+                                       ILockedStreamEvent |
 
                                        // From an AdaptationStream
 

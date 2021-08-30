@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
 import {
+  Observable,
+  merge as observableMerge,
+} from "rxjs";
+import {
+  ignoreElements,
   map,
   scan,
+  tap,
   withLatestFrom,
 } from "rxjs/operators";
 import isSeekingApproximate from "../../compat/is_seeking_approximate";
@@ -48,6 +53,13 @@ const { BUFFER_DISCONTINUITY_THRESHOLD,
  * very short, deviation when checking equalities.
  */
 const EPSILON = 1 / 60;
+
+export interface ILockedStreamEvent {
+  /** Buffer type for which no segment will currently load. */
+  bufferType : IBufferType;
+  /** Period for which no segment will currently load. */
+  period : Period;
+}
 
 /**
  * Event indicating that a discontinuity has been found.
@@ -117,6 +129,7 @@ interface IDiscontinuityStoredInfo {
  * @param {Object} manifest - The Manifest of the currently-played content.
  * @param {Observable} discontinuityUpdate$ - Observable emitting encountered
  * discontinuities for loaded Period and buffer types.
+ * @param {Function} setCurrentTime
  * @returns {Observable}
  */
 export default function StallAvoider(
@@ -124,6 +137,7 @@ export default function StallAvoider(
   mediaElement : HTMLMediaElement,
   manifest: Manifest | null,
   discontinuityUpdate$: Observable<IDiscontinuityEvent>,
+  lockedStream$ : Observable<ILockedStreamEvent>,
   setCurrentTime: (nb: number) => void
 ) : Observable<IStalledEvent | IUnstalledEvent | IWarningEvent> {
   const initialDiscontinuitiesStore : IDiscontinuityStoredInfo[] = [];
@@ -168,7 +182,39 @@ export default function StallAvoider(
 
   let prevFreezingState : { attemptTimestamp : number } | null;
 
-  return clock$.pipe(
+  /**
+   * If we're rebuffering waiting on data of a "locked stream", seek into the
+   * Period handled by that stream to unlock the situation.
+   */
+  const unlock$ = lockedStream$.pipe(
+    withLatestFrom(clock$),
+    tap(([lockedStreamEvt, tick]) => {
+      // TODO(PaulB) also skip when the user's wanted speed is set to `0`, as we
+      // might not want to seek in that case?
+      if (
+        !tick.rebuffering ||
+        tick.paused || (
+          lockedStreamEvt.bufferType !== "audio" &&
+          lockedStreamEvt.bufferType !== "video"
+        )
+      ) {
+        return;
+      }
+      const currPos = tick.position;
+      const rebufferingPos = tick.rebuffering.position ?? currPos;
+      const lckdPeriodStart = lockedStreamEvt.period.start;
+      if (currPos < lckdPeriodStart &&
+          Math.abs(rebufferingPos - lckdPeriodStart) < 1)
+      {
+        log.warn("Init: rebuffering because of a future locked stream.\n" +
+                 "Trying to unlock by seeking to the next Period");
+        setCurrentTime(lckdPeriodStart + 0.001);
+      }
+    }),
+    ignoreElements()
+  );
+
+  const stall$ = clock$.pipe(
     withLatestFrom(discontinuitiesStore$),
     map(([tick, discontinuitiesStore]) => {
       const { buffered,
@@ -176,7 +222,6 @@ export default function StallAvoider(
               readyState,
               rebuffering,
               freezing } = tick;
-
       if (freezing !== null) {
         const now = performance.now();
 
@@ -296,6 +341,7 @@ export default function StallAvoider(
       return { type: "stalled" as const,
                value: rebuffering.reason };
     }));
+  return observableMerge(unlock$, stall$);
 }
 
 /**

@@ -46,6 +46,7 @@ import { maintainEndOfStream } from "./end_of_stream";
 import initialSeekAndPlay from "./initial_seek_and_play";
 import StallAvoider, {
   IDiscontinuityEvent,
+  ILockedStreamEvent,
 } from "./stall_avoider";
 import streamEventsEmitter from "./stream_events_emitter";
 import {
@@ -145,6 +146,9 @@ export default function createMediaSourceLoader(
     /** Emits discontinuities detected by the StreamOrchestrator. */
     const discontinuityUpdate$ = new Subject<IDiscontinuityEvent>();
 
+    /** Emits event when streams are "locked", meaning they cannot load segments. */
+    const lockedStream$ = new Subject<ILockedStreamEvent>();
+
     // Creates Observable which will manage every Stream for the given Content.
     const streams$ = StreamOrchestrator({ manifest, initialPeriod },
                                         streamClock$,
@@ -171,6 +175,9 @@ export default function createMediaSourceLoader(
                                         discontinuity: imminentDiscontinuity,
                                         position });
             return EMPTY;
+          case "locked-stream":
+            lockedStream$.next(evt.value);
+            return EMPTY;
           default:
             return observableOf(evt);
         }
@@ -194,6 +201,7 @@ export default function createMediaSourceLoader(
                                        mediaElement,
                                        manifest,
                                        discontinuityUpdate$,
+                                       lockedStream$,
                                        setCurrentTime);
 
     /**

@@ -237,16 +237,6 @@ export default function StreamOrchestrator(
           null
         >((message) => {
           switch (message.type) {
-            case "needs-media-source-reload":
-              // Only reload the MediaSource when the more immediately required
-              // Period is the one asking for it
-              const firstPeriod = periodList.head();
-              if (firstPeriod === undefined ||
-                  firstPeriod.id !== message.value.period.id)
-              {
-                return null;
-              }
-              break;
             case "periodStreamReady":
               enableOutOfBoundsCheck = true;
               periodList.add(message.value.period);
