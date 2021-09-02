@@ -18,12 +18,10 @@ import {
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
-  Observable,
-} from "rxjs";
-import {
   mergeMap,
+  Observable,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 
 /**
  * Same as concatMap, but get last emitted value from source instead of unstack

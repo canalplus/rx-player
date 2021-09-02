@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import {
+  map,
+  Observable,
+} from "rxjs";
 import log from "../../log";
 import getBufferLevels from "./get_buffer_levels";
 import getEstimateFromBufferLevels, {

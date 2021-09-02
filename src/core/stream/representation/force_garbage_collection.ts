@@ -15,14 +15,12 @@
  */
 
 import {
-  from as observableFrom,
-  Observable,
-} from "rxjs";
-import {
   concatAll,
+  from as observableFrom,
   mergeMap,
+  Observable,
   take,
-} from "rxjs/operators";
+} from "rxjs";
 import config from "../../../config";
 import log from "../../../log";
 import { getInnerAndOuterTimeRanges } from "../../../utils/ranges";

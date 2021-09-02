@@ -17,8 +17,8 @@
 import {
   merge as observableMerge,
   Subject,
+  takeUntil,
 } from "rxjs";
-import { takeUntil } from "rxjs/operators";
 import { base64ToBytes } from "../../../utils/base64";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";

@@ -15,16 +15,14 @@
  */
 
 import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   filter,
   mapTo,
   mergeMap,
+  Observable,
+  of as observableOf,
   startWith,
   take,
-} from "rxjs/operators";
+} from "rxjs";
 import log from "../../log";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import createSharedReference from "../../utils/reference";

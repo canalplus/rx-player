@@ -27,12 +27,9 @@ import {
   EMPTY,
   of as observableOf,
   Subject,
-  // throwError as observableThrow,
-} from "rxjs";
-import {
   take,
   takeUntil,
-} from "rxjs/operators";
+} from "rxjs";
 import {
   MediaKeysImpl,
   MediaKeySystemAccessImpl,

@@ -16,15 +16,13 @@
 
 import {
   defer as observableDefer,
+  distinctUntilChanged,
   interval as observableInterval,
+  map,
   Observable,
   Observer,
-} from "rxjs";
-import {
-  distinctUntilChanged,
-  map,
   startWith,
-} from "rxjs/operators";
+} from "rxjs";
 import log from "../log";
 import isNode from "./is_node";
 

@@ -15,16 +15,14 @@
  */
 
 import {
-  Observable,
-  merge as observableMerge,
-} from "rxjs";
-import {
   ignoreElements,
   map,
+  merge as observableMerge,
+  Observable,
   scan,
   tap,
   withLatestFrom,
-} from "rxjs/operators";
+} from "rxjs";
 import isSeekingApproximate from "../../compat/is_seeking_approximate";
 import config from "../../config";
 import { MediaError } from "../../errors";

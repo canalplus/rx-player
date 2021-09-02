@@ -16,21 +16,19 @@
 
 import pinkie from "pinkie";
 import {
-  combineLatest,
-  lastValueFrom,
-  merge as observableMerge,
-  race as observableRace,
-  Subject,
-} from "rxjs";
-import {
   catchError,
+  combineLatest,
   finalize,
   ignoreElements,
+  lastValueFrom,
   map,
+  merge as observableMerge,
   mergeMap,
+  race as observableRace,
+  Subject,
   take,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import Player from "../../../core/api";
 import createSegmentFetcher, {
   ISegmentFetcher,

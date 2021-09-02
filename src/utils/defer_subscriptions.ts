@@ -17,8 +17,8 @@
 import {
   asapScheduler,
   Observable,
+  subscribeOn,
 } from "rxjs";
-import { subscribeOn } from "rxjs/operators";
 
 /**
  * At subscription, instead of "running" the Observable right away, wait until

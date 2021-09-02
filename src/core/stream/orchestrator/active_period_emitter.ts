@@ -15,15 +15,13 @@
  */
 
 import {
-  merge as observableMerge,
-  Observable,
-} from "rxjs";
-import {
   distinctUntilChanged,
   filter,
   map,
+  merge as observableMerge,
+  Observable,
   scan,
-} from "rxjs/operators";
+} from "rxjs";
 import { Period } from "../../../manifest";
 import { IBufferType } from "../../segment_buffers";
 import { IStreamOrchestratorEvent } from "../types";

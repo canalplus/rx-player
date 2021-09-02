@@ -16,19 +16,17 @@
 
 import {
   concat as observableConcat,
+  concatMap,
   interval,
+  mapTo,
   merge as observableMerge,
   Observable,
-  of as observableOf,
   Subject,
-  timer,
-} from "rxjs";
-import {
-  concatMap,
-  mapTo,
+  of as observableOf,
   take,
   tap,
-} from "rxjs/operators";
+  timer,
+} from "rxjs";
 import concatMapLatest from "../concat_map_latest";
 
 describe("utils - concatMapLatest", () => {

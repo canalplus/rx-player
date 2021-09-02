@@ -17,13 +17,11 @@
 import {
   concat as observableConcat,
   defer as observableDefer,
+  map,
+  mergeMap,
   Observable,
   of as observableOf,
 } from "rxjs";
-import {
-  map,
-  mergeMap,
-} from "rxjs/operators";
 import { ICustomMediaKeySession } from "../../compat";
 import log from "../../log";
 import cleanOldLoadedSessions, {

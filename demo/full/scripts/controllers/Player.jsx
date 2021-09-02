@@ -4,8 +4,10 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Subject } from "rxjs";
-import { takeUntil } from "rxjs/operators";
+import {
+  Subject,
+  takeUntil,
+} from "rxjs";
 import { createModule } from "../lib/vespertine.js";
 import PlayerModule from "../modules/player";
 import ControlBar from "./ControlBar.jsx";

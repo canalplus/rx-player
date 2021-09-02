@@ -25,11 +25,9 @@
 
 import {
   EMPTY,
-  // of as observableOf,
   Subject,
-  // throwError as observableThrow,
+  takeUntil,
 } from "rxjs";
-import { takeUntil } from "rxjs/operators";
 import { IEncryptedEventData } from "../../../../compat/eme";
 import { IContentProtection } from "../../types";
 import {

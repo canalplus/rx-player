@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import {
+  map,
+  Observable,
+} from "rxjs";
 import openMediaSource from "../../../core/init/create_media_source";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 

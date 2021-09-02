@@ -18,25 +18,23 @@ import {
   combineLatest,
   concat as observableConcat,
   defer as observableDefer,
-  EMPTY,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-  Subject,
-} from "rxjs";
-import {
   distinctUntilChanged,
+  EMPTY,
   exhaustMap,
   filter,
   ignoreElements,
   map,
+  merge as observableMerge,
   mergeMap,
+  Observable,
+  of as observableOf,
   share,
   startWith,
+  Subject,
   take,
   takeUntil,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";

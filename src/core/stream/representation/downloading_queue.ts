@@ -17,21 +17,19 @@
 import {
   concat as observableConcat,
   defer as observableDefer,
-  Observable,
-  of as observableOf,
-  merge as observableMerge,
   EMPTY,
-  ReplaySubject,
-} from "rxjs";
-import {
   filter,
   finalize,
   map,
+  merge as observableMerge,
   mergeMap,
+  Observable,
+  of as observableOf,
+  ReplaySubject,
   share,
   switchMap,
   take,
-} from "rxjs/operators";
+} from "rxjs";
 import { ICustomError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {

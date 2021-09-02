@@ -15,11 +15,11 @@
  */
 
 import {
+  map,
   merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
-import { map } from "rxjs/operators";
 import {
   events,
   hasEMEAPIs,

@@ -16,9 +16,9 @@
 
 import {
   combineLatest as observableCombineLatest,
+  map,
   Observable,
 } from "rxjs";
-import { map } from "rxjs/operators";
 import Manifest from "../../manifest";
 import { IReadOnlySharedReference } from "../../utils/reference";
 import { IStreamOrchestratorClockTick } from "../stream";
@@ -41,8 +41,7 @@ export interface IStreamClockArguments {
 
 /**
  * Create clock Observable for the `Stream` part of the code.
- * @param {Observable} initClock$
- * @param {Object} streamClockArgument
+ * @param {Observable} initClock$ @param {Object} streamClockArgument
  * @returns {Observable}
  */
 export default function createStreamClock(

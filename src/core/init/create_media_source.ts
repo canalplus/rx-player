@@ -15,14 +15,12 @@
  */
 
 import {
-  Observable,
-  Observer,
-} from "rxjs";
-import {
   mapTo,
   mergeMap,
+  Observable,
+  Observer,
   take,
-} from "rxjs/operators";
+} from "rxjs";
 import {
   clearElementSrc,
   events,

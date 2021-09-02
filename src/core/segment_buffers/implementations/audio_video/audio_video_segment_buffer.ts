@@ -20,11 +20,9 @@ import {
   Observable,
   Observer,
   Subject,
-} from "rxjs";
-import {
   takeUntil,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import {
   ICompatSourceBuffer,
   tryToChangeSourceBufferType,

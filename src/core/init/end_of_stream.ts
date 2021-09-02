@@ -17,17 +17,15 @@
 import {
   defer as observableDefer,
   merge as observableMerge,
+  mergeMap,
   Observable,
   of as observableOf,
   race as observableRace,
-} from "rxjs";
-import {
-  mergeMap,
   startWith,
   switchMap,
   take,
   takeLast,
-} from "rxjs/operators";
+} from "rxjs";
 import { events } from "../../compat";
 import log from "../../log";
 

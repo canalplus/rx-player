@@ -27,9 +27,9 @@ import {
   Observable,
   of as observableOf,
   Subject,
+  takeUntil,
   throwError as observableThrow,
 } from "rxjs";
-import { takeUntil } from "rxjs/operators";
 import { ICustomMediaKeySystemAccess } from "../../../../compat";
 import {
   defaultKSConfig,

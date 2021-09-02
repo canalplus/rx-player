@@ -1,15 +1,13 @@
 import {
+  distinctUntilChanged,
   EMPTY,
   interval as intervalObservable,
-} from "rxjs";
-import {
-  distinctUntilChanged,
   map,
   startWith,
   switchMap,
   takeUntil,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import fromPlayerEvent from "./fromPlayerEvent";
 
 const POSITION_UPDATES_INTERVAL = 100;

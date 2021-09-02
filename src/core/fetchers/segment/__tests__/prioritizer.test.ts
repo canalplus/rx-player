@@ -16,15 +16,13 @@
 
 import {
   defer,
+  mapTo,
   merge,
   NEVER,
   of,
+  startWith,
   timer,
 } from "rxjs";
-import {
-  mapTo,
-  startWith,
-} from "rxjs/operators";
 import Prioritizer, {
   ITaskEvent,
 } from "../prioritizer";

@@ -15,10 +15,10 @@
  */
 
 import {
+  map,
   Observable,
   throwError,
 } from "rxjs";
-import { map } from "rxjs/operators";
 import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import request from "../../../utils/request/xhr";

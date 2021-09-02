@@ -16,16 +16,14 @@
 
 import {
   defer as observableDefer,
+  mapTo,
+  mergeMap,
   Observable,
   of as observableOf,
   race as observableRace,
+  take,
   timer as observableTimer,
 } from "rxjs";
-import {
-  mapTo,
-  mergeMap,
-  take,
-} from "rxjs/operators";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
 import tryCatch from "../../utils/rx-try_catch";

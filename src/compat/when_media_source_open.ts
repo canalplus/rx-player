@@ -17,8 +17,8 @@
 import {
   Observable,
   of as observableOf,
+  take,
 } from "rxjs";
-import { take } from "rxjs/operators";
 import { onSourceOpen$ } from "./event_listeners";
 
 /**

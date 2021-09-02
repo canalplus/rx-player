@@ -15,10 +15,10 @@
  */
 
 import {
+  catchError,
   defer as observableDefer,
   Observable,
 } from "rxjs";
-import { catchError } from "rxjs/operators";
 import log from "../../log";
 import { getNextBoxOffsets } from "../../parsers/containers/isobmff";
 import {

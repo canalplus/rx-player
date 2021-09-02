@@ -15,15 +15,13 @@
  */
 
 import {
+  catchError,
   defer as observableDefer,
+  map,
   Observable,
   of as observableOf,
   throwError as observableThrow,
 } from "rxjs";
-import {
-  catchError,
-  map,
-} from "rxjs/operators";
 import {
   ICustomMediaKeySystemAccess,
   requestMediaKeySystemAccess,

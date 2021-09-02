@@ -23,8 +23,10 @@
 /* eslint-disable no-restricted-properties */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
-import { Subject } from "rxjs";
-import { takeUntil } from "rxjs/operators";
+import {
+  Subject,
+  takeUntil,
+} from "rxjs";
 import { IContentProtection } from "../../types";
 import {
   expectLicenseRequestMessage,

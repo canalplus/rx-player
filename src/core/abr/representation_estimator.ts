@@ -17,19 +17,17 @@
 import {
   combineLatest as observableCombineLatest,
   defer as observableDefer,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   filter,
   ignoreElements,
   map,
+  merge as observableMerge,
+  Observable,
+  of as observableOf,
   startWith,
   switchMap,
   tap,
   withLatestFrom,
-} from "rxjs/operators";
+} from "rxjs";
 import log from "../../log";
 import {
   Adaptation,

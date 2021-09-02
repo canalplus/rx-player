@@ -16,15 +16,13 @@
 
 import {
   combineLatest as observableCombineLatest,
+  concatAll,
   EMPTY,
   from as observableFrom,
-  Observable,
-} from "rxjs";
-import {
-  concatAll,
   ignoreElements,
   mergeMap,
-} from "rxjs/operators";
+  Observable,
+} from "rxjs";
 import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
 import { SegmentBuffer } from "./implementations";

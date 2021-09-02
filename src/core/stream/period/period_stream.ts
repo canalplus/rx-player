@@ -15,23 +15,21 @@
  */
 
 import {
+  catchError,
   concat as observableConcat,
   EMPTY,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-  ReplaySubject,
-} from "rxjs";
-import {
-  catchError,
   ignoreElements,
   map,
   mapTo,
+  merge as observableMerge,
   mergeMap,
+  Observable,
+  of as observableOf,
+  ReplaySubject,
   startWith,
   switchMap,
   take,
-} from "rxjs/operators";
+} from "rxjs";
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";

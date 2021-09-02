@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { timer } from "rxjs";
 import {
   mapTo,
   share,
   startWith,
-} from "rxjs/operators";
+  timer,
+} from "rxjs";
 import deferSubscriptions from "../defer_subscriptions";
 
 describe("utils - deferSubscriptions", () => {

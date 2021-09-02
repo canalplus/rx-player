@@ -23,9 +23,11 @@
 
 import {
   of as observableOf,
+  skip,
+  take,
+  tap,
   throwError,
 } from "rxjs";
-import { skip, take, tap } from "rxjs/operators";
 
 describe("core - eme - initMediaKeys", () => {
   beforeEach(() => {

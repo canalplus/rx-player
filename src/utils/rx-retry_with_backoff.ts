@@ -15,13 +15,11 @@
  */
 
 import {
+  catchError,
+  mergeMap,
   Observable,
   timer as observableTimer,
 } from "rxjs";
-import {
-  catchError,
-  mergeMap,
-} from "rxjs/operators";
 import { ICustomError } from "../errors";
 import getFuzzedDelay from "./get_fuzzed_delay";
 import isNullOrUndefined from "./is_null_or_undefined";

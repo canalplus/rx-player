@@ -15,16 +15,14 @@
  */
 
 import {
+  catchError,
+  map,
+  mergeMap,
   Observable,
   of as observableOf,
   race as observableRace,
   timer as observableTimer,
 } from "rxjs";
-import {
-  catchError,
-  map,
-  mergeMap,
-} from "rxjs/operators";
 import castToObservable from "../../utils/cast_to_observable";
 import { ICustomMediaKeySession } from "./custom_media_keys";
 

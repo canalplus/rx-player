@@ -15,16 +15,14 @@
  */
 
 import {
-  merge as observableMerge,
   Observable,
-  of as observableOf,
   Subject,
-} from "rxjs";
-import {
   distinctUntilChanged,
   map,
+  merge as observableMerge,
+  of as observableOf,
   switchMap,
-} from "rxjs/operators";
+} from "rxjs";
 import { MediaError } from "../../../errors";
 import Manifest, {
   Adaptation,

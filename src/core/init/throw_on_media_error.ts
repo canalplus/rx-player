@@ -16,9 +16,9 @@
 
 import {
   fromEvent as observableFromEvent,
+  mergeMap,
   Observable,
 } from "rxjs";
-import { mergeMap } from "rxjs/operators";
 import { MediaError } from "../../errors";
 
 /**

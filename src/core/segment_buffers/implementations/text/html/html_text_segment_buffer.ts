@@ -18,17 +18,15 @@ import {
   concat as observableConcat,
   defer as observableDefer,
   interval as observableInterval,
+  mapTo,
   merge as observableMerge,
   Observable,
   of as observableOf,
-  Subject,
-} from "rxjs";
-import {
-  mapTo,
   startWith,
+  Subject,
   switchMapTo,
   takeUntil,
-} from "rxjs/operators";
+} from "rxjs";
 import {
   events,
   onHeightWidthChange,

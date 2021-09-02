@@ -20,24 +20,22 @@
  */
 
 import {
-  combineLatest as observableCombineLatest,
-  defer as observableDefer,
-  fromEvent as observableFromEvent,
-  interval as observableInterval,
-  merge as observableMerge,
   NEVER,
   Observable,
-  of as observableOf,
-} from "rxjs";
-import {
+  combineLatest as observableCombineLatest,
+  defer as observableDefer,
   delay,
   distinctUntilChanged,
+  fromEvent as observableFromEvent,
+  interval as observableInterval,
   map,
   mapTo,
+  merge as observableMerge,
+  of as observableOf,
   startWith,
   switchMap,
   throttleTime,
-} from "rxjs/operators";
+} from "rxjs";
 import config from "../config";
 import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";
