@@ -199,7 +199,11 @@ export default function SessionEventsListener(
     sessionWarningSubject$);
 
   return !isNullOrUndefined(session.closed) ?
-           sessionEvents.pipe(takeUntil(castToObservable(session.closed))) :
+           sessionEvents
+              // TODO There is a subtle TypeScript issue there that made casting
+              // to a type-compatible type mandatory. If a more elegant solution
+              // can be found, it should be preffered.
+             .pipe(takeUntil(castToObservable(session.closed as Promise<unknown>))) :
            sessionEvents;
 }
 

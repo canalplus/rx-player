@@ -22,6 +22,7 @@
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
+  Connectable,
   concat as observableConcat,
   connectable,
   EMPTY,
@@ -32,8 +33,6 @@ import {
   Subject,
   Subscription,
 } from "rxjs";
-// RxJS forgot to make that one more accessible it seems
-import { ConnectableObservableLike } from "rxjs/internal/observable/connectable";
 import {
   distinctUntilChanged,
   filter,
@@ -754,7 +753,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     });
 
     /** Emit playback events. */
-    let playback$ : ConnectableObservableLike<IInitEvent>;
+    let playback$ : Connectable<IInitEvent>;
 
     const speed$ = this._priv_speed$.pipe(distinctUntilChanged());
 

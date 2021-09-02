@@ -67,7 +67,6 @@ interface ICompatDocument extends Document {
   msExitFullscreen? : () => void;
   msFullscreenElement? : Element | null;
   msHidden? : boolean;
-  pictureInPictureElement? : HTMLElement | null | undefined;
   webkitExitFullscreen : () => void;
   webkitFullscreenElement : Element | null;
   webkitHidden? : boolean;
