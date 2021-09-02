@@ -46,10 +46,11 @@ this event to then communicate it back to the user.
 
 To facilitate those actions, the API relies on multiple building blocks:
 
-  - __the `Clock` (./clock.ts)__
+  - __the `PlaybackObserver` (./playback_observer.ts)__
 
-    Provide an Observable emitting regularly the current playback conditions for
-    the Player. Many RxPlayer modules rely on that clock.
+    Provide multiple methods allowing to monitor the current playback conditions
+    (e.g. the current position and/or the current playback rate).
+    Many RxPlayer modules rely on this PlaybackObserver.
 
 
   - __the `TrackChoiceManager` (./track_choice_manager.ts)__

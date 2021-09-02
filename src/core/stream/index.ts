@@ -15,13 +15,13 @@
  */
 
 import StreamOrchestrator, {
-  IStreamOrchestratorClockTick,
   IStreamOrchestratorOptions,
+  IStreamOrchestratorPlaybackObservation,
 } from "./orchestrator";
 export * from "./types";
 
 export default StreamOrchestrator;
 export {
-  IStreamOrchestratorClockTick,
+  IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorOptions,
 };

@@ -24,32 +24,30 @@ import {
   shouldWaitForDataBeforeLoaded,
 } from "../../compat";
 import filterMap from "../../utils/filter_map";
+import { IPlaybackObservation } from "../api";
 import SegmentBuffersStore from "../segment_buffers";
 import EVENTS from "./events_generators";
-import {
-  IInitClockTick,
-  ILoadedEvent,
-} from "./types";
+import { ILoadedEvent } from "./types";
 
 /**
  * Emit a `ILoadedEvent` once the content can be considered as loaded.
- * @param {Observable} clock$
+ * @param {Observable} observation$
  * @param {HTMLMediaElement} mediaElement
  * @param {Object|null} segmentBuffersStore
  * @param {boolean} isDirectfile - `true` if this is a directfile content
  * @returns {Observable}
  */
 export default function emitLoadedEvent(
-  clock$ : Observable<IInitClockTick>,
+  observation$ : Observable<IPlaybackObservation>,
   mediaElement : HTMLMediaElement,
   segmentBuffersStore : SegmentBuffersStore | null,
   isDirectfile : boolean
 ) : Observable<ILoadedEvent> {
-  return clock$.pipe(
-    filterMap<IInitClockTick, ILoadedEvent, null>((tick) => {
-      if (tick.rebuffering !== null ||
-          tick.freezing !== null ||
-          tick.readyState === 0)
+  return observation$.pipe(
+    filterMap<IPlaybackObservation, ILoadedEvent, null>((observation) => {
+      if (observation.rebuffering !== null ||
+          observation.freezing !== null ||
+          observation.readyState === 0)
       {
         return null;
       }
@@ -61,7 +59,7 @@ export default function emitLoadedEvent(
                                            null;
       }
 
-      if (tick.readyState >= 3 && tick.currentRange !== null) {
+      if (observation.readyState >= 3 && observation.currentRange !== null) {
         if (!shouldValidateMetadata() || mediaElement.duration > 0) {
           return EVENTS.loaded(segmentBuffersStore);
         }

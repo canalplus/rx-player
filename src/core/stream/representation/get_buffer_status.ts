@@ -20,6 +20,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   IBufferedChunk,
   IEndOfSegmentOperation,
@@ -71,7 +72,7 @@ export interface IBufferStatus {
  * be filled by any segment, even in the future.
  *
  * @param {Object} content
- * @param {Object} tick
+ * @param {Object} playbackInfo
  * @param {number|undefined} fastSwitchThreshold
  * @param {number} bufferGoal
  * @param {Object} segmentBuffer
@@ -82,10 +83,8 @@ export default function getBufferStatus(
              manifest : Manifest;
              period : Period;
              representation : Representation; },
-  tick : { position : number;
-           wantedTimeOffset: number;
-           liveGap? : number;
-           getCurrentTime() : number; },
+  wantedStartPosition : number,
+  playbackObserver : IReadOnlyPlaybackObserver<unknown>,
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
   segmentBuffer : SegmentBuffer
@@ -93,7 +92,6 @@ export default function getBufferStatus(
   const { period, representation } = content;
   segmentBuffer.synchronizeInventory();
 
-  const wantedStartPosition = tick.position + tick.wantedTimeOffset;
   const wantedEndPosition = wantedStartPosition + bufferGoal;
   const neededRange = { start: Math.max(wantedStartPosition, period.start),
                         end: Math.min(wantedEndPosition, period.end ?? Infinity) };
@@ -115,6 +113,7 @@ export default function getBufferStatus(
     getPlayableBufferedSegments({ start: Math.max(neededRange.start - 0.5, 0),
                                   end: neededRange.end + 0.5 },
                                 segmentBuffer.getInventory());
+  const currentPlaybackTime = playbackObserver.getCurrentTime();
 
   /** Callback allowing to retrieve a segment's history in the buffer. */
   const getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
@@ -122,12 +121,12 @@ export default function getBufferStatus(
   /** List of segments we will need to download. */
   const neededSegments = getNeededSegments({ content,
                                              bufferedSegments,
-                                             currentPlaybackTime: tick.getCurrentTime(),
+                                             currentPlaybackTime,
                                              fastSwitchThreshold,
                                              getBufferedHistory,
                                              neededRange,
                                              segmentsBeingPushed })
-    .map((segment) => ({ priority: getSegmentPriority(segment.time, tick),
+    .map((segment) => ({ priority: getSegmentPriority(segment.time, wantedStartPosition),
                          segment }));
 
   /**

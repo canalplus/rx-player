@@ -111,9 +111,6 @@ import SegmentBuffersStore, {
   IBufferType,
 } from "../segment_buffers";
 import { IInbandEvent } from "../stream";
-import createClock, {
-  IClockTick,
-} from "./clock";
 import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
   IPlayerState,
@@ -128,6 +125,9 @@ import {
   parseConstructorOptions,
   parseLoadVideoOptions,
 } from "./option_utils";
+import PlaybackObserver, {
+  IPlaybackObservation,
+} from "./playback_observer";
 import TrackChoiceManager, {
   IAudioTrackPreference,
   ITextTrackPreference,
@@ -746,16 +746,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
 
     const videoElement = this.videoElement;
-    /** Global "clock" used for content playback */
-    const { setCurrentTime, clock$ } = createClock(videoElement, {
+
+    /** Global "playback observer" which will emit playback conditions */
+    const playbackObserver = new PlaybackObserver(videoElement, {
       withMediaSource: !isDirectFile,
       lowLatencyMode,
     });
 
     /** Emit playback events. */
     let playback$ : Connectable<IInitEvent>;
-
-    const speed$ = this._priv_speed.asObservable().pipe(distinctUntilChanged());
 
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
@@ -887,7 +886,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const init$ = initializeMediaSourcePlayback({ adaptiveOptions,
                                                     autoPlay,
                                                     bufferOptions,
-                                                    clock$,
+                                                    playbackObserver,
                                                     keySystems,
                                                     lowLatencyMode,
                                                     manifest$,
@@ -895,8 +894,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     mediaElement: videoElement,
                                                     minimumManifestUpdateInterval,
                                                     segmentFetcherCreator,
-                                                    setCurrentTime,
-                                                    speed$,
+                                                    speed: this._priv_speed,
                                                     startAt,
                                                     textTrackOptions })
         .pipe(takeUntil(stopContent$));
@@ -970,12 +968,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       const directfileInit$ =
         features.directfile.initDirectFile({ autoPlay,
-                                             clock$,
                                              keySystems,
                                              mediaElement: videoElement,
-                                             speed$,
+                                             speed: this._priv_speed,
+                                             playbackObserver,
                                              startAt,
-                                             setCurrentTime,
                                              url })
           .pipe(takeUntil(stopContent$));
 
@@ -1068,14 +1065,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       .pipe(takeUntil(stopContent$))
       .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"));
 
-    // Link "positionUpdate" events to the clock
-    clock$
+    const observation$ = playbackObserver.observe(true);
+
+    // Link "positionUpdate" events to the PlaybackObserver
+    observation$
       .pipe(takeUntil(stopContent$))
-      .subscribe(x => this._priv_triggerPositionUpdate(x));
+      .subscribe(o => this._priv_triggerPositionUpdate(o));
 
     // Link "seeking" and "seeked" events (once the content is loaded)
     loaded$.pipe(
-      switchMapTo(emitSeekEvents(this.videoElement, clock$)),
+      switchMapTo(emitSeekEvents(this.videoElement, observation$)),
       takeUntil(stopContent$)
     ).subscribe((evt : "seeking" | "seeked") => {
       log.info(`API: Triggering "${evt}" event`);
@@ -2881,13 +2880,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each time a new clock tick object is emitted.
+   * Triggered each time a playback observation.
    *
    * Trigger the right Player Event
    *
-   * @param {Object} clockTick
+   * @param {Object} observation
    */
-  private _priv_triggerPositionUpdate(clockTick : IClockTick) : void {
+  private _priv_triggerPositionUpdate(observation : IPlaybackObservation) : void {
     if (this._priv_contentInfos === null) {
       log.warn("API: Cannot perform time update: no content loaded.");
       return;
@@ -2898,33 +2897,33 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
-    if ((!isDirectFile && manifest === null) || isNullOrUndefined(clockTick)) {
+    if ((!isDirectFile && manifest === null) || isNullOrUndefined(observation)) {
       return;
     }
 
-    this._priv_lastContentPlaybackInfos.lastPlaybackPosition = clockTick.position;
+    this._priv_lastContentPlaybackInfos.lastPlaybackPosition = observation.position;
 
     const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :
                                                 undefined;
     const positionData : IPositionUpdateItem = {
-      position: clockTick.position,
-      duration: clockTick.duration,
-      playbackRate: clockTick.playbackRate,
+      position: observation.position,
+      duration: observation.duration,
+      playbackRate: observation.playbackRate,
       maximumBufferTime: maximumPosition,
 
       // TODO fix higher up?
-      bufferGap: isFinite(clockTick.bufferGap) ? clockTick.bufferGap :
+      bufferGap: isFinite(observation.bufferGap) ? observation.bufferGap :
                                                  0,
     };
 
     if (manifest !== null &&
         maximumPosition !== undefined &&
         manifest.isLive &&
-        clockTick.position > 0
+        observation.position > 0
     ) {
       const ast = manifest.availabilityStartTime ?? 0;
-      positionData.wallClockTime = clockTick.position + ast;
-      positionData.liveGap = maximumPosition - clockTick.position;
+      positionData.wallClockTime = observation.position + ast;
+      positionData.liveGap = maximumPosition - observation.position;
     }
 
     this.trigger("positionUpdate", positionData);

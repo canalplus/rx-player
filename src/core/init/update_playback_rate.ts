@@ -25,7 +25,8 @@ import {
   tap,
 } from "rxjs";
 import log from "../../log";
-import { IInitClockTick } from "./types";
+import { IReadOnlySharedReference } from "../../utils/reference";
+import { IPlaybackObservation } from "../api";
 
 export interface IPlaybackRateOptions { pauseWhenRebuffering? : boolean }
 
@@ -35,18 +36,18 @@ export interface IPlaybackRateOptions { pauseWhenRebuffering? : boolean }
  * rebuffering and restore the speed once it appears to exit rebuffering status.
  *
  * @param {HTMLMediaElement} mediaElement
- * @param {Observable} speed$ - emit speed set by the user
- * @param {Observable} clock$ - Current playback conditions
+ * @param {Observable} speed - last speed set by the user
+ * @param {Observable} observation$ - Current playback conditions
  * @returns {Observable}
  */
 export default function updatePlaybackRate(
   mediaElement : HTMLMediaElement,
-  speed$ : Observable<number>,
-  clock$ : Observable<IInitClockTick>
+  speed : IReadOnlySharedReference<number>,
+  observation$ : Observable<IPlaybackObservation>
 ) : Observable<number> {
-  const forcePause$ = clock$
+  const forcePause$ = observation$
     .pipe(
-      map((timing) => timing.rebuffering !== null),
+      map((observation) => observation.rebuffering !== null),
       startWith(false),
       distinctUntilChanged()
     );
@@ -60,10 +61,10 @@ export default function updatePlaybackRate(
           return observableOf(0);
         });
       }
-      return speed$
-        .pipe(tap((speed) => {
-          log.info("Init: Resume playback speed", speed);
-          mediaElement.playbackRate = speed;
+      return speed.asObservable()
+        .pipe(tap((lastSpeed) => {
+          log.info("Init: Resume playback speed", lastSpeed);
+          mediaElement.playbackRate = lastSpeed;
         }));
     }));
 }

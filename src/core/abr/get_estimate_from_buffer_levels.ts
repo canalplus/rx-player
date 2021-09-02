@@ -17,7 +17,7 @@
 import log from "../../log";
 import arrayFindIndex from "../../utils/array_find_index";
 
-export interface IBufferBasedChooserClockTick {
+export interface IBufferBasedChooserPlaybackObservation {
   bufferGap : number; // Difference in seconds between the current position and
                       // the next non-buffered position
   currentBitrate? : number; // The bitrate of the currently downloaded segments, in bps
@@ -28,17 +28,17 @@ export interface IBufferBasedChooserClockTick {
 
 /**
  * From the buffer gap, choose a representation.
- * @param {Object} clockTick
+ * @param {Object} playbackObservation
  * @param {Array.<Number>} bitrates
  * @param {Array.<Number>} bufferLevels
  * @returns {Object|undefined}
  */
 export default function getEstimateFromBufferLevels(
-  clockTick : IBufferBasedChooserClockTick,
+  playbackObservation : IBufferBasedChooserPlaybackObservation,
   bitrates : number[],
   bufferLevels : number[]
 ) : number|undefined {
-  const { bufferGap, currentBitrate, currentScore, speed } = clockTick;
+  const { bufferGap, currentBitrate, currentScore, speed } = playbackObservation;
   if (currentBitrate == null) {
     return bitrates[0];
   }

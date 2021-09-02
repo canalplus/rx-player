@@ -457,17 +457,12 @@ export default {
   },
 
   /**
-   * Minimum interval at which timeupdate events will be "constructed". This
+   * Minimum interval at which playback information samples will be taken. This
    * variable is for the "regular" mediasource strategy (that is, not for the
    * directfile API.
    *
-   * Those events are the base of various important mechanisms in the player:
-   *   - set the clock used to regularly check which segments should be loaded
-   *   - set the clock for the ABR strategy.
-   *   - used to trigger positionUpdate events.
-   *
-   * This common logic is for performance reasons, as we call multiple browser's
-   * APIs which are useful for most of these.
+   * At each of these interval, various different modules in the RxPlayer will
+   * run based on the information communicated.
    *
    * Keep in mind this is the minimum interval. This logic will also be
    * triggered when various events of the media element are received.
