@@ -348,6 +348,36 @@ export interface INeedsMediaSourceReload {
 }
 
 /**
+ * A stream cannot go forward loading segments because it needs the
+ * `MediaSource` to be reloaded first.
+ *
+ * This is a Stream internal event before being translated into either an
+ * `INeedsMediaSourceReload` event or an `ILockedStreamEvent` depending on if
+ * the reloading action has to be taken now or when the corresponding Period
+ * becomes active.
+ */
+export interface IWaitingMediaSourceReloadInternalEvent {
+  type: "waiting-media-source-reload";
+  value: {
+    /** Period concerned. */
+    period : Period;
+    /** Buffer type concerned. */
+    bufferType : IBufferType;
+    /**
+     * The position in seconds and the time at which the MediaSource should be
+     * reset once it has been reloaded.
+     */
+    position : number;
+    /**
+     * If `true`, we want the HTMLMediaElement to play right after the reload is
+     * done.
+     * If `false`, we want to stay in a paused state at that point.
+     */
+    autoPlay : boolean;
+  };
+}
+
+/**
  * The stream is unable to load segments for a particular Period and buffer
  * type until that Period becomes the currently-played Period.
  *
@@ -427,11 +457,10 @@ export type IRepresentationStreamEvent = IStreamStatusEvent |
 
 /** Event sent by an `AdaptationStream`. */
 export type IAdaptationStreamEvent = IBitrateEstimationChangeEvent |
-                                     INeedsMediaSourceReload |
                                      INeedsDecipherabilityFlush |
                                      IRepresentationChangeEvent |
                                      INeedsBufferFlushEvent |
-                                     ILockedStreamEvent |
+                                     IWaitingMediaSourceReloadInternalEvent |
 
                                      // From a RepresentationStream
 
@@ -445,9 +474,8 @@ export type IAdaptationStreamEvent = IBitrateEstimationChangeEvent |
 
 /** Event sent by a `PeriodStream`. */
 export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
-                                 INeedsMediaSourceReload |
                                  IAdaptationChangeEvent |
-                                 ILockedStreamEvent |
+                                 IWaitingMediaSourceReloadInternalEvent |
 
                                  // From an AdaptationStream
 
@@ -474,10 +502,9 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
                                           // From a PeriodStream
 
                                           IPeriodStreamReadyEvent |
-                                          INeedsMediaSourceReload |
                                           INeedsBufferFlushEvent |
                                           IAdaptationChangeEvent |
-                                          ILockedStreamEvent |
+                                          IWaitingMediaSourceReloadInternalEvent |
 
                                           // From an AdaptationStream
 

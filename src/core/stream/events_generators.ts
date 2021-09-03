@@ -44,6 +44,7 @@ import {
   IStreamNeedsManifestRefresh,
   IStreamTerminatingEvent,
   IStreamWarningEvent,
+  IWaitingMediaSourceReloadInternalEvent,
 } from "./types";
 
 const EVENTS = {
@@ -195,6 +196,16 @@ const EVENTS = {
 
   warning(value : ICustomError) : IStreamWarningEvent {
     return { type: "warning", value };
+  },
+
+  waitingMediaSourceReload(
+    bufferType : IBufferType,
+    period : Period,
+    position : number,
+    autoPlay : boolean
+  ) : IWaitingMediaSourceReloadInternalEvent {
+    return { type: "waiting-media-source-reload",
+             value: { bufferType, period, position, autoPlay } };
   },
 };
 

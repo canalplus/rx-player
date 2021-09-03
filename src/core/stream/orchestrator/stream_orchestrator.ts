@@ -211,7 +211,7 @@ export default function StreamOrchestrator(
   function manageEveryStreams(
     bufferType : IBufferType,
     basePeriod : Period
-  ) : Observable<IMultiplePeriodStreamsEvent> {
+  ) : Observable<IStreamOrchestratorEvent> {
     // Each Period for which there is currently a Stream, chronologically
     const periodList = new SortedList<Period>((a, b) => a.start - b.start);
     const destroyStreams$ = new Subject<void>();
@@ -229,14 +229,23 @@ export default function StreamOrchestrator(
      */
     function launchConsecutiveStreamsForPeriod(
       period : Period
-    ) : Observable<IMultiplePeriodStreamsEvent> {
+    ) : Observable<IStreamOrchestratorEvent> {
       return manageConsecutivePeriodStreams(bufferType, period, destroyStreams$).pipe(
-        filterMap<
-          IMultiplePeriodStreamsEvent,
-          IMultiplePeriodStreamsEvent,
-          null
-        >((message) => {
+        map((message) => {
           switch (message.type) {
+            case "waiting-media-source-reload":
+              // Only reload the MediaSource when the more immediately required
+              // Period is the one asking for it
+              const firstPeriod = periodList.head();
+              if (firstPeriod === undefined ||
+                  firstPeriod.id !== message.value.period.id)
+              {
+                return EVENTS.lockedStream(message.value.bufferType,
+                                           message.value.period);
+              } else {
+                const { position, autoPlay } = message.value;
+                return EVENTS.needsMediaSourceReload(position, autoPlay);
+              }
             case "periodStreamReady":
               enableOutOfBoundsCheck = true;
               periodList.add(message.value.period);
@@ -246,7 +255,7 @@ export default function StreamOrchestrator(
               break;
           }
           return message;
-        }, null),
+        }),
         share()
       );
     }

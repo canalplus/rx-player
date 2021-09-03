@@ -26,7 +26,7 @@ import {
 } from "rxjs/operators";
 import { Period } from "../../../manifest";
 import { IBufferType } from "../../segment_buffers";
-import { IMultiplePeriodStreamsEvent } from "../types";
+import { IStreamOrchestratorEvent } from "../types";
 
 interface IPeriodObject { period : Period;
                           buffers: Set<IBufferType>; }
@@ -72,7 +72,7 @@ type IPeriodsList = Partial<Record<string, IPeriodObject>>;
  * @returns {Observable}
  */
 export default function ActivePeriodEmitter(
-  buffers$: Array<Observable<IMultiplePeriodStreamsEvent>>
+  buffers$: Array<Observable<IStreamOrchestratorEvent>>
 ) : Observable<Period|null> {
   const numberOfStreams = buffers$.length;
   return observableMerge(...buffers$).pipe(
@@ -80,7 +80,7 @@ export default function ActivePeriodEmitter(
     filter(({ type }) => type === "periodStreamCleared" ||
                          type === "adaptationChange" ||
                          type === "representationChange"),
-    scan<IMultiplePeriodStreamsEvent, IPeriodsList>((acc, evt) => {
+    scan<IStreamOrchestratorEvent, IPeriodsList>((acc, evt) => {
       switch (evt.type) {
         case "periodStreamCleared": {
           const { period, type } = evt.value;
