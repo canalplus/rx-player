@@ -25,7 +25,11 @@ pub fn report_mpd_attrs(e : &quick_xml::events::BytesStart) {
                     MaxSegmentDuration.try_report_as_iso_8601_duration(&attr),
                 b"maxSubsegmentDuration" =>
                     MaxSubsegmentDuration.try_report_as_iso_8601_duration(&attr),
-                _ => {},
+                x => {
+                    if x.len() > 6 && &x[..6] == b"xmlns:" {
+                        Namespace.try_report_as_key_value(&x[6..], &attr);
+                    }
+                }
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
@@ -42,7 +46,11 @@ pub fn report_period_attrs(tag_bs : &quick_xml::events::BytesStart) {
                 b"bitstreamSwitching" => BitstreamSwitching.try_report_as_bool(&attr),
                 b"xlink:href" => XLinkHref.try_report_as_string(&attr),
                 b"xlink:actuate" => XLinkActuate.try_report_as_string(&attr),
-                _ => {},
+                x => {
+                    if x.len() > 6 && &x[..6] == b"xmlns:" {
+                        Namespace.try_report_as_key_value(&x[6..], &attr);
+                    }
+                }
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
@@ -272,7 +280,11 @@ pub fn report_event_stream_attrs(tag_bs : &quick_xml::events::BytesStart) {
                 b"schemeIdUri" => SchemeIdUri.try_report_as_string(&attr),
                 b"value" => SchemeValue.try_report_as_string(&attr),
                 b"timescale" => TimeScale.try_report_as_u64(&attr),
-                _ => {},
+                x => {
+                    if x.len() > 6 && &x[..6] == b"xmlns:" {
+                        Namespace.try_report_as_key_value(&x[6..], &attr);
+                    }
+                }
             },
             Err(err) => ParsingError::from(err).report_err(),
         };

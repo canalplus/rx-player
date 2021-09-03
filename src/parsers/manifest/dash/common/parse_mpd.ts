@@ -255,7 +255,8 @@ function parseCompleteIntermediateRepresentation(
                           receivedTime: args.manifestReceivedTime,
                           timeShiftBufferDepth,
                           unsafelyBaseOnPreviousManifest,
-                          xlinkInfos };
+                          xlinkInfos,
+                          xmlNamespaces: mpdIR.attributes.namespaces };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
   const mediaPresentationDuration = rootAttributes.duration;
 

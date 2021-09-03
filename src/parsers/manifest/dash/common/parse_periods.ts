@@ -78,6 +78,14 @@ export interface IPeriodsContextInfos {
    */
   unsafelyBaseOnPreviousManifest : Manifest | null;
   xlinkInfos : IXLinkInfos;
+
+  /**
+   * XML namespaces linked to the `<MPD>` element.
+   * May be needed to convert EventStream's Event elements back into the
+   * Document form.
+   */
+  xmlNamespaces? : Array<{ key : string;
+                           value : string; }>;
 }
 
 /**
@@ -154,8 +162,12 @@ export default function parsePeriods(
                           unsafelyBaseOnPreviousPeriod };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
                                             periodInfos);
+
+    const namespaces = (contextInfos.xmlNamespaces ?? [])
+      .concat(periodIR.attributes.namespaces ?? []);
     const streamEvents = generateStreamEvents(periodIR.children.eventStreams,
-                                              periodStart);
+                                              periodStart,
+                                              namespaces);
     const parsedPeriod : IParsedPeriod = { id: periodID,
                                            start: periodStart,
                                            end: periodEnd,
@@ -306,13 +318,16 @@ function getMaximumLastPosition(
  */
 function generateStreamEvents(
   baseIr : IEventStreamIntermediateRepresentation[],
-  periodStart : number
+  periodStart : number,
+  xmlNamespaces : Array<{ key : string; value : string }>
 ) : IManifestStreamEvent[] {
   const res : IManifestStreamEvent[] = [];
   for (let i = 0; i < baseIr.length; i++) {
     const eventStreamIr = baseIr[i];
     const { schemeIdUri = "",
             timescale = 1 } = eventStreamIr.attributes;
+    const allNamespaces = xmlNamespaces
+      .concat(eventStreamIr.attributes.namespaces ?? []);
 
     for (let j = 0; j < eventStreamIr.children.events.length; j++) {
       const eventIr = eventStreamIr.children.events[j];
@@ -322,11 +337,27 @@ function generateStreamEvents(
           undefined :
           start + (eventIr.duration / timescale);
 
-        const element = eventIr.eventStreamData instanceof Element ?
-          eventIr.eventStreamData :
-          new DOMParser()
-            .parseFromString(utf8ToStr(new Uint8Array(eventIr.eventStreamData)),
-                             "application/xml").documentElement;
+        let element;
+        if (eventIr.eventStreamData instanceof Element) {
+          element = eventIr.eventStreamData;
+        } else {
+          // First, we will create a parent Element defining all namespaces that
+          // should have been encountered until know.
+          // This is needed because the DOMParser API might throw when
+          // encountering unknown namespaced attributes or elements in the given
+          // `<Event>` xml subset.
+          let parentNode = allNamespaces.reduce((acc, ns) => {
+            return acc + "xmlns:" + ns.key + "=\"" + ns.value + "\" ";
+          }, "<toremove ");
+          parentNode += ">";
+
+          const elementToString = utf8ToStr(new Uint8Array(eventIr.eventStreamData));
+          element = new DOMParser()
+            .parseFromString(parentNode + elementToString + "</toremove>",
+                             "application/xml")
+            .documentElement
+            .childNodes[0] as Element; // unwrap from the `<toremove>` element
+        }
         res.push({ start,
                    end,
                    id: eventIr.id,

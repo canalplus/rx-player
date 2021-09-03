@@ -141,6 +141,26 @@ export function generatePeriodAttrParser(
                                                ptr,
                                                len);
         break;
+      case AttributeName.Namespace:
+        const xmlNs = { key: "", value: "" };
+        const dataView = new DataView(linearMemory.buffer);
+        let offset = ptr;
+        const keySize = dataView.getUint32(offset);
+        offset += 4;
+
+        xmlNs.key = parseString(textDecoder, linearMemory.buffer, offset, keySize);
+        offset += keySize;
+
+        const valSize = dataView.getUint32(offset);
+        offset += 4;
+        xmlNs.value = parseString(textDecoder, linearMemory.buffer, offset, valSize);
+
+        if (periodAttrs.namespaces === undefined) {
+          periodAttrs.namespaces = [xmlNs];
+        } else {
+          periodAttrs.namespaces.push(xmlNs);
+        }
+        break;
     }
   };
 }

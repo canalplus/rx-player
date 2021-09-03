@@ -1,4 +1,5 @@
 use core::mem;
+use std::borrow::Cow;
 use crate::events::AttributeName;
 use crate::processor::SegmentObject;
 use crate::onAttribute;
@@ -90,7 +91,27 @@ impl ReportableAttribute for &[SegmentObject] {
     }
 }
 
-impl<'a> ReportableAttribute for std::borrow::Cow<'a, [u8]> {
+// For key-value couples (such as XML namespaces)
+impl<'a> ReportableAttribute for (&'a [u8], Cow<'a, [u8]>) {
+    #[inline(always)]
+    fn report_as_attr(&self, attr_name: AttributeName) {
+        use crate::utils;
+        let len_key = self.0.len() as u32;
+        let len_val = self.1.len() as u32;
+
+        let mut msg = Vec::with_capacity((len_key + len_val + 8) as usize);
+        msg.extend(utils::u32_to_u8_slice_be(len_key));
+        msg.extend(self.0);
+        msg.extend(utils::u32_to_u8_slice_be(len_val));
+        msg.extend(self.1.to_vec());
+
+        // UNSAFE: We're using FFI, so we don't know how the pointer is used.
+        // Hopefully, the JavaScript-side should clone that value synchronously.
+        unsafe { onAttribute(attr_name, msg.as_ptr(), msg.len()); };
+    }
+}
+
+impl<'a> ReportableAttribute for Cow<'a, [u8]> {
     #[inline(always)]
     fn report_as_attr(&self, attr_name: AttributeName) {
         debug_assert!(attr_name as u64 <= u8::MAX as u64);
