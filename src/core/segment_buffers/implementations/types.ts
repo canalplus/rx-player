@@ -23,8 +23,10 @@ import {
 } from "../../../manifest";
 import SegmentInventory, {
   IBufferedChunk,
+  IBufferedHistoryEntry,
+  IChunkContext,
   IInsertedChunkInfos,
-} from "../segment_inventory";
+} from "../inventory";
 
 /**
  * Class allowing to push segments and remove data to a buffer to be able
@@ -174,6 +176,23 @@ export abstract class SegmentBuffer {
   public getPendingOperations() : Array<ISBOperation<unknown>> {
     // Return no pending operation by default (for synchronous SegmentBuffers)
     return [];
+  }
+
+  /**
+   * Returns a recent history of registered operations performed and event
+   * received linked to the segment given in argument.
+   *
+   * Not all operations and events are registered in the returned history.
+   * Please check the return type for more information on what is available.
+   *
+   * Note that history is short-lived for memory usage and performance reasons.
+   * You may not receive any information on operations that happened too long
+   * ago.
+   * @param {Object} context
+   * @returns {Array.<Object>}
+   */
+  public getSegmentHistory(context : IChunkContext) : IBufferedHistoryEntry[] {
+    return this._segmentInventory.getHistoryFor(context);
   }
 
   /**
