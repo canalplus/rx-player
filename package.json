@@ -68,7 +68,7 @@
     "test:memory:chrome:watch": "node tests/memory/run.js --bchrome --watch",
     "test:travis": "npm run test:unit && npm run test:integration:travis",
     "test:unit": "jest",
-    "test:unit:coverage": "cross-env RXP_COVERAGE=true jest",
+    "test:unit:coverage": "jest --coverage",
     "update-version": "npm run version --git-tag-version=false",
     "version": "./scripts/update-version"
   },

@@ -1,7 +1,5 @@
 /* eslint-env node */
 
-const coverageIsWanted = !!process.env.RXP_COVERAGE;
-
 module.exports = {
   // to uncomment to display logs.
   // verbose: false,
@@ -9,7 +7,6 @@ module.exports = {
   preset: "ts-jest",
   testEnvironment: "jsdom",
   testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
-  collectCoverage: coverageIsWanted,
   collectCoverageFrom: [
     "src/**/*.ts",
     "!src/**/index.ts",
