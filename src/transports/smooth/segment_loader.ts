@@ -23,7 +23,7 @@ import {
   CancellationSignal,
 } from "../../utils/task_canceller";
 import {
-  CustomSegmentLoader,
+  ICustomSegmentLoader,
   ISegmentContext,
   ISegmentLoaderCallbacks,
   ISegmentLoaderResultSegmentCreated,
@@ -86,7 +86,7 @@ const generateSegmentLoader = ({
   customSegmentLoader,
 } : {
   checkMediaSegmentIntegrity? : boolean;
-  customSegmentLoader? : CustomSegmentLoader;
+  customSegmentLoader? : ICustomSegmentLoader;
 }) => (
   url : string | null,
   content : ISegmentContext,
@@ -206,7 +206,7 @@ const generateSegmentLoader = ({
        * Callback triggered when the custom segment loader fails
        * @param {*} err - The corresponding error encountered
        */
-      const reject = (err = {}) => {
+      const reject = (err : unknown) => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;
         }

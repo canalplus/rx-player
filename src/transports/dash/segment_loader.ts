@@ -25,7 +25,7 @@ import {
 } from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
 import {
-  CustomSegmentLoader,
+  ICustomSegmentLoader,
   ILoadedAudioVideoSegmentFormat,
   ISegmentContext,
   ISegmentLoader,
@@ -94,7 +94,7 @@ export default function generateSegmentLoader(
   { lowLatencyMode,
     segmentLoader: customSegmentLoader,
     checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
-                                     segmentLoader? : CustomSegmentLoader;
+                                     segmentLoader? : ICustomSegmentLoader;
                                      checkMediaSegmentIntegrity? : boolean; }
 ) : ISegmentLoader<Uint8Array | ArrayBuffer | null> {
   return checkMediaSegmentIntegrity !== true ? segmentLoader :
@@ -158,7 +158,7 @@ export default function generateSegmentLoader(
        * Callback triggered when the custom segment loader fails
        * @param {*} err - The corresponding error encountered
        */
-      const reject = (err = {}) : void => {
+      const reject = (err : unknown) : void => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;
         }

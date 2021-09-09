@@ -56,3 +56,97 @@ export interface IHDRInformation {
    */
   colorSpace?: string;
 }
+
+/** Manifest, as documented in the API documentation. */
+export interface IExposedManifest {
+  periods : IExposedPeriod[];
+  /**
+   * @deprecated
+   */
+  adaptations : { audio? : IExposedAdaptation[];
+                  video? : IExposedAdaptation[];
+                  text? : IExposedAdaptation[];
+                  image? : IExposedAdaptation[]; };
+  isLive : boolean;
+  transport : string;
+}
+
+/** Period, as documented in the API documentation. */
+export interface IExposedPeriod {
+  id : string;
+  start : number;
+  end? : number | undefined;
+  adaptations : { audio? : IExposedAdaptation[];
+                  video? : IExposedAdaptation[];
+                  text? : IExposedAdaptation[];
+                  image? : IExposedAdaptation[]; };
+}
+
+/** Adaptation (represents a track), as documented in the API documentation. */
+export interface IExposedAdaptation {
+  /** String identifying the Adaptation, unique per Period. */
+  id : string;
+  type : "video" | "audio" | "text" | "image";
+  language? : string | undefined;
+  normalizedLanguage? : string | undefined;
+  isAudioDescription? : boolean | undefined;
+  isClosedCaption? : boolean | undefined;
+  isTrickModeTrack? : boolean | undefined;
+  representations : IExposedRepresentation[];
+
+  getAvailableBitrates() : number[];
+}
+
+/** Representation (represents a quality), as documented in the API documentation. */
+export interface IExposedRepresentation {
+  /** String identifying the Representation, unique per Adaptation. */
+  id : string;
+  bitrate : number;
+  /** Codec used by the segment in that Representation. */
+  codec? : string | undefined;
+  /**
+   * Whether we are able to decrypt this Representation / unable to decrypt it or
+   * if we don't know yet:
+   *   - if `true`, it means that we know we were able to decrypt this
+   *     Representation in the current content.
+   *   - if `false`, it means that we know we were unable to decrypt this
+   *     Representation
+   *   - if `undefined` there is no certainty on this matter
+   */
+  decipherable? : boolean | undefined;
+  /**
+   * This property makes the most sense for video Representations.
+   * It defines the height of the video, in pixels.
+   */
+  height? : number | undefined;
+  /**
+   * This property makes the most sense for video Representations.
+   * It defines the height of the video, in pixels.
+   */
+  width? : number | undefined;
+  /**
+   * The represesentation frame rate for this Representation. It defines either
+   * the number of frames per second as an integer (24), or as a ratio
+   * (24000 / 1000).
+   */
+  frameRate? : string | undefined;
+  /** If the track is HDR, gives the HDR characteristics of the content */
+  hdrInfo? : IHDRInformation;
+  index : IExposedRepresentationIndex;
+}
+
+interface IExposedRepresentationIndex {
+  getSegments(up : number, duration : number) : IExposedSegment[];
+}
+
+/** Segment, as documented in the API documentation. */
+export interface IExposedSegment {
+  id : string;
+  timescale : number;
+  duration? : number | undefined;
+  time : number;
+  isInit? : boolean | undefined;
+  range? : number[] | null | undefined;
+  indexRange? : number[] | null | undefined;
+  number? : number | undefined;
+}

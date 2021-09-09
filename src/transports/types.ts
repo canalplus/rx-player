@@ -17,6 +17,11 @@
 import { IInbandEvent } from "../core/stream";
 import Manifest, {
   Adaptation,
+  IExposedAdaptation,
+  IExposedManifest,
+  IExposedPeriod,
+  IExposedRepresentation,
+  IExposedSegment,
   IRepresentationFilter,
   ISegment,
   ISupplementaryImageTrack,
@@ -481,11 +486,11 @@ export interface ITransportOptions {
   aggressiveMode? : boolean;
   checkMediaSegmentIntegrity? : boolean;
   lowLatencyMode : boolean;
-  manifestLoader?: CustomManifestLoader;
+  manifestLoader?: ICustomManifestLoader;
   manifestUpdateUrl? : string;
   referenceDateTime? : number;
   representationFilter? : IRepresentationFilter;
-  segmentLoader? : CustomSegmentLoader;
+  segmentLoader? : ICustomSegmentLoader;
   serverSyncInfos? : IServerSyncInfos;
   /* eslint-disable import/no-deprecated */
   supplementaryImageTracks? : ISupplementaryImageTrack[];
@@ -495,34 +500,29 @@ export interface ITransportOptions {
   __priv_patchLastSegmentInSidx? : boolean;
 }
 
-export type CustomSegmentLoader = (
+export type ICustomSegmentLoader = (
   // first argument: infos on the segment
-  args : { adaptation : Adaptation;
-           representation : Representation;
-           segment : ISegment;
-           transport : string;
-           url : string;
-           manifest : Manifest; },
+  infos : { url : string;
+            manifest : IExposedManifest;
+            period : IExposedPeriod;
+            adaptation : IExposedAdaptation;
+            representation : IExposedRepresentation;
+            segment : IExposedSegment; },
 
   // second argument: callbacks
   callbacks : { resolve : (rArgs : { data : ArrayBuffer | Uint8Array;
-                                     sendingTime? : number;
-                                     receivingTime? : number;
-                                     size? : number;
-                                     duration? : number; })
-                          => void;
+                                     sendingTime? : number | undefined;
+                                     receivingTime? : number | undefined;
+                                     size? : number | undefined;
+                                     duration? : number | undefined; }) => void;
 
-                progress : (pArgs : { duration : number;
-                                      size : number;
-                                      totalSize? : number; })
-                           => void;
-                reject : (err? : Error) => void;
-                fallback? : () => void; }
+                 reject : (err? : unknown) => void;
+                 fallback? : (() => void) | undefined; }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
 
-export type CustomManifestLoader = (
+export type ICustomManifestLoader = (
   // first argument: url of the manifest
   url : string | undefined,
 

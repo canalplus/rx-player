@@ -23,10 +23,10 @@ import { Subject } from "rxjs";
 import log from "../../log";
 import {
   Adaptation,
+  IHDRInformation,
   Period,
   Representation,
 } from "../../manifest";
-import { IHDRInformation } from "../../manifest/types";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
