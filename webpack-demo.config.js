@@ -61,17 +61,6 @@ module.exports = {
           },
         },
       },
-      {
-        test: /\.css$/,
-        use: [
-          "style-loader",
-          "css-loader",
-        ],
-      },
-      {
-        test: /\.(otf|eot|svg|ttf|woff)$/,
-        use: ["url-loader"],
-      },
     ],
   },
   plugins: [
