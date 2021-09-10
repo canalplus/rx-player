@@ -11,6 +11,7 @@ function Button({
   onClick,
   value,
   disabled,
+  title,
 }) {
   if (disabled) {
     return (
@@ -18,6 +19,7 @@ function Button({
         aria-label={ariaLabel}
         disabled
         className={className + " disabled"}
+        title={title}
       >
         {value}
       </button>
@@ -29,6 +31,7 @@ function Button({
       aria-label={ariaLabel}
       className={className}
       onClick={onClick}
+      title={title}
     >
       {value}
     </button>

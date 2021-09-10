@@ -17,13 +17,9 @@ import VideoThumbnailLoader, {
 
 VideoThumbnailLoader.addLoader(DASH_LOADER);
 
-const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
-  const player = new RxPlayer({
-    limitVideoWidth: false,
-    stopAtEnd: false,
-    throttleVideoBitrateWhenHidden: true,
-    videoElement,
-  });
+const PLAYER = ({ $destroy, state }, initOpts) => {
+  const { textTrackElement } = initOpts;
+  const player = new RxPlayer(initOpts);
 
   // facilitate DEV mode
   window.RxPlayer = RxPlayer;
@@ -131,12 +127,6 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
       dettachVideoThumbnailLoader();
       player.loadVideo(Object.assign({
         textTrackElement,
-        networkConfig: {
-          segmentRetry: Infinity,
-          manifestRetry: Infinity,
-          offlineRetry: Infinity,
-        },
-        manualBitrateSwitchingMode: "direct",
         transportOptions: { checkMediaSegmentIntegrity: true },
       }, arg));
       state.set({

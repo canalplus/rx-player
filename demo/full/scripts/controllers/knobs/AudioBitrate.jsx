@@ -27,8 +27,7 @@ const AudioBitrateKnobBase = ({
     selectedIndex = 0;
   }
 
-  const onAudioBitrateChange = (evt) => {
-    const index = +evt.target.value;
+  const onAudioBitrateChange = ({ index }) => {
     if (index > 0) {
       const bitrate = availableAudioBitrates[index - 1];
       player.dispatch("SET_AUDIO_BITRATE", bitrate);
@@ -45,7 +44,7 @@ const AudioBitrateKnobBase = ({
       disabled={options.length < 2}
       onChange={onAudioBitrateChange}
       options={options}
-      selected={selectedIndex}
+      selected={{ index: selectedIndex }}
     />
   );
 };

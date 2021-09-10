@@ -34,8 +34,7 @@ const AudioTrackKnobBase = ({
       : 0;
   }
 
-  const onLanguageChange = (evt) => {
-    const index = +evt.target.value;
+  const onLanguageChange = ({ index }) => {
     const track = availableLanguages[index];
     player.dispatch("SET_AUDIO_TRACK", track);
   };
@@ -48,7 +47,7 @@ const AudioTrackKnobBase = ({
       disabled={availableLanguages.length < 2}
       onChange={onLanguageChange}
       options={options}
-      selected={selectedIndex}
+      selected={{ index: selectedIndex }}
     />
   );
 };

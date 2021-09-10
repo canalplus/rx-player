@@ -17,8 +17,7 @@ const PlaybackRateKnob = ({
   let selectedIndex = AVAILABLE_RATES
     .findIndex((rate) => playbackRate === rate);
 
-  const onPlaybackRateChange = (evt) => {
-    const index = +evt.target.value;
+  const onPlaybackRateChange = ({ index }) => {
     if (index > -1) {
       selectedIndex = index;
       const rate = AVAILABLE_RATES[index];
@@ -34,7 +33,7 @@ const PlaybackRateKnob = ({
       disabled={options.length < 2}
       onChange={onPlaybackRateChange}
       options={options}
-      selected={selectedIndex}
+      selected={{ index: selectedIndex }}
     />
   );
 };

@@ -11,6 +11,7 @@ import {
   parseHashInURL,
 } from "../lib/url_hash.js";
 import Button from "../components/Button.jsx";
+import Checkbox from "../components/CheckBox.jsx";
 import FocusedTextInput from "../components/FocusedInput.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
@@ -166,7 +167,7 @@ function generateLinkForContent(
  * @param {HTMLElement} checkBoxElt
  * @returns {boolean}
  */
-function getCheckBoxValue(checkBoxElt) {
+export function getCheckBoxValue(checkBoxElt) {
   return checkBoxElt.type === "checkbox" ?
     !!checkBoxElt.checked : !!checkBoxElt.value;
 }
@@ -224,8 +225,7 @@ class ContentList extends React.Component {
     const contentsPerType = constructContentList();
     const transportType = TRANSPORT_TYPES[0];
 
-    this.state = { autoPlay: true,
-                   contentChoiceIndex: 0,
+    this.state = { contentChoiceIndex: 0,
                    contentNameField: "",
                    contentsPerType,
                    chosenDRMType: DRM_TYPES[0],
@@ -323,7 +323,7 @@ class ContentList extends React.Component {
    * @param {Array.<Object>} drmInfos
    * @param {boolean} autoPlay
    */
-  loadUrl(url, drmInfos, autoPlay) {
+  loadUrl(url, drmInfos) {
     const { loadVideo } = this.props;
     const { lowLatencyChecked,
             fallbackKeyError,
@@ -334,7 +334,6 @@ class ContentList extends React.Component {
       .then((keySystems) => {
         loadVideo({ url,
                     transport: this.state.transportType.toLowerCase(),
-                    autoPlay,
                     textTrackMode: "html",
                     keySystems,
                     lowLatencyMode: lowLatencyChecked });
@@ -403,8 +402,8 @@ class ContentList extends React.Component {
   }
 
   render() {
-    const { autoPlay,
-            contentChoiceIndex,
+    const { showOptions, onOptionToggle } = this.props;
+    const { contentChoiceIndex,
             contentNameField,
             contentsPerType,
             chosenDRMType,
@@ -430,7 +429,6 @@ class ContentList extends React.Component {
     if (displayGeneratedLink) {
       generatedLink = contentChoiceIndex === 0 || isSavingOrUpdating ?
         generateLinkForCustomContent({
-          autoPlay,
           chosenDRMType: displayDRMSettings ?
             chosenDRMType :
             undefined,
@@ -455,23 +453,18 @@ class ContentList extends React.Component {
     const isLocalContent = !!(chosenContent &&
                               chosenContent.isLocalContent);
 
-    const onTransportChange = (evt) => {
-      const index = +evt.target.value;
-      if (index >= 0) {
-        const newTransportType = TRANSPORT_TYPES[index];
-        this.changeTransportType(newTransportType);
+    const onTransportChange = ({ value }) => {
+      this.changeTransportType(value);
 
-        // update content selection
-        const contents = contentsPerType[newTransportType];
-        const firstEnabledContentIndex =
-          getIndexOfFirstEnabledContent(contents);
-        this.changeSelectedContent(firstEnabledContentIndex,
-                                   contents[firstEnabledContentIndex]);
-      }
+      // update content selection
+      const contents = contentsPerType[value];
+      const firstEnabledContentIndex =
+        getIndexOfFirstEnabledContent(contents);
+      this.changeSelectedContent(firstEnabledContentIndex,
+                                 contents[firstEnabledContentIndex]);
     };
 
-    const onContentChoiceChange = (evt) => {
-      const index = +evt.target.value;
+    const onContentChoiceChange = ({ index }) => {
       const content = contentsToSelect[index];
       this.changeSelectedContent(index, content);
     };
@@ -482,7 +475,7 @@ class ContentList extends React.Component {
                             serverCertificateUrl,
                             drm: chosenDRMType,
                             customKeySystem }];
-        this.loadUrl(currentManifestURL, drmInfos, autoPlay);
+        this.loadUrl(currentManifestURL, drmInfos);
       } else {
         this.loadContent(contentsToSelect[contentChoiceIndex]);
       }
@@ -574,9 +567,6 @@ class ContentList extends React.Component {
                       serverCertificateUrl: "" });
     };
 
-    const onAutoPlayClick = (evt) =>
-      this.setState({ autoPlay: getCheckBoxValue(evt.target) });
-
     const onLowLatencyClick = (evt) => {
       this.setState({ lowLatencyChecked: getCheckBoxValue(evt.target) });
     };
@@ -639,14 +629,14 @@ class ContentList extends React.Component {
               ariaLabel="Select a transport"
               onChange={onTransportChange}
               options={TRANSPORT_TYPES}
-              selected={TRANSPORT_TYPES.indexOf(transportType)}
+              selected={{ value: transportType }}
             />
             <Select
               className="choice-input content-choice white-select"
               ariaLabel="Select a content"
               onChange={onContentChoiceChange}
               options={selectValues}
-              selected={contentChoiceIndex}
+              selected={{ index: contentChoiceIndex }}
             />
           </div>
           <div className="content-inputs-middle">
@@ -683,18 +673,15 @@ class ContentList extends React.Component {
             }
           </div>
           <div className="choice-input-button-wrapper">
-            <div className="auto-play">
-              AutoPlay
-              <label className="input switch">
-                <input
-                  type="checkbox"
-                  aria-label="Enable/Disable AutoPlay"
-                  checked={autoPlay}
-                  onChange={onAutoPlayClick}
-                />
-                <span className="slider round"></span>
-              </label>
-            </div>
+            <Checkbox
+              className="show-options"
+              ariaLabel="Show player options"
+              checked={showOptions}
+              onChange={onOptionToggle}
+              name="showOptions"
+            >
+              Show Options
+            </Checkbox>
             <Button
               className="choice-input-button load-button"
               ariaLabel="Load the selected content now"

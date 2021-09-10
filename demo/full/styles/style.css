@@ -73,7 +73,7 @@ body {
 .title-wrapper .version {
   font-weight: normal;
   font-size: 15px;
-  color: rgb(200,200,200);
+  color: rgb(200, 200, 200);
 }
 
 .custom-input-wrapper {
@@ -203,6 +203,7 @@ body {
 .video-player-wrapper {
   background-color: #000;
   margin: auto;
+  margin-top: 5px;
 }
 
 .video-player-wrapper video {
@@ -294,7 +295,7 @@ body {
   width: 180px;
   margin-left: -90px;
   z-index: 1011;
-  transform:scaleY(1);
+  transform: scaleY(1);
   animation: fadein 0.6s;
 }
 
@@ -335,7 +336,7 @@ body {
 }
 
 .progress-bar-wrapper:hover {
-  transform:scaleY(2);
+  transform: scaleY(2);
 }
 
 .progress-bar-current {
@@ -405,7 +406,7 @@ body {
   border-radius: 3px;
 }
 
-.auto-play {
+.show-options {
   margin-left: 8px;
   margin-right: 8px;
   flex-direction: row;
@@ -415,8 +416,13 @@ body {
   color: #2b2e2f;
   border: dashed 1px #d1d1d1;
   height: 39px;
-  padding: 0 0 0 10px;
   border-radius: 3px;
+  padding-right: 5px;
+  text-align: center;
+}
+
+.show-options > label:first-child {
+  margin: 5px;
 }
 
 .choice-input-button {
@@ -465,7 +471,7 @@ body {
 
 .running:hover:after {
   background: #ed3656;
-  background: rgba(237,54,86,.9);
+  background: rgba(237, 54, 86, 0.9);
   bottom: 40px;
   color: #fff;
   content: attr(title);
@@ -477,7 +483,7 @@ body {
   width: 175px;
 }
 
-.running:hover:before{
+.running:hover:before {
   border: solid;
   border-color: #ed3656 transparent;
   border-width: 6px 6px 0 6px;
@@ -700,7 +706,7 @@ body {
   transform: scale(0.9);
   transition: opacity 200ms;
   z-index: 1010;
-  pointer-events:none;
+  pointer-events: none;
 }
 
 .player-knobs.settings {
@@ -820,25 +826,25 @@ body {
   width: 100%;
   border: 0;
   outline: 0;
-  background-color: rgba(0,0,0);
-  color: rgb(240,240,240);
+  background-color: rgba(0, 0, 0);
+  color: rgb(240, 240, 240);
 }
 
 .black-knob select:disabled {
-  -moz-appearance:none;
-  -webkit-appearance:none;
-  appearance:none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
   background-image: none;
 }
 
 .knob-value > select:disabled {
-  color: rgb(130,130,130);
+  color: rgb(130, 130, 130);
 }
 
 .knob-value > select:focus {
   border: 0;
   outline: 0;
-  color: rgb(240,240,240);
+  color: rgb(240, 240, 240);
 }
 
 .player-charts {
@@ -886,7 +892,7 @@ body {
   display: inline-block;
   width: 30px;
   height: 17px;
-  margin: 10px;
+  margin-right: 5px;
 }
 
 /* Hide default HTML checkbox */
@@ -904,8 +910,8 @@ body {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  -webkit-transition: .2s;
-  transition: .2s;
+  -webkit-transition: 0.2s;
+  transition: 0.2s;
   width: 30px;
 }
 
@@ -917,8 +923,8 @@ body {
   left: 2px;
   bottom: 2px;
   background-color: white;
-  -webkit-transition: .2s;
-  transition: .2s;
+  -webkit-transition: 0.2s;
+  transition: 0.2s;
 }
 
 input:checked + .slider {
@@ -1005,7 +1011,7 @@ input:checked + .slider:before {
   padding: 5px;
   font-size: 12px;
   z-index: 1012;
-  transform:scaleY(1);
+  transform: scaleY(1);
   animation: fadein 0.6s;
   background-color: #1d1d1d;
   color: white;
@@ -1191,4 +1197,100 @@ input:checked + .slider:before {
 .video-player-manual-play {
   margin: auto;
   height: 110px;
+}
+
+.loadVideooptions {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  font-size: 15px;
+}
+
+.spacer {
+  border: solid 1px #ec3655;
+  width: 90%;
+}
+
+.loadVideooptions li {
+  padding: 5px 10px;
+  border-top: dashed 1px black;
+  display: flex;
+  flex-direction: column;
+}
+
+.loadVideooptions li:first-child {
+  border-top: none;
+}
+
+.loadVideooptions label {
+  margin-bottom: 5px;
+}
+
+.loadVideooptions input,
+select {
+  margin: 5px 0;
+}
+
+.optionWrapper {
+  background: white;
+  display: flex;
+  flex-direction: column;
+  padding: 5px;
+  margin-right: 10px;
+  margin-top: 10px;
+  flex: 1 1 0px;
+}
+
+.optionWrapper:last-child {
+  margin-right: 0;
+}
+
+.optionTitle {
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.settingsWrapper {
+  margin: 10px 0;
+}
+
+.featureWrapperWithSelectMode {
+  display: flex;
+  flex-direction: column;
+}
+
+.playerOptionInput {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+}
+
+.playerOptionsCheckBoxTitle {
+  font-weight: bold;
+}
+
+.playerOptionsCheckBox {
+  margin: 5px 0;
+}
+
+.wrapperInputWithResetBtn {
+  display: flex;
+  align-items: center;
+}
+
+.optionInput {
+  flex-grow: 1;
+}
+
+.resetBtn {
+  font-family: "icons";
+  border: 0;
+  background: transparent;
+  color: #ec3655;
+  cursor: pointer;
+}
+
+.disabledResetBtn {
+  color: #b5b5b5;
+  cursor: auto;
 }
