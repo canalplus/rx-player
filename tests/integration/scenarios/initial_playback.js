@@ -228,12 +228,12 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest
     await xhrMock.flush();
     await sleep(10);
-    expect(xhrMock.getLockedXHR().length).to.equal(2); // init segments
+
+    // init segments first media segments
+    expect(xhrMock.getLockedXHR().length).to.equal(4);
     await xhrMock.flush();
-    await sleep(10);
-    expect(xhrMock.getLockedXHR().length).to.equal(2); // first two segments
-    await xhrMock.flush(); // first two segments
-    await sleep(10);
+    await sleep(100);
+
     expect(xhrMock.getLockedXHR().length).to.equal(0); // nada
     expect(player.getVideoLoadedTime()).to.be.above(4);
     expect(player.getVideoLoadedTime()).to.be.below(5);
@@ -251,15 +251,16 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest
     await xhrMock.flush();
     await sleep(1);
-    expect(xhrMock.getLockedXHR().length).to.equal(2); // init segments
+
+    // init segments first media segments
+    expect(xhrMock.getLockedXHR().length).to.equal(4);
     await xhrMock.flush();
-    await sleep(1);
-    expect(xhrMock.getLockedXHR().length).to.equal(2); // first two segments
-    await xhrMock.flush(); // first two segments
-    await sleep(1);
-    expect(xhrMock.getLockedXHR().length).to.equal(2); // still
+    await sleep(100);
+
+    expect(xhrMock.getLockedXHR().length).to.equal(2); // next 2
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(100);
+
     expect(player.getVideoLoadedTime()).to.be.above(7);
     expect(player.getVideoLoadedTime()).to.be.below(9);
   });
