@@ -29,10 +29,8 @@ export default function prepareSourceBuffer(elt: HTMLVideoElement,
                                             codec: string
 ): Observable<AudioVideoSegmentBuffer> {
   return openMediaSource(elt).pipe(
-    map((mediaSource) => {
-      const segmentBuffer =
-        new AudioVideoSegmentBuffer("video", codec, mediaSource);
-      return segmentBuffer;
-    })
+    map((mediaSource) =>
+      new AudioVideoSegmentBuffer("video", codec, mediaSource)
+    )
   );
 }

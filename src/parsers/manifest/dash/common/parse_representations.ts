@@ -144,9 +144,7 @@ export default function parseRepresentations(
   adaptationInfos : IAdaptationInfos
 ): IParsedRepresentation[] {
   const parsedRepresentations : IParsedRepresentation[] = [];
-  for (let reprIdx = 0; reprIdx < representationsIR.length; reprIdx++) {
-    const representation = representationsIR[reprIdx];
-
+  for (const representation of representationsIR) {
     // Compute Representation ID
     let representationID = representation.attributes.id != null ?
       representation.attributes.id :
@@ -257,8 +255,7 @@ export default function parseRepresentations(
             const { cencPssh } = cp.children;
             const values : Array<{ systemId: string;
                                    data: Uint8Array; }> = [];
-            for (let i = 0; i < cencPssh.length; i++) {
-              const data = cencPssh[i];
+            for (const data of cencPssh) {
               values.push({ systemId, data });
             }
             if (values.length > 0) {

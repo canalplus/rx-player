@@ -144,6 +144,20 @@ class Progressbar extends React.Component {
     }
 
     const xThumbnailPosition = tipPosition - toolTipOffset;
+    let thumbnailElement = null;
+    if (thumbnailIsVisible) {
+      thumbnailElement = enableVideoThumbnails ?
+        <VideoThumbnail
+          xPosition={xThumbnailPosition}
+          time={imageTime}
+          player={player}
+        /> :
+        <ImageThumbnail
+          image={image}
+          xPosition={xThumbnailPosition}
+        />;
+    }
+
     return (
       <div
         className="progress-bar-parent"
@@ -158,19 +172,7 @@ class Progressbar extends React.Component {
               offset={toolTipOffset}
             /> : null
         }
-        {
-          !thumbnailIsVisible ? null :
-            enableVideoThumbnails ?
-              <VideoThumbnail
-                xPosition={xThumbnailPosition}
-                time={imageTime}
-                player={player}
-              /> :
-              <ImageThumbnail
-                image={image}
-                xPosition={xThumbnailPosition}
-              />
-        }
+        {thumbnailElement}
         <ProgressbarComponent
           seek={seek}
           onMouseOut={hideToolTips}

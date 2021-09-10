@@ -202,8 +202,8 @@ export default function parseMpdIr(
             warnings.push(...parsingWarnings);
           }
 
-          for (let irIndex = 0; irIndex < periodsIR.length; irIndex++) {
-            xlinkInfos.set(periodsIR[irIndex], { receivedTime, sendingTime, url });
+          for (const periodIR of periodsIR) {
+            xlinkInfos.set(periodIR, { receivedTime, sendingTime, url });
           }
 
           // replace original "xlinked" periods by the real deal

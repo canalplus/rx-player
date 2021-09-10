@@ -64,7 +64,7 @@ export default function DurationUpdater(
 ) : Observable<never> {
   return observableDefer(() => {
     let lastDurationUpdate: number | undefined;
-    return setMediaSourceDuration(mediaSource, manifest, undefined).pipe(
+    return setMediaSourceDuration(mediaSource, manifest).pipe(
       mergeMap((initialDurationUpdate) => {
         // only update `lastDurationUpdate` if the MediaSource's duration has
         // been updated.

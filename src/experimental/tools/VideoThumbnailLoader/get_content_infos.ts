@@ -35,8 +35,7 @@ export default function getContentInfos(
       period.adaptations.video.length === 0) {
     return null;
   }
-  for (let i = 0; i < period.adaptations.video.length; i++) {
-    const videoAdaptation = period.adaptations.video[i];
+  for (const videoAdaptation of period.adaptations.video) {
     const representation = videoAdaptation.trickModeTracks?.[0].representations?.[0];
     if (!isNullOrUndefined(representation)) {
       return { manifest,
