@@ -31,6 +31,7 @@ import {
   ICompletedStreamEvent,
   IEncryptionDataEncounteredEvent,
   IEndOfStreamEvent,
+  ILockedStreamEvent,
   INeedsBufferFlushEvent,
   INeedsDecipherabilityFlush,
   INeedsMediaSourceReload,
@@ -43,6 +44,7 @@ import {
   IStreamNeedsManifestRefresh,
   IStreamTerminatingEvent,
   IStreamWarningEvent,
+  IWaitingMediaSourceReloadInternalEvent,
 } from "./types";
 
 const EVENTS = {
@@ -106,22 +108,34 @@ const EVENTS = {
   },
 
   /**
-   * @param {Object} period - The Period to which the stream logic asking for a
-   * media source reload is linked.
    * @param {number} reloadAt - Position at which we should reload
    * @param {boolean} reloadOnPause - If `false`, stay on pause after reloading.
    * if `true`, automatically play once reloaded.
    * @returns {Object}
    */
   needsMediaSourceReload(
-    period : Period,
     reloadAt : number,
     reloadOnPause : boolean
   ) : INeedsMediaSourceReload {
     return { type: "needs-media-source-reload",
              value: { position : reloadAt,
-                      autoPlay : reloadOnPause,
-                      period } };
+                      autoPlay : reloadOnPause } };
+  },
+
+  /**
+   * @param {string} bufferType - The buffer type for which the stream cannot
+   * currently load segments.
+   * @param {Object} period - The Period for which the stream cannot
+   * currently load segments.
+   * media source reload is linked.
+   * @returns {Object}
+   */
+  lockedStream(
+    bufferType : IBufferType,
+    period : Period
+  ) : ILockedStreamEvent {
+    return { type: "locked-stream",
+             value: { bufferType, period } };
   },
 
   needsBufferFlush(): INeedsBufferFlushEvent {
@@ -182,6 +196,16 @@ const EVENTS = {
 
   warning(value : ICustomError) : IStreamWarningEvent {
     return { type: "warning", value };
+  },
+
+  waitingMediaSourceReload(
+    bufferType : IBufferType,
+    period : Period,
+    position : number,
+    autoPlay : boolean
+  ) : IWaitingMediaSourceReloadInternalEvent {
+    return { type: "waiting-media-source-reload",
+             value: { bufferType, period, position, autoPlay } };
   },
 };
 

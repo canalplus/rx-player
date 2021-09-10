@@ -24,7 +24,7 @@ import {
   map,
   startWith,
 } from "rxjs/operators";
-import { IMultiplePeriodStreamsEvent } from "../types";
+import { IStreamOrchestratorEvent } from "../types";
 
 /**
  * Returns an Observable which emits ``true`` when all PeriodStreams given are
@@ -44,7 +44,7 @@ import { IMultiplePeriodStreamsEvent } from "../types";
  * @returns {Observable}
  */
 export default function areStreamsComplete(
-  ...streams : Array<Observable<IMultiplePeriodStreamsEvent>>
+  ...streams : Array<Observable<IStreamOrchestratorEvent>>
 ) : Observable<boolean> {
   /**
    * Array of Observables linked to the Array of Streams which emit:

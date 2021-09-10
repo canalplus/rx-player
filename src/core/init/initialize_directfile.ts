@@ -170,6 +170,7 @@ export default function initializeDirectfileContent({
                                      mediaElement,
                                      null,
                                      EMPTY,
+                                     EMPTY,
                                      setCurrentTime);
 
   /**

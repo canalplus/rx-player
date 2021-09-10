@@ -259,7 +259,10 @@ export default function AdaptationStream({
         fromEstimate.manual &&
         !isFirstEstimate)
     {
-      return reloadAfterSwitch(period, clock$, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
+      return reloadAfterSwitch(period,
+                               adaptation.type,
+                               clock$,
+                               DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
     }
 
     /**

@@ -17,8 +17,9 @@
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { Period } from "../../manifest";
+import { IBufferType } from "../segment_buffers";
 import EVENTS from "./events_generators";
-import { INeedsMediaSourceReload } from "./types";
+import { IWaitingMediaSourceReloadInternalEvent } from "./types";
 
 /**
  * Regularly ask to reload the MediaSource on each `clock$` tick.
@@ -42,30 +43,25 @@ import { INeedsMediaSourceReload } from "./types";
  */
 export default function reloadAfterSwitch(
   period : Period,
+  bufferType : IBufferType,
   clock$ : Observable<{
     getCurrentTime : () => number;
     position : number;
     isPaused : boolean;
   }>,
   deltaPos : number
-) : Observable<INeedsMediaSourceReload> {
+) : Observable<IWaitingMediaSourceReloadInternalEvent> {
   return clock$.pipe(
     map((tick) => {
       const currentTime = tick.getCurrentTime();
-      if (currentTime < period.start ||
-          (period.end !== undefined && currentTime > period.end))
-      {
-        // The Period was not playing, ask to reload to the same position we're
-        // currently at
-        return EVENTS.needsMediaSourceReload(period, currentTime, !tick.isPaused);
-      }
-
-      // The Period was playing at the time of the switch, add `deltaPos`
       const pos = currentTime + deltaPos;
 
       // Bind to Period start and end
       const reloadAt = Math.min(Math.max(period.start, pos),
                                 period.end ?? Infinity);
-      return EVENTS.needsMediaSourceReload(period, reloadAt, !tick.isPaused);
+      return EVENTS.waitingMediaSourceReload(bufferType,
+                                             period,
+                                             reloadAt,
+                                             !tick.isPaused);
     }));
 }
