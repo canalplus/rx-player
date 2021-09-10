@@ -202,13 +202,13 @@ export default function StallAvoider(
       }
       const currPos = tick.position;
       const rebufferingPos = tick.rebuffering.position ?? currPos;
-      const lckdPeriodStart = lockedStreamEvt.period.start;
-      if (currPos < lckdPeriodStart &&
-          Math.abs(rebufferingPos - lckdPeriodStart) < 1)
+      const lockedPeriodStart = lockedStreamEvt.period.start;
+      if (currPos < lockedPeriodStart &&
+          Math.abs(rebufferingPos - lockedPeriodStart) < 1)
       {
         log.warn("Init: rebuffering because of a future locked stream.\n" +
                  "Trying to unlock by seeking to the next Period");
-        setCurrentTime(lckdPeriodStart + 0.001);
+        setCurrentTime(lockedPeriodStart + 0.001);
       }
     }),
     ignoreElements()
