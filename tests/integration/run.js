@@ -5,7 +5,9 @@ const karma = require("karma");
 const parseConfig = karma.config.parseConfig;
 const Server = karma.Server;
 const TestContentServer = require("../contents/server");
-const webpackConfig = require("../../webpack-tests.config.js");
+const generateTestWebpackConfig = require("../generate_test_webpack_config");
+
+const CONTENT_SERVER_PORT = 3000;
 
 const argv = process.argv;
 if (argv.includes("-h") || argv.includes("--help")) {
@@ -13,13 +15,8 @@ if (argv.includes("-h") || argv.includes("--help")) {
   process.exit(0);
 }
 
-const coverageIsWanted = argv.includes("--coverage") ?
-  true :
-  !!process.env.RXP_COVERAGE;
-
-const singleRun = argv.includes("--watch") ?
-  false :
-  !process.env.RXP_TESTS_WATCH;
+const coverage = !!argv.includes("--coverage");
+const singleRun = !argv.includes("--watch");
 
 const browsers = [];
 if (argv.includes("--bchrome")) {
@@ -36,6 +33,11 @@ if (browsers.length === 0) {
   displayHelp();
   process.exit(0);
 }
+
+const webpackConfig = generateTestWebpackConfig({
+  coverage,
+  contentServerInfo: { url: "127.0.0.1", port: CONTENT_SERVER_PORT },
+});
 
 const karmaConf = {
   basePath: ".",
@@ -88,7 +90,7 @@ const karmaConf = {
   },
 };
 
-if (coverageIsWanted) {
+if (coverage) {
   karmaConf.reporters.push("coverage-istanbul");
   karmaConf.coverageIstanbulReporter = {
     reports: [ "html", "text-summary" ],
@@ -100,7 +102,7 @@ if (coverageIsWanted) {
   };
 }
 
-const testContentServer = TestContentServer(3000);
+const testContentServer = TestContentServer(CONTENT_SERVER_PORT);
 parseConfig(
   null,
   karmaConf,

@@ -20,9 +20,32 @@ const { promisify } = require("util");
 const https = require("https");
 const getHumanReadableHours = require("./utils/get_human_readable_hours");
 
+/**
+ * Launch the static server and begin to serve on the configured port.
+ * @param {string} path - Root path that will be served by the static server.
+ * @param {Object} config - Associated configuration.
+ * @param {number} config.httpPort - Port on which the server will be listening
+ * for HTTP traffic.
+ * @param {number} config.httpsPort - Port on which the server will be listening
+ * for HTTPS traffic.
+ * @param {string} [config.certificatePath] - Path to the TLS certificate that
+ * will be used in HTTPS connections.
+ * If not defined or if it doesn't lead to any file, the server won't listen for
+ * HTTPS traffic.
+ * @param {string} config.keyPath - Path to the public key allowing to encrypt
+ * the HTTPS connection.
+ * If not defined or if it doesn't lead to any file, the server won't listen for
+ * HTTPS traffic.
+ */
 module.exports = function launchStaticServer(path, config) {
   const app = express();
   app.use(express.static(path));
+
+  if (config.certificatePath === undefined || config.keyPath === undefined) {
+    console.warn(`[${getHumanReadableHours()}] ` +
+                 "Not launching the demo in HTTPS: certificate not generated.\n" +
+                 "You can run `npm run certificate` to generate a certificate.");
+  }
 
   app.listen(config.httpPort, (err) => {
     if (err) {
