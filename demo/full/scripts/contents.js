@@ -19,11 +19,11 @@ export default [
   },
   {
     "name": "Tears of Steel (DRM PlayReady)",
-    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-playready.ism/.mpd",
+    "url": "http://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
     "transport": "dash",
     "live": false,
     "drmInfos": [{
-      "licenseServerUrl": "https://test.playready.microsoft.com/service/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1",
+      "licenseServerUrl": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:false,sl:150)",
       "drm": "Playready",
     }],
   },
