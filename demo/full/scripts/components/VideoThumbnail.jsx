@@ -119,16 +119,14 @@ class VideoThumbnail extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.videoThumbnailsData !== null &&
-        this.element.current !== null)
-    {
-      this.element.current
-        .appendChild(this.props.videoThumbnailsData.videoElement);
-    }
-    this.correctImagePosition();
+    this._placeVideoThumbnail();
   }
 
   componentDidUpdate() {
+    this._placeVideoThumbnail();
+  }
+
+  _placeVideoThumbnail() {
     if (this.props.videoThumbnailsData !== null &&
         this.element.current !== null)
     {
@@ -163,13 +161,7 @@ class VideoThumbnail extends React.Component {
       this._loadThumbnailTimeout = setTimeout(() => {
         this._loadThumbnailTimeout = null;
         thumbnailsData.videoThumbnailLoader.setTime(roundedTime)
-          .then(() => {
-            if (time !== this.props.time || !this._isMounted) {
-              return;
-            }
-            this.hideSpinner();
-          })
-          .catch(() => {
+          .finally(() => {
             if (time !== this.props.time || !this._isMounted) {
               return;
             }
@@ -178,7 +170,7 @@ class VideoThumbnail extends React.Component {
       }, 40);
     }
 
-    const divToDisplay = <div
+    return (<div
       className="thumbnail-wrapper"
       style={style}
       ref={this.element}
@@ -193,11 +185,7 @@ class VideoThumbnail extends React.Component {
           </div> :
           null
       }
-    </div>;
-
-    return (
-      divToDisplay
-    );
+    </div>);
   }
 }
 

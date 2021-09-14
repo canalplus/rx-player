@@ -282,10 +282,9 @@ function getMaximumLastPosition(
     .filter((ada) : ada is IParsedAdaptation[] => ada != null);
   const allAdaptations = flatMap(adaptationsVal,
                                  (adaptationsForType) => adaptationsForType);
-  for (let adapIndex = 0; adapIndex < allAdaptations.length; adapIndex++) {
-    const representations = allAdaptations[adapIndex].representations;
-    for (let repIndex = 0; repIndex < representations.length; repIndex++) {
-      const representation = representations[repIndex];
+  for (const adaptation of allAdaptations) {
+    const representations = adaptation.representations;
+    for (const representation of representations) {
       const position = representation.index.getLastPosition();
       if (position !== null) {
         allIndexAreEmpty = false;
@@ -322,15 +321,13 @@ function generateStreamEvents(
   xmlNamespaces : Array<{ key : string; value : string }>
 ) : IManifestStreamEvent[] {
   const res : IManifestStreamEvent[] = [];
-  for (let i = 0; i < baseIr.length; i++) {
-    const eventStreamIr = baseIr[i];
+  for (const eventStreamIr of baseIr) {
     const { schemeIdUri = "",
             timescale = 1 } = eventStreamIr.attributes;
     const allNamespaces = xmlNamespaces
       .concat(eventStreamIr.attributes.namespaces ?? []);
 
-    for (let j = 0; j < eventStreamIr.children.events.length; j++) {
-      const eventIr = eventStreamIr.children.events[j];
+    for (const eventIr of eventStreamIr.children.events) {
       if (eventIr.eventStreamData !== undefined) {
         const start = ((eventIr.presentationTime ?? 0) / timescale) + periodStart;
         const end = eventIr.duration === undefined ?

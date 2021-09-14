@@ -80,7 +80,6 @@ import EventEmitter, {
 } from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Logger from "../../utils/logger";
-import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import PPromise from "../../utils/promise";
 import {
@@ -496,7 +495,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */"3.26.0";
+    this.version = /* PLAYER_VERSION */"3.26.1";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -2345,18 +2344,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (!isNullOrUndefined(this.videoElement)) {
       clearEMESession(this.videoElement)
-        .subscribe(
-          noop,
-          (err : unknown) => {
+        .subscribe({
+          error: (err : unknown) => {
             log.error("API: An error arised when trying to clean-up the EME session:" +
                       (err instanceof Error ? err.toString() :
                                               "Unknown Error"));
             freeUpContentLock();
           },
-          () => {
+          complete: () => {
             log.debug("API: EME session cleaned-up with success!");
             freeUpContentLock();
-          });
+          },
+        });
     } else {
       freeUpContentLock();
     }
@@ -2976,7 +2975,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return activeRepresentations[currentPeriod.id];
   }
 }
-Player.version = /* PLAYER_VERSION */"3.26.0";
+Player.version = /* PLAYER_VERSION */"3.26.1";
 
 export default Player;
 export { IStreamEventData };

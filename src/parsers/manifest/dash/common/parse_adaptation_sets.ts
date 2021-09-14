@@ -241,8 +241,7 @@ function getAdaptationSetSwitchingIDs(
 ) : string[] {
   if (adaptation.children.supplementalProperties != null) {
     const { supplementalProperties } = adaptation.children;
-    for (let j = 0; j < supplementalProperties.length; j++) {
-      const supplementalProperty = supplementalProperties[j];
+    for (const supplementalProperty of supplementalProperties) {
       if (
         supplementalProperty.schemeIdUri ===
         "urn:mpeg:dash:adaptation-set-switching:2016" &&
@@ -293,8 +292,7 @@ export default function parseAdaptationSets(
     return priority2 - priority1;
   });
 
-  for (let i = 0; i < adaptationsIR.length; i++) {
-    const adaptation = adaptationsIR[i];
+  for (const adaptation of adaptationsIR) {
     const adaptationChildren = adaptation.children;
     const { essentialProperties,
             roles } = adaptationChildren;
@@ -466,8 +464,7 @@ export default function parseAdaptationSets(
         let mergedInto : IParsedAdaptation|null = null;
 
         // look if we have to merge this into another Adaptation
-        for (let k = 0; k < adaptationSetSwitchingIDs.length; k++) {
-          const id : string = adaptationSetSwitchingIDs[k];
+        for (const id of adaptationSetSwitchingIDs) {
           const switchingInfos = adaptationSwitchingInfos[id];
           if (switchingInfos != null &&
               switchingInfos.newID !== newID &&

@@ -32,16 +32,13 @@ function attachTrickModeTrack(
   trickModeTracks: Array<{ adaptation: IParsedAdaptation;
                            trickModeAttachedAdaptationIds: string[]; }>
 ): void {
-  for (let i = 0; i < trickModeTracks.length; i++) {
-    const { adaptation, trickModeAttachedAdaptationIds } = trickModeTracks[i];
-    for (let m = 0; m < trickModeAttachedAdaptationIds.length; m++) {
-      const trickModeAttachedAdaptationId = trickModeAttachedAdaptationIds[m];
-      for (let j = 0; j < SUPPORTED_ADAPTATIONS_TYPE.length; j++) {
-        const adaptationType = SUPPORTED_ADAPTATIONS_TYPE[j];
+  for (const track of trickModeTracks) {
+    const { adaptation, trickModeAttachedAdaptationIds } = track;
+    for (const trickModeAttachedAdaptationId of trickModeAttachedAdaptationIds) {
+      for (const adaptationType of SUPPORTED_ADAPTATIONS_TYPE) {
         const adaptationsByType = adaptations[adaptationType];
         if (adaptationsByType !== undefined) {
-          for (let k = 0; k < adaptationsByType.length; k++) {
-            const adaptationByType = adaptationsByType[k];
+          for (const adaptationByType of adaptationsByType) {
             if (adaptationByType.id === trickModeAttachedAdaptationId) {
               if (adaptationByType.trickModeTracks === undefined) {
                 adaptationByType.trickModeTracks = [];

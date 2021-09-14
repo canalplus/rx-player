@@ -126,15 +126,15 @@ export function getInitializedSourceBuffer$(
   if (mediaSourceSubscription === undefined) {
     mediaSourceSubscription =
       prepareSourceBuffer(element, representation.getMimeTypeString())
-        .subscribe(
-          (sourceBuffer) => sourceBuffer$.next(sourceBuffer),
-          (err: Error) => {
+        .subscribe({
+          next: (sourceBuffer) => sourceBuffer$.next(sourceBuffer),
+          error: (err: Error) => {
             mediaSourceError$.next(
               new Error("VideoThumbnailLoaderError: Error when creating" +
                       " media source or source buffer: " + err.toString())
             );
-          }
-        );
+          },
+        });
   }
 
   return observableMerge(sourceBuffer$,

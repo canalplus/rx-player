@@ -70,7 +70,6 @@ export default class ParsersStack {
     this._currentNodeId = nodeId;
     this.attributeParser = attribute;
     this.childrenParser = children;
-    return ;
   }
 
   public reset() : void {
