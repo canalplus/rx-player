@@ -455,7 +455,7 @@ useful depending on your needs):
         _Note that while fallbacking, it is possible that the player goes into
         the `"RELOADING"` state (during which the video will disappear and many
         APIs will become unavailable). More information about the `"RELOADING"`
-        state can be found in [the player states documentation](./states)._
+        state can be found in [the player states documentation](./states.md)._
 
         You can set this option as an optimization (to only perform a single
         license requests instead of many while playing contents encrypted with
