@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.26.1 (UNRELEASED)
+## v3.26.1 (2021/09/14)
 
 ### Bug fixes
 
