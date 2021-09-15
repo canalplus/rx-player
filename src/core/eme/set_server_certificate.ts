@@ -23,23 +23,21 @@ import {
 import {
   catchError,
   ignoreElements,
+  tap,
 } from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat";
-import {
-  EncryptedMediaError,
-} from "../../errors";
+import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
-import {
-  IEMEWarningEvent,
-  TypedArray,
-} from "./types";
+import tryCatch from "../../utils/rx-try_catch";
+import ServerCertificateStore from "./server_certificate_store";
+import { IEMEWarningEvent } from "./types";
 
 /**
  * Call the setServerCertificate API with the given certificate.
- * Complete when worked, throw when failed.
+ * Complete observable on success, throw when failed.
  *
- * TODO Manage success?
+ * TODO Handle returned value?
  * From the spec:
  *   - setServerCertificate resolves with true if everything worked
  *   - it resolves with false if the CDM does not support server
@@ -51,12 +49,14 @@ import {
  */
 function setServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
-  serverCertificate : ArrayBuffer|TypedArray
-) : Observable<unknown> {
+  serverCertificate : BufferSource
+) : Observable<boolean> {
   return observableDefer(() => {
-    return castToObservable(
-      (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
-    ).pipe(catchError((error: unknown) => {
+    return tryCatch<void, boolean>(() =>
+      castToObservable(
+        (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
+      )
+    , undefined).pipe(catchError((error: unknown) => {
       log.warn("EME: mediaKeys.setServerCertificate returned an error", error);
       const reason = error instanceof Error ? error.toString() :
                                               "`setServerCertificate` error";
@@ -74,19 +74,35 @@ function setServerCertificate(
  */
 export default function trySettingServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
-  serverCertificate : ArrayBuffer|TypedArray
+  serverCertificate : BufferSource
 ) : Observable<IEMEWarningEvent> {
-  if (typeof mediaKeys.setServerCertificate === "function") {
-    log.debug("EME: Setting server certificate on the MediaKeys");
+  return observableDefer(() => {
+    if (typeof mediaKeys.setServerCertificate !== "function") {
+      log.warn("EME: Could not set the server certificate." +
+               " mediaKeys.setServerCertificate is not a function");
+      return EMPTY;
+    }
+
+    if (ServerCertificateStore.hasOne(mediaKeys) === true) {
+      log.info("EME: The MediaKeys already has a server certificate, skipping...");
+      return EMPTY;
+    }
+
+    log.info("EME: Setting server certificate on the MediaKeys");
+    // Because of browser errors, or a user action that can lead to interrupting
+    // server certificate setting, we might be left in a status where we don't
+    // know if we attached the server certificate or not.
+    // Calling `prepare` allow to invalidate temporarily that status.
+    ServerCertificateStore.prepare(mediaKeys);
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
+      tap(() => { ServerCertificateStore.set(mediaKeys, serverCertificate); }),
       ignoreElements(),
-      catchError(error => {
-        return observableOf({ type: "warning" as const, value: error });
-      }));
-  }
-  log.warn("EME: Could not set the server certificate." +
-           " mediaKeys.setServerCertificate is not a function");
-  return EMPTY;
+      catchError(error => observableOf({
+        type: "warning" as const,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        value: error,
+      })));
+  });
 }
 
 export {

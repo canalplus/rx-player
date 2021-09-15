@@ -19,17 +19,49 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
-import { mergeMap } from "rxjs/operators";
-import { setMediaKeys } from "../../compat";
+import { mergeMap, tap } from "rxjs/operators";
+import {
+  ICustomMediaKeys,
+  ICustomMediaKeySystemAccess,
+  setMediaKeys,
+} from "../../compat";
 import log from "../../log";
 import MediaKeysInfosStore from "./media_keys_infos_store";
-import { IMediaKeysInfos } from "./types";
+import {
+  IKeySystemOption,
+} from "./types";
+import LoadedSessionsStore from "./utils/loaded_sessions_store";
 
 /**
- * Set the MediaKeys object on the HTMLMediaElement if it is not already on the
- * element.
- * If a MediaKeys was already set on it, dispose of it before setting the new
- * one.
+ * Dispose the media keys on media element.
+ * @param {Object} mediaElement
+ * @returns {Observable}
+ */
+export function disableMediaKeys(
+  mediaElement : HTMLMediaElement
+): Observable<unknown> {
+  return observableDefer(() => {
+    MediaKeysInfosStore.setState(mediaElement, null);
+    return setMediaKeys(mediaElement, null);
+  });
+}
+
+/** MediaKeys and associated state attached to a media element. */
+export interface IMediaKeysState {
+  /** Options set when the MediaKeys has been attached. */
+  keySystemOptions : IKeySystemOption;
+  /** LoadedSessionsStore associated to the MediaKeys instance. */
+  loadedSessionsStore : LoadedSessionsStore;
+  /** The MediaKeySystemAccess allowing to create MediaKeys instances. */
+  mediaKeySystemAccess: MediaKeySystemAccess |
+                        ICustomMediaKeySystemAccess;
+  /** The MediaKeys instance to attach to the media element. */
+  mediaKeys : MediaKeys |
+              ICustomMediaKeys;
+}
+
+/**
+ * Attach MediaKeys and its associated state to an HTMLMediaElement.
  *
  * /!\ Mutates heavily MediaKeysInfosStore
  * @param {Object} mediaKeysInfos
@@ -37,33 +69,33 @@ import { IMediaKeysInfos } from "./types";
  * @returns {Observable}
  */
 export default function attachMediaKeys(
-  mediaKeysInfos: IMediaKeysInfos,
-  mediaElement : HTMLMediaElement
+  mediaElement : HTMLMediaElement,
+  { keySystemOptions,
+    loadedSessionsStore,
+    mediaKeySystemAccess,
+    mediaKeys } : IMediaKeysState
 ) : Observable<unknown> {
   return observableDefer(() => {
-    const { keySystemOptions,
-            mediaKeySystemAccess,
-            mediaKeys,
-            loadedSessionsStore } = mediaKeysInfos;
-
     const previousState = MediaKeysInfosStore.getState(mediaElement);
-    MediaKeysInfosStore.setState(mediaElement,
-                                 { keySystemOptions,
-                                   mediaKeySystemAccess,
-                                   mediaKeys,
-                                   loadedSessionsStore });
+    const closeAllSessions$ = previousState !== null &&
+                              previousState.loadedSessionsStore !== loadedSessionsStore ?
+                                previousState.loadedSessionsStore.closeAllSessions() :
+                                observableOf(null);
 
-    return (previousState != null &&
-            previousState.loadedSessionsStore !== loadedSessionsStore ?
-              previousState.loadedSessionsStore.closeAllSessions() :
-              observableOf(null)
-    ).pipe(mergeMap(() => {
-      if (mediaElement.mediaKeys === mediaKeys) {
-        return observableOf(null);
-      }
-
-      log.debug("EME: Setting MediaKeys");
-      return setMediaKeys(mediaElement, mediaKeys);
-    }));
+    return closeAllSessions$.pipe(
+      mergeMap(() => {
+        MediaKeysInfosStore.setState(mediaElement,
+                                     { keySystemOptions,
+                                       mediaKeySystemAccess,
+                                       mediaKeys,
+                                       loadedSessionsStore });
+        if (mediaElement.mediaKeys === mediaKeys) {
+          return observableOf(null);
+        }
+        log.info("EME: Attaching MediaKeys to the media element");
+        return setMediaKeys(mediaElement, mediaKeys)
+          .pipe(tap(() => { log.info("EME: MediaKeys attached with success"); }));
+      })
+    );
   });
 }

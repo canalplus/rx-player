@@ -17,6 +17,7 @@ export default {
       adaptations: {
         audio: [
           {
+            id: "audio-eng-audio-audio/mp4",
             isAudioDescription: false,
             language: "eng",
             normalizedLanguage: "eng",
@@ -31,22 +32,22 @@ export default {
                   },
                   segments: [
                     // {
-                    //   time: 73320372578304,
-                    //   timescale: 48000,
-                    //   duration: 288768,
+                    //   time: 73320372578304 / 48000,
+                    //   duration: 288768 / 48000,
+                    //   timescale: 1,
                     //   mediaURLs: [BASE_URL + "A48/t73320372578304.m4s"],
                     // },
                     {
-                      time: 73320372867072,
-                      timescale: 48000,
-                      duration: 287744,
+                      time: 73320372867072 / 48000,
+                      duration: 287744 / 48000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "A48/t73320372867072.m4s"],
                     },
                     {
-                      duration: 288768,
+                      time: 73320373154816 / 48000,
+                      duration: 288768 / 48000,
+                      timescale: 1,
                       mediaURLs: ["http://127.0.0.1:3000/DASH_dynamic_SegmentTimeline/media/A48/t73320373154816.m4s"],
-                      time: 73320373154816,
-                      timescale: 48000,
                     },
                   ],
                   // ...
@@ -57,9 +58,12 @@ export default {
         ],
         video: [
           {
+            id:"video-video-video/mp4",
             representations: [
               {
+                id: "V300",
                 bitrate: 300000,
+                frameRate: "60/2",
                 height: 360,
                 width: 640,
                 codec: "avc1.64001e",
@@ -70,22 +74,22 @@ export default {
                   },
                   segments: [
                     // {
-                    //   time: 137475698580000,
-                    //   timescale: 90000,
-                    //   duration: 540000,
+                    //   time: 137475698580000 / 90000,
+                    //   duration: 540000 / 90000,
+                    //   timescale: 1,
                     //   mediaURLs: [BASE_URL + "V300/t137475698580000.m4s"],
                     // },
                     {
-                      time: 137475699120000,
-                      timescale: 90000,
-                      duration: 540000,
+                      time: 137475699120000 / 90000,
+                      duration: 540000 / 90000,
+                      timescale: 1,
                       mediaURLs: [BASE_URL + "V300/t137475699120000.m4s"],
                     },
                     {
-                      duration: 540000,
+                      time: 137475699660000 / 90000,
+                      duration: 540000 / 90000,
+                      timescale: 1,
                       mediaURLs: ["http://127.0.0.1:3000/DASH_dynamic_SegmentTimeline/media/V300/t137475699660000.m4s"],
-                      time: 137475699660000,
-                      timescale: 90000,
                     },
                   ],
                   // ...

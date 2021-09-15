@@ -17,14 +17,12 @@
 import {
   defer as observableDefer,
   EMPTY,
-  fromEvent as observableFromEvent,
   merge as observableMerge,
   Observable,
-  of as observableOf,
 } from "rxjs";
 import {
+  filter,
   mapTo,
-  mergeMap,
   startWith,
   switchMapTo,
   take,
@@ -41,26 +39,25 @@ import { IClockTick } from "./clock";
  * @returns {Observable}
  */
 export default function emitSeekEvents(
- mediaElement : HTMLMediaElement | null,
- clock$ : Observable<IClockTick>
+  mediaElement : HTMLMediaElement | null,
+  clock$ : Observable<IClockTick>
 ) : Observable<"seeking" | "seeked"> {
   return observableDefer(() => {
     if (mediaElement === null) {
       return EMPTY;
     }
 
-    const isSeeking$ = observableFromEvent(mediaElement, "seeking")
-      .pipe(mapTo("seeking" as const));
-
-    const hasSeeked$ = observableFromEvent(mediaElement, "seeked").pipe(
+    const isSeeking$ = clock$.pipe(
+      filter((tick : IClockTick) => tick.event === "seeking"),
+      mapTo("seeking" as const)
+    );
+    const hasSeeked$ = isSeeking$.pipe(
       switchMapTo(
         clock$.pipe(
-          mergeMap((tick : IClockTick) => {
-            return tick.stalled === null || tick.stalled.reason !== "seeking" ?
-              observableOf("seeked" as const) :
-              EMPTY;
-          }),
-          take(1))));
+          filter((tick : IClockTick) => tick.event === "seeked"),
+          mapTo("seeked" as const),
+          take(1)))
+    );
     const seekingEvents$ = observableMerge(isSeeking$, hasSeeked$);
     return mediaElement.seeking ? seekingEvents$.pipe(startWith("seeking" as const)) :
                                   seekingEvents$;

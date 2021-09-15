@@ -17,8 +17,10 @@
 import {
   concat,
   itobe4,
-  strToBytes,
+  itobe8,
 } from "../../../utils/byte_parsing";
+import { strToUtf8 } from "../../../utils/string_parsing";
+import { MAX_32_BIT_INT } from "./constants";
 
 /**
  * Speed up string to bytes conversion by memorizing the result
@@ -43,7 +45,7 @@ function boxName(str : string) : Uint8Array {
     return boxNamesMem[str];
   }
 
-  const nameInBytes = strToBytes(str);
+  const nameInBytes = strToUtf8(str);
   boxNamesMem[str] = nameInBytes;
   return nameInBytes;
 }
@@ -57,7 +59,8 @@ function boxName(str : string) : Uint8Array {
  */
 function createBox(name : string, buff : Uint8Array) : Uint8Array {
   const len = buff.length + 8;
-  return concat(itobe4(len), boxName(name), buff);
+  return len <= MAX_32_BIT_INT ? concat(itobe4(len), boxName(name), buff) :
+                                 concat(itobe4(1), boxName(name), itobe8(len + 8), buff);
 }
 
 /**

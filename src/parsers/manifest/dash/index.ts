@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import parseFromDocument, {
-  IMPDParserResponse,
-} from "./parse_from_document";
-
-export default parseFromDocument;
 export {
-  IMPDParserResponse,
-};
+  BaseRepresentationIndex,
+  ListRepresentationIndex,
+  TemplateRepresentationIndex,
+  TimelineRepresentationIndex,
+} from "./common";

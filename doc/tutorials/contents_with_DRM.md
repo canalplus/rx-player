@@ -572,10 +572,12 @@ rxPlayer.loadVideo({
       persistentLicense: true,
       licenseStorage: {
         save(data) {
-          localStorage.setItem("RxPlayer-licenseStorage", data);
+          localStorage.setItem("RxPlayer-licenseStorage", JSON.stringify(data));
         },
         load() {
-          return localStorage.getItem("RxPlayer-licenseStorage", data);
+          const item = localStorage.getItem("RxPlayer-licenseStorage");
+          return item === null ? [] :
+                                 JSON.parse(item);
         }
       },
     },
@@ -590,10 +592,9 @@ You can also use every storage API at your disposition (some embedded devices
 might have their own).
 
 As a nice bonus, you can note that the data given is perfectly "serializable"
-through the JSON.stringify browser API. This means that:
-```js
-console.log(data === JSON.parse(JSON.stringify(data))); // displays "true"
-```
+through the JSON.stringify browser API. This means that, as the example shown
+above, you can call `JSON.stringify` on that data and retrieve it through a
+`JSON.parse` call.
 
 This is very useful for storage APIs which cannot store JavaScript objects.
 

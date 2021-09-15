@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-import pinkie from "pinkie";
 import {
   combineLatest as observableCombineLatest,
+  lastValueFrom,
   of as observableOf,
 } from "rxjs";
 import { map } from "rxjs/operators";
 import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
 import getDurationFromManifest from "./get_duration_from_manifest";
-
-const PPromise = typeof Promise !== undefined ? Promise :
-                                                pinkie;
 
 interface IMetaplaylistContentInfos { url: string;
                                       transport: "dash" | "smooth";
@@ -58,8 +55,8 @@ function createMetaplaylist(
     );
   });
 
-  return observableCombineLatest(completeContentsInfos$).pipe(
-    map((completeContentsInfos) => {
+  return lastValueFrom(observableCombineLatest(completeContentsInfos$).pipe(
+    map((completeContentsInfos) : IMetaPlaylist => {
       const contents = completeContentsInfos
         .reduce((acc: Array<{ url: string;
                               transport: "dash" | "smooth" | "metaplaylist";
@@ -74,12 +71,11 @@ function createMetaplaylist(
                      endTime: startTime + val.duration });
           return acc;
         }, []);
-    return { type: "MPL" as const,
-             version: "0.1",
-             dynamic: false,
-             contents };
-    })
-  ).toPromise(PPromise);
+      return { type: "MPL" as const,
+               version: "0.1",
+               dynamic: false,
+               contents };
+    })));
 }
 
 export default createMetaplaylist;

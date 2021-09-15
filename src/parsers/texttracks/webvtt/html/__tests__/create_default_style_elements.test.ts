@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/naming-convention */
+
 import createDefaultStyleElements from "../create_default_style_elements";
 
 describe("parsers - webvtt - createDefaultStyleElements", () => {

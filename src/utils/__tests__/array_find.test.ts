@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
+/* eslint-disable no-invalid-this */
+/* eslint-disable no-restricted-properties */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/ban-types */
+
 import arrayFind from "../array_find";
 
-/* tslint:disable no-unbound-method */
-const initialArrayFind = (Array.prototype as any).find;
-/* tslint:enable no-unbound-method */
+/* eslint-disable @typescript-eslint/unbound-method */
+const initialArrayFind = (Array.prototype as { find : unknown }).find;
+/* eslint-enable @typescript-eslint/unbound-method */
 
 describe("utils - arrayFind", () => {
   beforeEach(() => {
-    (Array.prototype as any).find = undefined;
+    (Array.prototype as { find : unknown }).find = undefined;
   });
 
   afterEach(() => {
-    (Array.prototype as any).find = initialArrayFind;
+    (Array.prototype as { find : unknown }).find = initialArrayFind;
   });
 
   it("should return undefined for an empty array", () => {
@@ -77,12 +83,12 @@ describe("utils - arrayFind", () => {
 
   if (typeof initialArrayFind === "function") {
     it("should call the original array.find function if it exists", () => {
-      (Array.prototype as any).find = initialArrayFind;
+      (Array.prototype as { find : unknown }).find = initialArrayFind;
       const obj1 = {};
       const obj2 = {};
       const context = {};
       const arr = [obj2, obj1, obj2, obj1];
-      const spy = jest.spyOn(arr as any, "find");
+      const spy = jest.spyOn(arr as unknown as { find : () => unknown }, "find");
 
       let currentIndex = 0;
       const predicate = function(

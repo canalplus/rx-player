@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import {
   interval as observableInterval,
   timer as observableTimer,
@@ -24,7 +31,6 @@ import {
   tap,
 } from "rxjs/operators";
 
-/* tslint:disable no-unsafe-any */
 describe("compat - whenMediaSourceOpen$", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -43,7 +49,7 @@ describe("compat - whenMediaSourceOpen$", () => {
     });
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onSourceOpen$: mockOnSourceOpen$,
     }));
 
@@ -68,7 +74,7 @@ describe("compat - whenMediaSourceOpen$", () => {
     });
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onSourceOpen$: mockOnSourceOpen$,
     }));
 
@@ -79,8 +85,7 @@ describe("compat - whenMediaSourceOpen$", () => {
         expect(mockOnSourceOpen$).toHaveBeenCalledTimes(1);
         done();
       })
-    )
-    .subscribe();
+    ).subscribe();
   });
 
   it("should emit if readyState is already opened", (done) => {
@@ -91,7 +96,7 @@ describe("compat - whenMediaSourceOpen$", () => {
     const mockOnSourceOpen$ = jest.fn(() => null);
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onSourceOpen$: mockOnSourceOpen$,
     }));
 
@@ -103,4 +108,3 @@ describe("compat - whenMediaSourceOpen$", () => {
     });
   });
 });
-/* tslint:enable no-unsafe-any */

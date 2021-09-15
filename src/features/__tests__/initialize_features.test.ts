@@ -14,42 +14,58 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable max-len */
+
 describe("Features - initializeFeaturesObject", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
+  /* eslint-disable @typescript-eslint/naming-convention */
+  const win = window as unknown as {
+    __FEATURES__: unknown;
+    __RELATIVE_PATH__ : unknown;
+  };
+  /* eslint-enable @typescript-eslint/naming-convention */
+
   it("should set no feature if nothing is enabled", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get() { return false; },
     });
     const feat = {};
-    jest.mock("../index", () => ({ default: feat }));
+    jest.mock("../features_object", () => ({ default: feat,
+                                             __esModule: true as const }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect<unknown>(feat).toEqual({});
-    delete (window as any).__FEATURES__;
+    delete win.__FEATURES__;
   });
 
   it("should set the right features when everything is enabled", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get() { return true; },
     });
-    (window as any).__RELATIVE_PATH__ = {
+    win.__RELATIVE_PATH__ = {
       EME_MANAGER: "../core/eme/index.ts",
-      IMAGE_BUFFER: "../custom_source_buffers/image/index.ts",
+      IMAGE_BUFFER: "../core/segment_buffers/implementations/image/index.ts",
       BIF_PARSER: "../parsers/images/bif.ts",
       SMOOTH: "../transports/smooth/index.ts",
       DASH: "../transports/dash/index.ts",
+      DASH_JS_PARSER: "../parsers/manifest/dash/js-parser/index.ts",
       LOCAL_MANIFEST: "../transports/local/index.ts",
       METAPLAYLIST: "../transports/metaplaylist/index.ts",
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index.ts",
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_VTT: "../parsers/texttracks/webvtt/native/index.ts",
       NATIVE_SRT: "../parsers/texttracks/srt/native.ts",
       NATIVE_TTML: "../parsers/texttracks/ttml/native/index.ts",
       NATIVE_SAMI: "../parsers/texttracks/sami/native.ts",
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_VTT: "../parsers/texttracks/webvtt/html/index.ts",
       HTML_SRT: "../parsers/texttracks/srt/html.ts",
       HTML_TTML: "../parsers/texttracks/ttml/html/index.ts",
@@ -59,6 +75,7 @@ describe("Features - initializeFeaturesObject", () => {
     };
     const feat = {
       transports: {},
+      dashParsers: { js: null, wasm: null },
       imageBuffer: null,
       imageParser: null,
       nativeTextTracksBuffer: null,
@@ -68,8 +85,8 @@ describe("Features - initializeFeaturesObject", () => {
       emeManager: null,
       directfile: null,
     };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
@@ -81,15 +98,21 @@ describe("Features - initializeFeaturesObject", () => {
         smooth: require("../../transports/smooth/index").default,
         local: require("../../transports/local/index").default,
       },
+      dashParsers: {
+        js: require("../../parsers/manifest/dash/js-parser").default,
+        wasm: null,
+      },
       emeManager: require("../../core/eme/index").default,
       directfile: {
         initDirectFile: require("../../core/init/initialize_directfile").default,
         mediaElementTrackChoiceManager:
           require("../../core/api/media_element_track_choice_manager").default,
       },
-      imageBuffer: require("../../custom_source_buffers/image/index").default,
+      imageBuffer: require(
+        "../../core/segment_buffers/implementations/image/index"
+      ).default,
       imageParser: require("../../parsers/images/bif").default,
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         vtt: require("../../parsers/texttracks/webvtt/native/index").default,
@@ -97,7 +120,7 @@ describe("Features - initializeFeaturesObject", () => {
         sami: require("../../parsers/texttracks/sami/native").default,
         srt: require("../../parsers/texttracks/srt/native").default,
       },
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         vtt: require("../../parsers/texttracks/webvtt/html/index").default,
@@ -107,264 +130,263 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the html text buffer if the html vtt parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "HTML_VTT";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+    win.__RELATIVE_PATH__ = {
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_VTT: "../parsers/texttracks/webvtt/html/index.ts",
     };
     const feat = {
       htmlTextTracksBuffer: null,
       htmlTextTracksParsers: {},
     };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         vtt: require("../../parsers/texttracks/webvtt/html/index").default,
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the html text buffer if the html sami parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "HTML_SAMI";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+    win.__RELATIVE_PATH__ = {
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_SAMI: "../parsers/texttracks/sami/html",
     };
     const feat = {
       htmlTextTracksBuffer: null,
       htmlTextTracksParsers: {},
     };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         sami: require("../../parsers/texttracks/sami/html").default,
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the html text buffer if the html ttml parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "HTML_TTML";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+    win.__RELATIVE_PATH__ = {
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_TTML: "../parsers/texttracks/ttml/html/index",
     };
     const feat = {
       htmlTextTracksBuffer: null,
       htmlTextTracksParsers: {},
     };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         ttml: require("../../parsers/texttracks/ttml/html/index").default,
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the html text buffer if the html srt parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "HTML_SRT";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
-      HTML_TEXT_BUFFER: "../custom_source_buffers/text/html/index.ts",
+    win.__RELATIVE_PATH__ = {
+      HTML_TEXT_BUFFER: "../core/segment_buffers/implementations/text/html/index.ts",
       HTML_SRT: "../parsers/texttracks/srt/html",
     };
     const feat = {
       htmlTextTracksBuffer: null,
       htmlTextTracksParsers: {},
     };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      htmlTextTracksBuffer: require("../../custom_source_buffers/text/html/index")
+      htmlTextTracksBuffer: require("../../core/segment_buffers/implementations/text/html/index")
         .default,
       htmlTextTracksParsers: {
         srt: require("../../parsers/texttracks/srt/html").default,
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the native text buffer if the native vtt parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "NATIVE_VTT";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index",
+    win.__RELATIVE_PATH__ = {
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index",
       NATIVE_VTT: "../parsers/texttracks/webvtt/native/index",
     };
     const feat = {
       nativeTextTracksBuffer: null,
       nativeTextTracksParsers: {},
     };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         vtt: require("../../parsers/texttracks/webvtt/native/index").default,
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the native text buffer if the native sami parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "NATIVE_SAMI";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index.ts",
+    win.__RELATIVE_PATH__ = {
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_SAMI: "../parsers/texttracks/sami/native",
     };
     const feat = {
       nativeTextTracksBuffer: null,
       nativeTextTracksParsers: {},
     };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         sami: require("../../parsers/texttracks/sami/native").default,
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the native text buffer if the native ttml parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "NATIVE_TTML";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index.ts",
+    win.__RELATIVE_PATH__ = {
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_TTML: "../parsers/texttracks/ttml/native/index",
     };
     const feat = {
       nativeTextTracksBuffer: null,
       nativeTextTracksParsers: {},
     };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         ttml: require("../../parsers/texttracks/ttml/native/index").default,
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 
   it("should add the native text buffer if the native srt parser is added", () => {
-    (window as any).__FEATURES__ = new Proxy({}, {
+    win.__FEATURES__ = new Proxy({}, {
       get(_target, prop) {
         return prop === "NATIVE_SRT";
       },
     });
-    (window as any).__RELATIVE_PATH__ = {
-      NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index.ts",
+    win.__RELATIVE_PATH__ = {
+      NATIVE_TEXT_BUFFER: "../core/segment_buffers/implementations/text/native/index.ts",
       NATIVE_SRT: "../parsers/texttracks/srt/native",
     };
     const feat = {
       nativeTextTracksBuffer: null,
       nativeTextTracksParsers: {},
     };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
     expect(feat).toEqual({
-      nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")
+      nativeTextTracksBuffer: require("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
         srt: require("../../parsers/texttracks/srt/native").default,
       },
     });
 
-    delete (window as any).__FEATURES__;
-    delete (window as any).__RELATIVE_PATH__;
+    delete win.__FEATURES__;
+    delete win.__RELATIVE_PATH__;
   });
 });
-/* tslint:enable no-unsafe-any */

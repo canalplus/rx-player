@@ -19,13 +19,10 @@ import {
   Subject,
 } from "rxjs";
 import { takeUntil } from "rxjs/operators";
-import { TypedArray } from "../../../core/eme";
-import {
-  bytesToStr,
-  strToBytes,
-} from "../../../utils/byte_parsing";
+import { base64ToBytes } from "../../../utils/base64";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
+import { utf8ToStr } from "../../../utils/string_parsing";
 import * as events from "../../event_listeners";
 import {
   ICustomMediaKeys,
@@ -38,8 +35,8 @@ export interface IOldWebkitHTMLMediaElement extends HTMLVideoElement {
   webkitGenerateKeyRequest : (keyType: string, initData : ArrayBuffer) => void;
   webkitAddKey : (
     keyType: string,
-    key : ArrayBuffer|TypedArray|DataView,
-    kid : ArrayBuffer|TypedArray|DataView|null,
+    key : BufferSource,
+    kid : BufferSource|null,
     sessionId : string
   ) => void;
 }
@@ -57,10 +54,11 @@ export function isOldWebkitMediaElement(
     .webkitGenerateKeyRequest === "function";
 }
 
-class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
-                               implements ICustomMediaKeySession {
-  public readonly update: (license: Uint8Array) =>
-    Promise<void>;
+class OldWebkitMediaKeySession
+  extends EventEmitter<IMediaKeySessionEvents>
+  implements ICustomMediaKeySession
+{
+  public readonly update: (license: Uint8Array) => Promise<void>;
   public readonly closed: Promise<void>;
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
@@ -70,8 +68,7 @@ class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
   private readonly _key: string;
   private readonly _closeSession$: Subject<void>;
 
-  constructor(mediaElement: IOldWebkitHTMLMediaElement,
-              keySystem: string) {
+  constructor(mediaElement: IOldWebkitHTMLMediaElement, keySystem: string) {
     super();
     this._closeSession$ = new Subject();
     this._vid = mediaElement;
@@ -97,11 +94,12 @@ class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
             const licenseTypedArray =
               license instanceof ArrayBuffer ? new Uint8Array(license) :
                                                license;
-            /* tslint:disable no-unsafe-any */
-            const json = JSON.parse(bytesToStr(licenseTypedArray));
-            const key = strToBytes(atob(json.keys[0].k));
-            const kid = strToBytes(atob(json.keys[0].kid));
-            /* tslint:enable no-unsafe-any */
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const json = JSON.parse(utf8ToStr(licenseTypedArray));
+            /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+            const key = base64ToBytes(json.keys[0].k);
+            const kid = base64ToBytes(json.keys[0].kid);
+            /* eslint-enable @typescript-eslint/no-unsafe-member-access */
             resolve(this._vid.webkitAddKey(this._key, key, kid, /* sessionId */ ""));
           } else {
             resolve(this._vid.webkitAddKey(this._key, license, null, /* sessionId */ ""));
@@ -138,11 +136,11 @@ class OldWebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
 }
 
 class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
-  private readonly ks_: string;
+  private readonly _keySystem: string;
   private _videoElement?: IOldWebkitHTMLMediaElement;
 
   constructor(keySystem: string) {
-    this.ks_ = keySystem;
+    this._keySystem = keySystem;
   }
 
   _setVideo(videoElement: IOldWebkitHTMLMediaElement|HTMLMediaElement): void {
@@ -156,7 +154,7 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
     if (this._videoElement == null) {
       throw new Error("Video not attached to the MediaKeys");
     }
-    return new OldWebkitMediaKeySession(this._videoElement, this.ks_);
+    return new OldWebkitMediaKeySession(this._videoElement, this._keySystem);
   }
 
   setServerCertificate(): Promise<void> {
@@ -164,7 +162,14 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
   }
 }
 
-export default function getOldWebKitMediaKeysCallbacks() {
+export default function getOldWebKitMediaKeysCallbacks() : {
+  isTypeSupported: (keyType: string) => boolean;
+  createCustomMediaKeys: (keyType: string) => OldWebKitCustomMediaKeys;
+  setMediaKeys: (
+    elt: HTMLMediaElement,
+    mediaKeys: MediaKeys|ICustomMediaKeys|null
+  ) => void;
+} {
   const isTypeSupported = function (keyType: string): boolean {
     // get any <video> element from the DOM or create one
     // and try the `canPlayType` method
@@ -172,20 +177,21 @@ export default function getOldWebKitMediaKeysCallbacks() {
     if (videoElement == null) {
       videoElement = document.createElement("video");
     }
-    /* tslint:disable no-unsafe-any */
-    /* tslint:disable no-unbound-method */
     if (videoElement != null && typeof videoElement.canPlayType === "function") {
-      /* tslint:enable no-unbound-method */
-      return !!(videoElement as any).canPlayType("video/mp4", keyType);
-      /* tslint:enable no-unsafe-any */
+      return !!(videoElement.canPlayType as unknown as (
+        mimeType : string,
+        keyType? : string
+      ) => boolean)("video/mp4", keyType);
     } else {
       return false;
     }
   };
   const createCustomMediaKeys =
     (keyType: string) => new OldWebKitCustomMediaKeys(keyType);
-  const setMediaKeys = (elt: HTMLMediaElement,
-                        mediaKeys: MediaKeys|ICustomMediaKeys|null): void => {
+  const setMediaKeys = (
+    elt: HTMLMediaElement,
+    mediaKeys: MediaKeys|ICustomMediaKeys|null
+  ): void => {
     if (mediaKeys === null) {
       return;
     }

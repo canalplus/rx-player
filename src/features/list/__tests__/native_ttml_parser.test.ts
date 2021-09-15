@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import ttmlParser from "../../../parsers/texttracks/ttml/native";
 import addNativettmlFeature from "../native_ttml_parser";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/ttml/native", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - native ttml Parser", () => {
   it("should add an native ttml Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { nativeTextTracksParsers: {} };
     addNativettmlFeature(featureObject);
     expect(featureObject).toEqual({
@@ -33,4 +35,3 @@ describe("Features list - native ttml Parser", () => {
     expect(featureObject.nativeTextTracksParsers.ttml).toBe(ttmlParser);
   });
 });
-/* tslint:enable no-unsafe-any */

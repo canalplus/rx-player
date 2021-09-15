@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+
 describe("Manifest - Manifest", () => {
   const fakeLogger = { warn: jest.fn(() => undefined),
                        info: jest.fn(() => undefined) };
@@ -25,11 +32,11 @@ describe("Manifest - Manifest", () => {
     jest.resetModules();
     fakeLogger.warn.mockClear();
     fakeLogger.info.mockClear();
-    jest.mock("../../log", () =>  ({ __esModule: true,
+    jest.mock("../../log", () =>  ({ __esModule: true as const,
                                      default: fakeLogger }));
     fakeGenerateNewId.mockClear();
     fakeIdGenerator.mockClear();
-    jest.mock("../../utils/id_generator", () => ({ __esModule: true,
+    jest.mock("../../utils/id_generator", () => ({ __esModule: true as const,
                                                    default: fakeIdGenerator }));
 
   });
@@ -39,8 +46,12 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [],
-                                 transportType: "foobar" };
+                                 timeBounds: { absoluteMinimumTime: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
+                                 periods: [] };
 
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
@@ -51,12 +62,11 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(undefined);
-    expect(manifest.maximumTime).toEqual(undefined);
-    expect(manifest.minimumTime).toEqual(undefined);
-    expect(manifest.parsingErrors).toEqual([]);
+    expect(manifest.getMaximumPosition()).toEqual(10);
+    expect(manifest.getMinimumPosition()).toEqual(0);
+    expect(manifest.contentWarnings).toEqual([]);
     expect(manifest.periods).toEqual([]);
     expect(manifest.suggestedPresentationDelay).toEqual(undefined);
-    expect(manifest.transport).toEqual("foobar");
     expect(manifest.uris).toEqual([]);
 
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
@@ -72,13 +82,17 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [period1, period2],
-                                 transportType: "foobar" };
+                                 timeBounds: { absoluteMinimumTime: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
+                                 periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
-      return { id: `foo${period.id}`, adaptations: {}, parsingErrors: [] };
+      return { id: `foo${period.id}`, adaptations: {}, contentWarnings: [] };
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
 
     const Manifest = require("../manifest").default;
@@ -89,10 +103,10 @@ describe("Manifest - Manifest", () => {
 
     expect(manifest.periods).toEqual([ { id: "foo0",
                                          adaptations: {},
-                                         parsingErrors: [] },
+                                         contentWarnings: [] },
                                        { id: "foo1",
                                          adaptations: {},
-                                         parsingErrors: [] } ]);
+                                         contentWarnings: [] } ]);
     expect(manifest.adaptations).toEqual({});
 
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
@@ -108,21 +122,25 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [period1, period2],
-                                 transportType: "foobar" };
+                                 timeBounds: { absoluteMinimumTime: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
+                                 periods: [period1, period2] };
 
     const representationFilter = function() { return false; };
 
     const fakePeriod = jest.fn((period) => {
-      return { id: `foo${period.id}`, parsingErrors: [] };
+      return { id: `foo${period.id}`, contentWarnings: [] };
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     const Manifest = require("../manifest").default;
 
-    /* tslint:disable no-unused-expression */
+    /* eslint-disable @typescript-eslint/no-unused-expressions */
     new Manifest(simpleFakeManifest, { representationFilter });
-    /* tslint:enable no-unused-expression */
+    /* eslint-enable @typescript-eslint/no-unused-expressions */
 
     expect(fakePeriod).toHaveBeenCalledTimes(2);
     expect(fakePeriod).toHaveBeenCalledWith(period1, representationFilter);
@@ -142,13 +160,17 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [period1, period2],
-                                 transportType: "foobar" };
+                                 timeBounds: { absoluteMinimumTime: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
+                                 periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
-      return { ...period, id: `foo${period.id}`, parsingErrors: [] };
+      return { ...period, id: `foo${period.id}`, contentWarnings: [] };
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     const Manifest = require("../manifest").default;
 
@@ -158,8 +180,8 @@ describe("Manifest - Manifest", () => {
     expect(fakePeriod).toHaveBeenCalledWith(period2, undefined);
 
     expect(manifest.periods).toEqual([
-      { id: "foo0", parsingErrors: [], start: 4, adaptations: adapP1 },
-      { id: "foo1", parsingErrors: [], start: 12, adaptations: adapP2 },
+      { id: "foo0", contentWarnings: [], start: 4, adaptations: adapP1 },
+      { id: "foo1", contentWarnings: [], start: 12, adaptations: adapP2 },
     ]);
     expect(manifest.adaptations).toBe(adapP1);
 
@@ -176,26 +198,30 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 periods: [period1, period2],
-                                 transportType: "foobar" };
+                                 timeBounds: { absoluteMinimumTime: 0,
+                                               timeshiftDepth: null,
+                                               maximumTimeData: { isLinear: false,
+                                                                  value: 10,
+                                                                  time: 10 } },
+                                 periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
       return { id: `foo${period.id}`,
-               parsingErrors: [ new Error(`a${period.id}`),
-                                new Error(period.id) ] };
+               contentWarnings: [ new Error(`a${period.id}`),
+                                  new Error(period.id) ] };
     });
     jest.mock("../period", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakePeriod,
     }));
     const Manifest = require("../manifest").default;
 
     const manifest = new Manifest(simpleFakeManifest, {});
-    expect(manifest.parsingErrors).toHaveLength(4);
-    expect(manifest.parsingErrors).toContainEqual(new Error("a0"));
-    expect(manifest.parsingErrors).toContainEqual(new Error("a1"));
-    expect(manifest.parsingErrors).toContainEqual(new Error("0"));
-    expect(manifest.parsingErrors).toContainEqual(new Error("1"));
+    expect(manifest.contentWarnings).toHaveLength(4);
+    expect(manifest.contentWarnings).toContainEqual(new Error("a0"));
+    expect(manifest.contentWarnings).toContainEqual(new Error("a1"));
+    expect(manifest.contentWarnings).toContainEqual(new Error("0"));
+    expect(manifest.contentWarnings).toContainEqual(new Error("1"));
 
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
@@ -213,20 +239,22 @@ describe("Manifest - Manifest", () => {
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              parsingErrors: [new Error("a"), new Error("b")],
+                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [oldPeriod1, oldPeriod2],
-                              maximumTime: { isContinuous: false, value: 10, time },
-                              minimumTime: { isContinuous: true, value: 5, time },
+                              timeBounds: { absoluteMinimumTime: 5,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time } },
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
       return { ...period,
                id: `foo${period.id}`,
-               parsingErrors: [new Error(period.id)] };
+               contentWarnings: [new Error(period.id)] };
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
@@ -237,15 +265,14 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(13);
-    expect(manifest.parsingErrors).toEqual([new Error("0"), new Error("1")]);
-    expect(manifest.maximumTime).toEqual({ isContinuous: false, value: 10, time });
-    expect(manifest.minimumTime).toEqual({ isContinuous: true, value: 5, time });
+    expect(manifest.contentWarnings).toEqual([new Error("0"), new Error("1")]);
+    expect(manifest.getMaximumPosition()).toEqual(10);
+    expect(manifest.getMinimumPosition()).toEqual(5);
     expect(manifest.periods).toEqual([
-      { id: "foo0", parsingErrors: [new Error("0")], adaptations: {}, start: 4 },
-      { id: "foo1", parsingErrors: [new Error("1")], adaptations: {}, start: 12 },
+      { id: "foo0", contentWarnings: [new Error("0")], adaptations: {}, start: 4 },
+      { id: "foo1", contentWarnings: [new Error("1")], adaptations: {}, start: 12 },
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
-    expect(manifest.transport).toEqual("foobar");
     expect(manifest.uris).toEqual(["url1", "url2"]);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
@@ -258,11 +285,11 @@ describe("Manifest - Manifest", () => {
       return {
         ...period,
         id: `foo${period.id}`,
-        parsingErrors: [new Error(period.id)],
+        contentWarnings: [new Error(period.id)],
       };
     });
     jest.mock("../period", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakePeriod,
     }));
     const Manifest = require("../manifest").default;
@@ -273,15 +300,16 @@ describe("Manifest - Manifest", () => {
                                isDynamic: false,
                                isLive: false,
                                lifetime: 13,
-      parsingErrors: [new Error("a"), new Error("b")],
-      periods: [
-        { id: "0", start: 4, adaptations: {} },
-        { id: "1", start: 12, adaptations: {} },
-      ],
-      suggestedPresentationDelay: 99,
-      transportType: "foobar",
-      uris: ["url1", "url2"],
-    };
+                               timeBounds: { absoluteMinimumTime: 0,
+                                             timeshiftDepth: null,
+                                             maximumTimeData: { isLinear: false,
+                                                                value: 10,
+                                                                time: 10 } },
+                               contentWarnings: [new Error("a"), new Error("b")],
+                               periods: [ { id: "0", start: 4, adaptations: {} },
+                                          { id: "1", start: 12, adaptations: {} } ],
+                               suggestedPresentationDelay: 99,
+                               uris: ["url1", "url2"] };
 
     const manifest1 = new Manifest(oldManifestArgs1, {});
     expect(manifest1.getUrl()).toEqual("url1");
@@ -292,27 +320,24 @@ describe("Manifest - Manifest", () => {
                                isDynamic: false,
                                isLive: false,
                                lifetime: 13,
-                               minimumTime: 4,
-                               parsingErrors: [new Error("a"), new Error("b")],
-                               periods: [
-                                 { id: "0", start: 4, adaptations: {} },
-                                 { id: "1", start: 12, adaptations: {} },
-                               ],
+                               contentWarnings: [new Error("a"), new Error("b")],
+                               periods: [ { id: "0", start: 4, adaptations: {} },
+                                          { id: "1", start: 12, adaptations: {} } ],
                                suggestedPresentationDelay: 99,
-                               transportType: "foobar",
+                               timeBounds: { absoluteMinimumTime: 0,
+                                             timeshiftDepth: null,
+                                             maximumTimeData: { isLinear: false,
+                                                                value: 10,
+                                                                time: 10 } },
                                uris: [] };
     const manifest2 = new Manifest(oldManifestArgs2, {});
     expect(manifest2.getUrl()).toEqual(undefined);
   });
 
-  it("should update with a new Manifest when calling `update`", () => {
-    const fakePeriod = jest.fn((period) => {
-      return {
-        ...period,
-        id: `foo${period.id}`,
-        parsingErrors: [new Error(period.id)],
-      };
-    });
+  it("should replace with a new Manifest when calling `replace`", () => {
+    const fakePeriod = jest.fn((period) => ({ ...period,
+                                              id: `foo${period.id}`,
+                                              contentWarnings: [new Error(period.id)] }));
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
@@ -321,14 +346,10 @@ describe("Manifest - Manifest", () => {
       oldPeriod.start = newPeriod.start;
       oldPeriod.adaptations = newPeriod.adaptations;
     });
-    jest.mock("../period", () =>  ({
-      __esModule: true,
-      default: fakePeriod,
-    }));
-    jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
-      default: fakeUpdatePeriodInPlace,
-    }));
+    jest.mock("../period", () => ({ __esModule: true as const,
+                                    default: fakePeriod }));
+    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
+                                                    default: fakeUpdatePeriodInPlace }));
 
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
@@ -336,18 +357,16 @@ describe("Manifest - Manifest", () => {
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              parsingErrors: [ new Error("a"),
-                                               new Error("b") ],
+                              contentWarnings: [ new Error("a"),
+                                                 new Error("b") ],
                               periods: [ { id: "0", start: 4, adaptations: {} },
                                          { id: "1", start: 12, adaptations: {} } ],
-                              maximumTime: { isContinuous: false,
-                                             value: 10,
-                                             time: 30000 },
-                              minimumTime: { isContinuous: true,
-                                             value: 7,
-                                             time: 10000 },
+                              timeBounds: { absoluteMinimumTime: 7,
+                                            timeshiftDepth: 10,
+                                            maximumTimeData: { isLinear: true,
+                                                               value: 30,
+                                                               time: 30000 } },
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const Manifest = require("../manifest").default;
@@ -357,25 +376,25 @@ describe("Manifest - Manifest", () => {
 
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
-    const newMinimumTime = { isContinuous: false, value: 1, time: 5000000 };
-    const newMaximumTime = { isContinuous: true, value: 3, time: 4000000 };
     const newAdaptations = {};
     const newPeriod1 = { id: "foo0", start: 4, adaptations: {} };
     const newPeriod2 = { id: "foo1", start: 12, adaptations: {} };
-    const newManifest : any = { adaptations: newAdaptations,
-                                availabilityStartTime: 6,
-                                id: "man2",
-                                isDynamic: true,
-                                isLive: true,
-                                lifetime: 14,
-                                parsingErrors: [new Error("c"), new Error("d")],
-                                suggestedPresentationDelay: 100,
-                                timeShiftBufferDepth: 3,
-                                maximumTime: newMaximumTime,
-                                minimumTime: newMinimumTime,
-                                periods: [newPeriod1, newPeriod2],
-                                transport: "foob",
-                                uris: ["url3", "url4"] };
+    const newManifest = { adaptations: newAdaptations,
+                          availabilityStartTime: 6,
+                          id: "man2",
+                          isDynamic: true,
+                          isLive: true,
+                          lifetime: 14,
+                          contentWarnings: [new Error("c"), new Error("d")],
+                          suggestedPresentationDelay: 100,
+                          timeShiftBufferDepth: 3,
+                          _timeBounds: { absoluteMinimumTime: 7,
+                                         timeshiftDepth: 5,
+                                         maximumTimeData: { isLinear: false,
+                                                            value: 40,
+                                                            time: 30000 } },
+                          periods: [newPeriod1, newPeriod2],
+                          uris: ["url3", "url4"] };
 
     manifest.replace(newManifest);
     expect(manifest.adaptations).toEqual(newAdaptations);
@@ -384,11 +403,10 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isDynamic).toEqual(true);
     expect(manifest.isLive).toEqual(true);
     expect(manifest.lifetime).toEqual(14);
-    expect(manifest.parsingErrors).toEqual([new Error("c"), new Error("d")]);
-    expect(manifest.maximumTime).toEqual(newMaximumTime);
-    expect(manifest.minimumTime).toEqual(newMinimumTime);
+    expect(manifest.contentWarnings).toEqual([new Error("c"), new Error("d")]);
+    expect(manifest.getMinimumPosition()).toEqual(40 - 5);
+    expect(manifest.getMaximumPosition()).toEqual(40);
     expect(manifest.suggestedPresentationDelay).toEqual(100);
-    expect(manifest.transport).toEqual("foob");
     expect(manifest.uris).toEqual(["url3", "url4"]);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2]);
@@ -405,25 +423,28 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 
-  it("should prepend older Periods when calling `update`", () => {
+  it("should prepend older Periods when calling `replace`", () => {
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              minimumTime: 4,
-                              parsingErrors: [new Error("a"), new Error("b")],
+                              timeBounds: { absoluteMinimumTime: 0,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time: 10 } },
+                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1", start: 4, adaptations: {} }],
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
       return {
         ...period,
         id: `foo${period.id}`,
-        parsingErrors: [new Error(period.id)],
+        contentWarnings: [new Error(period.id)],
       };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
@@ -433,12 +454,12 @@ describe("Manifest - Manifest", () => {
       oldPeriod.id = newPeriod.id;
       oldPeriod.start = newPeriod.start;
       oldPeriod.adaptations = newPeriod.adaptations;
-      oldPeriod.parsingErrors = newPeriod.parsingErrors;
+      oldPeriod.contentWarnings = newPeriod.contentWarnings;
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
@@ -450,32 +471,35 @@ describe("Manifest - Manifest", () => {
     const newPeriod1 = { id: "pre0",
                          start: 0,
                          adaptations: {},
-                         parsingErrors: [] };
+                         contentWarnings: [] };
     const newPeriod2 = { id: "pre1",
                          start: 2,
                          adaptations: {},
-                         parsingErrors: [] };
+                         contentWarnings: [] };
     const newPeriod3 = { id: "foo1",
                          start: 4,
                          adaptations: {},
-                         parsingErrors: [] };
+                         contentWarnings: [] };
     const newManifest = { adaptations: {},
                           availabilityStartTime: 6,
                           id: "man2",
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          minimumTime: 5,
-                          parsingErrors: [ new Error("c"),
-                                           new Error("d") ],
+                          contentWarnings: [ new Error("c"),
+                                             new Error("d") ],
                           suggestedPresentationDelay: 100,
                           periods: [ newPeriod1,
                                      newPeriod2,
                                      newPeriod3 ],
-                          transport: "foob",
+                          timeBounds: { absoluteMinimumTime: 0,
+                                        timeshiftDepth: null,
+                                        maximumTimeData: { isLinear: false,
+                                                           value: 10,
+                                                           time: 10 } },
                           uris: ["url3", "url4"] };
 
-    manifest.replace(newManifest as any);
+    manifest.replace(newManifest);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -493,24 +517,27 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 
-  it("should append newer Periods when calling `update`", () => {
+  it("should append newer Periods when calling `replace`", () => {
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              minimumTime: 4,
-                              parsingErrors: [new Error("a"), new Error("b")],
+                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
+                              timeBounds: { absoluteMinimumTime: 0,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time: 10 } },
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
       return { ...period,
                id: `foo${period.id}`,
-               parsingErrors: [new Error(period.id)] };
+               contentWarnings: [new Error(period.id)] };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -518,14 +545,14 @@ describe("Manifest - Manifest", () => {
       });
       oldPeriod.id = newPeriod.id;
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs as any, {});
+    const manifest = new Manifest(oldManifestArgs, {});
     const [oldPeriod1] = manifest.periods;
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
@@ -539,14 +566,17 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          minimumTime: 5,
-                          parsingErrors: [new Error("c"), new Error("d")],
+                          contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
-                          transport: "foob",
+                          timeBounds: { absoluteMinimumTime: 0,
+                                        timeshiftDepth: null,
+                                        maximumTimeData: { isLinear: false,
+                                                           value: 10,
+                                                           time: 10 } },
                           uris: ["url3", "url4"] };
 
-    manifest.replace(newManifest as any);
+    manifest.replace(newManifest);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -562,24 +592,27 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 
-  it("should replace different Periods when calling `update`", () => {
+  it("should replace different Periods when calling `replace`", () => {
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              minimumTime: 4,
-                              parsingErrors: [new Error("a"), new Error("b")],
+                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
+                              timeBounds: { absoluteMinimumTime: 0,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time: 10 } },
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
       return { ...period,
                id: `foo${period.id}`,
-               parsingErrors: [new Error(period.id)] };
+               contentWarnings: [new Error(period.id)] };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -587,14 +620,14 @@ describe("Manifest - Manifest", () => {
       });
       oldPeriod.id = newPeriod.id;
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs as any, {});
+    const manifest = new Manifest(oldManifestArgs, {});
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
@@ -607,14 +640,17 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          minimumTime: 5,
-                          parsingErrors: [new Error("c"), new Error("d")],
+                          contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
-                          transport: "foob",
+                          timeBounds: { absoluteMinimumTime: 0,
+                                        timeshiftDepth: null,
+                                        maximumTimeData: { isLinear: false,
+                                                           value: 10,
+                                                           time: 10 } },
                           uris: ["url3", "url4"] };
 
-    manifest.replace(newManifest as any);
+    manifest.replace(newManifest);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -627,26 +663,29 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 
-  it("should merge overlapping Periods when calling `update`", () => {
+  it("should merge overlapping Periods when calling `replace`", () => {
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              minimumTime: 4,
-                              parsingErrors: [new Error("a"), new Error("b")],
+                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1", start: 2 },
                                         { id: "2", start: 4 },
                                         { id: "3", start: 6 }],
+                              timeBounds: { absoluteMinimumTime: 0,
+                                            timeshiftDepth: null,
+                                            maximumTimeData: { isLinear: false,
+                                                               value: 10,
+                                                               time: 10 } },
                               suggestedPresentationDelay: 99,
-                              transportType: "foobar",
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
       return { ...period,
                id: `foo${period.id}`,
-               parsingErrors: [new Error(period.id)] };
+               contentWarnings: [new Error(period.id)] };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -655,14 +694,14 @@ describe("Manifest - Manifest", () => {
       oldPeriod.id = newPeriod.id;
       oldPeriod.start = newPeriod.start;
     });
-    jest.mock("../period", () =>  ({ __esModule: true,
+    jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
     jest.mock("../update_period_in_place", () =>  ({
-      __esModule: true,
+      __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
     const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs as any, {});
+    const manifest = new Manifest(oldManifestArgs, {});
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
@@ -678,18 +717,21 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          minimumTime: 5,
-                          parsingErrors: [new Error("c"), new Error("d")],
+                          contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [ newPeriod1,
                                      newPeriod2,
                                      newPeriod3,
                                      newPeriod4,
                                      newPeriod5 ],
-                          transport: "foob",
+                          timeBounds: { absoluteMinimumTime: 0,
+                                        timeshiftDepth: null,
+                                        maximumTimeData: { isLinear: false,
+                                                           value: 10,
+                                                           time: 10 } },
                           uris: ["url3", "url4"] };
 
-    manifest.replace(newManifest as any);
+    manifest.replace(newManifest);
 
     expect(manifest.periods).toEqual([ newPeriod1,
                                        newPeriod2,
@@ -708,4 +750,3 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 });
-/* tslint:enable no-unsafe-any */

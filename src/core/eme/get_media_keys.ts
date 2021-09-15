@@ -24,16 +24,20 @@ import {
   mergeMap,
 } from "rxjs/operators";
 import {
-  EncryptedMediaError,
-} from "../../errors";
+  ICustomMediaKeys,
+  ICustomMediaKeySystemAccess,
+} from "../../compat";
+import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import tryCatch from "../../utils/rx-try_catch";
 import getMediaKeySystemAccess from "./find_key_system";
 import MediaKeysInfosStore from "./media_keys_infos_store";
+import ServerCertificateStore from "./server_certificate_store";
 import {
   IKeySystemOption,
-  IMediaKeysInfos,
+  IMediaKeySessionStores,
 } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
@@ -56,8 +60,22 @@ function createPersistentSessionsStorage(
                                   "No license storage found for persistent license.");
   }
 
-  log.info("EME: Set the given license storage");
+  log.debug("EME: Set the given license storage");
   return new PersistentSessionsStore(licenseStorage);
+}
+
+/** Object returned by `getMediaKeysInfos`. */
+export interface IMediaKeysInfos {
+  /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
+  mediaKeySystemAccess: MediaKeySystemAccess |
+                        ICustomMediaKeySystemAccess;
+  /** The MediaKeys instance. */
+  mediaKeys : MediaKeys |
+              ICustomMediaKeys;
+  /** Stores allowing to create and retrieve MediaKeySessions. */
+  stores : IMediaKeySessionStores;
+  /** IKeySystemOption compatible to the created MediaKeys instance. */
+  options : IKeySystemOption;
 }
 
 /**
@@ -69,35 +87,57 @@ export default function getMediaKeysInfos(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[]
 ) : Observable<IMediaKeysInfos> {
-    return getMediaKeySystemAccess(mediaElement,
-                                   keySystemsConfigs
-    ).pipe(mergeMap((evt) => {
+  return getMediaKeySystemAccess(mediaElement, keySystemsConfigs).pipe(
+    mergeMap((evt) => {
       const { options, mediaKeySystemAccess } = evt.value;
       const currentState = MediaKeysInfosStore.getState(mediaElement);
       const persistentSessionsStore = createPersistentSessionsStorage(options);
 
-      if (currentState != null && evt.type === "reuse-media-key-system-access") {
+      if (currentState !== null && evt.type === "reuse-media-key-system-access") {
         const { mediaKeys, loadedSessionsStore } = currentState;
-        return observableOf({ mediaKeys,
-                              loadedSessionsStore,
-                              mediaKeySystemAccess,
-                              keySystemOptions: options,
-                              persistentSessionsStore });
+
+        // We might just rely on the currently attached MediaKeys instance.
+        // First check if server certificate parameters are the same than in the
+        // current MediaKeys instance. If not, re-create MediaKeys from scratch.
+        if (ServerCertificateStore.hasOne(mediaKeys) === false ||
+            (!isNullOrUndefined(options.serverCertificate) &&
+             ServerCertificateStore.has(mediaKeys, options.serverCertificate)))
+        {
+          return observableOf({ mediaKeys,
+                                mediaKeySystemAccess,
+                                stores: { loadedSessionsStore, persistentSessionsStore },
+                                options });
+
+        }
       }
 
-      log.debug("EME: Calling createMediaKeys on the MediaKeySystemAccess");
-      return tryCatch(() => castToObservable(mediaKeySystemAccess.createMediaKeys()),
-                      undefined).pipe(
-        catchError((error : unknown) : never => {
-          const message = error instanceof Error ?
-            error.message :
-            "Unknown error when creating MediaKeys.";
-          throw new EncryptedMediaError("CREATE_MEDIA_KEYS_ERROR", message);
-        }),
-        map((mediaKeys) => ({ mediaKeys,
-                              loadedSessionsStore: new LoadedSessionsStore(mediaKeys),
-                              mediaKeySystemAccess,
-                              keySystemOptions: options,
-                              persistentSessionsStore })));
+      return createMediaKeys(mediaKeySystemAccess).pipe(map((mediaKeys) => {
+        log.info("EME: MediaKeys created with success", mediaKeys);
+        const loadedSessionsStore = new LoadedSessionsStore(mediaKeys);
+        return { mediaKeys,
+                 mediaKeySystemAccess,
+                 stores: { loadedSessionsStore, persistentSessionsStore },
+                 options };
+      }));
+    }));
+}
+
+/**
+ * Create `MediaKeys` from the `MediaKeySystemAccess` given.
+ * Throws the right formatted error if it fails.
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess
+ * @returns {Observable.<MediaKeys>}
+ */
+function createMediaKeys(
+  mediaKeySystemAccess : MediaKeySystemAccess | ICustomMediaKeySystemAccess
+) : Observable<MediaKeys | ICustomMediaKeys> {
+  log.info("EME: Calling createMediaKeys on the MediaKeySystemAccess");
+  return tryCatch(() => castToObservable(mediaKeySystemAccess.createMediaKeys()),
+                  undefined).pipe(
+    catchError((error : unknown) : never => {
+      const message = error instanceof Error ?
+        error.message :
+        "Unknown error when creating MediaKeys.";
+      throw new EncryptedMediaError("CREATE_MEDIA_KEYS_ERROR", message);
     }));
 }

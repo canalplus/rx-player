@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("parsers - webvtt - convertPayloadToHTML", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
+  const win = window as {
+    DOMParser : unknown;
+  };
   it("should return empty payload when input text is empty", () => {
     const spyParseFromString = jest.fn(() => {
       return {
@@ -29,8 +38,8 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
       };
     });
 
-    const origDOMParser = (window as any).DOMParser;
-    (window as any).DOMParser = class MockDOMParser {
+    const origDOMParser = win.DOMParser;
+    win.DOMParser = class MockDOMParser {
       constructor() {
         // Useless constructor in mock
       }
@@ -41,7 +50,7 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
 
     const spy = jest.fn();
     jest.mock("../create_styled_element", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spy,
     }));
 
@@ -49,7 +58,7 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
     expect(convertPayloadToHTML("", {})).toEqual([]);
     expect(spyParseFromString).toHaveBeenCalledTimes(1);
     expect(spy).not.toHaveBeenCalled();
-    (window as any).DOMParser = origDOMParser;
+    win.DOMParser = origDOMParser;
   });
 
   it("should convert normal input text with no style", () => {
@@ -74,12 +83,12 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
       }
     });
     jest.mock("../create_styled_element", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyCreateStyledElement,
     }));
 
-    const origDOMParser = (window as any).DOMParser;
-    (window as any).DOMParser = class MockDOMParser {
+    const origDOMParser = win.DOMParser;
+    win.DOMParser = class MockDOMParser {
       constructor() {
         // Useless constructor in mock
       }
@@ -92,7 +101,6 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
     expect(convertPayloadToHTML(innerText, {})).toEqual([bNode, span]);
     expect(spyParseFromString).toHaveBeenCalledTimes(1);
     expect(spyCreateStyledElement).toHaveBeenCalledTimes(2);
-    (window as any).DOMParser = origDOMParser;
+    win.DOMParser = origDOMParser;
   });
 });
-/* tslint:enable no-unsafe-any */

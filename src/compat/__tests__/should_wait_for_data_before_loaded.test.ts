@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("compat - shouldWaitForDataBeforeLoaded", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -23,7 +29,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
   it("should return true if we are not on Safari browser nor in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: false,
       };
     });
@@ -35,7 +41,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
   it("should return true if we are not on Safari browser but in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: false,
       };
     });
@@ -44,12 +50,12 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(true);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return true if we are on the Safari browser but not in directfile mode", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: true,
       };
     });
@@ -58,10 +64,11 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     expect(shouldWaitForDataBeforeLoaded.default(false, false)).toBe(true);
   });
 
+  // eslint-disable-next-line max-len
   it("should return false if we are on the Safari browser with no play inline and in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: true,
       };
     });
@@ -70,10 +77,11 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(false);
   });
 
+  // eslint-disable-next-line max-len
   it("should return true if we are on the Safari browser, we should play inline and in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: true,
       };
     });
@@ -82,10 +90,11 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     expect(shouldWaitForDataBeforeLoaded.default(true, true)).toBe(true);
   });
 
+  // eslint-disable-next-line max-len
   it("should return true if we are on the Safari browser, play inline but no directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: true,
       };
     });
@@ -94,10 +103,11 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     expect(shouldWaitForDataBeforeLoaded.default(false, true)).toBe(true);
   });
 
+  // eslint-disable-next-line max-len
   it("should return true if we are not on the Safari browser, should not play inline and in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSafariMobile: false,
       };
     });
@@ -109,4 +119,3 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     jest.resetModules();
   });
 });
-/* tslint:enable no-unsafe-any */

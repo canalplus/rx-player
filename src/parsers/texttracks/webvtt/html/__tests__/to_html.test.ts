@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { IStyleElements } from "../parse_style_block";
 
-/* tslint:disable no-unsafe-any */
 describe("parsers - webvtt - toHTML", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -24,7 +30,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should include payload HTML", () => {
     jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: () => {
         return [
           document.createElement("b"),
@@ -65,7 +71,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should include payload HTML and apply correclty style class element", () => {
     jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: () => {
         return [
           document.createElement("b"),
@@ -108,7 +114,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should include payload HTML and apply correctly global style element", () => {
     jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: () => {
         return [
           document.createElement("b"),
@@ -150,7 +156,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should apply both the global style element and a given class", () => {
     jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: () => {
         return [
           document.createElement("b"),
@@ -193,7 +199,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should return default element if no payload", () => {
     jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: () => {
         return [];
       },
@@ -226,4 +232,3 @@ describe("parsers - webvtt - toHTML", () => {
       "</div>");
   });
 });
-/* tslint:enable no-unsafe-any */

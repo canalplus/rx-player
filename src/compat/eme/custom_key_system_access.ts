@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 import PPromise from "../../utils/promise";
-
-// XXX TODO remove when the issue is resolved
-// https://github.com/Microsoft/TypeScript/issues/19189
-import { ICompatMediaKeySystemConfiguration } from "../browser_compatibility_types";
 import { ICustomMediaKeys } from "./custom_media_keys";
 
 // MediaKeySystemAccess implementation
 export interface ICustomMediaKeySystemAccess {
   readonly keySystem : string;
-  getConfiguration() : ICompatMediaKeySystemConfiguration;
+  getConfiguration() : MediaKeySystemConfiguration;
   createMediaKeys() : Promise<MediaKeys|ICustomMediaKeys>;
 }
 
@@ -42,9 +38,9 @@ export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystem
    * MediaKeySystemAccess.
    */
   constructor(
-    private readonly _keyType : string,
-    private readonly _mediaKeys : ICustomMediaKeys|MediaKeys,
-    private readonly _configuration : ICompatMediaKeySystemConfiguration
+    private readonly _keyType: string,
+    private readonly _mediaKeys: ICustomMediaKeys|MediaKeys,
+    private readonly _configuration: MediaKeySystemConfiguration
   ) {}
 
   /**
@@ -66,7 +62,7 @@ export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystem
   /**
    * @returns {Object} - Configuration accepted for this MediaKeySystemAccess.
    */
-  public getConfiguration() : ICompatMediaKeySystemConfiguration {
+  public getConfiguration() : MediaKeySystemConfiguration {
     return this._configuration;
   }
 }

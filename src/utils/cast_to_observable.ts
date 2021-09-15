@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import PPromise from "pinkie";
 import {
   from as observableFrom,
   Observable,
@@ -21,49 +22,26 @@ import {
 } from "rxjs";
 import isNullOrUndefined from "./is_null_or_undefined";
 
-interface IObservableLike<T> { subscribe(next : (i: T) => void,
-                                         error : (e: any) => void,
-                                         complete : () => void) :
-                                 (
-                                   { dispose? : () => void;
-                                     unsubscribe? : () => void; } |
-                                   void); }
-
 /**
  * Try to cast the given value into an observable.
  * StraightForward - test first for an Observable then for a Promise.
  * @param {Observable|Function|*}
  * @returns {Observable}
  */
-function castToObservable<T>(
-  value : Observable<T>|IObservableLike<T>|Promise<T>) : Observable<T>;
-function castToObservable<T>(value? : T) : Observable<T>;
-function castToObservable<T>(value? : any) : Observable<T> {
+function castToObservable<T>(value : Observable<T> |
+                                     Promise<T> |
+                                     PPromise<T> |
+                                     Exclude<T, Observable<T>>) : Observable<T> {
   if (value instanceof Observable) {
     return value;
-  }
-
-  /* tslint:disable no-unsafe-any */
-  if (!isNullOrUndefined(value) && typeof value.subscribe === "function") {
-  /* tslint:enable no-unsafe-any */
-    const valObsLike = value as IObservableLike<T>;
-    return new Observable((obs) => {
-      const sub = valObsLike.subscribe((val : T)   => { obs.next(val); },
-                                       (err : unknown) => { obs.error(err); },
-                                       () => { obs.complete(); });
-      return () => {
-        if (!isNullOrUndefined(sub) && typeof sub.dispose === "function") {
-          sub.dispose();
-        } else if (!isNullOrUndefined(sub) && typeof sub.unsubscribe === "function") {
-          sub.unsubscribe();
-        }
-      };
-    });
-  }
-
-  /* tslint:disable no-unsafe-any */
-  if (!isNullOrUndefined(value) && typeof value.then === "function") {
-  /* tslint:enable no-unsafe-any */
+  } else if (
+    value instanceof PPromise ||
+    value instanceof Promise ||
+    (
+      !isNullOrUndefined(value) &&
+      typeof (value as { then? : unknown }).then === "function")
+  )
+  {
     return observableFrom(value as Promise<T>);
   }
 

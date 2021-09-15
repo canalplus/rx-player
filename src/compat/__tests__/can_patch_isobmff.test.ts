@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("compat - canPatchISOBMFFSegment", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -23,7 +29,7 @@ describe("compat - canPatchISOBMFFSegment", () => {
   it("should return true if we are not on IE11 nor Edge", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isIEOrEdge: false,
       };
     });
@@ -34,7 +40,7 @@ describe("compat - canPatchISOBMFFSegment", () => {
   it("should return false if we are on IE11 or Edge", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isIEOrEdge: true,
       };
     });
@@ -42,4 +48,3 @@ describe("compat - canPatchISOBMFFSegment", () => {
     expect(canPatchISOBMFFSegment.default()).toBe(false);
   });
 });
-/* tslint:enable no-unsafe-any */

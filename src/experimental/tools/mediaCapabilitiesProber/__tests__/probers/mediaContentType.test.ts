@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { ProberStatus } from "../../types";
 
-/* tslint:disable no-unsafe-any */
 
 describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
   beforeEach(() => {
@@ -28,12 +34,12 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       MediaSource_: null,
     }));
     const probeMediaContentType = require("../../probers/mediaContentType").default;
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeMediaContentType({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: " +
         "MediaSource API not available"
     );
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should throw if no compatible isTypeSupported API", () => {
@@ -43,12 +49,12 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       },
     }));
     const probeMediaContentType = require("../../probers/mediaContentType").default;
-    /* tslint:disable no-floating-promises */
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeMediaContentType({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: " +
         "isTypeSupported not available"
     );
-    /* tslint:enable no-floating-promises */
+    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should throw if no specified contentType in config", (done) => {
@@ -92,7 +98,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     probeMediaContentType(config)
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Supported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
         done();
@@ -119,7 +125,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     probeMediaContentType(config)
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Supported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
         done();
@@ -149,7 +155,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     probeMediaContentType(config)
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Supported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
         done();
@@ -176,7 +182,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     probeMediaContentType(config)
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
         done();
@@ -203,7 +209,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     probeMediaContentType(config)
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
         done();
@@ -233,7 +239,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     probeMediaContentType(config)
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
         done();
@@ -265,7 +271,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     probeMediaContentType(config)
-      .then(([res]: [any]) => {
+      .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
         done();
@@ -276,4 +282,3 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
   });
 });
 
-/* tslint:enable no-unsafe-any */

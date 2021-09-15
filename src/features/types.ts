@@ -15,9 +15,10 @@
  */
 
 import { Observable } from "rxjs";
-import { ICustomSourceBuffer } from "../compat";
+// eslint-disable-next-line max-len
 import MediaElementTrackChoiceManager from "../core/api/media_element_track_choice_manager";
 import {
+  IContentProtection,
   IEMEManagerEvent,
   IKeySystemOption,
 } from "../core/eme";
@@ -25,6 +26,12 @@ import {
   IDirectfileEvent,
   IDirectFileOptions,
 } from "../core/init/initialize_directfile";
+import { SegmentBuffer } from "../core/segment_buffers";
+import {
+  IDashParserResponse,
+  IMPDParserArguments,
+} from "../parsers/manifest/dash/parsers_types";
+import DashWasmParser from "../parsers/manifest/dash/wasm-parser";
 import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
@@ -34,21 +41,18 @@ import { ITransportFunction } from "../transports";
 export type IDirectFileInit = (args : IDirectFileOptions) =>
                                 Observable<IDirectfileEvent>;
 
-interface IContentProtection { type : string;
-                               data : Uint8Array; }
-
 export type IEMEManager = (mediaElement : HTMLMediaElement,
                            keySystems: IKeySystemOption[],
                            contentProtections$ : Observable<IContentProtection>) =>
                              Observable<IEMEManagerEvent>;
 
-export type INativeTextTracksBuffer =
-  new(mediaElement : HTMLMediaElement,
-      hideNativeSubtitle: boolean) => ICustomSourceBuffer<unknown>;
-
 export type IHTMLTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
-      textTrackElement: HTMLElement) => ICustomSourceBuffer<unknown>;
+      textTrackElement : HTMLElement) => SegmentBuffer;
+
+export type INativeTextTracksBuffer =
+  new(mediaElement : HTMLMediaElement,
+      hideNativeSubtitle : boolean) => SegmentBuffer;
 
 export type IMediaElementTrackChoiceManager = typeof MediaElementTrackChoiceManager;
 
@@ -56,14 +60,6 @@ interface IBifThumbnail { index : number;
                           duration : number;
                           ts : number;
                           data : Uint8Array; }
-
-interface IImageTrackSegmentData {
-  data : IBifThumbnail[]; // image track data, in the given type
-  end : number; // end time time until which the segment apply
-  start : number; // start time from which the segment apply
-  timescale : number; // timescale to convert the start and end into seconds
-  type : string; // the type of the data (example: "bif")
-}
 
 interface IBifObject { fileFormat : string;
                        version : string;
@@ -76,10 +72,16 @@ interface IBifObject { fileFormat : string;
                        isVod : boolean;
                        thumbs : IBifThumbnail[]; }
 
-export type IImageBuffer = new() => ICustomSourceBuffer<IImageTrackSegmentData>;
+export type IImageBuffer =
+  new() => SegmentBuffer;
 
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);
+
+export type IDashJsParser = (
+  document: Document,
+  args : IMPDParserArguments
+) => IDashParserResponse<string>;
 
 // interface of the global `features` object through which features are
 // accessed.
@@ -93,8 +95,19 @@ export interface IFeaturesObject {
   imageBuffer : IImageBuffer|null;
   imageParser : IImageParser|null;
   transports : Partial<Record<string, ITransportFunction>>;
+  dashParsers : {
+    wasm : DashWasmParser | null;
+    js : IDashJsParser | null;
+  };
   nativeTextTracksBuffer : INativeTextTracksBuffer|null;
   nativeTextTracksParsers : Partial<Record<string, INativeTextTracksParserFn>>;
 }
 
+export interface IFeatureObject {
+  _addFeature(features : IFeaturesObject) : void;
+}
+
 export type IFeatureFunction = (features : IFeaturesObject) => void;
+
+export type IFeature = IFeatureObject |
+                       IFeatureFunction;

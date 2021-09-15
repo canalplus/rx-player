@@ -26,21 +26,22 @@ function generateRepresentationIndex(
     shouldRefresh() { return false; },
     getFirstPosition() : undefined { return ; },
     getLastPosition() : number|undefined|null { return lastPosition; },
-    checkDiscontinuity() { return -1; },
+    checkDiscontinuity() : number | null { return null; },
+    areSegmentsChronologicallyGenerated() { return true; },
     isSegmentStillAvailable() : undefined { return ; },
     isFinished() { return false; },
+    isInitialized() : true { return true; },
     canBeOutOfSyncError() : true { return true; },
     _replace() { /* noop */ },
     _update() { /* noop */ },
-    _addSegments() { /* noop */ },
   };
 }
 
 describe("parsers utils - getLastPositionFromAdaptation", function() {
   it("should return null if no representation", () => {
     expect(getLastPositionFromAdaptation({ id: "0",
-                                            type: "audio",
-                                            representations: [] }))
+                                           type: "audio",
+                                           representations: [] }))
       .toEqual(null);
   });
 
@@ -55,22 +56,22 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
                               bitrate: 12,
                               index: generateRepresentationIndex(null) };
     expect(getLastPositionFromAdaptation({ id: "0",
-                                            type: "audio",
-                                            representations: [representation1] }))
+                                           type: "audio",
+                                           representations: [representation1] }))
       .toEqual(37);
     expect(getLastPositionFromAdaptation({ id: "0",
-                                            type: "audio",
-                                            representations: [representation2] }))
+                                           type: "audio",
+                                           representations: [representation2] }))
       .toEqual(undefined);
     expect(getLastPositionFromAdaptation({ id: "0",
-                                            type: "audio",
-                                            representations: [representation3] }))
+                                           type: "audio",
+                                           representations: [representation3] }))
       .toEqual(null);
   });
 
-  /* tslint:disable max-line-length*/
+  /* eslint-disable max-len */
   it("should return the minimum first position if many representations is present", () => {
-  /* tslint:enable max-line-length*/
+  /* eslint-enable max-len */
     const representation1 = { id: "1",
                               bitrate: 12,
                               index: generateRepresentationIndex(37) };
@@ -81,10 +82,10 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
                               bitrate: 12,
                               index: generateRepresentationIndex(57) };
     expect(getLastPositionFromAdaptation({ id: "0",
-                                            type: "audio",
-                                            representations: [representation1,
-                                                              representation2,
-                                                              representation3] }))
+                                           type: "audio",
+                                           representations: [representation1,
+                                                             representation2,
+                                                             representation3] }))
       .toEqual(37);
   });
 
@@ -99,10 +100,10 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
                               bitrate: 12,
                               index: generateRepresentationIndex(undefined) };
     expect(getLastPositionFromAdaptation({ id: "0",
-                                            type: "audio",
-                                            representations: [representation1,
-                                                              representation2,
-                                                              representation3] }))
+                                           type: "audio",
+                                           representations: [representation1,
+                                                             representation2,
+                                                             representation3] }))
       .toEqual(undefined);
   });
 
@@ -117,10 +118,10 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
                               bitrate: 12,
                               index: generateRepresentationIndex(null) };
     expect(getLastPositionFromAdaptation({ id: "0",
-                                            type: "audio",
-                                            representations: [representation1,
-                                                              representation2,
-                                                              representation3] }))
+                                           type: "audio",
+                                           representations: [representation1,
+                                                             representation2,
+                                                             representation3] }))
       .toEqual(37);
   });
 
@@ -135,10 +136,10 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
                               bitrate: 12,
                               index: generateRepresentationIndex(null) };
     expect(getLastPositionFromAdaptation({ id: "0",
-                                            type: "audio",
-                                            representations: [representation1,
-                                                              representation2,
-                                                              representation3] }))
+                                           type: "audio",
+                                           representations: [representation1,
+                                                             representation2,
+                                                             representation3] }))
       .toEqual(null);
   });
 });

@@ -23,7 +23,7 @@
  */
 export default function reduceChildren<T>(
   root : Element,
-  fn : (accumulator : T, nodeName : string, node : Element) => T,
+  fn : (accu : T, nodeName : string, nodeElt : Element) => T,
   init : T
 ) : T {
   let node = root.firstElementChild;

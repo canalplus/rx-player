@@ -32,9 +32,9 @@ export interface IResolution { width : number;
                                height : number; }
 
 interface IResizeObserverConstructor {
-  /* tslint:disable callable-types */
+  /* eslint-disable @typescript-eslint/prefer-function-type */
   new(callback: IResizeObserverCallback) : IResizeObserver;
-  /* tslint:enable callable-types */
+  /* eslint-enable @typescript-eslint/prefer-function-type */
 }
 
 interface IResizeObserver { observe(target : Element) : void;
@@ -56,11 +56,13 @@ interface IDOMRectReadOnly { readonly x: number;
                              readonly bottom: number;
                              readonly left: number; }
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 const _ResizeObserver : IResizeObserverConstructor |
-                        /* tslint:disable no-unsafe-any */
                         undefined = isNode ? undefined :
-                                            (window as any).ResizeObserver;
-                        /* tslint:enable no-unsafe-any */
+                                             window.ResizeObserver;
+/* eslint-enable @typescript-eslint/no-unsafe-member-access */
+/* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
 /**
  * Emit the current height and width of the given `element` on subscribtion

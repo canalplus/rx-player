@@ -17,7 +17,10 @@
 import { INetworkErrorType } from "./error_codes";
 
 /**
- * Errors linked to the XHR implentation done in the RxPlayer.
+ * Internal Error used when doing requests through fetch / XHRs.
+ *
+ * It is not part of the API, as such it is only a temporary error which is
+ * later converted to another Error instance (e.g. NETWORK_ERROR).
  *
  * @class RequestError
  * @extends Error

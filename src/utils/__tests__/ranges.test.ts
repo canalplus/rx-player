@@ -104,9 +104,9 @@ describe("utils - ranges", () => {
   });
 
   describe("getInnerAndOuterTimeRanges", () => {
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should get inner range and outer ranges with the given TimeRanges and number", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       const timeRanges = constructTimeRanges([
         [0, 10],
         [20, 30],
@@ -209,9 +209,9 @@ describe("utils - ranges", () => {
         });
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return an empty outerRanges if the number given is in the single range given", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       const timeRanges = constructTimeRanges([
         [20, 30],
       ]);
@@ -278,9 +278,9 @@ describe("utils - ranges", () => {
   });
 
   describe("getNextRangeGap", () => {
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return gap until next range if the given number is not in any range", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       const timeRanges = constructTimeRanges([
         [0, 10],
         [20, 30],
@@ -290,9 +290,9 @@ describe("utils - ranges", () => {
       expect(getNextRangeGap(timeRanges, 30)).toBe(50 - 30);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return gap until next range if the given number is in a range", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       const timeRanges = constructTimeRanges([
         [0, 10],
         [20, 30],
@@ -457,9 +457,9 @@ describe("utils - ranges", () => {
         { start: 50, end: 70 },
       ];
       const timeRanges2 = [
-        { start: 0, end: 70},
-        { start: 90, end: 100},
-        { start: 100, end: 120},
+        { start: 0, end: 70 },
+        { start: 90, end: 100 },
+        { start: 100, end: 120 },
       ];
       expect(keepRangeIntersection(timeRanges1, timeRanges2)).toEqual(timeRanges1);
       expect(keepRangeIntersection(timeRanges2, timeRanges1)).toEqual(timeRanges1);
@@ -472,9 +472,9 @@ describe("utils - ranges", () => {
         { start: 50, end: 70 },
       ];
       const timeRanges2 = [
-        { start: 5, end: 24},
-        { start: 27, end: 29},
-        { start: 40, end: 80},
+        { start: 5, end: 24 },
+        { start: 27, end: 29 },
+        { start: 40, end: 80 },
       ];
       const result = [
         { start: 5, end: 10 },
@@ -504,16 +504,16 @@ describe("utils - ranges", () => {
         { start: 50, end: 70 },
       ];
       const timeRanges2 = [
-        { start: 0, end: 70},
-        { start: 90, end: 100},
-        { start: 100, end: 120},
+        { start: 0, end: 70 },
+        { start: 90, end: 100 },
+        { start: 100, end: 120 },
       ];
       expect(excludeFromRanges(timeRanges1, timeRanges2)).toEqual([]);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return the part of the first range not included in the second range", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       const timeRanges1 = [
         { start: 10, end: 50 },
         { start: 80, end: 90 },
@@ -571,9 +571,9 @@ describe("utils - ranges", () => {
       expect(isTimeInRanges([], NaN)).toBe(false);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return true if the given time is equal to the start of one of the ranges", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       const ranges = [ { start: 0, end: 1 },
                        { start: 30, end: 70 },
                        { start: 72, end: 74 },
@@ -584,9 +584,9 @@ describe("utils - ranges", () => {
       expect(isTimeInRanges(ranges, 0)).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return false if the given time is only the end of one of the ranges", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       const ranges = [ { start: 0, end: 1 },
                        { start: 30, end: 70 },
                        { start: 72, end: 74 },
@@ -639,6 +639,36 @@ describe("utils - ranges", () => {
         { start: 100, end: 101 },
       ]);
     });
+    it("should clear multiple sequential ranges", () => {
+      expect(removeEmptyRanges([
+        { start: 30, end: 70 },
+        { start: 90, end: 90 },
+        { start: 90, end: 90 },
+        { start: 90, end: 90 },
+        { start: 100, end: 101 },
+      ])).toEqual([
+        { start: 30, end: 70 },
+        { start: 100, end: 101 },
+      ]);
+    });
+    it("should clear the first and last ranges if they are empty", () => {
+      expect(removeEmptyRanges([
+        { start: 30, end: 30 },
+        { start: 90, end: 91 },
+        { start: 95, end: 96 },
+        { start: 100, end: 100 },
+      ])).toEqual([
+        { start: 90, end: 91 },
+        { start: 95, end: 96 },
+      ]);
+    });
+    it("should return empty array if all ranges are empty", () => {
+      expect(removeEmptyRanges([
+        { start: 90, end: 90 },
+        { start: 90, end: 90 },
+        { start: 90, end: 90 },
+      ])).toEqual([]);
+    });
   });
 
   describe("mergeContiguousRanges", () => {
@@ -678,18 +708,18 @@ describe("utils - ranges", () => {
   });
 
   describe("isAfter", () => {
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return true if the first range begins after the end of the second range", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isAfter(
         { start: 10, end: 15 },
         { start: 0, end: 5 }
       )).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return true if the first range begins at the same time than the end of the second range", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isAfter(
         { start: 5, end: 15 },
         { start: 0, end: 5 }
@@ -700,9 +730,9 @@ describe("utils - ranges", () => {
       )).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return false if the first range begins before the end of the second range", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isAfter(
         { start: 10.1, end: 10.2 },
         { start: 10, end: 70 }
@@ -719,18 +749,18 @@ describe("utils - ranges", () => {
   });
 
   describe("isBefore", () => {
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return true if the first range ends before the start of the second range", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isBefore(
         { start: 0, end: 5 },
         { start: 10, end: 15 }
       )).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return true if the first range ends at the same time than the start of the second range", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isBefore(
         { start: 0, end: 5 },
         { start: 5, end: 15 }
@@ -741,9 +771,9 @@ describe("utils - ranges", () => {
       )).toBe(true);
     });
 
-    /* tslint:disable max-line-length */
+    /* eslint-disable max-len */
     it("should return false if the first range ends after the start of the second range", () => {
-    /* tslint:enable max-line-length */
+    /* eslint-enable max-len */
       expect(isBefore(
         { start: 10, end: 70 },
         { start: 10.1, end: 10.2 }

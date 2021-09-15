@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import samiParser from "../../../parsers/texttracks/sami/native";
 import addNativeSAMIFeature from "../native_sami_parser";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/sami/native", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - native SAMI Parser", () => {
   it("should add an native SAMI Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { nativeTextTracksParsers: {} };
     addNativeSAMIFeature(featureObject);
     expect(featureObject).toEqual({
@@ -33,4 +35,3 @@ describe("Features list - native SAMI Parser", () => {
     expect(featureObject.nativeTextTracksParsers.sami).toBe(samiParser);
   });
 });
-/* tslint:enable no-unsafe-any */

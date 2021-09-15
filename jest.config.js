@@ -1,12 +1,12 @@
 /* eslint-env node */
 
-const coverageIsWanted = !!process.env.RXP_COVERAGE;
-
 module.exports = {
+  // to uncomment to display logs.
+  // verbose: false,
   roots: ["<rootDir>/src"],
   preset: "ts-jest",
   testEnvironment: "jsdom",
-  collectCoverage: coverageIsWanted,
+  testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
   collectCoverageFrom: [
     "src/**/*.ts",
     "!src/**/index.ts",
@@ -15,7 +15,7 @@ module.exports = {
   globals: {
     __DEV__: true,
     "ts-jest": {
-      tsConfig: {
+      tsconfig: {
         target: "es2017",
         lib: ["es2017", "dom"],
         forceConsistentCasingInFileNames: true,

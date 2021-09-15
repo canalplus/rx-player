@@ -42,6 +42,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       id: `${this._representationId}_init`,
       isInit: true,
       time: 0,
+      end: 0,
       duration: 0,
       timescale: 1,
       mediaURLs: null,
@@ -61,11 +62,11 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     const wantedSegments : ILocalIndexSegment[] = [];
     for (let i = 0; i < this._index.segments.length; i++) {
       const segment = this._index.segments[i];
-      const segmentStart = segment.time / 1000;
+      const segmentStart = segment.time;
       if (endTime <= segmentStart) {
         break;
       }
-      const segmentEnd = (segment.time + segment.duration) / 1000;
+      const segmentEnd = segment.time + segment.duration;
       if (segmentEnd > startTime) {
         wantedSegments.push(segment);
       }
@@ -77,8 +78,9 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
           id: `${this._representationId}_${wantedSegment.time}`,
           isInit: false,
           time: wantedSegment.time,
+          end: wantedSegment.time + wantedSegment.duration,
           duration: wantedSegment.duration,
-          timescale: 1000,
+          timescale: 1,
           timestampOffset: wantedSegment.timestampOffset,
           mediaURLs: null,
           privateInfos: {
@@ -96,7 +98,8 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     if (this._index.segments.length === 0) {
       return undefined;
     }
-    return this._index.segments[0].time;
+    const firstSegment = this._index.segments[0];
+    return firstSegment.time;
   }
 
   /**
@@ -106,7 +109,8 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     if (this._index.segments.length === 0) {
       return undefined;
     }
-    return this._index.segments[this._index.segments.length - 1].time;
+    const lastSegment = this._index.segments[this._index.segments.length - 1];
+    return lastSegment.time;
   }
 
   /**
@@ -135,19 +139,35 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @returns {Number}
+   * @returns {null}
    */
-  checkDiscontinuity() : -1 {
-    return -1;
+  checkDiscontinuity() : null {
+    return null;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  areSegmentsChronologicallyGenerated() : boolean {
+    return false;
+  }
+
+  /**
+   * @returns {Boolean}
+   */
+  isInitialized() : true {
+    return true;
   }
 
   _replace(newIndex : LocalRepresentationIndex) : void {
+    this._isFinished = newIndex._isFinished;
     this._index.segments = newIndex._index.segments;
     this._index.loadSegment = newIndex._index.loadSegment;
     this._index.loadInitSegment = newIndex._index.loadInitSegment;
   }
 
   _update(newIndex : LocalRepresentationIndex) : void {
+    this._isFinished = newIndex._isFinished;
     const newSegments = newIndex._index.segments;
     if (newSegments.length <= 0) {
       return;
@@ -185,11 +205,5 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       return;
     }
     return this._replace(newIndex);
-  }
-
-  _addSegments() : void {
-    if (__DEV__) {
-      log.warn("Tried to add Segments to a local Manifest RepresentationIndex");
-    }
   }
 }

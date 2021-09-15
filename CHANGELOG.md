@@ -1,5 +1,247 @@
 # Changelog
 
+## v3.26.1 (2021/09/14)
+
+### Bug fixes
+
+  - ttml: Do not throw if a TTML subtitles file doesn't contain any `<body>` tag, just ignore it [#993]
+  - Auto-detect when playback is unexplicably frozen and try to unlock it through a small seek [#982]
+  - Properly send `available{Audio,Video}BitratesChange` event for multi-Period contents [#983]
+  - DASH/MetaPlaylist/Local: fix rare infinite rebuffering issue which could happen when changing or disabling the track of a future Period [#1000]
+  - compat: Prevent rare segment-loading loops by automatically detecting when segments are garbage collected by the browser immediately after being pushed [#987, #990]
+  - compat/DRM: In some Safari versions, communicating a license as a JS `ArrayBuffer` could throw, this is now fixed [#974]
+  - DASH_WASM: Don't stop with a fatal error if an expected ISO8601 duration value is empty in the MPD
+  - DASH_WASM: Parse `<Event>` elements which contain an XML namespace defined outside that element [#981]
+  - DASH_WASM: Drastically reduce wasm compilation time and file size [#980]
+
+### Other improvements
+
+  - Request initialization segment and the first media segments at the same time when possible, potentially reducing loading times [#973]
+  - Remove cached segment request detection in the adaptive logic, as it is sensible to false positives, leading to a poor bitrate in some short contents [#977]
+  - Export more needed types through the `rx-player/types` path [#972, #976]
+  - demo: Expose some player options in the demo page [#999]
+  - dev: Rewrite build logic from bash to node.js to improve its maintainability
+  - dev: Replace internal `info` script by more helpful and interactive `list` script [#991]
+  - dev/code: Forbid the usage of TypeScript's type `any` in most of the RxPlayer's code - performing runtime type-checking in some cases (in DEV mode only) [#994]
+  - dev/code: Remove RxJS from the transports code [#962]
+
+
+## v3.26.0 (2021/06/10)
+
+### Features
+
+  - Add HDR information through the `hdrInfo` property on video Representation/tracks as returned by APIs such as `getVideoTrack`, `getAvailableVideoTracks`, the `videoTrackChange` event, `getManifest`, `getCurrentAdaptations` and `getCurrentRepresentations` [#946]
+  - Add the `DASH_WASM` experimental feature, allowing faster MPD parsing using WebAssembly [#937]
+  - Add the experimental `VideoThumbnailLoader` tool, which uses "trickmodes" DASH AdaptationSet to generate thumbnails [#647]
+  - Add `preferTrickModeTracks` option to `setPlaybackRate`, to switch on or off trickmode tracks when available on the Manifest [#940]
+  - Add `areTrickModeTracksEnabled` method to indicate whether the RxPlayer is using trickmode tracks in priority [#940]
+  - Add `trickModeTracks` and `isTrickModeTrack` properties to video tracks as returned by the `getVideoTrack` and `getAvailableVideoTracks` method and by the `videoTrackChange` event [#940]
+  - Add `maxSessionCacheSize` `keySystems` option, to configure the maximum number of decryption sessions that can be kept alive at the same time in a cache [#938]
+  - The `manifestLoader` callback defined in `transportOptions` can now ask for a request to be retried [#964]
+  - `initialManifest` now accepts the Manifest as an `ArrayBuffer` [#937]
+  - The `manifestLoader` callback defined in `transportOptions` can now send the Manifest as an `ArrayBuffer` [#937]
+
+### Bug fixes
+
+  - DASH: don't ignore new EventStream elements that weren't in the previous MPD update for a given Period [#956]
+  - DASH: fix fatal error linked to the `duration` of the `MediaSource` happening when playing a multi-Period live DASH content whose previous (before updating) last Period's segments had been fully generated and fully pushed. [#952]
+  - DASH: Avoid loading plain-text subtitles in a loop when playing before the first cue starts or after the last cue ends [#945, #948]
+  - DASH: Avoid loading plain-text subtitles in a loop when the `transportOptions.checkMediaSegmentIntegrity` is set to `true` [#947]
+  - DASH: avoid ending a dynamic stream if new Periods may be added later to the MPD [#959]
+  - DASH: avoid unnecessarily refresh a MPD based on SegmentList elements when they don't perfectly align with the pushed data [#963]
+
+### Other improvements
+
+  - Improve `audioTrackSwitchingMode` `"direct"` mode by avoiding unnecessary reloading cases [#872, #887, #943]
+  - When seeking after the end of an ended content, actually seek just a little before to avoid subtle issues [#941]
+  - DASH: limit the postponment of a Manifest refresh due to poor MPD-parsing performance to 6-times the "regular" delay (not impacted by `tansportOptions.minimumManifestUpdateInterval`) [#958]
+  - DASH: Avoid loading two times a segment instead of once when that segment is not anounced in the MPD through a SegmentBase, SegmentList nor SegmentTemplate element but just through the Representation's BaseURL. [#949]
+  - Update used RxJS version to 7.0.0, which might bring with it a smaller size and better performances [#954]
+  - demo: remove Chart.js dependency (we found that its new API documentation and errors were too impenetrable) and replace the "Buffer Size" chart by a homemade one. [#955, #957]
+
+
+## v3.24.0 (2021/04/01)
+
+### Features
+
+  - Add `inbandEvent` event for when an event is encountered in a media segment [#892]
+  - DRM: Add `singleLicensePer` `keySystems` option to be able to signal in advance that the current content has a single license, even if it has multiple encryption keys [#863, #904]
+  - DRM: Add `keySystems[].licenseStorage.disableRetroCompatibility` boolean to unlock optimizations when compatibility with EME sessions persisted in older RxPlayer versions is not important [#919]
+
+### Bug fixes
+
+  - DASH: Fix rounding error that could cause infinite buffering issues when going from a DASH Period to the next [#897, #899]
+  - DRM: Always pass on server certificate before any challenge is generated. Contents with multiple licenses previously could lead to the latter being done before the former. [#895]
+  - DRM: Fix possible leaks of MediaKeySessions if closed at the wrong time [#920]
+  - Fix issue making sudden and acute fall in bandwidth not being considered soon enough [#906]
+  - On some devices when `maxBufferAhead` is set, avoid removing the initially loaded data if done before the initial seek could be performed [#907]
+  - Avoid cases of infinite rebuffering on Tizen 4 by avoiding pushing segments "on top of others" too close to the current position [#925]
+  - Avoid seeking issues on Tizen by not seeking over discontinuities that will be already handled by the browser [#922]
+  - Fix initial seek on Tizen (Samsung TVs) on live contents by setting a much lower duration (to work-around a Tizen overflow) [#914]
+  - DASH: Consider multiple defined `<Accessibility>` tags for a single AdaptationSet [#903]
+  - Fix error that could be thrown on Safari when calling the `getStatusForHDCP` method from the experimental `MediaCapabilitiesProber` tool [#927]
+
+### Other improvements
+
+  - Avoid to push on top of the current position if there's already a segment there as it can provoke minor decoding issues on some devices [#925]
+  - Update video element's duration if the content duration changes [#917]
+  - DASH: Improve loading time with encrypted contents by only using the encrypted initialization data found in the Manifest when found in it [#911, #919]
+  - Record redirections made on a `manifestUpdateUrl` to request directly the right URL on next update. [#929]
+  - Improve loading time when a `serverCertificate` is given by calling the `setServerCertificate` API earlier [#895]
+  - Improve loading time when switching contents by fetching the Manifest at the same time the previous content is cleaned-up [#894]
+  - Improve loading time on some CPU-constrained devices by not running unnecessary playback checks on the "progress" HTMLMediaElement event anymore [#893]
+  - DASH: Consider DASH audio AdaptationSet with a "urn:mpeg:dash:role:2011" schemeIdUri and a "description" role as `audioDescription` tracks [#903]
+  - Warn through the logger when the autoplay attribute is enabled on the media element but not on RxPlayer [#924]
+  - Avoid switching to a SEEKING state if the seek operation was performed inside the RxPlayer's code [#872, #887]
+  - DRM: Wait up to 100 milliseconds after a persistent MediaKeySession has been loaded to wait for possibly late `keyStatuses` updates [#928]
+  - DRM: Only store persistent MediaKeySession once at least one key is known [#926]
+  - DRM: Reconsider Representations that have been fallbacked from if they become decipherable [#905]
+  - DRM: Lower the maximum size of the MediaKeySession cache from 50 to 15 to improve compatibility, even more now that license with multiple keys are properly handled
+  - Doc: Move architecture documentation closer to the code it documents [#764, #900]
+  - Doc: add "Quick links" to the top of the API documentation [#909]
+
+
+## v3.23.1 (2021/02/01)
+
+### Bug fixes
+
+  - Fix support of encrypted contents on Safari (v3.23.0 regression)
+
+
+## v3.23.0 (2021/02/01)
+
+### Features
+
+  - Add the `reload` method to be able to re-load the last loaded content as fast as possible (e.g. after fatal errors) [#859, #867]
+  - Add `onCodecSwitch` loadVideo option, to select a strategy when a new incompatible codec is encountered [#856]
+  - Emit `DISCONTINUITY_ENCOUNTERED` warnings when a discontinuity has been seeked over [#862]
+  - Add minAudioBitrate and minVideoBitrate constructor options and the {set,get}Minimum{Audio,Video}Bitrate methods to define the minimum quality reachable through adaptive streaming [#876]
+
+### Bug fixes
+
+  - Fix impossibility to fallback to another Representation (with the `keySystems[].fallbackOn` `loadVideo` options) when a decryption key has been found to be non-usable [#889]
+  - Fix DRM-related events being sent twice in a row instead of just once [#850]
+  - Stop and throw `MANIFEST_PARSE_ERROR` error again when either audio or video has only unsupported codecs (instead of just playing the other type) [#864]
+  - Avoid re-downloading a segment that ends a lot before its expected end [#846]
+  - In "native" `textTrackMode`, avoid requesting text segments in a loop [#878]
+  - Disable effects of `throttleVideoBitrateWhenHidden`, `limitVideoWidth` and `throttleVideoBitrate` player options on Firefox >= 67 due to how Picture in Picture mode is currently handled in them [#874]
+  - Work-around race condition in old Chromium versions where loading a persistent MediaKeySession led to no key statuses right away [#847]
+
+### Other improvements
+
+  - Skip over most audio or video discontinuities in the stream, even those not announced in the Manifest [#862]
+  - When track or bitrate switching lead to a reload, seek back a consistent number of milliseconds to give back context [#848]
+  - Don't call `setServerCertificate` API when `keySystems[].serverCertificate` option is set to `null` [#849]
+  - On the rare platforms where an undefined initialization data type can be received on encrypted events, retry `generateRequest` with a default "cenc" value if the first one fails due to it being empty [#870]
+  - Re-add debug logs logging the principal media properties at each clock tick [#844]
+  - Use TextEncoder and TextDecoder interfaces when available to speed-up string conversions [#843, #875]
+  - Throw a better error when no EME API is found
+  - Reduce default bundles size by switching to webpack 5 to generate them
+  - tests: Add conformance tests on the initial seek to help debugging related issues on new platforms [#873]
+  - lint/code: Use eslint code linter even for the TypeScript code [#842]
+
+
+## v3.22.0 (2020/11/17)
+
+### Features
+
+  - Add `audioTrackSwitchingMode` `loadVideo` option to allow different strategies when switching between audio tracks [#801, #806]
+  - Add `enableFastSwitching` `loadVideo` option to enable or disable optimizations doing segment replacement in the browser's buffer [#779, #780]
+  - Add `initialManifest` `loadVideo` option to provide the Manifest to the RxPlayer when it has already been loaded [#807]
+  - tools: Add `StringUtils` utilitary functions to tools to convert bytes to strings and the other way around [#809]
+  - tools: The `TextTrackRenderer` tool is not experimental anymore: it now has a stable API [#810]
+  - experimental/local-manifest: The RxPlayer now (only) plays the new `"0.2"` format version of the "LocalManifest" (in the experimental `"local"` transport) [#810]
+
+### Bug fixes
+
+  - directfile: Fix impossibility to play an encrypted content in directfile mode (regression brought in v3.21.1) [#827, #830]
+  - subtitles: Display multiple cues with overlapping times [#829]
+  - smooth: Fix minimum position in a Smooth live content when fewer segments than the dvr window length are available [#826]
+  - dash/metaplaylist: Fix possible playback issues on multi-Period contents, where segments from multiple Periods overlap [#837]
+  - Fix very rare race condition which triggered a "setting priority of null" error after synchronous segment requests were done [#817]
+  - local-manifest: LocalManifest that transition from not finished to finished while playing now end properly [#818]
+  - local-manifest: Fix and clarify the duration and maximum position reported for a playing LocalManifest [#818]
+  - compatibility/drm: On some webkit-based browsers, do not require the use of a server certificate for DRM if the key system used is not FairPlay [#833]
+  - drm: Properly update to a different server certificate on the MediaKeys or remove it if needed [#835]
+  - drm: throw MEDIA_IS_ENCRYPTED_ERROR again when playing an encrypted event without either the `EME` feature, EME APIs or a `keySystems` option [#841]
+
+### Other improvements
+
+  - subtitles/ttml: Apply default position to TTML subtitles in `"html"` `textTrackMode` when no style is found [#815]
+  - subtitles/ttml: Set default text color to white to TTML subtitles in `"html"` textTrackMode [#832]
+  - drm: Avoid re-setting a server certificate we know has already been pushed to improve loading performance [#824, #835]
+  - dash: Always prefer a "main" AdaptationSet when hesitating between multiple ones [#828]
+  - dash: Improve minimum position precision for dynamic DASH contents when less segments are available than what would be guessed from the timeShiftBufferDepth [#826]
+  - drm/logs: Better log why a MediaKeySession is not considered as "usable" [#822]
+  - drm/logs: Be more verbose with DRM-related logs, even at lower logger levels [#821]
+  - tests/conformance: Add "conformance tests", to quickly test the capabilities of new devices and targets [#814]
+  - code: avoid circular dependency in `src/features` in original typescript source files [#805]
+  - demo: Fix default position for the video track select element in the demo to always be at the currently selected video track [#813]
+  - demo/code: Better integrate the RxPlayer to the demo: through a simple import, instead of adding a script tag for the bundled version [#811]
+  - dev: Remove all enforced git-hooks (on pre-commit and pre-push) [#808]
+
+
+## v3.21.1 (2020/09/21)
+
+### Bug fixes
+
+  - compatibility/drm: make switching the current `MediaKeys` work on most platforms by re-ordering browser API calls [#766, #744]
+  - compatibility/drm: in Edge and IE11, fix behavior which could lead to not fallbacking from a non-decryptable quality due to a badly parsed key ID [#790]
+  - dash: when a Representation depends on multiple SegmentTemplate at the same time, merge all corresponding information instead of just relying on the last one [#767, #768]
+  - smooth: skip discontinuity when seeking in the middle of one when playing a smooth content [#792]
+  - api: fix `getUrl` and the minimum position calculation after playing for some time a live content with a set `manifestUpdateUrl` [#775, #776]
+  - drm/subtitles: better handle UTF-8 and UTF-16 characters in an encrypted initialization data or in subtitles [#791]
+  - requests: still retry all the other segment's URLs when a non-retryable error happen on the request for one of them [#798]
+  - dash: fix infinite rebuffering when playing multi-Period DASH contents for some time with a `manifestUpdateUrl` set [#797]
+
+### Other improvements
+
+  - improve seek latency in some rare cases where we could profit from cancelling a request for a needed segment [#752, #769]
+  - requests: only download an initialization segment when media segments for that Representation are needed [#773]
+  - requests: avoid unnecessary segment requests when segments loaded don't exactly align with what is expected if contiguous segments exist [#772, #771]
+  - better time quality switches to avoid having to re-download segments in the new quality [#781, #782, #783]
+  - adaptive: limit bandwidth oscillations when the buffer level is low by choosing a lower bitrate by default and limiting fall in bandwidth when in "starvation mode" [#796]
+  - compatibility/drm: filter out badly-formed CENC PSSH when found, if some well-formed exist [#788]
+  - isobmff: support rare but possible occurence where an ISOBMFF box size is stored on 8 bytes [#784]
+  - logs: when logs are set to `"DEBUG"`, now regularly print visual representations of which segments live currently in the buffer(s) [#795]
+  - demo: change separator in the demo's generated links from "\" to "!" to not change its form when percent-encoded [#758, #759]
+  - project: better document changes in changelog and release notes, mostly by linking to related issues and PRs
+  - code: rename "Buffer" module to "Stream" in the code, documentation and logs to better reflect what that code does [#793]
+  - tests: add "global" unit tests for a more a module-oriented testing strategy (when compared to our existing function-oriented unit tests) to our EME (DRM) related code [#753]
+
+
+## v3.21.0 (2020/06/17)
+
+### Features
+
+  - api/events: add `"streamEvent"` event for when a DASH EventStream's event is reached
+  - api/events: add `"streamEventSkip"` event for when a DASH EventStream's event is "skipped"
+  - types/events: add `IStreamEvent` and `IStreamEventData` - which define the payload emitted by both a `"streamEvent"` and `"streamEventSkip"` events to the exported types
+  - api/tracks: add second argument to `setPreferredAudioTracks`, `setPreferredTextTracks` and `setPreferredVideoTracks` to be able to also apply them to the currently loaded Periods / content
+  - text/webvtt: parse settings attributes of WebVTT subtitles when in HTML mode
+  - api/tracks: add codec information to `getAvailableAudioTracks` and `getAudioTrack`
+
+### Bug fixes
+
+  - dash: do not reduce the minimum position when using the `manifestUpdateUrl` `transportOptions` in `loadVideo`
+  - local-manifest: consider `language` property from a "local" Manifest
+  - local-manifest: refresh the Manifest even if we dont have a Manifest URL, as is often the case when playing locally-stored contents
+  - local-manifest: allow the "expired" property of a local-manifest to be updated
+  - compat/eme/fairplay: for fairplay contents, better format the initialization data given to the CDM. The previous behavior could lead to invalid license requests
+  - eme: re-allow serialization into a JSON string of the persisted session data, as presented in the DRM tutorial
+  - compat/low-latency: fix compilation of async/await when playing low-latency contents with the default bundled builds
+  - eme: ensure that the previous MediaKeySystemAccess used had `persistentState` to "required" when a new content needs it to be
+  - eme: fix `closeSessionsOnStop` `keySystems` option actually not removing any MediaKeySession when stopping a content (v3.20.1 regression).
+
+### Other improvements
+
+  - dash: emit minor errors arising when parsing the DASH MPD through warning events (whose payload will be an error with the `PIPELINE_PARSE_ERROR` code)
+  - dash: consider AdaptationSet@selectionPriority in our initial track choice if the user preferences lead to multiple compatible tracks
+  - misc: do not download video segments when playing on an "audio" element.
+  - eme: replace the MediaKeySession's cache entry based on the least recently used instead of on the least recently created to improve cache effectiveness.
+  - eme/persistent sessions: Limit the maximum of stored persistent MediaKeySessions to 1000 to avoid the storage to grow indefinitely (higher than that, the least-recently used will be evicted)
+
+
 ## v3.20.1 (2020/05/06)
 
 ### Bug fixes
@@ -44,7 +286,7 @@
 
 ### Features
 
-  - dash: handle multiple URL per segment anounced through multiple BaseURL elements in the MPD
+  - dash: handle multiple URL per segment announced through multiple BaseURL elements in the MPD
   - dash/smooth/metaplaylist: add `manifestUpdateUrl` to loadVideo's `transportOptions` to provide a shorter version of the Manifest, used for more resource-efficient Manifest updates
   - tools/createMetaplaylist: add the experimental `createMetaplaylist` tool, which allows to generate Metaplaylist contents from given Manifests
   - tools/TextTrackRenderer: add the optional `language` property to the `setTextTrack` method of the experimental `TextTrackRenderer` tool as it could be needed when parsing SAMI subtitles
@@ -74,7 +316,7 @@
   - directfile: support most audio tracks API when playing a directfile content
   - directfile: support most text tracks API when playing a directfile content
   - directfile: support most video tracks API when playing a directfile content
-  - api: add `seeking` and `seeked` events which anounce the beginning and end of a seek, even when seeking to an already buffered part
+  - api: add `seeking` and `seeked` events which announce the beginning and end of a seek, even when seeking to an already buffered part
   - subtitles/ttml: handle styles inheriting other styles in TTML subtitles
   - local-manifest: add experimental `local` transport to allow the playback of downloaded contents (even when offline)
   - tools: add the experimental `TextTrackRenderer` tool to be able to add a custom text track to any content
@@ -135,7 +377,7 @@
  - dash/metaplaylist: download the first segment of a new Period when the last downloaded segment from the previous Period ends after that segment ends
  - smooth/metaplaylist: consider `serverSyncInfos` `transportOptions` for Smooth and MetaPlaylist contents
  - buffers: completely clean a previous audio/text track from the SourceBuffer when switching to a different audio/text track
- - dash: avoid requesting an inexistant segment when downloading a multi-Period DASH content with a number-based SegmentTemplate with the `agressiveMode` option set to `true`
+ - dash: avoid requesting an inexistent segment when downloading a multi-Period DASH content with a number-based SegmentTemplate with the `agressiveMode` option set to `true`
  - eme: do not wait for a previous invalid MediaKeySession to be closed before re-creating a valid one for the same content, to work around a widevine issue
  - eme: avoid race condition issue arising when multiple init data are received before the MediaKeys have been attached to the media element
  - dash: do not consider "trickmodes" AdaptationSet as directly playable video tracks
@@ -173,7 +415,7 @@
   - dash/smooth: Avoid requesting multiple time the last segment when the duration given in the Manifest are inexact
   - smooth: Skip without throwing Manifest's StreamIndex with an unrecognized type
   - dash: Improve prediction of when to update a dynamic MPD with xlinks
-  - dash: Be more tolerant of differences between a segment's time anounced by the Manifest and the reality to avoid multiple cases of segment re-downloading
+  - dash: Be more tolerant of differences between a segment's time announced by the Manifest and the reality to avoid multiple cases of segment re-downloading
   - dash: Guess initialization range for segments defined in a SegmentBase without an Initialization element
   - dash: Throw better error when a sidx with a reference_type `1` is encountered
   - api: Throw a better error when setting a `preferredAudioTracks` or `preferredTextTracks` value in the wrong format
@@ -703,7 +945,7 @@
   - net: use redirected URL as a base for further requests when the manifest request led to a HTTP redirect.
   - vtt/srt: ignore silently (do not throw) when an unknown block has been detected in a vtt or srt file
   - vtt/srt: support styling spans (like b, i and u XML tags) spanning multiple lines
-  - api: ``getAvailableTextTracks`` and ``getAvailableAudioTracks`` now always return an array (and never null) as anounced in the API documentation
+  - api: ``getAvailableTextTracks`` and ``getAvailableAudioTracks`` now always return an array (and never null) as announced in the API documentation
   - api: set default log level to ``"NONE"`` instead of ``"INFO"``
   - misc: remove development-only code from the non-minified code
 

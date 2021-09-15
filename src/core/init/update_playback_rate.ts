@@ -29,39 +29,29 @@ import {
 import log from "../../log";
 import { IInitClockTick } from "./types";
 
-export interface IPlaybackRateOptions { pauseWhenStalled? : boolean; }
+export interface IPlaybackRateOptions { pauseWhenRebuffering? : boolean }
 
 /**
  * Manage playback speed.
  * Set playback rate set by the user, pause playback when the player appear to
- * stall and restore the speed once it appears to un-stall.
+ * rebuffering and restore the speed once it appears to exit rebuffering status.
  *
  * @param {HTMLMediaElement} mediaElement
  * @param {Observable} speed$ - emit speed set by the user
  * @param {Observable} clock$ - Current playback conditions
- * @param {Object} options - Contains the following properties:
- *   - pauseWhenStalled {Boolean|undefined} - true if the player
- *     stalling should lead to a pause until it un-stalls. True by default.
  * @returns {Observable}
  */
 export default function updatePlaybackRate(
   mediaElement : HTMLMediaElement,
   speed$ : Observable<number>,
-  clock$ : Observable<IInitClockTick>,
-  { pauseWhenStalled = true } : IPlaybackRateOptions
+  clock$ : Observable<IInitClockTick>
 ) : Observable<number> {
-  let forcePause$ : Observable<boolean>;
-
-  if (!pauseWhenStalled) {
-    forcePause$ = observableOf(false);
-  } else {
-    forcePause$ = clock$
-      .pipe(
-        map((timing) => timing.stalled !== null),
-        startWith(false),
-        distinctUntilChanged()
-      );
-  }
+  const forcePause$ = clock$
+    .pipe(
+      map((timing) => timing.rebuffering !== null),
+      startWith(false),
+      distinctUntilChanged()
+    );
 
   return forcePause$
     .pipe(switchMap(shouldForcePause => {

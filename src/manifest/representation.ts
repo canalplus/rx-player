@@ -15,20 +15,18 @@
  */
 
 import { isCodecSupported } from "../compat";
+import { IContentProtection } from "../core/eme";
 import log from "../log";
 import {
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
-import { concat } from "../utils/byte_parsing";
-import IRepresentationIndex from "./representation_index";
-import { IAdaptationType } from "./types";
-
-export interface IContentProtectionsInitDataObject {
-  type : string;
-  data : Uint8Array;
-}
+import { IRepresentationIndex } from "./representation_index";
+import {
+  IAdaptationType,
+  IHDRInformation,
+} from "./types";
 
 /**
  * Normalized Representation structure.
@@ -36,7 +34,7 @@ export interface IContentProtectionsInitDataObject {
  */
 class Representation {
   /** ID uniquely identifying the Representation in the Adaptation. */
-  public readonly id : string|number;
+  public readonly id : string;
 
   /**
    * Interface allowing to get information about segments available for this
@@ -82,6 +80,11 @@ class Representation {
   public contentProtections? : IContentProtections;
 
   /**
+   * If the track is HDR, give the characteristics of the content
+   */
+  public hdrInfo?: IHDRInformation;
+
+  /**
    * Whether we are able to decrypt this Representation / unable to decrypt it or
    * if we don't know yet:
    *   - if `true`, it means that we know we were able to decrypt this
@@ -103,15 +106,15 @@ class Representation {
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
 
-    if (args.height != null) {
+    if (args.height !== undefined) {
       this.height = args.height;
     }
 
-    if (args.width != null) {
+    if (args.width !== undefined) {
       this.width = args.width;
     }
 
-    if (args.mimeType != null) {
+    if (args.mimeType !== undefined) {
       this.mimeType = args.mimeType;
     }
 
@@ -119,8 +122,12 @@ class Representation {
       this.contentProtections = args.contentProtections;
     }
 
-    if (args.frameRate != null) {
+    if (args.frameRate !== undefined) {
       this.frameRate = args.frameRate;
+    }
+
+    if (args.hdrInfo !== undefined) {
+      this.hdrInfo = args.hdrInfo;
     }
 
     this.index = args.index;
@@ -135,67 +142,158 @@ class Representation {
    * which is often needed when interacting with the browser's APIs.
    * @returns {string}
    */
-  getMimeTypeString() : string {
+  public getMimeTypeString() : string {
     return `${this.mimeType ?? ""};codecs="${this.codec ?? ""}"`;
   }
 
   /**
-   * Returns every protection initialization data concatenated.
-   * This data can then be used through the usual EME APIs.
-   * `null` if this Representation has no detected protection initialization
-   * data.
-   * @returns {Array.<Object>|null}
+   * Returns encryption initialization data linked to the given DRM's system ID.
+   * This data may be useful to decrypt encrypted media segments.
+   *
+   * Returns an empty array if there is no data found for that system ID at the
+   * moment.
+   *
+   * When you know that all encryption data has been added to this
+   * Representation, you can also call the `getAllEncryptionData` method.
+   * This second function will return all encryption initialization data
+   * regardless of the DRM system, and might thus be used in all cases.
+   *
+   * /!\ Note that encryption initialization data may be progressively added to
+   * this Representation after `_addProtectionData` calls or Manifest updates.
+   * Because of this, the return value of this function might change after those
+   * events.
+   *
+   * @param {string} drmSystemId - The hexa-encoded DRM system ID
+   * @returns {Array.<Object>}
    */
-  getProtectionsInitializationData() : IContentProtectionsInitDataObject[] {
-    const contentProtections = this.contentProtections;
-    if (contentProtections === undefined) {
+  public getEncryptionData(drmSystemId : string) : IContentProtection[] {
+    const allInitData = this.getAllEncryptionData();
+    const filtered = [];
+    for (let i = 0; i < allInitData.length; i++) {
+      let createdObjForType = false;
+      const initData = allInitData[i];
+      for (let j = 0; j < initData.values.length; j++) {
+        if (initData.values[j].systemId.toLowerCase() === drmSystemId.toLowerCase()) {
+          if (!createdObjForType) {
+            const keyIds = this.contentProtections?.keyIds.map(val => val.keyId);
+            filtered.push({ type: initData.type,
+                            keyIds,
+                            values: [initData.values[j]] });
+            createdObjForType = true;
+          } else {
+            filtered[filtered.length - 1].values.push(initData.values[j]);
+          }
+        }
+      }
+    }
+    return filtered;
+  }
+
+
+  /**
+   * Returns all currently-known encryption initialization data linked to this
+   * Representation.
+   * Encryption initialization data is generally required to be able to decrypt
+   * those Representation's media segments.
+   *
+   * Unlike `getEncryptionData`, this method will return all available
+   * encryption data.
+   * It might as such might be used when either the current drm's system id is
+   * not known or when no encryption data specific to it was found. In that
+   * case, providing every encryption data linked to this Representation might
+   * still allow decryption.
+   *
+   * Returns an empty array in two cases:
+   *   - the content is not encrypted.
+   *   - We don't have any decryption data yet.
+   *
+   * /!\ Note that new encryption initialization data can be added progressively
+   * through the `_addProtectionData` method or through Manifest updates.
+   * It is thus highly advised to only rely on this method once every protection
+   * data related to this Representation has been known to be added.
+   *
+   * The main situation where new encryption initialization data is added is
+   * after parsing this Representation's initialization segment, if one exists.
+   * @returns {Array.<Object>}
+   */
+  public getAllEncryptionData() : IContentProtection[] {
+    if (this.contentProtections === undefined ||
+        this.contentProtections.initData.length === 0)
+    {
       return [];
     }
-    return Object.keys(contentProtections.initData)
-      .reduce<IContentProtectionsInitDataObject[]>((acc, initDataType) => {
-        const initDataArr = contentProtections.initData[initDataType];
-        if (initDataArr === undefined || initDataArr.length === 0) {
-          return acc;
-        }
-        const initData = concat(...initDataArr.map(({ data }) => data));
-        acc.push({ type: initDataType,
-                   data: initData });
-        return acc;
-      }, []);
+    const keyIds = this.contentProtections?.keyIds.map(val => val.keyId);
+    return this.contentProtections.initData.map((x) => {
+      return { type: x.type,
+               keyIds,
+               values: x.values };
+    });
   }
 
   /**
-   * Add protection data to the Representation to be able to properly blacklist
-   * it if that data is.
+   * Add new encryption initialization data to this Representation if it was not
+   * already included.
+   *
+   * Returns `true` if new encryption initialization data has been added.
+   * Returns `false` if none has been added (e.g. because it was already known).
+   *
    * /!\ Mutates the current Representation
+   *
+   * TODO better handle use cases like key rotation by not always grouping
+   * every protection data together? To check.
    * @param {string} initDataArr
    * @param {string} systemId
    * @param {Uint8Array} data
+   * @returns {boolean}
    */
-  _addProtectionData(initDataType : string, systemId : string, data : Uint8Array) {
-    const newElement = { systemId, data };
+  public _addProtectionData(
+    initDataType : string,
+    data : Array<{
+      systemId : string;
+      data : Uint8Array;
+    }>
+  ) : boolean {
+    let hasUpdatedProtectionData = false;
     if (this.contentProtections === undefined) {
       this.contentProtections = { keyIds: [],
-                                  initData: { [initDataType] : [newElement] } };
-      return;
+                                  initData: [ { type: initDataType,
+                                                values: data } ] };
+      return true;
     }
 
-    const initDataArr = this.contentProtections.initData[initDataType];
+    const cInitData = this.contentProtections.initData;
+    for (let i = 0; i < cInitData.length; i++) {
+      if (cInitData[i].type === initDataType) {
+        const cValues = cInitData[i].values;
 
-    if (initDataArr === undefined) {
-      this.contentProtections.initData[initDataType] = [newElement];
-      return;
-    }
-
-    for (let i = initDataArr.length - 1; i >= 0; i--) {
-      if (initDataArr[i].systemId === systemId) {
-        if (areArraysOfNumbersEqual(initDataArr[i].data, data)) {
-          return;
+        // loop through data
+        for (let dataI = 0; dataI < data.length; dataI++) {
+          const dataToAdd = data[dataI];
+          let cValuesIdx;
+          for (cValuesIdx = 0; cValuesIdx < cValues.length; cValuesIdx++) {
+            if (dataToAdd.systemId === cValues[cValuesIdx].systemId) {
+              if (areArraysOfNumbersEqual(dataToAdd.data, cValues[cValuesIdx].data)) {
+                // go to next dataToAdd
+                break;
+              } else {
+                log.warn("Manifest: different init data for the same system ID");
+              }
+            }
+          }
+          if (cValuesIdx === cValues.length) {
+            // we didn't break the loop === we didn't already find that value
+            cValues.push(dataToAdd);
+            hasUpdatedProtectionData = true;
+          }
         }
-        log.warn("Manifest: Two PSSH for the same system ID");
+        return hasUpdatedProtectionData;
       }
     }
-    initDataArr.push(newElement);
+    // If we are here, this means that we didn't find the corresponding
+    // init data type in this.contentProtections.initData.
+    this.contentProtections.initData.push({ type: initDataType,
+                                            values: data });
+    return true;
   }
 }
 

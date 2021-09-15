@@ -40,7 +40,7 @@ import {
  * @returns {Function} - Function taking in argument the arguments you want
  * to give your function, and returning an Observable.
  */
-export default function throttle<T, U, V>(
+export default function throttle<T, _, V>(
   func : (arg1: T) => Observable<V>
 ) : (arg1: T) => Observable<V>;
 export default function throttle<T, U, V>(
@@ -63,15 +63,17 @@ export default function throttle<T, U, V>(
 
       isPending = true;
       const funcSubscription = func(...args)
-        .subscribe((i) => { obs.next(i); },
-                   (e) => {
-                    isPending = false;
-                     obs.error(e);
-                   },
-                   () => {
-                     isPending = false;
-                     obs.complete();
-                   });
+        .subscribe({
+          next: (i) => { obs.next(i); },
+          error: (e) => {
+            isPending = false;
+            obs.error(e);
+          },
+          complete: () => {
+            isPending = false;
+            obs.complete();
+          },
+        });
 
       return () => {
         funcSubscription.unsubscribe();

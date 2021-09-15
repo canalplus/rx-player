@@ -15,7 +15,7 @@
  */
 
 import { createBoxWithChildren } from "../../../parsers/containers/isobmff";
-import { hexToBytes } from "../../../utils/byte_parsing";
+import { hexToBytes } from "../../../utils/string_parsing";
 import {
   createAVC1Box,
   createAVCCBox,
@@ -28,12 +28,6 @@ import {
 } from "./create_boxes";
 import createInitSegment from "./create_init_segment";
 
-type IPSSList = Array<{
-  systemId : string;
-  privateData? : Uint8Array;
-  keyIds? : Uint8Array;
-}>;
-
 /**
  * Return full video Init segment as Uint8Array
  * @param {Number} timescale - lowest number, this one will be set into mdhd
@@ -44,10 +38,7 @@ type IPSSList = Array<{
  * @param {Number} vRes
  * @param {Number} nalLength (1, 2 or 4)
  * @param {string} codecPrivateData
- * @param {Uint8Array} keyId - hex string representing the key Id,
- * 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b
- * @param {Array.<Object>} [pssList] - List of dict, example:
- * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
+ * @param {Uint8Array} [keyId]
  * @returns {Uint8Array}
  */
 export default function createVideoInitSegment(
@@ -58,11 +49,8 @@ export default function createVideoInitSegment(
   vRes : number,
   nalLength : number,
   codecPrivateData : string,
-  keyId? : Uint8Array,
-  pssList? : IPSSList
+  keyId? : Uint8Array
 ) : Uint8Array {
-  const _pssList = pssList === undefined ? [] :
-                                           pssList;
   const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
   if (spsHex === undefined || ppsHex === undefined) {
     throw new Error("Smooth: unsupported codec private data.");
@@ -73,7 +61,7 @@ export default function createVideoInitSegment(
   // TODO NAL length is forced to 4
   const avcc = createAVCCBox(sps, pps, nalLength);
   let stsd;
-  if (_pssList.length === 0 || keyId === undefined) {
+  if (keyId === undefined) {
     const avc1 = createAVC1Box(width, height, hRes, vRes, "AVC Coding", 24, avcc);
     stsd = createSTSDBox([avc1]);
   } else {
@@ -86,7 +74,5 @@ export default function createVideoInitSegment(
     stsd = createSTSDBox([encv]);
   }
 
-  return createInitSegment(
-    timescale, "video", stsd, createVMHDBox(), width, height, _pssList
-  );
+  return createInitSegment(timescale, "video", stsd, createVMHDBox(), width, height);
 }

@@ -36,11 +36,9 @@ describe("utils - concatMapLatest", () => {
     const counter$ : Observable<number> = observableOf(0);
     let itemReceived = false;
     counter$.pipe(
-      /* tslint:disable no-unnecessary-callback-wrapper */
-      concatMapLatest((i: number) => observableOf(i))
-      /* tslint:enable no-unnecessary-callback-wrapper */
+      concatMapLatest<number, number>(observableOf)
     ).subscribe({
-      next(res: number) {
+      next(res: number) : void {
         expect(res).toBe(0);
         itemReceived = true;
       },
@@ -51,21 +49,19 @@ describe("utils - concatMapLatest", () => {
     });
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should consider all values if precedent inner Observable finished synchronously", (done) => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     const innerValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     const innerValuesLength = innerValues.length;
     let lastCount: number|undefined;
 
     const counter$ : Observable<number> = observableOf(...innerValues);
     counter$.pipe(
-      /* tslint:disable no-unnecessary-callback-wrapper */
       concatMapLatest((i: number, count: number) => {
         lastCount = count;
         return observableOf(i);
       })
-      /* tslint:enable no-unnecessary-callback-wrapper */
     ).subscribe({
       next(res: number) {
         const expectedResult = innerValues.shift();
@@ -81,9 +77,9 @@ describe("utils - concatMapLatest", () => {
     });
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should consider all values if precedent inner Observable had time to finish", (done) => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
     const innerValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     const innerValuesLength = innerValues.length;
     let lastCount: number|undefined;
@@ -92,12 +88,10 @@ describe("utils - concatMapLatest", () => {
       concatMap((v) => timer(5).pipe(mapTo(v)))
     );
     counter$.pipe(
-      /* tslint:disable no-unnecessary-callback-wrapper */
       concatMapLatest((i: number, count: number) => {
         lastCount = count;
         return observableOf(i);
       })
-      /* tslint:enable no-unnecessary-callback-wrapper */
     ).subscribe({
       next(res: number) {
         const expectedResult = innerValues.shift();
@@ -113,9 +107,9 @@ describe("utils - concatMapLatest", () => {
     });
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should skip all inner values but the last when the inner Observable completes", (done) => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 
     const counter$ = new Subject<number>();
     let itemEmittedCounter = 0;
@@ -157,9 +151,9 @@ describe("utils - concatMapLatest", () => {
     counter$.next(2); // should be ignored
   });
 
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   it("should increment the counter each times the callback is called", (done) => {
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 
     let itemProcessed = 0;
     let nextCount = 0;
@@ -167,10 +161,10 @@ describe("utils - concatMapLatest", () => {
     const obs2$ = observableOf(4, 5);
     const obs3$ = observableOf(6, 7, 8, 9);
 
-    observableOf<[number, Observable<number>]>(
-      [0, obs1$],
-      [1, obs2$],
-      [2, obs3$]
+    observableOf(
+      [0, obs1$] as [number, Observable<number>],
+      [1, obs2$] as [number, Observable<number>],
+      [2, obs3$] as [number, Observable<number>]
     ).pipe(
       concatMapLatest(([wantedCounter, obs$], counter) => {
         itemProcessed++;
@@ -223,6 +217,7 @@ describe("utils - concatMapLatest", () => {
       });
     }
 
+    // eslint-disable-next-line no-restricted-properties
     await Promise.all([validateThroughConcat(), validateThroughMerge()]);
   });
 });

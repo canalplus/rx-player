@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  bytesToHex,
-  itobe2,
-} from "../../../utils/byte_parsing";
+import { itobe2 } from "../../../utils/byte_parsing";
+import { bytesToHex } from "../../../utils/string_parsing";
 
 /**
  * Sampling frequencies defined in MPEG-4 Audio.

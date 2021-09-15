@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import {
-  concat,
-  hexToBytes,
-  strToBytes,
-} from "../../../utils/byte_parsing";
+import { base64ToBytes } from "../../../utils/base64";
+import { concat } from "../../../utils/byte_parsing";
+import { hexToBytes } from "../../../utils/string_parsing";
 import { getPlayReadyKIDFromPrivateData } from "../../containers/isobmff";
 
 export interface IKeySystem { systemId : string;
@@ -43,7 +41,7 @@ function createWidevineKeySystem(keyIdBytes : Uint8Array) : IKeySystem[] {
  */
 export default function parseProtectionNode(
   protectionNode : Element,
-  keySystemCreator : (keyIdBytes : Uint8Array) => IKeySystem[] = createWidevineKeySystem
+  keySystemCreator : (keyId : Uint8Array) => IKeySystem[] = createWidevineKeySystem
 ) : IContentProtectionSmooth {
   if (protectionNode.firstElementChild === null ||
       protectionNode.firstElementChild.nodeName !== "ProtectionHeader")
@@ -51,8 +49,8 @@ export default function parseProtectionNode(
     throw new Error("Protection should have ProtectionHeader child");
   }
   const header = protectionNode.firstElementChild;
-  const privateData = strToBytes(atob(header.textContent === null ? "" :
-                                                                    header.textContent));
+  const privateData = base64ToBytes(header.textContent === null ? "" :
+                                                                  header.textContent);
   const keyIdHex = getPlayReadyKIDFromPrivateData(privateData);
   const keyIdBytes = hexToBytes(keyIdHex);
 
@@ -60,11 +58,15 @@ export default function parseProtectionNode(
   const systemIdAttr = header.getAttribute("SystemID");
   const systemId = (systemIdAttr !== null ? systemIdAttr :
                                             "")
-                     .toLowerCase()
-                     .replace(/\{|\}/g, "");
-  return { keyId: keyIdBytes,
-           keySystems: [ { systemId,
-                           privateData,
-                           /* keyIds: [keyIdBytes], */ }, ]
-            .concat(keySystemCreator(keyIdBytes)), };
+    .toLowerCase()
+    .replace(/\{|\}/g, "");
+
+  return {
+    keyId: keyIdBytes,
+    keySystems: [ {
+      systemId,
+      privateData,
+      /* keyIds: [keyIdBytes], */
+    } ].concat(keySystemCreator(keyIdBytes)),
+  };
 }

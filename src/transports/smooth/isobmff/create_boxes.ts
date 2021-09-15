@@ -19,12 +19,14 @@ import {
   be2toi,
   be4toi,
   concat,
-  hexToBytes,
   itobe2,
   itobe4,
   itobe8,
-  strToBytes,
 } from "../../../utils/byte_parsing";
+import {
+  hexToBytes,
+  strToUtf8,
+} from "../../../utils/string_parsing";
 
 /**
  * @param {Number} width
@@ -46,18 +48,18 @@ function createAVC1Box(
   avcc : Uint8Array
 ) : Uint8Array {
   return createBox("avc1", concat(
-    6,                      // 6 bytes reserved
-    itobe2(1), 16,          // drefIdx + QuickTime reserved, zeroes
-    itobe2(width),          // size 2 w
-    itobe2(height),         // size 2 h
-    itobe2(hRes), 2,        // reso 4 h
-    itobe2(vRes), 2 + 4,    // reso 4 v + QuickTime reserved, zeroes
-    [0, 1, encName.length], // frame count (default 1)
-    strToBytes(encName),    // 1byte len + encoder name str
-    (31 - encName.length),  // + padding
-    itobe2(colorDepth),     // color depth
-    [0xFF, 0xFF],           // reserved ones
-    avcc                    // avcc atom,
+    6,                       // 6 bytes reserved
+    itobe2(1), 16,           // drefIdx + QuickTime reserved, zeroes
+    itobe2(width),           // size 2 w
+    itobe2(height),          // size 2 h
+    itobe2(hRes), 2,         // reso 4 h
+    itobe2(vRes), 2 + 4,     // reso 4 v + QuickTime reserved, zeroes
+    [0, 1, encName.length],  // frame count (default 1)
+    strToUtf8(encName),      // 1byte len + encoder name str
+    (31 - encName.length),   // + padding
+    itobe2(colorDepth),      // color depth
+    [0xFF, 0xFF],            // reserved ones
+    avcc                     // avcc atom,
   ));
 }
 
@@ -83,18 +85,18 @@ function createENCVBox(
   sinf : Uint8Array
 ) : Uint8Array {
   return createBox("encv", concat(
-    6,                      // 6 bytes reserved
-    itobe2(1), 16,          // drefIdx + QuickTime reserved, zeroes
-    itobe2(width),          // size 2 w
-    itobe2(height),         // size 2 h
-    itobe2(hRes), 2,        // reso 4 h
-    itobe2(vRes), 2 + 4,    // reso 4 v + QuickTime reserved, zeroes
-    [0, 1, encName.length], // frame count (default 1)
-    strToBytes(encName),    // 1byte len + encoder name str
-    (31 - encName.length),  // + padding
-    itobe2(colorDepth),     // color depth
-    [0xFF, 0xFF],           // reserved ones
-    avcc,                   // avcc atom,
+    6,                       // 6 bytes reserved
+    itobe2(1), 16,           // drefIdx + QuickTime reserved, zeroes
+    itobe2(width),           // size 2 w
+    itobe2(height),          // size 2 h
+    itobe2(hRes), 2,         // reso 4 h
+    itobe2(vRes), 2 + 4,     // reso 4 v + QuickTime reserved, zeroes
+    [0, 1, encName.length],  // frame count (default 1)
+    strToUtf8(encName),      // 1byte len + encoder name str
+    (31 - encName.length),   // + padding
+    itobe2(colorDepth),      // color depth
+    [0xFF, 0xFF],            // reserved ones
+    avcc,                    // avcc atom,
     sinf
   ));
 }
@@ -176,10 +178,9 @@ function createDREFBox(url : Uint8Array) : Uint8Array {
  * @returns {Uint8Array}
  */
 function createFTYPBox(majorBrand : string, brands : string[]) : Uint8Array {
-  return createBox("ftyp", concat.apply(null, [
-    strToBytes(majorBrand),
-    [0, 0, 0, 1],
-  ].concat(brands.map(strToBytes))));
+  const content = concat(...[ strToUtf8(majorBrand),
+                              [0, 0, 0, 1] ].concat(brands.map(strToUtf8)));
+  return createBox("ftyp", content);
 }
 
 /**
@@ -188,7 +189,7 @@ function createFTYPBox(majorBrand : string, brands : string[]) : Uint8Array {
  * @returns {Uint8Array}
  */
 function createSCHMBox(schemeType : string, schemeVersion : number) : Uint8Array {
-  return createBox("schm", concat(4, strToBytes(schemeType), itobe4(schemeVersion)));
+  return createBox("schm", concat(4, strToUtf8(schemeType), itobe4(schemeVersion)));
 }
 
 /**
@@ -248,7 +249,7 @@ function createESDSBox(stream : number, codecPrivateData : string) : Uint8Array 
  * @returns {Uint8Array}
  */
 function createFRMABox(dataFormat : string) : Uint8Array {
-  return createBox("frma", strToBytes(dataFormat));
+  return createBox("frma", strToUtf8(dataFormat));
 }
 
 /**
@@ -259,11 +260,11 @@ function createFRMABox(dataFormat : string) : Uint8Array {
  * 1, "68ef3880")
  * @returns {Uint8Array}
  */
-  function createAVCCBox(
-    sps : Uint8Array,
-    pps : Uint8Array,
-    nalLen : number
-  ) : Uint8Array {
+function createAVCCBox(
+  sps : Uint8Array,
+  pps : Uint8Array,
+  nalLen : number
+) : Uint8Array {
   const nal = (nalLen === 2) ? 0x1 :
               (nalLen === 4) ? 0x3 :
               0x0;
@@ -312,8 +313,8 @@ function createHDLRBox(type : "audio"|"video"|"hint") : Uint8Array {
 
   return createBox("hdlr", concat(
     8,
-    strToBytes(name), 12,
-    strToBytes(handlerName),
+    strToUtf8(name), 12,
+    strToUtf8(handlerName),
     1 // handler name is C-style string (0 terminated)
   ));
 }
@@ -326,11 +327,11 @@ function createMDHDBox(timescale : number) : Uint8Array {
   return createBox("mdhd", concat(12, itobe4(timescale), 8));
 }
 
-  /**
-   * @param {Number} timescale
-   * @param {Number} trackId
-   * @returns {Uint8Array}
-   */
+/**
+ * @param {Number} timescale
+ * @param {Number} trackId
+ * @returns {Uint8Array}
+ */
 function createMVHDBox(timescale : number, trackId : number) : Uint8Array {
   return createBox("mvhd", concat(
     12,
@@ -341,45 +342,6 @@ function createMVHDBox(timescale : number, trackId : number) : Uint8Array {
     [0, 1], 14,         // default matrix
     [64, 0, 0, 0], 26,
     itobe2(trackId + 1) // next trackId (=trackId + 1);
-  ));
-}
-
-/**
- * @param {string} systemId - Hex string representing the CDM, 16 bytes.
- * @param {Uint8Array|undefined} privateData - Data associated to protection
- * specific system.
- * @param {Array.<Uint8Array>} keyIds - List of key ids contained in the PSSH
- * @returns {Uint8Array}
- */
-function createPSSHBox(
-  systemId : string,
-  privateData : Uint8Array = new Uint8Array(0),
-  keyIds : Uint8Array = new Uint8Array(0)
-) : Uint8Array {
-  const _systemId = systemId.replace(/-/g, "");
-
-  if (_systemId.length !== 32) {
-    throw new Error("HSS: wrong system id length");
-  }
-
-  let version;
-  let kidList;
-  const kidCount = keyIds.length;
-  if (kidCount > 0) {
-    version = 1;
-    kidList = concat(...[itobe4(kidCount)].concat(keyIds));
-  }
-  else {
-    version = 0;
-    kidList = [];
-  }
-
-  return createBox("pssh", concat(
-    [version, 0, 0, 0],
-    hexToBytes(_systemId),
-    kidList,
-    itobe4(privateData.length),
-    privateData
   ));
 }
 
@@ -508,7 +470,6 @@ export {
   createMDHDBox,
   createMP4ABox,
   createMVHDBox,
-  createPSSHBox,
   createSAIOBox,
   createSAIZBox,
   createSCHMBox,

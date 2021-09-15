@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import createManifestFetcher, {
+import ManifestFetcher, {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
   IManifestFetcherWarningEvent,
 } from "./manifest";
 import SegmentFetcherCreator, {
   IPrioritizedSegmentFetcher,
+  IPrioritizedSegmentFetcherEvent,
   ISegmentFetcherChunkCompleteEvent,
   ISegmentFetcherChunkEvent,
   ISegmentFetcherCreatorBackoffOptions,
@@ -29,7 +30,7 @@ import SegmentFetcherCreator, {
 } from "./segment";
 
 export {
-  createManifestFetcher,
+  ManifestFetcher,
   SegmentFetcherCreator,
 
   IManifestFetcherParserOptions,
@@ -37,6 +38,8 @@ export {
   IManifestFetcherWarningEvent,
 
   IPrioritizedSegmentFetcher,
+  IPrioritizedSegmentFetcherEvent,
+
   ISegmentFetcherEvent,
 
   ISegmentFetcherCreatorBackoffOptions,

@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("Features list - LOCAL_MANIFEST", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -21,19 +28,15 @@ describe("Features list - LOCAL_MANIFEST", () => {
 
   it("should add LOCAL_MANIFEST in the current features", () => {
     const feat = {};
-    jest.mock("../../../transports/local", () => ({ __esModule: true,
+    jest.mock("../../../transports/local", () => ({ __esModule: true as const,
                                                     default: feat }));
-    /* tslint:disable no-unsafe-any */
     const addDASHFeature = require("../local").default;
-    /* tslint:enable no-unsafe-any */
 
     const featureObject : {
       transports : { [featureName : string] : unknown };
     } = { transports: {} };
 
-    /* tslint:disable no-unsafe-any */
     addDASHFeature(featureObject);
-    /* tslint:enable no-unsafe-any */
 
     expect(featureObject).toEqual({ transports: { local: {} } });
     expect(featureObject.transports.local).toBe(feat);

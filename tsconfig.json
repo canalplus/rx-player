@@ -4,6 +4,8 @@
     "allowJs": true,
     "target": "es2017",
     "lib": ["es2017", "dom"],
+    // TODO
+    // "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
     "noImplicitAny": true,

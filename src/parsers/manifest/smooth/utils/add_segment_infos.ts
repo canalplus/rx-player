@@ -38,8 +38,7 @@ export default function _addSegmentInfos(
                  duration : number;
                  timescale : number; },
   currentSegment : { time : number;
-                     duration : number;
-                     timescale : number; }
+                     duration : number; }
 ) : boolean {
   const { timeline, timescale } = index;
   const timelineLength = timeline.length;
@@ -47,17 +46,9 @@ export default function _addSegmentInfos(
 
   const scaledNewSegment = newSegment.timescale === timescale ?
     { time: newSegment.time,
-      duration: newSegment.duration, } :
+      duration: newSegment.duration } :
     { time: (newSegment.time / newSegment.timescale) * timescale,
       duration: (newSegment.duration / newSegment.timescale) * timescale };
-
-  let scaledCurrentTime;
-
-  if (currentSegment.timescale !== 0) {
-    scaledCurrentTime = currentSegment.timescale === timescale ?
-      currentSegment.time :
-      (currentSegment.time / currentSegment.timescale) * timescale;
-  }
 
   // in some circumstances, the new segment information are only duration
   // information that we could use to deduct the start of the next segment.
@@ -65,8 +56,7 @@ export default function _addSegmentInfos(
   // segment and have the same start.
   // However, we prefer to be sure of the duration of the new segments
   // before adding such segments.
-  const shouldDeductNextSegment = scaledCurrentTime != null &&
-    (scaledNewSegment.time === scaledCurrentTime);
+  const shouldDeductNextSegment = currentSegment.time === scaledNewSegment.time;
   if (shouldDeductNextSegment) {
     return false;
   } else if (scaledNewSegment.time >= getIndexSegmentEnd(last, null)) {

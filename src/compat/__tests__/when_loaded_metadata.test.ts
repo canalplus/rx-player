@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import {
   interval as observableInterval,
   timer as observableTimer,
@@ -24,7 +31,6 @@ import {
   tap,
 } from "rxjs/operators";
 
-/* tslint:disable no-unsafe-any */
 describe("compat - whenLoadedMetadata$", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -43,7 +49,7 @@ describe("compat - whenLoadedMetadata$", () => {
     });
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onLoadedMetadata$: mockOnLoadedMetadata$,
     }));
 
@@ -68,7 +74,7 @@ describe("compat - whenLoadedMetadata$", () => {
     });
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onLoadedMetadata$: mockOnLoadedMetadata$,
     }));
 
@@ -90,7 +96,7 @@ describe("compat - whenLoadedMetadata$", () => {
     const mockOnLoadedMetadata$ = jest.fn(() => null);
 
     jest.mock("../event_listeners", () => ({
-      __esModule: true,
+      __esModule: true as const,
       onLoadedMetadata$: mockOnLoadedMetadata$,
     }));
 
@@ -102,4 +108,3 @@ describe("compat - whenLoadedMetadata$", () => {
     });
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("transports utils - checkISOBMFFIntegrity", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -22,7 +28,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
 
   it("should check just ftyp and and moov integrity for init segments", () => {
     const findCompleteBoxSpy = jest.fn(() => 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
@@ -34,7 +40,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
 
   it("should check just moof and and mdat integrity for regular segments", () => {
     const findCompleteBoxSpy = jest.fn(() => 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
@@ -46,90 +52,89 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
 
   it("should throw an other error if an init segment is missing a complete ftyp", () => {
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x66747970 ? -1 : 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : Error | null = null;
+    let error : unknown | null = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, true);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as any).name).toEqual("OtherError");
-    expect((error as any).type).toEqual("OTHER_ERROR");
-    expect((error as any).code).toEqual("INTEGRITY_ERROR");
-    expect((error as any).message)
+    expect((error as typeof OtherError).name).toEqual("OtherError");
+    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
+    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as typeof OtherError).message)
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `ftyp` box");
   });
 
   it("should throw an other error if an init segment is missing a complete moov", () => {
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D6F6F76 ? -1 : 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : Error | null = null;
+    let error : unknown | null = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, true);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as any).name).toEqual("OtherError");
-    expect((error as any).type).toEqual("OTHER_ERROR");
-    expect((error as any).code).toEqual("INTEGRITY_ERROR");
-    expect((error as any).message)
+    expect((error as typeof OtherError).name).toEqual("OtherError");
+    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
+    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as typeof OtherError).message)
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `moov` box");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should throw an other error if a regular segment is missing a complete moof", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D6F6F66 ? -1 : 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : Error | null = null;
+    let error : unknown | null = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, false);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as any).name).toEqual("OtherError");
-    expect((error as any).type).toEqual("OTHER_ERROR");
-    expect((error as any).code).toEqual("INTEGRITY_ERROR");
-    expect((error as any).message)
+    expect((error as typeof OtherError).name).toEqual("OtherError");
+    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
+    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as typeof OtherError).message)
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `moof` box");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should throw an other error if a regular segment is missing a complete mdat", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D646174 ? -1 : 45);
-    jest.mock("../find_complete_box", () => ({ __esModule: true,
+    jest.mock("../find_complete_box", () => ({ __esModule: true as const,
                                                default: findCompleteBoxSpy }));
     const OtherError = require("../../../errors").OtherError;
     const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : Error | null = null;
+    let error : unknown | null = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, false);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as any).name).toEqual("OtherError");
-    expect((error as any).type).toEqual("OTHER_ERROR");
-    expect((error as any).code).toEqual("INTEGRITY_ERROR");
-    expect((error as any).message)
+    expect((error as typeof OtherError).name).toEqual("OtherError");
+    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
+    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as typeof OtherError).message)
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `mdat` box");
   });
 });
-/* tslint:enable no-unsafe-any */

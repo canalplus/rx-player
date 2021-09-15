@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
-import { tap } from "rxjs/operators";
+import PPromise from "pinkie";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
+import { CancellationSignal } from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
 import {
-  ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
+  ILoadedTextSegmentFormat,
+  ISegmentContext,
+  ISegmentLoader,
+  ISegmentLoaderCallbacks,
+  ISegmentLoaderResultChunkedComplete,
+  ISegmentLoaderResultSegmentCreated,
+  ISegmentLoaderResultSegmentLoaded,
 } from "../types";
 import byteRange from "../utils/byte_range";
-import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
-import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
+import inferSegmentContainer from "../utils/infer_segment_container";
+import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
@@ -37,61 +42,72 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
  */
 export default function generateTextTrackLoader(
   { lowLatencyMode,
-    checkMediaSegmentIntegrity } : { lowLatencyMode : boolean;
+    checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
                                      checkMediaSegmentIntegrity? : boolean; }
-) : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< ArrayBuffer |
-                                                               string |
-                                                               null > {
-  if (checkMediaSegmentIntegrity !== true) {
-    return textTrackLoader;
-  }
-  return (content) => textTrackLoader(content).pipe(tap(res => {
-    if ((res.type === "data-loaded" || res.type === "data-chunk") &&
-        res.value.responseData !== null &&
-        typeof res.value.responseData !== "string")
-    {
-      checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
-                            content.segment.isInit);
-    }
-  }));
+) : ISegmentLoader<Uint8Array | ArrayBuffer | string | null> {
+  return checkMediaSegmentIntegrity !== true ? textTrackLoader :
+                                               addSegmentIntegrityChecks(textTrackLoader);
 
   /**
-   * @param {Object} args
-   * @returns {Observable}
+   * @param {string|null} url
+   * @param {Object} content
+   * @param {Object} cancelSignal
+   * @param {Object} callbacks
+   * @returns {Promise}
    */
   function textTrackLoader(
-    args : ISegmentLoaderArguments
-  ) : ISegmentLoaderObservable< ArrayBuffer | string | null > {
-    const { range } = args.segment;
-    const { url } = args;
+    url : string | null,
+    content : ISegmentContext,
+    cancelSignal : CancellationSignal,
+    callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
+  ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
+              ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat> |
+              ISegmentLoaderResultChunkedComplete>
+  {
+    const { adaptation, representation, segment } = content;
+    const { range } = segment;
 
     if (url === null) {
-      return observableOf({ type: "data-created",
-                            value: { responseData: null } });
+      return PPromise.resolve({ resultType: "segment-created",
+                                resultData: null });
     }
 
-    if (args.segment.isInit) {
-      return initSegmentLoader(url, args);
+    if (segment.isInit) {
+      return initSegmentLoader(url, segment, cancelSignal, callbacks);
     }
 
-    const isMP4Embedded = isMP4EmbeddedTextTrack(args.representation);
-    if (lowLatencyMode && isMP4Embedded) {
+    const containerType = inferSegmentContainer(adaptation.type, representation);
+    const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
+    if (lowLatencyMode && seemsToBeMP4) {
       if (fetchIsSupported()) {
-        return lowLatencySegmentLoader(url, args);
+        return lowLatencySegmentLoader(url, content, callbacks, cancelSignal);
       } else {
         warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                  "a higher chance of rebuffering when playing close to the live edge");
       }
     }
 
-    // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
-    const responseType = isMP4Embedded ?  "arraybuffer" :
-                                          "text";
-    return request<ArrayBuffer|string>({ url,
-                                         responseType,
-                                         headers: Array.isArray(range) ?
-                                           { Range: byteRange(range) } :
-                                           null,
-                                         sendProgressEvents: true });
+    if (seemsToBeMP4) {
+      return request({ url,
+                       responseType: "arraybuffer",
+                       headers: Array.isArray(range) ?
+                         { Range: byteRange(range) } :
+                         null,
+                       onProgress: callbacks.onProgress,
+                       cancelSignal })
+        .then((data) => ({ resultType: "segment-loaded",
+                           resultData: data }));
+    }
+
+    return request({ url,
+                     responseType: "text",
+                     headers: Array.isArray(range) ?
+                       { Range: byteRange(range) } :
+                       null,
+                     onProgress: callbacks.onProgress,
+                     cancelSignal })
+      .then((data) => ({ resultType: "segment-loaded",
+                         resultData: data }));
+
   }
 }

@@ -14,21 +14,26 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import arrayFindIndex from "../../utils/array_find_index";
 
-/* tslint:disable no-unsafe-any */
 describe("Compat - clearElementSrc", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
   it("should empty the src and remove the Attribute for a given Element", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
     };
     jest.mock("../browser_detection.ts", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: false,
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -41,12 +46,12 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should throw if failed to remove the Attribute for a given Element", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { throw new Error("Oups, can't remove attribute."); },
     };
     jest.mock("../browser_detection.ts", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: false,
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -59,7 +64,7 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should disable text tracks and remove childs if on firefox", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
       textTracks: [
@@ -74,13 +79,13 @@ describe("Compat - clearElementSrc", () => {
       hasChildNodes: () => true,
       removeChild: (node: { nodeName: string }) => {
         const { childNodes } = fakeElement;
-        const idx = arrayFindIndex(childNodes, (n: any) => n.nodeName === node.nodeName);
+        const idx = arrayFindIndex(childNodes, (n) => n.nodeName === node.nodeName);
         childNodes.splice(idx, 1);
       },
     };
 
     jest.mock("../browser_detection.ts", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -99,11 +104,11 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
     expect(spyHasChildNodes).toHaveBeenCalledTimes(1);
     expect(spyRemoveChild).toHaveBeenCalledTimes(2);
-    expect(spyRemoveChild).toHaveBeenCalledWith({ nodeName: "track"});
+    expect(spyRemoveChild).toHaveBeenCalledWith({ nodeName: "track" });
   });
 
   it("should log when failed to remove text track child node if on firefox", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
       textTracks: [
@@ -122,13 +127,13 @@ describe("Compat - clearElementSrc", () => {
     };
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
 
     const mockLogWarn = jest.fn((message) => message);
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: { warn: mockLogWarn },
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -157,7 +162,7 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should not remove audio child node if on firefox and no text tracks", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
       textTracks: [],
@@ -169,7 +174,7 @@ describe("Compat - clearElementSrc", () => {
     };
 
     jest.mock("../browser_detection.ts", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -189,7 +194,7 @@ describe("Compat - clearElementSrc", () => {
   });
 
   it("should not handle text tracks nodes is has no child nodes if on firefox", () => {
-    const fakeElement : any = {
+    const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
       textTracks: [],
@@ -199,7 +204,7 @@ describe("Compat - clearElementSrc", () => {
     };
 
     jest.mock("../browser_detection.ts", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -218,4 +223,3 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).not.toHaveBeenCalled();
   });
 });
-/* tslint:enable no-unsafe-any */

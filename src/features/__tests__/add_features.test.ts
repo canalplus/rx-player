@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("Features - addFeatures", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -22,8 +28,8 @@ describe("Features - addFeatures", () => {
 
   it("should do nothing if an empty array is given", () => {
     const feat = {};
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const addFeatures = require("../add_features").default;
@@ -33,8 +39,8 @@ describe("Features - addFeatures", () => {
 
   it("should throw if something different than a function is given", () => {
     const feat = {};
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const addFeatures = require("../add_features").default;
@@ -46,8 +52,8 @@ describe("Features - addFeatures", () => {
 
   it("should call the given functions with the features object in argument", () => {
     const feat = { a: 412 };
-    jest.mock("../index", () => ({
-      __esModule: true,
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
       default: feat,
     }));
     const addFeatures = require("../add_features").default;
@@ -61,4 +67,3 @@ describe("Features - addFeatures", () => {
     expect(fakeFeat2).toHaveBeenCalledWith(feat);
   });
 });
-/* tslint:enable no-unsafe-any */

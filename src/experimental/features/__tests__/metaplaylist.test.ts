@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("Features list - METAPLAYLIST", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -22,7 +28,7 @@ describe("Features list - METAPLAYLIST", () => {
 
   it("should add METAPLAYLIST in the current features", () => {
     const feat = {};
-    jest.mock("../../../transports/metaplaylist", () => ({ __esModule: true,
+    jest.mock("../../../transports/metaplaylist", () => ({ __esModule: true as const,
                                                            default: feat }));
     const addDASHFeature = require("../metaplaylist").default;
 
@@ -34,4 +40,3 @@ describe("Features list - METAPLAYLIST", () => {
     expect(featureObject.transports.metaplaylist).toBe(feat);
   });
 });
-/* tslint:enable no-unsafe-any */

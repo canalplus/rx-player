@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/tslint/config */
+
 describe("parsers - webvtt - parseStyleBlock", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -28,10 +35,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -47,18 +52,16 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       [
         "STYLE",
         "::cue {",
-          "background-image: linear-gradient(to bottom, dimgray, lightgray);",
-          "color: papayawhip;",
+        "background-image: linear-gradient(to bottom, dimgray, lightgray);",
+        "color: papayawhip;",
         "}",
       ],
     ];
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -82,10 +85,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -103,8 +104,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       [
         "STYLE",
         "::cue {",
-          "background-image: linear-gradient(to bottom, dimgray, lightgray);",
-          "color: papayawhip;",
+        "background-image: linear-gradient(to bottom, dimgray, lightgray);",
+        "color: papayawhip;",
         "}",
       ],
       [
@@ -117,10 +118,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -149,10 +148,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -183,10 +180,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -214,10 +209,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -251,10 +244,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -287,10 +278,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -323,10 +312,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -346,10 +333,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
-      __esModule: true,
-      /* tslint:disable no-inferred-empty-object-type */
+      __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
-      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
@@ -358,4 +343,3 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 });
-/* tslint:enable no-unsafe-any */

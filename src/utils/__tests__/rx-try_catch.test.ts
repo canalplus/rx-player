@@ -18,7 +18,6 @@ import {
   concat,
   Observable,
   of as observableOf,
-  // Subject,
   throwError as observableThrow,
 } from "rxjs";
 import tryCatch from "../rx-try_catch";
@@ -26,17 +25,19 @@ import tryCatch from "../rx-try_catch";
 describe("utils - tryCatch (RxJS)", () => {
   it("should return a throwing observable if the function throws", (done) => {
     function func() : Observable<never> {
+      // eslint-disable-next-line no-throw-literal
       throw 4;
     }
 
     let itemsReceived = 0;
-    tryCatch(func, undefined).subscribe(
-      () => { itemsReceived++; },
-      (err) => {
+    tryCatch(func, undefined).subscribe({
+      next: () => { itemsReceived++; },
+      error: (err) => {
         expect(itemsReceived).toBe(0);
         expect(err).toBe(4);
         done();
-      });
+      },
+    });
   });
 
   it("should allow giving optional arguments", (done) => {
@@ -47,9 +48,9 @@ describe("utils - tryCatch (RxJS)", () => {
     tryCatch(func, 4).subscribe({ error() { done(); } });
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should emit when the returned Observable emits and complete when it completes", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     function func() {
       return observableOf(1, 2, 3);
     }
@@ -80,20 +81,20 @@ describe("utils - tryCatch (RxJS)", () => {
 
   it("should throw when the returned Observable throws", (done) => {
     function func() {
-      return concat(observableOf(1), observableThrow("a"));
+      return concat(observableOf(1), observableThrow(() => "a"));
     }
 
     let itemsReceived = 0;
-    tryCatch(func, undefined).subscribe(
-      (i) => {
+    tryCatch(func, undefined).subscribe({
+      next: (i) => {
         itemsReceived++;
         expect(i).toBe(1);
       },
-      (err) => {
+      error: (err) => {
         expect(itemsReceived).toBe(1);
         expect(err).toBe("a");
         done();
-      }
-    );
+      },
+    });
   });
 });

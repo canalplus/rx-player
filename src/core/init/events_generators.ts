@@ -20,19 +20,19 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { IRepresentationChangeEvent } from "../buffers";
-import SourceBuffersStore, {
+import SegmentBuffersStore, {
   IBufferType,
-} from "../source_buffers";
-import { IStallingItem } from "./get_stalled_events";
+} from "../segment_buffers";
+import { IRepresentationChangeEvent } from "../stream";
 import {
   IDecipherabilityUpdateEvent,
   ILoadedEvent,
   IManifestReadyEvent,
   IManifestUpdateEvent,
   IReloadingMediaSourceEvent,
-  ISpeedChangedEvent,
   IStalledEvent,
+  IStallingSituation,
+  IUnstalledEvent,
   IWarningEvent,
 } from "./types";
 
@@ -40,17 +40,25 @@ import {
  * Construct a "loaded" event.
  * @returns {Object}
  */
-function loaded(sourceBuffersStore : SourceBuffersStore | null) : ILoadedEvent {
-  return { type: "loaded", value: { sourceBuffersStore } };
+function loaded(segmentBuffersStore : SegmentBuffersStore | null) : ILoadedEvent {
+  return { type: "loaded", value: { segmentBuffersStore } };
 }
 
 /**
  * Construct a "stalled" event.
- * @param {Object|null} stalling
+ * @param {Object|null} rebuffering
  * @returns {Object}
  */
-function stalled(stalling : IStallingItem|null) : IStalledEvent {
-  return { type: "stalled", value: stalling };
+function stalled(rebuffering : IStallingSituation) : IStalledEvent {
+  return { type: "stalled", value: rebuffering };
+}
+
+/**
+ * Construct a "stalled" event.
+ * @returns {Object}
+ */
+function unstalled() : IUnstalledEvent {
+  return { type: "unstalled", value: null };
 }
 
 /**
@@ -84,15 +92,6 @@ function manifestReady(
  */
 function manifestUpdate() : IManifestUpdateEvent {
   return { type: "manifestUpdate", value: null };
-}
-
-/**
- * Construct a "speedChanged" event.
- * @param {Number} speed
- * @returns {Object}
- */
-function speedChanged(speed : number) : ISpeedChangedEvent {
-  return { type: "speedChanged", value: speed };
 }
 
 /**
@@ -134,8 +133,8 @@ const INIT_EVENTS = { loaded,
                       manifestUpdate,
                       nullRepresentation,
                       reloadingMediaSource,
-                      speedChanged,
                       stalled,
+                      unstalled,
                       warning };
 
 export default INIT_EVENTS;

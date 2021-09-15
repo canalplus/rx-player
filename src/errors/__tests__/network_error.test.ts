@@ -35,27 +35,6 @@ describe("errors - NetworkError", () => {
       .toBe("NetworkError (PIPELINE_LOAD_ERROR) TIMEOUT");
   });
 
-  it("should be able to use an object instead", () => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://www.example.com");
-    const networkError = new NetworkError("PIPELINE_LOAD_ERROR",
-                                          { xhr,
-                                            url: "foo://www.example.com",
-                                            status: 12,
-                                            type: "TIMEOUT",
-                                            message: "TIMEOUT" });
-    expect(networkError).toBeInstanceOf(Error);
-    expect(networkError.name).toBe("NetworkError");
-    expect(networkError.type).toBe("NETWORK_ERROR");
-    expect(networkError.xhr).toBe(xhr);
-    expect(networkError.status).toBe(12);
-    expect(networkError.errorType).toBe("TIMEOUT");
-    expect(networkError.code).toBe("PIPELINE_LOAD_ERROR");
-    expect(networkError.fatal).toBe(false);
-    expect(networkError.message)
-      .toBe("NetworkError (PIPELINE_LOAD_ERROR) TIMEOUT");
-  });
-
   it("should filter in a valid error code", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
@@ -82,9 +61,9 @@ describe("errors - NetworkError", () => {
     expect(networkError.isHttpError(0)).toBe(false);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return false in isHttpError if it is an HTTP error with a different code", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError("foo", 44, "ERROR_HTTP_CODE", xhr);
@@ -92,9 +71,9 @@ describe("errors - NetworkError", () => {
     expect(networkError.isHttpError(1)).toBe(false);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return true in isHttpError if it is an HTTP error with the same code", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError("foo", 33, "ERROR_HTTP_CODE", xhr);

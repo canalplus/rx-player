@@ -131,5 +131,5 @@ export {
   isStartOfNoteBlock,
   isStartOfRegionBlock,
   isStartOfStyleBlock,
-  findEndOfCueBlock
+  findEndOfCueBlock,
 };

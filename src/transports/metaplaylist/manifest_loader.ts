@@ -15,10 +15,11 @@
  */
 
 import request from "../../utils/request";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  CustomManifestLoader,
-  IManifestLoaderArguments,
-  IManifestLoaderObservable,
+  ICustomManifestLoader,
+  ILoadedManifestFormat,
+  IRequestedData,
 } from "../types";
 import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
 
@@ -27,12 +28,13 @@ import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
  * @param {string} url
  */
 function regularManifestLoader(
-  { url } : IManifestLoaderArguments
-) : IManifestLoaderObservable {
+  url : string | undefined,
+  cancelSignal : CancellationSignal
+) : Promise< IRequestedData<ILoadedManifestFormat> > {
   if (url === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
-  return request({ url, responseType: "text" });
+  return request({ url, responseType: "text", cancelSignal });
 }
 
 /**
@@ -41,12 +43,13 @@ function regularManifestLoader(
  * @returns {Function}
  */
 export default function generateManifestLoader(
-  options: { customManifestLoader?: CustomManifestLoader }
-) : (args : IManifestLoaderArguments) => IManifestLoaderObservable {
-  const { customManifestLoader } = options;
-  if (typeof customManifestLoader !== "function") {
-    return regularManifestLoader;
-  }
-  return callCustomManifestLoader(customManifestLoader,
-                                  regularManifestLoader);
+  { customManifestLoader } : { customManifestLoader?: ICustomManifestLoader }
+) : (
+    url : string | undefined,
+    cancelSignal : CancellationSignal
+  ) => Promise<IRequestedData<ILoadedManifestFormat>>
+{
+  return typeof customManifestLoader !== "function" ?
+    regularManifestLoader :
+    callCustomManifestLoader(customManifestLoader, regularManifestLoader);
 }

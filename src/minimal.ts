@@ -20,11 +20,10 @@
  * This allows to import a "minimal" player with a small bundle size and then
  * import only features that is needed.
  */
-
 import Player from "./core/api";
 import {
   addFeatures,
-  IFeatureFunction,
+  IFeature,
 } from "./features";
 import logger from "./log";
 
@@ -40,7 +39,7 @@ if (__DEV__) {
  * @class MinimalPlayer
  */
 export default class MinimalPlayer extends Player {
-  static addFeatures(featureList : IFeatureFunction[]) : void {
+  static addFeatures(featureList : IFeature[]) : void {
     addFeatures(featureList);
   }
 }

@@ -71,7 +71,7 @@ function removeEmptyRanges(ranges : IRange[]) : IRange[] {
   for (let index = 0; index < ranges.length; index++) {
     const range = ranges[index];
     if (range.start === range.end) {
-      ranges.splice(index++, 1);
+      ranges.splice(index--, 1);
     }
   }
   return ranges;
@@ -457,6 +457,26 @@ function excludeFromRanges(
   return result;
 }
 
+/**
+ * Returns `true` if the given `time` is available in the TimeRanges object
+ * given.
+ * Returns `false` otherwise.
+ * @param {TimeRanges} ranges
+ * @param {Number} time
+ * @returns {boolean}
+ */
+function isTimeInTimeRanges(
+  ranges : TimeRanges,
+  time : number
+) : boolean {
+  for (let i = 0; i < ranges.length; i++) {
+    if (ranges.start(i) <= time && time < ranges.end(i)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export {
   convertToRanges,
   excludeFromRanges,
@@ -470,6 +490,7 @@ export {
   IRange,
   isAfter,
   isBefore,
+  isTimeInTimeRanges,
   isTimeInRange,
   isTimeInRanges,
   keepRangeIntersection,

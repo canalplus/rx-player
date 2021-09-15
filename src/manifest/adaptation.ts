@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-import {
-  ICustomError,
-  MediaError,
-} from "../errors";
-import log from "../log";
 import { IParsedAdaptation } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
-import arrayIncludes from "../utils/array_includes";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
 import uniq from "../utils/uniq";
 import Representation from "./representation";
-import { IAdaptationType } from "./types";
+import {
+  IAdaptationType,
+  IExposedRepresentation,
+} from "./types";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
@@ -35,32 +32,20 @@ export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
                                                                "image" ];
 
 /**
- * Returns true if the given Adaptation's `type` is a valid `type` property.
- * @param {string} adaptationType
- * @returns {boolean}
- */
-function isSupportedAdaptationType(
-  adaptationType : string
-) : adaptationType is IAdaptationType {
-  return arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptationType);
-}
-
-/**
  * Information describing a single Representation from an Adaptation, to be used
  * in the `representationFilter` API.
  */
 export interface IRepresentationInfos { bufferType: IAdaptationType;
-                                        language?: string;
-                                        isAudioDescription? : boolean;
-                                        isClosedCaption? : boolean;
-                                        isDub? : boolean;
-                                        isSignInterpreted?: boolean;
-                                        normalizedLanguage? : string; }
+                                        language?: string | undefined;
+                                        isAudioDescription? : boolean | undefined;
+                                        isClosedCaption? : boolean | undefined;
+                                        isDub? : boolean | undefined;
+                                        isSignInterpreted?: boolean | undefined;
+                                        normalizedLanguage? : string | undefined; }
 
 /** Type for the `representationFilter` API. */
-export type IRepresentationFilter = (representation: Representation,
-                                     adaptationInfos: IRepresentationInfos)
-                                    => boolean;
+export type IRepresentationFilter = (representation: IExposedRepresentation,
+                                     adaptationInfos: IRepresentationInfos) => boolean;
 
 /**
  * Normalized Adaptation structure.
@@ -110,21 +95,13 @@ export default class Adaptation {
    */
   public manuallyAdded? : boolean;
 
-  /**
-   * `false` if from all Representation from this Adaptation, none is decipherable.
-   * `true` if at least one is known to be decipherable.
-   * `undefined` if this is not known for at least a single Representation.
-   */
-  public decipherable? : boolean;
-
   /** `true` if at least one Representation is in a supported codec. `false` otherwise. */
   public isSupported : boolean;
 
-  /**
-   * Array containing every errors that happened when the Adaptation has been
-   * created, in the order they have happened.
-   */
-  public readonly parsingErrors : ICustomError[];
+  /** Tells if the track is a trick mode track. */
+  public isTrickModeTrack? : boolean;
+
+  public readonly trickModeTracks? : Adaptation[];
 
   /**
    * @constructor
@@ -135,16 +112,11 @@ export default class Adaptation {
     representationFilter? : IRepresentationFilter;
     isManuallyAdded? : boolean;
   } = {}) {
+    const { trickModeTracks } = parsedAdaptation;
     const { representationFilter, isManuallyAdded } = options;
-    this.parsingErrors = [];
     this.id = parsedAdaptation.id;
+    this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
 
-    if (!isSupportedAdaptationType(parsedAdaptation.type)) {
-      log.info("Manifest: Not supported adaptation type", parsedAdaptation.type);
-      throw new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
-                           `"${parsedAdaptation.type}" is not a valid ` +
-                           "Adaptation type.");
-    }
     this.type = parsedAdaptation.type;
 
     if (parsedAdaptation.language !== undefined) {
@@ -165,9 +137,13 @@ export default class Adaptation {
       this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
     }
 
+    if (trickModeTracks !== undefined &&
+        trickModeTracks.length > 0) {
+      this.trickModeTracks = trickModeTracks.map((track) => new Adaptation(track));
+    }
+
     const argsRepresentations = parsedAdaptation.representations;
     const representations : Representation[] = [];
-    let decipherable : boolean | undefined = false;
     let isSupported : boolean = false;
     for (let i = 0; i < argsRepresentations.length; i++) {
       const representation = new Representation(argsRepresentations[i],
@@ -184,28 +160,18 @@ export default class Adaptation {
                                isSignInterpreted: this.isSignInterpreted });
       if (shouldAdd) {
         representations.push(representation);
-        if (decipherable === false && representation.decipherable !== false) {
-          decipherable = representation.decipherable;
-        }
         if (!isSupported && representation.isSupported) {
           isSupported = true;
         }
       }
     }
-    this.representations = representations.sort((a, b) => a.bitrate - b.bitrate);
+    representations.sort((a, b) => a.bitrate - b.bitrate);
+    this.representations = representations;
 
-    this.decipherable = decipherable;
     this.isSupported = isSupported;
 
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = isManuallyAdded === true;
-
-    if (this.representations.length > 0 && !isSupported) {
-      log.warn("Incompatible codecs for adaptation", parsedAdaptation);
-      const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                                   "An Adaptation contains only incompatible codecs.");
-      this.parsingErrors.push(error);
-    }
   }
 
   /**

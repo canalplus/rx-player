@@ -55,6 +55,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     map(() => {
       const position = player.getPosition();
       const duration = player.getVideoDuration();
+      const videoTrack = player.getVideoTrack();
       return {
         currentTime: player.getPosition(),
         wallClockDiff: player.getWallClockTime() - position,
@@ -64,6 +65,10 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         maximumPosition: player.getMaximumPosition(),
         liveGap: player.getMaximumPosition() - player.getPosition(),
         playbackPosition: player.getPlaybackRate(),
+        videoTrackHasTrickMode: videoTrack !== null &&
+          videoTrack !== undefined &&
+          videoTrack.trickModeTracks !== undefined &&
+          videoTrack.trickModeTracks.length > 0,
       };
     }),
     takeUntil($destroy)
@@ -137,7 +142,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
 
   // update bufferedData
   fromPlayerEvent(player, "playerStateChange").pipe(
-    map((state) => state === "STOPPED"),
+    map((playerState) => playerState === "STOPPED"),
     distinctUntilChanged(),
     takeUntil($destroy),
     switchMap((isStopped) => {
@@ -148,15 +153,15 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       return intervalObservable(BUFFERED_DATA_UPDATES_INTERVAL).pipe(
         startWith(0),
         tap(() => {
-          let audioContent = player.__priv_getSourceBufferContent("audio");
+          let audioContent = player.__priv_getSegmentBufferContent("audio");
           if (Array.isArray(audioContent)) {
             audioContent = audioContent.slice();
           }
-          let textContent = player.__priv_getSourceBufferContent("text");
+          let textContent = player.__priv_getSegmentBufferContent("text");
           if (Array.isArray(textContent)) {
             textContent = textContent.slice();
           }
-          let videoContent = player.__priv_getSourceBufferContent("video");
+          let videoContent = player.__priv_getSegmentBufferContent("video");
           if (Array.isArray(videoContent)) {
             videoContent = videoContent.slice();
           }

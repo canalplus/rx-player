@@ -18,6 +18,7 @@ import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
+import arrayFindIndex from "../../utils/array_find_index";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
 import {
@@ -31,32 +32,61 @@ const { ABR_REGULAR_FACTOR,
         ABR_STARVATION_GAP,
         OUT_OF_STARVATION_GAP } = config;
 
-interface INetworkAnalizerClockTick {
-  bufferGap : number; // time to the end of the buffer, in seconds
-  currentTime : number; // current position, in seconds
-  speed : number; // current playback rate
-  duration : number; // whole duration of the content
+/** Object describing the current playback conditions. */
+interface IPlaybackConditionsInfo {
+  /**
+   * For the concerned media buffer, difference in seconds between the next
+   * position where no segment data is available and the current position.
+   */
+  bufferGap : number;
+  /** Current playback position on the concerned media element, in seconds. */
+  position : number;
+  /**
+   * Last "playback rate" set by the user. This is the ideal "playback rate" at
+   * which the media should play.
+   */
+  speed : number;
+  /** `duration` property of the HTMLMediaElement on which the content plays. */
+  duration : number;
 }
 
 /**
- * Get the pending request starting with the asked segment position.
+ * Get pending segment request(s) starting with the asked segment position.
  * @param {Object} requests
  * @param {number} position
- * @returns {IRequestInfo|undefined}
+ * @returns {Array.<Object>}
  */
-function getConcernedRequest(
+function getConcernedRequests(
   requests : IRequestInfo[],
   neededPosition : number
-) : IRequestInfo | undefined {
-  for (let i = 0; i < requests.length; i++) {
-    const request = requests[i];
-    if (request.duration > 0) {
-      const segmentEnd = request.time + request.duration;
-      if (segmentEnd > neededPosition && neededPosition - request.time > -0.3) {
-        return request;
-      }
+) : IRequestInfo[] {
+  /** Index of the request for the next needed segment, in `requests`. */
+  const nextSegmentIndex = arrayFindIndex(requests, (request) => {
+    if (request.duration <= 0) {
+      return false;
+    }
+    const segmentEnd = request.time + request.duration;
+    return segmentEnd > neededPosition &&
+           neededPosition - request.time > -1.2;
+  });
+
+  if (nextSegmentIndex < 0) { // Not found
+    return [];
+  }
+
+  const nextRequest = requests[nextSegmentIndex];
+  const segmentTime = nextRequest.time;
+  const filteredRequests = [nextRequest];
+
+  // Get the possibly multiple requests for that segment's position
+  for (let i = nextSegmentIndex + 1; i < requests.length; i++) {
+    if (requests[i].time === segmentTime) {
+      filteredRequests.push(requests[i]);
+    } else {
+      break;
     }
   }
+  return filteredRequests;
 }
 
 /**
@@ -67,7 +97,8 @@ function getConcernedRequest(
  * @returns {number|undefined}
  */
 function estimateRequestBandwidth(request : IRequestInfo) : number|undefined {
-  if (request.progress.length < 2) {
+  if (request.progress.length < 5) { // threshold from which we can consider
+                                     // progress events reliably
     return undefined;
   }
 
@@ -103,46 +134,57 @@ function estimateRemainingTime(
  * If that's the case, re-calculate the bandwidth urgently based on
  * this single request.
  * @param {Object} pendingRequests - Current pending requests.
- * @param {Object} clock - Information on the current playback.
- * @param {Number} lastEstimatedBitrate - Last bitrate estimation emitted.
+ * @param {Object} playbackInfo - Information on the current playback.
+ * @param {Object|null} currentRepresentation - The Representation being
+ * presently being loaded.
+ * @param {Number} lastEstimatedBitrate - Last bitrate estimate emitted.
  * @returns {Number|undefined}
  */
 function estimateStarvationModeBitrate(
   pendingRequests : IRequestInfo[],
-  clock : INetworkAnalizerClockTick,
+  playbackInfo : IPlaybackConditionsInfo,
   currentRepresentation : Representation | null,
   lastEstimatedBitrate : number|undefined
 ) : number|undefined {
-  const nextNeededPosition = clock.currentTime + clock.bufferGap;
-  const concernedRequest = getConcernedRequest(pendingRequests, nextNeededPosition);
-  if (concernedRequest === undefined) {
+  const { bufferGap, speed, position } = playbackInfo;
+  const realBufferGap = isFinite(bufferGap) ? bufferGap :
+                                              0;
+  const nextNeededPosition = position + realBufferGap;
+  const concernedRequests = getConcernedRequests(pendingRequests, nextNeededPosition);
+
+  if (concernedRequests.length !== 1) { // 0  == no request
+                                        // 2+ == too complicated to calculate
     return undefined;
   }
 
+  const concernedRequest = concernedRequests[0];
   const chunkDuration = concernedRequest.duration;
   const now = performance.now();
   const lastProgressEvent = concernedRequest.progress.length > 0 ?
     concernedRequest.progress[concernedRequest.progress.length - 1] :
-    null;
+    undefined;
 
   // first, try to do a quick estimate from progress events
   const bandwidthEstimate = estimateRequestBandwidth(concernedRequest);
-  if (lastProgressEvent != null && bandwidthEstimate != null) {
-    const remainingTime =
-      estimateRemainingTime(lastProgressEvent, bandwidthEstimate) * 1.2;
 
-    // if this remaining time is reliable and is not enough to avoid buffering
-    if (
-      (now - lastProgressEvent.timestamp) / 1000 <= remainingTime &&
-      remainingTime > (clock.bufferGap / clock.speed)
-    ) {
-      return bandwidthEstimate;
+  if (lastProgressEvent !== undefined && bandwidthEstimate !== undefined) {
+    const remainingTime = estimateRemainingTime(lastProgressEvent,
+                                                bandwidthEstimate);
+
+    // if the remaining time does seem reliable
+    if ((now - lastProgressEvent.timestamp) / 1000 <= remainingTime) {
+      // Calculate estimated time spent rebuffering if we continue doing that request.
+      const expectedRebufferingTime = remainingTime -
+        (realBufferGap / speed);
+      if (expectedRebufferingTime > 2000) {
+        return bandwidthEstimate;
+      }
     }
   }
 
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const reasonableElapsedTime = requestElapsedTime <=
-    ((chunkDuration * 1.5 + 1) / clock.speed);
+    ((chunkDuration * 1.5 + 2) / speed);
   if (currentRepresentation == null || reasonableElapsedTime) {
     return undefined;
   }
@@ -150,7 +192,9 @@ function estimateStarvationModeBitrate(
   // calculate a reduced bitrate from the current one
   const factor = chunkDuration / requestElapsedTime;
   const reducedBitrate = currentRepresentation.bitrate * Math.min(0.7, factor);
-  if (lastEstimatedBitrate == null || reducedBitrate < lastEstimatedBitrate) {
+  if (lastEstimatedBitrate === undefined ||
+      reducedBitrate < lastEstimatedBitrate)
+  {
     return reducedBitrate;
   }
 }
@@ -160,43 +204,45 @@ function estimateStarvationModeBitrate(
  * switch immediately if a lower bitrate is more adapted.
  * Returns false if it estimates that you have time before switching to a lower
  * bitrate.
- * @param {Object} clock
+ * @param {Object} playbackInfo
  * @param {Object} requests - Every requests pending, in a chronological
  * order in terms of segment time.
+ * @param {number} abrStarvationGap - "Buffer gap" from which we enter a
+ * "starvation mode".
  * @returns {boolean}
  */
 function shouldDirectlySwitchToLowBitrate(
-  clock : INetworkAnalizerClockTick,
-  requests : IRequestInfo[],
-  abrStarvationGap : number
+  playbackInfo : IPlaybackConditionsInfo,
+  requests : IRequestInfo[]
 ) : boolean {
-   const nextNeededPosition = clock.currentTime + clock.bufferGap;
+  const realBufferGap = isFinite(playbackInfo.bufferGap) ? playbackInfo.bufferGap :
+                                                           0;
+  const nextNeededPosition = playbackInfo.position + realBufferGap;
+  const nextRequest = arrayFind(requests, (r) =>
+    r.duration > 0 && (r.time + r.duration) > nextNeededPosition);
 
-   const nextNeededRequest = arrayFind(requests, (r) =>
-     (r.time + r.duration) > nextNeededPosition
-   );
-   if (nextNeededRequest === undefined) {
-     return true;
-   }
+  if (nextRequest === undefined) {
+    return true;
+  }
 
-   const now = performance.now();
-   const lastProgressEvent = nextNeededRequest.progress.length > 0 ?
-     nextNeededRequest.progress[nextNeededRequest.progress.length - 1] :
-     null;
+  const now = performance.now();
+  const lastProgressEvent = nextRequest.progress.length > 0 ?
+    nextRequest.progress[nextRequest.progress.length - 1] :
+    undefined;
 
-   // first, try to do a quick estimate from progress events
-   const bandwidthEstimate = estimateRequestBandwidth(nextNeededRequest);
-   if (lastProgressEvent == null || bandwidthEstimate == null) {
-     return true;
-   }
+  // first, try to do a quick estimate from progress events
+  const bandwidthEstimate = estimateRequestBandwidth(nextRequest);
+  if (lastProgressEvent === undefined || bandwidthEstimate === undefined) {
+    return true;
+  }
 
-   const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
-   if ((now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
-       remainingTime < ((clock.bufferGap / clock.speed) + abrStarvationGap))
-  {
-     return false;
-   }
-   return true;
+  const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
+  if ((now - lastProgressEvent.timestamp) / 1000 > (remainingTime * 1.2)) {
+    return true;
+  }
+  const expectedRebufferingTime = remainingTime -
+    (realBufferGap / playbackInfo.speed);
+  return expectedRebufferingTime > -1.5;
 }
 
 /**
@@ -216,10 +262,10 @@ export default class NetworkAnalyzer {
     this._initialBitrate = initialBitrate;
     this._inStarvationMode = false;
     if (lowLatencyMode) {
-    this._config = { starvationGap: ABR_STARVATION_GAP.LOW_LATENCY,
-                     outOfStarvationGap: OUT_OF_STARVATION_GAP.LOW_LATENCY,
-                     starvationBitrateFactor: ABR_STARVATION_FACTOR.LOW_LATENCY,
-                     regularBitrateFactor: ABR_REGULAR_FACTOR.LOW_LATENCY };
+      this._config = { starvationGap: ABR_STARVATION_GAP.LOW_LATENCY,
+                       outOfStarvationGap: OUT_OF_STARVATION_GAP.LOW_LATENCY,
+                       starvationBitrateFactor: ABR_STARVATION_FACTOR.LOW_LATENCY,
+                       regularBitrateFactor: ABR_REGULAR_FACTOR.LOW_LATENCY };
     } else {
       this._config = { starvationGap: ABR_STARVATION_GAP.DEFAULT,
                        outOfStarvationGap: OUT_OF_STARVATION_GAP.DEFAULT,
@@ -228,26 +274,41 @@ export default class NetworkAnalyzer {
     }
   }
 
+  /**
+   * Gives an estimate of the current bandwidth and of the bitrate that should
+   * be considered for chosing a `representation`.
+   * This estimate is only based on network metrics.
+   * @param {Object} playbackInfo - Gives current information about playback
+   * @param {Object} bandwidthEstimator
+   * @param {Object|null} currentRepresentation
+   * @param {Array.<Object>} currentRequests
+   * @param {number|undefined} lastEstimatedBitrate
+   * @returns {Object}
+   */
   public getBandwidthEstimate(
-    clockTick: INetworkAnalizerClockTick,
+    playbackInfo: IPlaybackConditionsInfo,
     bandwidthEstimator : BandwidthEstimator,
     currentRepresentation : Representation | null,
     currentRequests : IRequestInfo[],
     lastEstimatedBitrate: number|undefined
   ) : { bandwidthEstimate? : number; bitrateChosen : number } {
-    let newBitrateCeil; // bitrate ceil for the chosen Representation
+    let newBitrateCeil : number | undefined; // bitrate ceil for the chosen Representation
     let bandwidthEstimate;
     const localConf = this._config;
-    const { bufferGap, currentTime, duration } = clockTick;
+    const { bufferGap, position, duration } = playbackInfo;
+    const realBufferGap = isFinite(bufferGap) ? bufferGap :
+                                                0;
 
     // check if should get in/out of starvation mode
     if (isNaN(duration) ||
-        bufferGap + currentTime < duration - ABR_STARVATION_DURATION_DELTA)
+        realBufferGap + position < duration - ABR_STARVATION_DURATION_DELTA)
     {
-      if (!this._inStarvationMode && bufferGap <= localConf.starvationGap) {
+      if (!this._inStarvationMode && realBufferGap <= localConf.starvationGap) {
         log.info("ABR: enter starvation mode.");
         this._inStarvationMode = true;
-      } else if (this._inStarvationMode && bufferGap >= localConf.outOfStarvationGap) {
+      } else if (this._inStarvationMode &&
+                 realBufferGap >= localConf.outOfStarvationGap)
+      {
         log.info("ABR: exit starvation mode.");
         this._inStarvationMode = false;
       }
@@ -258,10 +319,10 @@ export default class NetworkAnalyzer {
 
     // If in starvation mode, check if a quick new estimate can be done
     // from the last requests.
-    // If so, cancel previous estimations and replace it by the new one
+    // If so, cancel previous estimates and replace it by the new one
     if (this._inStarvationMode) {
       bandwidthEstimate = estimateStarvationModeBitrate(currentRequests,
-                                                        clockTick,
+                                                        playbackInfo,
                                                         currentRepresentation,
                                                         lastEstimatedBitrate);
 
@@ -291,8 +352,8 @@ export default class NetworkAnalyzer {
       }
     }
 
-    if (clockTick.speed > 1) {
-      newBitrateCeil /= clockTick.speed;
+    if (playbackInfo.speed > 1) {
+      newBitrateCeil /= playbackInfo.speed;
     }
 
     return { bandwidthEstimate, bitrateChosen: newBitrateCeil };
@@ -301,24 +362,22 @@ export default class NetworkAnalyzer {
   /**
    * For a given wanted bitrate, tells if should switch urgently.
    * @param {number} bitrate
-   * @param {Object} clockTick
+   * @param {Object} playbackInfo
    * @returns {boolean}
    */
   public isUrgent(
     bitrate: number,
     currentRepresentation : Representation | null,
     currentRequests : IRequestInfo[],
-    clockTick: INetworkAnalizerClockTick
-   ) : boolean {
-    if (currentRepresentation == null) {
+    playbackInfo: IPlaybackConditionsInfo
+  ) : boolean {
+    if (currentRepresentation === null) {
       return true;
     } else if (bitrate === currentRepresentation.bitrate) {
       return false;
     } else if (bitrate > currentRepresentation.bitrate) {
       return !this._inStarvationMode;
     }
-    return shouldDirectlySwitchToLowBitrate(clockTick,
-                                            currentRequests,
-                                            this._config.starvationGap);
+    return shouldDirectlySwitchToLowBitrate(playbackInfo, currentRequests);
   }
 }

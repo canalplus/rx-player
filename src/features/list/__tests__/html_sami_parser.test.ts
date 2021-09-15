@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import samiParser from "../../../parsers/texttracks/sami/html";
 import addHTMLSAMIFeature from "../html_sami_parser";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/sami/html", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - HTML SAMI Parser", () => {
   it("should add an HTML SAMI Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { htmlTextTracksParsers: {} };
     addHTMLSAMIFeature(featureObject);
     expect(featureObject).toEqual({
@@ -33,4 +35,3 @@ describe("Features list - HTML SAMI Parser", () => {
     expect(featureObject.htmlTextTracksParsers.sami).toBe(samiParser);
   });
 });
-/* tslint:enable no-unsafe-any */

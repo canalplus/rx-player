@@ -13,23 +13,22 @@ const VideoTrackKnobBase = ({
   currentVideoTrack,
 }) => {
   let options = [];
-  let selectedIndex;
+  let selectedIndex = 0;
 
   if (!availableVideoTracks.length) {
     options = ["Not available"];
-    selectedIndex = 0;
   } else {
     options = ["no video track"].concat(
       availableVideoTracks.map((track, i) => `track ${i}: ${track.id}`),
     );
 
-    selectedIndex = currentVideoTrack ?
-      Math.max(findVideoTrackIndex(currentVideoTrack, availableVideoTracks), 1)
-      : 0;
+    if (currentVideoTrack) {
+      selectedIndex =
+        1 + findVideoTrackIndex(currentVideoTrack, availableVideoTracks);
+    }
   }
 
-  const onTrackChange = (evt) => {
-    const index = +evt.target.value;
+  const onTrackChange = ({ index }) => {
     if (index === 0) {
       player.dispatch("DISABLE_VIDEO_TRACK");
     } else {
@@ -46,7 +45,7 @@ const VideoTrackKnobBase = ({
       disabled={options.length <= 1}
       onChange={onTrackChange}
       options={options}
-      selected={selectedIndex}
+      selected={{ index: selectedIndex }}
     />
   );
 };

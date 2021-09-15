@@ -13,11 +13,14 @@
     - [transportOptions](#prop-transportOptions)
     - [textTrackMode](#prop-textTrackMode)
     - [textTrackElement](#prop-textTrackElement)
+    - [audioTrackSwitchingMode](#prop-audioTrackSwitchingMode)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
+    - [onCodecSwitch](#prop-onCodecSwitch)
     - [lowLatencyMode](#prop-lowLatencyMode)
-    - [supplementaryImageTracks](#prop-supplementaryImageTracks)
-    - [hideNativeSubtitle](#prop-hideNativeSubtitle)
     - [networkConfig](#prop-networkConfig)
+    - [enableFastSwitching](#prop-enableFastSwitching)
+    - [hideNativeSubtitle (deprecated)](#prop-hideNativeSubtitle)
+    - [supplementaryImageTracks (deprecated)](#prop-supplementaryImageTracks)
     - [supplementaryTextTracks (deprecated)](#prop-supplementaryTextTracks)
     - [defaultAudioTrack (deprecated)](#prop-defaultAudioTrack)
     - [defaultTextTrack (deprecated)](#prop-defaultTextTrack)
@@ -56,31 +59,57 @@ This property is mandatory.
 
 Can be either:
 
-  - ``"dash"`` - for DASH contents
+  - **`"dash"` - for DASH contents.**
 
-  - ``"smooth"`` - for Microsoft Smooth Streaming contents
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least either one of the following features to be able
+    to play DASH contents:
+      - the `DASH` feature (rely on a generally-sufficient JavaScript parser)
+      - the `DASH_WASM` experimental feature (backed by a WebAssembly parser,
+        more efficient when handling very large MPDs).
+        More information in the [`DASH_WASM` experimental feature
+        documentation](./dash_wasm_parser.md).
+      - or both (which will use the latter only when available)
 
-  - ``"directfile"`` - for loading a video in _DirectFile_ mode, which allows to
-    directly play media files (example: ``.mp4`` or ``.webm`` files) without
+  - **`"smooth"` - for Microsoft Smooth Streaming contents**
+
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `SMOOTH` feature to be able to play Smooth
+    contents.
+
+  - **`"directfile"` - for loading a video in _DirectFile_ mode, which allows to
+    directly play media files** (example: ``.mp4`` or ``.webm`` files) without
     using a transport protocol. With that option, you can even play HLS
     contents on multiple browsers (mainly safari and iOS browsers).
+
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `DIRECTFILE` feature to be able to play those
+    contents.
 
     :warning: In that mode, multiple APIs won't have any effect.
     This is documented in the documentation of each concerned method, option or
     event in the API.
 
-  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams, which are
+  - **`"metaplaylist"` for [MetaPlaylist](./metaplaylist.md) streams**, which are
     a concatenation of multiple smooth and DASH contents
 
-  - `"local"` for [local manifests](./local_manifest.md), which allows to play
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `METAPLAYLIST` experimental feature to be able
+    to play those contents.
+
+  - **`"local"` for [local manifests](./local_manifest.md)**, which allows to play
     downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
+
+    If you're using the [minimal build of the player](./minimal_player.md), you
+    will need to add at least the `LOCAL_MANIFEST` experimental feature to be
+    able to play those contents.
 
 Example:
 ```js
 // play some dash content
 rxPlayer.loadVideo({
   transport: "dash",
-  url: https://www.example.com/dash.mpd
+  url: "https://www.example.com/dash.mpd"
 })
 ```
 
@@ -96,15 +125,24 @@ For Smooth, DASH or MetaPlaylist contents, the URL to the
 For _DirectFile_ mode contents, the URL of the content (the supported contents
 depends on the current browser).
 
-This property is mandatory unless a `manifestLoader` is defined in the
-[transportOptions](#prop-transportOptions), in which case that callback will be
-called instead any time we want to load the Manifest.
+This property is mandatory unless either:
+
+  - a `manifestLoader` is defined in the
+    [transportOptions](#prop-transportOptions), in which case that callback will
+    be called instead any time we want to load the Manifest.
+
+  - an `initialManifest` is defined in the
+    [transportOptions](#prop-transportOptions), in which case this will be used
+    as the first version of the Manifest.
+    Note however that if the Manifest needs to be refreshed and no `url` nor
+    `manifestLoader` has been set, the RxPlayer will most likely fail and stop
+    playback.
 
 Example:
 ```js
 // play some dash content
 rxPlayer.loadVideo({
-  url: https://www.example.com/dash.mpd,
+  url: "https://www.example.com/dash.mpd",
   transport: "dash"
 })
 ```
@@ -115,24 +153,51 @@ rxPlayer.loadVideo({
 
 _type_: ``Array.<Object>|undefined``
 
-This property is mandatory if the content uses DRM.
+`keySystems` allows to define every options relative to the encryption of the
+wanted content.
 
-It is here that is defined every options relative to the encryption of your
-content. There's a lot of configuration possible here. In the case you find
-this documentation hard to grasp, we've written a [tutorial on DRM configuration
-here](../tutorials/contents_with_DRM.md).
+This property is mandatory if the content relies on DRM and needs to be
+decrypted but unnecessary if the content is not encrypted.
 
-This property is an array of objects with the following properties (only
-``type`` and ``getLicense`` are mandatory here):
+There's a lot of configuration possible here.
+In the case you find this documentation hard to grasp, we've written a [tutorial
+on DRM configuration here](../tutorials/contents_with_DRM.md).
 
-  - __type__ (``string``): name of the DRM system used. Can be either
-    ``"widevine"``, ``"playready"`` or ``clearkey`` or the type (reversed domain
-    name) of the keySystem (e.g. ``"com.widevine.alpha"``,
-    ``"com.microsoft.playready"`` ...).
+--
 
-  - __getLicense__ (``Function``): Callback which will be triggered everytime a
-    message is sent by the Content Decryption Module (CDM), usually to
-    fetch/renew the license.
+This property is an array of objects, each describing a wanted DRM
+configuration.
+
+The RxPlayer will then try each of those configurations in order (from the first
+element in that array to the last) and only consider the first one compatible
+with the current device.
+
+If none of those configurations are compatible with the current device, an
+[`INCOMPATIBLE_KEYSYSTEMS` error](./errors.md#types-encrypted_media_error) might
+be sent through an [`"error"` event](./player_events.md#events-error).
+
+Here's the list of all possible options, (note that only `type` and
+`getLicense` are required, other properties are optional yet might be very
+useful depending on your needs):
+
+  - __type__ (``string``):
+
+    Name of the DRM system used. Can be either one of:
+      - `"widevine"`
+      - `"playready"`
+      - `"clearkey"`
+
+    For more specific (or just diffrent ones), the full reverse domain name of
+    the key system can be used instead, for example:
+      - `"com.widevine.alpha"`,
+      - `"com.microsoft.playready.hardware"`
+      - `"com.apple.fps.1_0"`
+      - etc.
+
+  - __getLicense__ (``Function``):
+
+    Callback which will be triggered everytime a message is sent by the Content
+    Decryption Module (CDM), usually to fetch/renew the license.
 
     Gets two arguments when called:
       1. the message (``Uint8Array``): The message, formatted to an Array of
@@ -142,82 +207,125 @@ This property is an array of objects with the following properties (only
          There is only 4 possible message types, all defined in [the w3c
          specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype).
 
-      This function should return either synchronously the license, `null` to
-      not set a license for this `message` event or a Promise which should
-      either:
-        - resolves if the license was fetched, with the licence in argument
-        - resolve with ``null`` if you do not want to set a license for this
-          `message` event
-        - reject if an error was encountered.
+    This function should return either synchronously the license, `null` to not
+    set a license for this `message` event or a Promise which should either:
+      - resolve if the license was fetched, with the licence in argument
+      - resolve with ``null`` if you do not want to set a license for this
+        `message` event
+      - reject if an error was encountered.
 
-      Note: We set a 10 seconds timeout by default on this request (configurable
-      through the `getLicenseConfig` object).
-      If the returned Promise do not resolve or reject under this limit, the
-      player will stop with an error.
+    Note: We set a 10 seconds timeout by default on this request (configurable
+    through the `keySystems[].getLicenseConfig` object).
+    If the returned Promise do not resolve or reject under this limit, the
+    RxPlayer will stop with an error.
 
-      In any case, the license provided by this function should be of a
-      ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
+    In any case, if a license is provided by this function it should be under a
+    ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
 
-      Even in case of an error, you can (this is not mandatory) set any of the
-      following properties on the rejected value which will be interpreted by
-      the RxPlayer:
+    If this callback throws or rejects, the RxPlayer will either:
 
-        - `noRetry` (`Boolean`): If set to `true`, we will throw directly a
-          `KEY_LOAD_ERROR` to call `getLicense`. If not set or set to `false`,
-          the current retry parameters will be applied (see `getLicenseConfig`)
+      - retry if new retry attempts can be done according to the parameters
+        given as `getLicenseConfig` and if the `noRetry` property of the last
+        rejected/throwed value was not set to `true`.
 
-        - `message` (`string`): If the `message` property is set as a "string",
-          this message will be set as the `message` property of the
-          corresponding `EncryptedMediaError` (either communicated through an
-          `"error"` event if we're not retrying or through a `"warning"` event
-          if we're retrying).
-          As every other `getLicense`-related errors, this error will have the
-          `KEY_LOAD_ERROR` `code` property.
+        In that case an error with the `KEY_LOAD_ERROR` code will still be
+        emitted through a `warning` event to indicate that this attempt as
+        failed.
 
-        - `fallbackOnLastTry`: If this getLicense is the last retry (if the
-          `noRetry` property is set to `true`, this is always true), we will not
-          throw immediately but rather try to fallback on other Representations
-          (e.g. qualities) which might have a different decryption key. If no
-          Representation is left, we will throw a MediaError with a
-          `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
-          documentation](./errors.md#types-media_error).
+      - stop playback, emitting an `error` event with the `KEY_LOAD_ERROR` code,
+        if no attempt is left to be done (or if the `noRetry` property of the
+        last throwed/rejected error was set to `true`) AND if the
+        `fallbackOnLastTry` property on the last throwed/rejected error was not
+        set to `true`.
 
-          You will receive a `decipherabilityUpdate` event when we fallback from
-          a given Representation. You can find documentation on this event [in
-          the corresponding chapter of the events
-          documentation](./player_events.md#events-decipherabilityUpdate).
+      - try to fallback to a different `Representation` (a.k.a. media profile)
+        if no attempt is left to be done (or if the `noRetry` property of the
+        last throwed/rejected error was set to `true`) AND if the
+        `fallbackOnLastTry` property on the last throwed/rejected error WAS
+        set to `true`.
 
-          This option is thus only useful for contents depending on multiple
-          licenses.
+        In that case an error with the `KEY_LOAD_ERROR` code will still be
+        emitted through a `warning` event to indicate that this attempt as
+        failed.
 
-          When fallbacking, we might need to reload the current MediaSource,
-          leading to a black screen during a brief instant. When reloading, the
-          RxPlayer will have the `"reloading"` [player state](./states.md).
-          on most situations, we will however not reload the media source but
-          only perform a very little seek (of some milliseconds). you might see
-          the stream stutter for a very brief instant at that point.
+        If we have no Representation to fallback to anymore, we will throw a
+        MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
+        the errors documentation](./errors.md#types-media_error).
 
-          On the Edge browser, we found an issue that can arise when this option
-          is set if PlayReady is used. This issue can make the player loads the
-          content indefinitely.
-          Sadly, no work-around has been found for now for this issue. We're
-          currently trying to create a reproducible scenario and document that
-          issue so it can hopefully be fixed in the future. In the meantime,
-          you're encouraged either to use Widevine (only on Chromium-based Edge)
-          or to not make use of the `fallBackOnLastTry` option on that browser.
+    If the `getLicense` call throws/rejects, you can add any of the following
+    properties (none are mandatory) to configure the behavior of the RxPlayer
+    relative to that failure:
+
+      - `noRetry` (`Boolean`): If set to `true`, we won't make another attempt
+        to call `getLicense`. Its failure
+        `getLicense` another time.
+        This will result in: trigger a fallback to other
+        Representations (and a `KEY_LOAD_ERROR` warning being sent) or th
+        will  throw directly a `KEY_LOAD_ERROR`.
+        the current retry parameters will be applied (see `getLicenseConfig`)
+
+      - `message` (`string`): If the `message` property is set as a "string",
+        this message will be set as the `message` property of the
+        corresponding `EncryptedMediaError` (either communicated through an
+        `"error"` event if we're not retrying or through a `"warning"` event
+        if we're retrying).
+        As every other `getLicense`-related errors, this error will have the
+        `KEY_LOAD_ERROR` `code` property.
+
+      - `fallbackOnLastTry` (`boolean`): If this getLicense is the last retry
+        (if the `noRetry` property is set to `true`, this is always true), we
+        will not throw immediately but rather try to fallback on other
+        Representations (e.g. qualities) which might have a different decryption
+        key. If no Representation is left, we will throw a MediaError with a
+        `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
+        documentation](./errors.md#types-media_error).
+
+        You will receive a `decipherabilityUpdate` event when we fallback from
+        a given Representation. You can find documentation on this event [in
+        the corresponding chapter of the events
+        documentation](./player_events.md#events-decipherabilityUpdate).
+
+        This option is thus only useful for contents depending on multiple
+        licenses.
+
+        When fallbacking, we might need to reload the current MediaSource,
+        leading to a black screen during a brief instant. When reloading, the
+        RxPlayer will have the `"RELOADING"` [player state](./states.md).
+        on most situations, we will however not reload the media source but
+        only perform a very little seek (of some milliseconds). you might see
+        the stream stutter for a very brief instant at that point.
+
+        On the Edge browser, we found an issue that can arise when this option
+        is set if PlayReady is used. This issue can make the player loads the
+        content indefinitely.
+        Sadly, no work-around has been found for now for this issue. We're
+        currently trying to create a reproducible scenario and document that
+        issue so it can hopefully be fixed in the future. In the meantime,
+        you're encouraged either to use Widevine (only on Chromium-based Edge)
+        or to not make use of the `fallBackOnLastTry` option on that browser.
 
   - __getLicenseConfig__ (`Object|undefined`): Optional configuration for the
-    `getLicense` callback. Can contain the following properties:
-       - `retry` (`Number`|`undefined`) (default: `2`): number of time
-         `getLicense` is retried on error or on timeout before we fail on a
-         `KEY_LOAD_ERROR`
-       - `timeout` (`Number`|`undefined`) (default: `10000`): timeout, in ms,
-         after which we consider the `getLicense` callback to have failed.
+    `keySystems[].getLicense` callback.
+    Can contain the following properties:
+      - `retry` (`Number`|`undefined`) (default: `2`): number of time
+        `getLicense` is retried on error or on timeout before we fail on a
+        `KEY_LOAD_ERROR`
+      - `timeout` (`Number`|`undefined`) (default: `10000`): timeout, in ms,
+        after which we consider the `getLicense` callback to have failed.
 
-         Set it to `-1` to disable any timeout.
+        Set it to `-1` to disable any timeout.
+        `getLicense` callback. Can contain the following properties:
+           - `retry` (`Number`|`undefined`) (default: `2`): number of time
+             `getLicense` is retried on error or on timeout before we fail on a
+             `KEY_LOAD_ERROR`
+           - `timeout` (`Number`|`undefined`) (default: `10000`): timeout, in ms,
+             after which we consider the `getLicense` callback to have failed.
+
+             Set it to `-1` to disable any timeout.
 
   - __serverCertificate__ (``BufferSource|undefined``): Eventual certificate
     used to encrypt messages to the license server.
+
     If set, we will try to set this certificate on the CDM. If it fails, we will
     still continue to try deciphering the content (albeit a
     [warning](./errors.md) will be emitted in that case with the code
@@ -225,31 +333,181 @@ This property is an array of objects with the following properties (only
 
   - __persistentLicense__ (``Boolean|undefined``): Set it to ``true`` if you
     want the ability to persist the license for later retrieval.
+
     In that case, you will also need to set the ``licenseStorage`` attribute to
-    be able to persist the license through your preferred method. This is not
-    needed for most usecases.
+    be able to persist the license through your preferred method.
+
+    Note that not all licenses can be persisted, this is dependent both on the
+    loaded licenses and on the Content Decryption Module used in the browser.
 
   - __licenseStorage__ (``Object|undefined``): Required only if
-    ``persistentLicense`` has been set to ``true``. It's an object containing
-    two functions ``load`` and ``save``:
-      - ``save``: take into argument an ``Array.<Object>`` which will be the set
-        of sessionId to save. No return value needed.
-      - ``load``: take no argument and returns the stored ``Array.<Object>``
-        (the last given to ``save``) synchronously.
+    ``persistentLicense`` has been set to ``true``.
 
-  - __persistentStateRequired__ (``Boolean|undefined``): Set it to ``true`` if
-    the chosen CDM should have the ability to persist a license, ``false`` if
-    you don't care. This is not needed for most usecases. ``false`` by default.
-    You do not have to set it to ``true`` if the ``persistentLicense`` option is
-    set.
+    This is an object containing the following properties:
+      - `save` (`Function`): function which takes into argument an
+        `Array.<Object>` which will contain information on all the DRM
+        sessions the RxPlayer currently needs to save.
+        No return value is needed.
+
+      - `load` (`Function`): Function which takes no argument and returns the
+        last stored `Array.<Object>` (the last one given to `save`).
+
+      - `disableRetroCompatibility` (`boolean`): If set to `true` the RxPlayer
+        might not be able to load licenses persisted through an older RxPlayer
+        version. This will allow to unlock some optimizations, for example to
+        allow a faster loading of the current content.
+
+        We recommend setting that option to `true` if retrieving persisted
+        licenses through older versions are not that important to you.
+
+  - __fallbackOn__ (`Object|undefined`): This advanced option allows to fallback on
+    other Representations (a.k.a.) when one of them has its decription key refused.
+
+    This option is thus only useful for contents depending on multiple keys.
+
+    This object can have two properties:
+
+      - `keyInternalError`: fallback when the corresponding key has the
+        [`"internal-error"`
+        status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus).
+
+        We found that most widevine implementation use this status to signal
+        that a key is refused.
+
+      - `keyOutputRestricted`: fallback when the corresponding key has the
+        [`"output-restricted"`
+        status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus).
+
+        This is the proper status for a key refused due to output restrictions.
+
+    For most cases where you want to fallback in case of a refused key, we
+    recommend setting both properties to `true`.
+
+    You will receive a `decipherabilityUpdate` event when we fallback from
+    a given Representation. You can find documentation on this event
+    [in the corresponding chapter of the events
+    documentation](./player_events.md#events-decipherabilityUpdate).
+
+    When fallbacking, we might need to reload the current MediaSource, leading
+    to a black screen during a brief instant. When reloading, the RxPlayer
+    will have the `"RELOADING"` [player state](./states.md).
+
+    If we have no Representation to fallback to anymore, we will throw a
+    MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
+    the errors documentation](./errors.md#types-media_error).
+
+  - __maxSessionCacheSize__ (`number|undefined`): The RxPlayer maintains a cache
+    of recently opened `MediaKeySession` (and consequently of recently fetched
+    licenses) as an optimization measure.
+    That way, loading a content whose license had already been fetched won't
+    necessitate a new license request, leading to shorter loading times and less
+    requests.
+
+    The size of this cache is usually kept relatively low (in the 10s) by the
+    player.
+    We found out however that some devices have an event lower limit for the
+    number of `MediaKeySession` that can be created at the same time.
+
+    The `maxSessionCacheSize` option allows to configure the maximum number of
+    `MediaKeySession` that should be kept "alive" at the same time. Any
+    supplementary older `MediaKeySession` will be closed, at least when the time
+    comes to create a new one.
+
+  - __closeSessionsOnStop__ (``Boolean|undefined``): If set to ``true``, the
+    ``MediaKeySession`` created for a content will be immediately closed when
+    the content stops its playback.
+
+    This might be required by your key system implementation (most often, it is
+    not).
+
+    If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the
+    same content needs to be re-decrypted.
+
+    If you want to set this property because the current device has a limited
+    number of `MediaKeySession` that can be created at the same time, prefer
+    using `maxSessionCacheSize` instead.
+
+  - __singleLicensePer__ (``string|undefined``): Allows to use optimally a
+    single license for multiple decryption keys.
+
+    Can be set to the following values:
+
+      - `"init-data"`: This is the default value.
+        Under that behavior, the RxPlayer will try to fetch a new license any
+        time it encounters an unknown encryption initialization data in the
+        current content.
+
+        This usually means that a license will be fetched any time a new
+        decryption key is encountered, which is the most sensible thing to
+        do in most cases.
+
+      - `"content"`: Only fetch a single license for the whole content, even
+        if the content has multiple keys.
+
+        Under that behavior, only a single license will be fetched, with a
+        "challenge" generated from the first encryption initialization data
+        encountered.
+
+        Not only that, all Representations (qualities) whose key was not present
+        in the license will be fallbacked from, meaning that they won't be
+        played anymore.
+
+        _Note that while fallbacking, it is possible that the player goes into
+        the `"RELOADING"` state (during which the video will disappear and many
+        APIs will become unavailable). More information about the `"RELOADING"`
+        state can be found in [the player states documentation](./states.md)._
+
+        You can set this option as an optimization (to only perform a single
+        license requests instead of many while playing contents encrypted with
+        multiple keys) but only if the corresponding optimizations have also
+        been performed on the side of the license server (to return a license
+        for every keys even if one for a single key was asked for).
+
+  - __disableMediaKeysAttachmentLock__ (``Boolean|undefined``): In regular
+    conditions, we might want to wait for the media element to have decryption
+    capabilities (what we call here "MediaKeys attachment") before beginning
+    to load the actual content.
+
+    Waiting for that capability validation first allows for example to play a
+    content which contains both encrypted and unencrypted data on Chrome and
+    Chromium-derived browsers.
+
+    However, we found that on some peculiar devices (like some set-top boxes)
+    this can create a deadlock: the browser might wait for some content to be
+    loaded before validating the media element's decryption capabilities.
+
+    Because we didn't find a good enough compromise for now, we added the
+    `disableMediaKeysAttachmentLock` boolean.
+    By setting it to `true`, we won't wait for "MediaKeys attachment" before
+    pushing the first content. The downside being that content of mixed
+    unencrypted/encrypted data might not be playable with that configuration.
+
+    You can try that property if your encrypted contents seems to be loading
+    indefinitely on some peculiar targets.
 
   - __distinctiveIdentifierRequired__ (``Boolean|undefined``): When set to
     ``true``, the use of
     [Distinctive Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier)
     or
     [Distinctive Permanent Identifier(s)](https://www.w3.org/TR/encrypted-media/#uses-distinctive-permanent-identifiers)
-    will be required. This is not needed for most usecases. ``false`` if you do
-    not care. ``false`` by default.
+    will be required.
+
+    This is not needed for most use cases.
+
+  - __persistentStateRequired__ (``Boolean|undefined``): Set it to `true` if
+    the chosen CDM should have the ability to persist state.
+
+    This includes session data and any other type of state, but does not include
+    [distinctive
+    identifiers](https://www.w3.org/TR/2017/REC-encrypted-media-20170918/#distinctive-identifier),
+    for which there's another `keySystems` option, `distinctiveIdentifierRequired`.
+
+    If the `persistentLicense` `keySystems` option has been set to `true`,
+    setting this value to `true` is redundant and therefore unnecessary (as
+    exploiting persistent licenses already necessitate the ability to persist
+    session state).
+
+    This is very rarely (if ever) needed.
 
   - __throwOnLicenseExpiration__ (``Boolean|undefined``): `true` by default.
 
@@ -261,6 +519,7 @@ This property is an array of objects with the following properties (only
     If set to `false`, the playback of the current content will not be
     interrupted even if one of the current licenses is expired. It might however
     stop decoding in that situation.
+
     It's then up to you to update the problematic license, usually through the
     usual `getLicense` callback.
 
@@ -269,95 +528,34 @@ This property is an array of objects with the following properties (only
     In that case, content may continue to play once the license has been
     updated.
 
-  - __fallbackOn__ (`Object`): This advanced option allows to fallback on other
-      Representations (e.g. qualities) when one of them has its decription key
-      refused.
+  - __onKeyStatusesChange__ (``Function|undefined``): Callback triggered each
+    time one of the key's
+    [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)[status]
+    is updated except for the following statuses and conditions (in which cases
+    the RxPlayer throws instead):
+      - ``expired`` if (and only if) `keySystems[].throwOnLicenseExpiration` is
+        not set to `false`
+      - `internal-error` if (and only if)
+        `keySystems[].fallbackOn.keyInternalError` is not set set to `true`
 
-      This option is thus only useful for contents depending on multiple
-      keys.
-
-      This object can have two properties:
-        - `keyInternalError`: fallback when the corresponding key has the
-          [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
-          `"internal-error"`. We found that most widevine implementation use
-          this error when a key is refused.
-        - `keyOutputRestricted`: fallback when the corresponding key has the
-          [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
-          `"output-restricted"`. This is the proper status for a key refused due
-          to output restrictions.
-
-      For most cases where you want to fallback in case of a refused key, we
-      recommend setting both properties to `true`.
-
-      You will receive a `decipherabilityUpdate` event when we fallback from
-      a given Representation. You can find documentation on this event
-      [in the corresponding chapter of the events
-      documentation](./player_events.md#events-decipherabilityUpdate).
-
-      When fallbacking, we might need to reload the current MediaSource, leading
-      to a black screen during a brief instant. When reloading, the RxPlayer
-      will have the `"reloading"` [player state](./states.md).
-      on most situations, we will however not reload the media source but only
-      perform a very little seek (of some milliseconds). you might see the
-      stream twitch for a very brief instant at that point.
-
-      If we have no Representation to fallback to anymore, we will throw a
-      MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
-      the errors documentation](./errors.md#types-media_error).
-
-  - __onKeyStatusesChange__ (``Function|undefined``): Not needed for most
-    usecases.
-
-    Triggered each time the key statuses of the current session
-    changes, except for the following statuses (which throws immediately):
-      - ``expired`` if (and only if) `throwOnLicenseExpiration` is not set to
-        `false`
-      - `internal-error`
+    This option is very rarely needed (if ever).
 
     Takes 2 arguments:
-    1. The keystatuseschange event ``{Event}``
-    2. The session associated with the event ``{MediaKeySession}``
 
-    Like ``getLicense``, this function should return a promise which emit a
-    license or `null` (for no license) when resolved. It can also return
-    directly the license or `null` if it can be done synchronously.
+      1. The keystatuseschange event ``{Event}``
+      2. The session associated with the event ``{MediaKeySession}``
 
-    In case of an error, you can set the `message` property on the
-    rejected value as a "string". This message will be set as the `message`
-    property of the corresponding `EncryptedMediaError` communicated through
-    an `"error"` event.
-    As every other `onKeyStatusesChange`-related errors, this error will have
-    the `KEY_STATUS_CHANGE_ERROR` `code` property.
+    Like ``getLicense``, this function should return a promise which either
+    emits a license or `null` (for no license) when resolved.
+    It can also return directly the license or `null` if it can be done
+    synchronously.
 
-  - __closeSessionsOnStop__ (``Boolean|undefined``): If set to ``true``, the
-    ``MediaKeySession`` created for a content will be immediately closed when
-    the content stops its playback. This might be required by your key system
-    implementation (most often, it is not).
-
-    If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the
-    same content needs to be re-decrypted.
-
-  - __disableMediaKeysAttachmentLock__ (``Boolean|undefined``):
-    In regular conditions, we might want to wait for the media element to have
-    decryption capabilities (what we call here "MediaKeys attachment") before
-    beginning to load the actual content.
-
-    Waiting for that capability validation allows for example to play a content
-    which contains both encrypted and unencrypted data on the Chrome browser.
-
-    However, we found that in some peculiar devices (like some set-top boxes)
-    this can create a deadlock: the browser sometimes wait for some
-    content to be loaded before validating the media element's decryption
-    capabilities.
-
-    Because we didn't find a good enough compromise for now, we added the
-    `disableMediaKeysAttachmentLock` boolean.
-    By setting it to `true`, we won't wait for "MediaKeys attachment" before
-    pushing the first content. The downside being that content of mixed
-    unencrypted/encrypted data might not be playable with that configuration.
-
-    You can try that property if your encrypted contents seems to load
-    indefinitely on peculiar targets.
+    In the case this callback throws or rejects, the playback will stop and an
+    `"error"` event will be sent with a `KEY_STATUS_CHANGE_ERROR` `code`
+    property.
+    You can set the `message` property on the rejected/thrown value as a
+    `string`. In this case, that string will be used as the error message of
+    the `KEY_STATUS_CHANGE_ERROR` error (and used at its `message` property).
 
 
 #### Example
@@ -528,7 +726,7 @@ _type_: ``Object|undefined``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -575,6 +773,41 @@ considered stable:
       }
     });
     ```
+
+  - __initialManifest__ (`string|Document|Object|ArrayBuffer`):
+
+    Manifest that will be initially used (before any potential Manifest
+    refresh).
+
+    Some applications pre-load the Manifest to parse some information from it
+    before calling `loadVideo`.
+    As in that case the Manifest has already been loaded, an application can
+    optimize content loading time by giving to the RxPlayer that already-loaded
+    Manifest so the latter can avoid doing another request for it.
+
+    The format accepted for that option depends on the current chosen
+    [`transport`](#prop-transport):
+
+      - for `"dash"` and `"smooth"` contents either a `string` (of the whole
+        Manifest's xml data) or a corresponding `Document` format is accepted.
+
+      - for `"metaplaylist"`, either a `string` (for the whole JSON) or the
+        corresponding JS Object is accepted.
+
+      - for `"local"`, only the corresponding local Manifest as a JS object is
+        accepted.
+
+    Note that using this option could have implications for live contents.
+    Depending on the content, the initial playing position and maximum position
+    could be calculated based on that option's value.
+
+    In a case where the corresponding Manifest request was performed long before
+    the `loadVideo` call, the RxPlayer could be for example initially playing
+    far from the real live edge.
+    Because of that, it is recommended to only set that options for live/dynamic
+    contents if its request was done immediately before the `loadVideo`
+    call.
+
 
   - __manifestUpdateUrl__ (`string|undefined`):
 
@@ -623,7 +856,7 @@ considered stable:
     rxPlayer.loadVideo({
       // ...
       transportOptions: {
-        representationFilter(representations, infos) {
+        representationFilter(representation, infos) {
           // ...
         }
       }
@@ -795,7 +1028,7 @@ _defaults_: ``"native"``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -833,7 +1066,7 @@ _type_: ``HTMLElement``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -849,6 +1082,44 @@ You can however re-size or update the style of it as you wish, to better suit
 your UI needs.
 
 
+<a name="prop-audioTrackSwitchingMode"></a>
+### audioTrackSwitchingMode ####################################################
+
+_type_: ``string``
+
+_defaults_: ``"seamless"``
+
+---
+
+:warning: This option has no effect in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Behavior taken by the player when switching to a different audio track, through
+the `setAudioTrack` method.
+
+There are two possible values:
+
+  - ``"seamless"``: The transition between the old audio track and the new one
+    happens seamlessly, without interruption.
+    This is the default behavior.
+
+    As an inconvenient, you might have at worst a few seconds in the previous
+    audio track before the new one can be heard.
+
+  - ``"direct"``: The player will try to switch to the new audio track as soon
+    as possible, which might lead to an interruption while it is doing so.
+
+    Note that while switching audio track with a `"direct"`
+    `audioTrackSwitchingMode`, it is possible that the player goes into the
+    `"RELOADING"` state (during which the video will disappear and many APIs
+    will become unavailable) to be able to switch to the new track.
+
+    More information about the ``"RELOADING"`` state can be found in [the
+    player states documentation](./states).
+
+
 <a name="prop-manualBitrateSwitchingMode"></a>
 ### manualBitrateSwitchingMode #################################################
 
@@ -858,7 +1129,7 @@ _defaults_: ``"seamless"``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -892,6 +1163,50 @@ There is two possible values:
     player states documentation](./states).
 
 
+<a name="prop-onCodecSwitch"></a>
+### onCodecSwitch ##############################################################
+
+_type_: ``string``
+
+_defaults_: ``"continue"``
+
+---
+
+:warning: This option has no effect in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Behavior taken by the player when switching to either an audio or video track
+which has a codec "incompatible" with the previous one (for example going from
+avc, a.k.a h264 to hevc, a.k.a. h265).
+
+This switch can either after the user switches from one track to another or
+after encountering a new Period in some transport technologies (concept existing
+for DASH, "local" and MetaPlaylist contents).
+
+Can be set to one of those two values:
+
+  - ``"continue"``: try to have a seamless transition between both codecs.
+    This behavior works on most modern browsers but might lead to problems like
+    infinite buffering and decoding errors on older browsers and peculiar
+    platforms.
+    This is the default behavior.
+
+  - ``"reload"``: When switching from one codec to another - incompatible - one,
+    the RxPlayer will "reload" the content: the player will go into the
+    `"RELOADING"` state for a small amount of time, during which the video will
+    disappear and many APIs will become unavailable, before playing the track
+    with the new codec.
+    That behavior has the advantage of working on any platform but disadvantage
+    of having a visible transition when those type of codec switches happen.
+
+    Use it if you have issues with codec switching on some platforms.
+
+    _More information about the ``"RELOADING"`` state can be found in [the
+    player states documentation](./states)._
+
+
 <a name="prop-lowLatencyMode"></a>
 ### lowLatencyMode #############################################################
 
@@ -912,81 +1227,6 @@ More information on playing low-latency DASH contents can be found in the
 [corresponding documentation page](./low_latency.md).
 
 
-<a name="prop-supplementaryImageTracks"></a>
-### supplementaryImageTracks ###################################################
-
-_type_: ``Array.<Object>|Object|undefined``
-_defaults_: ``[]``
-
----
-
-:warning: This option is not available in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-This option allows to specify information about supplementary image tracks you
-might want to add to those already declared in the
-[Manifest](../terms.md#manifest).
-
-This only work under the following conditions:
-
-  - the image track is not fragmented
-
-  - the image track can be retrieved by fetching a single URL
-
-  - the image track is in an understood format and enough information has been
-    given to infer it.
-
-
-Each of those can have the following properties:
-```js
-const supplementaryImageTracks = [{
-  url: ImageTrackURL, // {string} The url on which the complete image track can
-                      // be obtained
-
-  mimeType: "application/bif", // {string} A mimeType used to describe
-                               // the image format.
-}];
-```
-
-
-<a name="prop-hideNativeSubtitle"></a>
-### hideNativeSubtitle #########################################################
-
----
-
-:warning: This option is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_type_: ``Boolean``
-
-_defaults_: ``false``
-
----
-
-:warning: This option is not available in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-If set to ``true``, the eventual <track> element will be put on mode ``hidden``
-when added to the video element, so it won't actually display the subtitles the
-rx-player add to it.
-
-This has an effect only if:
-
-  - the current ``textTrackMode`` is equal to ``"native"`` (see [textTrackMode
-    option](#prop-textTrackMode))
-
-  - a text track is currently active
-
-  - the text track format is understood by the rx-player
-
-
-
 <a name="prop-networkConfig"></a>
 ### networkConfig ##############################################################
 
@@ -996,7 +1236,7 @@ _defaults_: ``{}``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1040,9 +1280,146 @@ This object can take the following properties (all are optional):
 
   - The request failed because of a timeout
 
-  - the request failed because of an unknown XHR error (might be a
+  - the request failed because of an unknown request error (might be a
     parsing/interface error)
 
+
+
+<a name="prop-enableFastSwitching"></a>
+### enableFastSwitching ########################################################
+
+_type_: ``boolean``
+
+_defaults_: ``true``
+
+---
+
+:warning: This option has no effect in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Enable (when set to `true` and by default) or disable (when set to `false`) the
+"fast-switching" feature.
+
+"Fast-switching" is an optimization which allows the RxPlayer to replace
+low-quality segments (i.e.  with a low bitrate) with higher-quality segments
+(higher bitrate) in the buffer in some situations.
+
+This is used for example to obtain a faster quality transition when the user's
+network bandwidth raise up: instead of pushing the new high-quality segments at
+the end of the current buffer, we push them much sooner - "on top" of already
+pushed low-quality segments - so the user can quickly see the better quality.
+
+In most cases, this is a feature you want. On some rare devices however,
+replacing segments is poorly supported.
+We've for example seen on a few devices that old replaced segments were still
+decoded (and not the new better-quality segments that should have replaced
+them). On other devices, replacing segments resulted in visible small decoding
+issues.
+
+Setting `enableFastSwitching` to `false` thus allows to disable the
+fast-switching behavior. Note that it is - sadly - difficult to know when you
+need to disable it.
+In the great majority of cases, enabling fast-switching (the default behavior)
+won't lead to any problem. So we advise to only disable it when you suspect that
+segment replacement when the quality raises is at the source of some issues
+you're having (in which case it will help to see if that's really the case).
+
+It is also important to add that setting `enableFastSwitching` to `false` only
+disable the fast-switching feature and not all the logic where the RxPlayer is
+replacing segments it already pushed to the buffer.
+Forbiding the RxPlayer to replace segments altogether is today not possible and
+would even break playback in some situations: when multi-Period DASH contents
+have overlapping segments, when the browser garbage-collect partially a
+segment...
+
+
+
+<a name="prop-hideNativeSubtitle"></a>
+### hideNativeSubtitle #########################################################
+
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_type_: ``Boolean``
+
+_defaults_: ``false``
+
+---
+
+:warning: This option has no effect in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+If set to ``true``, the eventual <track> element will be put on mode ``hidden``
+when added to the video element, so it won't actually display the subtitles the
+rx-player add to it.
+
+This has an effect only if:
+
+  - the current ``textTrackMode`` is equal to ``"native"`` (see [textTrackMode
+    option](#prop-textTrackMode))
+
+  - a text track is currently active
+
+  - the text track format is understood by the rx-player
+
+
+
+<a name="prop-supplementaryImageTracks"></a>
+### supplementaryImageTracks ###################################################
+
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+If you want to parse and display a BIF image track, you can use the
+[`parseBifThumbnails`](./parseBifThumbnails.md) tool, which will also work for
+Directfile contents.
+
+---
+
+_type_: ``Array.<Object>|Object|undefined``
+_defaults_: ``[]``
+
+---
+
+:warning: This option has no effect in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+This option allows to specify information about supplementary image tracks you
+might want to add to those already declared in the
+[Manifest](../terms.md#manifest).
+
+This only work under the following conditions:
+
+  - the image track is not fragmented
+
+  - the image track can be retrieved by fetching a single URL
+
+  - the image track is in an understood format and enough information has been
+    given to infer it.
+
+
+Each of those can have the following properties:
+```js
+const supplementaryImageTracks = [{
+  url: ImageTrackURL, // {string} The url on which the complete image track can
+                      // be obtained
+
+  mimeType: "application/bif", // {string} A mimeType used to describe
+                               // the image format.
+}];
+```
 
 
 <a name="prop-supplementaryTextTracks"></a>
@@ -1064,7 +1441,7 @@ _defaults_: ``[]``
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option has no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1159,7 +1536,7 @@ taken instead.
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option might have no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---
@@ -1205,7 +1582,7 @@ taken instead.
 
 ---
 
-:warning: This option is not available in _DirectFile_ mode (see [transport
+:warning: This option might have no effect in _DirectFile_ mode (see [transport
 option](#prop-transport)).
 
 ---

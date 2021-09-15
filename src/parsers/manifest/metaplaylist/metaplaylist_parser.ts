@@ -25,6 +25,7 @@ import {
   IParsedAdaptations,
   IParsedManifest,
   IParsedPeriod,
+  IParsedRepresentation,
 } from "../types";
 import MetaRepresentationIndex from "./representation_index";
 
@@ -80,6 +81,7 @@ export default function parseMetaPlaylist(
     parsedData = data;
   } else if (typeof data === "string") {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       parsedData = JSON.parse(data);
     } catch (error) {
       throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");
@@ -193,7 +195,7 @@ function createManifest(
           for (let iAda = 0; iAda < currentAdaptations.length; iAda++) {
             const currentAdaptation = currentAdaptations[iAda];
 
-            const representations : any[] = [];
+            const representations : IParsedRepresentation[] = [];
             for (let iRep = 0; iRep < currentAdaptation.representations.length; iRep++) {
               const currentRepresentation = currentAdaptation.representations[iRep];
 
@@ -292,6 +294,10 @@ function createManifest(
   }
 
   const time = performance.now();
+  const isLastPeriodKnown = !isDynamic ||
+                            mplData.pollInterval === undefined &&
+                            (manifests.length <= 0 ||
+                             manifests[manifests.length - 1].isLastPeriodKnown);
   const manifest = { availabilityStartTime: 0,
                      clockOffset,
                      suggestedPresentationDelay: 10,
@@ -299,14 +305,14 @@ function createManifest(
                      transportType: "metaplaylist",
                      isLive: isDynamic,
                      isDynamic,
+                     isLastPeriodKnown,
                      uris: url == null ? [] :
                                          [url],
-                     maximumTime: { isContinuous: false,
-                                    value: maximumTime,
-                                    time },
-                     minimumTime: { isContinuous: false,
-                                    value: minimumTime,
-                                    time },
+                     timeBounds: { minimumTime,
+                                   timeshiftDepth: null,
+                                   maximumTimeData: { isLinear: false,
+                                                      value: maximumTime,
+                                                      time } },
                      lifetime: mplData.pollInterval };
 
   return manifest;

@@ -39,12 +39,13 @@ export default function filterByWidth(
     typeof representation.width === "number" &&
     representation.width >= width);
 
-  if (repWithMaxWidth !== undefined) {
-    const maxWidth = typeof repWithMaxWidth.width === "number" ? repWithMaxWidth.width :
-                                                                 0;
-    return representations.filter(representation =>
-      typeof representation.width === "number" ? representation.width <= maxWidth :
-                                                 true);
+  if (repWithMaxWidth === undefined) {
+    return representations;
   }
-  return representations;
+
+  const maxWidth = typeof repWithMaxWidth.width === "number" ? repWithMaxWidth.width :
+                                                               0;
+  return representations.filter(representation =>
+    typeof representation.width === "number" ? representation.width <= maxWidth :
+                                               true);
 }

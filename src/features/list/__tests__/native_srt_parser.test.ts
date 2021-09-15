@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import srtParser from "../../../parsers/texttracks/srt/native";
 import addNativesrtFeature from "../native_srt_parser";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/srt/native", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - native srt Parser", () => {
   it("should add an native srt Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { nativeTextTracksParsers: {} };
     addNativesrtFeature(featureObject);
     expect(featureObject).toEqual({
@@ -33,4 +35,3 @@ describe("Features list - native srt Parser", () => {
     expect(featureObject.nativeTextTracksParsers.srt).toBe(srtParser);
   });
 });
-/* tslint:enable no-unsafe-any */

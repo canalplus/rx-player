@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { TypedArray } from "../../../core/eme";
 import { IEventEmitter } from "../../../utils/event_emitter";
 
 export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEvents> {
@@ -31,11 +30,11 @@ export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEv
   // Functions
 
   generateRequest(initDataType: string,
-                  initData: ArrayBuffer | TypedArray | DataView | null)
+                  initData: BufferSource | null)
                  : Promise<void>;
 
   load(sessionId: string) : Promise<boolean>;
-  update(response: ArrayBuffer | TypedArray | DataView | null): Promise<void>;
+  update(response: BufferSource | null): Promise<void>;
   close() : Promise<void>;
   remove() : Promise<void>;
 }
@@ -43,38 +42,18 @@ export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEv
 export interface ICustomMediaKeys {
   _setVideo : (vid : HTMLMediaElement) => void;
   createSession(sessionType? : MediaKeySessionType) : ICustomMediaKeySession;
-  setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
+  setServerCertificate(setServerCertificate : BufferSource) : Promise<void>;
 }
 
 export interface ICustomMediaKeyStatusMap {
   readonly size: number;
-  forEach(callback: (status : MediaKeyStatus) => void, thisArg?: any): void;
+  forEach(callback: (status : MediaKeyStatus) => void, thisArg?: unknown): void;
   get(
-    keyId: Int8Array |
-           Int16Array |
-           Int32Array |
-           Uint8Array |
-           Uint16Array |
-           Uint32Array |
-           Uint8ClampedArray |
-           Float32Array |
-           Float64Array |
-           DataView |
-           ArrayBuffer |
+    keyId: BufferSource |
            null
   ) : MediaKeyStatus|undefined;
   has(
-    keyId: Int8Array |
-           Int16Array |
-           Int32Array |
-           Uint8Array |
-           Uint16Array |
-           Uint32Array |
-           Uint8ClampedArray |
-           Float32Array |
-           Float64Array |
-           DataView |
-           ArrayBuffer |
+    keyId: BufferSource |
            null
     ) : boolean;
 }

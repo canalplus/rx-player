@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
 import {
   getMDHDTimescale,
   takePSSHOut,
@@ -22,71 +21,73 @@ import {
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  IAudioVideoParserObservable,
-  ISegmentParserArguments,
+  ISegmentContext,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
-import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
+import inferSegmentContainer from "../utils/infer_segment_container";
 
-export default function segmentParser({
-  content,
-  response,
-  initTimescale,
-} : ISegmentParserArguments<ArrayBuffer | null>
-) : IAudioVideoParserObservable {
-  const { period, segment, representation } = content;
-  const { data } = response;
+export default function segmentParser(
+  loadedSegment : { data : ArrayBuffer | Uint8Array | null;
+                    isChunked : boolean; },
+  content : ISegmentContext,
+  initTimescale : number | undefined
+) : ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null> |
+    ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>
+{
+  const { period, adaptation, representation, segment } = content;
+  const { data } = loadedSegment;
   const appendWindow : [ number, number | undefined ] = [ period.start, period.end ];
 
   if (data === null) {
     if (segment.isInit) {
-      const _segmentProtections = representation.getProtectionsInitializationData();
-      return observableOf({ type: "parsed-init-segment",
-                            value: { initializationData: null,
-                                     segmentProtections: _segmentProtections,
-                                     initTimescale: undefined } });
+      return { segmentType: "init",
+               initializationData: null,
+               protectionDataUpdate: false,
+               initTimescale: undefined };
     }
-    return observableOf({ type: "parsed-segment",
-                          value: { chunkData: null,
-                                   chunkInfos: null,
-                                   chunkOffset: 0,
-                                   appendWindow } });
+    return { segmentType: "media",
+             chunkData: null,
+             chunkInfos: null,
+             chunkOffset: 0,
+             protectionDataUpdate: false,
+             appendWindow };
   }
 
   const chunkData = new Uint8Array(data);
-  const isWEBM = isWEBMEmbeddedTrack(representation);
+  const containerType = inferSegmentContainer(adaptation.type, representation);
 
-  if (!isWEBM) {
+  // TODO take a look to check if this is an ISOBMFF/webm?
+  const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
+  let protectionDataUpdate = false;
+  if (seemsToBeMP4) {
     const psshInfo = takePSSHOut(chunkData);
     if (psshInfo.length > 0) {
-      for (let i = 0; i < psshInfo.length; i++) {
-        const { systemID, data: psshData } = psshInfo[i];
-        representation._addProtectionData("cenc", systemID, psshData);
-      }
+      protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
     }
   }
 
   if (segment.isInit) {
-    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
-                               getMDHDTimescale(chunkData);
-    const segmentProtections = representation.getProtectionsInitializationData();
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: chunkData,
-                                   initTimescale: timescale !== null && timescale > 0 ?
-                                     timescale :
-                                     undefined,
-                                   segmentProtections } });
+    const timescale = containerType === "webm" ? getTimeCodeScale(chunkData, 0) :
+                                                 // assume ISOBMFF-compliance
+                                                 getMDHDTimescale(chunkData);
+    return { segmentType: "init",
+             initializationData: chunkData,
+             initTimescale: timescale ?? undefined,
+             protectionDataUpdate };
   }
 
-  const chunkInfos = isWEBM ? null : // TODO extract from webm
-                              getISOBMFFTimingInfos(chunkData,
-                                                    false,
-                                                    segment,
-                                                    initTimescale);
+  const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData,
+                                                          false,
+                                                          segment,
+                                                          initTimescale) :
+                                    null; // TODO extract time info from webm
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData,
-                                 chunkInfos,
-                                 chunkOffset,
-                                 appendWindow } });
+  return { segmentType: "media",
+           chunkData,
+           chunkInfos,
+           chunkOffset,
+           protectionDataUpdate: false,
+           appendWindow };
 }

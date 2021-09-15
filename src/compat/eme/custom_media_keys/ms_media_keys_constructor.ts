@@ -16,6 +16,34 @@
 
 import isNode from "../../is_node";
 
+export interface MSMediaKeyError {
+    readonly code: number;
+    readonly systemCode: number;
+    readonly MS_MEDIA_KEYERR_CLIENT: number;
+    readonly MS_MEDIA_KEYERR_DOMAIN: number;
+    readonly MS_MEDIA_KEYERR_HARDWARECHANGE: number;
+    readonly MS_MEDIA_KEYERR_OUTPUT: number;
+    readonly MS_MEDIA_KEYERR_SERVICE: number;
+    readonly MS_MEDIA_KEYERR_UNKNOWN: number;
+}
+
+export interface MSMediaKeySession extends EventTarget {
+    readonly error: MSMediaKeyError | null;
+    readonly keySystem: string;
+    readonly sessionId: string;
+    close(): void;
+    update(key: Uint8Array): void;
+}
+
+export interface MSMediaKeys {
+    readonly keySystem: string;
+    createSession(
+      type: string,
+      initData: Uint8Array,
+      cdmData?: Uint8Array | null
+    ): MSMediaKeySession;
+}
+
 interface IMSMediaKeysConstructor {
   new(keySystem: string): MSMediaKeys;
   isTypeSupported(keySystem: string, type?: string | null): boolean;
@@ -24,14 +52,18 @@ interface IMSMediaKeysConstructor {
 
 let MSMediaKeysConstructor: IMSMediaKeysConstructor|undefined;
 if (!isNode) {
-  /* tslint:disable no-unsafe-any */
-  const { MSMediaKeys } = (window as any);
-  if (MSMediaKeys !== undefined &&
-      MSMediaKeys.prototype !== undefined &&
-      typeof MSMediaKeys.isTypeSupported === "function" &&
-      typeof MSMediaKeys.prototype.createSession === "function") {
+  const { MSMediaKeys } = (window as Window & {
+    MSMediaKeys? : IMSMediaKeysConstructor;
+  });
+  if (
+    MSMediaKeys !== undefined &&
+    MSMediaKeys.prototype !== undefined &&
+    typeof MSMediaKeys.isTypeSupported === "function" &&
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    typeof MSMediaKeys.prototype.createSession === "function"
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  ) {
     MSMediaKeysConstructor = MSMediaKeys;
   }
-  /* tslint:enable no-unsafe-any */
 }
 export { MSMediaKeysConstructor };

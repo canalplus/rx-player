@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import srtParser from "../../../parsers/texttracks/srt/html";
 import addHTMLsrtFeature from "../html_srt_parser";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/srt/html", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - HTML srt Parser", () => {
   it("should add an HTML srt Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { htmlTextTracksParsers: {} };
     addHTMLsrtFeature(featureObject);
     expect(featureObject).toEqual({
@@ -33,4 +35,3 @@ describe("Features list - HTML srt Parser", () => {
     expect(featureObject.htmlTextTracksParsers.srt).toBe(srtParser);
   });
 });
-/* tslint:enable no-unsafe-any */

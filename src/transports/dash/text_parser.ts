@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
+import { BaseRepresentationIndex } from "../../parsers/manifest/dash";
 import {
-  bytesToStr,
-  strToBytes,
-} from "../../utils/byte_parsing";
+  strToUtf8,
+  utf8ToStr,
+} from "../../utils/string_parsing";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  ISegmentParserArguments,
-  ITextParserObservable,
+  ISegmentContext,
+  ISegmentParser,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
+  ITextTrackSegmentData,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
-import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
+import inferSegmentContainer from "../utils/infer_segment_container";
 import {
   getISOBMFFEmbeddedTextTrackData,
   getPlainTextTrackData,
@@ -37,36 +40,70 @@ import {
 
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.
- * @param {Object} infos
+ *
+ * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
+ * @param {boolean} isChunked - If `true`, the `data` may contain only a
+ * decodable subpart of the full data in the linked segment.
+ * @param {Object} content - Object describing the context of the given
+ * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
+ * `Manifest` it is a part of etc.
+ * @param {number|undefined} initTimescale - `timescale` value - encountered
+ * in this linked initialization segment (if it exists) - that may also apply
+ * to that segment if no new timescale is defined in it.
+ * Can be `undefined` if no timescale was defined, if it is not known, or if
+ * no linked initialization segment was yet parsed.
+ * @param {boolean} __priv_patchLastSegmentInSidx - Enable ugly Canal+-specific
+ * fix for an issue people on the content-packaging side could not fix.
+ * For more information on that, look at the code using it.
  * @returns {Observable.<Object>}
  */
 function parseISOBMFFEmbeddedTextTrack(
-  { response,
-    content,
-    initTimescale } : ISegmentParserArguments< Uint8Array |
-                                               ArrayBuffer |
-                                               string >
-) : ITextParserObservable {
+  data : ArrayBuffer | Uint8Array | string,
+  isChunked : boolean,
+  content : ISegmentContext,
+  initTimescale : number | undefined,
+  __priv_patchLastSegmentInSidx? : boolean
+) : ISegmentParserParsedSegment< ITextTrackSegmentData | null > |
+    ISegmentParserParsedInitSegment< null > {
   const { period, representation, segment } = content;
   const { isInit, indexRange } = segment;
-  const { data, isChunked } = response;
 
-  const chunkBytes = typeof data === "string" ? strToBytes(data) :
+  const chunkBytes = typeof data === "string"   ? strToUtf8(data) :
                      data instanceof Uint8Array ? data :
                                                   new Uint8Array(data);
   if (isInit) {
     const sidxSegments =
       getSegmentsFromSidx(chunkBytes, Array.isArray(indexRange) ? indexRange[0] :
                                                                   0);
-    const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    if (sidxSegments !== null && sidxSegments.length > 0) {
-      representation.index._addSegments(sidxSegments);
+
+    // This is a very specific handling for streams we know have a very
+    // specific problem at Canal+: The last reference gives a truncated
+    // segment.
+    // Sadly, people on the packaging side could not fix all legacy contents.
+    // This is an easy-but-ugly fix for those.
+    // TODO Cleaner way? I tried to always check the obtained segment after
+    // a byte-range request but it leads to a lot of code.
+    if (__priv_patchLastSegmentInSidx === true &&
+        sidxSegments !== null &&
+        sidxSegments.length > 0)
+    {
+      const lastSegment = sidxSegments[ sidxSegments.length - 1 ];
+      if (Array.isArray(lastSegment.range)) {
+        lastSegment.range[1] = Infinity;
+      }
     }
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: null,
-                                   segmentProtections: [],
-                                   initTimescale: mdhdTimescale > 0 ? mdhdTimescale :
-                                                                       undefined } });
+
+    const mdhdTimescale = getMDHDTimescale(chunkBytes);
+    if (representation.index instanceof BaseRepresentationIndex &&
+        sidxSegments !== null &&
+        sidxSegments.length > 0)
+    {
+      representation.index.initializeIndex(sidxSegments);
+    }
+    return { segmentType: "init",
+             initializationData: null,
+             protectionDataUpdate: false,
+             initTimescale: mdhdTimescale };
   }
   const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
                                            isChunked,
@@ -77,86 +114,110 @@ function parseISOBMFFEmbeddedTextTrack(
                                                     chunkInfos,
                                                     isChunked);
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData,
-                                 chunkInfos,
-                                 chunkOffset,
-                                 appendWindow: [period.start, period.end] } });
+  return { segmentType: "media",
+           chunkData,
+           chunkInfos,
+           chunkOffset,
+           protectionDataUpdate: false,
+           appendWindow: [period.start, period.end] };
 }
 
 /**
- * Parse TextTrack data in plain text form.
- * @param {Object} infos
+ * Parse TextTrack data when it is in plain text form.
+ *
+ * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
+ * @param {boolean} isChunked - If `true`, the `data` may contain only a
+ * decodable subpart of the full data in the linked segment.
+ * @param {Object} content - Object describing the context of the given
+ * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
+ * `Manifest` it is a part of etc.
  * @returns {Observable.<Object>}
  */
 function parsePlainTextTrack(
-  { response,
-    content } : ISegmentParserArguments< Uint8Array |
-                                         ArrayBuffer |
-                                         string >
-) : ITextParserObservable {
+  data : ArrayBuffer | Uint8Array | string,
+  isChunked : boolean,
+  content : ISegmentContext
+) : ISegmentParserParsedSegment< ITextTrackSegmentData | null > |
+    ISegmentParserParsedInitSegment< null > {
   const { period, segment } = content;
   const { timestampOffset = 0 } = segment;
   if (segment.isInit) {
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: null,
-                                   segmentProtections: [],
-                                   initTimescale: undefined } });
+    return { segmentType: "init",
+             initializationData: null,
+             protectionDataUpdate: false,
+             initTimescale: undefined };
   }
 
-  const { data, isChunked } = response;
   let textTrackData : string;
   if (typeof data !== "string") {
     const bytesData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
-    textTrackData = bytesToStr(bytesData);
+    textTrackData = utf8ToStr(bytesData);
   } else {
     textTrackData = data;
   }
   const chunkData = getPlainTextTrackData(content, textTrackData, isChunked);
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData,
-                                 chunkInfos: null,
-                                 chunkOffset: timestampOffset,
-                                 appendWindow: [period.start, period.end] } });
+  return { segmentType: "media",
+           chunkData,
+           chunkInfos: null,
+           chunkOffset: timestampOffset,
+           protectionDataUpdate: false,
+           appendWindow: [period.start, period.end] };
 }
 
 /**
- * Parse TextTrack data.
- * @param {Object} infos
- * @returns {Observable.<Object>}
+ * Generate a "segment parser" for DASH text tracks.
+ *
+ * @param {Object} config
+ * @returns {Function}
  */
-export default function textTrackParser(
-  { response,
-    content,
-    initTimescale } : ISegmentParserArguments< Uint8Array |
-                                               ArrayBuffer |
-                                               string |
-                                               null >
-) : ITextParserObservable {
-  const { period, representation, segment } = content;
-  const { timestampOffset = 0 } = segment;
-  const { data, isChunked } = response;
-  if (data === null) { // No data, just return empty infos
-    if (segment.isInit) {
-      return observableOf({ type: "parsed-init-segment",
-                            value: { initializationData: null,
-                                     segmentProtections: [],
-                                     initTimescale: undefined } });
-    }
-    return observableOf({ type: "parsed-segment",
-                          value: { chunkData: null,
-                                   chunkInfos: null,
-                                   chunkOffset: timestampOffset,
-                                   appendWindow: [period.start, period.end] } });
-  }
+export default function generateTextTrackParser(
+  { __priv_patchLastSegmentInSidx } : { __priv_patchLastSegmentInSidx? : boolean }
+) : ISegmentParser< ArrayBuffer | Uint8Array | string | null,
+                    ITextTrackSegmentData | null > {
+  /**
+   * Parse TextTrack data.
+   * @param {Object} infos
+   * @returns {Observable.<Object>}
+   */
+  return function textTrackParser(
+    loadedSegment : { data : ArrayBuffer | Uint8Array | string | null;
+                      isChunked : boolean; },
+    content : ISegmentContext,
+    initTimescale : number | undefined
+  ) : ISegmentParserParsedSegment< ITextTrackSegmentData | null > |
+      ISegmentParserParsedInitSegment< null > {
+    const { period, adaptation, representation, segment } = content;
+    const { data, isChunked } = loadedSegment;
 
-  const isMP4 = isMP4EmbeddedTextTrack(representation);
-  if (isMP4) {
-    return parseISOBMFFEmbeddedTextTrack({ response: { data, isChunked },
+    if (data === null) {
+      // No data, just return an empty placeholder object
+      return segment.isInit ? { segmentType: "init",
+                                initializationData: null,
+                                protectionDataUpdate: false,
+                                initTimescale: undefined } :
+
+                              { segmentType: "media",
+                                chunkData: null,
+                                chunkInfos: null,
+                                chunkOffset: segment.timestampOffset ?? 0,
+                                protectionDataUpdate: false,
+                                appendWindow: [period.start, period.end] };
+    }
+
+    const containerType = inferSegmentContainer(adaptation.type, representation);
+
+    // TODO take a look to check if this is an ISOBMFF/webm when undefined?
+    if (containerType === "webm") {
+      // TODO Handle webm containers
+      throw new Error("Text tracks with a WEBM container are not yet handled.");
+    } else if (containerType === "mp4") {
+      return parseISOBMFFEmbeddedTextTrack(data,
+                                           isChunked,
                                            content,
-                                           initTimescale });
-  } else {
-    return parsePlainTextTrack({ response: { data, isChunked }, content });
-  }
+                                           initTimescale, __priv_patchLastSegmentInSidx);
+    } else {
+      return parsePlainTextTrack(data, isChunked, content);
+    }
+  };
 }

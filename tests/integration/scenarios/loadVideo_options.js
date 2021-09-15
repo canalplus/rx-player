@@ -317,9 +317,10 @@ describe("loadVideo Options", () => {
         expect(numberOfTimeRepresentationFilterIsCalledForVideo)
           .to.equal(initialNumberOfRepresentations);
 
-        const currentVideoRepresentations =
-          player.getCurrentAdaptations().video.representations;
-        expect(currentVideoRepresentations.length).to.equal(
+        const currentVideoTrack = player.getAvailableVideoTracks()
+          .find(track => track.active);
+
+        expect(currentVideoTrack.representations).to.have.length(
           Math.floor(initialNumberOfRepresentations / 2)
         );
       });
@@ -398,14 +399,7 @@ describe("loadVideo Options", () => {
         await xhrMock.flush(); // Manifest request
         await sleep(1);
         expect(numberOfTimeCustomSegmentLoaderWasCalled)
-          .to.equal(2); // Segment requests
-        nbVideoSegmentRequests += xhrMock.getLockedXHR()
-          .filter(r => r.url && r.url.includes("ateam-video"))
-          .length;
-        await xhrMock.flush();
-        await sleep(1);
-        expect(numberOfTimeCustomSegmentLoaderWasCalled)
-          .to.equal(4); // Segment requests
+          .to.equal(4); // init + media Segment requests
         nbVideoSegmentRequests += xhrMock.getLockedXHR()
           .filter(r => r.url && r.url.includes("ateam-video"))
           .length;

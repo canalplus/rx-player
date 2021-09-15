@@ -25,44 +25,50 @@ interface IWebKitSourceBuffer { append(data : ArrayBuffer) : void;
 
 // TODO This is the last ugly side-effect here.
 // Either remove it or find the best way to implement that
-export default function patchWebkitSourceBuffer() {
+export default function patchWebkitSourceBuffer() : void {
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-disable @typescript-eslint/no-unsafe-call */
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
-  /* tslint:disable no-unsafe-any */
-  if (!isNode && (window as any).WebKitSourceBuffer != null &&
-      !(window as any).WebKitSourceBuffer.prototype.addEventListener
-  ) {
+  if (
+    !isNode && (window as any).WebKitSourceBuffer != null &&
+    (window as any).WebKitSourceBuffer.prototype.addEventListener === undefined)
+  {
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     const sourceBufferWebkitRef : IWebKitSourceBufferConstructor =
-      (window as any).WebKitSourceBuffer;
+      (window as unknown as {
+        WebKitSourceBuffer : IWebKitSourceBufferConstructor;
+      }).WebKitSourceBuffer;
     const sourceBufferWebkitProto = sourceBufferWebkitRef.prototype;
-  /* tslint:enable no-unsafe-any */
 
     for (const fnName in EventEmitter.prototype) {
       if (EventEmitter.prototype.hasOwnProperty(fnName)) {
-        /* tslint:disable no-unsafe-any */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sourceBufferWebkitProto[fnName] = (EventEmitter.prototype as any)[fnName];
-        /* tslint:enable no-unsafe-any */
       }
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
-    /* tslint:disable no-unsafe-any */
     sourceBufferWebkitProto._listeners = [];
 
-    sourceBufferWebkitProto.__emitUpdate =
-      function(eventName : string, val : any) {
+    sourceBufferWebkitProto._emitUpdate =
+      function(eventName : string, val : unknown) {
         nextTick(() => {
-          /* tslint:disable no-invalid-this */
+          /* eslint-disable no-invalid-this */
           this.trigger(eventName, val);
           this.updating = false;
           this.trigger("updateend");
-          /* tslint:enable no-invalid-this */
+          /* eslint-enable no-invalid-this */
         });
       };
 
     sourceBufferWebkitProto.appendBuffer =
-      function(data : any) {
-        /* tslint:disable no-invalid-this */
+      function(data : unknown) {
+        /* eslint-disable no-invalid-this */
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (this.updating) {
           throw new Error("updating");
         }
@@ -71,12 +77,13 @@ export default function patchWebkitSourceBuffer() {
         try {
           this.append(data);
         } catch (error) {
-          this.__emitUpdate("error", error);
+          this._emitUpdate("error", error);
           return;
         }
-        this.__emitUpdate("update");
-        /* tslint:enable no-invalid-this */
+        this._emitUpdate("update");
+        /* eslint-enable no-invalid-this */
       };
-    /* tslint:enable no-unsafe-any */
   }
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-enable @typescript-eslint/no-unsafe-call */
 }

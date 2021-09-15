@@ -38,7 +38,7 @@
  * @returns {Boolean}
  */
 export default function isOffline() : boolean {
-  /* tslint:disable no-boolean-literal-compare */
+  /* eslint-disable @typescript-eslint/no-unnecessary-boolean-literal-compare */
   return navigator.onLine === false;
-  /* tslint:enable no-boolean-literal-compare */
+  /* eslint-enable @typescript-eslint/no-unnecessary-boolean-literal-compare */
 }

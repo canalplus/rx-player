@@ -18,8 +18,10 @@ import { Representation } from "../../manifest";
 import arrayFindIndex from "../../utils/array_find_index";
 
 /**
- * Get only representations lower than a given bitrate.
- * @param {Array.<Object>} representations - The representations array
+ * Get only representations lower or equal to a given bitrate.
+ * If no representation is lower than the given bitrate, returns an array containing
+ * all Representation(s) with the lowest available bitrate.
+ * @param {Array.<Object>} representations - All Representations available
  * @param {Number} bitrate
  * @returns {Array.<Object>}
  */
@@ -27,13 +29,18 @@ export default function filterByBitrate(
   representations : Representation[],
   bitrate : number
 ) : Representation[] {
-  const firstSuperiorBitrate = arrayFindIndex(
-    representations,
-    (representation) => representation.bitrate > bitrate
-  );
-
-  if (firstSuperiorBitrate === -1) {
-    return representations; // All representations have a lower bitrates.
+  if (representations.length === 0) {
+    return [];
   }
-  return representations.slice(0, firstSuperiorBitrate);
+  representations.sort((ra, rb) => ra.bitrate - rb.bitrate);
+  const minimumBitrate = representations[0].bitrate;
+  const bitrateCeil = Math.max(bitrate, minimumBitrate);
+  const firstSuperiorBitrateIndex = arrayFindIndex(
+    representations,
+    (representation) => representation.bitrate > bitrateCeil
+  );
+  if (firstSuperiorBitrateIndex === -1) {
+    return representations; // All representations have lower bitrates.
+  }
+  return representations.slice(0, firstSuperiorBitrateIndex);
 }

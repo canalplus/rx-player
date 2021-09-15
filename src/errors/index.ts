@@ -15,6 +15,7 @@
  */
 
 import AssertionError from "./assertion_error";
+import CustomLoaderError from "./custom_loader_error";
 import EncryptedMediaError from "./encrypted_media_error";
 import {
   ErrorCodes,
@@ -34,6 +35,7 @@ import RequestError from "./request_error";
 
 export {
   AssertionError,
+  CustomLoaderError,
   EncryptedMediaError,
   ErrorCodes,
   ErrorTypes,

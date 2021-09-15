@@ -15,10 +15,9 @@
  */
 
 import idGenerator from "../../../utils/id_generator";
-import getMaximumPosition from "../utils/get_maximum_position";
-import getMinimumPosition from "../utils/get_minimum_position";
-
 import {
+  IContentProtections,
+  IContentProtectionInitData,
   IParsedAdaptation,
   IParsedManifest,
   IParsedPeriod,
@@ -26,6 +25,7 @@ import {
 } from "../types";
 import LocalRepresentationIndex from "./representation_index";
 import {
+  IContentProtections as ILocalContentProtections,
   ILocalAdaptation,
   ILocalManifest,
   ILocalPeriod,
@@ -42,54 +42,52 @@ export default function parseLocalManifest(
   if (localManifest.type !== "local") {
     throw new Error("Invalid local manifest given. It misses the `type` property.");
   }
-  if (localManifest.version !== "0.1") {
+  if (localManifest.version !== "0.2") {
     throw new Error(`The current Local Manifest version (${localManifest.version})` +
                     " is not compatible with the current version of the RxPlayer");
   }
   const periodIdGenerator = idGenerator();
-  const { isFinished } = localManifest;
-  const manifest: IParsedManifest = {
-    availabilityStartTime: 0,
-    expired: localManifest.expired,
-    transportType: "local",
-    isDynamic: !localManifest.isFinished,
-    isLive: false,
-    uris: [],
-    periods: localManifest.periods
-      .map(period => parsePeriod(period, periodIdGenerator, isFinished)),
-  };
-  const maximumPosition = getMaximumPosition(manifest);
-  if (maximumPosition !== undefined) {
-    manifest.maximumTime = {
-        isContinuous : false,
-        value : localManifest.duration,
-        time : performance.now(),
-    };
-  }
-  const minimumPosition = getMinimumPosition(manifest);
-  manifest.minimumTime = {
-    isContinuous : false,
-    value : minimumPosition !== undefined ? minimumPosition : 0,
-    time : performance.now(),
-  };
-  return manifest;
+  const { minimumPosition,
+          maximumPosition,
+          isFinished } = localManifest;
+  const parsedPeriods = localManifest.periods
+    .map(period => parsePeriod(period, { periodIdGenerator,
+                                         isFinished }));
+
+  return { availabilityStartTime: 0,
+           expired: localManifest.expired,
+           transportType: "local",
+           isDynamic: !isFinished,
+           isLastPeriodKnown: isFinished,
+           isLive: false,
+           uris: [],
+           timeBounds: { absoluteMinimumTime: minimumPosition ?? 0,
+                         timeshiftDepth: null,
+                         maximumTimeData: { isLinear: false,
+                                            value: maximumPosition,
+                                            time: performance.now() } },
+           periods: parsedPeriods };
 }
 
 /**
  * @param {Object} period
+ * @param {Object} ctxt
  * @returns {Object}
  */
 function parsePeriod(
   period : ILocalPeriod,
-  periodIdGenerator : () => string,
-  isFinished : boolean
+  ctxt : { periodIdGenerator : () => string; /* Generate next Period's id */
+           /** If true, the local Manifest has been fully downloaded. */
+           isFinished : boolean; }
 ) : IParsedPeriod {
+  const { isFinished } = ctxt;
   const adaptationIdGenerator = idGenerator();
   return {
-    id: "period-" + periodIdGenerator(),
+    id: "period-" + ctxt.periodIdGenerator(),
+
     start: period.start,
-    end: period.duration - period.start,
-    duration: period.duration,
+    end: period.end,
+    duration: period.end - period.start,
     adaptations: period.adaptations
       .reduce<Partial<Record<string, IParsedAdaptation[]>>>((acc, ada) => {
         const type = ada.type;
@@ -98,7 +96,8 @@ function parsePeriod(
           adaps = [];
           acc[type] = adaps;
         }
-        adaps.push(parseAdaptation(ada, adaptationIdGenerator, isFinished));
+        adaps.push(parseAdaptation(ada, { adaptationIdGenerator,
+                                          isFinished }));
         return acc;
       }, {}),
   };
@@ -106,21 +105,26 @@ function parsePeriod(
 
 /**
  * @param {Object} adaptation
+ * @param {Object} ctxt
  * @returns {Object}
  */
 function parseAdaptation(
   adaptation : ILocalAdaptation,
-  adaptationIdGenerator : () => string,
-  isFinished : boolean
+  ctxt : { adaptationIdGenerator : () => string; /* Generate next Adaptation's id */
+           /** If true, the local Manifest has been fully downloaded. */
+           isFinished : boolean; }
 ) : IParsedAdaptation {
+  const { isFinished } = ctxt;
   const representationIdGenerator = idGenerator();
   return {
-    id: "adaptation-" + adaptationIdGenerator(),
+    id: "adaptation-" + ctxt.adaptationIdGenerator(),
     type: adaptation.type,
     audioDescription: adaptation.audioDescription,
     closedCaption: adaptation.closedCaption,
+    language: adaptation.language,
     representations: adaptation.representations.map((representation) =>
-        parseRepresentation(representation, representationIdGenerator, isFinished)),
+      parseRepresentation(representation, { representationIdGenerator,
+                                            isFinished })),
   };
 }
 
@@ -130,10 +134,15 @@ function parseAdaptation(
  */
 function parseRepresentation(
   representation : ILocalRepresentation,
-  representationIdGenerator : () => string,
-  isFinished : boolean
+  ctxt : { representationIdGenerator : () => string;
+           /** If true, the local Manifest has been fully downloaded. */
+           isFinished : boolean; }
 ) : IParsedRepresentation {
-  const id = "representation-" + representationIdGenerator();
+  const { isFinished } = ctxt;
+  const id = "representation-" + ctxt.representationIdGenerator();
+  const contentProtections = representation.contentProtections === undefined ?
+    undefined :
+    formatContentProtections(representation.contentProtections);
   return { id,
            bitrate: representation.bitrate,
            height: representation.height,
@@ -141,5 +150,24 @@ function parseRepresentation(
            codecs: representation.codecs,
            mimeType: representation.mimeType,
            index: new LocalRepresentationIndex(representation.index, id, isFinished),
-           contentProtections: representation.contentProtections };
+           contentProtections };
+}
+
+/**
+ * Translate Local Manifest's `contentProtections` attribute to the one defined
+ * for a `Manifest` structure.
+ * @param {Object} localContentProtections
+ * @returns {Object}
+ */
+function formatContentProtections(
+  localContentProtections : ILocalContentProtections
+) : IContentProtections {
+  const keyIds = localContentProtections.keyIds;
+  const initData : IContentProtectionInitData[] =
+    Object.keys(localContentProtections.initData).map((currType) => {
+      const localInitData = localContentProtections.initData[currType] ?? [];
+      return { type: currType,
+               values: localInitData };
+    });
+  return { keyIds, initData };
 }

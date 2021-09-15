@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import createManifestFetcher, {
+import ManifestFetcher, {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
   IManifestFetcherWarningEvent,
-} from "./create_manifest_fetcher";
+} from "./manifest_fetcher";
 
-export default createManifestFetcher;
+export default ManifestFetcher;
 export {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,

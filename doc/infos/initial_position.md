@@ -27,10 +27,10 @@ content might be calculated and used when defining that starting position.
 Those positions are inferred directly from the Manifest (when not playing a
 directfile content).
 Most Manifests declare every segments currently available. In that case, we can
-simply use the start of the first anounced segment as a minimum position and the
+simply use the start of the first announced segment as a minimum position and the
 end of the last one as a maximum.
 
-In some other Manifest files, segment availability is not clearly anounced.
+In some other Manifest files, segment availability is not clearly announced.
 In those cases, the minimum and maximum positions use other properties declared
 in the Manifest, often by making usage of a synchronized clock between the
 client and the server.

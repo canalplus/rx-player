@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+// Ugly transitory type to make duck typing work
+type ArrayWithFlatMap<T> = T[] & {
+  flatMap<U, This = undefined>(
+    callback: (this: This, value: T, index: number, array: T[]) => U | U[],
+    thisArg?: This
+  ): U[];
+};
+
 /**
  * Map each element using a mapping function, then flat the result into
  * a new array.
@@ -24,13 +32,11 @@ export default function flatMap<T, U>(
   originalArray : T[],
   fn: (arg: T) => U[]|U
 ) : U[] {
-  /* tslint:disable no-unbound-method */
-  if (typeof (Array.prototype as any).flatMap === "function") {
-  /* tslint:enable no-unbound-method */
-    /* tslint:disable no-unsafe-any */
-    return (originalArray as any).flatMap(fn);
-    /* tslint:enable no-unsafe-any */
+  /* eslint-disable @typescript-eslint/unbound-method */
+  if (typeof (Array.prototype as ArrayWithFlatMap<T>).flatMap === "function") {
+    return (originalArray as ArrayWithFlatMap<T>).flatMap(fn);
   }
+  /* eslint-enable @typescript-eslint/unbound-method */
 
   return originalArray.reduce((acc : U[], arg : T) : U[] => {
     const r = fn(arg);

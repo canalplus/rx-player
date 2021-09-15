@@ -15,20 +15,29 @@
  */
 
 import { Subject } from "rxjs";
-import { ITransportPipelines } from "../../../transports";
+import config from "../../../config";
 import {
-  IABRMetric,
-  IABRRequest,
+  ISegmentPipeline,
+  ITransportPipelines,
+} from "../../../transports";
+import {
+  IABRMetricsEvent,
+  IABRRequestBeginEvent,
+  IABRRequestEndEvent,
+  IABRRequestProgressEvent,
 } from "../../abr";
-import { IBufferType } from "../../source_buffers";
-import getSegmentBackoffOptions from "./get_segment_backoff_options";
+import { IBufferType } from "../../segment_buffers";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
 import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
+  getSegmentFetcherOptions,
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
+
+const { MIN_CANCELABLE_PRIORITY,
+        MAX_HIGH_PRIORITY_LEVEL } = config;
 
 /** Options used by the `SegmentFetcherCreator`. */
 export interface ISegmentFetcherCreatorBackoffOptions {
@@ -70,9 +79,25 @@ export interface ISegmentFetcherCreatorBackoffOptions {
  *   .subscribe((res) => console.log("audio chunk downloaded:", res));
  * ```
  */
-export default class SegmentFetcherCreator<T> {
+export default class SegmentFetcherCreator {
+  /**
+   * Transport pipelines of the currently choosen streaming protocol (e.g. DASH,
+   * Smooth etc.).
+   */
   private readonly _transport : ITransportPipelines;
-  private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<T>>;
+  /**
+   * `ObservablePrioritizer` linked to this SegmentFetcherCreator.
+   *
+   * Note: this is typed as `any` because segment loaders / parsers can use
+   * different types depending on the type of buffer. We could maybe be smarter
+   * about it, but typing as any just in select places, like here, looks like
+   * a good compromise.
+   */
+  private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<unknown>>;
+  /**
+   * Options used by the SegmentFetcherCreator, e.g. to allow configuration on
+   * segment retries (number of retries maximum, default delay and so on).
+   */
   private readonly _backoffOptions : ISegmentFetcherCreatorBackoffOptions;
 
   /**
@@ -83,25 +108,39 @@ export default class SegmentFetcherCreator<T> {
     options : ISegmentFetcherCreatorBackoffOptions
   ) {
     this._transport = transport;
-    this._prioritizer = new ObservablePrioritizer();
+    this._prioritizer = new ObservablePrioritizer({
+      prioritySteps: { high: MAX_HIGH_PRIORITY_LEVEL,
+                       low: MIN_CANCELABLE_PRIORITY },
+    });
     this._backoffOptions = options;
   }
 
   /**
    * Create a segment fetcher, allowing to easily perform segment requests.
-   * @param {string} bufferType
-   * @param {Object} options
+   * @param {string} bufferType - The type of buffer concerned (e.g. "audio",
+   * "video", etc.)
+   * @param {Subject} requests$ - Subject through which request-related events
+   * (such as those needed by the ABRManager) will be sent.
    * @returns {Object}
    */
   createSegmentFetcher(
     bufferType : IBufferType,
-    requests$ : Subject<IABRRequest | IABRMetric>
-  ) : IPrioritizedSegmentFetcher<T> {
-    const backoffOptions = getSegmentBackoffOptions(bufferType, this._backoffOptions);
-    const segmentFetcher = createSegmentFetcher<T>(bufferType,
-                                                   this._transport,
-                                                   requests$,
-                                                   backoffOptions);
-    return applyPrioritizerToSegmentFetcher<T>(this._prioritizer, segmentFetcher);
+    requests$ : Subject<IABRRequestBeginEvent |
+                        IABRRequestProgressEvent |
+                        IABRRequestEndEvent |
+                        IABRMetricsEvent>
+  ) : IPrioritizedSegmentFetcher<unknown> {
+    const backoffOptions = getSegmentFetcherOptions(bufferType, this._backoffOptions);
+    const pipelines = this._transport[bufferType];
+
+    // Types are very complicated here as they are per-type of buffer.
+    // This is the reason why `any` is used instead.
+    const segmentFetcher = createSegmentFetcher<unknown, unknown>(
+      bufferType,
+      pipelines as ISegmentPipeline<unknown, unknown>,
+      requests$,
+      backoffOptions
+    );
+    return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
   }
 }

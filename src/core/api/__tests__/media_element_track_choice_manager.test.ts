@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { BehaviorSubject } from "rxjs";
 import MediaElementTrackChoiceManager from "../media_element_track_choice_manager";
 
 const fakeMediaElement = {
@@ -33,87 +32,71 @@ const fakeMediaElement = {
   videoTracks: [
     { language: "", selected: true },
   ],
-};
+} as unknown as HTMLVideoElement;
 
 describe("API - MediaElementTrackChoiceManager", () => {
   it("should returns correct results for getter", () => {
-      const trackManager = new MediaElementTrackChoiceManager(
-        {
-          preferredAudioTracks: new BehaviorSubject([] as any[]),
-          preferredTextTracks: new BehaviorSubject([] as any[]),
-          preferredVideoTracks: new BehaviorSubject([] as any[]),
-        },
-        fakeMediaElement as any
-      );
-      const audioTracks = trackManager.getAvailableAudioTracks();
-      const textTracks = trackManager.getAvailableTextTracks();
-      const videoTracks = trackManager.getAvailableVideoTracks();
-      expect(audioTracks).toBeDefined();
-      expect(audioTracks?.length).toBe(4);
-      expect(videoTracks).toBeDefined();
-      expect(videoTracks?.length).toBe(1);
-      expect(textTracks).toBeDefined();
-      expect(textTracks?.length).toBe(4);
+    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
+    const audioTracks = trackManager.getAvailableAudioTracks();
+    const textTracks = trackManager.getAvailableTextTracks();
+    const videoTracks = trackManager.getAvailableVideoTracks();
+    expect(audioTracks).toBeDefined();
+    expect(audioTracks?.length).toBe(4);
+    expect(videoTracks).toBeDefined();
+    expect(videoTracks?.length).toBe(1);
+    expect(textTracks).toBeDefined();
+    expect(textTracks?.length).toBe(4);
 
-      const chosenAudioTrack = trackManager.getChosenAudioTrack();
-      const chosenTextTrack = trackManager.getChosenTextTrack();
-      const chosenVideoTrack = trackManager.getChosenVideoTrack();
-      expect(chosenAudioTrack).toEqual({
-        id: "gen_audio_fr_1",
-        language: "fr",
-        audioDescription: false,
-        normalized: "fra",
-      });
-      expect(chosenVideoTrack).toEqual({
-        id: "gen_video_nolang_1",
-        representations: [],
-      });
-      expect(chosenTextTrack).toEqual({
-        id: "gen_text_fr_1",
-        language: "fr",
-        closedCaption: false,
-        normalized: "fra",
-      });
+    const chosenAudioTrack = trackManager.getChosenAudioTrack();
+    const chosenTextTrack = trackManager.getChosenTextTrack();
+    const chosenVideoTrack = trackManager.getChosenVideoTrack();
+    expect(chosenAudioTrack).toEqual({
+      id: "gen_audio_fr_1",
+      language: "fr",
+      audioDescription: false,
+      normalized: "fra",
+      representations: [],
+    });
+    expect(chosenVideoTrack).toEqual({
+      id: "gen_video_nolang_1",
+      representations: [],
+    });
+    expect(chosenTextTrack).toEqual({
+      id: "gen_text_fr_1",
+      language: "fr",
+      closedCaption: false,
+      normalized: "fra",
+    });
   });
   it("should returns correct results for setters", () => {
-      const trackManager = new MediaElementTrackChoiceManager(
-        {
-          preferredAudioTracks: new BehaviorSubject([] as any[]),
-          preferredTextTracks: new BehaviorSubject([] as any[]),
-          preferredVideoTracks: new BehaviorSubject([] as any[]),
-        },
-        fakeMediaElement as any
-      );
+    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
 
-      trackManager.setAudioTrackById("gen_audio_en_1");
-      // unset enabled attribute of other track, as browser is supported to do this
-      fakeMediaElement.audioTracks[1].enabled = false;
-      expect(trackManager.getChosenAudioTrack()).toEqual({
-        id: "gen_audio_en_1",
-        language: "en",
-        audioDescription: false,
-        normalized: "eng",
-      });
+    trackManager.setAudioTrackById("gen_audio_en_1");
+    // unset enabled attribute of other track, as browser is supported to do this
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (fakeMediaElement as any).audioTracks[1].enabled = false;
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    expect(trackManager.getChosenAudioTrack()).toEqual({
+      id: "gen_audio_en_1",
+      language: "en",
+      audioDescription: false,
+      normalized: "eng",
+      representations: [],
+    });
 
-      trackManager.setTextTrackById("gen_text_en_1");
-      // changed mode attribute of other track, as browser is supported to do this
-      fakeMediaElement.textTracks[1].mode = "hidden";
-      expect(trackManager.getChosenTextTrack()).toEqual({
-        id: "gen_text_en_1",
-        language: "en",
-        closedCaption: false,
-        normalized: "eng",
-      });
+    trackManager.setTextTrackById("gen_text_en_1");
+    // changed mode attribute of other track, as browser is supported to do this
+    fakeMediaElement.textTracks[1].mode = "hidden";
+    expect(trackManager.getChosenTextTrack()).toEqual({
+      id: "gen_text_en_1",
+      language: "en",
+      closedCaption: false,
+      normalized: "eng",
+    });
   });
   it("should emit available tracks change when changing text contents", (done) => {
-    const trackManager = new MediaElementTrackChoiceManager(
-      {
-        preferredAudioTracks: new BehaviorSubject([] as any[]),
-        preferredTextTracks: new BehaviorSubject([] as any[]),
-        preferredVideoTracks: new BehaviorSubject([] as any[]),
-      },
-      fakeMediaElement as any
-    );
+    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
 
     trackManager
       .addEventListener("availableTextTracksChange", (tracks) => {
@@ -127,20 +110,13 @@ describe("API - MediaElementTrackChoiceManager", () => {
       });
 
     // Fake browser behavior
-    fakeMediaElement.textTracks.unshift({ language: "es", mode: "hidden" });
-    /* tslint:disable-next-line */
-    (fakeMediaElement.textTracks as any).onaddtrack();
+    (fakeMediaElement.textTracks as unknown as TextTrack[])
+      .unshift({ language: "es", mode: "hidden" } as TextTrack);
+    fakeMediaElement.textTracks.onaddtrack?.({} as TrackEvent);
   });
 
   it("should emit available tracks change when changing video contents", (done) => {
-    const trackManager = new MediaElementTrackChoiceManager(
-      {
-        preferredAudioTracks: new BehaviorSubject([] as any[]),
-        preferredTextTracks: new BehaviorSubject([] as any[]),
-        preferredVideoTracks: new BehaviorSubject([] as any[]),
-      },
-      fakeMediaElement as any
-    );
+    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
 
     trackManager
       .addEventListener("availableVideoTracksChange", (tracks) => {
@@ -151,20 +127,20 @@ describe("API - MediaElementTrackChoiceManager", () => {
       });
 
     // Fake browser behavior
-    fakeMediaElement.videoTracks.unshift({ language: "en", selected: false });
-    /* tslint:disable-next-line */
-    (fakeMediaElement.videoTracks as any).onaddtrack();
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const _elt = fakeMediaElement as any;
+    _elt.videoTracks.unshift({ language: "en", selected: false });
+    _elt.videoTracks.onaddtrack?.({} as TrackEvent);
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   });
 
   it("should emit available tracks change when changing audio contents", (done) => {
-    const trackManager = new MediaElementTrackChoiceManager(
-      {
-        preferredAudioTracks: new BehaviorSubject([] as any[]),
-        preferredTextTracks: new BehaviorSubject([] as any[]),
-        preferredVideoTracks: new BehaviorSubject([] as any[]),
-      },
-      fakeMediaElement as any
-    );
+    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
 
     trackManager
       .addEventListener("availableAudioTracksChange", (tracks) => {
@@ -178,20 +154,20 @@ describe("API - MediaElementTrackChoiceManager", () => {
       });
 
     // Fake browser behavior
-    fakeMediaElement.audioTracks.unshift({ language: "en", enabled: false });
-    /* tslint:disable-next-line */
-    (fakeMediaElement.audioTracks as any).onaddtrack();
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const _elt = fakeMediaElement as any;
+    _elt.audioTracks.unshift({ language: "en", selected: false });
+    _elt.audioTracks.onaddtrack?.({} as TrackEvent);
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   });
 
   it("should emit chosen track when changing text content", (done) => {
-    const trackManager = new MediaElementTrackChoiceManager(
-      {
-        preferredAudioTracks: new BehaviorSubject([] as any[]),
-        preferredTextTracks: new BehaviorSubject([] as any[]),
-        preferredVideoTracks: new BehaviorSubject([] as any[]),
-      },
-      fakeMediaElement as any
-    );
+    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
 
     trackManager
       .addEventListener("textTrackChange", (chosenTrack) => {
@@ -203,7 +179,6 @@ describe("API - MediaElementTrackChoiceManager", () => {
 
     // Fake browser behavior
     fakeMediaElement.textTracks[0].mode = "hidden";
-    /* tslint:disable-next-line */
-    (fakeMediaElement.textTracks as any).onchange();
+    fakeMediaElement.textTracks?.onchange?.(undefined as unknown as Event);
   });
 });

@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("getEstimateFromBufferLevels", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -22,10 +28,10 @@ describe("getEstimateFromBufferLevels", () => {
 
   it("should return the first bitrate if the current bitrate is undefined", () => {
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
-                                          .default;
+      .default;
     expect(getEstimateFromBufferLevels({
       bufferGap: 0,
       speed: 1,
@@ -53,11 +59,11 @@ describe("getEstimateFromBufferLevels", () => {
     }, [1, 2, 3], [0, 5, 10])).toEqual(1);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should log an error and return the first bitrate if the given bitrate does not exist", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logger = { error: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -73,11 +79,11 @@ describe("getEstimateFromBufferLevels", () => {
       .toHaveBeenCalledWith("ABR: Current Bitrate not found in the calculated levels");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should log an error and return the first bitrate if the given bitrates and levels are of different length", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logger = { error: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -93,11 +99,11 @@ describe("getEstimateFromBufferLevels", () => {
       .toHaveBeenCalledWith("ABR: Current Bitrate not found in the calculated levels");
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should go to the next bitrate if the current one is maintainable and we have more buffer than the next level", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -139,11 +145,11 @@ describe("getEstimateFromBufferLevels", () => {
     }, [10, 20, 40], [0, 15, 20])).toEqual(40);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should go to the next bitrate if the current one is maintainable and we have the buffer corresponding to the next level", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -185,11 +191,11 @@ describe("getEstimateFromBufferLevels", () => {
     }, [10, 20, 40], [0, 15, 20])).toEqual(40);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should stay at the current bitrate if it is maintainable but we have a buffer inferior to the next level", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -225,11 +231,11 @@ describe("getEstimateFromBufferLevels", () => {
     }, [10, 20, 40], [0, 15, 20])).toEqual(20);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should stay at the current bitrate if we are currently at the maximum one", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -247,11 +253,11 @@ describe("getEstimateFromBufferLevels", () => {
     }, [10, 20, 40, 40], [0, 15, 20, 20])).toEqual(40);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should stay at the current bitrate if the current one is not maintainable due to the speed", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -287,11 +293,11 @@ describe("getEstimateFromBufferLevels", () => {
     }, [10, 20, 40], [0, 15, 20])).toEqual(20);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should not go to the next bitrate if we do not know if it is maintainable", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const logger = {};
-    jest.mock("../../../log", () => ({ __esModule: true,
+    jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const getEstimateFromBufferLevels = require("../get_estimate_from_buffer_levels")
       .default;
@@ -327,4 +333,3 @@ describe("getEstimateFromBufferLevels", () => {
     }, [10, 20, 40], [0, 15, 20])).toEqual(20);
   });
 });
-/* tslint:enable no-unsafe-any */

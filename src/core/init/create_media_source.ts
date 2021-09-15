@@ -35,23 +35,6 @@ import isNonEmptyString from "../../utils/is_non_empty_string";
 const { onSourceOpen$ } = events;
 
 /**
- * Set the media duration in the mediaSource.
- * @param {MediaSource} mediaSource
- * @param {number} duration
- */
-export function setDurationToMediaSource(
-  mediaSource : MediaSource,
-  duration : number
-) : void {
-  const newDuration = duration === Infinity ? Number.MAX_VALUE :
-                                              duration;
-  if (mediaSource.duration !== newDuration) {
-    log.info("Init: Setting duration", newDuration);
-    mediaSource.duration = newDuration;
-  }
-}
-
-/**
  * Dispose of ressources taken by the MediaSource:
  *   - Clear the MediaSource' SourceBuffers
  *   - Clear the mediaElement's src (stop the mediaElement)
@@ -106,8 +89,8 @@ function resetMediaSource(
  * This Observable never completes. It can throw if MediaSource is not
  * available in the current environment.
  *
- * On unsubscription, the mediaElement.src is cleaned, MediaSource sourceBuffers
- * and customBuffers are aborted and some minor cleaning is done.
+ * On unsubscription, the mediaElement.src is cleaned, MediaSource SourceBuffers
+ * are aborted and some minor cleaning is done.
  *
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}

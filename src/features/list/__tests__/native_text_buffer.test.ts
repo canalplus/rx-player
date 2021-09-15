@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-import nativeTextTracksBuffer from "../../../custom_source_buffers/text/native";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+// eslint-disable-next-line max-len
+import nativeTextTracksBuffer from "../../../core/segment_buffers/implementations/text/native";
 import addNativeTextBuffer from "../native_text_buffer";
 
-/* tslint:disable no-unsafe-any */
-jest.mock("../../../custom_source_buffers/text/native", () => ({
-  __esModule: true,
+jest.mock("../../../core/segment_buffers/implementations/text/native", () => ({
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - native Text Buffer", () => {
   it("should add an native Text Buffer in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addNativeTextBuffer(featureObject);
     expect(featureObject).toEqual({ nativeTextTracksBuffer });
     expect(featureObject.nativeTextTracksBuffer).toBe(nativeTextTracksBuffer);
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -18,12 +18,12 @@ import ContentDownloader from "./ContentDownloader";
 import createMetaplaylist from "./createMetaplaylist";
 import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
 import parseBifThumbnails from "./parseBIFThumbnails";
-import TextTrackRenderer from "./TextTrackRenderer";
+import VideoThumbnailLoader from "./VideoThumbnailLoader";
 
 export {
   ContentDownloader,
   createMetaplaylist,
   mediaCapabilitiesProber,
   parseBifThumbnails,
-  TextTrackRenderer,
+  VideoThumbnailLoader,
 };

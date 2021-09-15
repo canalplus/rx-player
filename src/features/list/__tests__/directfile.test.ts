@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+// eslint-disable-next-line max-len
 import mediaElementTrackChoiceManager from "../../../core/api/media_element_track_choice_manager";
 import initDirectFile from "../../../core/init/initialize_directfile";
 import addDirectfileFeature from "../directfile";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../core/init/initialize_directfile", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - Directfile", () => {
   it("should add Directfile in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addDirectfileFeature(featureObject);
     expect(featureObject).toEqual({
@@ -37,4 +40,3 @@ describe("Features list - Directfile", () => {
       .toEqual(mediaElementTrackChoiceManager);
   });
 });
-/* tslint:enable no-unsafe-any */

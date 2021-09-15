@@ -4,8 +4,6 @@
 
 - [Issues and new features](#issues)
 - [Reading the current code](#reading)
-- [Creating a branch](#branch)
-  - [Naming convention](#branch-name)
 - [Code style](#code)
     - [Linting](#code-lint)
     - [Types](#code-types)
@@ -15,7 +13,7 @@
   - [Using HTTPS](#demo-https)
 - [Creating a commit](#commit)
   - [Checks](#commit-checks)
-  - [Naming convention](#commit-name)
+  - [Convention](#commit-name)
 - [The test suite](#testing)
   - [Unit tests](#testing-unit)
   - [Integration tests](#testing-integration)
@@ -47,60 +45,17 @@ Even if we hope the current code is straightforward, readable and commented
 enough we can still admit that going blind into the codebase can be hard at
 first (as it would be for any non-small codebase).
 
-We thus encourage you to rely on [the architecture documentation
-](https://canalplus.github.io/rx-player/doc/pages/architecture/index.html)
-(note: this page is updated with each new version. For any older version, it can
-also be found in the `doc/architecture/` directory, in the markdown format).
+We thus encourage you to rely on the architecture documentation you can usually
+find alongside the code, in `README.md` files.
+You can for example start by reading `src/README.md`, to have a clearer idea
+of the general code architecture of the player.
 
-A good place to start would be the [file organization of the project
-](https://canalplus.github.io/rx-player/doc/pages/architecture/files.html).
+Also, for a more exhaustive approach to the documentation of the project's file
+organization, you can look at `FILES.md` at the root of this repository.
 
 The code of the RxPlayer being heavily modularized, you should not need to read
 the whole documentation to be ready, only the parts you want to update
 (hopefully!).
-
-
-
-<a name="branch"></a>
-## Creating a branch ###########################################################
-
-<a name="branch-name"></a>
-### Naming convention ##########################################################
-
-We follow a strict convention for branch names. They are usually under this
-form: `type/alias_for_the_fix`.
-
-This strictness mostly helps us to quickly rememorate what each PR or merged
-branch is/was about.
-
----
-
-The type should be one of the following:
-  - `fix`: For bug fixes
-  - `feat`: For new features to the RxPlayer
-  - `doc`: For documentation updates
-  - `demo`: For demo improvements/fixes
-  - `tests`: For tests improvements/fixes
-  - `code`: For refactoring code which brings no fix or no new feature
-  - `tools`: For improvements related to the RxPlayer's tools
-  - `misc`: For unclassifiable other improvements
-
----
-
-The `alias` should be descriptive enough to understand roughly what is the
-impacted code.
-
----
-
-Examples:
-  - `fix/dash-minimum_position`
-  - `fix/webm-duration_calculation`
-  - `fix/ttml-background_color`
-  - `feat/dash-utc_timing`
-  - `code/manifest_as_event_emitter`
-  - `tests/eme-attach_media_keys`
-  - `tools/webpack-4`
-  - `doc/public_api_typos`
 
 
 
@@ -110,7 +65,7 @@ Examples:
 <a name="code-lint"></a>
 ### Linting ####################################################################
 
-The code style in `src` is automatically checked by a "linter", `tslint`.
+The code style in `src` is automatically checked by a "linter", `eslint`.
 
 It basically follows those principles:
   - 2 spaces indentation
@@ -127,11 +82,14 @@ directory) by calling `npm run lint:tests`.
 <a name="code-types"></a>
 ### Types ######################################################################
 
+#### General TypeScript rules ##################################################
+
 We try to be as strict as possible with types:
 
   - the `any` type should be avoided
 
-  - the `as` keyword should also be avoided as much as possible.
+  - the `as` TypeScript keyword, used for type casting, should also be avoided
+    as much as possible.
 
   - the `is` keyword is fine in some situations, but simpler solutions should be
     preferred.
@@ -139,8 +97,70 @@ We try to be as strict as possible with types:
 This is to be sure we can detect as much as possible type errors automatically
 with TypeScript.
 
-Also, created TypeScript's `type` and `interface` should all be named beginning
-with the letter I, for easier identification purposes.
+### `type` and `interface` typing
+
+TypeScript's `type` and `interface` should all be named beginning with the
+letter `I`, for easier identification purposes\*:
+```
+interface IMyObject {
+  someKey: string;
+}
+
+type IStringOrNumber = string |
+                       number;
+```
+
+\*We know that this rule is a controversial subject amongst TypeScript
+developpers, yet we still decide to enforce it for now.
+
+#### Generic parameters typing #################################################
+
+Generic parameters are usually named in order `T` (for the first generic
+parameter), then `U` (if there's two), then `V` (if there's three):
+
+Examples:
+```
+type IMyGenericType<T> = Array<T>;
+
+type IMyGenericType2<T, U> = Promise<T> |
+                             U;
+
+function mergeThree<T, U, V>(
+  arg1: T,
+  arg2: U,
+  arg3: V
+) : T & U & V {
+  return Object.assign({}, arg1, arg2, arg3);
+}
+```
+
+Some exceptions exist like for things like key-values couples, which can be named
+respectively `K` and `V`:
+```
+type IMyMap<K, V> = Map<K, V>;
+```
+
+This is a general convention for generic parameters inherited from Java, and
+re-used by TypeScript, and it helps identifying which type is a generic
+parameter vs which type is a real type (no prefix) vs which type is a type
+definition (prefixed by `I`).
+
+If what they correspond to is not obvious (and if there's more than one, it
+might well be), you're encouraged to add a more verbose and clear name, that you
+should prefix by `T`:
+```
+function loadResource<TResourceFormat>(
+  url : string
+) : Promise<TResourceFormat> {
+  // ...
+}
+```
+
+However note that typing rules for generic parameters is a very minor
+consideration and may not always need to be respected depending on the code it
+is applied on.
+In the end, it will be up to the RxPlayer's maintainers to decide that those
+rules should be enforced or not on a given code.
 
 
 <a name="code-forbidden"></a>
@@ -242,9 +262,6 @@ Every commits in a PR should pass our quick checks (linter, typescript check
 and unit tests). To check if that's the case, you can run locally the `check`
 script by calling `npm run check`.
 
-In any case, the type checking and linting of the `src` directory is
-automatically done before each commit thanks to a git hook.
-
 Those checks give us some guarantees that every merged commit in the `master`
 branch is stable enough.
 
@@ -253,46 +270,26 @@ debugging if we detect a regression by the usage of tools such as git-bisect.
 
 
 <a name="commit-name"></a>
-### Naming convention ##########################################################
+### Convention #################################################################
 
-We have a naming convention for commits, roughly under the form:
-`namespace: what the commit does`.
+When creating a new commit it is advised (though not enforced) to add a message
+containing multiple paragraphs.
 
-Adding a paragraph (by setting multiple `-m` options to git-commit for
-example) to explain why you did those modifications is preferred.
+The first paragraph should be a short summary of what the commit does, short
+enough so it can usually be displayed on one line - probably like the usual
+commit messages you are used to.
+The following paragraphs can be as long as you want (note that relying on a
+[maximum column width of around 72 is a sensible
+default](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)
+even if we do not enforce that either).
 
-The `namespace` here describe here the area of the code the commit modifies.
-It usually is one of the following:
-  - `abr`
-  - `api`
-  - `bif`
-  - `buffers`
-  - `compat`
-  - `dash`
-  - `eme`
-  - `errors`
-  - `fetchers`
-  - `init`
-  - `isobmff`
-  - `manifest`
-  - `matroska`
-  - `sami`
-  - `scripts`
-  - `smooth`
-  - `source-buffers`
-  - `srt`
-  - `subtitles`
-  - `tests`
-  - `ttml`
-  - `utils`
-  - `webvtt`
+The goal here is to help understand your changes at a later time, in case things
+go wrong in the future.
 
-But it could be any other values you feel to be consistent with that
-convention.
-
-This namespace helps us quickly evaluate the area of the code a commit impact,
-to easily evaluate where testing need to be done and to better detect a
-problematic commit if a regression is detected.
+_You can create a commit with multiple paragraphs either through the command
+line either by setting multiple `-m` options to git-commit, or just by calling
+`git commit` with no `-m` option and editing the message manually in the opened
+editor._
 
 
 

@@ -14,50 +14,72 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import PPromise from "pinkie";
 import features from "../../features";
 import request from "../../utils/request";
 import takeFirstSet from "../../utils/take_first_set";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  IImageParserObservable,
-  ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
-  ISegmentParserArguments,
+  IImageTrackSegmentData,
+  ILoadedImageSegmentFormat,
+  ISegmentContext,
+  ISegmentLoaderCallbacks,
+  ISegmentLoaderResultChunkedComplete,
+  ISegmentLoaderResultSegmentCreated,
+  ISegmentLoaderResultSegmentLoaded,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
 } from "../types";
 
 /**
- * @param {Object} args
- * @returns {Observable}
+ * Loads an image segment.
+ * @param {string|null} url
+ * @param {Object} content
+ * @param {Object} cancelSignal
+ * @param {Object} callbacks
+ * @returns {Promise}
  */
 export function imageLoader(
-  { segment,
-    url } : ISegmentLoaderArguments
-) : ISegmentLoaderObservable< ArrayBuffer | null > {
+  url : string | null,
+  content : ISegmentContext,
+  cancelSignal : CancellationSignal,
+  callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
+) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
+            ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat> |
+            ISegmentLoaderResultChunkedComplete>
+{
+  const { segment } = content;
   if (segment.isInit || url === null) {
-    return observableOf({ type: "data-created" as const,
-                          value: { responseData: null } });
+    return PPromise.resolve({ resultType: "segment-created",
+                              resultData: null });
   }
   return request({ url,
                    responseType: "arraybuffer",
-                   sendProgressEvents: true });
+                   onProgress: callbacks.onProgress,
+                   cancelSignal })
+    .then((data) => ({ resultType: "segment-loaded",
+                       resultData: data }));
 }
 
 /**
+ * Parses an image segment.
  * @param {Object} args
- * @returns {Observable}
+ * @returns {Object}
  */
 export function imageParser(
-  { response,
-    content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-) : IImageParserObservable {
+  loadedSegment : { data : ArrayBuffer | Uint8Array | null;
+                    isChunked : boolean; },
+  content : ISegmentContext
+) : ISegmentParserParsedSegment< IImageTrackSegmentData | null > |
+    ISegmentParserParsedInitSegment< null > {
   const { segment, period } = content;
-  const { data, isChunked } = response;
+  const { data, isChunked } = loadedSegment;
 
   if (content.segment.isInit) { // image init segment has no use
-    return observableOf({ type: "parsed-init-segment",
-                          value: { initializationData: null,
-                                   segmentProtections: [],
-                                   initTimescale: undefined } });
+    return { segmentType: "init",
+             initializationData: null,
+             protectionDataUpdate: false,
+             initTimescale: undefined };
   }
 
   if (isChunked) {
@@ -66,32 +88,28 @@ export function imageParser(
 
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
 
-  // TODO image Parsing should be more on the sourceBuffer side, no?
+  // TODO image Parsing should be more on the buffer side, no?
   if (data === null || features.imageParser === null) {
-    return observableOf({ type: "parsed-segment",
-                          value: { chunkData: null,
-                                   chunkInfos: segment.timescale > 0 ?
-                                     { duration: segment.isInit ? 0 :
-                                                                  segment.duration,
-                                       time: segment.isInit ? -1 :
-                                                              segment.time,
-                                       timescale: segment.timescale } :
-                                     null,
-                                    chunkOffset,
-                                    appendWindow: [period.start, period.end] } });
+    return { segmentType: "media",
+             chunkData: null,
+             chunkInfos: { duration: segment.duration,
+                           time: segment.time },
+             chunkOffset,
+             protectionDataUpdate: false,
+             appendWindow: [period.start, period.end] };
   }
 
   const bifObject = features.imageParser(new Uint8Array(data));
   const thumbsData = bifObject.thumbs;
-  return observableOf({ type: "parsed-segment",
-                        value: { chunkData: { data: thumbsData,
-                                              start: 0,
-                                              end: Number.MAX_VALUE,
-                                              timescale: 1,
-                                              type: "bif" },
-                                 chunkInfos: { time: 0,
-                                               duration: Number.MAX_VALUE,
-                                               timescale: bifObject.timescale },
-                                 chunkOffset,
-                                 appendWindow: [period.start, period.end] } });
+  return { segmentType: "media",
+           chunkData: { data: thumbsData,
+                        start: 0,
+                        end: Number.MAX_VALUE,
+                        timescale: 1,
+                        type: "bif" },
+           chunkInfos: { time: 0,
+                         duration: Number.MAX_VALUE },
+           chunkOffset,
+           protectionDataUpdate: false,
+           appendWindow: [period.start, period.end] };
 }

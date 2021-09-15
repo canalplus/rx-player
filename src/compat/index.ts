@@ -17,25 +17,24 @@
 import addClassName from "./add_class_name";
 import addTextTrack from "./add_text_track";
 import {
-  ICompatMediaKeySystemAccess,
-  ICompatMediaKeySystemConfiguration,
   ICompatTextTrack,
   ICompatVTTCue,
   MediaSource_,
-  VTTCue_,
 } from "./browser_compatibility_types";
 import canPatchISOBMFFSegment from "./can_patch_isobmff";
 import tryToChangeSourceBufferType, {
-  ICustomSourceBuffer,
+  ICompatSourceBuffer,
 } from "./change_source_buffer_type";
 import clearElementSrc from "./clear_element_src";
 import {
+  closeSession,
   CustomMediaKeySystemAccess,
   generateKeyRequest,
   getInitData,
   ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
+  loadSession,
   requestMediaKeySystemAccess,
   setMediaKeys,
 } from "./eme";
@@ -47,14 +46,15 @@ import {
 } from "./fullscreen";
 import hasEMEAPIs from "./has_eme_apis";
 import isCodecSupported from "./is_codec_supported";
+import isNode from "./is_node";
 import isOffline from "./is_offline";
-import isPlaybackStuck from "./is_playback_stuck";
 import isVTTCue from "./is_vtt_cue";
 import makeVTTCue from "./make_vtt_cue";
 import onHeightWidthChange from "./on_height_width_change";
 import patchWebkitSourceBuffer from "./patch_webkit_source_buffer";
-import play$ from "./play";
+import play from "./play";
 import setElementSrc$ from "./set_element_src";
+// eslint-disable-next-line max-len
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "./should_reload_media_source_on_decipherability_update";
 import shouldRenewMediaKeys from "./should_renew_media_keys";
 import shouldUnsetMediaKeys from "./should_unset_media_keys";
@@ -63,7 +63,9 @@ import shouldWaitForDataBeforeLoaded from "./should_wait_for_data_before_loaded"
 import whenLoadedMetadata$ from "./when_loaded_metadata";
 import whenMediaSourceOpen$ from "./when_media_source_open";
 
-// TODO TO REMOVE
+// TODO To remove. This seems to be the only side-effect done on import, which
+// we  would prefer to disallow (both for the understandability of the code and
+// to better exploit tree shaking.
 patchWebkitSourceBuffer();
 
 export {
@@ -71,29 +73,29 @@ export {
   addTextTrack,
   canPatchISOBMFFSegment,
   clearElementSrc,
+  closeSession,
   CustomMediaKeySystemAccess,
   events,
   exitFullscreen,
   generateKeyRequest,
   getInitData,
   hasEMEAPIs,
-  ICompatMediaKeySystemAccess,
-  ICompatMediaKeySystemConfiguration,
   ICompatTextTrack,
   ICompatVTTCue,
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
   ICustomMediaKeys,
-  ICustomSourceBuffer,
+  ICompatSourceBuffer,
   isCodecSupported,
   isFullscreen,
+  isNode,
   isOffline,
-  isPlaybackStuck,
   isVTTCue,
+  loadSession,
   makeVTTCue,
   MediaSource_,
   onHeightWidthChange,
-  play$,
+  play,
   requestFullscreen,
   requestMediaKeySystemAccess,
   setElementSrc$,
@@ -104,7 +106,6 @@ export {
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,
   tryToChangeSourceBufferType,
-  VTTCue_,
   whenLoadedMetadata$,
   whenMediaSourceOpen$,
 };

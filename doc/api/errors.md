@@ -100,7 +100,7 @@ Among its properties, you have:
 
   - ``url`` (``string``): The url the request has been on
 
-  - ``status`` (``Number``): Shortcut to the status code of the xhr.
+  - ``status`` (``Number``): Status code of the HTTP request.
 
   - ``errorType`` (``string``): Further precision about what went wrong.
 
@@ -110,9 +110,6 @@ Among its properties, you have:
       - ``"PARSE_ERROR"``: No data could have been extracted from this request
       - ``"ERROR_HTTP_CODE"``: The request finished with a status code not in
         the 2xx range.
-
-  - ``code`` (``number``): The HTTP code of the request at the time of the
-    error (`0` if no request has been done yet)
 
   - ``xhr`` (``XMLHttpRequest|undefined``): The xhr associated with the request.
     Not defined if the current content has been launched in `lowLatencyMode`.
@@ -137,13 +134,13 @@ They all have a ``type`` property equal to ``"MEDIA_ERROR"``.
 A MediaError can have the following codes (``code`` property):
 
   - ``"BUFFER_APPEND_ERROR"``: A media segment could not have been added to the
-    corresponding SourceBuffer. This often happens with malformed segments.
+    corresponding media buffer. This often happens with malformed segments.
 
   - ``"BUFFER_FULL_ERROR"``: The needed segment could not have been added
-    because the SourceBuffer was full.
+    because the corresponding media buffer was full.
 
   - ``"BUFFER_TYPE_UNKNOWN"``: The type of buffer considered (e.g. "audio" /
-    "video" / "text") has no SourceBuffer implementation in your build.
+    "video" / "text") has no media buffer implementation in your build.
 
   - ``"MANIFEST_INCOMPATIBLE_CODECS_ERROR"``: An
     [Adaptation](../terms.md#adaptation) (or track) has none of its
@@ -209,6 +206,12 @@ A MediaError can have the following codes (``code`` property):
     is currently declared in the [Manifest](../terms.md#manifest).
     This can lead to stalling indefinitely as the player won't be able to
     download new segments arround the current time.
+
+  - ``"DISCONTINUITY_ENCOUNTERED"``: A discontinuity (i.e. a hole in the media
+    buffer) has been encontered and seeked over.
+
+    This is rarely a problem and may be encountered at a very start of a content
+    when the initial segment's start is much later than expected.
 
   - ``"NO_PLAYABLE_REPRESENTATION"``: The currently chosen Adaptation does not
     contain any playable Representation. This usually happen when every

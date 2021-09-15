@@ -69,7 +69,6 @@ describe("DASH live - UTCTimings", () => {
     const { manifestInfos } = WithHTTP;
     let player;
     let xhrMock;
-    const requests = [];
 
     beforeEach(() => {
       player = new RxPlayer();
@@ -77,7 +76,6 @@ describe("DASH live - UTCTimings", () => {
     });
 
     afterEach(() => {
-      requests.length = 0;
       player.dispose();
       xhrMock.restore();
     });

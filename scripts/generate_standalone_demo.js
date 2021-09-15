@@ -14,15 +14,10 @@
 
 const Webpack = require("webpack");
 const path = require("path");
-const displayWebpackErrors = require("./display_webpack_errors");
-const getHumanReadableHours = require("./get_human_readable_hours");
+const displayWebpackErrors = require("./utils/display_webpack_errors");
+const getHumanReadableHours = require("./utils/get_human_readable_hours");
 
 const webpackConfig = require("../webpack.config.js");
-
-// overwrite entries/output (ugly but just werks and did not find any better)
-webpackConfig.entry = path.join(__dirname, "../src/index.ts");
-webpackConfig.output.path = __dirname;
-webpackConfig.output.filename = "../demo/standalone/lib.js";
 
 /* eslint-disable no-console */
 console.log(
@@ -30,7 +25,19 @@ console.log(
     "Building demo..."
 );
 /* eslint-enable no-console */
-const compiler = Webpack(webpackConfig);
+
+const config = webpackConfig({
+  production: false,
+  minify: false,
+  reportSize: false,
+});
+
+// overwrite entries/output (ugly but just werks and did not find any better for now)
+config.entry = path.join(__dirname, "../src/index.ts");
+config.output.path = __dirname;
+config.output.filename = "../demo/standalone/lib.js";
+
+const compiler = Webpack(config);
 
 const compilerWatching = compiler.watch({
   aggregateTimeout: 300,

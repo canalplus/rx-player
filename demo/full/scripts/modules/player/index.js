@@ -6,20 +6,23 @@
  * application.
  */
 
+import RxPlayer from "rx-player";
 import { linkPlayerEventsToState } from "./events.js";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import $handleCatchUpMode from "./catchUp";
+import VideoThumbnailLoader, {
+  DASH_LOADER
+} from "../../../../../src/experimental/tools/VideoThumbnailLoader";
 
-const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
-  const player = new window.RxPlayer({
-    limitVideoWidth: false,
-    stopAtEnd: false,
-    throttleVideoBitrateWhenHidden: true,
-    videoElement,
-  });
+VideoThumbnailLoader.addLoader(DASH_LOADER);
+
+const PLAYER = ({ $destroy, state }, initOpts) => {
+  const { textTrackElement } = initOpts;
+  const player = new RxPlayer(initOpts);
 
   // facilitate DEV mode
+  window.RxPlayer = RxPlayer;
   window.player = window.rxPlayer = player;
 
   // initial state. Written here to easily showcase it exhaustively
@@ -64,6 +67,19 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     videoTrackId: undefined,
     volume: player.getVolume(),
     wallClockDiff: undefined,
+    /**
+     * If `true`, the currently set video track has a linked "trickmode" track.
+     * @type {boolean}
+     */
+    videoTrackHasTrickMode: false,
+    /**
+     * Either `null` when no VideoThumbnailLoader is instanciated.
+     * Either an object containing two property:
+     *   - `videoThumbnailLoader`: The VideoThumbnailLoader instance
+     *   - `videoElement`: The video element on which thumbnails are displayed
+     * @type {Object|null}
+     */
+    videoThumbnailsData: null,
   });
 
   linkPlayerEventsToState(player, state, $destroy);
@@ -76,20 +92,41 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   // dispose of the RxPlayer when destroyed
   $destroy.subscribe(() => player.dispose());
 
+  function dettachVideoThumbnailLoader() {
+    const { videoThumbnailsData } = state.get();
+    if (videoThumbnailsData !== null) {
+      videoThumbnailsData.videoThumbnailLoader.dispose();
+      state.set({ videoThumbnailsData: null });
+    }
+  }
   return {
+    ATTACH_VIDEO_THUMBNAIL_LOADER: () => {
+      const prevVideoThumbnailsData = state.get().videoThumbnailsData;
+      if (prevVideoThumbnailsData !== null) {
+        prevVideoThumbnailsData.videoThumbnailLoader.dispose();
+      }
+
+      const thumbnailVideoElement = document.createElement("video");
+      const videoThumbnailLoader = new VideoThumbnailLoader(
+        thumbnailVideoElement,
+        player
+      );
+      state.set({
+        videoThumbnailsData: {
+          videoThumbnailLoader,
+          videoElement: thumbnailVideoElement,
+        },
+      });
+    },
+
     SET_VOLUME: (volume) => {
       player.setVolume(volume);
     },
 
     LOAD: (arg) => {
+      dettachVideoThumbnailLoader();
       player.loadVideo(Object.assign({
         textTrackElement,
-        networkConfig: {
-          segmentRetry: Infinity,
-          manifestRetry: Infinity,
-          offlineRetry: Infinity,
-        },
-        manualBitrateSwitchingMode: "direct",
         transportOptions: { checkMediaSegmentIntegrity: true },
       }, arg));
       state.set({
@@ -117,6 +154,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     },
 
     STOP: () => {
+      dettachVideoThumbnailLoader();
       player.stop();
     },
 

@@ -16,6 +16,15 @@
 
 import Player from "./public_api";
 export {
+  IStreamEvent,
+  IStreamEventData,
+} from "./public_api";
+export {
+  IClockMediaEventType,
+  IFreezingStatus,
+  IRebufferingStatus,
+} from "./clock";
+export {
   IConstructorOptions,
   ILoadVideoOptions,
 
@@ -28,7 +37,7 @@ export {
   IDefaultTextTrackOption,
   INetworkConfigOption,
   IStartAtOption,
-} from "./option_parsers";
+} from "./option_utils";
 export {
   ITMAudioTrackListItem,
   ITMTextTrackListItem,

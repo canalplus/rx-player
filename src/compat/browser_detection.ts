@@ -16,11 +16,20 @@
 
 import isNode from "./is_node";
 
+interface IIE11WindowObject extends Window {
+  MSInputMethodContext? : unknown;
+}
+
+interface IIE11Document extends Document {
+  documentMode? : unknown;
+}
+
 // true on IE11
 // false on Edge and other IEs/browsers.
-const isIE11 : boolean = !isNode &&
-                         !!(window as any).MSInputMethodContext &&
-                         !!(document as any).documentMode;
+const isIE11 : boolean =
+  !isNode &&
+  typeof (window as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
+  typeof (document as IIE11Document).documentMode !== "undefined";
 
 // true for IE / Edge
 const isIEOrEdge : boolean = isNode ?
@@ -29,21 +38,27 @@ const isIEOrEdge : boolean = isNode ?
   navigator.appName === "Netscape" &&
   /(Trident|Edge)\//.test(navigator.userAgent);
 
+const isEdgeChromium: boolean = !isNode &&
+                                navigator.userAgent.toLowerCase().indexOf("edg/") !== -1;
+
 const isFirefox : boolean = !isNode &&
                             navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
 
 const isSamsungBrowser : boolean = !isNode &&
                                    /SamsungBrowser/.test(navigator.userAgent);
 
+const isTizen : boolean = !isNode &&
+                          /Tizen/.test(navigator.userAgent);
+
+interface ISafariWindowObject extends Window {
+  safari? : { pushNotification? : { toString() : string } };
+}
+
 const isSafari : boolean =
   !isNode && (
-    /* tslint:disable ban */
     Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
-    /* tslint:enable ban */
-    /* tslint:disable no-unsafe-any */
-    (window as any).safari?.pushNotification.toString() ===
+    (window as ISafariWindowObject).safari?.pushNotification?.toString() ===
       "[object SafariRemoteNotification]"
-    /* tslint:enable no-unsafe-any */
   );
 
 const isSafariMobile : boolean = !isNode &&
@@ -51,10 +66,12 @@ const isSafariMobile : boolean = !isNode &&
                                  /iPad|iPhone|iPod/.test(navigator.platform);
 
 export {
+  isEdgeChromium,
   isIE11,
   isIEOrEdge,
   isFirefox,
   isSafari,
   isSafariMobile,
   isSamsungBrowser,
+  isTizen,
 };

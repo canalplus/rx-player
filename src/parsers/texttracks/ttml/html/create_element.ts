@@ -75,7 +75,10 @@ function applyTextStyle(
   // applies to span
   const textOutline = style.textOutline;
   if (isNonEmptyString(textOutline)) {
-    const outlineData = textOutline.trim().replace(/\s+/g, " ").split(" ");
+    const outlineData = textOutline
+      .trim()
+      .replace(/\s+/g, " ")
+      .split(" ");
     const len = outlineData.length;
     if (len === 3) {
       const outlineColor = ttmlColorToCSSColor(outlineData[0]);
@@ -222,6 +225,11 @@ function applyGeneralStyle(
   element : HTMLElement,
   style : Partial<Record<string, string>>
 ) {
+  // Set default text color. It can be overrided by text element color.
+  element.style.color = "white";
+
+  element.style.position = "absolute";
+
   // applies to tt, region
   const extent = style.extent;
   if (isNonEmptyString(extent)) {
@@ -253,9 +261,9 @@ function applyGeneralStyle(
 
   // applies to region
   const displayAlign = style.displayAlign;
-  element.style.display = "flex";
-  element.style.flexDirection = "column";
   if (isNonEmptyString(displayAlign)) {
+    element.style.display = "flex";
+    element.style.flexDirection = "column";
     switch (displayAlign) {
       case "before":
         element.style.justifyContent = "flex-start";
@@ -457,7 +465,7 @@ function generateTextContent(
  * @param {Array.<Object>} regions
  * @param {Array.<Object>} styles
  * @param {Object} paragraphStyle
- * @param {Boolean} shouldTrimWhiteSpaceOnParagraph
+ * @param {Object}
  * @returns {HTMLElement}
  */
 export default function createElement(

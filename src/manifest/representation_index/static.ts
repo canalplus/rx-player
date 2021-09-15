@@ -15,11 +15,12 @@
  */
 
 import log from "../../log";
-import IRepresentationIndex, {
+import {
+  IRepresentationIndex,
   ISegment,
 } from "./types";
 
-export interface IStaticRepresentationIndexInfos { media: string; }
+export interface IStaticRepresentationIndexInfos { media: string }
 
 /**
  * Simple RepresentationIndex implementation for static files.
@@ -53,10 +54,11 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return [{ id: "0",
               isInit: false,
               number: 0,
+              mediaURLs: [this._mediaURLs],
               time: 0,
+              end: Number.MAX_VALUE,
               duration: Number.MAX_VALUE,
-              timescale: 1,
-              mediaURLs: [this._mediaURLs] }];
+              timescale: 1 }];
   }
 
   /**
@@ -65,7 +67,6 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    */
   getFirstPosition() : undefined {
     return ;
-    /* tslint:enable return-undefined */
   }
 
   /**
@@ -85,10 +86,17 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @returns {Number}
+   * @returns {null}
    */
-  checkDiscontinuity() : -1 {
-    return -1;
+  checkDiscontinuity() : null {
+    return null;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  areSegmentsChronologicallyGenerated() : boolean {
+    return true;
   }
 
   /**
@@ -113,8 +121,11 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return true;
   }
 
-  _addSegments() : void {
-    log.warn("Tried add Segments to a static RepresentationIndex");
+  /**
+   * @returns {Boolean}
+   */
+  isInitialized() : true {
+    return true;
   }
 
   _replace() : void {

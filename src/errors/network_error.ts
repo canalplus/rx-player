@@ -21,14 +21,7 @@ import {
   NetworkErrorTypes,
 } from "./error_codes";
 import errorMessage from "./error_message";
-
-export interface INetworkErrorOptions {
-  xhr? : XMLHttpRequest; // possible linked XHR to the error
-  url : string; // URL the request was on
-  status : number; // HTTP code of the response. 0 if not known.
-  type : INetworkErrorType; // Type of the error
-  message : string; // Message to display to the user
-}
+import RequestError from "./request_error";
 
 /**
  * Error linked to network interactions (requests).
@@ -49,10 +42,10 @@ export default class NetworkError extends Error {
 
   /**
    * @param {string} code
-   * @param {Error} options
+   * @param {Error} baseError
    * @param {Boolean} fatal
    */
-  constructor(code : INetworkErrorCode, options : INetworkErrorOptions) {
+  constructor(code : INetworkErrorCode, baseError : RequestError) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, NetworkError.prototype);
@@ -60,13 +53,13 @@ export default class NetworkError extends Error {
     this.name = "NetworkError";
     this.type = ErrorTypes.NETWORK_ERROR;
 
-    this.xhr = options.xhr === undefined ? null : options.xhr;
-    this.url = options.url;
-    this.status = options.status;
-    this.errorType = options.type;
+    this.xhr = baseError.xhr === undefined ? null : baseError.xhr;
+    this.url = baseError.url;
+    this.status = baseError.status;
+    this.errorType = baseError.type;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, options.message);
+    this.message = errorMessage(this.name, this.code, baseError.message);
     this.fatal = false;
   }
 

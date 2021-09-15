@@ -14,23 +14,29 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { map } from "rxjs/operators";
 
-/* tslint:disable no-unsafe-any */
 describe("compat - setElementSrc", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
   it("should set element src and clear it when unsubscribe", (done) => {
-    const fakeMediaElement: any = {
+    const fakeMediaElement = {
       src: "",
       removeAttribute: () => null,
     };
 
     const mockLogInfo = jest.fn((message) => message);
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: {
         info: mockLogInfo,
       },
@@ -39,7 +45,7 @@ describe("compat - setElementSrc", () => {
       fakeMediaElement.src = "";
     });
     jest.mock("../clear_element_src", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: mockClearElementSrc,
     }));
     const fakeURL = "blob:http://fakeURL";
@@ -63,4 +69,3 @@ describe("compat - setElementSrc", () => {
     }, 200);
   });
 });
-/* tslint:enable no-unsafe-any */

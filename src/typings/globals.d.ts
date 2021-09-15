@@ -17,6 +17,8 @@
 // Webpack-defined globals
 // Should be all replaced once the lib built.
 
+/* eslint-disable @typescript-eslint/naming-convention */
+
 declare const __DEV__: boolean;
 declare const __LOGGER_LEVEL__: string;
 declare const __FEATURES__ : {
@@ -39,6 +41,7 @@ declare const __FEATURES__ : {
 declare const __RELATIVE_PATH__ : {
   BIF_PARSER: string;
   DASH: string;
+  DASH_JS_PARSER: string;
   DIRECTFILE: string;
   EME_MANAGER: string;
   HTML_SAMI: string;

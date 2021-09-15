@@ -21,16 +21,23 @@ import {
 import { subscribeOn } from "rxjs/operators";
 
 /**
- * At  subscription, instead of "running" the Observable right away, wait until
- * the current script has finished executing before actually running this
+ * At subscription, instead of "running" the Observable right away, wait until
+ * the current task has finished executing before actually running this
  * Observable.
  *
  * This can be important for example when you want in a given function to
  * exploit the same shared Observable which may send synchronous events directly
  * after subscription.
+ *
+ * Here, you might be left in a situation where the first element subscribing to
+ * that Observable will receive those synchronous events immediately on
+ * subscription. Further subscriptions on that Observable will miss out on those
+ * events - even if those subscriptions happen synchronously after the first
+ * one.
+ *
  * Calling `deferSubscriptions` in those cases will make sure that all such
- * subscriptions in the same function are registered before the Observable
- * start emitting events (as long as such Subscriptions are done synchronously).
+ * subscriptions can be registered before the Observable start emitting events
+ * (as long as such Subscriptions are done synchronously).
  *
  * @example
  * ```js

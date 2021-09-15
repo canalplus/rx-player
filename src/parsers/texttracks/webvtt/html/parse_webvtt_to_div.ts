@@ -20,7 +20,7 @@ import parseCueBlock from "../parse_cue_block";
 import { getFirstLineAfterHeader } from "../utils";
 import parseStyleBlocks from "./parse_style_block";
 import toHTML, {
-  IVTTHTMLCue
+  IVTTHTMLCue,
 } from "./to_html";
 
 /**
@@ -45,7 +45,7 @@ export default function parseWebVTT(
   const linified = text.split(newLineChar);
 
   const cuesArray : IVTTHTMLCue[] = [];
-  if (linified[0].match(/^WEBVTT( |\t|\n|\r|$)/) === null) {
+  if (/^WEBVTT( |\t|\n|\r|$)/.exec(linified[0]) === null) {
     throw new Error("Can't parse WebVTT: Invalid File.");
   }
 

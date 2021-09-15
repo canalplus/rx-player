@@ -14,21 +14,27 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+import dashJsParser from "../../../parsers/manifest/dash/js-parser";
 import DASHFeature from "../../../transports/dash";
 import addDASHFeature from "../dash";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../transports/dash", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - DASH", () => {
   it("should add DASH in the current features", () => {
-    const featureObject : any = { transports: {} };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const featureObject : any = { transports: {},
+                                  dashParsers: { js: null,
+                                                 wasm: null } };
     addDASHFeature(featureObject);
-    expect(featureObject).toEqual({ transports: { dash: DASHFeature } });
+    expect(featureObject).toEqual({ transports: { dash: DASHFeature },
+                                    dashParsers: { js: dashJsParser,
+                                                   wasm: null } });
     expect(featureObject.transports.dash).toBe(DASHFeature);
   });
 });
-/* tslint:enable no-unsafe-any */

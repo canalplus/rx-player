@@ -94,35 +94,38 @@ function probeMediaConfiguration(
               break;
           }
         }
-      }).catch((error: Error) =>
-        log.debug(error.message === undefined ? error : error.message)));
+      }).catch((error: unknown) => {
+        if (error instanceof Error) {
+          log.debug(error.message);
+        }
+      }));
     }
   }
 
   return PPromise.all(promises).then(() => {
-      if (globalStatus == null) {
-        globalStatus = ProberStatus.Unknown;
-      }
+    if (globalStatus == null) {
+      globalStatus = ProberStatus.Unknown;
+    }
 
-      const probedCapabilities =
-        getProbedConfiguration(config, resultsFromAPIS.map((a) => a.APIName));
-      const areUnprobedCapabilities =
-        JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
+    const probedCapabilities =
+      getProbedConfiguration(config, resultsFromAPIS.map((a) => a.APIName));
+    const areUnprobedCapabilities =
+      JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
 
-      if (areUnprobedCapabilities && globalStatus === ProberStatus.Supported) {
-        globalStatus = ProberStatus.Unknown;
-      }
+    if (areUnprobedCapabilities && globalStatus === ProberStatus.Supported) {
+      globalStatus = ProberStatus.Unknown;
+    }
 
-      if (areUnprobedCapabilities) {
-        log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities " +
-          "could not be probed, due to the incompatibility of browser APIs, or the " +
-          "lack of arguments to call them. See debug logs for more details.");
-      }
+    if (areUnprobedCapabilities) {
+      log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities " +
+        "could not be probed, due to the incompatibility of browser APIs, or the " +
+        "lack of arguments to call them. See debug logs for more details.");
+    }
 
-      log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
-        probedCapabilities);
+    log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
+             probedCapabilities);
 
-      return { globalStatus, resultsFromAPIS };
+    return { globalStatus, resultsFromAPIS };
   });
 }
 

@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import assertUnreachable from "../assert_unreachable";
 
 describe("utils - assert", () => {
@@ -21,18 +24,17 @@ describe("utils - assert", () => {
     let error;
     try {
       assertUnreachable(4 as never);
-    } catch (e) {
+    } catch (e : unknown) {
       error = e;
-      /* tslint:disable:no-unused-expression */
-      expect(e).toBeDefined();
-      /* tslint:enable:no-unused-expression */
     }
-    /* tslint:disable:no-unused-expression */
-    expect(error).toBeDefined();
-    /* tslint:enable:no-unused-expression */
-    /* tslint:disable no-unsafe-any */
+
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
     expect(error.message).toBe("Unreachable path taken");
     expect(error.name).toBe("AssertionError");
-    /* tslint:enable no-unsafe-any */
   });
 });

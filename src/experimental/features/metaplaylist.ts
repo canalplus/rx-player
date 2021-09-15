@@ -17,7 +17,7 @@
 import { IFeaturesObject } from "../../features/types";
 import metaplaylist from "../../transports/metaplaylist";
 
-function addMetaPlaylistFeature(features: IFeaturesObject) {
+function addMetaPlaylistFeature(features: IFeaturesObject) : void {
   features.transports.metaplaylist = metaplaylist;
 }
 

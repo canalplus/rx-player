@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import arrayFindIndex from "../../utils/array_find_index";
 
-/* tslint:disable no-unsafe-any */
 describe("compat - removeCue", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -45,12 +51,12 @@ describe("compat - removeCue", () => {
     };
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: false,
     }));
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, { id: "1" } as any);
+    removeCue(fakeTrack, { id: "1" });
 
     expect(fakeTrack.cues.length).toBe(0);
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
@@ -89,12 +95,12 @@ describe("compat - removeCue", () => {
     };
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, fakeCue as any);
+    removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(0);
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
@@ -133,12 +139,12 @@ describe("compat - removeCue", () => {
     };
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, fakeCue as any);
+    removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(0);
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
@@ -157,11 +163,11 @@ describe("compat - removeCue", () => {
     const mockLog = jest.fn((message) => message);
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: true,
     }));
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: {
         warn: mockLog,
       },
@@ -175,7 +181,7 @@ describe("compat - removeCue", () => {
     };
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, fakeCue as any);
+    removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(1);
     expect(fakeTrack.mode).toBe("showing");
@@ -192,11 +198,11 @@ describe("compat - removeCue", () => {
     });
 
     jest.mock("../browser_detection", () => ({
-      __esModule: true,
+      __esModule: true as const,
       isFirefox: false,
     }));
     jest.mock("../../log", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: {
         warn: mockLog,
       },
@@ -211,7 +217,7 @@ describe("compat - removeCue", () => {
     };
 
     const removeCue = require("../remove_cue").default;
-    removeCue(fakeTrack as any, { id: "1" } as any);
+    removeCue(fakeTrack, { id: "1" });
 
     expect(fakeTrack.cues.length).toBe(1);
     expect(fakeTrack.mode).toBe("showing");
@@ -221,4 +227,3 @@ describe("compat - removeCue", () => {
     expect(mockRemoveCue).toHaveBeenLastCalledWith({ id: "1" });
   });
 });
-/* tslint:enable no-unsafe-any */

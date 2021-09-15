@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Observer,
-} from "rxjs";
+import { IInbandEvent } from "../core/stream";
 import Manifest, {
   Adaptation,
+  IExposedAdaptation,
+  IExposedManifest,
+  IExposedPeriod,
+  IExposedRepresentation,
+  IExposedSegment,
   IRepresentationFilter,
   ISegment,
   ISupplementaryImageTrack,
@@ -30,143 +32,263 @@ import Manifest, {
 import { IBifThumbnail } from "../parsers/images/bif";
 import { ILocalManifest } from "../parsers/manifest/local";
 import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../utils/task_canceller";
 
-// Contains timings information on a single segment.
-// Those variables expose the best guess we have on the effective duration and
-// starting time that the corresponding segment should have at decoding time.
-export interface IChunkTimingInfos {
-  duration? : number; // duration of the segment in the corresponding timescale
-                      // (see timescale).
-                      // 0 for init segments
-  time : number; // effective start time of the segment at decoding time in the
-                 // corresponding timescale (see timescale).
-                 // -1 for init segments
-  timescale : number; // time unit for seconds conversion.
-                      // e.g.:
-                      //   timeInSeconds = time / timescale
-                      //   durationInSeconds = duration / timescale
+/**
+ * Interface returned by any transport implementation.
+ * @param {Object} options - Options allowing to configure the transport's
+ * behavior.
+ * @returns {Object} - The "transport pipelines". Those are all APIs for this
+ * transport implementation.
+ */
+export type ITransportFunction = (options : ITransportOptions) =>
+  ITransportPipelines;
+
+/**
+ * Every API implemented for a transport implementation, allowing to load and
+ * parse the Manifest or any segment.
+ */
+export interface ITransportPipelines {
+  /** Functions allowing to load an parse the Manifest for this transport. */
+  manifest : ITransportManifestPipeline;
+  /** Functions allowing to load an parse audio segments. */
+  audio : ISegmentPipeline<ILoadedAudioVideoSegmentFormat,
+                           Uint8Array | ArrayBuffer | null>;
+  /** Functions allowing to load an parse video segments. */
+  video : ISegmentPipeline<ILoadedAudioVideoSegmentFormat,
+                           Uint8Array | ArrayBuffer | null>;
+  /** Functions allowing to load an parse text (e.g. subtitles) segments. */
+  text : ISegmentPipeline<ILoadedTextSegmentFormat,
+                          ITextTrackSegmentData | null>;
+  /** Functions allowing to load an parse image (e.g. thumbnails) segments. */
+  image : ISegmentPipeline<ILoadedImageSegmentFormat,
+                           IImageTrackSegmentData | null>;
 }
 
-export interface ISegmentProtection { type : string;
-                                      data : Uint8Array; }
+/** Functions allowing to load and parse the Manifest. */
+export interface ITransportManifestPipeline {
+  /**
+   * "Loader" of the Manifest pipeline, allowing to request a Manifest so it can
+   * later be parsed by the `parseManifest` function.
+   *
+   * @param {string|undefined} url - URL of the Manifest we want to load.
+   * `undefined` if the Manifest doesn't have an URL linked to it, in which case
+   * the Manifest should be loaded through another mean.
+   * @param {CancellationSignal} cancellationSignal - Signal which will allow to
+   * cancel the loading operation if the Manifest is not needed anymore (for
+   * example, if the content has just been stopped).
+   * When cancelled, the promise returned by this function will reject with a
+   * `CancellationError`.
+   * @returns {Promise.<Object>} - Promise emitting the loaded Manifest, that
+   * then can be parsed through the `parseManifest` function.
+   *
+   * Rejects in two cases:
+   *   - The loading operation has been cancelled through the `cancelSignal`
+   *     given in argument.
+   *     In that case, this Promise will reject with a `CancellationError`.
+   *   - The loading operation failed, most likely due to a request error.
+   *     In that case, this Promise will reject with the corresponding Error.
+   */
+  loadManifest : (
+    url : string | undefined,
+    cancelSignal : CancellationSignal,
+  ) => Promise<IRequestedData<ILoadedManifestFormat>>;
 
-// Contains timing information on new segments indicated in the metadata of
-// a previous segment
-export interface INextSegmentsInfos {
-  duration : number; // duration of the segment, in the corresponding timescale
-  time : number; // start time of the segment, in the corresponding timescale
-  timescale : number; // convert duration and time into seconds
+  /**
+   * "Parser" of the Manifest pipeline, allowing to parse a loaded Manifest so
+   * it can be exploited by the rest of the RxPlayer's logic.
+   *
+   * @param {Object} manifestData - Response obtained from the `loadManifest`
+   * function.
+   * @param {Object} parserOptions - Various options relative to the parsing
+   * operation.
+   * @param {Function} onWarnings - Callbacks called:
+   *   - when minor Manifest parsing errors are found
+   *   - when `scheduleRequest` rejects on requests this function can do
+   *     without.
+   * @param {CancellationSignal} cancelSignal - Cancellation signal which will
+   * allow to abort the parsing operation if you do not want the Manifest
+   * anymore.
+   *
+   * That cancellationSignal can be triggered at any time, such as:
+   *   - after a warning is received
+   *   - while a request scheduled through the `scheduleRequest` argument is
+   *     pending.
+   *
+   * `parseManifest` will interrupt all operations if the signal has been
+   * triggered in one of those scenarios, and will automatically reject with
+   * the corresponding `CancellationError` instance.
+   * @param {Function} scheduleRequest - Allows `parseManifest` to schedule
+   * network requests, for example to fetch sub-parts of the Manifest or
+   * supplementary resources we can only know of at Manifest parsing time.
+   *
+   * All requests scheduled through `scheduleRequest` should abort (and the
+   * corresponding Promise reject a `CancellationError`) when/if `cancelSignal`
+   * is triggered.
+   *
+   * If a request scheduled through `scheduleRequest` rejects with an error:
+   *   - either the error was due to a cancellation, in which case
+   *     `parseManifest` should reject the same error immediately.
+   *   - either the requested resource was mandatory to parse the Manifest
+   *     in which case `parseManifest` will reject with the same error.
+   *   - either the parser can make up for that error, in which case it will
+   *     just be emitted as a warning and `parseManifest` will continue its
+   *     operations.
+   * @returns {Object | Promise.<Object>} - Returns directly the Manifest data
+   * if the parsing can be performed synchronously or through a Promise if it
+   * needs to perform network requests first through the `scheduleRequest`
+   * function.
+   *
+   * Throws if an error happens synchronously and rejects if it happens
+   * asynchronously.
+   *
+   * If this error is due to a failed request performed through the
+   * `scheduleRequest` argument, then the rejected error should be the same one
+   * than the one rejected by `scheduleRequest`.
+   *
+   * If this error is due to a cancellation instead (indicated through the
+   * `cancelSignal` argument), then the rejected error should be the
+   * `CancellationError` instance instead.
+   */
+  parseManifest : (
+    manifestData : IRequestedData<unknown>,
+    parserOptions : IManifestParserOptions,
+    onWarnings : (warnings : Error[]) => void,
+    cancelSignal : CancellationSignal,
+    scheduleRequest : IManifestParserRequestScheduler
+  ) => IManifestParserResult |
+       Promise<IManifestParserResult>;
+
+  /**
+   * @deprecated
+   * "Resolves the Manifest's URL, to obtain its true URL.
+   * This is a deprecated function which corresponds to an old use case at
+   * Canal+ where the URL of the Manifest first need to be parsed from a .wsx
+   * file.
+   * Thankfully this API should not be used anymore, though to not break
+   * compatibility, we have to keep it until a v4.x.x release.
+   *
+   * @param {string | undefined} url - URL used to obtain the real URL of the
+   * Manifest.
+   * @param {CancellationSignal} cancelSignal - Cancellation signal which will
+   * allow to abort the resolving operation if you do not want the Manifest
+   * anymore.
+   * When cancelled, the promise returned by this function will reject with a
+   * `CancellationError`.
+   * @returns {Promise.<string|undefined>} - Promise emitting the "real" URL of
+   * the Manifest, that should be loaded by the `loadManifest` function.
+   * `undefined` if the URL is either unknown or inexistant.
+   *
+   * Rejects in two cases:
+   *
+   *   1. The resolving operation has been aborted through the `cancelSignal`
+   *      given in argument.
+   *      In that case, this Promise will reject a `CancellationError`.
+   *
+   *   2. The resolving operation failed, most likely due to a request error.
+   *      In that case, this Promise will reject the corresponding Error.
+   */
+  resolveManifestUrl? : (
+    url : string | undefined,
+    cancelSignal : CancellationSignal,
+  ) => Promise<string | undefined>;
 }
 
-// ---- LOADER ----
-
-// -- arguments
-
-// Arguments for the loader of the manifest pipeline
-export interface IManifestLoaderArguments {
-  url? : string; // URL of the concerned manifest
+/** Functions allowing to load and parse segments of any type. */
+export interface ISegmentPipeline<
+  TLoadedFormat,
+  TParsedSegmentDataFormat,
+> {
+  loadSegment : ISegmentLoader<TLoadedFormat>;
+  parseSegment : ISegmentParser<TLoadedFormat,
+                                TParsedSegmentDataFormat>;
 }
 
-// Argument for the loader of the segment pipelines
-export interface ISegmentLoaderArguments {
-  manifest : Manifest; // Manifest related to this segment
-  period : Period; // Period related to this segment
-  adaptation : Adaptation; // Adaptation related to this segment
-  representation : Representation; // Representation related to this segment
-  segment : ISegment; // Segment we want to load
-  url : string | null; // URL at which the segment should be downloaded
-}
+/**
+ * Segment loader function, allowing to load a segment of any type.
+ * @param {stop|null} url - URL at which the segment should be downloaded.
+ * `null` if we do not have an URL (in which case the segment should be loaded
+ * through other means, such as information taken from the segment's content).
+ * @param {Object} content - Content linked to the wanted segment.
+ * @param {CancellationSignal} cancelSignal - Cancellation signal which will
+ * allow to cancel the loading operation if the segment is not needed anymore.
+ *
+ * When cancelled, this loader should stop any pending operation (such as an
+ * HTTP request) and the Promise returned should reject immediately with a
+ * `CancellationError`, generated through this CancellationSignal object.
+ * @param {Object} callbacks - Callbacks called on various loader events.
+ * @returns {Promise.<Object>} - Promise resolving when it has finished loading
+ * the segment.
+ */
+export type ISegmentLoader<TLoadedFormat> = (
+  url : string | null,
+  content : ISegmentContext,
+  cancelSignal : CancellationSignal,
+  callbacks : ISegmentLoaderCallbacks<TLoadedFormat>
+) => Promise<ISegmentLoaderResultSegmentCreated<TLoadedFormat> |
+             ISegmentLoaderResultSegmentLoaded<TLoadedFormat> |
+             ISegmentLoaderResultChunkedComplete>;
 
-// -- response
+/**
+ * Segment parser function, allowing to parse a segment of any type.
+ *
+ * This function will throw if it encounters any error it cannot recover from.
+ */
+export type ISegmentParser<
+  TLoadedFormat,
+  TParsedSegmentDataFormat
+> = (
+  /** Attributes of the corresponding loader's response. */
+  loadedSegment : {
+    /** The loaded segment data. */
+    data : TLoadedFormat;
+    /**
+     * If `true`,`data` is only a "chunk" of the whole segment (which potentially
+     * will contain multiple chunks).
+     * If `false`, `data` is the data for the whole segment.
+     */
+    isChunked : boolean;
+  },
+  /** Context about the wanted segment. */
+  content : ISegmentContext,
+  /**
+   * "Timescale" obtained from parsing the wanted representation's initialization
+   * segment.
+   *
+   * `undefined` if either no such `timescale` has been parsed yet or if this
+   * value doesn't exist for the wanted segment.
+   *
+   * This value can be useful when parsing the loaded segment's data.
+   */
+  initTimescale : number | undefined
+) =>
+  /**
+   * The parsed data.
+   *
+   * Can be of two types:
+   *   - `ISegmentParserParsedInitSegment`: When the parsed segment was an
+   *     initialization segment.
+   *     Such segments only serve to initialize the decoder and do not contain
+   *     any decodable media data.
+   *   - `ISegmentParserParsedSegment`: When the parsed segment was a media
+   *     segment.
+   *     Such segments generally contain decodable media data.
+   */
+  ISegmentParserParsedInitSegment<TParsedSegmentDataFormat> |
+  ISegmentParserParsedSegment<TParsedSegmentDataFormat>;
 
-// Value of a "data-loaded" event
-export interface ILoaderDataLoadedValue<T> {
-  responseData : T; // The response for the request
-  duration? : number; // time in seconds it took to load this content
-  size? : number; // size in bytes of this content
-  url? : string; // real URL (post-redirection) used to download this content
-  sendingTime? : number; // time at which the request was sent (since the time
-                         // origin), in ms
-  receivedTime? : number; // time at which the request was received (since the
-                          // time origin), in ms
-}
-
-// Event emitted by a loader with the response after a request completed
-export interface ILoaderDataLoaded<T> { type : "data-loaded";
-                                        value : ILoaderDataLoadedValue<T>; }
-
-// Event emitted by a loader with the response when it did not perform any request
-export interface ILoaderDataCreated<T> { type : "data-created";
-                                         value : { responseData : T }; }
-
-// Event emitted by loaders on xhr progress events
-export interface ILoaderProgress { type : "progress";
-                                   value : { duration : number;
-                                             size : number;
-                                             totalSize? : number; }; }
-
-// Event emitted by loaders when a chunk of the response is available
-export interface ILoaderChunkedData { type : "data-chunk";
-                                      value : {
-                                        responseData: ArrayBuffer|Uint8Array;
-                                      }; }
-
-// Event emitted by loaders when all data has been emitted through chunks
-export interface ILoaderChunkedDataComplete { type : "data-chunk-complete";
-                                              value : { duration : number;
-                                                        receivedTime : number;
-                                                        sendingTime : number;
-                                                        size : number;
-                                                        status : number;
-                                                        url : string; }; }
-
-// Events sent by loaders
-export type ILoaderChunkedDataEvent = ILoaderChunkedData |
-                                      ILoaderProgress |
-                                      ILoaderChunkedDataComplete;
-
-export type ILoaderRegularDataEvent<T> = ILoaderProgress |
-                                         ILoaderDataLoaded<T> |
-                                         ILoaderDataCreated<T>;
-
-export type ILoadedManifest = Document |
-                              string |
-                              IMetaPlaylist |
-                              ILocalManifest;
-export type IManifestLoaderEvent = ILoaderDataLoaded<ILoadedManifest>;
-export type IManifestLoaderObservable = Observable<IManifestLoaderEvent>;
-export type IManifestLoaderObserver = Observer<IManifestLoaderEvent>;
-
-export type ISegmentLoaderEvent<T> = ILoaderChunkedDataEvent |
-                                     ILoaderRegularDataEvent<T>;
-
-export type ISegmentLoaderObservable<T> = Observable<ILoaderChunkedDataEvent |
-                                                     ILoaderRegularDataEvent<T>>;
-
-// ---- PARSER ----
-
-// -- arguments
-
-/** Arguments given to the `parser` function of the Manifest pipeline. */
-export interface IManifestParserArguments {
-  /** Response obtained from the loader. */
-  response : ILoaderDataLoadedValue<unknown>;
-  /** URL originally requested. */
-  url? : string;
+export interface IManifestParserOptions {
   /**
    * If set, offset to add to `performance.now()` to obtain the current
    * server's time.
    */
-  externalClockOffset? : number;
+  externalClockOffset : number | undefined;
+  /** Original URL used for the full version of the Manifest. */
+  originalUrl : string | undefined;
   /** The previous value of the Manifest (when updating). */
   previousManifest : Manifest | null;
-  /**
-   * Allow the parser to ask for loading supplementary ressources while still
-   * profiting from the same retries and error management than the loader.
-   */
-  scheduleRequest : (request : () =>
-    Observable< ILoaderDataLoadedValue< Document | string > >) =>
-    Observable< ILoaderDataLoadedValue< Document | string > >;
   /**
    * If set to `true`, the Manifest parser can perform advanced optimizations
    * to speed-up the parsing process. Those optimizations might lead to a
@@ -177,102 +299,127 @@ export interface IManifestParserArguments {
   unsafeMode : boolean;
 }
 
-export interface ISegmentParserArguments<T> {
-  response : { data: T; // Segment's data
-               isChunked : boolean; }; // If true, the given response corresponds
-                                       // to a chunk of the whole data.
-                                       // If false, the response is the whole
-                                       // segment.
-  initTimescale? : number; // timescale taken from the init segment which might
-                           // be useful for the following regular segments.
-  content : {
-    manifest : Manifest; // Manifest related to this segment
-    period : Period; // Period related to this segment
-    adaptation : Adaptation; // Adaptation related to this segment
-    representation : Representation; // Representation related to this segment
-    segment : ISegment; // The segment we want to parse
-  };
+export interface IManifestParserCallbacks {
+  onWarning : (warning : Error) => void;
+
+  /**
+   * @param {Function} performRequest - Function performing the request
+   * @param {TaskCanceller} canceller - Interface allowing to cancel the request
+   * performed by the `performRequest` argument.
+   * @returns {Promise.<Object>}
+   */
+  scheduleRequest : (
+    performRequest : () => Promise< IRequestedData< Document | string > >,
+    canceller : TaskCanceller
+  ) =>  Promise< IRequestedData< Document | string > >;
 }
 
-// -- response
+/**
+ * Function allowing a Manifest parser to perform a request needed for the
+ * parsing of the Manifest.
+ *
+ * @param {Function} performRequest - Function performing the wanted request.
+ * Note that this function might be called multiple times depending on the error
+ * obtained at the last call.
+ *
+ * Should resolve with the requested data on success.
+ *
+ * Rejects in two cases:
+ *   - The request has been cancelled through the `canceller` given.
+ *     In that case, this Promise will reject with a `CancellationError`.
+ *
+ *   - The request failed.
+ *     In that case, this Promise will reject with the corresponding Error.
+ *
+ * @param {TaskCanceller} canceller - Interface allowing to cancel the request
+ * performed by the `performRequest` argument.
+ *
+ * When triggered, the request should be aborted and the Promise returned by
+ * `performRequest` should reject the corresponding `CancellationError`.
+ *
+ * The Promise returned by that function should in consequence also reject the
+ * same `CancellationError`.
+ *
+ * @returns {Promise.<Object>} - Promise resolving with the requested data on
+ * success.
+ *
+ * Rejects in two cases:
+ *   - The request has been cancelled through the `canceller` given.
+ *     In that case, this Promise will reject with a `CancellationError`.
+ *
+ *   - All the attempts to perform the request failed.
+ *     In that case, this Promise will reject with the Error corresponding to
+ *     the last performed request.
+ */
+export type IManifestParserRequestScheduler =
+  (
+    performRequest : () => Promise< IRequestedData< ILoadedManifestFormat > >
+  ) =>  Promise< IRequestedData< ILoadedManifestFormat > >;
 
-// Response object returned by the Manifest's parser
-export interface IManifestParserResponse {
-  manifest : Manifest; // the manifest itself
-  url? : string; // final URL of the manifest
+// Either the Manifest can be parsed directly, in which case a
+// IManifestParserResult is returned, either the Manifest parser needs to
+// perform supplementary requests first
+
+/** Event emitted when a Manifest has been parsed by a Manifest parser. */
+export interface IManifestParserResult {
+  /** The parsed Manifest Object itself. */
+  manifest : Manifest;
+  /**
+   * "Real" URL (post-redirection) at which the Manifest can be refreshed.
+   *
+   * Note that this doesn't always apply e.g. some Manifest might need multiple
+   * URLs to be fetched, some other might need to fetch no URL.
+   * This property should only be set when a unique URL is sufficient to
+   * retrieve the whole data.
+   */
+  url? : string;
 }
 
-export type IManifestParserObservable = Observable<IManifestParserResponse>;
-
-// Format of a parsed initialization segment
-export interface ISegmentParserParsedInitSegment<T> {
-  initializationData : T | null; // Data to push to initialize the decoder
-  initTimescale? : number; // timescale taken from the init segment which might
-                           // be useful for the following regular segments.
-  segmentProtections : ISegmentProtection[]; // Information about the
-                                             // protection put in place
-                                            // for the segments in this
-                                            // Representation
-                                            // Empty if not encrypted.
+/**
+ * Allow the parser to ask for loading supplementary ressources while still
+ * profiting from the same retries and error management than the loader.
+ */
+export interface IManifestParserRequestNeeded {
+  resultType : "request-needed";
+  performRequest : IManifestParserRequest;
 }
 
-// Format of a parsed regular (non-initialization) segment
-export interface ISegmentParserParsedSegment<T> {
-  chunkData : T | null; // Data to decode
-  chunkInfos : IChunkTimingInfos | null; // Timing infos about the segment
-  chunkOffset : number; // time offset, in seconds, to add to the absolute
-                        // timed data defined in `chunkData` to obtain the
-                        // "real" wanted effective time.
-                        //
-                        // For example:
-                        //   If `chunkData` anounce that the segment begins at
-                        //   32 seconds, and `chunkOffset` equals to `4`, then
-                        //   the segment should really begin at 36 seconds
-                        //   (32 + 4).
-                        //
-                        // Note that `chunkInfos` needs not to be offseted as
-                        // it should already contain the correct time
-                        // information.
-  appendWindow : [ number | undefined, // start window for the segment
-                                       // (part of the segment before that time
-                                       // will be ignored)
-                   number | undefined ]; // end window for the segment
-                                         // (part of the segment after that time
-                                         // will be ignored)
+/**
+ * Time information for a single segment.
+ * Those variables expose the best guess we have on the effective duration and
+ * starting time that the corresponding segment should have at decoding time.
+ */
+export interface IChunkTimeInfo {
+  /**
+   * Difference between the latest and the earliest presentation time
+   * available in that segment, in seconds.
+   *
+   * Either `undefined` or set to `0` for an initialization segment.
+   */
+  duration : number | undefined;
+  /** Earliest presentation time available in that segment, in seconds. */
+  time : number;
 }
 
-// What a segment parser returns when parsing an init segment
-export interface ISegmentParserInitSegment<T> {
-  type : "parsed-init-segment";
-  value : ISegmentParserParsedInitSegment<T>;
-}
-
-// What a segment parser returns when parsing a regular (non-init) segment
-export interface ISegmentParserSegment<T> {
-  type : "parsed-segment";
-  value : ISegmentParserParsedSegment<T>;
-}
-
-// generic segment parser response
-export type ISegmentParserResponse<T> =
-  ISegmentParserInitSegment<T> |
-  ISegmentParserSegment<T>;
-
-// format under which audio / video data / initialization data is decodable
-export type IAudioVideoTrackSegmentData = Uint8Array |
-                                          ArrayBuffer;
-
-// format under which text data is decodable
+/** Text track segment data, once parsed. */
 export interface ITextTrackSegmentData {
-  data : string; // text track data
-  type : string; // the type of `data` (examples: "ttml", "srt" or "vtt")
-  language? : string; // language in which the text track is, as a language code
-  start? : number; // start time from which the segment apply, timescaled
-  end? : number; // end time until which the segment apply, timescaled
-  timescale : number; // timescale to convert `start` and `end` into seconds
+  /** The text track data, in the format indicated in `type`. */
+  data : string;
+  /** The format of `data` (examples: "ttml", "srt" or "vtt") */
+  type : string;
+  /**
+   * Language in which the text track is, as a language code.
+   * This is mostly needed for "sami" subtitles, to know which cues can / should
+   * be parsed.
+   */
+  language? : string;
+  /** start time from which the segment apply, in seconds. */
+  start? : number;
+  /** end time until which the segment apply, in seconds. */
+  end? : number;
 }
 
-// format under which image data is decodable
+/** Format under which image data is decodable by the RxPlayer. */
 export interface IImageTrackSegmentData {
   data : IBifThumbnail[]; // image track data, in the given type
   end : number; // end time time until which the segment apply
@@ -281,105 +428,48 @@ export interface IImageTrackSegmentData {
   type : string; // the type of the data (example: "bif")
 }
 
-// Response from an audio / video segment parser when parsing an init segment
-export type IAudioVideoParserInitSegmentResponse =
-  ISegmentParserInitSegment< IAudioVideoTrackSegmentData >;
-
-// Response from an audio / video segment parser when parsing a regular segment
-export type IAudioVideoParserSegmentResponse =
-  ISegmentParserSegment< IAudioVideoTrackSegmentData >;
-
-// Response object returned by the audio's / video's segment parser
-export type IAudioVideoParserResponse = IAudioVideoParserInitSegmentResponse |
-                                        IAudioVideoParserSegmentResponse;
-
-// Response from a text segment parser when parsing an init segment
-export type ITextParserInitSegmentResponse = ISegmentParserInitSegment< null >;
-
-// Response from a text segment parser when parsing a regular segment
-export type ITextParserSegmentResponse =
-  ISegmentParserSegment< ITextTrackSegmentData >;
-
-// Response object returned by the text's segment parser
-export type ITextParserResponse = ITextParserInitSegmentResponse |
-                                  ITextParserSegmentResponse;
-
-// Response from a image segment parser when parsing an init segment
-export type IImageParserInitSegmentResponse = ISegmentParserInitSegment< null >;
-
-// Response from a image segment parser when parsing a regular segment
-export type IImageParserSegmentResponse =
-  ISegmentParserSegment< IImageTrackSegmentData >;
-
-// Response object returned by the image's segment parser
-export type IImageParserResponse = IImageParserInitSegmentResponse |
-                                   IImageParserSegmentResponse;
-
-export type IAudioVideoParserObservable = Observable<IAudioVideoParserResponse>;
-export type ITextParserObservable = Observable<ITextParserResponse>;
-export type IImageParserObservable = Observable<IImageParserResponse>;
-
-// TODO Remove resolver
-export type IManifestResolverFunction =
-  (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
-
-export type IManifestLoaderFunction =
-  (x : IManifestLoaderArguments) => IManifestLoaderObservable;
-
-export type IManifestParserFunction =
-  (x : IManifestParserArguments) => IManifestParserObservable;
-
-// TODO Remove resolver
-export interface ITransportManifestPipeline { resolver? : IManifestResolverFunction;
-                                              loader : IManifestLoaderFunction;
-                                              parser : IManifestParserFunction; }
-
-export type ITransportAudioVideoSegmentLoader =
-  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                             ArrayBuffer |
-                                                             null >;
-export type ITransportAudioVideoSegmentParser =
-  (x : ISegmentParserArguments< Uint8Array |
-                                ArrayBuffer |
-                                null >) => IAudioVideoParserObservable;
+export type IManifestParserRequest1 = (
+  (
+    /**
+     * Cancellation signal which will allow to cancel the request if the
+     * Manifest is not needed anymore.
+     *
+     * When cancelled, this parser should stop any pending operation (such as an
+     * HTTP request) and the Promise returned should reject immediately after with
+     * a `CancellationError`.
+     */
+    cancelSignal : CancellationSignal,
+  ) => Promise< IRequestedData< Document | string > >
+);
+export type IManifestParserRequest = (
+  /**
+   * Cancellation signal which will allow to cancel the request if the
+   * Manifest is not needed anymore.
+   *
+   * When cancelled, this parser should stop any pending operation (such as an
+   * HTTP request) and the Promise returned should reject immediately after with
+   * a `CancellationError`.
+   */
+  cancelSignal : CancellationSignal,
+) => Promise< IManifestParserResult |
+              IManifestParserRequestNeeded >;
 
 export interface ITransportAudioVideoSegmentPipeline {
-  loader : ITransportAudioVideoSegmentLoader;
-  parser : ITransportAudioVideoSegmentParser;
+  loadSegment : ISegmentLoader<ILoadedAudioVideoSegmentFormat>;
+  parseSegment : ISegmentParser<ILoadedAudioVideoSegmentFormat,
+                                Uint8Array | ArrayBuffer | null>;
 }
-
-// Note: The segment's data can be null for init segments
-export type ITransportTextSegmentLoader =
-  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                             ArrayBuffer |
-                                                             string |
-                                                             null >;
-
-export type ITransportTextSegmentParser =
-  (x : ISegmentParserArguments< Uint8Array |
-                                ArrayBuffer |
-                                string |
-                                null >) => ITextParserObservable;
 
 export interface ITransportTextSegmentPipeline {
-  loader : ITransportTextSegmentLoader;
-  parser : ITransportTextSegmentParser;
+  loadSegment : ISegmentLoader<ILoadedTextSegmentFormat>;
+  parseSegment : ISegmentParser<ILoadedTextSegmentFormat,
+                                ITextTrackSegmentData | null>;
 }
 
-export type ITransportImageSegmentLoader =
-  // Note: The segment's data can be null for init segments
-  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                             ArrayBuffer |
-                                                             null >;
-
-export type ITransportImageSegmentParser =
-  (x : ISegmentParserArguments< Uint8Array |
-                                ArrayBuffer |
-                                null >) => IImageParserObservable;
-
 export interface ITransportImageSegmentPipeline {
-  loader : ITransportImageSegmentLoader;
-  parser : ITransportImageSegmentParser;
+  loadSegment : ISegmentLoader<ILoadedImageSegmentFormat>;
+  parseSegment : ISegmentParser<ILoadedImageSegmentFormat,
+                                IImageTrackSegmentData | null>;
 }
 
 export type ITransportSegmentPipeline = ITransportAudioVideoSegmentPipeline |
@@ -389,12 +479,6 @@ export type ITransportSegmentPipeline = ITransportAudioVideoSegmentPipeline |
 export type ITransportPipeline = ITransportManifestPipeline |
                                  ITransportSegmentPipeline;
 
-export interface ITransportPipelines { manifest : ITransportManifestPipeline;
-                                       audio : ITransportAudioVideoSegmentPipeline;
-                                       video : ITransportAudioVideoSegmentPipeline;
-                                       text : ITransportTextSegmentPipeline;
-                                       image : ITransportImageSegmentPipeline; }
-
 interface IServerSyncInfos { serverTimestamp : number;
                              clientTime : number; }
 
@@ -402,53 +486,48 @@ export interface ITransportOptions {
   aggressiveMode? : boolean;
   checkMediaSegmentIntegrity? : boolean;
   lowLatencyMode : boolean;
-  manifestLoader?: CustomManifestLoader;
+  manifestLoader?: ICustomManifestLoader;
+  manifestUpdateUrl? : string;
   referenceDateTime? : number;
   representationFilter? : IRepresentationFilter;
-  segmentLoader? : CustomSegmentLoader;
+  segmentLoader? : ICustomSegmentLoader;
   serverSyncInfos? : IServerSyncInfos;
-  /* tslint:disable deprecation */
+  /* eslint-disable import/no-deprecated */
   supplementaryImageTracks? : ISupplementaryImageTrack[];
   supplementaryTextTracks? : ISupplementaryTextTrack[];
-  /* tslint:enable deprecation */
+  /* eslint-enable import/no-deprecated */
+
+  __priv_patchLastSegmentInSidx? : boolean;
 }
 
-export type ITransportFunction = (options : ITransportOptions) =>
-                                   ITransportPipelines;
-
-export type CustomSegmentLoader = (
+export type ICustomSegmentLoader = (
   // first argument: infos on the segment
-  args : { adaptation : Adaptation;
-           representation : Representation;
-           segment : ISegment;
-           transport : string;
-           url : string;
-           manifest : Manifest; },
+  infos : { url : string;
+            manifest : IExposedManifest;
+            period : IExposedPeriod;
+            adaptation : IExposedAdaptation;
+            representation : IExposedRepresentation;
+            segment : IExposedSegment; },
 
   // second argument: callbacks
-  callbacks : { resolve : (args : { data : ArrayBuffer | Uint8Array;
-                                    sendingTime? : number;
-                                    receivingTime? : number;
-                                    size? : number;
-                                    duration? : number; })
-                          => void;
+  callbacks : { resolve : (rArgs : { data : ArrayBuffer | Uint8Array;
+                                     sendingTime? : number | undefined;
+                                     receivingTime? : number | undefined;
+                                     size? : number | undefined;
+                                     duration? : number | undefined; }) => void;
 
-                progress : (args : { duration : number;
-                                     size : number;
-                                     totalSize? : number; })
-                           => void;
-                reject : (err? : Error) => void;
-                fallback? : () => void; }
+                 reject : (err? : unknown) => void;
+                 fallback? : (() => void) | undefined; }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
 
-export type CustomManifestLoader = (
+export type ICustomManifestLoader = (
   // first argument: url of the manifest
   url : string | undefined,
 
   // second argument: callbacks
-  callbacks : { resolve : (args : { data : ILoadedManifest;
+  callbacks : { resolve : (args : { data : ILoadedManifestFormat;
                                     sendingTime? : number;
                                     receivingTime? : number;
                                     size? : number;
@@ -460,3 +539,257 @@ export type CustomManifestLoader = (
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
+
+export interface ISegmentContext {
+  /** Manifest object related to this segment. */
+  manifest : Manifest;
+  /** Period object related to this segment. */
+  period : Period;
+  /** Adaptation object related to this segment. */
+  adaptation : Adaptation;
+  /** Representation Object related to this segment. */
+  representation : Representation;
+  /** Segment we want to load. */
+  segment : ISegment;
+}
+
+export interface ISegmentLoaderCallbacks<T> {
+  /**
+   * Callback called when new progress information on a segment request is
+   * available.
+   * The information emitted though this callback can be used to gather
+   * metrics on a current, un-terminated, request.
+   */
+  onProgress : (info : ISegmentLoadingProgressInformation) => void;
+  /**
+   * Callback called when a decodable sub-part of the segment is available.
+   *
+   * Note that this callback is only called if the loader decides to load the
+   * wanted segment in a "chunk" mode, that is, when the segment is loaded
+   * decodable chunk by decodable chunk, each being a subpart of this same
+   * segment.
+   *
+   * In that case, this callback might be called multiple times for subsequent
+   * decodable chunks until the Promise resolves.
+   *
+   * Not all segments are loaded in a "chunk" mode.
+   * The alternatives to this mode are:
+   *
+   *   - when the segment is created locally without needing to perform any
+   *     request.
+   *
+   *   - when the segment is loaded as a whole.
+   *
+   * In both of those other cases, the segment data can be retrieved in the
+   * Promise returned by the segment loader instead.
+   */
+  onNewChunk : (data : T) => void;
+}
+
+export interface ISegmentLoadingProgressInformation {
+  /** Time since the beginning of the request so far, in seconds. */
+  duration : number;
+  /** Size of the data already downloaded, in bytes. */
+  size : number;
+  /** Size of whole data to download (data already-loaded included), in bytes. */
+  totalSize? : number;
+}
+
+/**
+ * Result returned by a segment loader when a segment has been loaded in a
+ * "chunk" mode.
+ * In that mode, the segment has been divided into multiple decodable chunks
+ * each sent in order through the `onNewChunk` callback of the corresponding
+ * loader.
+ */
+export interface ISegmentLoaderResultChunkedComplete {
+  resultType : "chunk-complete";
+  /** Information on the request performed. */
+  resultData : IChunkCompleteInformation;
+}
+
+/**
+ * Result returned by a segment loader when a segment has been loaded
+ * by performing a request.
+ */
+export interface ISegmentLoaderResultSegmentLoaded<T> {
+  resultType : "segment-loaded";
+  /** Segment data and information on the request. */
+  resultData : IRequestedData<T>;
+}
+
+/**
+ * Result returned by a segment loader when a segment has been fully
+ * created locally and thus did not depend on a request.
+ * TODO merge with ISegmentLoaderResultSegmentLoaded?
+ */
+export interface ISegmentLoaderResultSegmentCreated<T> {
+  resultType : "segment-created";
+  /** The data iself. */
+  resultData : T;
+}
+
+/** Data emitted in a `ISegmentLoaderResultChunkedComplete`. */
+export interface IChunkCompleteInformation {
+  /** Duration the request took to be performed, in seconds. */
+  duration : number | undefined;
+  /**
+   * "Real" URL (post-redirection) at which the segment was loaded.
+   *
+   * Note that this doesn't always apply e.g. some segment might need multiple
+   * URLs to be fetched, some other might need to fetch no URL.
+   * This property should only be set when a unique URL is sufficient to
+   * retrieve the whole data.
+   */
+  url? : string;
+  /**
+   * Time at which the request began in terms of `performance.now`.
+   * If fetching the corresponding data necessitated to perform multiple
+   * requests, this time corresponds to the first request made.
+   */
+  sendingTime? : number;
+  /**
+   * Time at which the request ended in terms of `performance.now`.
+   * If fetching the corresponding data necessitated to perform multiple
+   * requests, this time corresponds to the last request to end.
+   */
+  receivedTime? : number;
+  /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
+  size : number | undefined;
+}
+
+/** Format of a loaded Manifest before parsing. */
+export type ILoadedManifestFormat = Document |
+                                    string |
+                                    ArrayBuffer |
+                                    IMetaPlaylist |
+                                    ILocalManifest |
+                                    Manifest;
+
+/** Format of a loaded audio and video segment before parsing. */
+export type ILoadedAudioVideoSegmentFormat = Uint8Array |
+                                             ArrayBuffer |
+                                             null;
+
+/** Format of a loaded text segment before parsing. */
+export type ILoadedTextSegmentFormat = Uint8Array |
+                                       ArrayBuffer |
+                                       string |
+                                       null;
+
+/** Format of a loaded image segment before parsing. */
+export type ILoadedImageSegmentFormat = Uint8Array |
+                                        ArrayBuffer |
+                                        null;
+
+/** Result returned by a segment parser when it parsed an initialization segment. */
+export interface ISegmentParserParsedInitSegment<DataType> {
+  segmentType : "init";
+  /**
+   * Initialization segment that can be directly pushed to the corresponding
+   * buffer.
+   */
+  initializationData : DataType | null;
+  /**
+   * Timescale metadata found inside this initialization segment.
+   * That timescale might be useful when parsing further merdia segments.
+   */
+  initTimescale? : number;
+  /**
+   * If set to `true`, some protection information has been found in this
+   * initialization segment and lead the corresponding `Representation`
+   * object to be updated with that new information.
+   *
+   * In that case, you can re-check any encryption-related information with the
+   * `Representation` linked to that segment.
+   *
+   * In the great majority of cases, this is set to `true` when new content
+   * protection initialization data to have been encountered.
+   */
+  protectionDataUpdate : boolean;
+}
+
+/**
+ * Result returned by a segment parser when it parsed a media (not an
+ * initialization segment).
+ */
+export interface ISegmentParserParsedSegment<DataType> {
+  segmentType : "media";
+  /** Parsed chunk of data that can be decoded. */
+  chunkData : DataType | null;
+  /** Time information on this parsed chunk. */
+  chunkInfos : IChunkTimeInfo | null;
+  /**
+   * time offset, in seconds, to add to the absolute timed data defined in
+   * `chunkData` to obtain the "real" wanted effective time.
+   *
+   * For example:
+   *   If `chunkData` announces (when parsed by the demuxer or decoder) that the
+   *   segment begins at 32 seconds, and `chunkOffset` equals to `4`, then the
+   *   segment should really begin at 36 seconds (32 + 4).
+   *
+   * Note that `chunkInfos` needs not to be offseted as it should already
+   * contain the correct time information.
+   */
+  chunkOffset : number;
+  /**
+   * start and end windows for the segment (part of the chunk respectively
+   * before and after that time will be ignored).
+   * `undefined` when their is no such limitation.
+   */
+  appendWindow : [ number | undefined,
+                   number | undefined ];
+  /**
+   * If set and not empty, then "events" have been encountered in this parsed
+   * chunks.
+   */
+  inbandEvents? : IInbandEvent[]; // Inband events parsed from segment data
+  /**
+   * If set to `true`, then parsing this chunk revealed that the current
+   * Manifest instance needs to be refreshed.
+   */
+  needsManifestRefresh?: boolean;
+  /**
+   * If set to `true`, some protection information has been found in this
+   * media segment and lead the corresponding `Representation` object to be
+   * updated with that new information.
+   *
+   * In that case, you can re-check any encryption-related information with the
+   * `Representation` linked to that segment.
+   *
+   * In the great majority of cases, this is set to `true` when new content
+   * protection initialization data to have been encountered.
+   */
+  protectionDataUpdate : boolean;
+}
+
+/** Describe data loaded through a request. */
+export interface IRequestedData<T> {
+  /** The loaded response data. */
+  responseData : T;
+  /** Duration the request took to be performed, in seconds. */
+  duration : number | undefined;
+  /**
+   * "Real" URL (post-redirection) at which the data can be loaded.
+   *
+   * Note that this doesn't always apply e.g. some data might need multiple
+   * URLs to be fetched, some other might need to fetch no URL.
+   * This property should only be set when a unique URL is sufficient to
+   * retrieve the whole data.
+   */
+  url? : string;
+  /**
+   * Time at which the request began in terms of `performance.now`.
+   * If fetching the corresponding data necessitated to perform multiple
+   * requests, this time corresponds to the first request made.
+   */
+  sendingTime? : number;
+  /**
+   * Time at which the request ended in terms of `performance.now`.
+   * If fetching the corresponding data necessitated to perform multiple
+   * requests, this time corresponds to the last request to end.
+   */
+  receivedTime? : number;
+  /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
+  size : number | undefined;
+}

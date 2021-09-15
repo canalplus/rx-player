@@ -25,6 +25,14 @@ const audioSegments = [
   };
 });
 
+const textSegments = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(time => {
+  return {
+    url: BASE_URL + `dash/ateam-text-${time}.dash`,
+    path: path.join(__dirname, `./media/dash/ateam-text-${time}.dash`),
+    contentType: "text/plain",
+  };
+});
+
 const videoQualities = flatMap(
   [400000, 795000, 1193000, 1996000],
   quality => {
@@ -69,11 +77,50 @@ module.exports = [
     contentType: "application/dash+xml",
   },
   {
+    url: BASE_URL + "ateam-trickmode.mpd",
+    path: path.join(__dirname, "media/ateam-trickmode.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
     url: BASE_URL + "not_starting_at_0.mpd",
     path: path.join(__dirname, "media/not_starting_at_0.mpd"),
     contentType: "application/dash+xml",
   },
-
+  {
+    url: BASE_URL + "multi-AdaptationSets.mpd",
+    path: path.join(__dirname, "media/multi-AdaptationSets.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "event-streams.mpd",
+    path: path.join(__dirname, "media/event-streams.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "segment_template_inheritance_period_as.mpd",
+    path: path.join(__dirname, "media/segment_template_inheritance_period_as.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "segment_template_inheritance_as_rep.mpd",
+    path: path.join(__dirname, "media/segment_template_inheritance_as_rep.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "discontinuity.mpd",
+    path: path.join(__dirname, "media/discontinuity.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "multi_period_different_choices.mpd",
+    path: path.join(__dirname, "media/multi_period_different_choices.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "multi_period_same_choices.mpd",
+    path: path.join(__dirname, "media/multi_period_same_choices.mpd"),
+    contentType: "application/dash+xml",
+  },
   // Audio initialization segment
   {
     url: BASE_URL + "dash/ateam-audio=128000.dash",
@@ -81,5 +128,6 @@ module.exports = [
     contentType: "audio/mp4",
   },
   ...audioSegments, // remaining audio segments
+  ...textSegments, // every text segments
   ...videoQualities, // every video segments
 ];

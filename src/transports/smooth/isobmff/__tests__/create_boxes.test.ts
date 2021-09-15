@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("Smooth - ISOBMFF - boxes creation", () => {
-   beforeEach(() => {
+  beforeEach(() => {
     jest.resetModules();
-   });
+  });
 
   describe("createVMHDBox", () => {
     it("should create always the same vmhd box", () => {
@@ -208,10 +214,10 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
     it("should just integrate the data format", () => {
       const dataFormatToBytes = new Uint8Array([4, 3, 2, 1]);
       const box = new Uint8Array([1, 2, 3, 4]);
-      const strToBytesSpy = jest.fn().mockImplementation(() => dataFormatToBytes);
+      const strToUtf8Spy = jest.fn().mockImplementation(() => dataFormatToBytes);
       const createBoxSpy = jest.fn().mockImplementation(() => box);
-      jest.mock("../../../../utils/byte_parsing", () => {
-        return { strToBytes: strToBytesSpy };
+      jest.mock("../../../../utils/string_parsing", () => {
+        return { strToUtf8: strToUtf8Spy };
       });
       jest.mock("../../../../parsers/containers/isobmff", () => {
         return { createBox: createBoxSpy };
@@ -220,9 +226,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       expect(createFRMABox("foo")).toBe(box);
       expect(createBoxSpy).toHaveBeenCalledTimes(1);
       expect(createBoxSpy).toHaveBeenCalledWith("frma", dataFormatToBytes);
-      expect(strToBytesSpy).toHaveBeenCalledTimes(1);
-      expect(strToBytesSpy).toHaveBeenCalledWith("foo");
+      expect(strToUtf8Spy).toHaveBeenCalledTimes(1);
+      expect(strToUtf8Spy).toHaveBeenCalledWith("foo");
     });
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -2,12 +2,6 @@ import MetaPlaylistDASHSmoothURL from "./metaplaylist_url";
 
 export default [
   {
-    "name": "DASH-IF - SegmentTimeline live stream",
-    "url": "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
-    "transport": "dash",
-    "live": true,
-  },
-  {
     "name": "Tears of Steel (clear)",
     "url": "https://www.bok.net/dash/tears_of_steel/cleartext/stream.mpd",
     "transport": "dash",
@@ -25,19 +19,13 @@ export default [
   },
   {
     "name": "Tears of Steel (DRM PlayReady)",
-    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-playready.ism/.mpd",
+    "url": "http://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
     "transport": "dash",
     "live": false,
     "drmInfos": [{
-      "licenseServerUrl": "https://test.playready.microsoft.com/service/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1",
+      "licenseServerUrl": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:false,sl:150)",
       "drm": "Playready",
     }],
-  },
-  {
-    "name": "DASH-IF - SegmentTemplate live stream",
-    "url": "https://vm2.dashif.org/livesim-dev/periods_1/testpic_2s/Manifest.mpd",
-    "transport": "dash",
-    "live": true,
   },
   {
     "name": "BBC - presentationTimeOffset on audio and video",
@@ -46,8 +34,14 @@ export default [
     "live": false,
   },
   {
+    "name": "DASH-IF - Trickmode",
+    "url": "https://dash.akamaized.net/dash264/TestCases/9b/qualcomm/1/MultiRate.mpd",
+    "transport": "dash",
+    "live": false,
+  },
+  {
     "name": "DASH-IF - Multi-Subtitles",
-    "url": "https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
     "transport": "dash",
     "live": false,
   },
@@ -59,13 +53,19 @@ export default [
   },
   {
     "name": "DASH-IF - Audio-only",
-    "url": "https://vm2.dashif.org/livesim/testpic_2s/audio.mpd",
+    "url": "https://dash.akamaized.net/dash264/TestCases/3a/fraunhofer/aac-lc_stereo_without_video/Sintel/sintel_audio_only_aaclc_stereo_sidx.mpd",
+    "transport": "dash",
+    "live": false,
+  },
+  {
+    "name": "DASH IF - SegmentTemplate",
+    "url": "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd",
     "transport": "dash",
     "live": true,
   },
   {
-    "name": "Wowza - Big Buck Bunny",
-    "url": "https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/manifest_mpm4sav_mvtime_w925796611.mpd",
+    "name": "DASH IF - SegmentTimeline",
+    "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
     "transport": "dash",
     "live": true,
   },
@@ -145,15 +145,6 @@ export default [
     "url": "https://utils.ssl.cdn.cra.cz/dash/1/manifest.mpd",
     "transport": "dash",
     "live": false,
-  },
-  {
-    "name": "Canal + - BIF Thumbnail Track example",
-    "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
-    "transport": "smooth",
-    "supplementaryImageTracks": {
-      "mimeType": "application/bif",
-      "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
-    },
   },
   {
     "name": "Mix of DASH and Smooth VOD Contents",

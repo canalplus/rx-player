@@ -61,7 +61,10 @@ export default function closeSession$(
             }
             // The `closed` promise may resolve, even if `close()` result has not
             // (it may happen on Firefox). Wait for it and timeout after 1 second.
-            const sessionIsClosed$ = castToObservable(session.closed);
+            // TODO There is a subtle TypeScript issue there that made casting to
+            // a type-compatible type mandatory. If a more elegant solution can
+            // be found, it should be preffered.
+            const sessionIsClosed$ = castToObservable(session.closed as Promise<unknown>);
             return observableRace(
               sessionIsClosed$,
               observableTimer(1000).pipe(

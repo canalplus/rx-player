@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 
-import htmlTextTracksBuffer from "../../../custom_source_buffers/text/html";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+/* eslint-disable max-len */
+import htmlTextTracksBuffer from "../../../core/segment_buffers/implementations/text/html";
+/* eslint-enable max-len */
 import addHTMLTextBuffer from "../html_text_buffer";
 
-/* tslint:disable no-unsafe-any */
-jest.mock("../../../custom_source_buffers/text/html", () => ({
-  __esModule: true,
+jest.mock("../../../core/segment_buffers/implementations/text/html", () => ({
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - HTML Text Buffer", () => {
   it("should add an HTML Text Buffer in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addHTMLTextBuffer(featureObject);
     expect(featureObject).toEqual({ htmlTextTracksBuffer });
     expect(featureObject.htmlTextTracksBuffer).toBe(htmlTextTracksBuffer);
   });
 });
-/* tslint:enable no-unsafe-any */

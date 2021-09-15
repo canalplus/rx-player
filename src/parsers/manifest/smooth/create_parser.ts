@@ -15,14 +15,21 @@
  */
 
 import log from "../../../log";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
 import assert from "../../../utils/assert";
+import {
+  concat,
+  itobe4,
+} from "../../../utils/byte_parsing";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import objectAssign from "../../../utils/object_assign";
 import resolveURL, {
   normalizeBaseURL,
 } from "../../../utils/resolve_url";
+import { hexToBytes } from "../../../utils/string_parsing";
 import takeFirstSet from "../../../utils/take_first_set";
+import { createBox } from "../../containers/isobmff";
 import {
   IContentProtectionKID,
   IParsedAdaptation,
@@ -64,8 +71,6 @@ type IAdaptationType = "audio" |
                        "video" |
                        "text" |
                        "image";
-
-const KNOWN_ADAPTATION_TYPES : IAdaptationType[] = ["audio", "video", "text", "image"];
 
 const DEFAULT_MIME_TYPES : Partial<Record<string, string>> = {
   audio: "audio/mp4",
@@ -117,9 +122,8 @@ interface ISmoothParsedQualityLevel {
  */
 function createSmoothStreamingParser(
   parserOptions : IHSSParserConfiguration = {}
-) : (manifest : Document,
-     url? : string,
-     manifestReceivedTime? : number) => IParsedManifest
+) : (manifest : Document, url? : string, manifestReceivedTime? : number)
+  => IParsedManifest
 {
   const referenceDateTime = parserOptions.referenceDateTime === undefined ?
     Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000 :
@@ -287,7 +291,7 @@ function createSmoothStreamingParser(
     if (typeAttribute === null) {
       throw new Error("StreamIndex without type.");
     }
-    if (!arrayIncludes(KNOWN_ADAPTATION_TYPES, typeAttribute)) {
+    if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, typeAttribute)) {
       log.warn("Smooth Parser: Unrecognized adaptation type:", typeAttribute);
     }
     const adaptationType = typeAttribute as IAdaptationType;
@@ -302,9 +306,10 @@ function createSmoothStreamingParser(
     }
 
     const { qualityLevels, cNodes } =
-      reduceChildren<{ qualityLevels: ISmoothParsedQualityLevel[];
-                       cNodes : Element[]; }>(root, (res, _name, node) =>
-      {
+      reduceChildren<
+        { qualityLevels: ISmoothParsedQualityLevel[];
+          cNodes : Element[]; }
+      >(root, (res, _name, node) => {
         switch (_name) {
           case "QualityLevel":
             const qualityLevel = parseQualityLevel(node, adaptationType);
@@ -346,9 +351,6 @@ function createSmoothStreamingParser(
         media: replaceRepresentationSmoothTokens(path,
                                                  qualityLevel.bitrate,
                                                  qualityLevel.customAttributes),
-        isLive,
-        timeShiftBufferDepth,
-        manifestReceivedTime,
       };
       const mimeType = isNonEmptyString(qualityLevel.mimeType) ?
         qualityLevel.mimeType :
@@ -386,24 +388,39 @@ function createSmoothStreamingParser(
                                     // instead of the first one
                                     protection: firstProtection != null ? {
                                       keyId: firstProtection.keyId,
-                                      keySystems: firstProtection.keySystems,
-                                    } : undefined, };
+                                    } : undefined };
 
       const aggressiveMode = parserOptions.aggressiveMode == null ?
         DEFAULT_AGGRESSIVE_MODE :
         parserOptions.aggressiveMode;
       const reprIndex = new RepresentationIndex(repIndex, { aggressiveMode,
                                                             isLive,
-                                                            segmentPrivateInfos });
+                                                            manifestReceivedTime,
+                                                            segmentPrivateInfos,
+                                                            timeShiftBufferDepth });
       const representation : IParsedRepresentation = objectAssign({},
                                                                   qualityLevel,
                                                                   { index: reprIndex,
                                                                     mimeType,
                                                                     codecs,
                                                                     id });
-      if (keyIDs.length > 0) {
-        representation.contentProtections = { keyIds: keyIDs,
-                                              initData: {} };
+      if (keyIDs.length > 0 || firstProtection !== undefined) {
+        const initDataValues : Array<{ systemId: string;
+                                       data: Uint8Array; }> =
+          firstProtection === undefined ?
+            [] :
+            firstProtection.keySystems.map((keySystemData) => {
+              const { systemId, privateData } = keySystemData;
+              const cleanedSystemId = systemId.replace(/-/g, "");
+              const pssh = createPSSHBox(cleanedSystemId, privateData);
+              return { systemId: cleanedSystemId, data: pssh };
+            });
+        if (initDataValues.length > 0) {
+          const initData = [{ type: "cenc", values: initDataValues }];
+          representation.contentProtections = { keyIds: keyIDs, initData };
+        } else {
+          representation.contentProtections = { keyIds: keyIDs, initData: [] };
+        }
       }
       return representation;
     });
@@ -458,13 +475,13 @@ function createSmoothStreamingParser(
       adaptationNodes: Element[];
     }> (root, (res, name, node) => {
       switch (name) {
-      case "Protection":  {
-        res.protections.push(parseProtectionNode(node, parserOptions.keySystems));
-        break;
-      }
-      case "StreamIndex":
-        res.adaptationNodes.push(node);
-        break;
+        case "Protection":  {
+          res.protections.push(parseProtectionNode(node, parserOptions.keySystems));
+          break;
+        }
+        case "StreamIndex":
+          res.adaptationNodes.push(node);
+          break;
       }
       return res;
     }, {
@@ -511,8 +528,9 @@ function createSmoothStreamingParser(
 
     let suggestedPresentationDelay : number|undefined;
     let availabilityStartTime : number|undefined;
-    let minimumTime : { isContinuous : boolean; value : number; time : number}|undefined;
-    let maximumTime : { isContinuous : boolean; value : number; time : number}|undefined;
+    let minimumTime : number | undefined;
+    let timeshiftDepth : number | null = null;
+    let maximumTimeData : { isLinear : boolean; value : number; time : number };
 
     const firstVideoAdaptation = adaptations.video !== undefined ?
       adaptations.video[0] :
@@ -580,44 +598,28 @@ function createSmoothStreamingParser(
       suggestedPresentationDelay = parserOptions.suggestedPresentationDelay;
       availabilityStartTime = referenceDateTime;
 
-      const time = performance.now();
-      maximumTime = { isContinuous: true,
-                      value: lastTimeReference != null ?
-                        lastTimeReference :
-                        (Date.now() / 1000 - availabilityStartTime),
-                      time };
-      if (timeShiftBufferDepth == null) {
-        // infinite buffer
-        minimumTime = { isContinuous: false,
-                        value: firstTimeReference != null ? firstTimeReference :
-                                                            availabilityStartTime,
-                        time };
-      } else {
-        minimumTime = { isContinuous: true,
-                        value: Math.min(maximumTime.value - timeShiftBufferDepth + 5,
-                                        maximumTime.value),
-                        time };
-      }
+      minimumTime = firstTimeReference ?? availabilityStartTime;
+      const maximumTime = lastTimeReference != null ?
+        lastTimeReference :
+        (Date.now() / 1000 - availabilityStartTime);
+      maximumTimeData = { isLinear: true,
+                          value: maximumTime,
+                          time: performance.now() };
+      timeshiftDepth = timeShiftBufferDepth ?? null;
     } else {
-      minimumTime = { isContinuous: false,
-                      value: firstTimeReference != null ? firstTimeReference :
-                                                          0,
-                      time: performance.now() };
-      if (lastTimeReference !== undefined) {
-        maximumTime = { isContinuous: false,
-                        value: lastTimeReference,
-                        time: performance.now() };
-      } else if (duration !== undefined) {
-        maximumTime = { isContinuous: false,
-                        value: minimumTime.value + duration,
-                        time: performance.now() };
-      }
+      minimumTime = firstTimeReference ?? 0;
+      const maximumTime = lastTimeReference !== undefined ? lastTimeReference :
+                          duration !== undefined ? minimumTime + duration :
+                                                   Infinity;
+      maximumTimeData = { isLinear: false,
+                          value: maximumTime,
+                          time: performance.now() };
     }
 
     const periodStart = isLive ? 0 :
-                                 minimumTime.value;
+                                 minimumTime;
     const periodEnd = isLive ? undefined :
-                               maximumTime?.value;
+                               maximumTimeData.value;
     const manifest = {
       availabilityStartTime: availabilityStartTime === undefined ?
         0 :
@@ -625,8 +627,10 @@ function createSmoothStreamingParser(
       clockOffset: serverTimeOffset,
       isLive,
       isDynamic: isLive,
-      maximumTime,
-      minimumTime,
+      isLastPeriodKnown: true,
+      timeBounds: { absoluteMinimumTime: minimumTime,
+                    timeshiftDepth,
+                    maximumTimeData },
       periods: [{ adaptations,
                   duration: periodEnd !== undefined ?
                     periodEnd - periodStart : duration,
@@ -643,5 +647,29 @@ function createSmoothStreamingParser(
 
   return parseFromDocument;
 }
+
+/**
+ * @param {string} systemId - Hex string representing the CDM, 16 bytes.
+ * @param {Uint8Array|undefined} privateData - Data associated to protection
+ * specific system.
+ * @returns {Uint8Array}
+ */
+function createPSSHBox(
+  systemId : string,
+  privateData : Uint8Array
+) : Uint8Array {
+  if (systemId.length !== 32) {
+    throw new Error("HSS: wrong system id length");
+  }
+  const version = 0;
+  return createBox("pssh", concat(
+    [version, 0, 0, 0],
+    hexToBytes(systemId),
+    /** To put there KIDs if it exists (necessitate PSSH v1) */
+    itobe4(privateData.length),
+    privateData
+  ));
+}
+
 
 export default createSmoothStreamingParser;

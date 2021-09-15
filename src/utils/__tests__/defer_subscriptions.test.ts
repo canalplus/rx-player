@@ -23,22 +23,23 @@ import {
 import deferSubscriptions from "../defer_subscriptions";
 
 describe("utils - deferSubscriptions", () => {
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should wait until all subscription in the current script are done before emitting", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     let logs = "";
     const myObservableDeferred = timer(5).pipe(mapTo("A"),
                                                startWith("S"),
                                                deferSubscriptions(),
                                                share());
 
-    myObservableDeferred.subscribe(
-      x => { logs += `1:${x}-`; },
-      () => { /* noop */ },
-      () => {
+    myObservableDeferred.subscribe({
+      next: x => { logs += `1:${x}-`; },
+      error: () => { /* noop */ },
+      complete: () => {
         expect(logs).toEqual("1:S-2:S-1:A-2:A-3:A-4:A-");
         done();
-      });
+      },
+    });
     myObservableDeferred.subscribe(x => { logs += `2:${x}-`; });
 
     setTimeout(() => {

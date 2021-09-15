@@ -62,7 +62,7 @@ export default class SortedList<T> {
    * You can still re-force the sorting to happen by calling forceSort.
    * @param {...*} elements
    */
-  public add(...elements : T[]) {
+  public add(...elements : T[]) : void {
     elements.sort(this._sortingFn);
 
     let j = 0;
@@ -143,6 +143,7 @@ export default class SortedList<T> {
       this._array.splice(indexOf, 1);
       return indexOf;
     }
+    return undefined;
   }
 
   /**

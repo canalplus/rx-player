@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 const cueBlock1 = [
   "112",
   "00:00:31.080 --> 00:07:32.200",
@@ -78,7 +85,6 @@ const notCueBlock7 = [
   "TATA",
 ];
 
-/* tslint:disable no-unsafe-any */
 describe("parsers - srt - parseCueBlocks", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -213,12 +219,12 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseCueBlock(notCueBlock7, 0)).toEqual(null);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return null if parseTimestamp returns null either for the starting timestamp", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const parseTimestamp = jest.fn((arg) => arg === "00:00:31.080" ? null : 10);
     jest.mock("../parse_timestamp", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: parseTimestamp,
     }));
     const parseCueBlock = require("../parse_cue_block").default;
@@ -227,12 +233,12 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseTimestamp).toHaveBeenCalledTimes(2);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should return null if parseTimestamp returns null either for the ending timestamp", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const parseTimestamp = jest.fn((arg) => arg === "00:07:32.200" ? null : 10);
     jest.mock("../parse_timestamp", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: parseTimestamp,
     }));
     const parseCueBlock = require("../parse_cue_block").default;
@@ -241,4 +247,3 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseTimestamp).toHaveBeenCalledTimes(2);
   });
 });
-/* tslint:enable no-unsafe-any */

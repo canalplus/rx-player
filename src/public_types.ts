@@ -44,4 +44,25 @@ export {
   IAudioTrackPreference,
   ITextTrackPreference,
   IVideoTrackPreference,
+
+  IStreamEvent,
+  IStreamEventData,
 } from "./core/api";
+export {
+  IPersistentSessionInfo,
+  IPersistentSessionStorage,
+} from "./core/eme";
+export { ICustomError as IPlayerError } from "./errors";
+export {
+  IExposedAdaptation as IAdaptation,
+  IExposedManifest as IManifest,
+  IExposedPeriod as IPeriod,
+  IExposedRepresentation as IRepresentation,
+  IExposedSegment as ISegment,
+  IRepresentationFilter,
+  IRepresentationInfos,
+} from "./manifest";
+export {
+  ICustomSegmentLoader as ISegmentLoader,
+  ICustomManifestLoader as IManifestLoader,
+} from "./transports";

@@ -43,8 +43,8 @@ import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";
 import isNonEmptyString from "../utils/is_non_empty_string";
 import {
-  HTMLElement_,
   ICompatDocument,
+  ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
 import isNode from "./is_node";
@@ -74,7 +74,9 @@ function isEventSupported(
     return true;
   } else {
     clone.setAttribute(eventName, "return;");
-    return typeof (clone as any)[eventName] === "function";
+    return typeof (
+      clone as HTMLElement & Partial<Record<string, unknown>>
+    )[eventName] === "function";
   }
 }
 
@@ -101,7 +103,7 @@ function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
   return eventNames.reduce((parent : string[], name : string) =>
     parent.concat((prefixes == null ? BROWSER_PREFIXES :
                                       prefixes)
-          .map((p) => p + name)), []);
+      .map((p) => p + name)), []);
 }
 
 export interface IEventEmitterLike {
@@ -111,7 +113,7 @@ export interface IEventEmitterLike {
 
 export type IEventTargetLike = HTMLElement |
                                IEventEmitterLike |
-                               IEventEmitter<any>;
+                               IEventEmitter<unknown>;
 
 /**
  * @param {Array.<string>} eventNames
@@ -127,7 +129,7 @@ function compatibleListener<T extends Event>(
   return (element : IEventTargetLike) => {
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
-    if (element instanceof HTMLElement_) {
+    if (element instanceof HTMLElement) {
       if (typeof mem === "undefined") {
         mem = findSupportedEvent(element, prefixedEvents);
       }
@@ -147,8 +149,7 @@ function compatibleListener<T extends Event>(
     // otherwise, we need to listen to all the events
     // and merge them into one observable sequence
     return observableMerge(...prefixedEvents.map(eventName =>
-                             observableFromEvent(element, eventName))
-    );
+      observableFromEvent(element, eventName)));
   };
 }
 
@@ -239,35 +240,36 @@ export interface IPictureInPictureEvent {
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-export function onPictureInPictureEvent$(
-  mediaElement: HTMLMediaElement
+function onPictureInPictureEvent$(
+  elt: HTMLMediaElement
 ): Observable<IPictureInPictureEvent> {
   return observableDefer(() => {
-    if ((mediaElement as any).webkitSupportsPresentationMode &&
-        typeof (mediaElement as any).webkitSetPresentationMode === "function")
+    const mediaElement = elt as ICompatHTMLMediaElement;
+    if (mediaElement.webkitSupportsPresentationMode === true &&
+        typeof mediaElement.webkitSetPresentationMode === "function")
     {
       const isWebKitPIPEnabled =
-        (mediaElement as any).webkitPresentationMode === "picture-in-picture";
-      return observableFromEvent(mediaElement, "webkitpresentationmodechanged")
-          .pipe(
-            map(() => ({ isEnabled: (mediaElement as any)
-                           .webkitPresentationMode === "picture-in-picture",
-                         pipWindow: null })),
-            startWith({ isEnabled: isWebKitPIPEnabled, pipWindow: null })
-          );
+        mediaElement.webkitPresentationMode === "picture-in-picture";
+      return observableFromEvent(mediaElement, "webkitpresentationmodechanged").pipe(
+        map(() => ({
+          isEnabled: mediaElement.webkitPresentationMode === "picture-in-picture",
+          pipWindow: null,
+        })),
+        startWith({ isEnabled: isWebKitPIPEnabled, pipWindow: null }));
     }
 
     const isPIPEnabled = (
-      (document as any).pictureInPictureElement &&
-      (document as any).pictureInPictureElement === mediaElement
+      (document as ICompatDocument).pictureInPictureElement === mediaElement
     );
     const initialState = { isEnabled: isPIPEnabled, pipWindow: null };
     return observableMerge(
       observableFromEvent(mediaElement, "enterpictureinpicture")
-        .pipe(map((evt: any) => ({ isEnabled: true,
-                                   /* tslint:disable no-unsafe-any */
-                                   pipWindow: evt.pictureInPictureWindow }))),
-                                   /* tslint:enable no-unsafe-any */
+        .pipe(map((evt) => ({
+          isEnabled: true,
+          pipWindow: (evt as Event & {
+            pictureInPictureWindow? : ICompatPictureInPictureWindow;
+          }).pictureInPictureWindow ?? null,
+        }))),
       observableFromEvent(mediaElement, "leavepictureinpicture")
         .pipe(mapTo({ isEnabled: false, pipWindow: null }))
     ).pipe(startWith(initialState));
@@ -316,9 +318,7 @@ function videoWidth$(
       } else if (pip.pipWindow != null) {
         const { pipWindow } = pip;
         const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
-
-        // RxJS typing issue (for the "as any")
-        return observableFromEvent(pipWindow as any, "resize").pipe(
+        return observableFromEvent(pipWindow, "resize").pipe(
           startWith(firstWidth * pixelRatio),
           map(() => getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio)
         );
@@ -395,6 +395,18 @@ const onTextTrackChanges$ =
 const onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
 
 /**
+ * @param {MediaSource} mediaSource
+ * @returns {Observable}
+ */
+const onSourceClose$ = compatibleListener(["sourceclose", "webkitsourceclose"]);
+
+/**
+ * @param {MediaSource} mediaSource
+ * @returns {Observable}
+ */
+const onSourceEnded$ = compatibleListener(["sourceended", "webkitsourceended"]);
+
+/**
  * @param {SourceBuffer} sourceBuffer
  * @returns {Observable}
  */
@@ -451,6 +463,8 @@ export {
   onTimeUpdate$,
   onFullscreenChange$,
   onSourceOpen$,
+  onSourceClose$,
+  onSourceEnded$,
   onUpdate$,
   onRemoveSourceBuffers$,
   onEncrypted$,
@@ -458,4 +472,5 @@ export {
   onKeyAdded$,
   onKeyError$,
   onKeyStatusesChange$,
+  onPictureInPictureEvent$,
 };

@@ -21,9 +21,9 @@ import {
   Representation,
 } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
-import stringFromUTF8 from "../../utils/string_from_utf8";
+import { utf8ToStr } from "../../utils/string_parsing";
 import {
-  IChunkTimingInfos,
+  IChunkTimeInfo,
   ITextTrackSegmentData,
 } from "../types";
 
@@ -33,7 +33,9 @@ import {
  * @returns {string}
  */
 export function extractTextTrackFromISOBMFF(chunkBytes : Uint8Array) : string {
-  return stringFromUTF8(getMDAT(chunkBytes));
+  const mdat = getMDAT(chunkBytes);
+  return mdat === null ? "" :
+                         utf8ToStr(mdat);
 }
 
 /**
@@ -101,7 +103,7 @@ export function getISOBMFFEmbeddedTextTrackData(
                          adaptation : Adaptation;
                          representation : Representation; },
   chunkBytes : Uint8Array,
-  chunkInfos : IChunkTimingInfos | null,
+  chunkInfos : IChunkTimeInfo | null,
   isChunked : boolean
 ) : ITextTrackSegmentData | null {
   if (segment.isInit) {
@@ -109,14 +111,12 @@ export function getISOBMFFEmbeddedTextTrackData(
   }
   let startTime : number | undefined;
   let endTime : number | undefined;
-  let timescale : number = 1;
   if (chunkInfos === null) {
     if (!isChunked) {
       log.warn("Transport: Unavailable time data for current text track.");
     } else {
       startTime = segment.time;
-      endTime = startTime + segment.duration;
-      timescale = segment.timescale;
+      endTime = segment.end;
     }
   } else {
     startTime = chunkInfos.time;
@@ -125,7 +125,6 @@ export function getISOBMFFEmbeddedTextTrackData(
     } else if (!isChunked) {
       endTime = startTime + segment.duration;
     }
-    timescale = chunkInfos.timescale;
   }
 
   const type = getISOBMFFTextTrackFormat(representation);
@@ -134,8 +133,7 @@ export function getISOBMFFEmbeddedTextTrackData(
            type,
            language: adaptation.language,
            start: startTime,
-           end: endTime,
-           timescale } ;
+           end: endTime } ;
 }
 
 /**
@@ -157,15 +155,14 @@ export function getPlainTextTrackData(
   if (segment.isInit) {
     return null;
   }
-  let start : number | undefined;
-  let end : number | undefined;
-  let timescale : number = 1;
-  if (!isChunked) {
-    start = segment.time;
-    end = start + segment.duration;
-    timescale = segment.timescale;
-  } else {
+
+  let start;
+  let end;
+  if (isChunked) {
     log.warn("Transport: Unavailable time data for current text track.");
+  } else {
+    start = segment.time;
+    end = segment.time + segment.duration;
   }
 
   const type = getPlainTextTrackFormat(representation);
@@ -173,6 +170,5 @@ export function getPlainTextTrackData(
            type,
            language: adaptation.language,
            start,
-           end,
-           timescale };
+           end };
 }

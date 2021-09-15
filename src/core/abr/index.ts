@@ -19,10 +19,14 @@ import ABRManager, {
   IABRManagerClockTick,
 } from "./abr_manager";
 export {
-  IABRBufferEvents,
+  IABRAddedSegmentEvent,
+  IABRStreamEvents,
   IABREstimate,
-  IABRMetric,
-  IABRRequest,
+  IABRMetricsEvent,
+  IABRRepresentationChangeEvent,
+  IABRRequestBeginEvent,
+  IABRRequestEndEvent,
+  IABRRequestProgressEvent,
 } from "./representation_estimator";
 
 export default ABRManager;

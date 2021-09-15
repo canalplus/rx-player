@@ -17,7 +17,7 @@
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import createDefaultStyleElements from "./create_default_style_elements";
 
-export interface IStyleElements { [className : string]: string; }
+export interface IStyleElements { [className : string]: string }
 
 /**
  * Parse style element from WebVTT.
@@ -36,24 +36,24 @@ export default function parseStyleBlocks(
     if (styleBlock.length >= 2) {
       for (let index = 1; index < styleBlock.length; index++) {
         let line = styleBlock[index];
-        if (Array.isArray(line.match(/::cue {/))) {
+        if (Array.isArray(/::cue {/.exec(line))) {
           line = styleBlock[++index];
-          while (isNonEmptyString(line) && (!(Array.isArray(line.match(/}/)) ||
+          while (isNonEmptyString(line) && (!(Array.isArray(/}/.exec(line)) ||
                                               line.length === 0))) {
             global += line;
             line = styleBlock[++index];
           }
         } else {
           const classNames : string[] = [];
-          let cueClassLine = line.match(/::cue\(\.?(.*?)\)(?:,| {)/);
+          let cueClassLine = /::cue\(\.?(.*?)\)(?:,| {)/.exec(line);
           while (isNonEmptyString(line) && Array.isArray(cueClassLine)) {
             classNames.push(cueClassLine[1]);
             line = styleBlock[++index];
-            cueClassLine = line.match(/::cue\(\.?(.*?)\)(?:,| {)/);
+            cueClassLine = /::cue\(\.?(.*?)\)(?:,| {)/.exec(line);
           }
 
           let styleContent = "";
-          while (isNonEmptyString(line) && (!(Array.isArray(line.match(/}/)) ||
+          while (isNonEmptyString(line) && (!(Array.isArray(/}/.exec(line)) ||
                                               line.length === 0)))
           {
             styleContent += line;

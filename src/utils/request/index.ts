@@ -16,12 +16,12 @@
 
 import fetchRequest, {
   fetchIsSupported,
-  IDataChunk,
-  IDataComplete,
+  IFetchedDataObject,
+  IFetchedStreamComplete,
 } from "./fetch";
 import xhr, {
   IRequestOptions,
-  IRequestProgress,
+  IProgressInfo,
   IRequestResponse,
 } from "./xhr";
 
@@ -29,10 +29,10 @@ export default xhr;
 export {
   fetchIsSupported,
   fetchRequest,
-  IDataChunk,
-  IDataComplete,
+  IFetchedDataObject,
+  IFetchedStreamComplete,
+  IProgressInfo,
   IRequestOptions,
-  IRequestProgress,
   IRequestResponse,
   xhr,
 };

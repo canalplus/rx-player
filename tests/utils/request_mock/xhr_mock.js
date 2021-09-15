@@ -49,6 +49,16 @@ export default class XHRMock {
       }
       xhr._shouldMock = (...args) => shouldMockRequest(args);
 
+      /**
+       * Contains tuple of all request headers, name and value, passed to the
+       * `requestHeadersSet` XHR method.
+       */
+      const requestHeadersSet = [];
+
+      xhr._onSetRequestHeader = (name, value) => {
+        requestHeadersSet.push([name, value]);
+      };
+
       xhr._onSend = (data) => {
         if (!xhr.async) { // We sadly cannot manage those without breaking stuff
           /* eslint-disable-next-line no-console */
@@ -59,7 +69,7 @@ export default class XHRMock {
         } else if (!this.isLocked) {
           this.__xhrSend(xhr, data);
         } else {
-          this._sendingQueue.push({ xhr, data });
+          this._sendingQueue.push({ xhr, data, requestHeadersSet });
         }
       };
     };
@@ -105,14 +115,22 @@ export default class XHRMock {
    *   - ``xhr`` {``Object``} - Corresponding XMLHttpRequest (technically, it is
    *     not an instance of a regular XMLHttpRequest but rather our own
    *     implementation).
-   *   - ``method`` (``string``) - method used when opening the XMLHttpRequest.
-   *   - ``url`` (``string``) - URL used when opening the XMLHttpRequest.
+   *   - ``method`` (``string``): method used when opening the XMLHttpRequest.
+   *   - ``url`` (``string``): URL used when opening the XMLHttpRequest.
+   *   - ``requestHeadersSet`` (``Array``): Array containing all request headers
+   *     set through the `setRequestHeader` method of that XHR, by chronological
+   *     order (from earliest to latest).
+   *     For each header set trough this method, you will get a tuple under
+   *     the following form `[headerName: string, headerValue: string]`.
+   *
    * @returns {Array.<Object>}
    */
   getLockedXHR() {
-    return this._sendingQueue.map(req => ({ xhr: req.xhr,
-                                            method: req.xhr.method,
-                                            url: req.xhr.url }));
+    return this._sendingQueue.map(req => ({
+      xhr: req.xhr,
+      requestHeadersSet: req.requestHeadersSet,
+      method: req.xhr.method,
+      url: req.xhr.url }));
   }
 
   /**
@@ -136,14 +154,17 @@ export default class XHRMock {
    * Perform every locked requests and resolve once every one of them have
    * finished (either aborted, on error or finished succesfully).
    * Keep the lock on, if one.
+   * @param {number} count
    * @returns {Promise}
    */
-  flush() {
-    const queue = this._sendingQueue.slice();
-    this._sendingQueue.length = 0;
+  flush(nbrOfRequests) {
+    const len = this._sendingQueue.length;
     const proms = [];
-    for (let i = 0; i < queue.length; i++) {
-      const { xhr, data } = queue[i];
+    const nbrOfRequestsToFlush = nbrOfRequests !== undefined ?
+      Math.min(len, nbrOfRequests) : len;
+    const nbrOfRequestThatStays = len - nbrOfRequestsToFlush;
+    while (this._sendingQueue.length > nbrOfRequestThatStays) {
+      const { xhr, data } = this._sendingQueue.pop();
       this.__xhrSend(xhr, data);
       proms.push(xhr._finished);
     }

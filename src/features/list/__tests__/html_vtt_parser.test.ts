@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import vttParser from "../../../parsers/texttracks/webvtt/html";
 import addHTMLVTTFeature from "../html_vtt_parser";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/webvtt/html", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - HTML VTT Parser", () => {
   it("should add an HTML VTT Parser in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { htmlTextTracksParsers: {} };
     addHTMLVTTFeature(featureObject);
     expect(featureObject).toEqual({
@@ -33,4 +35,3 @@ describe("Features list - HTML VTT Parser", () => {
     expect(featureObject.htmlTextTracksParsers.vtt).toBe(vttParser);
   });
 });
-/* tslint:enable no-unsafe-any */

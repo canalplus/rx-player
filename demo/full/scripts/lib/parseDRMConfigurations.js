@@ -1,7 +1,7 @@
 import {
-  bytesToStr,
-  strToBytes,
-  bytesToUTF16Str,
+  utf8ToStr,
+  strToUtf8,
+  leUtf16ToStr,
 } from "./bytes.js";
 
 export default function parseDRMConfigurations(drmConfigurations) {
@@ -63,11 +63,11 @@ function getServerCertificate(url) {
 }
 
 function formatPlayreadyChallenge(challenge) {
-  const str = bytesToUTF16Str(challenge);
+  const str = leUtf16ToStr(challenge);
   const match = /<Challenge encoding="base64encoded">(.*)<\/Challenge>/.exec(str);
   const xml = match ?
     atob(match[1]) : /* IE11 / EDGE */
-    bytesToStr(new Uint8Array(challenge)); // Chromecast
+    utf8ToStr(challenge); // Chromecast
   return xml;
 }
 
@@ -75,7 +75,8 @@ function generateGetLicense(licenseServerUrl, drmType, fallbackOnLastTry) {
   const isPlayready = drmType.indexOf("playready") !== -1;
   return (rawChallenge) => {
     const challenge =  isPlayready ?
-      formatPlayreadyChallenge(rawChallenge) : rawChallenge;
+      formatPlayreadyChallenge(rawChallenge) :
+      rawChallenge;
     const xhr = new XMLHttpRequest();
     xhr.open("POST", licenseServerUrl, true);
     return new Promise((resolve, reject) => {
@@ -103,7 +104,8 @@ function generateGetLicense(licenseServerUrl, drmType, fallbackOnLastTry) {
       }
       xhr.send(challenge);
     }).then(license =>
-      isPlayready && typeof license === "string" ? strToBytes(license) : license
-    );
+      isPlayready && typeof license === "string" ?
+        strToUtf8(license) :
+        license);
   };
 }

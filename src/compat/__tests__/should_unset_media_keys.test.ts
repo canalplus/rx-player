@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("compat - shouldUnsetMediaKeys", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -23,7 +29,7 @@ describe("compat - shouldUnsetMediaKeys", () => {
   it("should return false if we are not on IE11", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isIE11: false,
       };
     });
@@ -34,7 +40,7 @@ describe("compat - shouldUnsetMediaKeys", () => {
   it("should return true if we are on IE11", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isIE11: true,
       };
     });
@@ -45,4 +51,3 @@ describe("compat - shouldUnsetMediaKeys", () => {
     jest.resetModules();
   });
 });
-/* tslint:enable no-unsafe-any */

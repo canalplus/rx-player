@@ -20,6 +20,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import { IEMSG } from "../../parsers/containers/isobmff";
 import {
   ILocalIndexSegment,
   ILocalManifestInitSegmentLoader,
@@ -30,18 +31,37 @@ import {
  * Supplementary information specific to Smooth Initialization segments.
  * Contains every information needed to generate an initialization segment.
  */
-export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
-                                                  bitsPerSample? : number;
-                                                  channels? : number;
-                                                  packetSize? : number;
-                                                  samplingRate? : number;
-                                                  protection? : {
-                                                    keyId : Uint8Array;
-                                                    keySystems : Array<{
-                                                      systemId : string;
-                                                      privateData : Uint8Array;
-                                                    }>;
-                                                  }; }
+export interface ISmoothInitSegmentPrivateInfos {
+  /**
+   * Timescale the segments are in, in the Manifest.
+   * Needed because Smooth segment are created in JS based on timing information
+   * as found in the Manifest.
+   */
+  timescale : number;
+  codecPrivateData? : string;
+  bitsPerSample? : number;
+  channels? : number;
+  packetSize? : number;
+  samplingRate? : number;
+  protection? : { keyId : Uint8Array };
+}
+
+/**
+ * Supplementary information specific to Smooth media segments (that is, every
+ * segments but the initialization segment).
+ */
+export interface ISmoothSegmentPrivateInfos {
+  /**
+   * Start time of the segment as announced in the Manifest, in the same
+   * timescale than the one indicated through `ISmoothInitSegmentPrivateInfos`.
+   */
+  time : number;
+  /**
+   * Duration of the segment as announced in the Manifest, in the same timescale
+   * than the one indicated through `ISmoothInitSegmentPrivateInfos`.
+   */
+  duration : number;
+}
 
 /** Describes a given "real" Manifest for MetaPlaylist's segments. */
 export interface IBaseContentInfos { manifest: Manifest;
@@ -50,10 +70,16 @@ export interface IBaseContentInfos { manifest: Manifest;
                                      representation: Representation; }
 
 /** Supplementary information needed for segments in the "metaplaylist" transport. */
-export interface IMetaPlaylistPrivateInfos { transportType : string;
-                                             baseContent : IBaseContentInfos;
-                                             contentStart : number;
-                                             contentEnd? : number; }
+export interface IMetaPlaylistPrivateInfos {
+  /** The original transport protocol (e.g. "dash", "smooth" etc.) */
+  transportType : string;
+  /** The context this segment is in. */
+  baseContent : IBaseContentInfos;
+  /** The segment originally created by this transport's RepresentationIndex. */
+  originalSegment : ISegment;
+  contentStart : number;
+  contentEnd? : number;
+}
 
 /**
  * Supplementary information needed for initialization segments of the "local"
@@ -86,26 +112,38 @@ export interface ILocalManifestSegmentPrivateInfos {
  * exploited by the corresponding transport logic.
  */
 export interface IPrivateInfos {
-  smoothInit? : ISmoothInitSegmentPrivateInfos;
+  smoothInitSegment? : ISmoothInitSegmentPrivateInfos;
+  smoothMediaSegment? : ISmoothSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
   localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
   localManifestSegment? : ILocalManifestSegmentPrivateInfos;
+  isEMSGWhitelisted? : (evt: IEMSG) => boolean;
 }
 
 /** Represent a single Segment from a Representation. */
 export interface ISegment {
-  /** Estimated duration of the segment, in timescale. */
-  duration : number;
   /** ID of the Segment. Should be unique for this Representation. */
   id : string;
-  /** If true, this Segment contains initialization data. */
+  /**
+   * If true, this segment is an initialization segment with no decodable data.
+   *
+   * Those types of segment contain no decodable data and are only there for
+   * initialization purposes, such as giving initial infos to the decoder on
+   * subsequent media segments that will be pushed.
+   *
+   * Note that if `isInit` is false, it only means that the segment contains
+   * decodable media, it can also contain important initialization information.
+   *
+   * Also, a segment which would contain both all initialization data and the
+   * decodable data would have `isInit` set to `false` as it is not purely an
+   * initialization segment.
+   *
+   * Segments which are not purely an initialization segments are called "media
+   * segments" in the code.
+   */
   isInit : boolean;
   /** URLs where this segment is available. From the most to least prioritary. */
   mediaURLs : string[]|null;
-  /** Estimated start time for the segment, in timescale. */
-  time : number;
-  /** Timescale to convert `time` and `duration` into seconds. */
-  timescale : number;
   /**
    * If set, the corresponding byte-range in the downloaded segment will
    * contain an index describing other Segments
@@ -129,55 +167,98 @@ export interface ISegment {
    * offseted when decoded.
    */
   timestampOffset? : number;
+  /**
+   * Estimated start time for the segment, in seconds.
+   * Note that some rounding errors and some differences between what the
+   * Manifest says and what the content really is might make that time not
+   * exact.
+   *
+   * `0` for initialization segments.
+   */
+  time : number;
+  /**
+   * Estimated end time for the segment, in seconds.
+   * Note that some rounding errors and some differences between what the
+   * Manifest says and what the content really is might make that time not
+   * exact.
+   *
+   * `0` for initialization segments.
+   */
+  end : number;
+  /**
+   * Estimated duration for the segment, in seconds.
+   * Note that some rounding errors and some differences between what the
+   * Manifest says and what the content really is might make that time not
+   * exact.
+   *
+   * `0` for initialization segments.
+   */
+  duration : number;
+  /**
+   * Always set to 1 for API compatibility with v3.X.X.
+   * This was intended for conversion of the `time` and `duration` properties
+   * into seconds.
+   *
+   * As both are always in seconds now, this property became unneeded.
+   */
+  timescale : 1;
 }
 
 /** Interface that should be implemented by any Representation's `index` value. */
-export default interface IRepresentationIndex {
+export interface IRepresentationIndex {
   /**
-   * Returns Segment object allowing to do the Init Segment request.
+   * Returns Segment object for the initialization segment, allowing to do the
+   * Init Segment request.
+   *
+   * `null` if there's no initialization segment.
    * @returns {Object}
    */
   getInitSegment() : ISegment|null;
 
   /**
    * Returns an array of Segments needed for the amount of time given.
-   * @param {number} up
-   * @param {number} duration
-   * @returns {Array.<Object>}
+   * @param {number} up - The first wanted position, in seconds.
+   * @param {number} duration - The amount of time in seconds you want from the
+   * starting position given in `up`.
+   * @returns {Array.<Object>} - The list of segments corresponding to your
+   * wanted range.
    */
   getSegments(up : number, duration : number) : ISegment[];
 
   /**
-   * Returns true if, from the given situation, the manifest has to be refreshed
-   * @param {number} up - Beginning timestamp of what you want
-   * @param {number} to - End timestamp of what you want
+   * Returns `true` if, from the given situation, the manifest has to be
+   * refreshed.
+   * @param {number} up - Beginning time in seconds of the range that is
+   * currently wanted.
+   * @param {number} to - Ending time in seconds of the range that is
+   * currently wanted.
    * @returns {Boolean}
    */
   shouldRefresh(up : number, to : number) : boolean;
 
   /**
    * Returns the starting time, in seconds, of the earliest segment currently
-   * available.
-   * Returns null if nothing is in the index
-   * Returns undefined if we cannot know this value.
+   * available in this index.
+   * Returns `null` if nothing is in the index
+   * Returns `undefined` if we cannot know this value.
    * @returns {Number|null}
    */
   getFirstPosition() : number | null | undefined;
 
   /**
    * Returns the ending time, in seconds, of the last segment currently
-   * available.
-   * Returns null if nothing is in the index
-   * Returns undefined if we cannot know this value.
+   * available in this index.
+   * Returns `null` if nothing is in the index
+   * Returns `undefined` if we cannot know this value.
    * @returns {Number|null|undefined}
    */
   getLastPosition() : number | null | undefined;
 
   /**
-   * Returns true if a Segment returned by this index is still considered
+   * Returns `true` if a Segment returned by this index is still considered
    * available.
-   * Returns false if it is not available anymore.
-   * Returns undefined if we cannot know whether it is still available or not.
+   * Returns `false` if it is not available anymore.
+   * Returns `undefined` if we cannot know whether it is still available or not.
    * @param {Object} segment
    * @returns {Boolean|undefined}
    */
@@ -185,8 +266,13 @@ export default interface IRepresentationIndex {
 
   /**
    * Returns true if the `error` given following the request of `segment` can
-   * indicate that the index became "unsynchronized" with the server.
-   * Some transport cannot become unsynchronized and can return false directly.
+   * indicate that the index became "de-synchronized" with the server.
+   *
+   * Reasons for de-synchronizations includes for example Manifest parsing
+   * optimizations where a newer version will not be totally parsed. In those
+   * conditions, we could be left with doing a segment request for a segment
+   * that does not really exists.
+   *
    * Note: This API assumes that the user first checked that the segment is
    * still available through `isSegmentStillAvailable`.
    * @param {Error} error
@@ -196,22 +282,78 @@ export default interface IRepresentationIndex {
   canBeOutOfSyncError(error : ICustomError, segment : ISegment) : boolean;
 
   /**
-   * Checks if the given time - in seconds - is in a discontinuity. That is:
-   *   - We're on the upper bound of the current range (end of the range - time
-   *     is inferior to the timescale)
-   *   - The next range starts after the end of the current range.
-   * @param {Number} _time
-   * @returns {Number} - If a discontinuity is present, this is the Starting
-   * time for the next (discontinuited) range. If not this is equal to -1.
+   * Checks if the given time - in seconds - is in a discontinuity.
+   * That is a "hole" in the stream with no segment defined.
+   * If that's the case, return the next available position where a segment
+   * should be available.
+   * If that's not the case, return `null`.
+   * @param {number} time - The time to check if it's in a discontinuity, in
+   * seconds.
+   * @returns {number | null} - If `null`, no discontinuity is encountered at
+   * `time`. If this is a number instead, there is one and that number is the
+   * position for which a segment is available in seconds.
    */
-  checkDiscontinuity(time : number) : number;
+  checkDiscontinuity(time : number) : number | null;
 
   /**
-   * Returns true if the last segments in this index have already been generated
-   * so that we can freely go to the next period.
+   * Most RepresentationIndex are linked to segments which are generated in
+   * chronological order: from an initial position (obtainable with
+   * `getFirstPosition`) to the last position of the corresponding Period
+   * (obtainable with `getLastPosition`).
+   *
+   * However, some RepresentationIndex could announce segments in a more random
+   * order.
+   * Examples of such RepresentationIndex are ones for contents which are being
+   * downloaded locally. Here a seek close to the end could schedule the
+   * download of the last segments immediately, which might thus be announced
+   * in this index before segments in the middle are.
+   *
+   * Knowing this value serves for example to check if a discontinuity
+   * encountered in the content can be skipped over, or if it's possible that
+   * this discontinuity is due to a segment not yet being generated.
+   *
+   * You should return `true` only if there is a chance that segments are not
+   * chronologically generated (even if they all have since been generated, this
+   * function is only to know if it's possible, not if it's the case now).
+   *
+   * In other most likely cases, you should return `false`.
+   *
+   * TODO find a better way with the "local" RepresentationIndex, like
+   * explicitely declaring which segments have not been downloaded yet.
+   * @returns {boolean}
+   */
+  areSegmentsChronologicallyGenerated() : boolean;
+
+  /**
+   * Returns `true` if the last segments in this index have already been
+   * generated so that we can freely go to the next period.
+   * Returns `false` if the index is still waiting on future segments to be
+   * generated.
    * @returns {boolean}
    */
   isFinished() : boolean;
+
+  /**
+   * Returns `true` if this index has all the data it needs to give the list
+   * of available segments.
+   * Returns `false` if you first should load its initialization segment (or
+   * the initialization segment's associated index file) to get the list of
+   * available segments.
+   *
+   * Most index don't rely on the initialization segment to give an index and
+   * as such, this method should return `true` directly.
+   * However in some index, the segment lists might only be known after the
+   * initialization has been loaded. In those case, it should return `false`
+   * until the corresponding segment list is known, at which point it can return
+   * `true`.
+   *
+   * You can use any ad-hoc mean you want to "initialize" an index.
+   * This is usually done by adding supplementary methods (like one named
+   * `initialize`) to that `RepresentationIndex` and calling it directly in the
+   * segment parsing code.
+   * @returns {boolean}
+   */
+  isInitialized() : boolean;
 
   /**
    * Replace the index with another one, such as after a Manifest update.
@@ -221,24 +363,10 @@ export default interface IRepresentationIndex {
 
   /**
    * Update the current index with a new, partial, version.
+   * Unlike `replace`, this method do not completely overwrite the information
+   * about this index's segments, it should mainly add new information about new
+   * announced segments.
    * @param {Object} newIndex
    */
   _update(newIndex : IRepresentationIndex) : void;
-
-  /**
-   * Add new segments to the index, obtained through various other different
-   * ways.
-   * @param {Array.<Object>} nextSegments
-   * @param {Object} currentSegment
-   */
-  _addSegments(
-    nextSegments : Array<{ time : number;
-                           duration : number;
-                           timescale : number;
-                           count? : number;
-                           range? : [number, number]; }>,
-    currentSegment? : { duration? : number;
-                        time : number;
-                        timescale? : number; }
-  ) : void;
 }

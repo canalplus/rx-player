@@ -28,18 +28,18 @@ describe("utils - throttle (RxJS)", () => {
       return observableOf(x);
     };
     const throttledObsFunction = throttle(obsFunction);
-    const Obs1 = throttledObsFunction(1);
-    const Obs2 = throttledObsFunction(2);
+    const obs1 = throttledObsFunction(1);
+    const obs2 = throttledObsFunction(2);
 
     let receivedItemFrom1 = false;
     let has1Completed = false;
     let receivedItemFrom2 = false;
 
-    Obs1.subscribe({
+    obs1.subscribe({
       next() { receivedItemFrom1 = true; },
       complete() { has1Completed = true; },
     });
-    Obs2.subscribe({
+    obs2.subscribe({
       next() { receivedItemFrom2 = true; },
       complete() {
         expect(receivedItemFrom1).toBe(true);
@@ -57,15 +57,15 @@ describe("utils - throttle (RxJS)", () => {
       return concat(observableOf(undefined), sub);
     };
     const throttledObsFunction = throttle(obsFunction);
-    const Obs1 = throttledObsFunction(sub1);
-    const Obs2 = throttledObsFunction(sub2);
+    const obs1 = throttledObsFunction(sub1);
+    const obs2 = throttledObsFunction(sub2);
 
     let itemsReceivedFrom1 = 0;
     let itemsReceivedFrom2 = 0;
 
     let has2Completed = false;
 
-    Obs1.subscribe({
+    obs1.subscribe({
       next() { itemsReceivedFrom1++; },
       complete() {
         expect(itemsReceivedFrom1).toBe(2);
@@ -74,7 +74,7 @@ describe("utils - throttle (RxJS)", () => {
       },
     });
 
-    Obs2.subscribe({
+    obs2.subscribe({
       next() { itemsReceivedFrom2++; },
       complete() { has2Completed = true; },
     });
@@ -95,25 +95,25 @@ describe("utils - throttle (RxJS)", () => {
       return concat(observableOf(undefined), sub);
     };
     const throttledObsFunction = throttle(obsFunction);
-    const Obs1 = throttledObsFunction(sub1);
-    const Obs2 = throttledObsFunction(sub2);
-    const Obs3 = throttledObsFunction(sub3);
+    const obs1 = throttledObsFunction(sub1);
+    const obs2 = throttledObsFunction(sub2);
+    const obs3 = throttledObsFunction(sub3);
 
     let itemsReceivedFrom1 = 0;
     let itemsReceivedFrom3 = 0;
 
     let has1Completed = false;
 
-    Obs2.subscribe();
+    obs2.subscribe();
     sub2.complete();
 
-    Obs1.subscribe({
+    obs1.subscribe({
       next() { itemsReceivedFrom1++; },
       complete() { has1Completed = true; },
     });
     sub1.complete();
 
-    Obs3.subscribe({
+    obs3.subscribe({
       next() { itemsReceivedFrom3++; },
       complete() {
         expect(has1Completed).toBe(true);
@@ -134,9 +134,9 @@ describe("utils - throttle (RxJS)", () => {
       return concat(observableOf(undefined), sub);
     };
     const throttledObsFunction = throttle(obsFunction);
-    const Obs1 = throttledObsFunction(sub1);
-    const Obs2 = throttledObsFunction(sub2);
-    const Obs3 = throttledObsFunction(sub3);
+    const obs1 = throttledObsFunction(sub1);
+    const obs2 = throttledObsFunction(sub2);
+    const obs3 = throttledObsFunction(sub3);
     const error = new Error("ffo");
 
     let itemsReceivedFrom1 = 0;
@@ -144,35 +144,35 @@ describe("utils - throttle (RxJS)", () => {
 
     let has1Errored = false;
 
-    Obs2.subscribe();
+    obs2.subscribe();
     sub2.complete();
 
-    Obs1.subscribe(
-      () => { itemsReceivedFrom1++; },
-      (e) => {
+    obs1.subscribe({
+      next: () => { itemsReceivedFrom1++; },
+      error: (e) => {
         expect(e).toBe("titi");
         has1Errored = true;
-      }
-    );
+      },
+    });
     sub1.error("titi");
 
-    Obs3.subscribe(
-      () => { itemsReceivedFrom3++; },
-      (e) => {
+    obs3.subscribe({
+      next: () => { itemsReceivedFrom3++; },
+      error: (e) => {
         expect(e).toBe(error);
         expect(has1Errored).toBe(true);
         expect(itemsReceivedFrom1).toBe(1);
         expect(itemsReceivedFrom3).toBe(1);
         done();
-      }
-    );
+      },
+    });
 
     sub3.error(error);
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should execute Observable coming after the previous one was unsubscribed", (done) => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const sub1 = new Subject<void>();
     const sub2 = new Subject<void>();
     const sub3 = new Subject<void>();
@@ -180,25 +180,25 @@ describe("utils - throttle (RxJS)", () => {
       return concat(observableOf(undefined), sub);
     };
     const throttledObsFunction = throttle(obsFunction);
-    const Obs1 = throttledObsFunction(sub1);
-    const Obs2 = throttledObsFunction(sub2);
-    const Obs3 = throttledObsFunction(sub3);
+    const obs1 = throttledObsFunction(sub1);
+    const obs2 = throttledObsFunction(sub2);
+    const obs3 = throttledObsFunction(sub3);
 
     let itemsReceivedFrom1 = 0;
     let itemsReceivedFrom3 = 0;
 
     let has1Completed = false;
 
-    const subscription2 = Obs2.subscribe();
+    const subscription2 = obs2.subscribe();
     subscription2.unsubscribe();
 
-    Obs1.subscribe({
+    obs1.subscribe({
       next() { itemsReceivedFrom1++; },
       complete() { has1Completed = true; },
     });
     sub1.complete();
 
-    Obs3.subscribe({
+    obs3.subscribe({
       next() { itemsReceivedFrom3++; },
       complete() {
         expect(has1Completed).toBe(true);
@@ -220,15 +220,15 @@ describe("utils - throttle (RxJS)", () => {
     };
     const throttledObsFunction1 = throttle(obsFunction);
     const throttledObsFunction2 = throttle(obsFunction);
-    const Obs1 = throttledObsFunction1(sub1);
-    const Obs2 = throttledObsFunction2(sub2);
+    const obs1 = throttledObsFunction1(sub1);
+    const obs2 = throttledObsFunction2(sub2);
 
     let itemsReceivedFrom1 = 0;
     let itemsReceivedFrom2 = 0;
 
     let has2Completed = false;
 
-    Obs1.subscribe({
+    obs1.subscribe({
       next() { itemsReceivedFrom1++; },
       complete() {
         expect(itemsReceivedFrom1).toBe(2);
@@ -237,7 +237,7 @@ describe("utils - throttle (RxJS)", () => {
       },
     });
 
-    Obs2.subscribe({
+    obs2.subscribe({
       next() { itemsReceivedFrom2++; },
       complete() { has2Completed = true; },
     });

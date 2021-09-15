@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("parsers - webvtt - parseWebVTT", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -38,7 +44,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       ["STYLE", ""],
     ]);
     jest.mock("../../get_style_blocks", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyGetStyleBlock,
     }));
 
@@ -47,7 +53,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       ["CUE", ""],
     ]);
     jest.mock("../../get_cue_blocks", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyGetCueBlock,
     }));
 
@@ -59,7 +65,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       settings: {},
     }));
     jest.mock("../../parse_cue_block", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyParseCueBlock,
     }));
 
@@ -69,7 +75,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       },
     }));
     jest.mock("../parse_style_block", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyParseStyleBlock,
     }));
 
@@ -79,13 +85,13 @@ describe("parsers - webvtt - parseWebVTT", () => {
       element: document.createElement("div"),
     }));
     jest.mock("../to_html", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyToHTML,
     }));
 
     const spyGetFirstLineAfterHeader = jest.fn(() => 1);
     jest.mock("../../utils", () => ({
-      __esModule: true,
+      __esModule: true as const,
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
@@ -118,7 +124,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       ["STYLE", ""],
     ]);
     jest.mock("../../get_style_blocks", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyGetStyleBlock,
     }));
 
@@ -127,13 +133,13 @@ describe("parsers - webvtt - parseWebVTT", () => {
       ["CUE", ""],
     ]);
     jest.mock("../../get_cue_blocks", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyGetCueBlock,
     }));
 
     const spyParseCueBlock = jest.fn(() => undefined);
     jest.mock("../../parse_cue_block", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyParseCueBlock,
     }));
 
@@ -143,7 +149,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       },
     }));
     jest.mock("../parse_style_block", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyParseStyleBlock,
     }));
 
@@ -153,13 +159,13 @@ describe("parsers - webvtt - parseWebVTT", () => {
       element: document.createElement("div"),
     }));
     jest.mock("../to_html", () => ({
-      __esModule: true,
+      __esModule: true as const,
       default: spyToHTML,
     }));
 
     const spyGetFirstLineAfterHeader = jest.fn(() => 1);
     jest.mock("../../utils", () => ({
-      __esModule: true,
+      __esModule: true as const,
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
@@ -173,4 +179,3 @@ describe("parsers - webvtt - parseWebVTT", () => {
     expect(spyToHTML).not.toHaveBeenCalled();
   });
 });
-/* tslint:enable no-unsafe-any */

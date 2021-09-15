@@ -18,22 +18,37 @@ import {
   defer as observableDefer,
   Observable,
 } from "rxjs";
+import { catchError } from "rxjs/operators";
 import log from "../../log";
+import { getNextBoxOffsets } from "../../parsers/containers/isobmff";
 import {
   be4toi,
   concat,
 } from "../../utils/byte_parsing";
 import castToObservable from "../../utils/cast_to_observable";
-import { isIEOrEdge } from "../browser_detection";
 import { PSSH_TO_INTEGER } from "./constants";
 import { ICustomMediaKeySession } from "./custom_media_keys";
 
 /**
- * Some browsers have problems when the CENC PSSH box is the first managed PSSH
- * encountered (for the moment just Edge was noted with this behavior).
+ * Modify "initialization data" sent to a `generateKeyRequest` EME call to
+ * improve the player's browser compatibility:
  *
- * This function tries to move CENC PSSH boxes at the end of the given init
- * data.
+ *   1. some browsers/CDM have problems when the CENC PSSH box is the first
+ *      encountered PSSH box in the initialization data (for the moment just
+ *      Edge was noted with this behavior).
+ *      We found however that it works on every browser when the CENC pssh
+ *      box(es) is/are the last box(es) encountered.
+ *
+ *      To that end, we move CENC pssh boxes at the end of the initialization
+ *      data in this function.
+ *
+ *   2. Some poorly encoded/packaged contents communicate both a CENC with a
+ *      pssh version of 0 and one with a version of 1. We found out that this is
+ *      not always well handled on some devices/browsers (on Edge and some other
+ *      embedded devices that shall remain nameless for now!).
+ *
+ *      Here this function will filter out CENC pssh with a version different to
+ *      1 when one(s) with a version of 1 is/are already present.
  *
  * If the initData is unrecognized or if a CENC PSSH is not found, this function
  * throws.
@@ -41,9 +56,9 @@ import { ICustomMediaKeySession } from "./custom_media_keys";
  * @returns {Uint8Array} - Initialization data, patched
  */
 export function patchInitData(initData : Uint8Array) : Uint8Array {
-  const initialLength = initData.byteLength;
   log.info("Compat: Trying to move CENC PSSH from init data at the end of it.");
-  let cencs = new Uint8Array();
+  let foundCencV1 = false;
+  let concatenatedCencs = new Uint8Array();
   let resInitData = new Uint8Array();
 
   let offset = 0;
@@ -80,8 +95,24 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
         initData[offset + 26] === 0xFB &&
         initData[offset + 27] === 0x4B
     ) {
-      log.info("Compat: CENC PSSH found.");
-      cencs = concat(cencs, currentPSSH);
+      const cencOffsets = getNextBoxOffsets(currentPSSH);
+      const version = cencOffsets === null ? undefined :
+                                             currentPSSH[cencOffsets[1]];
+      log.info("Compat: CENC PSSH found with version", version);
+      if (version === undefined) {
+        log.warn("Compat: could not read version of CENC PSSH");
+      } else if (foundCencV1 === (version === 1)) {
+        // Either `concatenatedCencs` only contains v1 or does not contain any
+        concatenatedCencs = concat(concatenatedCencs, currentPSSH);
+      } else if (version === 1) {
+        log.warn("Compat: cenc version 1 encountered, " +
+                 "removing every other cenc pssh box.");
+        concatenatedCencs = currentPSSH;
+        foundCencV1 = true;
+      } else {
+        log.warn("Compat: filtering out cenc pssh box with wrong version",
+                 version);
+      }
     } else {
       resInitData = concat(resInitData, currentPSSH);
     }
@@ -92,12 +123,7 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
     log.warn("Compat: unrecognized initialization data. Cannot patch it.");
     throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
   }
-
-  if (resInitData.byteLength === initialLength) {
-    log.warn("Compat: CENC PSSH not found. Cannot patch it");
-    throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
-  }
-  return concat(resInitData, cencs);
+  return concat(resInitData, concatenatedCencs);
 }
 
 /**
@@ -114,23 +140,33 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
  */
 export default function generateKeyRequest(
   session: MediaKeySession|ICustomMediaKeySession,
-  initData: Uint8Array,
-  initDataType: string|undefined
+  initializationDataType : string | undefined,
+  initializationData : Uint8Array
 ) : Observable<unknown> {
   return observableDefer(() => {
     log.debug("Compat: Calling generateRequest on the MediaKeySession");
     let patchedInit : Uint8Array;
-    if (isIEOrEdge) {
-      try {
-        patchedInit = patchInitData(initData);
-      } catch (_e) {
-        patchedInit = initData;
-      }
-    } else {
-      patchedInit = initData;
+    try {
+      patchedInit = patchInitData(initializationData);
+    } catch (_e) {
+      patchedInit = initializationData;
     }
-    return castToObservable(session.generateRequest(initDataType == null ? "" :
-                                                                           initDataType,
-                                                    patchedInit));
+    const initDataType = initializationDataType ?? "";
+    return castToObservable(session.generateRequest(initDataType, patchedInit))
+      .pipe(catchError(error => {
+        if (initDataType !== "" || !(error instanceof TypeError)) {
+          throw error;
+        }
+
+        // On newer EME versions of the specification, the initialization data
+        // type given to generateRequest cannot be an empty string (it returns
+        // a rejected promise with a TypeError in that case).
+        // Retry with a default "cenc" value for initialization data type if
+        // we're in that condition.
+        log.warn("Compat: error while calling `generateRequest` with an empty " +
+                 "initialization data type. Retrying with a default \"cenc\" value.",
+                 error);
+        return castToObservable(session.generateRequest("cenc", patchedInit));
+      }));
   });
 }

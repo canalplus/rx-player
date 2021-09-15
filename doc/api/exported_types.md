@@ -71,7 +71,7 @@ RxPlayer's method ``loadVideo``.
 Example:
 
 ```ts
-// the type(s) wanted
+// the type wanted
 import { ILoadVideoOptions } from "rx-player/types";
 
 // hypothetical file exporting an RxPlayer instance
@@ -95,14 +95,31 @@ rxPlayer.loadVideo(loadVideoOpts);
 Speaking of ``loadVideo``, some subparts of ``ILoadVideoOptions`` are also
 exported:
 
-  - ``ITransportOptions``: type for the ``transportOptions`` property
-    optionally given to ``loadVideo``.
-
   - ``IKeySystemOption``: type for an element of the ``keySystems`` array,
     which is an optional property given to ``loadVideo``.
 
     To clarify, the ``keySystems`` property in a ``loadVideo`` call is an
     optional array of one or multiple ``IKeySystemOption``.
+
+  - `IPersistentSessionStorage`: type of the `licenseStorage` property of the
+    `keySystems` option given to `loadVideo`.
+
+  - `IPersistentSessionInfo`: type used by an `IPersistentSessionStorage`.
+
+  - ``ITransportOptions``: type for the ``transportOptions`` property
+    optionally given to ``loadVideo``.
+
+  - `IManifestLoader`: type for the `manifestLoader` function optionally set
+    on the `transportOptions` option of `loadVideo`.
+
+  - `IRepresentationFilter`: type for the `representationFilter` function
+    optionally set on the `transportOptions` option of `loadVideo`.
+
+  - `IRepresentationInfos`: type for the second argument of the
+    `representationFilter` function (defined by `IRepresentationFilter`.)
+
+  - `ISegmentLoader`: type for the `segmentLoader` function optionally set on
+    the `transportOptions` option of `loadVideo`.
 
   - ``ISupplementaryTextTrackOption``: type for an element of the
     ``supplementaryTextTracks`` array, which is an optional property given to
@@ -125,7 +142,17 @@ exported:
     ``loadVideo``.
 
 
-### getAvailableAudioTracks ####################################################
+### Manifest structure #########################################################
+
+Several `RxPlayer` methods rely on a `Manifest` structure and one of its
+"children": the `Period`, the `Adaptation`, the `Representation` or the
+`Segment`.
+
+All of those can be imported from `"rx-player/types"` respectively as
+`IManifest`, `IPeriod`, `IAdaptation`, `IRepresentation` and `ISegment`
+
+
+### getAvailableAudioTracks method / availableAudioTracksChange event ##########
 
 The return type of the `getAvailableAudioTracks` method is an array of objects.
 Each of this objects corresponds to the `IAvailableAudioTrack` interface.
@@ -148,7 +175,7 @@ function getAvailableAudioTracks() : IAvailableAudioTrack[] {
 ```
 
 
-### getAvailableTextTracks #####################################################
+### getAvailableTextTracks method / availabletextTracksChange event ############
 
 The return type of the `getAvailableTextTracks` method is an array of objects.
 Each of this objects corresponds to the `IAvailableTextTrack` interface.
@@ -171,7 +198,7 @@ function getAvailableTextTracks() : IAvailableTextTrack[] {
 ```
 
 
-### getAvailableVideoTracks ####################################################
+### getAvailableVideoTracks method / availableVideoTracksChange event ##########
 
 The return type of the `getAvailableVideoTracks` method is an array of objects.
 Each of this objects corresponds to the `IAvailableVideoTrack` interface.
@@ -194,7 +221,7 @@ function getAvailableVideoTracks() : IAvailableVideoTrack[] {
 ```
 
 
-### getAudioTrack/audioTrackChange #############################################
+### getAudioTrack method /audioTrackChange event ###############################
 
 The `IAudioTrack` corresponds to both the type returned by the `getAudioTrack`
 method and emitted as the payload of the `audioTrackChange` event.
@@ -221,7 +248,7 @@ function getCurrentlyDownloadedAudioTrack() : IAudioTrack {
 ```
 
 
-### getTextTrack/textTrackChange ###############################################
+### getTextTrack method / textTrackChange event ################################
 
 The `ITextTrack` corresponds to both the type returned by the `getTextTrack`
 method and emitted as the payload of the `textTrackChange` event.
@@ -248,7 +275,7 @@ function getCurrentlyDownloadedTextTrack() : ITextTrack {
 ```
 
 
-### getVideoTrack/videoTrackChange #############################################
+### getVideoTrack method / videoTrackChange event ##############################
 
 The `IVideoTrack` corresponds to both the type returned by the `getVideoTrack`
 method and emitted as the payload of the `videoTrackChange` event.
@@ -272,4 +299,57 @@ rxPlayer.addEventListener("videoTrackChange", (track : IVideoTrack) => {
 function getCurrentlyDownloadedVideoTrack() : IVideoTrack {
   return rxPlayer.getVideoTrack();
 }
+```
+
+### streamEvent / streamEventSkip events #######################################
+
+The type `IStreamEvent` corresponds to the payload of either a `streamEvent` or
+a `streamEventSkip` event.
+
+The type `IStreamEventData` is the type of its `data` property.
+
+Example:
+
+```js
+// the type(s) wanted
+import { IStreamEvent, IStreamEventData } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+function processEventData(eventData : IStreamEventData) {
+  if (eventData.type === "dash-event-stream") {
+    console.log("DASH EventStream's event received!");
+  }
+}
+
+rxPlayer.addEventListener("streamEvent", (evt : IStreamEvent) {
+  processEventData(evt.data);
+});
+```
+
+
+### RxPlayer errors and warnings ###############################################
+
+RxPlayer errors and warnings may for now be either a plain `Error` instance or
+a special RxPlayer-defined error (which extends the `Error` Object).
+
+All RxPlayer-defined error are compatible with the exported `IPlayerError` type.
+
+Which means that you could write the following:
+```ts
+// the type wanted
+import { IPlayerError } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+rxPlayer.addEventListener("error", (err : Error | IPlayerError) => {
+  // ...
+});
+
+rxPlayer.addEventListener("warning", (err : Error | IPlayerError) => {
+  // ...
+});
+
 ```

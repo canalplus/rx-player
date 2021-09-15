@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { IIndexSegment } from "../index_helpers";
 
 describe("Manifest Parsers utils - updateSegmentTimeline", () => {
@@ -23,21 +30,19 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
   beforeEach(() => {
     jest.resetModules();
 
-    /* tslint:disable no-unsafe-any */
     logWarnSpy = jest.spyOn(require("../../../../log").default, "warn");
     updateSegmentTimeline = require("../update_segment_timeline").default;
-    /* tslint:enable no-unsafe-any */
   });
 
   afterEach(() => {
     logWarnSpy?.mockRestore();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should just replace with the new timeline if the old was empty", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const oldTimeline : IIndexSegment[] = [];
-    const newTimeline1 = [{ start: 0, duration: 1000, repeatCount: 10}];
+    const newTimeline1 = [{ start: 0, duration: 1000, repeatCount: 10 }];
     const newTimeline2 : IIndexSegment[] = [];
     updateSegmentTimeline?.(oldTimeline, newTimeline1);
     expect(oldTimeline).toEqual(newTimeline1);
@@ -49,7 +54,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
   });
 
   it("should not do anything if the new timeline is empty", () => {
-    const oldTimeline = [{ start: 0, duration: 1000, repeatCount: 10}];
+    const oldTimeline = [{ start: 0, duration: 1000, repeatCount: 10 }];
     const newTimeline : IIndexSegment[] = [];
     const oldTimelineCloned = oldTimeline.slice();
     updateSegmentTimeline?.(oldTimeline, newTimeline);
@@ -58,16 +63,16 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
   });
 
   it("should not do anything if the timelines are equal", () => {
-    const oldTimeline1 = [{ start: 0, duration: 1000, repeatCount: 10}];
-    const newTimeline1 = [{ start: 0, duration: 1000, repeatCount: 10}];
+    const oldTimeline1 = [{ start: 0, duration: 1000, repeatCount: 10 }];
+    const newTimeline1 = [{ start: 0, duration: 1000, repeatCount: 10 }];
     const oldTimeline1Cloned = oldTimeline1.slice();
     updateSegmentTimeline?.(oldTimeline1, newTimeline1);
     expect(oldTimeline1).toEqual(oldTimeline1Cloned);
 
-    const oldTimeline2 = [ { start: 0, duration: 1000, repeatCount: 10},
+    const oldTimeline2 = [ { start: 0, duration: 1000, repeatCount: 10 },
                            { start: 11000, duration: 1000, repeatCount: 0 },
                            { start: 12000, duration: 1000, repeatCount: 1 } ];
-    const newTimeline2 = [ { start: 0, duration: 1000, repeatCount: 10},
+    const newTimeline2 = [ { start: 0, duration: 1000, repeatCount: 10 },
                            { start: 11000, duration: 1000, repeatCount: 0 },
                            { start: 12000, duration: 1000, repeatCount: 1 } ];
     const oldTimeline2Cloned = oldTimeline2.slice();
@@ -76,12 +81,12 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     expect(logWarnSpy).not.toHaveBeenCalled();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should throw if the new timeline begin long after the old one", () => {
-  /* tslint:enable max-line-length */
-    const oldTimeline1 = [ { start: 0, duration: 1000, repeatCount: 10},
+  /* eslint-enable max-len */
+    const oldTimeline1 = [ { start: 0, duration: 1000, repeatCount: 10 },
                            { start: 11000, duration: 1000, repeatCount: 0 } ];
-    const newTimeline1 = [ { start: 13000, duration: 1000, repeatCount: 10},
+    const newTimeline1 = [ { start: 13000, duration: 1000, repeatCount: 10 },
                            { start: 24000, duration: 1000, repeatCount: 0 },
                            { start: 25000, duration: 1000, repeatCount: 1 } ];
     const oldTimeline1Cloned = oldTimeline1.slice();
@@ -93,20 +98,25 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
       err = e;
     }
 
-    /* tslint:disable no-unsafe-any */
-    expect(err).not.toBeNull();
-    expect(err.type).toEqual("MEDIA_ERROR");
-    expect(err.code).toEqual("MANIFEST_UPDATE_ERROR");
-    expect(err.message).toEqual("MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: not enough data");
-    /* tslint:enable no-unsafe-any */
+    expect(err).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(err instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+    expect((err as { type? : string }).type).toEqual("MEDIA_ERROR");
+    expect((err as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
+    expect(err.message)
+      .toEqual("MediaError (MANIFEST_UPDATE_ERROR) Cannot perform " +
+               "partial update: not enough data");
     expect(oldTimeline1).toEqual(oldTimeline1Cloned);
     expect(logWarnSpy).not.toHaveBeenCalled();
   });
 
   it("should merge consecutive timelines", () => {
-    const oldTimeline1 = [ { start: 0, duration: 500, repeatCount: 20},
+    const oldTimeline1 = [ { start: 0, duration: 500, repeatCount: 20 },
                            { start: 11000, duration: 1000, repeatCount: 0 } ];
-    const newTimeline1 = [ { start: 12000, duration: 1000, repeatCount: 11},
+    const newTimeline1 = [ { start: 12000, duration: 1000, repeatCount: 11 },
                            { start: 24000, duration: 1100, repeatCount: 0 },
                            { start: 25100, duration: 1000, repeatCount: 1 } ];
     const oldTimeline1Cloned = oldTimeline1.slice();
@@ -117,7 +127,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     // With repeats
 
-    const oldTimeline2 = [ { start: 0, duration: 500, repeatCount: 20},
+    const oldTimeline2 = [ { start: 0, duration: 500, repeatCount: 20 },
                            { start: 11000, duration: 1000, repeatCount: 8 } ];
     const newTimeline2 = [ { start: 20000, duration: 1000, repeatCount: 3 },
                            { start: 24000, duration: 1100, repeatCount: 0 },
@@ -129,31 +139,31 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     expect(logWarnSpy).not.toHaveBeenCalled();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should merge consecutive timelines with a repeatCount set to -1 for the old timeline", () => {
-  /* tslint:enable max-line-length */
-    const oldTimeline1 = [ { start: 0, duration: 500, repeatCount: 20},
+  /* eslint-enable max-len */
+    const oldTimeline1 = [ { start: 0, duration: 500, repeatCount: 20 },
                            { start: 11000, duration: 1000, repeatCount: -1 } ];
-    const newTimeline1 = [ { start: 12000, duration: 1000, repeatCount: 11},
+    const newTimeline1 = [ { start: 12000, duration: 1000, repeatCount: 11 },
                            { start: 24000, duration: 1100, repeatCount: 0 },
                            { start: 25100, duration: 1000, repeatCount: 1 } ];
     updateSegmentTimeline?.(oldTimeline1, newTimeline1);
     expect(oldTimeline1).toEqual([
-      { start: 0, duration: 500, repeatCount: 20},
+      { start: 0, duration: 500, repeatCount: 20 },
       { start: 11000, duration: 1000, repeatCount: 0 },
-      { start: 12000, duration: 1000, repeatCount: 11},
+      { start: 12000, duration: 1000, repeatCount: 11 },
       { start: 24000, duration: 1100, repeatCount: 0 },
       { start: 25100, duration: 1000, repeatCount: 1 },
     ]);
 
-    const oldTimeline2 = [ { start: 0, duration: 500, repeatCount: 20},
+    const oldTimeline2 = [ { start: 0, duration: 500, repeatCount: 20 },
                            { start: 11000, duration: 1000, repeatCount: -1 } ];
     const newTimeline2 = [ { start: 20000, duration: 1000, repeatCount: 3 },
                            { start: 24000, duration: 1100, repeatCount: 0 },
                            { start: 25100, duration: 1000, repeatCount: 1 } ];
     updateSegmentTimeline?.(oldTimeline2, newTimeline2);
     expect(oldTimeline2).toEqual([
-      { start: 0, duration: 500, repeatCount: 20},
+      { start: 0, duration: 500, repeatCount: 20 },
       { start: 11000, duration: 1000, repeatCount: 8 },
       { start: 20000, duration: 1000, repeatCount: 3 },
       { start: 24000, duration: 1100, repeatCount: 0 },
@@ -166,7 +176,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     const oldTimeline1 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 0 },
                            { start: 1500, duration: 1000, repeatCount: 0 } ];
-    const newTimeline1 = [ { start: 1000, duration: 500, repeatCount: 0},
+    const newTimeline1 = [ { start: 1000, duration: 500, repeatCount: 0 },
                            { start: 1500, duration: 1000, repeatCount: 0 },
                            { start: 2500, duration: 500, repeatCount: 0 },
                            { start: 3000, duration: 5000, repeatCount: 0 } ];
@@ -185,7 +195,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     const oldTimeline1 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 },
                            { start: 12000, duration: 1000, repeatCount: 0 } ];
-    const newTimeline1 = [ { start: 2000, duration: 500, repeatCount: 19},
+    const newTimeline1 = [ { start: 2000, duration: 500, repeatCount: 19 },
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
@@ -201,7 +211,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     const oldTimeline2 = [ { start: 1000, duration: 500, repeatCount: 21 },
                            { start: 12000, duration: 1000, repeatCount: 0 } ];
-    const newTimeline2 = [ { start: 2000, duration: 500, repeatCount: 19},
+    const newTimeline2 = [ { start: 2000, duration: 500, repeatCount: 19 },
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
@@ -215,7 +225,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     const oldTimeline3 = [ { start: 1000, duration: 500, repeatCount: 21 },
                            { start: 12000, duration: 1000, repeatCount: 0 } ];
-    const newTimeline3 = [ { start: 2000, duration: 500, repeatCount: -1},
+    const newTimeline3 = [ { start: 2000, duration: 500, repeatCount: -1 },
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
@@ -267,13 +277,13 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     expect(logWarnSpy).not.toHaveBeenCalled();
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should handle cases where the new timeline's start cannot be reached with the old timeline's repeatCount ", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const oldTimeline1 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 },
                            { start: 12000, duration: 1000, repeatCount: 0 } ];
-    const newTimeline1 = [ { start: 2700, duration: 500, repeatCount: 19},
+    const newTimeline1 = [ { start: 2700, duration: 500, repeatCount: 19 },
                            { start: 12700, duration: 1000, repeatCount: 0 },
                            { start: 13700, duration: 7000, repeatCount: 0 },
                            { start: 20700, duration: 5000, repeatCount: 0 } ];
@@ -287,12 +297,14 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
       { start: 20700, duration: 5000, repeatCount: 0 },
     ]);
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
-    expect(logWarnSpy).toHaveBeenCalledWith("RepresentationIndex: Manifest update removed previous segments");
+    expect(logWarnSpy).toHaveBeenCalledWith(
+      "RepresentationIndex: Manifest update removed previous segments"
+    );
     logWarnSpy?.mockClear();
 
     const oldTimeline2 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 } ];
-    const newTimeline2 = [ { start: 2700, duration: 500, repeatCount: 19},
+    const newTimeline2 = [ { start: 2700, duration: 500, repeatCount: 19 },
                            { start: 12700, duration: 1000, repeatCount: 0 },
                            { start: 13700, duration: 7000, repeatCount: 0 },
                            { start: 20700, duration: 5000, repeatCount: 0 } ];
@@ -306,12 +318,14 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
       { start: 20700, duration: 5000, repeatCount: 0 },
     ]);
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
-    expect(logWarnSpy).toHaveBeenCalledWith("RepresentationIndex: Manifest update removed previous segments");
+    expect(logWarnSpy).toHaveBeenCalledWith(
+      "RepresentationIndex: Manifest update removed previous segments"
+    );
     logWarnSpy?.mockClear();
 
     const oldTimeline3 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 } ];
-    const newTimeline3 = [ { start: 2700, duration: 500, repeatCount: 19} ];
+    const newTimeline3 = [ { start: 2700, duration: 500, repeatCount: 19 } ];
     updateSegmentTimeline?.(oldTimeline3, newTimeline3);
     expect(oldTimeline3).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
@@ -319,12 +333,14 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
       { start: 2700, duration: 500, repeatCount: 19 },
     ]);
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
-    expect(logWarnSpy).toHaveBeenCalledWith("RepresentationIndex: Manifest update removed previous segments");
+    expect(logWarnSpy).toHaveBeenCalledWith(
+      "RepresentationIndex: Manifest update removed previous segments"
+    );
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should handle cases where the repeatCount cannot be incremented due to different durations", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const oldTimeline1 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 },
                            { start: 12000, duration: 1000, repeatCount: 0 } ];
@@ -342,7 +358,9 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
       { start: 20000, duration: 5000, repeatCount: 0 },
     ]);
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
-    expect(logWarnSpy).toHaveBeenCalledWith("RepresentationIndex: Manifest update removed previous segments");
+    expect(logWarnSpy).toHaveBeenCalledWith(
+      "RepresentationIndex: Manifest update removed previous segments"
+    );
     logWarnSpy?.mockClear();
 
     const oldTimeline2 = [ { start: 0, duration: 1000, repeatCount: 0 },
@@ -361,7 +379,9 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
       { start: 20000, duration: 5000, repeatCount: 0 },
     ]);
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
-    expect(logWarnSpy).toHaveBeenCalledWith("RepresentationIndex: Manifest update removed previous segments");
+    expect(logWarnSpy).toHaveBeenCalledWith(
+      "RepresentationIndex: Manifest update removed previous segments"
+    );
     logWarnSpy?.mockClear();
 
     const oldTimeline3 = [ { start: 1000, duration: 500, repeatCount: 21 } ];
@@ -372,7 +392,9 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
       { start: 2000, duration: 1000, repeatCount: 9 },
     ]);
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
-    expect(logWarnSpy).toHaveBeenCalledWith("RepresentationIndex: Manifest update removed previous segments");
+    expect(logWarnSpy).toHaveBeenCalledWith(
+      "RepresentationIndex: Manifest update removed previous segments"
+    );
   });
 
   it("should handle and log when there is a direct overlap (not due to a repeat)", () => {
@@ -396,15 +418,17 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
       { start: 20000, duration: 5000, repeatCount: 0 },
     ]);
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
-    expect(logWarnSpy).toHaveBeenCalledWith("RepresentationIndex: Manifest update removed previous segments");
+    expect(logWarnSpy).toHaveBeenCalledWith(
+      "RepresentationIndex: Manifest update removed previous segments"
+    );
   });
 
-  /* tslint:disable max-line-length */
+  /* eslint-disable max-len */
   it("should handle the case where the new Timeline just increment the last repeatCount", () => {
-  /* tslint:enable max-line-length */
+  /* eslint-enable max-len */
     const oldTimeline1 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 } ];
-    const newTimeline1 = [ { start: 1000, duration: 500, repeatCount: 51} ];
+    const newTimeline1 = [ { start: 1000, duration: 500, repeatCount: 51 } ];
     updateSegmentTimeline?.(oldTimeline1, newTimeline1);
     expect(oldTimeline1).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
@@ -447,7 +471,9 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
     expect(logWarnSpy)
-      .toHaveBeenCalledWith("RepresentationIndex: The new index is \"bigger\" than the previous one");
+      .toHaveBeenCalledWith(
+        "RepresentationIndex: The new index is \"bigger\" than the previous one"
+      );
 
     logWarnSpy?.mockClear();
 
@@ -469,7 +495,9 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
     expect(logWarnSpy)
-      .toHaveBeenCalledWith("RepresentationIndex: The new index is \"bigger\" than the previous one");
+      .toHaveBeenCalledWith(
+        "RepresentationIndex: The new index is \"bigger\" than the previous one"
+      );
   });
 
   it("should handle when the newer timeline is actually older than the older one", () => {
@@ -489,7 +517,9 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
     expect(logWarnSpy)
-      .toHaveBeenCalledWith("RepresentationIndex: The new index is older than the previous one");
+      .toHaveBeenCalledWith(
+        "RepresentationIndex: The new index is older than the previous one"
+      );
 
     logWarnSpy?.mockClear();
 
@@ -509,7 +539,9 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
     expect(logWarnSpy)
-      .toHaveBeenCalledWith("RepresentationIndex: The new index is older than the previous one");
+      .toHaveBeenCalledWith(
+        "RepresentationIndex: The new index is older than the previous one"
+      );
 
     logWarnSpy?.mockClear();
   });

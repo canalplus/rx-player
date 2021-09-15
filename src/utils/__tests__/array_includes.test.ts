@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable no-restricted-properties */
+
 import arrayIncludes from "../array_includes";
 
-/* tslint:disable no-unbound-method */
+/* eslint-disable @typescript-eslint/unbound-method */
 const initialArrayIncludes = Array.prototype.includes;
-/* tslint:enable no-unbound-method */
+/* eslint-enable @typescript-eslint/unbound-method */
 describe("utils - array-includes", () => {
   beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Array.prototype as any).includes = undefined;
   });
 

@@ -21,7 +21,7 @@ import { IFeaturesObject } from "../types";
  * Add ability to parse WebVTT text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeVTTFeature(features : IFeaturesObject) {
+function addNativeVTTFeature(features : IFeaturesObject) : void {
   features.nativeTextTracksParsers.vtt = vttParser;
 }
 

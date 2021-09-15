@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 describe("compat - shouldValidateMetadata", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -23,7 +29,7 @@ describe("compat - shouldValidateMetadata", () => {
   it("should return false if we are not on the Samsung browser", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSamsungBrowser: false,
       };
     });
@@ -34,7 +40,7 @@ describe("compat - shouldValidateMetadata", () => {
   it("should return true if we are on the Samsung browser", () => {
     jest.mock("../browser_detection", () => {
       return {
-        __esModule: true,
+        __esModule: true as const,
         isSamsungBrowser: true,
       };
     });
@@ -45,4 +51,3 @@ describe("compat - shouldValidateMetadata", () => {
     jest.resetModules();
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import emeManager from "../../../core/eme";
 import addEMEFeature from "../eme";
 
-/* tslint:disable no-unsafe-any */
 jest.mock("../../../core/eme", () => ({
-  __esModule: true,
+  __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - EME", () => {
   it("should add EME in the current features", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addEMEFeature(featureObject);
     expect(featureObject).toEqual({ emeManager });
     expect(featureObject.emeManager).toBe(emeManager);
   });
 });
-/* tslint:enable no-unsafe-any */

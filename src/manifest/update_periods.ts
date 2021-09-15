@@ -77,7 +77,7 @@ export function updatePeriods(
   newPeriods: Period[]
 ) : void {
   if (oldPeriods.length === 0) {
-    oldPeriods.splice(0, oldPeriods.length, ...newPeriods);
+    oldPeriods.splice(0, 0, ...newPeriods);
     return;
   }
   if (newPeriods.length === 0) {

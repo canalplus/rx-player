@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-unsafe-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 const minimalIndex = { getInitSegment() { return null; },
                        getSegments() { return []; },
                        shouldRefresh() { return false; },
                        getFirstPosition() : undefined { return ; },
                        getLastPosition() : undefined { return ; },
-                       checkDiscontinuity() { return -1; },
+                       checkDiscontinuity() { return null; },
+                       areSegmentsChronologicallyGenerated() { return true; },
                        isSegmentStillAvailable() : undefined { return ; },
                        canBeOutOfSyncError() : true { return true; },
                        isFinished() : true { return true; },
                        _replace() { /* noop */ },
-                       _update() { /* noop */ },
-                       _addSegments() { /* noop */ } };
+                       _update() { /* noop */ } };
 
 const defaultIsCodecSupported = jest.fn(() => true);
 
@@ -39,7 +45,7 @@ describe("Manifest - Representation", () => {
   });
 
   it("should be able to create Representation with the minimum arguments given", () => {
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
     const Representation = require("../representation").default;
     const args = { bitrate: 12,
@@ -62,7 +68,7 @@ describe("Manifest - Representation", () => {
   });
 
   it("should be able to add a height attribute", () => {
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
     const Representation = require("../representation").default;
     const args = { bitrate: 12, id: "test", height: 57, index: minimalIndex };
@@ -83,7 +89,7 @@ describe("Manifest - Representation", () => {
   });
 
   it("should be able to add a width attribute", () => {
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
     const Representation = require("../representation").default;
     const args = { bitrate: 12, id: "test", width: 2, index: minimalIndex };
@@ -104,7 +110,7 @@ describe("Manifest - Representation", () => {
   });
 
   it("should be able to add a codecs attribute", () => {
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
     const Representation = require("../representation").default;
     const args = { bitrate: 12,
@@ -128,7 +134,7 @@ describe("Manifest - Representation", () => {
   });
 
   it("should be able to add a mimeType attribute", () => {
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
     const Representation = require("../representation").default;
     const args = { bitrate: 12,
@@ -152,7 +158,7 @@ describe("Manifest - Representation", () => {
   });
 
   it("should be able to add a contentProtections attribute", () => {
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
     const Representation = require("../representation").default;
     const args = { bitrate: 12,
@@ -161,12 +167,9 @@ describe("Manifest - Representation", () => {
                    mimeType: "video/mp4",
                    codecs: "vp12",
                    contentProtections: { keyIds: [{ keyId: new Uint8Array([45]) }],
-                                         initData: {
-                                           cenc: [{
-                                             systemId: "EDEF",
-                                             data: new Uint8Array([78]),
-                                           }],
-                                         } } };
+                                         initData: { cenc: [{
+                                           systemId: "EDEF",
+                                           data: new Uint8Array([78]) }] } } };
     const representation = new Representation(args, { type: "video" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
@@ -184,7 +187,7 @@ describe("Manifest - Representation", () => {
   });
 
   it("should be able to add a frameRate attribute", () => {
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
     const Representation = require("../representation").default;
     const args = { bitrate: 12,
@@ -210,7 +213,7 @@ describe("Manifest - Representation", () => {
   });
 
   it("should be able to return an exploitable codecs + mimeType string", () => {
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
     const Representation = require("../representation").default;
     const args1 = { bitrate: 12,
@@ -244,7 +247,7 @@ describe("Manifest - Representation", () => {
 
   it("should set `isSupported` of non-supported codecs or mime-type to `false`", () => {
     const notSupportedSpy = jest.fn(() => false);
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: notSupportedSpy }));
     const Representation = require("../representation").default;
     const args = { bitrate: 12,
@@ -270,9 +273,9 @@ describe("Manifest - Representation", () => {
     expect(notSupportedSpy).toHaveBeenCalledWith("audio/mp4;codecs=\"mp4a.40.2\"");
   });
 
-  it("should not check support for a custom SourceBuffer", () => {
+  it("should not check support for a custom media buffer", () => {
     const notSupportedSpy = jest.fn(() => false);
-    jest.mock("../../compat", () => ({ __esModule: true,
+    jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: notSupportedSpy }));
     const Representation = require("../representation").default;
     const args = { bitrate: 12,
@@ -290,4 +293,3 @@ describe("Manifest - Representation", () => {
     expect(notSupportedSpy).toHaveBeenCalledTimes(0);
   });
 });
-/* tslint:enable no-unsafe-any */

@@ -19,8 +19,8 @@
  *
  * Having this definition here allow to use the same reference each time a noop
  * is needed.
- * Also, it allows to avoid telling tslint to ignore empty blocks everywhere.
+ * Also, it allows to avoid telling eslint to ignore empty blocks everywhere.
  */
-/* tslint:disable:no-empty */
+/* eslint-disable no-empty,@typescript-eslint/no-empty-function */
 export default function() : void {}
-/* tslint:enable:no-empty */
+/* eslint-enable no-empty, @typescript-eslint/no-empty-function */

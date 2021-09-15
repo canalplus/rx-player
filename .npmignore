@@ -22,3 +22,4 @@
 /dist/_esm5.raw
 
 /doc
+/src/parsers/manifest/dash/wasm-parser/target

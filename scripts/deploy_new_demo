@@ -57,7 +57,6 @@ cp -r demo/full/fonts $tmpFontsDir -v
 cp -r demo/full/assets $tmpAssetsDir -v
 cp -r demo/full/styles $tmpStylesDir -v
 cp demo/full/bundle.js $tmpDemoFile -v
-cp demo/full/lib.js $tmpRxPlayerFile -v
 cp demo/full/index.html $tmpIndexFile -v
 cp demo/full/plus.ico $tmpFaviconFile -v
 
@@ -69,7 +68,6 @@ rm -rf "$deployed_branch"
 mkdir -p "$deployed_branch"
 mv $tmpIndexFile "${deployed_branch}/index.html"
 mv $tmpFaviconFile "${deployed_branch}/plus.ico"
-mv $tmpRxPlayerFile "${deployed_branch}/lib.js"
 mv $tmpDemoFile "${deployed_branch}/bundle.js"
 mv $tmpFontsDir/fonts "${deployed_branch}/fonts"
 mv $tmpAssetsDir/assets "${deployed_branch}/assets"

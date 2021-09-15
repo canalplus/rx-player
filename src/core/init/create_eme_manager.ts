@@ -35,7 +35,11 @@ import {
 
 const { onEncrypted$ } = events;
 
-export interface IEMEDisabledEvent { type: "eme-disabled"; }
+/**
+ * Event emitted after deciding that no EME logic should be launched for the
+ * current content.
+ */
+export interface IEMEDisabledEvent { type: "eme-disabled" }
 
 /**
  * Create EMEManager if possible (has the APIs and configuration).
@@ -50,38 +54,42 @@ export default function createEMEManager(
   keySystems : IKeySystemOption[],
   contentProtections$ : Observable<IContentProtection>
 ) : Observable<IEMEManagerEvent|IEMEDisabledEvent> {
+  const encryptedEvents$ = observableMerge(onEncrypted$(mediaElement),
+                                           contentProtections$);
   if (features.emeManager == null) {
     return observableMerge(
-      onEncrypted$(mediaElement).pipe(map(() => {
+      encryptedEvents$.pipe(map(() => {
         log.error("Init: Encrypted event but EME feature not activated");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
                                       "EME feature not activated.");
       })),
-      observableOf({ type: "eme-disabled" as "eme-disabled" }));
+      observableOf({ type: "eme-disabled" as const }));
   }
 
   if (keySystems.length === 0) {
     return observableMerge(
-      onEncrypted$(mediaElement).pipe(map(() => {
+      encryptedEvents$.pipe(map(() => {
         log.error("Init: Ciphered media and no keySystem passed");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
                                       "Media is encrypted and no `keySystems` given");
       })),
-      observableOf({ type: "eme-disabled" as "eme-disabled" }));
+      observableOf({ type: "eme-disabled" as const }));
   }
 
   if (!hasEMEAPIs()) {
     return observableMerge(
-      onEncrypted$(mediaElement).pipe(map(() => {
+      encryptedEvents$.pipe(map(() => {
         log.error("Init: Encrypted event but no EME API available");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
                                       "Encryption APIs not found.");
       })),
-      observableOf({ type: "eme-disabled" as "eme-disabled" }));
+      observableOf({ type: "eme-disabled" as const }));
   }
 
   log.debug("Init: Creating EMEManager");
-  return features.emeManager(mediaElement, keySystems, contentProtections$);
+  return features.emeManager(mediaElement,
+                             keySystems,
+                             contentProtections$);
 }
 
 export { IEMEManagerEvent };

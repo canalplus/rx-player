@@ -42,6 +42,7 @@ declare module "object-assign" {
     source4 : X,
     source5 : Y
   ) : T & U & V & W & Y;
+  // eslint-disable-next-line @typescript-eslint/ban-types
   function objectAssign<T>(target : object, ...sources : T[]) : T;
   export default objectAssign;
 }

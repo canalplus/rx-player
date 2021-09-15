@@ -20,23 +20,22 @@ import {
   of as observableOf,
   throwError as observableThrow,
 } from "rxjs";
+import { MediaError } from "../../../errors";
+import assert from "../../../utils/assert";
 import castToObservable from "../../../utils/cast_to_observable";
-import {
-  // XXX TODO remove when the issue is resolved
-  // https://github.com/Microsoft/TypeScript/issues/19189
-  ICompatMediaKeySystemAccess,
-  ICompatMediaKeySystemConfiguration,
-  MediaKeys_,
-} from "../../browser_compatibility_types";
+import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import { isIE11 } from "../../browser_detection";
 import isNode from "../../is_node";
 import shouldFavourCustomSafariEME from "../../should_favour_custom_safari_EME";
 import CustomMediaKeySystemAccess from "./../custom_key_system_access";
 import getIE11MediaKeysCallbacks, {
-  MSMediaKeysConstructor
+  MSMediaKeysConstructor,
 } from "./ie11_media_keys";
+import getMozMediaKeysCallbacks, {
+  MozMediaKeysConstructor,
+} from "./moz_media_keys_constructor";
 import getOldKitWebKitMediaKeyCallbacks, {
-  isOldWebkitMediaElement
+  isOldWebkitMediaElement,
 } from "./old_webkit_media_keys";
 import {
   ICustomMediaKeys,
@@ -47,40 +46,37 @@ import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
 let requestMediaKeySystemAccess : null |
                                   ((keyType : string,
-                                    config : ICompatMediaKeySystemConfiguration[])
-                                      => Observable<ICompatMediaKeySystemAccess |
+                                    config : MediaKeySystemConfiguration[])
+                                      => Observable<MediaKeySystemAccess |
                                                     CustomMediaKeySystemAccess>)
                                 = null;
 
-let _setMediaKeys : ((elt: HTMLMediaElement,
-                      mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =
-  function defaultSetMediaKeys(elt: HTMLMediaElement,
-                               mediaKeys: MediaKeys | ICustomMediaKeys | null) {
-    /* tslint:disable no-unbound-method */
+let _setMediaKeys :
+((elt: HTMLMediaElement, mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =
+  function defaultSetMediaKeys(
+    mediaElement: HTMLMediaElement,
+    mediaKeys: MediaKeys | ICustomMediaKeys | null
+  ) {
+    const elt : ICompatHTMLMediaElement = mediaElement;
+    /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof elt.setMediaKeys === "function") {
       return elt.setMediaKeys(mediaKeys as MediaKeys);
     }
-    /* tslint:enable no-unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
 
     // If we get in the following code, it means that no compat case has been
     // found and no standard setMediaKeys API exists. This case is particulary
     // rare. We will try to call each API with native media keys.
-    if ((elt as any).webkitSetMediaKeys) {
-      /* tslint:disable no-unsafe-any */
-      return (elt as any).webkitSetMediaKeys(mediaKeys);
-      /* tslint:enable no-unsafe-any */
+    if (typeof elt.webkitSetMediaKeys === "function") {
+      return elt.webkitSetMediaKeys(mediaKeys);
     }
 
-    if ((elt as any).mozSetMediaKeys) {
-      /* tslint:disable no-unsafe-any */
-      return (elt as any).mozSetMediaKeys(mediaKeys);
-      /* tslint:enable no-unsafe-any */
+    if (typeof elt.mozSetMediaKeys === "function") {
+      return elt.mozSetMediaKeys(mediaKeys);
     }
 
-    if ((elt as any).msSetMediaKeys && mediaKeys !== null) {
-      /* tslint:disable no-unsafe-any */
-      return (elt as any).msSetMediaKeys(mediaKeys);
-      /* tslint:enable no-unsafe-any */
+    if (typeof elt.msSetMediaKeys === "function" && mediaKeys !== null) {
+      return elt.msSetMediaKeys(mediaKeys);
     }
   };
 
@@ -96,22 +92,14 @@ let _setMediaKeys : ((elt: HTMLMediaElement,
 if (isNode ||
     (navigator.requestMediaKeySystemAccess != null && !shouldFavourCustomSafariEME())
 ) {
-  requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
-    castToObservable(
-      navigator.requestMediaKeySystemAccess(a, b) as Promise<ICompatMediaKeySystemAccess>
-    );
+  requestMediaKeySystemAccess = (
+    a : string,
+    b : MediaKeySystemConfiguration[]
+  ) : Observable<MediaKeySystemAccess> =>
+    castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 } else {
-  let isTypeSupported = (keyType: string): boolean => {
-    if ((MediaKeys_ as any).isTypeSupported === undefined) {
-      throw new Error("No isTypeSupported on MediaKeys.");
-    }
-    /* tslint:disable no-unsafe-any */
-    return (MediaKeys_ as any).isTypeSupported(keyType);
-    /* tslint:enable no-unsafe-any */
-  };
-  let createCustomMediaKeys = (keyType: string) => {
-    return new (MediaKeys_ as any)(keyType);
-  };
+  let isTypeSupported: (keyType: string) => boolean;
+  let createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
 
   // This is for Chrome with unprefixed EME api
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
@@ -122,30 +110,54 @@ if (isNode ||
   // This is for WebKit with prefixed EME api
   } else if (WebKitMediaKeysConstructor !== undefined) {
     const callbacks = getWebKitMediaKeysCallbacks();
-    /* tslint:disable no-unsafe-any */
     isTypeSupported = callbacks.isTypeSupported;
-    /* tslint:enable no-unsafe-any */
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
     _setMediaKeys = callbacks.setMediaKeys;
-  } else if (isIE11 && MSMediaKeysConstructor !== undefined)
-    {
-      const callbacks = getIE11MediaKeysCallbacks();
-      /* tslint:disable no-unsafe-any */
-      isTypeSupported = callbacks.isTypeSupported;
-      /* tslint:enable no-unsafe-any */
-      createCustomMediaKeys = callbacks.createCustomMediaKeys;
-      _setMediaKeys = callbacks.setMediaKeys;
-    }
+  } else if (isIE11 && MSMediaKeysConstructor !== undefined) {
+    const callbacks = getIE11MediaKeysCallbacks();
+    isTypeSupported = callbacks.isTypeSupported;
+    createCustomMediaKeys = callbacks.createCustomMediaKeys;
+    _setMediaKeys = callbacks.setMediaKeys;
+  } else if (MozMediaKeysConstructor !== undefined) {
+    const callbacks = getMozMediaKeysCallbacks();
+    isTypeSupported = callbacks.isTypeSupported;
+    createCustomMediaKeys = callbacks.createCustomMediaKeys;
+    _setMediaKeys = callbacks.setMediaKeys;
+  } else {
+    const MK = window.MediaKeys as unknown as typeof MediaKeys & {
+      isTypeSupported? : (keyType : string) => boolean;
+      new(keyType? : string) : ICustomMediaKeys;
+    };
+    const checkForStandardMediaKeys = () => {
+      if (MK === undefined) {
+        throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
+                             "No `MediaKeys` implementation found " +
+                             "in the current browser.");
+      }
+      if (typeof MK.isTypeSupported === "undefined") {
+        const message = "This browser seems to be unable to play encrypted contents " +
+                        "currently. Note: Some browsers do not allow decryption " +
+                        "in some situations, like when not using HTTPS.";
+        throw new Error(message);
+      }
+    };
+    isTypeSupported = (keyType: string): boolean => {
+      checkForStandardMediaKeys();
+      assert(typeof MK.isTypeSupported === "function");
+      return MK.isTypeSupported(keyType);
+    };
+    createCustomMediaKeys = (keyType: string) => {
+      checkForStandardMediaKeys();
+      return new MK(keyType);
+    };
+  }
 
   requestMediaKeySystemAccess = function(
     keyType : string,
-    keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
-  ) : Observable<ICompatMediaKeySystemAccess|CustomMediaKeySystemAccess> {
-    // TODO Why TS Do not understand that isTypeSupported exists here?
-    /* tslint:disable no-unsafe-any */
+    keySystemConfigurations : MediaKeySystemConfiguration[]
+  ) : Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
     if (!isTypeSupported(keyType)) {
-    /* tslint:enable no-unsafe-any */
-      return observableThrow(undefined);
+      return observableThrow(() => new Error("Unsupported key type"));
     }
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -165,23 +177,22 @@ if (isNode ||
           videoCapabilities,
           audioCapabilities,
           initDataTypes: ["cenc"],
-          distinctiveIdentifier: "not-allowed" as "not-allowed",
-          persistentState: "required" as "required",
+          distinctiveIdentifier: "not-allowed" as const,
+          persistentState: "required" as const,
           sessionTypes: ["temporary", "persistent-license"],
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const customMediaKeys = createCustomMediaKeys(keyType);
         return observableOf(
           new CustomMediaKeySystemAccess(keyType,
-                                         /* tslint:disable no-unsafe-any */
                                          customMediaKeys,
-                                         /* tslint:enable no-unsafe-any */
                                          keySystemConfigurationResponse)
         );
       }
     }
 
-    return observableThrow(undefined);
+    return observableThrow(() => new Error("Unsupported configuration"));
   };
 }
 
