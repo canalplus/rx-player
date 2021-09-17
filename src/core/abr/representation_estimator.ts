@@ -34,9 +34,11 @@ import log from "../../log";
 import {
   Adaptation,
   ISegment,
+  Period,
   Representation,
 } from "../../manifest";
 import { getLeftSizeOfRange } from "../../utils/ranges";
+import { IBufferType } from "../segment_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import BufferBasedChooser from "./buffer_based_chooser";
 import filterByBitrate from "./filter_by_bitrate";
@@ -45,6 +47,7 @@ import NetworkAnalyzer from "./network_analyzer";
 import PendingRequestsStore from "./pending_requests_store";
 import RepresentationScoreCalculator from "./representation_score_calculator";
 import selectOptimalRepresentation from "./select_optimal_representation";
+import SwitchesStore from "./switches_store";
 
 /**
  * Adaptive BitRate estimate object.
@@ -159,6 +162,8 @@ export interface IABRMetricsEvent { type : "metrics";
 export interface IABRRepresentationChangeEvent {
   type: "representationChange";
   value: {
+    type: IBufferType;
+    period: Period;
     /** The new loaded `Representation`. `null` if no Representation is chosen. */
     representation : Representation |
                      null;
@@ -409,6 +414,7 @@ export default function RepresentationEstimator({
   representations,
   streamEvents$,
 } : IRepresentationEstimatorArguments) : Observable<IABREstimate> {
+  const switchesStore = new SwitchesStore();
   const scoreCalculator = new RepresentationScoreCalculator();
   const networkAnalyzer = new NetworkAnalyzer(initialBitrate == null ? 0 :
                                                                        initialBitrate,
@@ -433,6 +439,11 @@ export default function RepresentationEstimator({
     const { representation } = content;
     scoreCalculator.addSample(representation, requestDuration, segmentDuration);
   }
+
+  const switches$ = streamEvents$.pipe(
+    filter((e) : e is IABRRepresentationChangeEvent => e.type === "representationChange"),
+    tap(({ value }) => switchesStore.add(value)),
+    ignoreElements());
 
   const metrics$ = streamEvents$.pipe(
     filter((e) : e is IABRMetricsEvent => e.type === "metrics"),
@@ -597,5 +608,5 @@ export default function RepresentationEstimator({
     }));
   });
 
-  return observableMerge(metrics$, requests$, estimate$);
+  return observableMerge(switches$, metrics$, requests$, estimate$);
 }
