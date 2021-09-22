@@ -15,6 +15,7 @@
  */
 
 import log from "../../log";
+import { Representation } from "../../manifest";
 import objectValues from "../../utils/object_values";
 
 export interface IProgressEventValue {
@@ -30,6 +31,7 @@ export interface IBeginRequestValue {
   time: number;
   duration: number;
   requestTimestamp: number;
+  representation: Representation;
 }
 
 export interface IRequestInfo {

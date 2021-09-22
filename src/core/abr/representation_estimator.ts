@@ -43,6 +43,7 @@ import BandwidthEstimator from "./bandwidth_estimator";
 import BufferBasedChooser from "./buffer_based_chooser";
 import filterByBitrate from "./filter_by_bitrate";
 import filterByWidth from "./filter_by_width";
+import L2ARule from "./learn_2_adapt";
 import NetworkAnalyzer from "./network_analyzer";
 import PendingRequestsStore from "./pending_requests_store";
 import RepresentationScoreCalculator from "./representation_score_calculator";
@@ -133,11 +134,13 @@ export interface IRepresentationEstimatorClockTick {
 }
 
 /** Content of the `IABRMetricsEvent` event's payload. */
-interface IABRMetricsEventValue {
+export interface IABRMetricsEventValue {
   /** Time the request took to perform the request, in milliseconds. */
   duration: number;
   /** Amount of bytes downloaded with this request. */
   size: number;
+  /** The exact unix time where the request finished */
+  finishTime: number;
   /** Context about the segment downloaded. */
   content: { representation: Representation;
              adaptation: Adaptation;
@@ -193,6 +196,10 @@ export interface IABRRequestBeginEvent {
      * corresponding segment, in seconds.
      */
     duration: number;
+    /**
+     * Representation we asks
+     */
+    representation: Representation;
     /** Value of `performance.now` at the time the request began.  */
     requestTimestamp: number;
   };
@@ -414,6 +421,11 @@ export default function RepresentationEstimator({
   representations,
   streamEvents$,
 } : IRepresentationEstimatorArguments) : Observable<IABREstimate> {
+  const L2A = new L2ARule({
+    representations,
+    streamEvents$,
+    bitrates: representations.map(r => r.bitrate),
+  });
   const switchesStore = new SwitchesStore();
   const scoreCalculator = new RepresentationScoreCalculator();
   const networkAnalyzer = new NetworkAnalyzer(initialBitrate == null ? 0 :
@@ -447,7 +459,10 @@ export default function RepresentationEstimator({
 
   const metrics$ = streamEvents$.pipe(
     filter((e) : e is IABRMetricsEvent => e.type === "metrics"),
-    tap(({ value }) => onMetric(value)),
+    tap(({ value }) => {
+      onMetric(value);
+      L2A.onMetricAdded(value);
+    }),
     ignoreElements());
 
   const requests$ = streamEvents$.pipe(
@@ -455,6 +470,7 @@ export default function RepresentationEstimator({
       switch (evt.type) {
         case "requestBegin":
           requestsStore.add(evt.value);
+          L2A.onSegmentDownloaded(evt.value);
           break;
         case "requestEnd":
           requestsStore.remove(evt.value.id);

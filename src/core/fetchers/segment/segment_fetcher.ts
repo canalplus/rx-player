@@ -122,6 +122,7 @@ export default function createSegmentFetcher<
                        value: { duration: segment.duration,
                                 time: segment.time,
                                 requestTimestamp: performance.now(),
+                                representation: content.representation,
                                 id } });
 
       const canceller = new TaskCanceller();
@@ -185,6 +186,7 @@ export default function createSegmentFetcher<
             requests$.next({ type: "metrics",
                              value: { size: res.resultData.size,
                                       duration: res.resultData.duration,
+                                      finishTime: Date.now(),
                                       content } });
           }
 
