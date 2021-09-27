@@ -257,8 +257,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const segments : ISegment[] = [];
 
     // number corresponding to the Period's start
-    const numberOffset = startNumber == null ? 1 :
-                                               startNumber;
+    const numberOffset = startNumber ?? 1;
 
     // calcul initial time from Period start, where the first segment would have
     // the `0` number
