@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   concat as observableConcat,
   EMPTY,
   merge as observableMerge,
@@ -42,6 +41,7 @@ import Manifest, {
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
+import { IReadOnlySharedReference } from "../../../utils/reference";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
 import { SegmentFetcherCreator } from "../../fetchers";
@@ -88,7 +88,7 @@ export interface IPeriodStreamArguments {
   segmentFetcherCreator : SegmentFetcherCreator;
   segmentBuffersStore : SegmentBuffersStore;
   options: IPeriodStreamOptions;
-  wantedBufferAhead$ : BehaviorSubject<number>;
+  wantedBufferAhead : IReadOnlySharedReference<number>;
 }
 
 /** Options tweaking the behavior of the PeriodStream. */
@@ -132,7 +132,7 @@ export default function PeriodStream({
   segmentFetcherCreator,
   segmentBuffersStore,
   options,
-  wantedBufferAhead$,
+  wantedBufferAhead,
 } : IPeriodStreamArguments) : Observable<IPeriodStreamEvent> {
   const { period } = content;
 
@@ -180,7 +180,7 @@ export default function PeriodStream({
 
         return observableConcat(
           cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
-          createEmptyStream(clock$, wantedBufferAhead$, bufferType, { period })
+          createEmptyStream(clock$, wantedBufferAhead, bufferType, { period })
         );
       }
 
@@ -262,7 +262,7 @@ export default function PeriodStream({
                               options,
                               segmentBuffer,
                               segmentFetcherCreator,
-                              wantedBufferAhead$ }).pipe(
+                              wantedBufferAhead }).pipe(
       catchError((error : unknown) => {
         // Stream linked to a non-native media buffer should not impact the
         // stability of the player. ie: if a text buffer sends an error, we want
@@ -277,7 +277,7 @@ export default function PeriodStream({
           });
           return observableConcat(
             observableOf(EVENTS.warning(formattedError)),
-            createEmptyStream(clock$, wantedBufferAhead$, bufferType, { period })
+            createEmptyStream(clock$, wantedBufferAhead, bufferType, { period })
           );
         }
         log.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`, error);

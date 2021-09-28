@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   combineLatest,
   concat as observableConcat,
   defer as observableDefer,
@@ -47,6 +46,7 @@ import Manifest, {
 import deferSubscriptions from "../../../utils/defer_subscriptions";
 import { fromEvent } from "../../../utils/event_emitter";
 import filterMap from "../../../utils/filter_map";
+import { IReadOnlySharedReference } from "../../../utils/reference";
 import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
@@ -79,9 +79,9 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
 /** Options tweaking the behavior of the StreamOrchestrator. */
 export type IStreamOrchestratorOptions =
   IPeriodStreamOptions &
-  { wantedBufferAhead$ : BehaviorSubject<number>;
-    maxBufferAhead$ : Observable<number>;
-    maxBufferBehind$ : Observable<number>; };
+  { wantedBufferAhead : IReadOnlySharedReference<number>;
+    maxBufferAhead : IReadOnlySharedReference<number>;
+    maxBufferBehind : IReadOnlySharedReference<number>; };
 
 /**
  * Create and manage the various Stream Observables needed for the content to
@@ -118,7 +118,7 @@ export default function StreamOrchestrator(
   options: IStreamOrchestratorOptions
 ) : Observable<IStreamOrchestratorEvent> {
   const { manifest, initialPeriod } = content;
-  const { maxBufferAhead$, maxBufferBehind$, wantedBufferAhead$ } = options;
+  const { maxBufferAhead, maxBufferBehind, wantedBufferAhead } = options;
 
   // Keep track of a unique BufferGarbageCollector created per
   // SegmentBuffer.
@@ -134,9 +134,9 @@ export default function StreamOrchestrator(
       return BufferGarbageCollector({
         segmentBuffer,
         clock$: clock$.pipe(map(tick => tick.position + tick.wantedTimeOffset)),
-        maxBufferBehind$: maxBufferBehind$.pipe(
+        maxBufferBehind$: maxBufferBehind.asObservable().pipe(
           map(val => Math.min(val, defaultMaxBehind))),
-        maxBufferAhead$: maxBufferAhead$.pipe(
+        maxBufferAhead$: maxBufferAhead.asObservable().pipe(
           map(val => Math.min(val, defaultMaxAhead))),
       });
     });
@@ -443,7 +443,7 @@ export default function StreamOrchestrator(
                                          segmentFetcherCreator,
                                          segmentBuffersStore,
                                          options,
-                                         wantedBufferAhead$ }
+                                         wantedBufferAhead }
     ).pipe(
       mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
         if (evt.type === "stream-status") {

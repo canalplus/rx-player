@@ -144,7 +144,7 @@ describe("core - eme - global tests - media key system access", () => {
       .subscribe((evt : any) => {
         eventsReceived++;
         expect(evt.type).toEqual("created-media-keys");
-        evt.value.attachMediaKeys$.next();
+        evt.value.canAttachMediaKeys.setValue(true);
         setTimeout(() => {
           expect(eventsReceived).toEqual(1);
           expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
@@ -173,7 +173,7 @@ describe("core - eme - global tests - media key system access", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -207,7 +207,7 @@ describe("core - eme - global tests - media key system access", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -250,7 +250,7 @@ describe("core - eme - global tests - media key system access", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");

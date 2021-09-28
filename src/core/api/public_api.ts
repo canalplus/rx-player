@@ -20,7 +20,6 @@
  */
 
 import {
-  BehaviorSubject,
   combineLatest as observableCombineLatest,
   Connectable,
   concat as observableConcat,
@@ -87,6 +86,9 @@ import {
   getPlayedSizeOfRange,
   getSizeOfRange,
 } from "../../utils/ranges";
+import createSharedReference, {
+  ISharedReference,
+} from "../../utils/reference";
 import warnOnce from "../../utils/warn_once";
 import {
   clearEMESession,
@@ -254,10 +256,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private readonly _priv_destroy$ : Subject<void>;
 
   /**
-   * Emit true when the previous content is cleaning-up, false when it's done.
-   * A new content cannot be launched until it emits false.
+   * Contains `true` when the previous content is cleaning-up, `false` when it's
+   * done.
+   * A new content cannot be launched until it stores `false`.
    */
-  private readonly _priv_contentLock$ : BehaviorSubject<boolean>;
+  private readonly _priv_contentLock : ISharedReference<boolean>;
 
   /**
    * Changes on "play" and "pause" events from the media elements.
@@ -265,22 +268,22 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Switches to ``false`` whent the "pause" event was the last received.
    * ``false`` if no such event was received for the current loaded content.
    */
-  private readonly _priv_playing$ : ReplaySubject<boolean>;
+  private readonly _priv_isPlaying : ISharedReference<boolean>;
 
   /**
    * The speed that should be applied to playback.
    * Used instead of videoElement.playbackRate to allow more flexibility.
    */
-  private readonly _priv_speed$ : BehaviorSubject<number>;
+  private readonly _priv_speed : ISharedReference<number>;
 
   /** Store buffer-related options used needed when initializing a content. */
   private readonly _priv_bufferOptions : {
-    /** Emit the last wanted buffer goal. */
-    wantedBufferAhead$ : BehaviorSubject<number>;
+    /** Last wanted buffer goal. */
+    wantedBufferAhead : ISharedReference<number>;
     /** Maximum kept buffer ahead in the current position, in seconds. */
-    maxBufferAhead$ : BehaviorSubject<number>;
+    maxBufferAhead : ISharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
-    maxBufferBehind$ : BehaviorSubject<number>;
+    maxBufferBehind : ISharedReference<number>;
   };
 
   /** Information on the current bitrate settings. */
@@ -295,16 +298,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                      image? : number; };
 
     /** Store last wanted minAutoBitrates for the next ABRManager instanciation. */
-    minAutoBitrates : { audio : BehaviorSubject<number>;
-                        video : BehaviorSubject<number>; };
+    minAutoBitrates : { audio : ISharedReference<number>;
+                        video : ISharedReference<number>; };
 
     /** Store last wanted maxAutoBitrates for the next ABRManager instanciation. */
-    maxAutoBitrates : { audio : BehaviorSubject<number>;
-                        video : BehaviorSubject<number>; };
+    maxAutoBitrates : { audio : ISharedReference<number>;
+                        video : ISharedReference<number>; };
 
     /** Store last wanted manual bitrates for the next ABRManager instanciation. */
-    manualBitrates : { audio : BehaviorSubject<number>;
-                       video : BehaviorSubject<number>; };
+    manualBitrates : { audio : ISharedReference<number>;
+                       video : ISharedReference<number>; };
   };
 
   /**
@@ -546,26 +549,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       )
       .subscribe((x : TextTrack[]) => this._priv_onNativeTextTracksNext(x));
 
-    this._priv_playing$ = new ReplaySubject(1);
-    this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
+    this._priv_isPlaying = createSharedReference(false);
+    this._priv_speed = createSharedReference(videoElement.playbackRate);
     this._priv_preferTrickModeTracks = false;
-    this._priv_contentLock$ = new BehaviorSubject<boolean>(false);
+    this._priv_contentLock = createSharedReference<boolean>(false);
 
     this._priv_bufferOptions = {
-      wantedBufferAhead$: new BehaviorSubject(wantedBufferAhead),
-      maxBufferAhead$: new BehaviorSubject(maxBufferAhead),
-      maxBufferBehind$: new BehaviorSubject(maxBufferBehind),
+      wantedBufferAhead: createSharedReference(wantedBufferAhead),
+      maxBufferAhead: createSharedReference(maxBufferAhead),
+      maxBufferBehind: createSharedReference(maxBufferBehind),
     };
 
     this._priv_bitrateInfos = {
       lastBitrates: { audio: initialAudioBitrate,
                       video: initialVideoBitrate },
-      minAutoBitrates: { audio: new BehaviorSubject(minAudioBitrate),
-                         video: new BehaviorSubject(minVideoBitrate) },
-      maxAutoBitrates: { audio: new BehaviorSubject(maxAudioBitrate),
-                         video: new BehaviorSubject(maxVideoBitrate) },
-      manualBitrates: { audio: new BehaviorSubject(-1),
-                        video: new BehaviorSubject(-1) },
+      minAutoBitrates: { audio: createSharedReference(minAudioBitrate),
+                         video: createSharedReference(minVideoBitrate) },
+      maxAutoBitrates: { audio: createSharedReference(maxAudioBitrate),
+                         video: createSharedReference(maxVideoBitrate) },
+      manualBitrates: { audio: createSharedReference(-1),
+                        video: createSharedReference(-1) },
     };
 
     this._priv_throttleWhenHidden = throttleWhenHidden;
@@ -622,20 +625,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_destroy$.next();
     this._priv_destroy$.complete();
 
-    // Complete all subjects
-    this._priv_playing$.complete();
-    this._priv_speed$.complete();
-    this._priv_contentLock$.complete();
-    this._priv_bufferOptions.wantedBufferAhead$.complete();
-    this._priv_bufferOptions.maxBufferAhead$.complete();
-    this._priv_bufferOptions.maxBufferBehind$.complete();
+    // Complete all subjects and references
     this._priv_pictureInPictureEvent$.complete();
-    this._priv_bitrateInfos.manualBitrates.video.complete();
-    this._priv_bitrateInfos.manualBitrates.audio.complete();
-    this._priv_bitrateInfos.minAutoBitrates.video.complete();
-    this._priv_bitrateInfos.minAutoBitrates.audio.complete();
-    this._priv_bitrateInfos.maxAutoBitrates.video.complete();
-    this._priv_bitrateInfos.maxAutoBitrates.audio.complete();
+    this._priv_isPlaying.finish();
+    this._priv_speed.finish();
+    this._priv_contentLock.finish();
+    this._priv_bufferOptions.wantedBufferAhead.finish();
+    this._priv_bufferOptions.maxBufferAhead.finish();
+    this._priv_bufferOptions.maxBufferBehind.finish();
+    this._priv_bitrateInfos.manualBitrates.video.finish();
+    this._priv_bitrateInfos.manualBitrates.audio.finish();
+    this._priv_bitrateInfos.minAutoBitrates.video.finish();
+    this._priv_bitrateInfos.minAutoBitrates.audio.finish();
+    this._priv_bitrateInfos.maxAutoBitrates.video.finish();
+    this._priv_bitrateInfos.maxAutoBitrates.audio.finish();
 
     this._priv_lastContentPlaybackInfos = {};
 
@@ -754,7 +757,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /** Emit playback events. */
     let playback$ : Connectable<IInitEvent>;
 
-    const speed$ = this._priv_speed$.pipe(distinctUntilChanged());
+    const speed$ = this._priv_speed.asObservable().pipe(distinctUntilChanged());
 
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
@@ -762,7 +765,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         // Stop previous content and reset its state
         this.stop();
         this._priv_currentError = null;
-        this._priv_playing$.next(false);
+        this._priv_isPlaying.setValue(false);
         throw new Error(`transport "${transport}" not supported`);
       }
 
@@ -813,7 +816,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.stop();
 
       this._priv_currentError = null;
-      this._priv_playing$.next(false);
+      this._priv_isPlaying.setValue(false);
       this._priv_contentInfos = contentInfos;
 
       const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
@@ -906,7 +909,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       // Stop previous content and reset its state
       this.stop();
       this._priv_currentError = null;
-      this._priv_playing$.next(false);
+      this._priv_isPlaying.setValue(false);
       if (features.directfile === null) {
         throw new Error("DirectFile feature not activated in your build.");
       }
@@ -972,7 +975,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                              clock$,
                                              keySystems,
                                              mediaElement: videoElement,
-                                             speed$: this._priv_speed$,
+                                             speed$,
                                              startAt,
                                              setCurrentTime,
                                              url })
@@ -1014,7 +1017,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     /** Emit state updates once the content is considered "loaded". */
     const loadedStateUpdates$ = observableCombineLatest([
-      this._priv_playing$,
+      this._priv_isPlaying.asObservable(),
       stalled$.pipe(startWith(null)),
       endedEvent$.pipe(startWith(null)),
       seekingEvent$.pipe(startWith(null)),
@@ -1103,7 +1106,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     });
 
     // initialize the content only when the lock is inactive
-    this._priv_contentLock$
+    this._priv_contentLock.asObservable()
       .pipe(
         filter((isLocked) => !isLocked),
         take(1),
@@ -1375,7 +1378,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getPlaybackRate() : number {
-    return this._priv_speed$.getValue();
+    return this._priv_speed.getValue();
   }
 
   /**
@@ -1438,7 +1441,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     rate : number,
     opts? : { preferTrickModeTracks? : boolean }
   ) : void {
-    this._priv_speed$.next(rate);
+    if (rate !== this._priv_speed.getValue()) {
+      this._priv_speed.setValue(rate);
+    }
 
     const preferTrickModeTracks = opts?.preferTrickModeTracks;
     if (typeof preferTrickModeTracks !== "boolean") {
@@ -1770,7 +1775,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} btr
    */
   setVideoBitrate(btr : number) : void {
-    this._priv_bitrateInfos.manualBitrates.video.next(btr);
+    this._priv_bitrateInfos.manualBitrates.video.setValue(btr);
   }
 
   /**
@@ -1779,7 +1784,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} btr
    */
   setAudioBitrate(btr : number) : void {
-    this._priv_bitrateInfos.manualBitrates.audio.next(btr);
+    this._priv_bitrateInfos.manualBitrates.audio.setValue(btr);
   }
 
   /**
@@ -1793,7 +1798,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                       `Its value, "${btr}" is superior the current maximum ` +
                       `video birate, "${maxVideoBitrate}".`);
     }
-    this._priv_bitrateInfos.minAutoBitrates.video.next(btr);
+    this._priv_bitrateInfos.minAutoBitrates.video.setValue(btr);
   }
 
   /**
@@ -1807,7 +1812,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                       `Its value, "${btr}" is superior the current maximum ` +
                       `audio birate, "${maxAudioBitrate}".`);
     }
-    this._priv_bitrateInfos.minAutoBitrates.audio.next(btr);
+    this._priv_bitrateInfos.minAutoBitrates.audio.setValue(btr);
   }
 
   /**
@@ -1821,7 +1826,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                       `Its value, "${btr}" is inferior the current minimum ` +
                       `video birate, "${minVideoBitrate}".`);
     }
-    this._priv_bitrateInfos.maxAutoBitrates.video.next(btr);
+    this._priv_bitrateInfos.maxAutoBitrates.video.setValue(btr);
   }
 
   /**
@@ -1835,7 +1840,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                       `Its value, "${btr}" is inferior the current minimum ` +
                       `audio birate, "${minAudioBitrate}".`);
     }
-    this._priv_bitrateInfos.maxAutoBitrates.audio.next(btr);
+    this._priv_bitrateInfos.maxAutoBitrates.audio.setValue(btr);
   }
 
   /**
@@ -1844,7 +1849,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} depthInSeconds
    */
   setMaxBufferBehind(depthInSeconds : number) : void {
-    this._priv_bufferOptions.maxBufferBehind$.next(depthInSeconds);
+    this._priv_bufferOptions.maxBufferBehind.setValue(depthInSeconds);
   }
 
   /**
@@ -1853,7 +1858,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} depthInSeconds
    */
   setMaxBufferAhead(depthInSeconds : number) : void {
-    this._priv_bufferOptions.maxBufferAhead$.next(depthInSeconds);
+    this._priv_bufferOptions.maxBufferAhead.setValue(depthInSeconds);
   }
 
   /**
@@ -1862,7 +1867,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} sizeInSeconds
    */
   setWantedBufferAhead(sizeInSeconds : number) : void {
-    this._priv_bufferOptions.wantedBufferAhead$.next(sizeInSeconds);
+    this._priv_bufferOptions.wantedBufferAhead.setValue(sizeInSeconds);
   }
 
   /**
@@ -1870,7 +1875,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getMaxBufferBehind() : number {
-    return this._priv_bufferOptions.maxBufferBehind$.getValue();
+    return this._priv_bufferOptions.maxBufferBehind.getValue();
   }
 
   /**
@@ -1878,7 +1883,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getMaxBufferAhead() : number {
-    return this._priv_bufferOptions.maxBufferAhead$.getValue();
+    return this._priv_bufferOptions.maxBufferAhead.getValue();
   }
 
   /**
@@ -1886,7 +1891,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getWantedBufferAhead() : number {
-    return this._priv_bufferOptions.wantedBufferAhead$.getValue();
+    return this._priv_bufferOptions.wantedBufferAhead.getValue();
   }
 
   /**
@@ -2327,7 +2332,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     log.debug("Locking `contentLock` to clean-up the current content.");
 
     // lock playback of new contents while cleaning up is pending
-    this._priv_contentLock$.next(true);
+    this._priv_contentLock.setValue(true);
 
     this._priv_contentInfos = null;
     this._priv_trackChoiceManager = null;
@@ -2339,7 +2344,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // EME cleaning
     const freeUpContentLock = () => {
       log.debug("Unlocking `contentLock`. Next content can begin.");
-      this._priv_contentLock$.next(false);
+      this._priv_contentLock.setValue(false);
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
@@ -2848,7 +2853,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("Disposed player");
     }
 
-    this._priv_playing$.next(isPlaying);
+    this._priv_isPlaying.setValue(isPlaying);
   }
 
   /**

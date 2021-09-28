@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   combineLatest as observableCombineLatest,
   EMPTY,
   merge as observableMerge,
@@ -47,6 +46,7 @@ import deferSubscriptions from "../../utils/defer_subscriptions";
 import { fromEvent } from "../../utils/event_emitter";
 import filterMap from "../../utils/filter_map";
 import objectAssign from "../../utils/object_assign";
+import { IReadOnlySharedReference } from "../../utils/reference";
 import ABRManager, {
   IABRManagerArguments,
 } from "../abr";
@@ -93,11 +93,11 @@ export interface IInitializeArguments {
   /** Options concerning the media buffers. */
   bufferOptions : {
     /** Buffer "goal" at which we stop downloading new segments. */
-    wantedBufferAhead$ : BehaviorSubject<number>;
+    wantedBufferAhead : IReadOnlySharedReference<number>;
     /** Max buffer size after the current position, in seconds (we GC further up). */
-    maxBufferAhead$ : Observable<number>;
+    maxBufferAhead : IReadOnlySharedReference<number>;
     /** Max buffer size before the current position, in seconds (we GC further down). */
-    maxBufferBehind$ : Observable<number>;
+    maxBufferBehind : IReadOnlySharedReference<number>;
     /** Strategy when switching the current bitrate manually (smooth vs reload). */
     manualBitrateSwitchingMode : "seamless" | "direct";
     /**
@@ -258,7 +258,7 @@ export default function InitializeOnMediaSource(
             mergeMap(() => {
               // Now that the MediaSource has been opened and linked to the media
               // element we can attach the MediaKeys instance to the latter.
-              evt.value.attachMediaKeys$.next();
+              evt.value.canAttachMediaKeys.setValue(true);
 
               // If the `disableMediaKeysAttachmentLock` option has been set to
               // `true`, we should not wait until the MediaKeys instance has been

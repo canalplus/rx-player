@@ -83,7 +83,7 @@ describe("core - eme - global tests - init data", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -135,7 +135,7 @@ describe("core - eme - global tests - init data", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -209,7 +209,7 @@ describe("core - eme - global tests - init data", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -303,7 +303,7 @@ describe("core - eme - global tests - init data", () => {
         switch (++eventsReceived) {
           case 1:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 2:
             expect(evt.type).toEqual("attached-media-keys");
@@ -396,7 +396,7 @@ describe("core - eme - global tests - init data", () => {
             break;
           case 2:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 3:
             expect(evt.type).toEqual("attached-media-keys");
@@ -458,7 +458,7 @@ describe("core - eme - global tests - init data", () => {
             break;
           case 5:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 6:
             expect(evt.type).toEqual("attached-media-keys");
@@ -553,7 +553,7 @@ describe("core - eme - global tests - init data", () => {
           case 5: checkEncryptedEventReceived(evt, initDataEvent2, 5); break;
           case 6:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 7: expect(evt.type).toEqual("attached-media-keys"); break;
           case 8:
@@ -668,7 +668,7 @@ describe("core - eme - global tests - init data", () => {
           case 4: checkEncryptedEventReceived(evt, initDataEvent4, 4); break;
           case 5:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 6: expect(evt.type).toEqual("attached-media-keys"); break;
           case 7:
@@ -778,7 +778,7 @@ describe("core - eme - global tests - init data", () => {
           case 1: checkEncryptedEventReceived(evt, initDataEvent1, 1); break;
           case 2:
             expect(evt.type).toEqual("created-media-keys");
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
             break;
           case 3:
             expect(evt.type).toEqual("attached-media-keys");

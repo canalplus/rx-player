@@ -120,22 +120,22 @@ export default function createMediaSourceLoader(
     /** Interface to create media buffers for loaded segments. */
     const segmentBuffersStore = new SegmentBuffersStore(mediaElement, mediaSource);
 
-    const { seek$, play$ } = initialSeekAndPlay({ clock$,
-                                                  mediaElement,
-                                                  startTime: initialTime,
-                                                  mustAutoPlay: autoPlay,
-                                                  setCurrentTime,
-                                                  isDirectfile: false });
+    const { seekAndPlay$,
+            initialPlayPerformed,
+            initialSeekPerformed } = initialSeekAndPlay({ clock$,
+                                                          mediaElement,
+                                                          startTime: initialTime,
+                                                          mustAutoPlay: autoPlay,
+                                                          setCurrentTime,
+                                                          isDirectfile: false });
 
-    const playDone$ = play$.pipe(filter((evt) => evt.type !== "warning"));
-
-    const streamEvents$ = playDone$.pipe(
-      mergeMap(() => streamEventsEmitter(manifest, mediaElement, clock$))
-    );
+    const streamEvents$ = initialPlayPerformed.asObservable().pipe(
+      filter((hasPlayed) => hasPlayed),
+      mergeMap(() => streamEventsEmitter(manifest, mediaElement, clock$)));
 
     const streamClock$ = createStreamClock(clock$, { autoPlay,
-                                                     initialPlay$: playDone$,
-                                                     initialSeek$: seek$,
+                                                     initialPlayPerformed,
+                                                     initialSeekPerformed,
                                                      manifest,
                                                      speed$,
                                                      startTime: initialTime });
@@ -209,12 +209,10 @@ export default function createMediaSourceLoader(
      * media can begin playback.
      * Also emits warning events if issues arise when doing so.
      */
-    const loadingEvts$ = play$.pipe(switchMap((evt) => {
-      if (evt.type === "warning") {
-        return observableOf(evt);
-      }
-      return emitLoadedEvent(clock$, mediaElement, segmentBuffersStore, false);
-    }));
+    const loadingEvts$ = seekAndPlay$.pipe(switchMap((evt) =>
+      evt.type === "warning" ?
+        observableOf(evt) :
+        emitLoadedEvent(clock$, mediaElement, segmentBuffersStore, false)));
 
     return observableMerge(durationUpdater$,
                            loadingEvts$,

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
 } from "../../compat";
 import { ICustomError } from "../../errors";
+import { ISharedReference } from "../../utils/reference";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
 
@@ -78,8 +78,10 @@ export interface IEncryptedEvent { type: "encrypted-event-received";
  * current content.
  * This is necessary before creating a MediaKeySession which will allow
  * encryption keys to be communicated.
- * It carries a subject (attachMediaKeys$) that will be used by the init to
- * ask the EME to attach the mediakeys.
+ *
+ * It carries a shared reference (`canAttachMediaKeys`) that should be setted to
+ * `true` to indicate that RxPlayer's EME logic can start to attach the
+ * `MediaKeys` instance to the HTMLMediaElement.
  */
 export interface ICreatedMediaKeysEvent {
   type: "created-media-keys";
@@ -115,9 +117,18 @@ export interface ICreatedMediaKeysEvent {
     /** The MediaKeys instance. */
     mediaKeys : MediaKeys |
                 ICustomMediaKeys;
+
+    /** Stores allowing to cache MediaKeySession instances. */
     stores : IMediaKeySessionStores;
+
+    /** key system options considered. */
     options : IKeySystemOption;
-    attachMediaKeys$: Subject<void>;
+
+    /**
+     * Shared reference that should be set to `true` once the `MediaKeys`
+     * instance can be attached to the HTMLMediaElement.
+     */
+    canAttachMediaKeys: ISharedReference<boolean>;
   };
 }
 
