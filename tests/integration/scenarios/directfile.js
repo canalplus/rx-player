@@ -29,8 +29,8 @@ describe("basic playback use cases: direct file", function () {
   });
 
   afterEach(() => {
-    player.dispose();
     player.stop();
+    player.dispose();
     URL.revokeObjectURL(WebMURL);
   });
 
