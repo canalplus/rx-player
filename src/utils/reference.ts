@@ -18,6 +18,7 @@ import {
   Observable,
   Subscriber,
 } from "rxjs";
+import log from "../log";
 
 /**
  * A value behind a shared reference, meaning that any update to its value from
@@ -150,7 +151,12 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
      */
     setValue(newVal : T) : void {
       if (isFinished) {
-        throw new Error("Finished shared references cannot be updated");
+        if (__DEV__) {
+          throw new Error("Finished shared references cannot be updated");
+        } else {
+          log.error("Finished shared references cannot be updated");
+          return;
+        }
       }
       value = newVal;
 
