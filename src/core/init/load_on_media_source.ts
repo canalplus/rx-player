@@ -66,10 +66,7 @@ export interface IMediaSourceLoaderArguments {
   playbackObserver : PlaybackObserver;
   /** Module to facilitate segment fetching. */
   segmentFetcherCreator : SegmentFetcherCreator;
-  /**
-   * Observable emitting the wanted playback rate as it changes.
-   * Replay the last value on subscription.
-   */
+  /** Last wanted playback rate. */
   speed : IReadOnlySharedReference<number>;
 }
 
@@ -111,7 +108,7 @@ export default function createMediaSourceLoader(
       return throwError(() => error);
     }
 
-    /** Interface to create media buffers for loaded segments. */
+    /** Interface to create media buffers. */
     const segmentBuffersStore = new SegmentBuffersStore(mediaElement, mediaSource);
 
     const { seekAndPlay$,
