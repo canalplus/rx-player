@@ -65,37 +65,37 @@ export interface IAudioPeriodInfo {
   /** The audio track wanted. */
   wantedTrack : Adaptation | null;
   /**
-   * Last `wantedTrack` emitted through `subject`.
-   * This value is mutated just before `subject` is "nexted" whereas
+   * Last `wantedTrack` emitted through `trackSubject`.
+   * This value is mutated just before `trackSubject` is "nexted" whereas
    * `wantedTrack` is updated as soon as we know which track is wanted.
    *
    * Having both `wantedTrack` and `lastEmittedTrack` allows to detect if some
-   * potential side-effects already led to the "nexting" of `subject` with the
-   * last `wantedTrack`, preventing the the `TrackChoiceManager` from doing it
-   * again.
+   * potential side-effects already led to the "nexting" of `trackSubject` with
+   * the last `wantedTrack`, preventing the the `TrackChoiceManager` from doing
+   * it again.
    */
   lastEmittedTrack : Adaptation | null | undefined;
   /** Subject through which the wanted track will be emitted.*/
-  subject : Subject<Adaptation | null> |
-            undefined;
+  trackSubject : Subject<Adaptation | null> |
+                 undefined;
 }
 
 export interface ITextPeriodInfo {
   /** The text track wanted. */
   wantedTrack : Adaptation | null;
   /**
-   * Last `wantedTrack` emitted through `subject`.
-   * This value is mutated just before `subject` is "nexted" whereas
+   * Last `wantedTrack` emitted through `trackSubject`.
+   * This value is mutated just before `trackSubject` is "nexted" whereas
    * `wantedTrack` is updated as soon as we know which track is wanted.
    *
    * Having both `wantedTrack` and `lastEmittedTrack` allows to detect if some
-   * potential side-effects already led to the "nexting" of `subject` with the
-   * last `wantedTrack`, preventing the the `TrackChoiceManager` from doing it
-   * again.
+   * potential side-effects already led to the "nexting" of `trackSubject` with
+   * the last `wantedTrack`, preventing the the `TrackChoiceManager` from doing
+   * it again.
    */
   lastEmittedTrack : Adaptation | null | undefined;
   /** Subject through which the wanted track will be emitted.*/
-  subject : Subject<Adaptation | null> |
+  trackSubject : Subject<Adaptation | null> |
             undefined;
 }
 
@@ -114,18 +114,18 @@ export interface IVideoPeriodInfo {
    */
   wantedTrack : Adaptation | null;
   /**
-   * Last `wantedTrack` emitted through `subject`.
-   * This value is mutated just before `subject` is "nexted" whereas
+   * Last `wantedTrack` emitted through `trackSubject`.
+   * This value is mutated just before `trackSubject` is "nexted" whereas
    * `wantedTrack` is updated as soon as we know which track is wanted.
    *
    * Having both `wantedTrack` and `lastEmittedTrack` allows to detect if some
-   * potential side-effects already led to the "nexting" of `subject` with the
-   * last `wantedTrack`, preventing the the `TrackChoiceManager` from doing it
-   * again.
+   * potential side-effects already led to the "nexting" of `trackSubject` with
+   * the last `wantedTrack`, preventing the the `TrackChoiceManager` from doing
+   * it again.
    */
   lastEmittedTrack : Adaptation | null | undefined;
   /** Subject through which the wanted track will be emitted.*/
-  subject : Subject<Adaptation | null> |
+  trackSubject : Subject<Adaptation | null> |
             undefined;
 }
 
@@ -288,9 +288,11 @@ export default class TrackChoiceManager extends EventEmitter<ITrackChoiceManager
 
     if (updatedTracks.length > 0) {
       for (const track of  updatedTracks) {
-        if (track.subject !== undefined && track.lastEmittedTrack !== track.wantedTrack) {
+        if (track.trackSubject !== undefined &&
+            track.lastEmittedTrack !== track.wantedTrack)
+        {
           track.lastEmittedTrack = track.wantedTrack;
-          track.subject.next(track.wantedTrack);
+          track.trackSubject.next(track.wantedTrack);
         }
       }
     }
@@ -317,7 +319,7 @@ export default class TrackChoiceManager extends EventEmitter<ITrackChoiceManager
   public addTrackSubject(
     bufferType : "audio" | "text"| "video",
     period : Period,
-    subject : Subject<Adaptation|null>
+    trackSubject : Subject<Adaptation|null>
   ) : void {
     let periodObj = getPeriodItem(this._storedPeriodInfo, period.id);
     if (periodObj === undefined) { // The Period has not yet been added.
@@ -326,18 +328,18 @@ export default class TrackChoiceManager extends EventEmitter<ITrackChoiceManager
                    [{ id: period.id,
                       start: period.start,
                       end: period.end }]);
-    } else if (periodObj[bufferType].subject !== undefined) {
+    } else if (periodObj[bufferType].trackSubject !== undefined) {
       log.error(`TrackChoiceManager: Subject already added for ${bufferType} ` +
                 `and Period ${period.start}`);
       return;
     } else {
-      periodObj[bufferType].subject = subject;
+      periodObj[bufferType].trackSubject = trackSubject;
     }
 
     const choice = periodObj[bufferType].wantedTrack;
     if (periodObj[bufferType].lastEmittedTrack !== choice) {
       periodObj[bufferType].lastEmittedTrack = choice;
-      subject.next(choice);
+      trackSubject.next(choice);
     }
   }
 
@@ -360,13 +362,13 @@ export default class TrackChoiceManager extends EventEmitter<ITrackChoiceManager
 
     const periodObj = this._storedPeriodInfo[periodIndex];
     const choiceItem = periodObj[bufferType];
-    if (choiceItem?.subject === undefined) {
+    if (choiceItem?.trackSubject === undefined) {
       log.warn(`TrackChoiceManager: Subject already removed for ${bufferType} ` +
                `and Period ${period.start}`);
       return;
     }
 
-    choiceItem.subject = undefined;
+    choiceItem.trackSubject = undefined;
     choiceItem.lastEmittedTrack = undefined;
 
     if (isPeriodItemRemovable(periodObj)) {
@@ -449,11 +451,11 @@ export default class TrackChoiceManager extends EventEmitter<ITrackChoiceManager
     for (let i = this._storedPeriodInfo.length - 1; i >= 0; i--) {
       const storedObj = this._storedPeriodInfo[i];
       storedObj.audio.lastEmittedTrack = undefined;
-      storedObj.audio.subject = undefined;
+      storedObj.audio.trackSubject = undefined;
       storedObj.video.lastEmittedTrack = undefined;
-      storedObj.video.subject = undefined;
+      storedObj.video.trackSubject = undefined;
       storedObj.text.lastEmittedTrack = undefined;
-      storedObj.text.subject = undefined;
+      storedObj.text.trackSubject = undefined;
       if (!storedObj.inManifest) {
         this._removePeriodObject(i);
       }
@@ -502,9 +504,9 @@ export default class TrackChoiceManager extends EventEmitter<ITrackChoiceManager
       return;
     }
     typeInfo.wantedTrack = newAdaptation;
-    if (typeInfo.subject !== undefined) {
+    if (typeInfo.trackSubject !== undefined) {
       typeInfo.lastEmittedTrack = newAdaptation;
-      typeInfo.subject.next(newAdaptation);
+      typeInfo.trackSubject.next(newAdaptation);
     }
   }
 
@@ -529,9 +531,9 @@ export default class TrackChoiceManager extends EventEmitter<ITrackChoiceManager
       periodObj.video.wantedTrackBase = null;
     }
     trackInfo.wantedTrack = null;
-    if (trackInfo.subject !== undefined) {
+    if (trackInfo.trackSubject !== undefined) {
       trackInfo.lastEmittedTrack = null;
-      trackInfo.subject.next(null);
+      trackInfo.trackSubject.next(null);
     }
   }
 
@@ -790,10 +792,10 @@ export default class TrackChoiceManager extends EventEmitter<ITrackChoiceManager
     for (let i = 0; i < sliced.length; i++) {
       const videoItem = sliced[i].video;
       if (videoItem.lastEmittedTrack !== videoItem.wantedTrack &&
-          videoItem.subject !== undefined)
+          videoItem.trackSubject !== undefined)
       {
         videoItem.lastEmittedTrack = videoItem.wantedTrack;
-        videoItem.subject.next(videoItem.wantedTrack);
+        videoItem.trackSubject.next(videoItem.wantedTrack);
       }
     }
   }
@@ -872,9 +874,9 @@ function isPeriodItemRemovable(
   periodObj : ITMPeriodObject
 ) : boolean {
   return !periodObj.inManifest &&
-         periodObj.text?.subject === undefined &&
-         periodObj.audio?.subject === undefined &&
-         periodObj.video?.subject === undefined;
+         periodObj.text?.trackSubject === undefined &&
+         periodObj.audio?.trackSubject === undefined &&
+         periodObj.video?.trackSubject === undefined;
 }
 
 /**
@@ -923,14 +925,14 @@ function generatePeriodInfo(
            isRemoved: false,
            audio: { wantedTrack: audioAdaptation,
                     lastEmittedTrack: undefined,
-                    subject: undefined },
+                    trackSubject: undefined },
            video: { wantedTrack: videoAdaptation,
                     wantedTrackBase: baseVideoAdaptation,
                     lastEmittedTrack: undefined,
-                    subject: undefined },
+                    trackSubject: undefined },
            text: { wantedTrack: textAdaptation,
                    lastEmittedTrack: undefined,
-                   subject: undefined } };
+                   trackSubject: undefined } };
 }
 
 /**
