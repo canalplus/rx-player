@@ -123,7 +123,6 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoBitrateChangeEvents[0]).to.equal(1996000);
 
     expect(periodChangeEvents).to.have.length(1);
-    expect(periodChangeEvents[0].id).to.equal("1");
 
     await goToSecondPeriod();
 
@@ -152,7 +151,6 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoBitrateChangeEvents[1]).to.equal(795001);
 
     expect(periodChangeEvents).to.have.length(2);
-    expect(periodChangeEvents[1].id).to.equal("2");
 
 
     await goToFirstPeriod();
@@ -182,7 +180,6 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoBitrateChangeEvents[2]).to.equal(1996000);
 
     expect(periodChangeEvents).to.have.length(3);
-    expect(periodChangeEvents[2].id).to.equal("1");
   });
 
   it("should send the right events when playing into a new Period", async function () {
@@ -257,7 +254,6 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoBitrateChangeEvents[0]).to.equal(1996000);
 
     expect(periodChangeEvents).to.have.length(1);
-    expect(periodChangeEvents[0].id).to.equal("1");
 
 
     // still first Period
@@ -307,7 +303,6 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoBitrateChangeEvents[1]).to.equal(795001);
 
     expect(periodChangeEvents).to.have.length(2);
-    expect(periodChangeEvents[1].id).to.equal("2");
   });
 });
 
@@ -417,7 +412,6 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoBitrateChangeEvents[0]).to.equal(1996000);
 
     expect(periodChangeEvents).to.have.length(1);
-    expect(periodChangeEvents[0].id).to.equal("1");
 
 
     await goToSecondPeriod();
@@ -440,7 +434,6 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoBitrateChangeEvents).to.have.length(1);
 
     expect(periodChangeEvents).to.have.length(2);
-    expect(periodChangeEvents[1].id).to.equal("2");
 
 
     await goToFirstPeriod();
@@ -463,7 +456,6 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoBitrateChangeEvents).to.have.length(1);
 
     expect(periodChangeEvents).to.have.length(3);
-    expect(periodChangeEvents[2].id).to.equal("1");
   });
 
   it("should send the right events when playing into a new Period", async function () {
@@ -538,7 +530,6 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoBitrateChangeEvents[0]).to.equal(1996000);
 
     expect(periodChangeEvents).to.have.length(1);
-    expect(periodChangeEvents[0].id).to.equal("1");
 
 
     // still first Period
@@ -581,6 +572,5 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoBitrateChangeEvents).to.have.length(1);
 
     expect(periodChangeEvents).to.have.length(2);
-    expect(periodChangeEvents[1].id).to.equal("2");
   });
 });
