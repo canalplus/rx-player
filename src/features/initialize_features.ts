@@ -109,10 +109,9 @@ export default function initializeFeaturesObject() : void {
   if (__FEATURES__.DIRECTFILE === __FEATURES__.IS_ENABLED as number) {
     const initDirectFile =
       require("../core/init/directfile_content_initializer.ts").default;
-    const mediaElementTrackChoiceManager =
-      require("../core/api/tracks_management/media_element_track_choice_manager.ts")
-        .default;
+    const mediaElementTracksStore =
+      require("../core/api/track_management/media_element_tracks_store.ts").default;
     features.directfile = { initDirectFile,
-                            mediaElementTrackChoiceManager };
+                            mediaElementTracksStore };
   }
 }

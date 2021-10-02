@@ -1,24 +1,9 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import nextTick from "next-tick";
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
 import { Representation } from "../../../manifest";
+import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
 import {
   createMappedReference,
@@ -28,15 +13,21 @@ import {
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
+import {
+  IABREstimate,
+  IRepresentationEstimatorCallbacks,
+} from "../../adaptive";
+import { IPrioritizedSegmentFetcher } from "../../fetchers";
 import RepresentationStream, {
+  IRepresentationsChoice,
   IRepresentationStreamCallbacks,
   ITerminationOrder,
 } from "../representation";
+import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy";
 import {
   IAdaptationStreamArguments,
   IAdaptationStreamCallbacks,
 } from "./types";
-import createRepresentationEstimator from "./utils/create_representation_estimator";
 
 /**
  * Create new `AdaptationStream` whose task will be to download the media data
@@ -80,7 +71,6 @@ export default function AdaptationStream<T>(
   callbacks : IAdaptationStreamCallbacks<T>,
   parentCancelSignal : CancellationSignal
 ) : void {
-  const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
 
   /** Allows to cancel everything the `AdaptationStream` is doing. */
@@ -105,106 +95,163 @@ export default function AdaptationStream<T>(
     adapStreamCanceller.signal
   );
 
-  const { estimateRef, abrCallbacks } = createRepresentationEstimator(
-    content,
-    representationEstimator,
-    currentRepresentation,
-    playbackObserver,
-    (err) => {
+  /** Stores the last emitted bitrate. */
+  let previouslyEmittedBitrate : number | undefined;
+
+  /** When triggered, cancel all `RepresentationStream`s currently created. */
+  let cancelCurrentStreams : TaskCanceller | undefined;
+
+  // Each time the list of wanted Representations changes, we restart the logic
+  content.representations.onUpdate((val) => {
+    cancelCurrentStreams?.cancel();
+    cancelCurrentStreams = new TaskCanceller({ cancelOn: adapStreamCanceller.signal });
+    onRepresentationsChoiceChange(val, cancelCurrentStreams.signal).catch((err) => {
+      if (cancelCurrentStreams?.isUsed === true &&
+          TaskCanceller.isCancellationError(err))
+      {
+        return;
+      }
       adapStreamCanceller.cancel();
       callbacks.error(err);
-    },
-    adapStreamCanceller.signal
-  );
+    });
+  }, { clearSignal: adapStreamCanceller.signal, emitCurrentValue: true });
+  return;
 
-  /** Allows the `RepresentationStream` to easily fetch media segments. */
-  const segmentFetcher = segmentFetcherCreator
-    .createSegmentFetcher(adaptation.type,
-                          /* eslint-disable @typescript-eslint/unbound-method */
-                          { onRequestBegin: abrCallbacks.requestBegin,
-                            onRequestEnd: abrCallbacks.requestEnd,
-                            onProgress: abrCallbacks.requestProgress,
-                            onMetrics: abrCallbacks.metrics });
-                          /* eslint-enable @typescript-eslint/unbound-method */
+  /**
+   * Function called each time the list of wanted Representations is updated.
+   *
+   * Returns a Promise to profit from async/await syntax. The Promise resolution
+   * does not indicate anything. The Promise may reject however, either on some
+   * error or on some cancellation.
+   * @param {Object} choice - The last Representations choice that has been
+   * made.
+   * @param {Object} fnCancelSignal - `CancellationSignal` allowing to cancel
+   * everything this function is doing and free all related resources.
+   */
+  async function onRepresentationsChoiceChange(
+    choice : IRepresentationsChoice,
+    fnCancelSignal : CancellationSignal
+  ) : Promise<void> {
+    // First check if we should perform any action regarding what was previously
+    // in the buffer
+    const switchStrat = getRepresentationsSwitchingStrategy(period,
+                                                            adaptation,
+                                                            choice,
+                                                            segmentBuffer,
+                                                            playbackObserver);
 
-  /** Stores the last emitted bitrate. */
-  let previousBitrate : number | undefined;
+    switch (switchStrat.type) {
+      case "continue":
+        break; // nothing to do
+      case "needs-reload": // Just ask to reload
+        // We begin by scheduling a micro-task to reduce the possibility of race
+        // conditions where the inner logic would be called synchronously before
+        // the next observation (which may reflect very different playback conditions)
+        // is actually received.
+        return nextTick(() => {
+          const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
+          playbackObserver.listen((observation) => {
+            const currentTime = playbackObserver.getCurrentTime();
+            const pos = currentTime + DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
 
-  /** Emit at each bitrate estimate done by the IRepresentationEstimator. */
-  estimateRef.onUpdate(({ bitrate }) => {
-    if (bitrate === undefined) {
-      return ;
+            // Bind to Period start and end
+            const position = Math.min(Math.max(period.start, pos),
+                                      period.end ?? Infinity);
+            const autoPlay = !(observation.paused.pending ??
+                               playbackObserver.getIsPaused());
+            callbacks.waitingMediaSourceReload({ bufferType: adaptation.type,
+                                                 period,
+                                                 position,
+                                                 autoPlay });
+          }, { includeLastObservation: true, clearSignal: fnCancelSignal });
+        });
+
+      case "flush-buffer": // Clean + flush
+      case "clean-buffer": // Just clean
+        for (const range of switchStrat.value) {
+          await segmentBuffer.removeBuffer(range.start, range.end, fnCancelSignal);
+          if (fnCancelSignal.isCancelled) {
+            return;
+          }
+        }
+        if (switchStrat.type === "flush-buffer") {
+          callbacks.needsBufferFlush();
+          if (fnCancelSignal.isCancelled) {
+            return;
+          }
+        }
+        break;
+      default: // Should be impossible
+        assertUnreachable(switchStrat);
     }
 
-    if (bitrate === previousBitrate) {
-      return ;
-    }
-    previousBitrate = bitrate;
-    log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
-    callbacks.bitrateEstimationChange({ type: adaptation.type, bitrate });
-  }, { emitCurrentValue: true, clearSignal: adapStreamCanceller.signal });
+    // TODO not as reference anymore? There seem to be no need anymore
+    const representationsList = createSharedReference(choice.representations);
+    representationsList.finish();
 
-  recursivelyCreateRepresentationStreams(true);
+    // Start-up Adaptive logic
+    const { estimates: estimateRef, callbacks: abrCallbacks } =
+      representationEstimator({ manifest, period, adaptation },
+                              currentRepresentation,
+                              representationsList,
+                              playbackObserver,
+                              fnCancelSignal);
+
+    /** Emit at each bitrate estimate done by the IRepresentationEstimator. */
+    estimateRef.onUpdate(({ bitrate }) => {
+      if (bitrate === undefined || bitrate === previouslyEmittedBitrate) {
+        return ;
+      }
+      previouslyEmittedBitrate = bitrate;
+      log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
+      callbacks.bitrateEstimationChange({ type: adaptation.type, bitrate });
+    }, { emitCurrentValue: true, clearSignal: fnCancelSignal });
+
+    recursivelyCreateRepresentationStreams(estimateRef, abrCallbacks, fnCancelSignal);
+  }
 
   /**
    * Create `RepresentationStream`s starting with the Representation of the last
    * estimate performed.
    * Each time a new estimate is made, this function will create a new
    * `RepresentationStream` corresponding to that new estimate.
-   * @param {boolean} isFirstEstimate - Whether this is the first time we're
-   * creating a `RepresentationStream` in the corresponding `AdaptationStream`.
-   * This is important because manual quality switches might need a full reload
-   * of the MediaSource _except_ if we are talking about the first quality chosen.
+   * @param {Object} estimateRef - Reference through which ABR estimates are
+   * set. May be updated at any time.
+   * @param {Object} abrCallbacks - Callbacks defined by the ABR logic that have
+   * to be called at the right time.
+   * @param {Object} fnCancelSignal - `CancellationSignal` which will abort
+   * anything this function is doing and free allocated resources.
    */
-  function recursivelyCreateRepresentationStreams(isFirstEstimate : boolean) : void {
+  function recursivelyCreateRepresentationStreams(
+    estimateRef : IReadOnlySharedReference<IABREstimate>,
+    abrCallbacks : IRepresentationEstimatorCallbacks,
+    fnCancelSignal : CancellationSignal
+  ) : void {
+    /** Allows a `RepresentationStream` to easily fetch media segments. */
+    const segmentFetcher = segmentFetcherCreator
+      .createSegmentFetcher(adaptation.type,
+                            /* eslint-disable @typescript-eslint/unbound-method */
+                            { onRequestBegin: abrCallbacks.requestBegin,
+                              onRequestEnd: abrCallbacks.requestEnd,
+                              onProgress: abrCallbacks.requestProgress,
+                              onMetrics: abrCallbacks.metrics });
+                            /* eslint-enable @typescript-eslint/unbound-method */
+
     /**
      * `TaskCanceller` triggered when the current `RepresentationStream` is
      * terminating and as such the next one might be immediately created
      * recursively.
      */
-    const repStreamTerminatingCanceller = new TaskCanceller({
-      cancelOn: adapStreamCanceller.signal,
-    });
-    const { representation, manual } = estimateRef.getValue();
+    const repStreamTerminatingCanceller = new TaskCanceller({ cancelOn: fnCancelSignal });
+    const { representation } = estimateRef.getValue();
     if (representation === null) {
       return;
     }
 
-    // A manual bitrate switch might need an immediate feedback.
-    // To do that properly, we need to reload the MediaSource
-    if (directManualBitrateSwitching && manual && !isFirstEstimate) {
-      const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
-
-      // We begin by scheduling a micro-task to reduce the possibility of race
-      // conditions where the inner logic would be called synchronously before
-      // the next observation (which may reflect very different playback conditions)
-      // is actually received.
-      return nextTick(() => {
-        playbackObserver.listen((observation) => {
-          const { manual: newManual } = estimateRef.getValue();
-          if (!newManual) {
-            return;
-          }
-          const currentTime = playbackObserver.getCurrentTime();
-          const pos = currentTime + DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
-
-          // Bind to Period start and end
-          const position = Math.min(Math.max(period.start, pos),
-                                    period.end ?? Infinity);
-          const autoPlay = !(observation.paused.pending ??
-                             playbackObserver.getIsPaused());
-          return callbacks.waitingMediaSourceReload({ bufferType: adaptation.type,
-                                                      period,
-                                                      position,
-                                                      autoPlay });
-        }, { includeLastObservation: true,
-             clearSignal: repStreamTerminatingCanceller.signal });
-      });
-    }
-
     /**
-     * Emit when the current RepresentationStream should be terminated to make
-     * place for a new one (e.g. when switching quality).
+     * Stores the last estimate emitted, starting with `null`.
+     * This allows to easily rely on that value in inner Observables which might also
+     * need the last already-considered value.
      */
     const terminateCurrentStream = createSharedReference<ITerminationOrder | null>(
       null,
@@ -228,15 +275,8 @@ export default function AdaptationStream<T>(
     }, { clearSignal: repStreamTerminatingCanceller.signal, emitCurrentValue: true });
 
     /**
-     * "Fast-switching" is a behavior allowing to replace low-quality segments
-     * (i.e. with a low bitrate) with higher-quality segments (higher bitrate) in
-     * the buffer.
-     * This threshold defines a bitrate from which "fast-switching" is disabled.
-     * For example with a fastSwitchThreshold set to `100`, segments with a
-     * bitrate of `90` can be replaced. But segments with a bitrate of `100`
-     * onward won't be replaced by higher quality segments.
-     * Set to `undefined` to indicate that there's no threshold (anything can be
-     * replaced by higher-quality segments).
+     * Recursively create `RepresentationStream`s according to the last
+     * Representation estimate.
      */
     const fastSwitchThreshold = createSharedReference<number | undefined>(0);
     if (options.enableFastSwitching) {
@@ -278,37 +318,48 @@ export default function AdaptationStream<T>(
           return; // Already handled
         }
         repStreamTerminatingCanceller.cancel();
-        return recursivelyCreateRepresentationStreams(false);
+        return recursivelyCreateRepresentationStreams(estimateRef,
+                                                      abrCallbacks,
+                                                      fnCancelSignal);
       },
     };
 
     createRepresentationStream(representation,
+                               segmentFetcher,
                                terminateCurrentStream,
                                fastSwitchThreshold,
-                               representationStreamCallbacks);
+                               representationStreamCallbacks,
+                               fnCancelSignal);
   }
 
   /**
    * Create and returns a new `RepresentationStream`, linked to the
    * given Representation.
-   * @param {Object} representation
-   * @param {Object} terminateCurrentStream
-   * @param {Object} fastSwitchThreshold
-   * @param {Object} representationStreamCallbacks
+   * @param {Object} representation - The Representation the
+   * `RepresentationStream` has to be created for.
+   * @param {Object} segmentFetcher - Allows to easily fetch segments.
+   * @param {Object} terminateCurrentStream - Gives termination orders,
+   * indicating that the `RepresentationStream` should stop what it's doing.
+   * @param {Object} fastSwitchThreshold - Used to determine when
+   * "fast-switching" is possible.
+   * @param {Object} representationStreamCallbacks - Callbacks to call on
+   * various `RepresentationStream` events.
+   * @param {Object} fnCancelSignal - `CancellationSignal` which will abort
+   * anything this function is doing and free allocated resources.
    */
   function createRepresentationStream(
     representation : Representation,
+    segmentFetcher : IPrioritizedSegmentFetcher<T>,
     terminateCurrentStream : IReadOnlySharedReference<ITerminationOrder | null>,
     fastSwitchThreshold : IReadOnlySharedReference<number | undefined>,
-    representationStreamCallbacks : IRepresentationStreamCallbacks<T>
+    representationStreamCallbacks : IRepresentationStreamCallbacks<T>,
+    fnCancelSignal : CancellationSignal
   ) : void {
     /**
      * `TaskCanceller` triggered when the `RepresentationStream` calls its
      * `terminating` callback.
      */
-    const terminatingRepStreamCanceller = new TaskCanceller({
-      cancelOn: adapStreamCanceller.signal,
-    });
+    const terminatingRepStreamCanceller = new TaskCanceller({ cancelOn: fnCancelSignal });
     const bufferGoal = createMappedReference(wantedBufferAhead, prev => {
       return prev * getBufferGoalRatio(representation);
     }, terminatingRepStreamCanceller.signal);
@@ -334,9 +385,11 @@ export default function AdaptationStream<T>(
           }
           bufferGoalRatioMap.set(representation.id, lastBufferGoalRatio - 0.25);
           return createRepresentationStream(representation,
+                                            segmentFetcher,
                                             terminateCurrentStream,
                                             fastSwitchThreshold,
-                                            representationStreamCallbacks);
+                                            representationStreamCallbacks,
+                                            fnCancelSignal);
         }
         representationStreamCallbacks.error(err);
       },
@@ -358,7 +411,7 @@ export default function AdaptationStream<T>(
                                       drmSystemId: options.drmSystemId,
                                       fastSwitchThreshold } },
                          updatedCallbacks,
-                         adapStreamCanceller.signal);
+                         fnCancelSignal);
   }
 
   /**

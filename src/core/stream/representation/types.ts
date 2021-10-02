@@ -5,7 +5,11 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import { IEMSG } from "../../../parsers/containers/isobmff";
-import { IPlayerError } from "../../../public_types";
+import {
+  IAudioRepresentationsSwitchingMode,
+  IPlayerError,
+  IVideoRepresentationsSwitchingMode,
+} from "../../../public_types";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { IContentProtection } from "../../decrypt";
@@ -289,4 +293,16 @@ export interface IRepresentationStreamOptions {
    * `0` can be emitted to disable any kind of fast-switching.
    */
   fastSwitchThreshold: IReadOnlySharedReference< undefined | number>;
+}
+
+/** Object indicating a choice of allowed Representations made by the user. */
+export interface IRepresentationsChoice {
+  /** `Representation`s wanted by the user. */
+  representations : Representation[];
+  /**
+   * How the Streams should react if another, not currently authorized,
+   * Representation was previously playing.
+   */
+  switchingMode : IVideoRepresentationsSwitchingMode |
+                  IAudioRepresentationsSwitchingMode;
 }

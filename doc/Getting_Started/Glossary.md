@@ -37,30 +37,6 @@ Note: There is minor differences between the RxPlayer's `Adaptation` and DASH'
 `Adaptation` in very specific cases.
 You can find more infos on it [here](../api/Miscellaneous/DASH_Adaptation_Difference.md).
 
-### Bitrate
-
-In the RxPlayer, a bitrate of a [Representation](#representation) indicates the
-number of bits per second of content described by that Representation.
-
-For example, let's imagine a video [Adaptation](#adaptation) with two
-Representation:
-
-1. one with a bitrate at `1,000,000` (which is 1 Megabit)
-2. the other with a bitrate at `500,000` (which is 500 kilobits)
-
-Each seconds of content described by the first Representation will be
-represented by 1 megabit of data
-
-Each seconds for the second Representation will be represented by 500 kilobits.
-
-Both will represent the same data, but the first one will need that the RxPlayer
-fetch more data to show the same amount of content.
-
-In most cases, a higher bitrate means a higher quality. That's why the RxPlayer
-has to compromise between having the best quality and choosing a Representation
-having a low-enough bitrate to be able to play on the user's computer without
-needing to pause due to poor network conditions.
-
 ### Buffer
 
 When we talk about the "buffer" in the RxPlayer, we most likely refer to the

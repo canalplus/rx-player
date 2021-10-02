@@ -41,9 +41,11 @@ import SegmentBuffersStore, {
   SegmentBuffer,
 } from "../../segment_buffers";
 import AdaptationStream, {
+  IAdaptationChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamPlaybackObservation,
 } from "../adaptation";
+import { IRepresentationsChoice } from "../representation";
 import {
   IPeriodStreamArguments,
   IPeriodStreamCallbacks,
@@ -96,19 +98,19 @@ export default function PeriodStream(
   callbacks : IPeriodStreamCallbacks,
   parentCancelSignal : CancellationSignal
 ) : void {
-  const { period } = content;
+  const { manifest, period } = content;
 
   /**
-   * Emits the chosen Adaptation for the current type.
+   * Emits the chosen Adaptation and Representations for the current type.
    * `null` when no Adaptation is chosen (e.g. no subtitles)
    * `undefined` at the beginning (it can be ignored.).
    */
-  const adaptationRef = createSharedReference<Adaptation|null|undefined>(
+  const adaptationRef = createSharedReference<IAdaptationChoice|null|undefined>(
     undefined,
     parentCancelSignal
   );
 
-  callbacks.periodStreamReady({ type: bufferType, period, adaptationRef });
+  callbacks.periodStreamReady({ type: bufferType, manifest, period, adaptationRef });
   if (parentCancelSignal.isCancelled) {
     return;
   }
@@ -116,17 +118,17 @@ export default function PeriodStream(
   let currentStreamCanceller : TaskCanceller | undefined;
   let isFirstAdaptationSwitch = true;
 
-  adaptationRef.onUpdate((adaptation : Adaptation | null | undefined) => {
+  adaptationRef.onUpdate((choice : IAdaptationChoice | null | undefined) => {
     // As an IIFE to profit from async/await while respecting onUpdate's signature
     (async () : Promise<void> => {
-      if (adaptation === undefined) {
+      if (choice === undefined) {
         return;
       }
       const streamCanceller = new TaskCanceller({ cancelOn: parentCancelSignal });
       currentStreamCanceller?.cancel(); // Cancel oreviously created stream if one
       currentStreamCanceller = streamCanceller;
 
-      if (adaptation === null) { // Current type is disabled for that Period
+      if (choice === null) { // Current type is disabled for that Period
         log.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
 
@@ -188,6 +190,7 @@ export default function PeriodStream(
         return askForMediaSourceReload(relativePosAfterSwitch, streamCanceller.signal);
       }
 
+      const { adaptation, representations } = choice;
       log.info(`Stream: Updating ${bufferType} adaptation`,
                `A: ${adaptation.id}`,
                `P: ${period.start}`);
@@ -207,6 +210,7 @@ export default function PeriodStream(
       const strategy = getAdaptationSwitchStrategy(segmentBuffer,
                                                    period,
                                                    adaptation,
+                                                   choice.switchingMode,
                                                    playbackInfos,
                                                    options);
       if (strategy.type === "needs-reload") {
@@ -233,7 +237,10 @@ export default function PeriodStream(
       }
 
       garbageCollectors.get(segmentBuffer)(streamCanceller.signal);
-      createAdaptationStream(adaptation, segmentBuffer, streamCanceller.signal);
+      createAdaptationStream(adaptation,
+                             representations,
+                             segmentBuffer,
+                             streamCanceller.signal);
     })().catch((err) => {
       if (err instanceof CancellationError) {
         return;
@@ -245,19 +252,23 @@ export default function PeriodStream(
 
   /**
    * @param {Object} adaptation
+   * @param {Object} representations
    * @param {Object} segmentBuffer
    * @param {Object} cancelSignal
    */
   function createAdaptationStream(
     adaptation : Adaptation,
+    representations : IReadOnlySharedReference<IRepresentationsChoice>,
     segmentBuffer : SegmentBuffer,
     cancelSignal : CancellationSignal
   ) : void {
-    const { manifest } = content;
     const adaptationPlaybackObserver =
       createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
 
-    AdaptationStream({ content: { manifest, period, adaptation },
+    AdaptationStream({ content: { manifest,
+                                  period,
+                                  adaptation,
+                                  representations },
                        options,
                        playbackObserver: adaptationPlaybackObserver,
                        representationEstimator,

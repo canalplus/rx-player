@@ -23,14 +23,17 @@ describe("Fast-switching", function () {
 
   it("should enable fast-switching by default", async function () {
     this.timeout(3000);
-    player.setVideoBitrate(0);
-    player.setWantedBufferAhead(15);
+    player.setMaxVideoBitrate(0);
+    player.setWantedBufferAhead(10);
     player.loadVideo({ url,
                        transport,
                        autoPlay: false });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(1000);
-    player.setVideoBitrate(Infinity);
+
+    player.setWantedBufferAhead(30);
+    player.setMaxVideoBitrate(Infinity);
+    player.setMinVideoBitrate(Infinity);
     await sleep(1000);
     const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
       .map(({ infos }) => {
@@ -45,15 +48,17 @@ describe("Fast-switching", function () {
 
   it("should enable fast-switching if explicitely enabled", async function () {
     this.timeout(3000);
-    player.setVideoBitrate(0);
-    player.setWantedBufferAhead(15);
+    player.setMaxVideoBitrate(0);
+    player.setWantedBufferAhead(10);
     player.loadVideo({ url,
                        transport,
                        autoPlay: false,
                        enableFastSwitching: true });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(1000);
-    player.setVideoBitrate(Infinity);
+    player.setWantedBufferAhead(30);
+    player.setMaxVideoBitrate(Infinity);
+    player.setMinVideoBitrate(Infinity);
     await sleep(1000);
     const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
       .map(({ infos }) => {
@@ -68,15 +73,17 @@ describe("Fast-switching", function () {
 
   it("should disable fast-switching if explicitely disabled", async function () {
     this.timeout(3000);
-    player.setVideoBitrate(0);
-    player.setWantedBufferAhead(15);
+    player.setMaxVideoBitrate(0);
+    player.setWantedBufferAhead(10);
     player.loadVideo({ url,
                        transport,
                        autoPlay: false,
                        enableFastSwitching: false });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(1000);
-    player.setVideoBitrate(Infinity);
+    player.setWantedBufferAhead(30);
+    player.setMaxVideoBitrate(Infinity);
+    player.setMinVideoBitrate(Infinity);
     await sleep(1000);
     const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
       .map(({ infos }) => {

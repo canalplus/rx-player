@@ -18,7 +18,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 // eslint-disable-next-line max-len
-import mediaElementTrackChoiceManager from "../../../core/api/tracks_management/media_element_track_choice_manager";
+import mediaElementTracksStore from "../../../core/api/track_management/media_element_tracks_store";
 import initDirectFile from "../../../core/init/directfile_content_initializer";
 import addDirectfileFeature from "../directfile";
 
@@ -35,10 +35,10 @@ describe("Features list - Directfile", () => {
     addDirectfileFeature(featureObject);
     expect(featureObject).toEqual({
       directfile: { initDirectFile,
-                    mediaElementTrackChoiceManager },
+                    mediaElementTracksStore },
     });
     expect(featureObject.directfile.initDirectFile).toEqual(initDirectFile);
-    expect(featureObject.directfile.mediaElementTrackChoiceManager)
-      .toEqual(mediaElementTrackChoiceManager);
+    expect(featureObject.directfile.mediaElementTracksStore)
+      .toEqual(mediaElementTracksStore);
   });
 });
