@@ -284,6 +284,15 @@ contains the following properties:
       characteristics of the track.
       (see [HDR support documentation](./Miscellaneous/hdr.md#hdrinfo))
 
+    - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+      Representation is supported by the current platform.
+
+      `undefined` (or not set) if support of that Representation is unknown or
+      if does not make sense here.
+
+    - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
+       deciphered (in the eventuality it had DRM-related protection).
+
   - `signInterpreted` (`Boolean|undefined`): If set to `true`, this track is
     known to contain an interpretation in sign language.
     If set to `false`, the track is known to not contain that type of content.
@@ -351,6 +360,17 @@ contains the following properties:
 
   - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
     has spatial audio.
+
+  - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+    Representation is supported by the current platform.
+
+    `undefined` (or not set) if support of that Representation is unknown or
+    if does not make sense here.
+
+  - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
+    deciphered (in the eventuality it had DRM-related protection).
+    If `false`, it cannot.
+    If `undefined` or not set, it is unknown if it can or cannot be deciphered.
 
 ##### For text tracks
 

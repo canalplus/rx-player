@@ -42,22 +42,6 @@ describe("DASH live content (SegmentTemplate)", function() {
     expect(xhrMock.getLockedXHR().length).to.be.at.least(2);
   });
 
-  it("should list the right bitrates", async function () {
-    xhrMock.lock();
-
-    player.loadVideo({
-      url: manifestInfos.url,
-      transport: manifestInfos.transport,
-    });
-
-    await sleep(1);
-    await xhrMock.flush();
-    await sleep(1);
-
-    expect(player.getAvailableAudioBitrates()).to.eql([48000]);
-    expect(player.getAvailableVideoBitrates()).to.eql([300000]);
-  });
-
   describe("getAvailableAudioTracks", () => {
     it("should list the right audio languages", async function () {
       xhrMock.lock();
@@ -279,22 +263,6 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     expect(player.getUrl()).to.equal(noTimeShiftBufferDepthManifestInfos.url);
 
     expect(xhrMock.getLockedXHR().length).to.be.at.least(2);
-  });
-
-  it("should list the right bitrates", async function () {
-    xhrMock.lock();
-
-    player.loadVideo({
-      url: noTimeShiftBufferDepthManifestInfos.url,
-      transport: noTimeShiftBufferDepthManifestInfos.transport,
-    });
-
-    await sleep(1);
-    await xhrMock.flush();
-    await sleep(1);
-
-    expect(player.getAvailableAudioBitrates()).to.eql([48000]);
-    expect(player.getAvailableVideoBitrates()).to.eql([300000]);
   });
 
   describe("getAvailableAudioTracks", () => {
