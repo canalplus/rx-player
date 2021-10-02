@@ -146,7 +146,8 @@ The array emitted contains object describing each available audio track:
 
   This information is usually set only if the current Manifest contains one.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### availableVideoTracksChange
 
@@ -188,7 +189,8 @@ The array emitted contains object describing each available video track:
 
   - `frameRate` (`number|undefined`): The video framerate.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### availableTextTracksChange
 
@@ -222,7 +224,8 @@ The array emitted contains object describing each available text track:
 - `active` (`Boolean`): Whether the track is the one currently active or
   not.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### audioTrackChange
 
@@ -248,7 +251,8 @@ properties:
 
   This information is usually set only if the current Manifest contains one.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### textTrackChange
 
@@ -269,7 +273,8 @@ properties:
 
   This information is usually set only if the current Manifest contains one.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### videoTrackChange
 
@@ -328,7 +333,8 @@ properties:
 
 A `null` payload means that video track has been disabled.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 <div class="warning">
 In <i>DirectFile</i> mode (see
@@ -372,7 +378,8 @@ properties:
 
 A `null` payload means that no video track is available now.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -395,7 +402,8 @@ properties:
 
   - `codec` (`string|undefined`): The codec of the representation
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -443,7 +451,7 @@ _payload type_: `Object`
 
 Triggered when the current [Period](../Getting_Started/Glossary.md#period) being seen changes.
 
-The payload of this event is an object containing two properties:
+The payload of this event is an object containing the following properties:
 
   - `start` (`number`): The starting position at which the Period starts, in
     seconds.
@@ -453,6 +461,45 @@ The payload of this event is an object containing two properties:
 
     `undefined` either if not known or if the Period has no end yet (e.g. for
     live contents, the end might not be known for now).
+
+  - `id` (`string`): `id` of the Period, allowing to call track and
+    Representation selection APIs (such as `setAudioTrack` and
+    `lockVideoRepresentations` for example) even when the Period changes.
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
+### newAvailablePeriods
+
+_payload type_: `Array.<Object>`
+
+Triggered when one or multiple
+[Periods](../Getting_Started/Glossary.md#period) are made available in the
+current content.
+
+This event is first sent once the Manifest has been parsed and then may be
+triggered again for dynamic contents upon Manifest refresh if new Periods are
+found.
+
+The payload of this event is an array of object, each describing a single Period
+in chronological order.
+Those objects all contain the following properties:
+
+  - `start` (`number`): The starting position at which the Period starts, in
+    seconds.
+
+  - `end` (`number|undefined`): The position at which the Period ends, in
+    seconds.
+
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
+
+  - `id` (`string`): `id` for this Period, allowing to call track and
+    Representation selection APIs (such as `setAudioTrack` and
+    `lockVideoRepresentations` for example) even if that Period is not currently
+    playing.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -513,6 +560,7 @@ Each of those objects have the following keys:
     to identify the track with methods such as `getAvailableAudioTracks` /
     `getVideoTrack` and so on...
 
+    XXX TODO Period object?
   - `periodStart` (`number`): The starting position at which the corresponding
     Period starts, in seconds.
 
@@ -521,6 +569,47 @@ Each of those objects have the following keys:
 
     `undefined` either if not known or if the Period has no end yet (e.g. for
     live contents, the end might not be known for now).
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
+### brokenRepresentationsLock
+
+_payload type_: `Object`
+
+Fairly rare event triggered if representations locked through Representations
+selection API such as `lockVideoRepresentations` or `lockAudioRepresentations`
+all became unplayable (most likely linked to encryption reasons), in which case,
+the RxPlayer "broke" that lock, i.e. it decided to remove that lock and play all
+Representations instead.
+
+This event is sent strictly before the RxPlayer had the chance to actually load
+those other Representations. You can thus profit from this event by
+synchronously locking only Representations you wish to play.
+
+The payload for this event is an object with the following properties:
+  - `period` (`Object`): Information about the concerned
+    [Period](../Getting_Started/Glossary.md#period). This object contains as
+    properties:
+
+    - `start` (`number`): The starting position at which the Period starts, in
+      seconds.
+
+    - `end` (`number|undefined`): The position at which the Period ends, in
+      seconds.
+
+      `undefined` either if not known or if the Period has no end yet (e.g. for
+      live contents, the end might not be known for now).
+
+    - `id` (`string`): `id` of the Period, allowing to call track and
+      Representation selection APIs (such as `setAudioTrack` and
+      `lockVideoRepresentations` for example) even when the Period changes.
+
+  - `trackType` (`string`): The type of track concerned. Can for example be
+    `audio` for audio Representations or `video` for video Representations.
+
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see

@@ -57,14 +57,17 @@ Each of the objects in the returned array have the following properties:
     It this property is either `undefined` or not set, then this track has no
     linked trickmode video track.
 
+You can also get the list of available video tracks for a specific Period by
+calling `getAvailableVideoTracks` with the corresponding Period's id in
+argument.
+Such id can be obtained through the `getAvailablePeriods` method, the
+`newAvailablePeriods` event or the `periodChange` event.
 
-<div class="note">
-Note for multi-Period contents:
-<br>
-This method will only return the available tracks of the
-<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
-playing.
-</div>
+```js
+// example: getting the video track list for the first Period
+const periods = rxPlayer.getAvailablePeriods();
+console.log(rxPlayer.getAvailableVideoTracks(periods[0].id);
+```
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -76,7 +79,18 @@ method will return an empty Array.
 ## Syntax
 
 ```js
+// Get list of available video tracks for the currently-playing Period
 const videoTracks = player.getAvailableVideoTracks();
+
+// Get list of available video tracks for a specific Period
+const videoTrack = player.getAvailableVideoTracks(periodId);
 ```
+
+ - **arguments**:
+
+   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+      to get the list of available video tracks.
+      If not defined, this method will return the list of video tracks for the
+      currently-playing Period.
 
  - **return value** `Array.<Object>`

@@ -49,13 +49,17 @@ Each of the objects in the returned array have the following properties:
   - `codec` (`string|undefined`): The audio codec the Representation is
     in, as announced in the corresponding Manifest.
 
-<div class="note">
-Note for multi-Period contents:
-<br>
-This method will only return the available tracks of the
-<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
-playing.
-</div>
+You can also get the list of available audio tracks for a specific Period by
+calling `getAvailableAudioTracks` with the corresponding Period's id in
+argument.
+Such id can be obtained through the `getAvailablePeriods` method, the
+`newAvailablePeriods` event or the `periodChange` event.
+
+```js
+// example: getting the audio track list for the first Period
+const periods = rxPlayer.getAvailablePeriods();
+console.log(rxPlayer.getAvailableAudioTracks(periods[0].id);
+```
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -67,7 +71,18 @@ method will return an empty Array.
 ## Syntax
 
 ```js
+// Get list of available audio tracks for the currently-playing Period
 const audioTracks = player.getAvailableAudioTracks();
+
+// Get list of available audio tracks for a specific Period
+const audioTrack = player.getAvailableAudioTracks(periodId);
 ```
+
+ - **arguments**:
+
+   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+      to get the list of available audio tracks.
+      If not defined, this method will return the list of audio tracks for the
+      currently-playing Period.
 
  - **return value** `Array.<Object>`

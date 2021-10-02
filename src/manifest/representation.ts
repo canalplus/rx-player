@@ -313,6 +313,15 @@ class Representation {
                                             values: data });
     return true;
   }
+
+  /**
+   * Returns `true` if this Representation can be played (that is: not
+   * undecipherable and with a supported codec).
+   * @returns {Array.<Representation>}
+   */
+  public isPlayable() : boolean {
+    return this.isSupported && this.decipherable !== false;
+  }
 }
 
 /** Protection data as returned by a Representation. */
