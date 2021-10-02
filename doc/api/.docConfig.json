@@ -37,8 +37,12 @@
       "displayName": "Track Selection"
     },
     {
-      "path": "./Bitrate_Selection",
-      "displayName": "Bitrate Selection"
+      "path": "./Representation_Selection",
+      "displayName": "Representation Selection"
+    },
+    {
+      "path": "./Bitrate_Control",
+      "displayName": "Bitrate Control"
     },
     {
       "path": "./Speed_Control",
