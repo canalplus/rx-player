@@ -102,11 +102,11 @@ export default class MediaError extends Error {
       switch (adaptation.type) {
         case "audio":
           this.trackInfo = { type: "audio",
-                             track: adaptation.toAudioTrack() };
+                             track: adaptation.toAudioTrack(false) };
           break;
         case "video":
           this.trackInfo = { type: "video",
-                             track: adaptation.toVideoTrack() };
+                             track: adaptation.toVideoTrack(false) };
           break;
         case "text":
           this.trackInfo = { type: "text",
