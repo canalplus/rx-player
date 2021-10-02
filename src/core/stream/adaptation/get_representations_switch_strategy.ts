@@ -18,8 +18,8 @@ import config from "../../../config";
 import {
   Adaptation,
   Period,
+  Representation,
 } from "../../../manifest";
-import areCodecsCompatible from "../../../utils/are_codecs_compatible";
 import {
   convertToRanges,
   excludeFromRanges,
@@ -28,50 +28,25 @@ import {
   isTimeInRanges,
   keepRangeIntersection,
 } from "../../../utils/ranges";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
   IBufferedChunk,
   SegmentBuffer,
 } from "../../segment_buffers";
-import { ITrackSwitchingMode } from "../types";
+import { IRepresentationsChoice } from "../types";
 
-
-export type IAdaptationSwitchStrategy =
-  { type: "continue"; value: undefined } |
-  { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
-  { type: "flush-buffer"; value: Array<{ start: number; end: number }> } |
-  { type: "needs-reload"; value: undefined };
-
-export interface IAdaptationSwitchOptions {
-  /** Behavior when a new video and/or audio codec is encountered. */
-  onCodecSwitch : "continue" | "reload";
-}
-
-/**
- * Find out what to do when switching Adaptation, based on the current
- * situation.
- * @param {Object} segmentBuffer
- * @param {Object} period
- * @param {Object} adaptation
- * @param {Object} playbackInfo
- * @returns {Object}
- */
-export default function getAdaptationSwitchStrategy(
-  segmentBuffer : SegmentBuffer,
+export default function getRepresentationsSwitchingStrategy(
   period : Period,
   adaptation : Adaptation,
-  switchingMode : ITrackSwitchingMode,
-  playbackInfo : { currentTime : number; readyState : number },
-  options : IAdaptationSwitchOptions
-) : IAdaptationSwitchStrategy {
-  if (segmentBuffer.codec !== undefined &&
-      options.onCodecSwitch === "reload" &&
-      !hasCompatibleCodec(adaptation, segmentBuffer.codec))
-  {
-    return { type: "needs-reload", value: undefined };
+  settings : IRepresentationsChoice,
+  segmentBuffer : SegmentBuffer,
+  playbackObserver : IReadOnlyPlaybackObserver<unknown>
+) : IRepresentationSwitchStrategy {
+  if (settings.switchingMode === "lazy") {
+    return { type: "continue", value: undefined };
   }
-
   const buffered = segmentBuffer.getBufferedRanges();
   if (buffered.length === 0) {
     return { type: "continue", value: undefined };
@@ -88,45 +63,39 @@ export default function getAdaptationSwitchStrategy(
   segmentBuffer.synchronizeInventory();
   const inventory = segmentBuffer.getInventory();
 
-  // Continue if we have no other Adaptation buffered in the current Period
-  if (!inventory.some(buf => buf.infos.period.id === period.id &&
-                             buf.infos.adaptation.id !== adaptation.id))
-  {
-    return { type: "continue", value: undefined };
-  }
-
   /** Data already in the right Adaptation */
-  const adaptationInBuffer =
-    getBufferedRangesFromAdaptation(inventory, period, adaptation);
+  const rangesWithReps =
+    getBufferedRangesFromRepresentations(inventory,
+                                         period,
+                                         adaptation,
+                                         settings.representations);
 
   /**
    * Data different from the wanted Adaptation in the Period's range.
    * /!\ Could contain some data at the end of the previous Period or at the
    * beginning of the next one.
    */
-  const unwantedRange = excludeFromRanges(intersection, adaptationInBuffer);
+  const unwantedRange = excludeFromRanges(intersection, rangesWithReps);
 
   if (unwantedRange.length === 0) {
     return { type: "continue", value: undefined };
   }
 
-  const { currentTime } = playbackInfo;
-  if (switchingMode === "reload" &&
+  const currentTime = playbackObserver.getCurrentTime();
+  const readyState = playbackObserver.getReadyState();
+  if (settings.switchingMode === "reload" &&
       // We're playing the current Period
       isTimeInRange({ start, end }, currentTime) &&
-      // There is data for the current position or the codecs are differents
-      (playbackInfo.readyState > 1 || !adaptation.getPlayableRepresentations()
-        .some(rep =>
-          areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""))) &&
+      // There is data for the current position
+      readyState > 1 &&
       // We're not playing the current wanted video Adaptation
-      !isTimeInRanges(adaptationInBuffer, currentTime))
+      !isTimeInRanges(rangesWithReps, currentTime))
   {
     return { type: "needs-reload", value: undefined };
   }
 
   // From here, clean-up data from the previous Adaptation, if one
-
-  const shouldCleanAll = switchingMode === "direct";
+  const shouldFlush = settings.switchingMode === "direct";
 
   const rangesToExclude = [];
 
@@ -145,21 +114,20 @@ export default function getAdaptationSwitchStrategy(
                            end: period.start + 1 });
   }
 
-  // Next, exclude data around current position to avoid decoding issues
-  const bufferType = adaptation.type;
-  const { ADAP_REP_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
+  if (!shouldFlush) {
+    // exclude data around current position to avoid decoding issues
+    const { ADAP_REP_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
+    const bufferType = adaptation.type;
 
-  /** Ranges that won't be cleaned from the current buffer. */
-  let paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
-  if (paddingBefore == null) {
-    paddingBefore = 0;
-  }
-  let paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
-  if (paddingAfter == null) {
-    paddingAfter = 0;
-  }
-
-  if (!shouldCleanAll) {
+    /** Ranges that won't be cleaned from the current buffer. */
+    let paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
+    if (paddingBefore == null) {
+      paddingBefore = 0;
+    }
+    let paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
+    if (paddingAfter == null) {
+      paddingAfter = 0;
+    }
     rangesToExclude.push({ start: currentTime - paddingBefore,
                            end: currentTime + paddingAfter });
   }
@@ -171,7 +139,8 @@ export default function getAdaptationSwitchStrategy(
     const firstSegmentAfter = getFirstSegmentAfterPeriod(inventory, period);
     if (firstSegmentAfter !== null &&
         (firstSegmentAfter.bufferedStart === undefined ||
-         (firstSegmentAfter.bufferedStart - period.end) < 1)) // Close to Period's end
+         // Close to Period's end
+         (firstSegmentAfter.bufferedStart - period.end) < 1))
     {
       rangesToExclude.push({ start: period.end - 1,
                              end: Number.MAX_VALUE });
@@ -184,25 +153,15 @@ export default function getAdaptationSwitchStrategy(
     return { type: "continue", value: undefined };
   }
 
-  return shouldCleanAll && adaptation.type !== "text" ?
-    { type: "flush-buffer", value: toRemove } :
-    { type: "clean-buffer", value: toRemove };
+  return shouldFlush ? { type: "flush-buffer", value: toRemove } :
+                       { type: "clean-buffer", value: toRemove };
 }
 
-/**
- * Returns `true` if at least one codec of the Representations in the given
- * Adaptation has a codec compatible with the given SegmentBuffer's codec.
- * @param {Object} adaptation
- * @param {string} segmentBufferCodec
- * @returns {boolean}
- */
-function hasCompatibleCodec(
-  adaptation : Adaptation,
-  segmentBufferCodec : string
-) : boolean {
-  return adaptation.getPlayableRepresentations().some(rep =>
-    areCodecsCompatible(rep.getMimeTypeString(), segmentBufferCodec));
-}
+export type IRepresentationSwitchStrategy =
+  { type: "continue"; value: undefined } |
+  { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
+  { type: "flush-buffer"; value: Array<{ start: number; end: number }> } |
+  { type: "needs-reload"; value: undefined };
 
 /**
  * Returns buffered ranges of what we know correspond to the given `adaptation`
@@ -212,14 +171,16 @@ function hasCompatibleCodec(
  * @param {Object} adaptation
  * @returns {Array.<Object>}
  */
-function getBufferedRangesFromAdaptation(
+function getBufferedRangesFromRepresentations(
   inventory : IBufferedChunk[],
   period : Period,
-  adaptation : Adaptation
+  adaptation : Adaptation,
+  representations : Representation[]
 ) : IRange[] {
   return inventory.reduce<IRange[]>((acc : IRange[], chunk) : IRange[] => {
     if (chunk.infos.period.id !== period.id ||
-        chunk.infos.adaptation.id !== adaptation.id)
+        chunk.infos.adaptation.id !== adaptation.id ||
+        !representations.some(rep => rep.id === chunk.infos.representation.id))
     {
       return acc;
     }

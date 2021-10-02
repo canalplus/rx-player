@@ -28,6 +28,7 @@ import { IBufferType } from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,
+  IAdaptationChoice,
   IBitrateEstimationChangeEvent,
   ICompletedStreamEvent,
   IEncryptionDataEncounteredEvent,
@@ -154,19 +155,24 @@ const EVENTS = {
 
   periodStreamReady(
     type : IBufferType,
+    manifest : Manifest,
     period : Period,
-    adaptation$ : Subject<Adaptation|null>
+    adaptation$ : Subject<IAdaptationChoice | null>
   ) : IPeriodStreamReadyEvent {
     return { type: "periodStreamReady",
-             value: { type, period, adaptation$ } };
+             value: { type,
+                      manifest,
+                      period,
+                      adaptation$ } };
   },
 
   periodStreamCleared(
     type : IBufferType,
+    manifest : Manifest,
     period : Period
   ) : IPeriodStreamClearedEvent {
     return { type: "periodStreamCleared",
-             value: { type, period } };
+             value: { type, manifest, period } };
   },
 
   encryptionDataEncountered(

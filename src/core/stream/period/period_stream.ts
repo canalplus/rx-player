@@ -39,7 +39,6 @@ import Manifest, {
   Adaptation,
   Period,
 } from "../../../manifest";
-import { IAudioTrackSwitchingMode } from "../../../public_types";
 import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 import createSharedReference, {
@@ -67,8 +66,10 @@ import EVENTS from "../events_generators";
 import reloadAfterSwitch from "../reload_after_switch";
 import { IPositionPlaybackObservation } from "../representation";
 import {
+  IAdaptationChoice,
   IAdaptationStreamEvent,
   IPeriodStreamEvent,
+  IRepresentationsChoice,
   IStreamWarningEvent,
 } from "../types";
 import createEmptyStream from "./create_empty_adaptation_stream";
@@ -116,8 +117,6 @@ export interface IPeriodStreamArguments {
 export type IPeriodStreamOptions =
   IAdaptationStreamOptions &
   {
-    /** RxPlayer's behavior when switching the audio track. */
-    audioTrackSwitchingMode : IAudioTrackSwitchingMode;
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
     /** Options specific to the text SegmentBuffer. */
@@ -145,14 +144,14 @@ export default function PeriodStream({
   wantedBufferAhead,
   maxVideoBufferSize,
 } : IPeriodStreamArguments) : Observable<IPeriodStreamEvent> {
-  const { period } = content;
+  const { manifest, period } = content;
 
-  // Emits the chosen Adaptation for the current type.
+  // Emits the chosen Adaptation and Representation for the current type.
   // `null` when no Adaptation is chosen (e.g. no subtitles)
-  const adaptation$ = new ReplaySubject<Adaptation|null>(1);
+  const adaptation$ = new ReplaySubject<IAdaptationChoice | null>(1);
   return adaptation$.pipe(
     switchMap((
-      adaptation : Adaptation | null,
+      choice : IAdaptationChoice | null,
       switchNb : number
     ) : Observable<IPeriodStreamEvent> => {
       /**
@@ -169,7 +168,7 @@ export default function PeriodStream({
         bufferType === "video" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video :
                                  DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
 
-      if (adaptation === null) { // Current type is disabled for that Period
+      if (choice === null) { // Current type is disabled for that Period
         log.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
         let cleanBuffer$ : Observable<unknown>;
@@ -215,6 +214,7 @@ export default function PeriodStream({
                                  relativePosAfterSwitch);
       }
 
+      const { adaptation, representations } = choice;
       log.info(`Stream: Updating ${bufferType} adaptation`,
                `A: ${adaptation.id}`,
                `P: ${period.start}`);
@@ -230,6 +230,7 @@ export default function PeriodStream({
         const strategy = getAdaptationSwitchStrategy(segmentBuffer,
                                                      period,
                                                      adaptation,
+                                                     choice.switchingMode,
                                                      playbackInfos,
                                                      options);
         if (strategy.type === "needs-reload") {
@@ -258,7 +259,9 @@ export default function PeriodStream({
             ).pipe(ignoreElements()) : EMPTY;
 
         const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
-        const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
+        const adaptationStream$ = createAdaptationStream(adaptation,
+                                                         representations,
+                                                         segmentBuffer);
 
         const cancelWait = new TaskCanceller();
         return fromCancellablePromise(cancelWait, () =>
@@ -275,7 +278,7 @@ export default function PeriodStream({
         newStream$
       );
     }),
-    startWith(EVENTS.periodStreamReady(bufferType, period, adaptation$))
+    startWith(EVENTS.periodStreamReady(bufferType, manifest, period, adaptation$))
   );
 
   /**
@@ -285,12 +288,15 @@ export default function PeriodStream({
    */
   function createAdaptationStream(
     adaptation : Adaptation,
+    representations : IReadOnlySharedReference<IRepresentationsChoice>,
     segmentBuffer : SegmentBuffer
   ) : Observable<IAdaptationStreamEvent|IStreamWarningEvent> {
-    const { manifest } = content;
     const adaptationPlaybackObserver =
       createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
-    return AdaptationStream({ content: { manifest, period, adaptation },
+    return AdaptationStream({ content: { manifest,
+                                         period,
+                                         adaptation,
+                                         representations },
                               options,
                               playbackObserver: adaptationPlaybackObserver,
                               representationEstimator,
