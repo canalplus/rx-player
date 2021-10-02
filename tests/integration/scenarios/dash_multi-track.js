@@ -216,7 +216,8 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
         const wantedAudioTrack = chooseWantedAudioTrack(availableAudioTracks,
                                                         audioTrackPreference);
         if (wantedAudioTrack !== undefined) {
-          player.setAudioTrack(wantedAudioTrack.id, period.id);
+          player.setAudioTrack({ trackId: wantedAudioTrack.id,
+                                 periodId: period.id });
           expect(player.getAudioTrack(period.id).id)
             .to.equal(wantedAudioTrack.id);
         }
@@ -233,7 +234,8 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
           const wantedTextTrack = chooseWantedTextTrack(availableTextTracks,
                                                         textTrackPreference);
           if (wantedTextTrack !== undefined) {
-            player.setTextTrack(wantedTextTrack.id, period.id);
+            player.setTextTrack({ trackId: wantedTextTrack.id,
+                                  periodId: period.id });
             expect(player.getTextTrack(period.id).id)
               .to.equal(wantedTextTrack.id);
           }
@@ -251,7 +253,8 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
           const wantedVideoTrack = chooseWantedVideoTrack(availableVideoTracks,
                                                           videoTrackPreference);
           if (wantedVideoTrack !== undefined) {
-            player.setVideoTrack(wantedVideoTrack.id, period.id);
+            player.setVideoTrack({ trackId: wantedVideoTrack.id,
+                                   periodId: period.id });
             expect(player.getVideoTrack(period.id).id)
               .to.equal(wantedVideoTrack.id);
           }

@@ -52,7 +52,6 @@ import SegmentBuffersStore, {
   ITextTrackSegmentBufferOptions,
 } from "../segment_buffers";
 import StreamOrchestrator, {
-  IAudioTrackSwitchingMode,
   IStreamOrchestratorOptions,
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorPlaybackObservation,
@@ -752,8 +751,6 @@ export interface IInitializeArguments {
      * higher-quality ones to have a faster transition.
      */
     enableFastSwitching : boolean;
-    /** Strategy when switching of audio track. */
-    audioTrackSwitchingMode : IAudioTrackSwitchingMode;
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
   };
