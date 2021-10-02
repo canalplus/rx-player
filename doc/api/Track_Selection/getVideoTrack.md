@@ -71,13 +71,16 @@ return an object with the following properties:
     It this property is either `undefined` or not set, then this track has no
     linked trickmode video track.
 
-<div class="note">
-Note for multi-Period contents:
-<br>
-This method will only return the chosen video track for the
-<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
-playing.
-</div>
+You can also get the information on the chosen video track for another Period by
+calling `getVideoTrack` with the corresponding Period's id in argument. Such id
+can be obtained through the `getAvailablePeriods` method, the
+`newAvailablePeriods` event or the `periodChange` event.
+
+```js
+// example: getting track information for the first Period
+const periods = rxPlayer.getAvailablePeriods();
+console.log(rxPlayer.getVideoTrack(periods[0].id);
+```
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -88,7 +91,18 @@ video tracks API in the browser, this method returns "undefined".
 ## Syntax
 
 ```js
+// Get information about the currently-playing video track
 const videoTrack = player.getVideoTrack();
+
+// Get information about the video track for a specific Period
+const videoTrack = player.getVideoTrack(periodId);
 ```
+
+ - **arguments**:
+
+   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+      to get information about its current video track.
+      If not defined, the information associated to the currently-playing Period
+      will be returned.
 
  - **return value** `Object|null|undefined`

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import MediaElementTrackChoiceManager from "../media_element_track_choice_manager";
+import MediaElementTracksStore from "../media_element_tracks_store";
 
 const fakeMediaElement = {
   audioTracks: [
@@ -34,9 +34,9 @@ const fakeMediaElement = {
   ],
 } as unknown as HTMLVideoElement;
 
-describe("API - MediaElementTrackChoiceManager", () => {
+describe("API - MediaElementTracksStore", () => {
   it("should returns correct results for getter", () => {
-    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
+    const trackManager = new MediaElementTracksStore(fakeMediaElement);
     const audioTracks = trackManager.getAvailableAudioTracks();
     const textTracks = trackManager.getAvailableTextTracks();
     const videoTracks = trackManager.getAvailableVideoTracks();
@@ -69,7 +69,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
     });
   });
   it("should returns correct results for setters", () => {
-    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
+    const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
     trackManager.setAudioTrackById("gen_audio_en_1");
     // unset enabled attribute of other track, as browser is supported to do this
@@ -96,7 +96,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
     });
   });
   it("should emit available tracks change when changing text contents", (done) => {
-    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
+    const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
     trackManager
       .addEventListener("availableTextTracksChange", (tracks) => {
@@ -116,7 +116,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
   });
 
   it("should emit available tracks change when changing video contents", (done) => {
-    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
+    const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
     trackManager
       .addEventListener("availableVideoTracksChange", (tracks) => {
@@ -140,7 +140,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
   });
 
   it("should emit available tracks change when changing audio contents", (done) => {
-    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
+    const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
     trackManager
       .addEventListener("availableAudioTracksChange", (tracks) => {
@@ -167,7 +167,7 @@ describe("API - MediaElementTrackChoiceManager", () => {
   });
 
   it("should emit chosen track when changing text content", (done) => {
-    const trackManager = new MediaElementTrackChoiceManager(fakeMediaElement);
+    const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
     trackManager
       .addEventListener("textTrackChange", (chosenTrack) => {

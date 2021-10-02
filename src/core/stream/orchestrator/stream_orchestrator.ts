@@ -467,7 +467,7 @@ export default function StreamOrchestrator(
     const currentStream$ : Observable<IMultiplePeriodStreamsEvent> =
       observableConcat(
         periodStream$.pipe(takeUntil(killCurrentStream$)),
-        observableOf(EVENTS.periodStreamCleared(bufferType, basePeriod))
+        observableOf(EVENTS.periodStreamCleared(bufferType, manifest, basePeriod))
           .pipe(tap(() => {
             log.info("SO: Destroying Stream for", bufferType, basePeriod.start);
           })));

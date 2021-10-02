@@ -42,6 +42,7 @@ const mockDefaultRepresentationImpl = jest.fn(arg => {
   return { bitrate: arg.bitrate,
            id: arg.id,
            isSupported: true,
+           isPlayable() { return true; },
            index: arg.index };
 });
 
@@ -164,6 +165,7 @@ describe("Manifest - Adaptation", () => {
       return { bitrate: arg.bitrate,
                id: arg.id,
                isSupported: arg.id !== "rep4",
+               isPlayable() { return true; },
                index: arg.index };
     });
 
@@ -422,16 +424,12 @@ describe("Manifest - Adaptation", () => {
   });
 
   /* eslint-disable max-len */
-  it("should return only supported and decipherable representation when calling `getPlayableRepresentations`", () => {
+  it("should return only playable representations when calling `getPlayableRepresentations`", () => {
   /* eslint-enable max-len */
     const mockRepresentation = jest.fn(arg => {
       return { bitrate: arg.bitrate,
                id: arg.id,
-               isSupported: arg.id !== "rep3" && arg.id !== "rep8",
-               decipherable: arg.id === "rep6" ? false :
-                             arg.id === "rep8" ? false :
-                             arg.id === "rep4" ? true :
-                                                 undefined,
+               isPlayable() { return arg.id !== "rep3"; },
                index: arg.index };
     });
     jest.mock("../representation", () => ({ __esModule: true as const,
@@ -474,11 +472,13 @@ describe("Manifest - Adaptation", () => {
     const adaptation = new Adaptation(args);
 
     const playableRepresentations = adaptation.getPlayableRepresentations();
-    expect(playableRepresentations.length).toEqual(5);
+    expect(playableRepresentations.length).toEqual(7);
     expect(playableRepresentations[0].id).toEqual("rep1");
     expect(playableRepresentations[1].id).toEqual("rep2");
     expect(playableRepresentations[2].id).toEqual("rep4");
     expect(playableRepresentations[3].id).toEqual("rep5");
-    expect(playableRepresentations[4].id).toEqual("rep7");
+    expect(playableRepresentations[4].id).toEqual("rep6");
+    expect(playableRepresentations[5].id).toEqual("rep7");
+    expect(playableRepresentations[6].id).toEqual("rep8");
   });
 });
