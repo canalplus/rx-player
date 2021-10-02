@@ -14,25 +14,7 @@
  * limitations under the License.
  */
 
-import StreamOrchestrator, {
-  IStreamOrchestratorOptions,
-  IStreamOrchestratorPlaybackObservation,
-  IStreamOrchestratorCallbacks,
-} from "./orchestrator";
-export {
-  IRepresentationsChoice,
-  IInbandEvent,
-  IStreamStatusPayload,
-} from "./representation";
-export {
-  IAdaptationChoice,
-  ITrackSwitchingMode,
-  IWaitingMediaSourceReloadPayload,
-} from "./adaptation";
+import TracksStore from "./tracks_store";
 
-export default StreamOrchestrator;
-export {
-  IStreamOrchestratorPlaybackObservation,
-  IStreamOrchestratorOptions,
-  IStreamOrchestratorCallbacks,
-};
+export default TracksStore;
+export * from "./tracks_store";

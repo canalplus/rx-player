@@ -368,8 +368,12 @@ class Representation {
    * @returns {Object}
    */
   public toAudioRepresentation(): IAudioRepresentation {
-    const { id, bitrate, codec } = this;
-    return { id, bitrate, codec };
+    const { id, bitrate, codec, isSupported, decipherable } = this;
+    return { id,
+             bitrate,
+             codec,
+             isCodecSupported: isSupported,
+             seemsDecipherable: decipherable };
   }
 
   /**
@@ -377,8 +381,33 @@ class Representation {
    * @returns {Object}
    */
   public toVideoRepresentation(): IVideoRepresentation {
-    const { id, bitrate, frameRate, width, height, codec, hdrInfo } = this;
-    return { id, bitrate, frameRate, width, height, codec, hdrInfo };
+    const { id,
+            bitrate,
+            frameRate,
+            width,
+            height,
+            codec,
+            hdrInfo,
+            isSupported,
+            decipherable } = this;
+    return { id,
+             bitrate,
+             frameRate,
+             width,
+             height,
+             codec,
+             hdrInfo,
+             isCodecSupported: isSupported,
+             seemsDecipherable: decipherable };
+  }
+
+  /**
+   * Returns `true` if this Representation can be played (that is: not
+   * undecipherable and with a supported codec).
+   * @returns {Array.<Representation>}
+   */
+  public isPlayable() : boolean {
+    return this.isSupported && this.decipherable !== false;
   }
 }
 

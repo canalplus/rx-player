@@ -132,22 +132,6 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getAvailableVideoBitrates", () => {
-      it("should return [] in getAvailableVideoBitrates by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getAvailableVideoBitrates()).toEqual([]);
-      });
-    });
-
-    describe("getAvailableAudioBitrates", () => {
-      it("should return [] in getAvailableAudioBitrates by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getAvailableAudioBitrates()).toEqual([]);
-      });
-    });
-
     describe("getVideoBitrate", () => {
       it("should return undefined in getVideoBitrate by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
