@@ -3,6 +3,10 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import {
+  IAudioTrackSwitchingMode,
+  IVideoTrackSwitchingMode,
+} from "../../../public_types";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import { IRepresentationEstimator } from "../../adaptive";
 import { IReadOnlyPlaybackObserver } from "../../api";
@@ -12,6 +16,7 @@ import {
   SegmentBuffer,
 } from "../../segment_buffers";
 import {
+  IRepresentationsChoice,
   IRepresentationStreamCallbacks,
   IRepresentationStreamPlaybackObservation,
 } from "../representation";
@@ -32,6 +37,14 @@ export interface IAdaptationStreamCallbacks<T>
    * needs the `MediaSource` to be reloaded first.
    */
   waitingMediaSourceReload(payload : IWaitingMediaSourceReloadPayload) : void;
+  /**
+   * Some situations might require the browser's buffers to be refreshed.
+   * This callback is called when such situation arised.
+   *
+   * Generally flushing/refreshing low-level buffers can be performed simply by
+   * performing a very small seek.
+   */
+  needsBufferFlush() : void;
 }
 
 /** Payload for the `bitrateEstimationChange` callback. */
@@ -126,7 +139,8 @@ export interface IAdaptationStreamArguments {
   /** Content you want to create this Stream for. */
   content : { manifest : Manifest;
               period : Period;
-              adaptation : Adaptation; };
+              adaptation : Adaptation;
+              representations : IReadOnlySharedReference<IRepresentationsChoice>; };
   options: IAdaptationStreamOptions;
   /** Estimate the right Representation to play. */
   representationEstimator : IRepresentationEstimator;
@@ -191,3 +205,20 @@ export interface IAdaptationStreamOptions {
   enableFastSwitching : boolean;
 }
 
+/** Object indicating a choice of Adaptation made by the user. */
+export interface IAdaptationChoice {
+  /** The Adaptation choosen. */
+  adaptation : Adaptation;
+
+  /** "Switching mode" in which the track switch should happen. */
+  switchingMode : ITrackSwitchingMode;
+
+  /**
+   * Shared reference allowing to indicate which Representations from
+   * that Adaptation are allowed.
+   */
+  representations : IReadOnlySharedReference<IRepresentationsChoice>;
+}
+
+export type ITrackSwitchingMode = IAudioTrackSwitchingMode |
+                                  IVideoTrackSwitchingMode;

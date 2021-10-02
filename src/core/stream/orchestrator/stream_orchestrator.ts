@@ -184,7 +184,7 @@ export default function StreamOrchestrator(
       while (periodList.length() > 0) {
         const period = periodList.get(periodList.length() - 1);
         periodList.removeElement(period);
-        callbacks.periodStreamCleared({ type: bufferType, period });
+        callbacks.periodStreamCleared({ type: bufferType, manifest, period });
       }
       currentCanceller.cancel();
       currentCanceller = new TaskCanceller();
@@ -322,7 +322,7 @@ export default function StreamOrchestrator(
       while (periodList.length() > 0) {
         const period = periodList.get(periodList.length() - 1);
         periodList.removeElement(period);
-        callbacks.periodStreamCleared({ type: bufferType, period });
+        callbacks.periodStreamCleared({ type: bufferType, manifest, period });
       }
 
       currentCanceller.cancel();
@@ -444,6 +444,7 @@ export default function StreamOrchestrator(
                  basePeriod.end);
         stopListeningObservations();
         consecutivePeriodStreamCb.periodStreamCleared({ type: bufferType,
+                                                        manifest,
                                                         period: basePeriod });
         currentStreamCanceller.cancel();
       }
@@ -473,7 +474,9 @@ export default function StreamOrchestrator(
           log.info("Stream: Destroying next PeriodStream due to current one being active",
                    bufferType, nextStreamInfo.period.start);
           consecutivePeriodStreamCb
-            .periodStreamCleared({ type: bufferType, period: nextStreamInfo.period });
+            .periodStreamCleared({ type: bufferType,
+                                   manifest,
+                                   period: nextStreamInfo.period });
           nextStreamInfo.canceller.cancel();
           nextStreamInfo = null;
         }
@@ -503,6 +506,7 @@ export default function StreamOrchestrator(
         log.warn("Stream: Creating next `PeriodStream` while one was already created.",
                  bufferType, nextPeriod.id, nextStreamInfo.period.id);
         consecutivePeriodStreamCb.periodStreamCleared({ type: bufferType,
+                                                        manifest,
                                                         period: nextStreamInfo.period });
         nextStreamInfo.canceller.cancel();
       }
@@ -590,6 +594,8 @@ export interface IPeriodStreamClearedPayload {
    * about which `PeriodStream` has been removed.
    */
   type : IBufferType;
+  /** The `Manifest` linked to the `PeriodStream` we just cleared. */
+  manifest : Manifest;
   /**
    * The `Period` linked to the `PeriodStream` we just removed.
    *
