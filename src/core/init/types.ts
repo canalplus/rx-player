@@ -27,7 +27,10 @@ import { PlaybackObserver } from "../api";
 import SegmentBuffersStore, {
   IBufferType,
 } from "../segment_buffers";
-import { IInbandEvent } from "../stream";
+import {
+  IAdaptationChoice,
+  IInbandEvent,
+} from "../stream";
 import {
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
@@ -154,6 +157,8 @@ export interface IContentInitializerEvents {
   periodStreamReady: {
     /** The type of buffer linked to the `PeriodStream` we want to create. */
     type : IBufferType;
+    /** The `Manifest` linked to the `PeriodStream` we have created. */
+    manifest : Manifest;
     /** The `Period` linked to the `PeriodStream` we have created. */
     period : Period;
     /**
@@ -167,7 +172,7 @@ export interface IContentInitializerEvents {
      * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
      * yourself.
      */
-    adaptationRef : ISharedReference<Adaptation|null|undefined>;
+    adaptationRef : ISharedReference<IAdaptationChoice|null|undefined>;
   };
   /**
    * A `PeriodStream` has been removed.

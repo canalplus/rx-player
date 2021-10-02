@@ -30,6 +30,8 @@ import {
 import {
   IBufferedChunk,
   IChunkContext,
+  getFirstSegmentAfterPeriod,
+  getLastSegmentBeforePeriod,
 } from "./inventory";
 import SegmentBuffersStore, {
   ISegmentBufferOptions,
@@ -60,4 +62,7 @@ export {
   IEndOfSegmentOperation,
   IPushOperation,
   IRemoveOperation,
+
+  getFirstSegmentAfterPeriod,
+  getLastSegmentBeforePeriod,
 };
