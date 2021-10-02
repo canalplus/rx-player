@@ -16,7 +16,7 @@
 
 import RxPlayer from "../core/api";
 // eslint-disable-next-line max-len
-import MediaElementTrackChoiceManager from "../core/api/tracks_management/media_element_track_choice_manager";
+import MediaElementTracksStore from "../core/api/track_management/media_element_tracks_store";
 import type ContentDecryptor from "../core/decrypt";
 import DirectFileContentInitializer from "../core/init/directfile_content_initializer";
 import MediaSourceContentInitializer from "../core/init/media_source_content_initializer";
@@ -59,8 +59,6 @@ export type IHTMLTextTracksBuffer =
 export type INativeTextTracksBuffer =
   new(mediaElement : HTMLMediaElement) => SegmentBuffer;
 
-export type IMediaElementTrackChoiceManager = typeof MediaElementTrackChoiceManager;
-
 export type IDashJsParser = (
   document: Document,
   args : IMPDParserArguments
@@ -93,7 +91,7 @@ export interface IFeaturesObject {
    * contents natively decodable by the browser.
    */
   directfile : { initDirectFile: typeof DirectFileContentInitializer;
-                 mediaElementTrackChoiceManager : IMediaElementTrackChoiceManager; } |
+                 mediaElementTracksStore : typeof MediaElementTracksStore; } |
                null;
   /** Handle content decryption. */
   decrypt : typeof ContentDecryptor | null;
