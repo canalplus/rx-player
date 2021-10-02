@@ -14,21 +14,7 @@
  * limitations under the License.
  */
 
-import SegmentInventory, {
-  ChunkStatus,
-  IBufferedChunk,
-  IInsertedChunkInfos,
-} from "./segment_inventory";
+import TracksStore from "./tracks_store";
 
-export default SegmentInventory;
-export {
-  ChunkStatus,
-  IBufferedChunk,
-  IInsertedChunkInfos,
-};
-export { IBufferedHistoryEntry } from "./buffered_history";
-export { IChunkContext } from "./types";
-export {
-  getFirstSegmentAfterPeriod,
-  getLastSegmentBeforePeriod,
-} from "./utils";
+export default TracksStore;
+export * from "./tracks_store";

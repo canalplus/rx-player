@@ -76,8 +76,8 @@ describe("DASH multi-Period with different choices", function () {
       periodChangeEvents.push(payload);
     });
 
-    player.setAudioBitrate(Infinity);
-    player.setVideoBitrate(Infinity);
+    player.setMinAudioBitrate(Infinity);
+    player.setMinVideoBitrate(Infinity);
 
 
     await loadContent();
@@ -155,8 +155,8 @@ describe("DASH multi-Period with different choices", function () {
     });
 
     player.setPlaybackRate(3);
-    player.setAudioBitrate(Infinity);
-    player.setVideoBitrate(Infinity);
+    player.setMinAudioBitrate(Infinity);
+    player.setMinVideoBitrate(Infinity);
 
 
     await loadContent();
@@ -269,8 +269,8 @@ describe("DASH multi-Period with same choices", function () {
       periodChangeEvents.push(payload);
     });
 
-    player.setAudioBitrate(Infinity);
-    player.setVideoBitrate(Infinity);
+    player.setMinAudioBitrate(Infinity);
+    player.setMinVideoBitrate(Infinity);
 
 
     await loadContent();
@@ -349,8 +349,8 @@ describe("DASH multi-Period with same choices", function () {
     });
 
     player.setPlaybackRate(3);
-    player.setAudioBitrate(Infinity);
-    player.setVideoBitrate(Infinity);
+    player.setMinAudioBitrate(Infinity);
+    player.setMinVideoBitrate(Infinity);
 
 
     await loadContent();
@@ -397,7 +397,6 @@ describe("DASH multi-Period with same choices", function () {
 
     expect(videoTrackChangeEvents).to.have.length(2);
     expect(videoTrackChangeEvents[1].id).to.equal("video-video-video/mp4-dup");
-
     expect(periodChangeEvents).to.have.length(2);
   });
 });

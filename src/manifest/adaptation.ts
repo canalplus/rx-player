@@ -207,9 +207,7 @@ export default class Adaptation {
    * @returns {Array.<Representation>}
    */
   getPlayableRepresentations() : Representation[] {
-    return this.representations.filter(rep => {
-      return rep.isSupported && rep.decipherable !== false;
-    });
+    return this.representations.filter(rep => rep.isPlayable());
   }
 
   /**
@@ -223,15 +221,21 @@ export default class Adaptation {
 
   /**
    * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
+   * @param {boolean} filterPlayable - If `true` only "playable" Representation
+   * will be returned.
    * @returns {Object}
    */
-  public toAudioTrack() : IAudioTrack {
+  public toAudioTrack(filterPlayable: boolean) : IAudioTrack {
     const formatted : IAudioTrack = {
       language: this.language ?? "",
       normalized: this.normalizedLanguage ?? "",
       audioDescription: this.isAudioDescription === true,
       id: this.id,
-      representations: this.representations.map(r => r.toAudioRepresentation()),
+      representations: (
+        filterPlayable ?
+          this.getPlayableRepresentations() :
+          this.representations
+      ).map(r => r.toAudioRepresentation()),
       label: this.label,
     };
     if (this.isDub === true) {
@@ -257,13 +261,18 @@ export default class Adaptation {
 
   /**
    * Format an `Adaptation`, generally of type `"video"`, as an `IAudioTrack`.
+   * @param {boolean} filterPlayable - If `true` only "playable" Representation
+   * will be returned.
    * @returns {Object}
    */
-  public toVideoTrack() : IVideoTrack {
+  public toVideoTrack(filterPlayable: boolean) : IVideoTrack {
     const trickModeTracks = this.trickModeTracks !== undefined ?
       this.trickModeTracks.map((trickModeAdaptation) => {
-        const representations = trickModeAdaptation.representations
-          .map(r => r.toVideoRepresentation());
+        const representations = (
+          filterPlayable ?
+            trickModeAdaptation.getPlayableRepresentations() :
+            trickModeAdaptation.representations
+        ).map(r => r.toVideoRepresentation());
         const trickMode : IVideoTrack = { id: trickModeAdaptation.id,
                                           representations,
                                           isTrickModeTrack: true };
@@ -276,7 +285,11 @@ export default class Adaptation {
 
     const videoTrack: IVideoTrack = {
       id: this.id,
-      representations: this.representations.map(r => r.toVideoRepresentation()),
+      representations: (
+        filterPlayable ?
+          this.getPlayableRepresentations() :
+          this.representations
+      ).map(r => r.toVideoRepresentation()),
       label: this.label,
     };
     if (this.isSignInterpreted === true) {
