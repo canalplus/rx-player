@@ -24,8 +24,8 @@ return an object with the following properties:
     This information is usually set only if the current Manifest contains one.
 
   - `representations` (`Array.<Object>`):
-    [Representations](../../Getting_Started/Glossary.md#representation) of this video track, with
-    attributes:
+    Only the currently-playable [Representations](../../Getting_Started/Glossary.md#representation)
+    of this video track, with attributes:
 
     - `id` (`string`): The id used to identify this Representation.
       No other Representation from this track will have the same `id`.
@@ -47,6 +47,23 @@ return an object with the following properties:
     - `hdrInfo` (`Object|undefined`) Information about the hdr
       characteristics of the track.
       (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+
+    - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+      Representation is supported by the current platform.
+
+      Note that because elements of the `representations` array only contains
+      playable Representation, this value here cannot be set to `false` when
+      in this array.
+
+      `undefined` (or not set) if support of that Representation is unknown or
+      if does not make sense here.
+
+    - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
+       deciphered (in the eventuality it had DRM-related protection).
+
+      Note that because elements of the `representations` array only contains
+      playable Representation, this value here cannot be set to `false` when
+      in this array.
 
   - `signInterpreted` (`Boolean|undefined`): If set to `true`, this track is
     known to contain an interpretation in sign language.
@@ -71,13 +88,16 @@ return an object with the following properties:
     It this property is either `undefined` or not set, then this track has no
     linked trickmode video track.
 
-<div class="note">
-Note for multi-Period contents:
-<br>
-This method will only return the chosen video track for the
-<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
-playing.
-</div>
+You can also get the information on the chosen video track for another Period by
+calling `getVideoTrack` with the corresponding Period's id in argument. Such id
+can be obtained through the `getAvailablePeriods` method, the
+`newAvailablePeriods` event or the `periodChange` event.
+
+```js
+// example: getting track information for the first Period
+const periods = rxPlayer.getAvailablePeriods();
+console.log(rxPlayer.getVideoTrack(periods[0].id);
+```
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -88,7 +108,18 @@ video tracks API in the browser, this method returns "undefined".
 ## Syntax
 
 ```js
+// Get information about the currently-playing video track
 const videoTrack = player.getVideoTrack();
+
+// Get information about the video track for a specific Period
+const videoTrack = player.getVideoTrack(periodId);
 ```
+
+ - **arguments**:
+
+   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+      to get information about its current video track.
+      If not defined, the information associated to the currently-playing Period
+      will be returned.
 
  - **return value** `Object|null|undefined`

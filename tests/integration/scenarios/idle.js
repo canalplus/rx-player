@@ -111,18 +111,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getAvailableVideoBitrates", () => {
-      it("should return [] in getAvailableVideoBitrates by default", () => {
-        expect(player.getAvailableVideoBitrates()).to.eql([]);
-      });
-    });
-
-    describe("getAvailableAudioBitrates", () => {
-      it("should return [] in getAvailableAudioBitrates by default", () => {
-        expect(player.getAvailableAudioBitrates()).to.eql([]);
-      });
-    });
-
     describe("getVideoBitrate", () => {
       it("should return undefined in getVideoBitrate by default", () => {
         expect(player.getVideoBitrate()).to.equal(undefined);
@@ -536,48 +524,6 @@ describe("initial idle state", () => {
         player.setMinVideoBitrate(defaultMin);
         player.setMaxVideoBitrate(defaultMax);
         expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
-      });
-    });
-
-    describe("setAudioBitrate/getManualAudioBitrate", () => {
-      it("should have a -1 manual audio bitrate by default", () => {
-        expect(player.getManualAudioBitrate()).to.equal(-1);
-      });
-
-      it("should update manual audio bitrate when calling setAudioBitrate", () => {
-        const oldManual = player.getManualAudioBitrate();
-
-        player.setAudioBitrate(84);
-        expect(player.getManualAudioBitrate()).to.equal(84);
-        player.setAudioBitrate(-1);
-        expect(player.getManualAudioBitrate()).to.equal(-1);
-        player.setAudioBitrate(0);
-        expect(player.getManualAudioBitrate()).to.equal(0);
-
-        player.setAudioBitrate(oldManual);
-        expect(player.getManualAudioBitrate()).to.equal(oldManual);
-      });
-    });
-
-    describe("setVideoBitrate/getManualVideoBitrate", () => {
-      it("should have a -1 manual video bitrate by default", () => {
-        expect(player.getManualVideoBitrate()).to.equal(-1);
-      });
-
-      it("should update manual video bitrate when calling setVideoBitrate", () => {
-        const oldManual = player.getManualVideoBitrate();
-
-        player.setVideoBitrate(84);
-        expect(player.getManualVideoBitrate()).to.equal(84);
-
-        player.setVideoBitrate(-1);
-        expect(player.getManualVideoBitrate()).to.equal(-1);
-
-        player.setVideoBitrate(0);
-        expect(player.getManualVideoBitrate()).to.equal(0);
-
-        player.setVideoBitrate(oldManual);
-        expect(player.getManualVideoBitrate()).to.equal(oldManual);
       });
     });
 
