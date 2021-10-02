@@ -80,9 +80,9 @@ export interface ISharedReference<T> {
   setValueIfChanged(newVal : T) : void;
 
   /**
-   * Returns an Observable which synchronously emits the current value (unless
-   * the `skipCurrentValue` argument has been set to `true`) and then each time
-   * a new value is set.
+   * Return an Observable which synchronously emits the current value (unless
+   * the `skipCurrentValue` argument has been set to `true`) and then emit its
+   * new value each time it is updated.
    * @param {boolean} [skipCurrentValue]
    * @returns {Observable}
    */

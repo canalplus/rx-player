@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 
-import StreamOrchestrator, {
-  IStreamOrchestratorOptions,
-  IStreamOrchestratorPlaybackObservation,
-} from "./orchestrator";
-export * from "./types";
+import TracksStore from "./tracks_store";
 
-export default StreamOrchestrator;
-export {
-  IStreamOrchestratorPlaybackObservation,
-  IStreamOrchestratorOptions,
-};
+export default TracksStore;
+export * from "./tracks_store";

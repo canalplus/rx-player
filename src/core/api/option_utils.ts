@@ -22,7 +22,6 @@
 import config from "../../config";
 import log from "../../log";
 import {
-  IAudioTrackSwitchingMode,
   IConstructorOptions,
   IKeySystemOption,
   ILoadedManifestFormat,
@@ -91,7 +90,6 @@ interface IParsedLoadVideoOptionsBase {
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
-  audioTrackSwitchingMode : IAudioTrackSwitchingMode;
   onCodecSwitch : "continue"|"reload";
 }
 
@@ -344,8 +342,7 @@ function parseLoadVideoOptions(
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
 
-  const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
-          DEFAULT_AUTO_PLAY,
+  const { DEFAULT_AUTO_PLAY,
           DEFAULT_CODEC_SWITCHING_BEHAVIOR,
           DEFAULT_ENABLE_FAST_SWITCHING,
           DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
@@ -403,20 +400,6 @@ function parseLoadVideoOptions(
   const initialManifest = options.transportOptions?.initialManifest;
   const minimumManifestUpdateInterval =
     options.transportOptions?.minimumManifestUpdateInterval ?? 0;
-
-  let audioTrackSwitchingMode = isNullOrUndefined(options.audioTrackSwitchingMode)
-                                  ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
-                                  : options.audioTrackSwitchingMode;
-  if (!arrayIncludes(["seamless", "direct", "reload"], audioTrackSwitchingMode)) {
-    log.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " +
-             "the following strategy name:\n" +
-             "- `seamless`\n" +
-             "- `direct`\n" +
-             "- `reload`\n" +
-             "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
-             " strategy will be used as default");
-    audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
-  }
 
   let onCodecSwitch = isNullOrUndefined(options.onCodecSwitch)
                         ? DEFAULT_CODEC_SWITCHING_BEHAVIOR
@@ -499,7 +482,6 @@ function parseLoadVideoOptions(
            initialManifest,
            lowLatencyMode,
            manualBitrateSwitchingMode,
-           audioTrackSwitchingMode,
            minimumManifestUpdateInterval,
            networkConfig,
            onCodecSwitch,

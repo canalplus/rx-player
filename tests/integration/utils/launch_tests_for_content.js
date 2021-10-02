@@ -56,19 +56,6 @@ export default function launchTestsForContent(manifestInfos) {
           transport } = manifestInfos;
 
   const firstPeriodIndex = isLive ? periodsInfos.length - 1 : 0;
-  const videoRepresentationsForFirstPeriod =
-    periodsInfos[firstPeriodIndex].adaptations.video &&
-    periodsInfos[firstPeriodIndex].adaptations.video.length ?
-      periodsInfos[firstPeriodIndex].adaptations.video[0].representations : [];
-  const videoBitrates = videoRepresentationsForFirstPeriod
-    .map(representation => representation.bitrate);
-
-  const audioRepresentationsForFirstPeriod =
-    periodsInfos[firstPeriodIndex].adaptations.audio &&
-    periodsInfos[firstPeriodIndex].adaptations.audio.length ?
-      periodsInfos[firstPeriodIndex].adaptations.audio[0].representations : [];
-  const audioBitrates = audioRepresentationsForFirstPeriod
-    .map(representation => representation.bitrate);
 
   describe("API tests", () => {
     beforeEach(() => {
@@ -86,8 +73,8 @@ export default function launchTestsForContent(manifestInfos) {
         xhrMock.lock();
 
         // set the lowest bitrate to facilitate the test
-        player.setVideoBitrate(0);
-        player.setAudioBitrate(0);
+        player.setMaxVideoBitrate(0);
+        player.setMaxVideoBitrate(0);
 
         player.loadVideo({ url: manifestInfos.url, transport });
 
@@ -186,7 +173,7 @@ export default function launchTestsForContent(manifestInfos) {
 
     describe("reload", () => {
       it("should reload at given absolute position", async function () {
-        player.setVideoBitrate(0);
+        player.setMaxVideoBitrate(0);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -207,7 +194,7 @@ export default function launchTestsForContent(manifestInfos) {
           .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
       });
       it("should reload at given relative position", async function () {
-        player.setVideoBitrate(0);
+        player.setMaxVideoBitrate(0);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -222,7 +209,7 @@ export default function launchTestsForContent(manifestInfos) {
           .to.be.closeTo(manifestInfos.minimumPosition + 7, 0.1);
       });
       it("should reload after stop, at given relative position", async function () {
-        player.setVideoBitrate(0);
+        player.setMaxVideoBitrate(0);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -238,7 +225,7 @@ export default function launchTestsForContent(manifestInfos) {
           .to.be.closeTo(manifestInfos.minimumPosition + 7, 1.5);
       });
       it("should reload when seeking at last playback position", async function () {
-        player.setVideoBitrate(0);
+        player.setMaxVideoBitrate(0);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -254,7 +241,7 @@ export default function launchTestsForContent(manifestInfos) {
           .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
       });
       it("should not reload when content is not loaded", async function () {
-        player.setVideoBitrate(0);
+        player.setMaxVideoBitrate(0);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -264,7 +251,7 @@ export default function launchTestsForContent(manifestInfos) {
           .to.throw("API: Can't reload without having previously loaded a content.");
       });
       it("should not reload when no content", async function () {
-        player.setVideoBitrate(0);
+        player.setMaxVideoBitrate(0);
         expect(() => player.reload())
           .to.throw("API: Can't reload without having previously loaded a content.");
       });
@@ -395,7 +382,7 @@ export default function launchTestsForContent(manifestInfos) {
       it("should return the buffer gap of the current range", async function() {
         this.timeout(20000);
 
-        player.setVideoBitrate(Infinity);
+        player.setMinVideoBitrate(Infinity);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
         player.loadVideo({
@@ -570,108 +557,6 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("getAvailableVideoBitrates", () => {
-      it("should list the right video bitrates", async function () {
-        xhrMock.lock();
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        expect(player.getAvailableVideoBitrates()).to.eql([]);
-
-        await sleep(5);
-        expect(player.getAvailableVideoBitrates()).to.eql([]);
-        await xhrMock.flush();
-        await sleep(500);
-
-        expect(player.getAvailableVideoBitrates()).to.eql(videoBitrates);
-      });
-    });
-
-    describe("getAvailableAudioBitrates", () => {
-      it("should list the right audio bitrates", async function () {
-        xhrMock.lock();
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        expect(player.getAvailableAudioBitrates()).to.eql([]);
-
-        await sleep(5);
-        expect(player.getAvailableAudioBitrates()).to.eql([]);
-        await xhrMock.flush();
-        await sleep(10);
-
-        expect(player.getAvailableAudioBitrates()).to.eql(audioBitrates);
-      });
-    });
-
-    describe("getManualAudioBitrate", () => {
-      it("should stay at -1 by default", async () => {
-        expect(player.getManualAudioBitrate()).to.equal(-1);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        expect(player.getManualAudioBitrate()).to.equal(-1);
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getManualAudioBitrate()).to.equal(-1);
-      });
-
-      it("should be able to update", async () => {
-        player.setAudioBitrate(10000);
-        expect(player.getManualAudioBitrate()).to.equal(10000);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        expect(player.getManualAudioBitrate()).to.equal(10000);
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getManualAudioBitrate()).to.equal(10000);
-        player.setAudioBitrate(5);
-        expect(player.getManualAudioBitrate()).to.equal(5);
-      });
-    });
-
-    describe("getManualVideoBitrate", () => {
-      it("should stay at -1 by default", async () => {
-        expect(player.getManualVideoBitrate()).to.equal(-1);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        expect(player.getManualVideoBitrate()).to.equal(-1);
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getManualVideoBitrate()).to.equal(-1);
-      });
-
-      it("should be able to update", async () => {
-        player.setVideoBitrate(10000);
-        expect(player.getManualVideoBitrate()).to.equal(10000);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        expect(player.getManualVideoBitrate()).to.equal(10000);
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getManualVideoBitrate()).to.equal(10000);
-        player.setVideoBitrate(5);
-        expect(player.getManualVideoBitrate()).to.equal(5);
-      });
-    });
-
     describe("getVideoBitrate", () => {
       it("should give a value once loaded", async () => {
         expect(player.getVideoBitrate()).to.equal(undefined);
@@ -683,8 +568,7 @@ export default function launchTestsForContent(manifestInfos) {
 
         expect(player.getVideoBitrate()).to.equal(undefined);
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getVideoBitrate()).to.be
-          .oneOf(player.getAvailableVideoBitrates());
+        expect(player.getVideoBitrate()).to.not.equal(undefined);
       });
     });
 
@@ -699,8 +583,7 @@ export default function launchTestsForContent(manifestInfos) {
 
         expect(player.getAudioBitrate()).to.equal(undefined);
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getAudioBitrate()).to.be
-          .oneOf(player.getAvailableAudioBitrates());
+        expect(player.getAudioBitrate()).to.not.equal(undefined);
       });
     });
 
@@ -713,9 +596,8 @@ export default function launchTestsForContent(manifestInfos) {
           transport,
         });
 
-        expect(player.getManualVideoBitrate()).to.equal(-1);
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getManualVideoBitrate()).to.equal(-1);
+        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
       });
 
       it("should be able to update", async () => {
@@ -744,9 +626,8 @@ export default function launchTestsForContent(manifestInfos) {
           transport,
         });
 
-        expect(player.getManualAudioBitrate()).to.equal(-1);
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getManualAudioBitrate()).to.equal(-1);
+        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
       });
 
       it("should be able to update", async () => {
@@ -1078,176 +959,6 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("setVideoBitrate", () => {
-      it("should set the video bitrate even if called before the loadVideo", () => {
-        player.setVideoBitrate(1000000);
-        expect(player.getManualVideoBitrate()).to.equal(1000000);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-          autoPlay: true,
-        });
-        expect(player.getManualVideoBitrate()).to.equal(1000000);
-      });
-
-      it("should set the video bitrate while playing", async () => {
-        player.setVideoBitrate(0.001);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-          autoPlay: true,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-
-        expect(player.getManualVideoBitrate()).to.equal(0.001);
-
-        if (videoBitrates.length) {
-          expect(player.getVideoBitrate()).to.equal(videoBitrates[0]);
-
-          if (videoBitrates.length > 1) {
-            const newBitrate = videoBitrates[1];
-            player.setVideoBitrate(newBitrate);
-            await sleep(100);
-
-            expect(player.getManualVideoBitrate()).to.equal(newBitrate);
-            expect(player.getVideoBitrate()).to.equal(videoBitrates[1]);
-
-            player.setVideoBitrate(newBitrate + 0.1);
-            await sleep(100);
-
-            expect(player.getManualVideoBitrate()).to.equal(newBitrate + 0.1);
-            expect(player.getVideoBitrate()).to.equal(videoBitrates[1]);
-          }
-        } else {
-          expect(player.getVideoBitrate()).to.equal(undefined);
-        }
-      });
-
-      it("should set the minimum bitrate if set to 0", async () => {
-        player.setVideoBitrate(0);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-          autoPlay: true,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-
-        expect(player.getManualVideoBitrate()).to.equal(0);
-        if (videoBitrates.length) {
-          expect(player.getVideoBitrate()).to.equal(videoBitrates[0]);
-        } else {
-          expect(player.getVideoBitrate()).to.equal(undefined);
-        }
-      });
-
-      it("should set the maximum bitrate if set to Infinity", async () => {
-        player.setVideoBitrate(Infinity);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-          autoPlay: true,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-        // TODO Check why it fails here for A-Team content
-
-        expect(player.getManualVideoBitrate()).to.equal(Infinity);
-        if (videoBitrates.length) {
-          expect(player.getVideoBitrate()).to
-            .equal(videoBitrates[videoBitrates.length - 1]);
-        } else {
-          expect(player.getVideoBitrate()).to.equal(undefined);
-        }
-      });
-    });
-
-    describe("setAudioBitrate", () => {
-      it("should set the audio bitrate even if called before the loadVideo", () => {
-        player.setAudioBitrate(1000000);
-        expect(player.getManualAudioBitrate()).to.equal(1000000);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-          autoPlay: true,
-        });
-        expect(player.getManualAudioBitrate()).to.equal(1000000);
-      });
-
-      it("should set the audio bitrate while playing", async () => {
-        player.setAudioBitrate(0.001);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-          autoPlay: true,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-
-        expect(player.getManualAudioBitrate()).to.equal(0.001);
-        if (audioBitrates.length) {
-          expect(player.getAudioBitrate()).to.equal(audioBitrates[0]);
-
-          if (audioBitrates.length > 1) {
-            const newBitrate = audioBitrates[1];
-            player.setAudioBitrate(newBitrate);
-            await sleep(100);
-
-            expect(player.getManualAudioBitrate()).to.equal(newBitrate);
-            expect(player.getAudioBitrate()).to.equal(audioBitrates[1]);
-
-            player.setAudioBitrate(newBitrate + 0.1);
-            await sleep(100);
-
-            expect(player.getManualAudioBitrate()).to.equal(newBitrate + 0.1);
-            expect(player.getAudioBitrate()).to.equal(audioBitrates[1]);
-          }
-        } else {
-          expect(player.getAudioBitrate()).to.equal(undefined);
-        }
-      });
-
-      it("should set the minimum bitrate if set to 0", async () => {
-        player.setAudioBitrate(0);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-          autoPlay: true,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-
-        expect(player.getManualAudioBitrate()).to.equal(0);
-        if (audioBitrates.length) {
-          expect(player.getAudioBitrate()).to.equal(audioBitrates[0]);
-        } else {
-          expect(player.getAudioBitrate()).to.equal(undefined);
-        }
-      });
-
-      it("should set the maximum bitrate if set to Infinity", async () => {
-        player.setAudioBitrate(Infinity);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-          autoPlay: true,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-
-        expect(player.getManualAudioBitrate()).to.equal(Infinity);
-        if (audioBitrates.length) {
-          expect(player.getAudioBitrate()).to
-            .equal(audioBitrates[audioBitrates.length - 1]);
-        } else {
-          expect(player.getAudioBitrate()).to.equal(undefined);
-        }
-      });
-    });
-
     describe("getAvailableAudioTracks", () => {
       it("should list the right audio languages", async function () {
         xhrMock.lock();
@@ -1404,7 +1115,7 @@ export default function launchTestsForContent(manifestInfos) {
       // TODO handle live contents
       it("should download until a set wanted buffer ahead", async function() {
         this.timeout(20000);
-        player.setVideoBitrate(0);
+        player.setMaxVideoBitrate(0);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
 

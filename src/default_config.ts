@@ -61,18 +61,6 @@ const DEFAULT_CONFIG = {
   DEFAULT_ENABLE_FAST_SWITCHING: true,
 
     /**
-     * Strategy to adopt when manually switching of audio adaptation.
-     * Can be either:
-     *    - "seamless": transitions are smooth but could be not immediate.
-     *    - "direct": that strategy will perform a very small seek that result
-     *    most of the time by a flush of the current buffered data, by doing
-     *    that we allow quicker transition between audio track, but we could
-     *    see appear a RELOADING or a SEEKING state.
-     */
-  DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as "seamless" |
-                                                      "direct",
-
-    /**
      * In some cases after switching the current track or bitrate, the RxPlayer
      * could be led to go into the `"RELOADING"` state, which corresponds to
      * visually a black screen (with nothing audible) before restarting playback.
@@ -1066,7 +1054,7 @@ const DEFAULT_CONFIG = {
 
     /**
      * Maximum duration from the current position we will let in the buffer when
-     * switching an Adaptation of a given type.
+     * switching an Adaptation/Representations of a given type.
      *
      * For example, if we have ``text: { before: 1, after: 4 }``, it means that
      * when switching subtitles, we will let 1 second before and 4 second after
@@ -1076,7 +1064,7 @@ const DEFAULT_CONFIG = {
      * can happen when removing the content being decoded.
      * @type {Object}
      */
-  ADAPTATION_SWITCH_BUFFER_PADDINGS: {
+  ADAP_REP_SWITCH_BUFFER_PADDINGS: {
     video: { before: 5, after: 5 },
     audio: { before: 2, after: 2.5 },
     text: { before: 0, after: 0 }, // not managed natively, so no problem here
@@ -1170,6 +1158,38 @@ const DEFAULT_CONFIG = {
    * It is set to avoid playback issues
    */
   UPTO_CURRENT_POSITION_CLEANUP : 5,
+
+  /**
+   * Default "switching mode" used when locking video Representations.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous set of video
+   * Representations to a new one.
+   */
+  DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE: "seamless" as const,
+
+  /**
+   * Default "switching mode" used when locking audio Representations.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous set of audio
+   * Representations to a new one.
+   */
+  DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE: "seamless" as const,
+
+  /**
+   * Default "switching mode" used when switching between video tracks.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous video track to a new
+   * one.
+   */
+  DEFAULT_VIDEO_TRACK_SWITCHING_MODE: "reload" as const,
+
+  /**
+   * Default "switching mode" used when switching between audio tracks.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous audio track to a new
+   * one.
+   */
+  DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as const,
 };
 
 export type IDefaultConfig = typeof DEFAULT_CONFIG;

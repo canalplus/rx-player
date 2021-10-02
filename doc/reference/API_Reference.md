@@ -276,73 +276,55 @@ properties, methods, events and so on.
   - [`disableVideoTrack`](../api/Track_Selection/disableVideoTrack.md):
     Disable the current video track.
 
-  - [`setPreferredAudioTracks`](../api/Track_Selection/setPreferredAudioTracks.md):
-    Update the current audio tracks preferences.
-
-  - [`setPreferredTextTracks`](../api/Track_Selection/setPreferredTextTracks.md):
-    Update the current text tracks preferences.
-
-  - [`setPreferredVideoTracks`](../api/Track_Selection/setPreferredVideoTracks.md):
-    Update the current video tracks preferences.
-
-  - [`getPreferredAudioTracks`](../api/Track_Selection/getPreferredAudioTracks.md):
-    Return the current audio tracks preferences.
-
-  - [`getPreferredTextTracks`](../api/Track_Selection/getPreferredTextTracks.md):
-    Return the current text tracks preferences.
-
-  - [`getPreferredVideoTracks`](../api/Track_Selection/getPreferredVideoTracks.md):
-    Return the current video tracks preferences.
-
   - [`isTrickModeEnabled`](../api/Track_Selection/isTrickModeEnabled.md):
     Returns `true` if trick mode tracks are currently enabled by default.
 
-  - [`getVideoBitrate`](../api/Bitrate_Selection/getVideoBitrate.md):
+  - [`getVideoBitrate`](../api/Bitrate_Control/getVideoBitrate.md):
     Returns the bitrate of the current video quality.
 
-  - [`getAudioBitrate`](../api/Bitrate_Selection/getAudioBitrate.md):
+  - [`getAudioBitrate`](../api/Bitrate_Control/getAudioBitrate.md):
     Returns the bitrate of the current audio quality.
 
-  - [`getAvailableVideoBitrates`](../api/Bitrate_Selection/getAvailableVideoBitrates.md):
+  - [`getAvailableVideoBitrates`](../api/Bitrate_Control/getAvailableVideoBitrates.md):
     Returns all available bitrates for the current video track.
 
-  - [`getAvailableAudioBitrates`](../api/Bitrate_Selection/getAvailableAudioBitrates.md):
+  - [`getAvailableAudioBitrates`](../api/Bitrate_Control/getAvailableAudioBitrates.md):
     Returns all available bitrates for the current audio track.
 
-  - [`setVideoBitrate`](../api/Bitrate_Selection/setVideoBitrate.md):
+  - [`setVideoBitrate`](../api/Bitrate_Control/setVideoBitrate.md):
     Set the bitrate for the current video track.
 
-  - [`setAudioBitrate`](../api/Bitrate_Selection/setAudioBitrate.md):
+  - [`setAudioBitrate`](../api/Bitrate_Control/setAudioBitrate.md):
     Set the bitrate for the current audio track.
 
-  - [`getManualVideoBitrate`](../api/Bitrate_Selection/getManualVideoBitrate.md):
+  - [`getManualVideoBitrate`](../api/Bitrate_Control/getManualVideoBitrate.md):
     Returns the last video bitrate manually set.
 
-  - [`getManualAudioBitrate`](../api/Bitrate_Selection/getManualAudioBitrate.md):
+  - [`getManualAudioBitrate`](../api/Bitrate_Control/getManualAudioBitrate.md):
     Returns the last audio bitrate manually set.
 
-  - [`setMinVideoBitrate`](../api/Bitrate_Selection/setMinVideoBitrate.md):
+  - [`setMinVideoBitrate`](../api/Bitrate_Control/setMinVideoBitrate.md):
     Set the minimum video bitrate reachable through adaptive streaming.
 
-  - [`setMinAudioBitrate`](../api/Bitrate_Selection/setMinAudioBitrate.md):
+  - [`setMinAudioBitrate`](../api/Bitrate_Control/setMinAudioBitrate.md):
     Set the minimum audio bitrate reachable through adaptive streaming.
 
-  - [`setMaxVideoBitrate`](../api/Bitrate_Selection/setMaxVideoBitrate.md):
+  - [`setMaxVideoBitrate`](../api/Bitrate_Control/setMaxVideoBitrate.md):
     Set the maximum video bitrate reachable through adaptive streaming.
 
-  - [`setMaxAudioBitrate`](../api/Bitrate_Selection/setMaxAudioBitrate.md):
+  - [`setMaxAudioBitrate`](../api/Bitrate_Control/setMaxAudioBitrate.md):
     Set the maximum audio bitrate reachable through adaptive streaming.
 
-  - [`getMinVideoBitrate`](../api/Bitrate_Selection/getMinVideoBitrate.md):
+  - [`getMinVideoBitrate`](../api/Bitrate_Control/getMinVideoBitrate.md):
     Returns the minimum video bitrate reachable through adaptive streaming.
 
-  - [`getMinAudioBitrate`](../api/Bitrate_Selection/getMinAudioBitrate.md):
+  - [`getMinAudioBitrate`](../api/Bitrate_Control/getMinAudioBitrate.md):
     Returns the minimum audio bitrate reachable through adaptive streaming.
 
-  - [`getMaxVideoBitrate`](../api/Bitrate_Selection/getMaxVideoBitrate.md):
+  - [`getMaxVideoBitrate`](../api/Bitrate_Control/getMaxVideoBitrate.md):
     Returns the maximum video bitrate reachable through adaptive streaming.
 
-  - [`getMaxAudioBitrate`](../api/Bitrate_Selection/getMaxAudioBitrate.md):
+  - [`getMaxAudioBitrate`](../api/Bitrate_Control/getMaxAudioBitrate.md):
     Returns the maximum audio bitrate reachable through adaptive streaming.
 
   - [`setPlaybackRate`](../api/Speed_Control/setPlaybackRate.md):
