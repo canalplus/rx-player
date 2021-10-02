@@ -41,8 +41,8 @@ import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../../utils/languages";
 
-/** Events emitted by the MediaElementTrackChoiceManager. */
-interface IMediaElementTrackChoiceManagerEvents {
+/** Events emitted by the MediaElementTracksStore. */
+interface IMediaElementTracksStoreEvents {
   availableVideoTracksChange: IAvailableVideoTrack[];
   availableAudioTracksChange: IAvailableAudioTrack[];
   availableTextTracksChange: IAvailableTextTrack[];
@@ -176,10 +176,10 @@ function createVideoTracks(
 
 /**
  * Manage video, audio and text tracks for current direct file content.
- * @class MediaElementTrackChoiceManager
+ * @class MediaElementTracksStore
  */
-export default class MediaElementTrackChoiceManager
-  extends EventEmitter<IMediaElementTrackChoiceManagerEvents> {
+export default class MediaElementTracksStore
+  extends EventEmitter<IMediaElementTracksStoreEvents> {
 
   /** List every available audio tracks available on the media element. */
   private _audioTracks : Array<{ track: IAudioTrack; nativeTrack: ICompatAudioTrack }>;
@@ -204,7 +204,7 @@ export default class MediaElementTrackChoiceManager
 
   /**
    * Last audio track manually set active through the corresponding
-   * MediaElementTrackChoiceManager's API(s).
+   * MediaElementTracksStore's API(s).
    * Allows to "lock on" a track, to be sure that choice will be kept even
    * through audio track list updates, as long as it is still available.
    * `undefined` if the audio track was not manually set.
@@ -213,7 +213,7 @@ export default class MediaElementTrackChoiceManager
 
   /**
    * Last text track manually set active through the corresponding
-   * MediaElementTrackChoiceManager's API(s).
+   * MediaElementTracksStore's API(s).
    * Allows to "lock on" a track, to be sure that choice will be kept even
    * through text track list updates, as long as it is still available.
    * `null` if the text track was disabled.
@@ -223,7 +223,7 @@ export default class MediaElementTrackChoiceManager
 
   /**
    * Last video track manually set active through the corresponding
-   * MediaElementTrackChoiceManager's API(s).
+   * MediaElementTracksStore's API(s).
    * Allows to "lock on" a track, to be sure that choice will be kept even
    * through video track list updates, as long as it is still available.
    * `null` if the video track was disabled.
@@ -413,7 +413,7 @@ export default class MediaElementTrackChoiceManager
   }
 
   /**
-   * Free the resources used by the MediaElementTrackChoiceManager.
+   * Free the resources used by the MediaElementTracksStore.
    */
   public dispose(): void {
     if (this._nativeVideoTracks !== undefined) {
