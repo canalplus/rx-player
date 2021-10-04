@@ -1,0 +1,20 @@
+{
+  "pages": [
+    {
+      "path": "./LogLevel.md",
+      "displayName": "LogLevel"
+    },
+    {
+      "path": "./version.md",
+      "displayName": "version"
+    },
+    {
+      "path": "./ErrorCodes.md",
+      "displayName": "ErrorCodes"
+    },
+    {
+      "path": "./ErrorTypes.md",
+      "displayName": "ErrorTypes"
+    }
+  ]
+}

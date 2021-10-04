@@ -1,0 +1,39 @@
+{
+  "logo": {
+    "srcLink": "https://raw.githubusercontent.com/canalplus/rx-player/master/doc/assets/logo.png",
+    "link": "https://github.com/canalplus/rx-player"
+  },
+  "favicon": {
+    "srcPath": "./static/img/favicon.png"
+  },
+  "otherVersionsLink": "https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html",
+  "linksLeft": [
+    {
+      "type": "local-doc",
+      "path": "./Getting_Started",
+      "displayName": "Getting Started"
+    },
+    {
+      "type": "local-doc",
+      "path": "./api",
+      "displayName": "API"
+    },
+    {
+      "type": "link",
+      "link": "https://developers.canal-plus.com/rx-player/",
+      "displayName": "Demo"
+    },
+    {
+      "type": "search"
+    }
+  ],
+  "linksRight": [
+    {
+      "type": "github-link",
+      "link": "https://github.com/canalplus/rx-player"
+    },
+    {
+      "type": "version"
+    }
+  ]
+}

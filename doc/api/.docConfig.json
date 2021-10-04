@@ -1,0 +1,76 @@
+{
+  "pages": [
+    {
+      "path": "./Overview.md",
+      "displayName": "Overview"
+    },
+    {
+      "path": "./Creating_a_Player.md",
+      "displayName": "Creating a Player"
+    },
+    {
+      "path": "./Loading_a_Content.md",
+      "displayName": "Loading a Content"
+    },
+    {
+      "path": "./Basic_Methods",
+      "displayName": "Basic Methods"
+    },
+    {
+      "path": "./Player_States.md",
+      "displayName": "Player States"
+    },
+    {
+      "path": "./Player_Events.md",
+      "displayName": "Player Events"
+    },
+    {
+      "path": "./Player_Errors.md",
+      "displayName": "Player Errors"
+    },
+    {
+      "path": "./Track_Selection",
+      "displayName": "Track Selection"
+    },
+    {
+      "path": "./Bitrate_Selection",
+      "displayName": "Bitrate Selection"
+    },
+    {
+      "path": "./Speed_Control",
+      "displayName": "Speed Control"
+    },
+    {
+      "path": "./Volume_Control",
+      "displayName": "Volume Control"
+    },
+    {
+      "path": "./Buffer_Control",
+      "displayName": "Buffer Control"
+    },
+    {
+      "path": "./Buffer_Information",
+      "displayName": "Buffer Information"
+    },
+    {
+      "path": "./Content_Information",
+      "displayName": "Content Information"
+    },
+    {
+      "path": "./Static_Properties",
+      "displayName": "RxPlayer Static Properties"
+    },
+    {
+      "path": "./Tools",
+      "displayName": "Tools"
+    },
+    {
+      "path": "./Miscellaneous",
+      "displayName": "Miscellaneous"
+    },
+    {
+      "path": "./Deprecated",
+      "displayName": "Deprecated Methods"
+    }
+  ]
+}

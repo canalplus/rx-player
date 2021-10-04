@@ -2,30 +2,52 @@ const { promisify } = require("util");
 const cheerio = require("cheerio");
 const fs = require("fs");
 const path = require("path");
-const mkdirParent = require("./mkdir_parent.js");
-const readTitleFromMD = require("./read_title_from_md.js");
+const buildSearchIndex = require("./build_search_index.js");
 const convertMDToHTML = require("./convert_MD_to_HMTL.js");
 const constructTableOfContents = require("./construct_table_of_contents.js");
-const constructHTML = require("./construct_html.js");
+const constructHtml = require("./construct_html.js");
+const {
+  mkdirParent,
+  toUriCompatibleRelativePath,
+} = require("./utils.js");
 
 /**
  * Create and write HTML page output file from the markdown input file.
- * @param {string} inputFile - Path to the file input (a Markdown file).
- * @param {string} outputFile - Path to the resulting file output (HTML file).
- * @param {Object} [options={}]
+ * @param {Object} options
  * @returns {Promise}
  */
-module.exports = async function createDocumentationPage(
+module.exports = async function createDocumentationPage({
+  // Absolute path to the root dir where all outputed files will be
+  baseOutDir,
+  // Relative CSS URIs on this page
+  cssUris,
+  // Absolute path to the file that should be converted
   inputFile,
+  // Function translating links in Markdown files to an URL form to the right file
+  linkTranslator,
+  // HTML string for the navbar (the header on the top of the page)
+  navBarHtml,
+  // Information relative to the next documentation page, `null` if none.
+  nextPageInfo,
+  // Absolute path where the generated page should be generated.
   outputFile,
-  options = {},
-)  {
-  const { css = [],
-          linkTranslator = (link) => link,
-          getPageTitle = a => a,
-          beforeParse,
-          homeLink,
-          listLink } = options;
+  // Title of the corresponding HTML page
+  pageTitle,
+  // Information relative to the previous documentation page, `null` if none.
+  prevPageInfo,
+  // Relative JS URIs on this page
+  scriptUris,
+  // Array corresponding to the complete search index.
+  // It will be completed with data present in this file.
+  searchIndex,
+  // HTML string for the sidebar
+  sidebarHtml,
+}) {
+  const rootUrl = toUriCompatibleRelativePath(
+    path.resolve(baseOutDir),
+    path.dirname(outputFile)
+  );
+  const outputUrlFromRoot = toUriCompatibleRelativePath(outputFile, baseOutDir);
 
   const outputDir = path.dirname(outputFile);
   let data;
@@ -38,25 +60,30 @@ module.exports = async function createDocumentationPage(
     return;
   }
   const inputDir = path.dirname(inputFile);
-  const pageTitle = readTitleFromMD(data) || "Untitled Page";
+  const { content, tocMd, nbTocElements } = constructTableOfContents(data);
 
-  // remove original table of contents if one and generate new one
-  const toParse = beforeParse != null ?
-    beforeParse(data) :
-    data;
-  const { content, toc } = constructTableOfContents(toParse);
+  let contentHtml = await parseMD(content, inputDir, outputDir, linkTranslator);
+  const indexForFile = buildSearchIndex(contentHtml);
+  searchIndex.push({
+    file: outputUrlFromRoot,
+    index: indexForFile,
+  });
+  contentHtml += constructNextPreviousPage(prevPageInfo, nextPageInfo);
 
-  const domContent = await parseMD(content,
-                                   inputDir,
-                                   outputDir,
-                                   linkTranslator);
+  const tocHtml = nbTocElements > 1 ?
+    generateTocbarHtml(tocMd) :
+    "";
+  const html = constructHtml({
+    contentHtml,
+    cssUris,
+    navBarHtml,
+    rootUrl,
+    scriptUris,
+    sidebarHtml,
+    title: pageTitle,
+    tocHtml,
+  });
 
-  const html = constructHTML(getPageTitle(pageTitle),
-                             domContent,
-                             { css,
-                               toc,
-                               homeLink,
-                               listLink });
   try {
     await promisify(fs.writeFile)(outputFile, html);
   } catch (err) {
@@ -80,9 +107,42 @@ async function updateMediaTag(mediaTag, inputDir, outputDir) {
   const outDir = path.dirname(outputFile);
   const doesOutDirExists = await promisify(fs.exists)(outDir);
   if (!doesOutDirExists) {
-    await mkdirParent(outDir);
+    try {
+      await mkdirParent(outDir);
+    } catch (err) {
+      const srcMessage = (err ?? {}).message ?? "Unknown error";
+      console.error(`Error: Could not create "${outDir}" directory: ${srcMessage}`);
+      process.exit(1);
+    }
   }
   await promisify(fs.copyFile)(inputFile, outputFile);
+}
+
+function constructNextPreviousPage(prevPageInfo, nextPageInfo) {
+  if (prevPageInfo === null && nextPageInfo === null) {
+    return "";
+  }
+
+  const prevPageElt = createNextPrevElt(prevPageInfo, false);
+  const nextPageElt = createNextPrevElt(nextPageInfo, true);
+  return `<nav class="next-previous-page-wrapper" aria-label="Navigate between pages">` +
+    prevPageElt +
+    nextPageElt +
+    `</nav>`;
+
+  function createNextPrevElt(pageInfo, isNext) {
+    const base = `<div class="next-or-previous-page${isNext ? " next-page" : ""}">`;
+    if (pageInfo === null) {
+      return base + "</div>";
+    }
+    return base +
+      `<a class="next-or-previous-page-link" href="${pageInfo.link}">` +
+      `<div class="next-or-previous-page-link-label">` +
+      (isNext ? "Next" : "Previous") +
+      "</div>" +
+      `<div class="next-or-previous-page-link-name">${pageInfo.name}</div>` +
+      "</a></div>";
+  }
 }
 
 /**
@@ -100,13 +160,17 @@ async function updateMediaTag(mediaTag, inputDir, outputDir) {
  */
 async function parseMD(data, inputDir, outputDir, linkTranslator) {
   // TODO I don't understand Cheerio/Jquery here, that's plain ugly
-  // TODO use markdown-it plugin instead
+  // use markdown-it plugin instead?
   const $ = cheerio.load(convertMDToHTML(data));
 
   if (linkTranslator) {
     $("a").each((_, elem) => {
       const href = $(elem).attr("href");
-      if (href) {
+      if (
+        typeof href === "string" &&
+        !/^(?:[a-z]+:)/.test(href) &&
+        href[0] !== "#"
+      ) {
         $(elem).attr("href", linkTranslator(href));
       }
     });
@@ -125,4 +189,19 @@ async function parseMD(data, inputDir, outputDir, linkTranslator) {
     await updateMediaTag($(videoTags[i]), inputDir, outputDir);
   }
   return $.html();
+}
+
+/**
+ * Construct the table of contents part of the HTML page, containing various
+ * links to the current documentation page.
+ * @param {string} toc - Markdown for the table of contents under a list form.
+ * @returns {string} - sidebar div tag
+ */
+function generateTocbarHtml(tocMd) {
+  const tocHtml = convertMDToHTML(tocMd);
+  return "<div class=\"tocbar-wrapper\">" +
+           "<div class=\"tocbar\">" +
+             tocHtml +
+           "</div>" +
+         "</div>";
 }

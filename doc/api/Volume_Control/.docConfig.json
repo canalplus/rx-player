@@ -1,0 +1,25 @@
+{
+  "pages": [
+    {
+      "path": "./setVolume.md",
+      "displayName": "setVolume"
+    },
+    {
+      "path": "./getVolume.md",
+      "displayName": "getVolume"
+    },
+    {
+      "path": "./mute.md",
+      "displayName": "mute"
+    },
+    {
+      "path": "./isMute.md",
+      "displayName": "isMute"
+    },
+    {
+      "path": "./unMute.md",
+      "displayName": "unMute"
+    }
+  ]
+}
+

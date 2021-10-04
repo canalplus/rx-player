@@ -1,0 +1,16 @@
+{
+  "pages": [
+    {
+      "path": "./getUrl.md",
+      "displayName": "getUrl"
+    },
+    {
+      "path": "./isLive.md",
+      "displayName": "isLive"
+    },
+    {
+      "path": "./getCurrentKeySystem.md",
+      "displayName": "getCurrentKeySystem"
+    }
+  ]
+}
