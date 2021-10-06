@@ -298,11 +298,11 @@ function assertChunkIsTextTrackSegmentData(
     ) ||
     (
       (chunk as INativeTextTracksBufferSegmentData).start !== undefined &&
-      typeof (chunk as INativeTextTracksBufferSegmentData).start !== "string"
+      typeof (chunk as INativeTextTracksBufferSegmentData).start !== "number"
     ) ||
     (
       (chunk as INativeTextTracksBufferSegmentData).end !== undefined &&
-      typeof (chunk as INativeTextTracksBufferSegmentData).end !== "string"
+      typeof (chunk as INativeTextTracksBufferSegmentData).end !== "number"
     )
   ) {
     throw new Error("Invalid format given to a NativeTextSegmentBuffer");
