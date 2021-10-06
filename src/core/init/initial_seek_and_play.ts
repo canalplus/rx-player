@@ -36,6 +36,10 @@ import {
 } from "../../compat";
 import { MediaError } from "../../errors";
 import log from "../../log";
+import {
+  createSharedReference,
+  IReadOnlySharedReference,
+} from "../../utils/reference";
 import EVENTS from "./events_generators";
 import {
   IInitClockTick,
@@ -101,24 +105,32 @@ function autoPlay(
   );
 }
 
+/** Object returned by `initialSeekAndPlay`. */
+export interface IInitialSeekAndPlayObject {
+  /**
+   * Observable which, when subscribed, will try to seek at the initial position
+   * then play if needed as soon as the HTMLMediaElement's properties are right.
+   *
+   * Emits various events relative to the status of this operation.
+   */
+  seekAndPlay$ : Observable<IInitialPlayEvent>;
+
+  /**
+   * Shared reference whose value becomes `true` once the initial seek has
+   * been considered / has been done by `seekAndPlay$`.
+   */
+  initialSeekPerformed : IReadOnlySharedReference<boolean>;
+
+  /**
+   * Shared reference whose value becomes `true` once the initial play has
+   * been considered / has been done by `seekAndPlay$`.
+   */
+  initialPlayPerformed: IReadOnlySharedReference<boolean>;
+}
+
 /**
- * Returns two Observables:
- *
- *   - seek$: when subscribed, will seek to the wanted started time as soon as
- *     it can. Emit and complete when done.
- *
- *   - play$: when subscribed, will autoplay if and only if the `mustAutoPlay`
- *     option is set as soon as it can.
- *     Emit and complete when done.
- *     Might also emit some warning events if issues related to the initial
- *     playback arised
- *
- * Both Observables are `shareReplay`, meaning that they re-emit everything on
- * subscription.
- *
- * /!\ `play$` has a dependency on `seek$`, as such, the player will try to seek
- * as soon as either Observable is subscribed to.
- *
+ * Creates an Observable allowing to seek at the initially wanted position and
+ * to play if autoPlay is wanted.
  * @param {Object} args
  * @returns {Object}
  */
@@ -134,7 +146,10 @@ export default function initialSeekAndPlay(
                          /** Perform an internal seek. */
                          setCurrentTime: (nb: number) => void;
                          startTime : number|(() => number); }
-) : { seek$ : Observable<unknown>; play$ : Observable<IInitialPlayEvent> } {
+) : IInitialSeekAndPlayObject {
+  const initialSeekPerformed = createSharedReference(false);
+  const initialPlayPerformed = createSharedReference(false);
+
   const seek$ = whenLoadedMetadata$(mediaElement).pipe(
     take(1),
     tap(() => {
@@ -142,11 +157,13 @@ export default function initialSeekAndPlay(
       const initialTime = typeof startTime === "function" ? startTime() :
                                                             startTime;
       setCurrentTime(initialTime);
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
     }),
     shareReplay({ refCount: true })
   );
 
-  const play$ = seek$.pipe(
+  const seekAndPlay$ = seek$.pipe(
     mergeMap(() : Observable<IWarningEvent | undefined> => {
       if (!shouldValidateMetadata() || mediaElement.duration > 0) {
         return waitUntilPlayable(clock$);
@@ -169,9 +186,13 @@ export default function initialSeekAndPlay(
           log.warn("Init: autoplay is enabled on HTML media element. " +
                    "Media will play as soon as possible.");
         }
+        initialPlayPerformed.setValue(true);
+        initialPlayPerformed.finish();
         return observableOf({ type: "skipped" as const });
       }
       return autoPlay(mediaElement).pipe(mergeMap((autoplayEvt) => {
+        initialPlayPerformed.setValue(true);
+        initialPlayPerformed.finish();
         if (autoplayEvt === "autoplay") {
           return observableOf({ type: "autoplay" as const });
         } else {
@@ -188,5 +209,5 @@ export default function initialSeekAndPlay(
     shareReplay({ refCount: true })
   );
 
-  return { seek$, play$ };
+  return { seekAndPlay$, initialPlayPerformed, initialSeekPerformed };
 }

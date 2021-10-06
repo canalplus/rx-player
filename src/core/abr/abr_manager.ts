@@ -20,6 +20,7 @@ import {
 } from "rxjs";
 import log from "../../log";
 import { Representation } from "../../manifest";
+import { ISharedReference } from "../../utils/reference";
 import takeFirstSet from "../../utils/take_first_set";
 import { IBufferType } from "../segment_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
@@ -48,15 +49,16 @@ export interface IABRManagerArguments {
   lowLatencyMode: boolean; // Some settings can depend on wether you're playing a
                            // low-latency content. Set it to `true` if you're playing
                            // such content.
-  minAutoBitrates: Partial<Record<IBufferType,          // Minimum bitrate chosen
-                                  Observable<number>>>; // when in auto mode, per
-                                                        // type (0 by default)
-  maxAutoBitrates: Partial<Record<IBufferType,          // Maximum bitrate chosen
-                                  Observable<number>>>; // when in auto mode, per
-                                                        // type (Infinity by default)
-  manualBitrates: Partial<Record<IBufferType,          // Manual bitrate set for
-                                 Observable<number>>>; // a given type (-1 for
-                                                       // auto mode)
+
+  /** Minimum bitrate chosen when in auto mode, per type (0 by default) */
+  minAutoBitrates: Partial<Record<IBufferType, ISharedReference<number>>>;
+
+  /** Maximum bitrate chosen when in auto mode, per type (0 by default) */
+  maxAutoBitrates: Partial<Record<IBufferType, ISharedReference<number>>>;
+
+  /** Manually forced bitrate set for a given type (`-1` for auto mode */
+  manualBitrates: Partial<Record<IBufferType, ISharedReference<number>>>;
+
   throttlers: IRepresentationEstimatorsThrottlers; // Throttle from external events
 }
 
@@ -70,9 +72,9 @@ export interface IABRManagerArguments {
 export default class ABRManager {
   private _bandwidthEstimators : Partial<Record<IBufferType, BandwidthEstimator>>;
   private _initialBitrates : Partial<Record<IBufferType, number>>;
-  private _manualBitrates : Partial<Record<IBufferType, Observable<number>>>;
-  private _minAutoBitrates : Partial<Record<IBufferType, Observable<number>>>;
-  private _maxAutoBitrates : Partial<Record<IBufferType, Observable<number>>>;
+  private _manualBitrates : Partial<Record<IBufferType, ISharedReference<number>>>;
+  private _minAutoBitrates : Partial<Record<IBufferType, ISharedReference<number>>>;
+  private _maxAutoBitrates : Partial<Record<IBufferType, ISharedReference<number>>>;
   private _throttlers : IRepresentationEstimatorsThrottlers;
   private _lowLatencyMode : boolean;
 
@@ -107,12 +109,13 @@ export default class ABRManager {
   ) : Observable<IABREstimate> {
     const bandwidthEstimator = this._getBandwidthEstimator(type);
     const manualBitrate$ =
-      takeFirstSet<Observable<number>>(this._manualBitrates[type], observableOf(-1));
+      takeFirstSet<Observable<number>>(this._manualBitrates[type]?.asObservable(),
+                                       observableOf(-1));
     const minAutoBitrate$ =
-      takeFirstSet<Observable<number>>(this._minAutoBitrates[type],
+      takeFirstSet<Observable<number>>(this._minAutoBitrates[type]?.asObservable(),
                                        observableOf(0));
     const maxAutoBitrate$ =
-      takeFirstSet<Observable<number>>(this._maxAutoBitrates[type],
+      takeFirstSet<Observable<number>>(this._maxAutoBitrates[type]?.asObservable(),
                                        observableOf(Infinity));
     const initialBitrate = takeFirstSet<number>(this._initialBitrates[type], 0);
     const filters$ = createFilters(this._throttlers.limitWidth[type],

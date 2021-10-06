@@ -353,7 +353,7 @@ function checkGetLicense(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .subscribe((evt : any) => {
       if (evt.type === "created-media-keys") {
-        evt.value.attachMediaKeys$.next();
+        evt.value.canAttachMediaKeys.setValue(true);
       }
       eventsReceived++;
       // Those first three have been tested enough

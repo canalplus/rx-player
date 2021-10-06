@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   concat as observableConcat,
   defer as observableDefer,
   Observable,
@@ -48,6 +47,7 @@ import {
 import assert from "../../../utils/assert";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
+import { IReadOnlySharedReference } from "../../../utils/reference";
 import {
   IPrioritizedSegmentFetcher,
   IPrioritizedSegmentFetcherEvent,
@@ -75,7 +75,7 @@ export default class DownloadingQueue<T> {
    * Segments whose request are still pending are still in that queue. Segments
    * are only removed from it once their request has succeeded.
    */
-  private _downloadQueue$ : BehaviorSubject<IDownloadQueueItem>;
+  private _downloadQueue : IReadOnlySharedReference<IDownloadQueueItem>;
   /**
    * Pending request for the initialization segment.
    * `null` if no request is pending for it.
@@ -103,8 +103,7 @@ export default class DownloadingQueue<T> {
    *
    * @param {Object} content - The context of the Representation you want to
    * load segments for.
-   * @param {BehaviorSubject} downloadQueue$ - Emit the queue of segments you
-   * want to load.
+   * @param {Object} downloadQueue - Queue of segments you want to load.
    * @param {Object} segmentFetcher - Interface to facilitate the download of
    * segments.
    * @param {boolean} hasInitSegment - Declare that an initialization segment
@@ -122,13 +121,13 @@ export default class DownloadingQueue<T> {
    */
   constructor(
     content: IDownloadingQueueContext,
-    downloadQueue$ : BehaviorSubject<IDownloadQueueItem>,
+    downloadQueue : IReadOnlySharedReference<IDownloadQueueItem>,
     segmentFetcher : IPrioritizedSegmentFetcher<T>,
     hasInitSegment : boolean
   ) {
     this._content = content;
     this._currentObs$ = null;
-    this._downloadQueue$ = downloadQueue$;
+    this._downloadQueue = downloadQueue;
     this._initSegmentRequest = null;
     this._mediaSegmentRequest = null;
     this._segmentFetcher = segmentFetcher;
@@ -171,7 +170,7 @@ export default class DownloadingQueue<T> {
       return this._currentObs$;
     }
     const obs = observableDefer(() => {
-      const mediaQueue$ = this._downloadQueue$.pipe(
+      const mediaQueue$ = this._downloadQueue.asObservable().pipe(
         filter(({ segmentQueue }) => {
           // First, the first elements of the segmentQueue might be already
           // loaded but awaiting the initialization segment to be parsed.
@@ -204,7 +203,7 @@ export default class DownloadingQueue<T> {
           segmentQueue.length > 0 ? this._requestMediaSegments() :
                                     EMPTY));
 
-      const initSegmentPush$ = this._downloadQueue$.pipe(
+      const initSegmentPush$ = this._downloadQueue.asObservable().pipe(
         filter((next) => {
           const initSegmentRequest = this._initSegmentRequest;
           if (next.initSegment !== null && initSegmentRequest !== null) {
@@ -242,7 +241,7 @@ export default class DownloadingQueue<T> {
                  IParsedSegmentEvent<T> |
                  IEndOfSegmentEvent> {
 
-    const { segmentQueue } = this._downloadQueue$.getValue();
+    const { segmentQueue } = this._downloadQueue.getValue();
     const currentNeededSegment = segmentQueue[0];
     const recursivelyRequestSegments = (
       startingSegment : IQueuedSegment | undefined
@@ -272,7 +271,7 @@ export default class DownloadingQueue<T> {
 
             case "ended":
               this._mediaSegmentRequest = null;
-              const lastQueue = this._downloadQueue$.getValue().segmentQueue;
+              const lastQueue = this._downloadQueue.getValue().segmentQueue;
               if (lastQueue.length === 0) {
                 return observableOf({ type : "end-of-queue" as const,
                                       value : null });
@@ -439,7 +438,7 @@ export interface ILoaderRetryEvent { type : "retry";
 export interface IEndOfQueueEvent { type : "end-of-queue"; value : null }
 
 /**
- * Structure of the object that has to be emitted through the `downloadQueue$`
+ * Structure of the object that has to be emitted through the `downloadQueue`
  * Observable, to signal which segments are currently needed.
  */
 export interface IDownloadQueueItem {

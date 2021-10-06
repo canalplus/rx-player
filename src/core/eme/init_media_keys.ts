@@ -17,9 +17,9 @@
 import {
   Observable,
   of as observableOf,
-  ReplaySubject,
 } from "rxjs";
 import {
+  filter,
   mapTo,
   mergeMap,
   startWith,
@@ -27,6 +27,7 @@ import {
 } from "rxjs/operators";
 import log from "../../log";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import createSharedReference from "../../utils/reference";
 import attachMediaKeys, {
   disableMediaKeys,
 } from "./attach_media_keys";
@@ -67,7 +68,7 @@ export default function initMediaKeys(
         initializationDataSystemId = getDrmSystemId(mediaKeySystemAccess.keySystem);
       }
 
-      const attachMediaKeys$ = new ReplaySubject<void>(1);
+      const canAttachMediaKeys = createSharedReference(false);
       const shouldDisableOldMediaKeys =
         mediaElement.mediaKeys !== null &&
         mediaElement.mediaKeys !== undefined &&
@@ -81,7 +82,8 @@ export default function initMediaKeys(
       return disableOldMediaKeys$.pipe(
         mergeMap(() => {
           log.debug("EME: Attaching current MediaKeys");
-          return attachMediaKeys$.pipe(
+          return canAttachMediaKeys.asObservable().pipe(
+            filter(canAttach => canAttach),
             mergeMap(() => {
               const stateToAttatch = { loadedSessionsStore: stores.loadedSessionsStore,
                                        mediaKeySystemAccess,
@@ -98,7 +100,7 @@ export default function initMediaKeys(
                                  mediaKeys,
                                  stores,
                                  options,
-                                 attachMediaKeys$ } })
+                                 canAttachMediaKeys } })
           );
         })
       );

@@ -22,6 +22,7 @@ import {
 import { mergeMap } from "rxjs/operators";
 import log from "../../../log";
 import { Period } from "../../../manifest";
+import { IReadOnlySharedReference } from "../../../utils/reference";
 import { IBufferType } from "../../segment_buffers";
 import { IStreamStatusEvent } from "../types";
 
@@ -31,23 +32,24 @@ import { IStreamStatusEvent } from "../types";
  * This observable will never download any segment and just emit a "full"
  * event when reaching the end.
  * @param {Observable} streamClock$
- * @param {Observable} wantedBufferAhead$
+ * @param {Object} wantedBufferAhead
  * @param {string} bufferType
  * @param {Object} content
  * @returns {Observable}
  */
 export default function createEmptyAdaptationStream(
   streamClock$ : Observable<{ position : number }>,
-  wantedBufferAhead$ : Observable<number>,
+  wantedBufferAhead : IReadOnlySharedReference<number>,
   bufferType : IBufferType,
   content : { period : Period }
 ) : Observable<IStreamStatusEvent> {
   const { period } = content;
   let hasFinishedLoading = false;
+  const wantedBufferAhead$ = wantedBufferAhead.asObservable();
   return observableCombineLatest([streamClock$, wantedBufferAhead$]).pipe(
-    mergeMap(([clockTick, wantedBufferAhead]) => {
+    mergeMap(([clockTick, wba]) => {
       const { position } = clockTick;
-      if (period.end !== undefined && position + wantedBufferAhead >= period.end) {
+      if (period.end !== undefined && position + wba >= period.end) {
         log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
         hasFinishedLoading = true;
       }

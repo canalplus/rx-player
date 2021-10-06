@@ -16,25 +16,27 @@
 
 import {
   combineLatest as observableCombineLatest,
-  merge as observableMerge,
   Observable,
 } from "rxjs";
-import {
-  ignoreElements,
-  map,
-  tap,
-} from "rxjs/operators";
+import { map } from "rxjs/operators";
 import Manifest from "../../manifest";
+import { IReadOnlySharedReference } from "../../utils/reference";
 import { IStreamOrchestratorClockTick } from "../stream";
 import { IInitClockTick } from "./types";
 
 export interface IStreamClockArguments {
-  autoPlay : boolean; // If true, the player will auto-play when initialPlay$ emits
-  initialPlay$ : Observable<unknown>; // The initial play has been done
-  initialSeek$ : Observable<unknown>; // The initial seek has been done
+  /** If true, the player will auto-play when `initialPlayPerformed` becomes `true`. */
+  autoPlay : boolean;
+  /** Becomes `true` after the initial play has been taken care of. */
+  initialPlayPerformed : IReadOnlySharedReference<boolean>;
+  /** Becomes `true` after the initial seek has been taken care of. */
+  initialSeekPerformed : IReadOnlySharedReference<boolean>;
+  /** The last speed requested by the user. */
+  speed$ : Observable<number>;
+  /** The time the player will seek when `initialSeekPerformed` becomes `true`. */
+  startTime : number;
+
   manifest : Manifest;
-  speed$ : Observable<number>; // The last speed requested by the user
-  startTime : number; // The time the player will seek when initialSeek$ emits
 }
 
 /**
@@ -46,48 +48,33 @@ export interface IStreamClockArguments {
 export default function createStreamClock(
   initClock$ : Observable<IInitClockTick>,
   { autoPlay,
-    initialPlay$,
-    initialSeek$,
+    initialPlayPerformed,
+    initialSeekPerformed,
     manifest,
     speed$,
     startTime } : IStreamClockArguments
 ) : Observable<IStreamOrchestratorClockTick> {
-  let initialPlayPerformed = false;
-  let initialSeekPerformed = false;
+  return observableCombineLatest([initClock$, speed$]).pipe(map(([tick, speed]) => {
+    const { isLive } = manifest;
+    return {
+      position: tick.position,
+      getCurrentTime: tick.getCurrentTime,
+      duration: tick.duration,
+      isPaused: initialPlayPerformed.getValue() ? tick.paused :
+                                                  !autoPlay,
+      liveGap: isLive ? manifest.getMaximumPosition() - tick.position :
+                        Infinity,
+      readyState: tick.readyState,
+      speed,
 
-  const updateIsPaused$ = initialPlay$.pipe(
-    tap(() => { initialPlayPerformed = true; }),
-    ignoreElements());
-
-  const updateTimeOffset$ = initialSeek$.pipe(
-    tap(() => { initialSeekPerformed = true; }),
-    ignoreElements());
-
-  const clock$ : Observable<IStreamOrchestratorClockTick> =
-    observableCombineLatest([initClock$, speed$])
-      .pipe(map(([tick, speed]) => {
-        const { isLive } = manifest;
-        return {
-          position: tick.position,
-          getCurrentTime: tick.getCurrentTime,
-          duration: tick.duration,
-          isPaused: initialPlayPerformed ? tick.paused :
-                                           !autoPlay,
-          liveGap: isLive ? manifest.getMaximumPosition() - tick.position :
-                            Infinity,
-          readyState: tick.readyState,
-          speed,
-
-          // wantedTimeOffset is an offset to add to the timing's current time to have
-          // the "real" wanted position.
-          // For now, this is seen when the media element has not yet seeked to its
-          // initial position, the currentTime will most probably be 0 where the
-          // effective starting position will be _startTime_.
-          // Thus we initially set a wantedTimeOffset equal to startTime.
-          wantedTimeOffset: initialSeekPerformed ? 0 :
-                                                   startTime - tick.position,
-        };
-      }));
-
-  return observableMerge(updateIsPaused$, updateTimeOffset$, clock$);
+      // wantedTimeOffset is an offset to add to the timing's current time to have
+      // the "real" wanted position.
+      // For now, this is seen when the media element has not yet seeked to its
+      // initial position, the currentTime will most probably be 0 where the
+      // effective starting position will be _startTime_.
+      // Thus we initially set a wantedTimeOffset equal to startTime.
+      wantedTimeOffset: initialSeekPerformed.getValue() ? 0 :
+                                                          startTime - tick.position,
+    };
+  }));
 }

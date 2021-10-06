@@ -25,7 +25,6 @@
 
 import nextTick from "next-tick";
 import {
-  BehaviorSubject,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
   defer as observableDefer,
@@ -53,6 +52,7 @@ import Manifest, {
 } from "../../../manifest";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
+import { createSharedReference } from "../../../utils/reference";
 import {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherWarning,
@@ -243,14 +243,15 @@ export default function RepresentationStream<TSegmentDataType>({
   const reCheckNeededSegments$ = new Subject<void>();
 
   /** Emit the last scheduled downloading queue for segments. */
-  const lastSegmentQueue$ =
-    new BehaviorSubject<IDownloadQueueItem>({ initSegment: null,
-                                              segmentQueue: [] });
+  const lastSegmentQueue = createSharedReference<IDownloadQueueItem>({
+    initSegment: null,
+    segmentQueue: [],
+  });
   const hasInitSegment = initSegmentState.segment !== null;
 
-  /** Will load every segments in `lastSegmentQueue$` */
+  /** Will load every segments in `lastSegmentQueue` */
   const downloadingQueue = new DownloadingQueue(content,
-                                                lastSegmentQueue$,
+                                                lastSegmentQueue,
                                                 segmentFetcher,
                                                 hasInitSegment);
 
@@ -275,11 +276,11 @@ export default function RepresentationStream<TSegmentDataType>({
     }
   }
 
-  /** Observable loading and pushing segments scheduled through `lastSegmentQueue$`. */
+  /** Observable loading and pushing segments scheduled through `lastSegmentQueue`. */
   const queue$ = downloadingQueue.start()
     .pipe(mergeMap(onQueueEvent));
 
-  /** Observable emitting the stream "status" and filling `lastSegmentQueue$`. */
+  /** Observable emitting the stream "status" and filling `lastSegmentQueue`. */
   const status$ = observableCombineLatest([
     clock$,
     bufferGoal$,
@@ -325,12 +326,12 @@ export default function RepresentationStream<TSegmentDataType>({
       }
 
       if (terminate === null) {
-        lastSegmentQueue$.next({ initSegment: neededInitSegment,
-                                 segmentQueue: neededSegments });
+        lastSegmentQueue.setValue({ initSegment: neededInitSegment,
+                                    segmentQueue: neededSegments });
       } else if (terminate.urgent) {
         log.debug("Stream: Urgent switch, terminate now.", bufferType);
-        lastSegmentQueue$.next({ initSegment: null, segmentQueue: [] });
-        lastSegmentQueue$.complete();
+        lastSegmentQueue.setValue({ initSegment: null, segmentQueue: [] });
+        lastSegmentQueue.finish();
         return observableOf(EVENTS.streamTerminating());
       } else {
         // Non-urgent termination wanted:
@@ -350,11 +351,11 @@ export default function RepresentationStream<TSegmentDataType>({
 
         const nextInit = initSegmentRequest === null ? null :
                                                        neededInitSegment;
-        lastSegmentQueue$.next({ initSegment: nextInit,
-                                 segmentQueue: nextQueue });
+        lastSegmentQueue.setValue({ initSegment: nextInit,
+                                    segmentQueue: nextQueue });
         if (nextQueue.length === 0 && nextInit === null) {
           log.debug("Stream: No request left, terminate", bufferType);
-          lastSegmentQueue$.complete();
+          lastSegmentQueue.finish();
           return observableOf(EVENTS.streamTerminating());
         }
       }

@@ -25,7 +25,6 @@
  */
 
 import {
-  BehaviorSubject,
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
@@ -53,6 +52,10 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import deferSubscriptions from "../../../utils/defer_subscriptions";
+import {
+  createSharedReference,
+  IReadOnlySharedReference,
+} from "../../../utils/reference";
 import ABRManager, {
   IABREstimate,
 } from "../../abr";
@@ -115,7 +118,7 @@ export interface IAdaptationStreamArguments {
    * position in the current SegmentBuffer. When this amount has been reached
    * this AdaptationStream won't try to download new segments.
    */
-  wantedBufferAhead$ : BehaviorSubject<number>;
+  wantedBufferAhead : IReadOnlySharedReference<number>;
 }
 
 /**
@@ -181,7 +184,7 @@ export default function AdaptationStream({
   options,
   segmentBuffer,
   segmentFetcherCreator,
-  wantedBufferAhead$,
+  wantedBufferAhead,
 } : IAdaptationStreamArguments) : Observable<IAdaptationStreamEvent> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
@@ -204,16 +207,16 @@ export default function AdaptationStream({
                                                                     requestFeedback$);
 
   /**
-   * Emits each time an estimate is made through the `abrEstimate$` Observable,
-   * starting with the last one.
+   * Stores the last estimate emitted through the `abrEstimate$` Observable,
+   * starting with `null`.
    * This allows to easily rely on that value in inner Observables which might also
    * need the last already-considered value.
    */
-  const lastEstimate$ = new BehaviorSubject<IABREstimate | null>(null);
+  const lastEstimate = createSharedReference<IABREstimate | null>(null);
 
   /** Emits abr estimates on Subscription. */
   const abrEstimate$ = estimator$.pipe(
-    tap((estimate) => { lastEstimate$.next(estimate); }),
+    tap((estimate) => { lastEstimate.setValue(estimate); }),
     deferSubscriptions(),
     share());
 
@@ -269,7 +272,7 @@ export default function AdaptationStream({
      * Emit when the current RepresentationStream should be terminated to make
      * place for a new one (e.g. when switching quality).
      */
-    const terminateCurrentStream$ = lastEstimate$.pipe(
+    const terminateCurrentStream$ = lastEstimate.asObservable().pipe(
       filter((newEstimate) => newEstimate === null ||
                               newEstimate.representation.id !== representation.id ||
                               (newEstimate.manual && !fromEstimate.manual)),
@@ -301,7 +304,7 @@ export default function AdaptationStream({
      */
     const fastSwitchThreshold$ = !options.enableFastSwitching ?
       observableOf(0) : // Do not fast-switch anything
-      lastEstimate$.pipe(
+      lastEstimate.asObservable().pipe(
         map((estimate) => estimate === null ? undefined :
                                               estimate.knownStableBitrate),
         distinctUntilChanged());
@@ -324,11 +327,11 @@ export default function AdaptationStream({
       }),
       mergeMap((evt) => {
         if (evt.type === "stream-terminating") {
-          const lastEstimate = lastEstimate$.getValue();
-          if (lastEstimate === null) {
+          const estimate = lastEstimate.getValue();
+          if (estimate === null) {
             return EMPTY;
           }
-          return recursivelyCreateRepresentationStreams(lastEstimate, false);
+          return recursivelyCreateRepresentationStreams(estimate, false);
         }
         return observableOf(evt);
       }));
@@ -351,7 +354,7 @@ export default function AdaptationStream({
                                                            1;
       bufferGoalRatioMap[representation.id] = bufferGoalRatio;
 
-      const bufferGoal$ = wantedBufferAhead$.pipe(
+      const bufferGoal$ = wantedBufferAhead.asObservable().pipe(
         map((wba) => wba * bufferGoalRatio)
       );
 
@@ -373,11 +376,9 @@ export default function AdaptationStream({
             defaultReason: "Unknown `RepresentationStream` error",
           });
           if (formattedError.code === "BUFFER_FULL_ERROR") {
-            const wantedBufferAhead = wantedBufferAhead$.getValue();
+            const wba = wantedBufferAhead.getValue();
             const lastBufferGoalRatio = bufferGoalRatio;
-            if (lastBufferGoalRatio <= 0.25 ||
-                wantedBufferAhead * lastBufferGoalRatio <= 2)
-            {
+            if (lastBufferGoalRatio <= 0.25 || wba * lastBufferGoalRatio <= 2) {
               throw formattedError;
             }
             bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;

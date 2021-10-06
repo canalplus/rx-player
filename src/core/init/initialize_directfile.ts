@@ -137,7 +137,7 @@ export default function initializeDirectfileContent({
   const initialTime = () => getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Init: Initial time calculated:", initialTime);
 
-  const { seek$, play$ } = initialSeekAndPlay({ clock$,
+  const { seekAndPlay$ } = initialSeekAndPlay({ clock$,
                                                 mediaElement,
                                                 startTime: initialTime,
                                                 mustAutoPlay: autoPlay,
@@ -181,13 +181,13 @@ export default function initializeDirectfileContent({
   const loadingEvts$ = emeManager$.pipe(
     filter(function isEMEReady(evt) {
       if (evt.type === "created-media-keys") {
-        evt.value.attachMediaKeys$.next();
+        evt.value.canAttachMediaKeys.setValue(true);
         return true;
       }
       return evt.type === "eme-disabled" || evt.type === "attached-media-keys";
     }),
     take(1),
-    mergeMapTo(play$),
+    mergeMapTo(seekAndPlay$),
     switchMap((evt) => {
       if (evt.type === "warning") {
         return observableOf(evt);
@@ -195,10 +195,7 @@ export default function initializeDirectfileContent({
       return emitLoadedEvent(clock$, mediaElement, null, true);
     }));
 
-  const initialSeek$ = seek$.pipe(ignoreElements());
-
   return observableMerge(loadingEvts$,
-                         initialSeek$,
                          emeManager$,
                          mediaError$,
                          playbackRate$,

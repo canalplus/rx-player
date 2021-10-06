@@ -22,7 +22,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import {
-  isObservable,
   of as observableOf,
   throwError,
 } from "rxjs";
@@ -71,8 +70,8 @@ describe("core - eme - initMediaKeys", () => {
           .toEqual(fakeResult.mediaKeySystemAccess);
         expect(result.value.stores).toEqual(fakeResult.stores);
         expect(result.value.options).toEqual(fakeResult.options);
-        expect(isObservable(result.value.attachMediaKeys$) &&
-               typeof result.value.attachMediaKeys$.next === "function").toBeTruthy();
+        expect(typeof result.value.canAttachMediaKeys.setValue === "function")
+          .toBeTruthy();
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
@@ -116,7 +115,7 @@ describe("core - eme - initMediaKeys", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         tap((evt: { type : string; value : any }) => {
           if (evt.type === "created-media-keys") {
-            evt.value.attachMediaKeys$.next();
+            evt.value.canAttachMediaKeys.setValue(true);
           }
         }),
         skip(1)
@@ -178,64 +177,4 @@ describe("core - eme - initMediaKeys", () => {
       });
   });
 
-  it("Should throw if attachMediaKeys throws", (done) => {
-    const fakeResult = { mediaKeySystemAccess: { a: 5, keySystem: "toto" },
-                         mediaKeys: { b: 4 },
-                         stores: { loadedSessionsStore: { c: 3 },
-                                   persistentSessionsStore: { d: 2 } },
-                         options: { e: 1 } };
-    const spyGetMediaKeysInfos = jest.fn(() => {
-      return observableOf(fakeResult);
-    });
-    jest.mock("../get_media_keys", () => ({
-      __esModule: true as const,
-      default: spyGetMediaKeysInfos,
-    }));
-    const err = new Error("a");
-    const spyAttachMediaKeys = jest.fn(() => throwError(() => err));
-    const spyDisableOldMediaKeys = jest.fn(() => {
-      return observableOf(undefined);
-    });
-    jest.mock("../attach_media_keys", () => ({
-      __esModule: true as const,
-      default: spyAttachMediaKeys,
-      disableOldMediaKeys: spyDisableOldMediaKeys,
-    }));
-    const initMediaKeys = require("../init_media_keys").default;
-
-    const mediaElement = document.createElement("video");
-    const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-
-    let eventReceived = false;
-    initMediaKeys(mediaElement, keySystemsConfigs)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .subscribe((evt : { type : string; value : any }) => {
-        expect(evt.type).toEqual("created-media-keys");
-        expect(evt.value.mediaKeys).toEqual(fakeResult.mediaKeys);
-        expect(evt.value.mediaKeySystemAccess).toEqual(fakeResult.mediaKeySystemAccess);
-        expect(evt.value.stores).toEqual(fakeResult.stores);
-        expect(evt.value.options).toEqual(fakeResult.options);
-        expect(isObservable(evt.value.attachMediaKeys$) &&
-               typeof evt.value.attachMediaKeys$.next === "function").toBeTruthy();
-        evt.value.attachMediaKeys$.next();
-        eventReceived = true;
-      }, (e : Error) => {
-        expect(eventReceived).toEqual(true);
-        expect(e).toBe(err);
-
-        expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
-        expect(spyGetMediaKeysInfos)
-          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
-
-        expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
-        expect(spyAttachMediaKeys)
-          .toHaveBeenCalledWith(
-            mediaElement,
-            { mediaKeySystemAccess: fakeResult.mediaKeySystemAccess,
-              mediaKeys: fakeResult.mediaKeys,
-              loadedSessionsStore: fakeResult.stores.loadedSessionsStore,
-              keySystemOptions: fakeResult.options });
-        done();
-      });
-  });
 });
