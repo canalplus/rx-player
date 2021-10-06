@@ -38,7 +38,6 @@ export default function applyFontSize(
   }
 
   if (firstFontSize[2] === "px" ||
-      firstFontSize[2] === "%" ||
       firstFontSize[2] === "em")
   {
     element.style.fontSize = firstFontSize[1] + firstFontSize[2];
@@ -46,6 +45,17 @@ export default function applyFontSize(
     element.style.position = "relative";
     addClassName(element, "proportional-style");
     element.setAttribute("data-proportional-font-size", firstFontSize[1]);
+  } else if (firstFontSize[2] === "%") {
+    const toNum = Number(firstFontSize[1]);
+    if (isNaN(toNum)) {
+      log.warn("TTML Parser: could not parse fontSize value \"" +
+               firstFontSize[1] +
+               "\" into a number");
+    } else {
+      element.style.position = "relative";
+      addClassName(element, "proportional-style");
+      element.setAttribute("data-proportional-font-size", String(toNum / 100));
+    }
   } else {
     log.warn("TTML Parser: unhandled fontSize unit:", firstFontSize[2]);
   }
