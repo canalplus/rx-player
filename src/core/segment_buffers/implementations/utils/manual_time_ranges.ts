@@ -39,7 +39,7 @@ export default class ManualTimeRanges implements TimeRanges {
   }
 
   insert(start : number, end : number) : void {
-    if (__DEV__) {
+    if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
       assert(start >= 0, "invalid start time");
       assert(end - start > 0, "invalid end time");
     }
@@ -48,7 +48,7 @@ export default class ManualTimeRanges implements TimeRanges {
   }
 
   remove(start : number, end : number) : void {
-    if (__DEV__) {
+    if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
       assert(start >= 0, "invalid start time");
       assert(end - start > 0, "invalid end time");
     }

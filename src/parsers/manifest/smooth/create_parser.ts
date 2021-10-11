@@ -301,7 +301,7 @@ function createSmoothStreamingParser(
     const baseURLAttr = root.getAttribute("Url");
     const baseURL = baseURLAttr === null ? "" :
                                            baseURLAttr;
-    if (__DEV__) {
+    if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
       assert(baseURL !== "");
     }
 

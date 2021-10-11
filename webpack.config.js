@@ -34,90 +34,75 @@ module.exports = (env) => {
   const plugins = [
     new webpack.DefinePlugin({
       "__FEATURES__": {
-        SMOOTH: isBarebone ?
+        IS_DISABLED: +(false), // === 0 (wrote this way to be explicit)
+        IS_ENABLED: +(true), // === 1 (wrote this way to be explicit)
+
+        // Each following feature is compared to IS_ENABLED or IS_DISABLED in
+        // code to check whether the feature is enabled or not.
+
+        SMOOTH: +(isBarebone ?
           process.env.RXP_SMOOTH === "true" :
-          process.env.RXP_SMOOTH !== "false",
+          process.env.RXP_SMOOTH !== "false"),
 
-        DASH: isBarebone ?
+        DASH: +(isBarebone ?
           process.env.RXP_DASH === "true" :
-          process.env.RXP_DASH !== "false",
+          process.env.RXP_DASH !== "false"),
 
-        LOCAL_MANIFEST: process.env.RXP_LOCAL_MANIFEST === "true",
+        LOCAL_MANIFEST: +(process.env.RXP_LOCAL_MANIFEST === "true"),
 
-        METAPLAYLIST: process.env.RXP_METAPLAYLIST === "true",
+        METAPLAYLIST: +(process.env.RXP_METAPLAYLIST === "true"),
 
-        DIRECTFILE: isBarebone ?
+        DIRECTFILE: +(isBarebone ?
           process.env.RXP_DIRECTFILE === "true" :
-          process.env.RXP_DIRECTFILE !== "false",
+          process.env.RXP_DIRECTFILE !== "false"),
 
-        NATIVE_TTML: isBarebone ?
+        NATIVE_TTML: +(isBarebone ?
           process.env.RXP_NATIVE_TTML === "true" :
-          process.env.RXP_NATIVE_TTML !== "false",
+          process.env.RXP_NATIVE_TTML !== "false"),
 
-        NATIVE_SAMI: isBarebone ?
+        NATIVE_SAMI: +(isBarebone ?
           process.env.RXP_NATIVE_SAMI === "true" :
-          process.env.RXP_NATIVE_SAMI !== "false",
+          process.env.RXP_NATIVE_SAMI !== "false"),
 
-        NATIVE_VTT: isBarebone ?
+        NATIVE_VTT: +(isBarebone ?
           process.env.RXP_NATIVE_VTT === "true" :
-          process.env.RXP_NATIVE_VTT !== "false",
+          process.env.RXP_NATIVE_VTT !== "false"),
 
-        NATIVE_SRT: isBarebone ?
+        NATIVE_SRT: +(isBarebone ?
           process.env.RXP_NATIVE_SRT === "true" :
-          process.env.RXP_NATIVE_SRT !== "false",
+          process.env.RXP_NATIVE_SRT !== "false"),
 
-        HTML_TTML: isBarebone ?
+        HTML_TTML: +(isBarebone ?
           process.env.RXP_HTML_TTML === "true" :
-          process.env.RXP_HTML_TTML !== "false",
+          process.env.RXP_HTML_TTML !== "false"),
 
-        HTML_SAMI: isBarebone ?
+        HTML_SAMI: +(isBarebone ?
           process.env.RXP_HTML_SAMI === "true" :
-          process.env.RXP_HTML_SAMI !== "false",
+          process.env.RXP_HTML_SAMI !== "false"),
 
-        HTML_VTT: isBarebone ?
+        HTML_VTT: +(isBarebone ?
           process.env.RXP_HTML_VTT === "true" :
-          process.env.RXP_HTML_VTT !== "false",
+          process.env.RXP_HTML_VTT !== "false"),
 
-        HTML_SRT: isBarebone ?
+        HTML_SRT: +(isBarebone ?
           process.env.RXP_HTML_SRT === "true" :
-          process.env.RXP_HTML_SRT !== "false",
+          process.env.RXP_HTML_SRT !== "false"),
 
-        EME: isBarebone ?
+        EME: +(isBarebone ?
           process.env.RXP_EME === "true" :
-          process.env.RXP_EME !== "false",
+          process.env.RXP_EME !== "false"),
 
-        BIF_PARSER: isBarebone ?
+        BIF_PARSER: +(isBarebone ?
           process.env.RXP_BIF_PARSER === "true" :
-          process.env.RXP_BIF_PARSER !== "false",
+          process.env.RXP_BIF_PARSER !== "false"),
       },
-
-      // Path relative to src/features where optional features are implemented
-      __RELATIVE_PATH__: {
-        EME_MANAGER: JSON.stringify("../core/eme/index.ts"),
-        IMAGE_BUFFER: JSON.stringify("../core/segment_buffers/implementations/image/index.ts"),
-        BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
-        SMOOTH: JSON.stringify("../transports/smooth/index.ts"),
-        DASH: JSON.stringify("../transports/dash/index.ts"),
-        DASH_JS_PARSER: JSON.stringify("../parsers/manifest/dash/js-parser/index.ts"),
-        LOCAL_MANIFEST: JSON.stringify("../transports/local/index.ts"),
-        METAPLAYLIST: JSON.stringify("../transports/metaplaylist/index.ts"),
-        NATIVE_TEXT_BUFFER: JSON.stringify("../core/segment_buffers/implementations/text/native/index.ts"),
-        NATIVE_VTT: JSON.stringify("../parsers/texttracks/webvtt/native/index.ts"),
-        NATIVE_SRT: JSON.stringify("../parsers/texttracks/srt/native.ts"),
-        NATIVE_TTML: JSON.stringify("../parsers/texttracks/ttml/native/index.ts"),
-        NATIVE_SAMI: JSON.stringify("../parsers/texttracks/sami/native.ts"),
-        HTML_TEXT_BUFFER: JSON.stringify("../core/segment_buffers/implementations/text/html/index.ts"),
-        HTML_VTT: JSON.stringify("../parsers/texttracks/webvtt/html/index.ts"),
-        HTML_SRT: JSON.stringify("../parsers/texttracks/srt/html.ts"),
-        HTML_TTML: JSON.stringify("../parsers/texttracks/ttml/html/index.ts"),
-        HTML_SAMI: JSON.stringify("../parsers/texttracks/sami/html.ts"),
-        DIRECTFILE: JSON.stringify("../core/init/initialize_directfile.ts"),
-        MEDIA_ELEMENT_TRACK_CHOICE_MANAGER: JSON.stringify("../core/api/media_element_track_choice_manager.ts"),
+      __ENVIRONMENT__: {
+        PRODUCTION: 0,
+        DEV: 1,
+        CURRENT_ENV: isDevMode ? 1 : 0,
       },
-      __DEV__: isDevMode,
-      __LOGGER_LEVEL__: isDevMode ? "\"INFO\"" : "\"DEBUG\"",
-      "process.env": {
-        NODE_ENV: JSON.stringify(isDevMode ? "development" : "production"),
+      __LOGGER_LEVEL__: {
+        CURRENT_LEVEL: isDevMode ? "\"INFO\"" : "\"ERROR\"",
       },
     }),
   ];

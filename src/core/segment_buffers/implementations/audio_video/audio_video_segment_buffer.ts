@@ -593,7 +593,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
 function assertPushedDataIsBufferSource(
   pushedData : IPushChunkInfos<unknown>
 ) : asserts pushedData is IPushChunkInfos<BufferSource> {
-  if (!__DEV__) {
+  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   const { chunk, initSegment } = pushedData.data;
