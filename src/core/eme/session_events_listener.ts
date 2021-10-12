@@ -15,27 +15,25 @@
  */
 
 import {
+  catchError,
   concat as observableConcat,
+  concatMap,
   defer as observableDefer,
   EMPTY,
   identity,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-  Subject,
-  TimeoutError,
-} from "rxjs";
-import {
-  catchError,
-  concatMap,
   map,
   mapTo,
+  merge as observableMerge,
   mergeMap,
+  Observable,
+  of as observableOf,
   startWith,
+  Subject,
   takeUntil,
   tap,
   timeout,
-} from "rxjs/operators";
+  TimeoutError,
+} from "rxjs";
 import {
   events,
   ICustomMediaKeySession,

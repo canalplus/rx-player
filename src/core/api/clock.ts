@@ -25,15 +25,13 @@ import {
   defer as observableDefer,
   fromEvent as observableFromEvent,
   interval as observableInterval,
-  merge as observableMerge,
-  Observable,
-} from "rxjs";
-import {
   map,
   mapTo,
+  merge as observableMerge,
+  Observable,
   shareReplay,
   startWith,
-} from "rxjs/operators";
+} from "rxjs";
 import config from "../../config";
 import log from "../../log";
 import objectAssign from "../../utils/object_assign";

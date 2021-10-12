@@ -18,11 +18,11 @@ import {
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
+  ignoreElements,
   merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
-import { ignoreElements } from "rxjs/operators";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,

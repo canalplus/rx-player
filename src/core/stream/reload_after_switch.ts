@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import {
+  map,
+  Observable,
+} from "rxjs";
 import { Period } from "../../manifest";
 import { IBufferType } from "../segment_buffers";
 import EVENTS from "./events_generators";

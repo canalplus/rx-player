@@ -6,10 +6,12 @@
  * application.
  */
 
+import {
+  Subject,
+  takeUntil,
+} from "rxjs";
 import RxPlayer from "rx-player";
 import { linkPlayerEventsToState } from "./events.js";
-import { Subject } from "rxjs";
-import { takeUntil } from "rxjs/operators";
 import $handleCatchUpMode from "./catchUp";
 import VideoThumbnailLoader, {
   DASH_LOADER

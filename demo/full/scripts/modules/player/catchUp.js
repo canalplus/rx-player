@@ -1,14 +1,12 @@
 import {
-  EMPTY,
-  of as observableOf,
-  interval,
-} from "rxjs";
-import {
   distinctUntilChanged,
+  EMPTY,
+  interval,
   map,
+  of as observableOf,
   startWith,
   switchMap,
-} from "rxjs/operators";
+} from "rxjs";
 import fromPlayerEvent from "./fromPlayerEvent";
 
 // Distance from live edge we try to reach when the catching up button

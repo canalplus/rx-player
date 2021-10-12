@@ -16,10 +16,10 @@
 
 import {
   defer as observableDefer,
+  mergeMapTo,
   Observable,
   of as observableOf,
 } from "rxjs";
-import { mergeMapTo } from "rxjs/operators";
 import { setMediaKeys } from "../../compat";
 import log from "../../log";
 import MediaKeysInfosStore from "./media_keys_infos_store";

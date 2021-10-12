@@ -15,16 +15,14 @@
  */
 
 import {
+  catchError,
   defer as observableDefer,
   EMPTY,
+  ignoreElements,
+  tap,
   Observable,
   of as observableOf,
 } from "rxjs";
-import {
-  catchError,
-  ignoreElements,
-  tap,
-} from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";

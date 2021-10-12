@@ -23,8 +23,10 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-restricted-properties */
 
-import { Subject } from "rxjs";
-import { takeUntil } from "rxjs/operators";
+import {
+  Subject,
+  takeUntil,
+} from "rxjs";
 import { ICustomError } from "../../../../errors";
 import { concat } from "../../../../utils/byte_parsing";
 import { IContentProtection } from "../../types";

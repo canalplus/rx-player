@@ -16,12 +16,10 @@
 
 import {
   defer as observableDefer,
-  Observable,
-} from "rxjs";
-import {
   filter,
   map,
-} from "rxjs/operators";
+  Observable,
+} from "rxjs";
 
 /**
  * Special kind of map which will ignore the result when the value emitted

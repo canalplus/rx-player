@@ -17,28 +17,26 @@
 import {
   combineLatest as observableCombineLatest,
   EMPTY,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-  Subject,
-} from "rxjs";
-import {
   exhaustMap,
   filter,
   finalize,
   ignoreElements,
   map,
   mapTo,
+  merge as observableMerge,
   mergeMap,
   mergeScan,
+  Observable,
+  of as observableOf,
   share,
   shareReplay,
   startWith,
+  Subject,
   switchMap,
   take,
   takeUntil,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
 import log from "../../log";

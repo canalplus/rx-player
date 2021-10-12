@@ -16,10 +16,10 @@
 
 import {
   combineLatest as observableCombineLatest,
+  map,
   Observable,
   of as observableOf,
 } from "rxjs";
-import { map } from "rxjs/operators";
 import objectAssign from "../../utils/object_assign";
 import { IABRFiltersObject } from "./representation_estimator";
 

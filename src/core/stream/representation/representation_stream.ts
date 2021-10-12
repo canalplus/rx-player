@@ -29,20 +29,18 @@ import {
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
+  ignoreElements,
   merge as observableMerge,
+  mergeMap,
   Observable,
   of as observableOf,
-  Subject,
-} from "rxjs";
-import {
-  ignoreElements,
-  mergeMap,
   share,
   startWith,
+  Subject,
   take,
   takeWhile,
   withLatestFrom,
-} from "rxjs/operators";
+} from "rxjs";
 import log from "../../../log";
 import Manifest, {
   Adaptation,

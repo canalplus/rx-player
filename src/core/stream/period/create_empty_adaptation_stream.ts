@@ -16,10 +16,10 @@
 
 import {
   combineLatest as observableCombineLatest,
+  mergeMap,
   Observable,
   of as observableOf,
 } from "rxjs";
-import { mergeMap } from "rxjs/operators";
 import log from "../../../log";
 import { Period } from "../../../manifest";
 import { IReadOnlySharedReference } from "../../../utils/reference";

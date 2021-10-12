@@ -15,28 +15,26 @@
  */
 
 import {
+  catchError,
   combineLatest as observableCombineLatest,
   defer as observableDefer,
-  EMPTY,
-  fromEvent as observableFromEvent,
-  interval as observableInterval,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
-  catchError,
   distinctUntilChanged,
+  EMPTY,
   filter,
+  fromEvent as observableFromEvent,
   ignoreElements,
+  interval as observableInterval,
   map,
   mapTo,
+  merge as observableMerge,
   mergeMap,
+  Observable,
+  of as observableOf,
   startWith,
   switchMap,
   take,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import {
   onSourceOpen$,
   onSourceClose$,

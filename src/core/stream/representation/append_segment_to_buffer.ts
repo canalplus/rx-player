@@ -19,13 +19,11 @@
  */
 
 import {
+  catchError,
   concat as observableConcat,
+  ignoreElements,
   Observable,
 } from "rxjs";
-import {
-  catchError,
-  ignoreElements,
-} from "rxjs/operators";
 import { MediaError } from "../../../errors";
 import {
   IPushChunkInfos,

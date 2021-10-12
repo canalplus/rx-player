@@ -17,16 +17,14 @@
 import {
   defer as observableDefer,
   EMPTY,
-  merge as observableMerge,
-  Observable,
-} from "rxjs";
-import {
   filter,
   mapTo,
+  merge as observableMerge,
+  Observable,
   startWith,
   switchMapTo,
   take,
-} from "rxjs/operators";
+} from "rxjs";
 import { IClockTick } from "./clock";
 
 /**

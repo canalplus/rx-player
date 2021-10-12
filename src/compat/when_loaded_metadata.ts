@@ -17,8 +17,8 @@
 import {
   Observable,
   of as observableOf,
+  take,
 } from "rxjs";
-import { take } from "rxjs/operators";
 import { READY_STATES } from "./browser_compatibility_types";
 import { onLoadedMetadata$ } from "./event_listeners";
 

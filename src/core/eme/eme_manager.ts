@@ -15,24 +15,22 @@
  */
 
 import {
+  catchError,
   concat as observableConcat,
   EMPTY,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-  ReplaySubject,
-  throwError,
-} from "rxjs";
-import {
-  catchError,
   filter,
   ignoreElements,
   map,
+  merge as observableMerge,
   mergeMap,
+  Observable,
+  of as observableOf,
+  ReplaySubject,
   shareReplay,
   take,
   tap,
-} from "rxjs/operators";
+  throwError,
+} from "rxjs";
 import {
   events,
   generateKeyRequest,

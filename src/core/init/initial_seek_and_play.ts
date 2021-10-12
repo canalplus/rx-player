@@ -15,20 +15,18 @@
  */
 
 import {
-  concat as observableConcat,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   catchError,
+  concat as observableConcat,
   filter,
   mapTo,
   mergeMap,
+  Observable,
+  of as observableOf,
   shareReplay,
   startWith,
   take,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import {
   play,
   shouldValidateMetadata,

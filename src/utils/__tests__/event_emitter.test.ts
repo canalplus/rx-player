@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { take } from "rxjs/operators";
+import { take } from "rxjs";
 import log from "../../log";
 import EventEmitter, {
   fromEvent,

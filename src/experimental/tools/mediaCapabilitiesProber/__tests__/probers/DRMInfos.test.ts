@@ -21,8 +21,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import { of as observableOf } from "rxjs";
-import { map } from "rxjs/operators";
+import {
+  map,
+  of as observableOf,
+} from "rxjs";
 import { ProberStatus } from "../../types";
 
 

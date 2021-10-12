@@ -1,11 +1,11 @@
 import React from "react";
-import { Subject } from "rxjs";
-import Button from "../components/Button.jsx";
 import {
-  skip,
-  takeUntil,
   filter,
-} from "rxjs/operators";
+  skip,
+  Subject,
+  takeUntil,
+} from "rxjs";
+import Button from "../components/Button.jsx";
 
 const LogElement = ({ text, date }) => (
   <div

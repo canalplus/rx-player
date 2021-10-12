@@ -16,19 +16,17 @@
 
 import {
   EMPTY,
+  map,
+  mapTo,
+  merge as observableMerge,
+  mergeMap,
   Observable,
   of as observableOf,
   ReplaySubject,
-  Subscription,
-  merge as observableMerge,
   Subject,
-} from "rxjs";
-import {
-  map,
-  mapTo,
-  mergeMap,
+  Subscription,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import { ISegmentFetcher } from "../../../core/fetchers/segment/segment_fetcher";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 import { ISegment } from "../../../manifest";

@@ -16,10 +16,11 @@
 
 import {
   defer as observableDefer,
+  mergeMap,
+  tap,
   Observable,
   of as observableOf,
 } from "rxjs";
-import { mergeMap, tap } from "rxjs/operators";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,

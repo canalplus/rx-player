@@ -17,10 +17,8 @@
 
 import {
   Observable,
-} from "rxjs";
-import {
   take,
-} from "rxjs/operators";
+} from "rxjs";
 import {
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,

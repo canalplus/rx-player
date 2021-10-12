@@ -17,8 +17,8 @@
 import {
   merge as observableMerge,
   Subject,
+  takeUntil,
 } from "rxjs";
-import { takeUntil } from "rxjs/operators";
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";

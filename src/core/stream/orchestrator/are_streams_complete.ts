@@ -16,14 +16,12 @@
 
 import {
   combineLatest as observableCombineLatest,
-  Observable,
-} from "rxjs";
-import {
   distinctUntilChanged,
   filter,
   map,
+  Observable,
   startWith,
-} from "rxjs/operators";
+} from "rxjs";
 import { IStreamOrchestratorEvent } from "../types";
 
 /**

@@ -22,14 +22,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import {
-  interval as observableInterval,
-  timer as observableTimer,
-} from "rxjs";
-import {
   finalize,
+  interval as observableInterval,
   mapTo,
   tap,
-} from "rxjs/operators";
+  timer as observableTimer,
+} from "rxjs";
 
 describe("compat - whenLoadedMetadata$", () => {
   beforeEach(() => {

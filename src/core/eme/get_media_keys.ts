@@ -15,14 +15,12 @@
  */
 
 import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   catchError,
   map,
   mergeMap,
-} from "rxjs/operators";
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,

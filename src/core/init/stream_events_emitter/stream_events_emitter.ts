@@ -17,22 +17,20 @@
 import {
   combineLatest as observableCombineLatest,
   concat as observableConcat,
-  EMPTY,
-  interval,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   distinctUntilChanged,
+  EMPTY,
   ignoreElements,
+  interval,
   map,
   mergeMap,
+  Observable,
   pairwise,
   scan,
   startWith,
   switchMap,
   tap,
-} from "rxjs/operators";
+  of as observableOf,
+} from "rxjs";
 import config from "../../../config";
 import Manifest from "../../../manifest";
 import { fromEvent } from "../../../utils/event_emitter";

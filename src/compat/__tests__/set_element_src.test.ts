@@ -21,7 +21,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import { map } from "rxjs/operators";
+import { map } from "rxjs";
 
 describe("compat - setElementSrc", () => {
   beforeEach(() => {

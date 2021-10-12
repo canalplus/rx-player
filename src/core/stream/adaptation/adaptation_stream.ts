@@ -25,24 +25,22 @@
  */
 
 import {
+  catchError,
   concat as observableConcat,
   defer as observableDefer,
-  EMPTY,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
-  catchError,
   distinctUntilChanged,
+  EMPTY,
   exhaustMap,
   filter,
   map,
+  merge as observableMerge,
   mergeMap,
+  Observable,
+  of as observableOf,
   share,
   take,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";

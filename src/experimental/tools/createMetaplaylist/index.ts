@@ -17,9 +17,9 @@
 import {
   combineLatest as observableCombineLatest,
   lastValueFrom,
+  map,
   of as observableOf,
 } from "rxjs";
-import { map } from "rxjs/operators";
 import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
 import getDurationFromManifest from "./get_duration_from_manifest";
 

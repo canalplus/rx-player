@@ -1,12 +1,10 @@
 import {
   combineLatest as observableCombineLatest,
-  Subject,
-} from "rxjs";
-import {
   distinctUntilChanged,
   map,
+  Subject,
   takeUntil,
-} from "rxjs/operators";
+} from "rxjs";
 
 /**
  * Homemade redux and r9webapp-core inspired state management architecture.

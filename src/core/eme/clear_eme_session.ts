@@ -17,9 +17,9 @@
 import {
   defer as observableDefer,
   EMPTY,
+  ignoreElements ,
   Observable,
 } from "rxjs";
-import { ignoreElements } from "rxjs/operators";
 import { shouldUnsetMediaKeys } from "../../compat/";
 import log from "../../log";
 import disposeMediaKeys from "./dispose_media_keys";

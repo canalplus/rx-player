@@ -16,20 +16,18 @@
 
 import {
   EMPTY,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-  Subject,
-  throwError,
-} from "rxjs";
-import {
   filter,
   finalize,
   ignoreElements,
+  merge as observableMerge,
   mergeMap,
+  Observable,
+  of as observableOf,
+  Subject,
   switchMap,
   takeUntil,
-} from "rxjs/operators";
+  throwError,
+} from "rxjs";
 import { MediaError } from "../../errors";
 import log from "../../log";
 import Manifest from "../../manifest";

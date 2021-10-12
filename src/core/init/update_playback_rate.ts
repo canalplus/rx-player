@@ -16,16 +16,14 @@
 
 import {
   defer as observableDefer,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   distinctUntilChanged,
   map,
+  Observable,
+  of as observableOf,
   startWith,
   switchMap,
   tap,
-} from "rxjs/operators";
+} from "rxjs";
 import log from "../../log";
 import { IInitClockTick } from "./types";
 

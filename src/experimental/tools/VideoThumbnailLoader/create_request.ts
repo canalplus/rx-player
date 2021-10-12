@@ -1,11 +1,9 @@
 import {
-  EMPTY,
-} from "rxjs";
-import {
   catchError,
+  EMPTY,
   filter,
   take,
-} from "rxjs/operators";
+} from "rxjs";
 import {
   ISegmentFetcher,
   ISegmentFetcherChunkEvent,

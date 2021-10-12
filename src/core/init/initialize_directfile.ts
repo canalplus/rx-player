@@ -21,19 +21,17 @@
 
 import {
   EMPTY,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   filter,
   ignoreElements,
+  merge as observableMerge,
   mergeMap,
   mergeMapTo,
   switchMap,
+  Observable,
+  of as observableOf,
   share,
   take,
-} from "rxjs/operators";
+} from "rxjs";
 import {
   clearElementSrc,
   setElementSrc$,

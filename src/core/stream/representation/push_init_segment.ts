@@ -17,9 +17,9 @@
 import {
   defer as observableDefer,
   EMPTY,
+  map,
   Observable,
 } from "rxjs";
-import { map } from "rxjs/operators";
 import Manifest, {
   Adaptation,
   ISegment,

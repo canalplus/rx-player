@@ -16,13 +16,11 @@
 
 import {
   EMPTY,
+  mapTo,
   merge as observableMerge,
   Observable,
-} from "rxjs";
-import {
-  mapTo,
   startWith,
-} from "rxjs/operators";
+} from "rxjs";
 import { ICustomMediaKeySession } from "../../compat";
 import { IInitializationDataInfo } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";

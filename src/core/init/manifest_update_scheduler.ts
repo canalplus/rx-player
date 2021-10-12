@@ -18,18 +18,16 @@ import {
   defer as observableDefer,
   EMPTY,
   from as observableFrom,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-  timer as observableTimer,
-} from "rxjs";
-import {
   mapTo,
+  merge as observableMerge,
   mergeMap,
   mergeMapTo,
+  Observable,
+  of as observableOf,
   share,
   take,
-} from "rxjs/operators";
+  timer as observableTimer,
+} from "rxjs";
 import config from "../../config";
 import log from "../../log";
 import Manifest from "../../manifest";
