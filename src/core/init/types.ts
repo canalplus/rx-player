@@ -77,7 +77,8 @@ export interface IInitClockTick { position : number;
                                                 null;
                                   freezing : IFreezingStatus |
                                              null;
-                                  seeking : boolean; }
+                                  seeking : boolean;
+                                  internalSeeking : boolean; }
 
 /** Event sent after the Manifest has been loaded and parsed for the first time. */
 export interface IManifestReadyEvent {

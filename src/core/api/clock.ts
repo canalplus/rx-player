@@ -102,7 +102,6 @@ export interface IRebufferingStatus {
   /** What started the player to rebuffer. */
   reason : "seeking" | // Building buffer after seeking
            "not-ready" | // Building buffer after low readyState
-           "internal-seek" | // Building buffer after a seek happened inside the player
            "buffering"; // Other cases
   /** `performance.now` at the time the rebuffering happened. */
   timestamp : number;
@@ -139,6 +138,11 @@ export interface IClockTick extends IMediaInfos {
    * `null` if the player is not frozen.
    */
   freezing : IFreezingStatus | null;
+  /**
+   * If `true`, an "internal seek" (a seeking operation triggered by the
+   * RxPlayer code) is currently pending.
+   */
+  internalSeeking : boolean;
   getCurrentTime : () => number;
 }
 
@@ -191,7 +195,6 @@ function getRebufferingEndGap(
 
   switch (rebufferingStatus.reason) {
     case "seeking":
-    case "internal-seek":
       return RESUME_GAP_AFTER_SEEKING[suffix];
     case "not-ready":
       return RESUME_GAP_AFTER_NOT_ENOUGH_DATA[suffix];
@@ -348,10 +351,6 @@ function getRebufferingStatus(
     if (currentEvt === "seeking" ||
         prevRebuffering !== null && prevRebuffering.reason === "seeking") {
       reason = "seeking";
-    } else if (currentTimings.seeking &&
-        ((currentEvt === "internal-seeking") ||
-        (prevRebuffering !== null && prevRebuffering.reason === "internal-seek"))) {
-      reason = "internal-seek";
     } else if (currentTimings.seeking) {
       reason = "seeking";
     } else if (readyState === 1) {
@@ -451,6 +450,7 @@ function createClock(
       getMediaInfos(mediaElement, "init"),
       { rebuffering: null,
         freezing: null,
+        internalSeeking: false,
         getCurrentTime: () => mediaElement.currentTime });
 
     function getCurrentClockTick(event : IClockMediaEventType) : IClockTick {
@@ -460,11 +460,17 @@ function createClock(
         internalSeekingComingCounter -= 1;
       }
       const mediaTimings = getMediaInfos(mediaElement, tmpEvt);
+      const internalSeeking = mediaTimings.seeking &&
+        // We've just received the event for internally seeking
+        (tmpEvt === "internal-seeking" ||
+          // or We're still waiting on the previous internal-seek
+          (lastTimings.internalSeeking && tmpEvt !== "seeking"));
       const rebufferingStatus = getRebufferingStatus(lastTimings, mediaTimings, options);
       const freezingStatus = getFreezingStatus(lastTimings, mediaTimings);
       const timings = objectAssign({},
                                    { rebuffering: rebufferingStatus,
                                      freezing: freezingStatus,
+                                     internalSeeking,
                                      getCurrentTime: () => mediaElement.currentTime },
                                    mediaTimings);
       log.debug("API: current media element state", timings);
