@@ -54,7 +54,7 @@
     "prepublishOnly": "npm run build:modular",
     "standalone": "node ./scripts/run_standalone_demo.js",
     "start": "node ./scripts/start_demo_web_server.js",
-    "start:fast": "node ./scripts/start_demo_web_server.js --fast",
+    "s": "node ./scripts/start_demo_web_server.js --fast",
     "wasm-strip": "node scripts/wasm-strip.js dist/mpd-parser.wasm",
     "test:appveyor": "npm run test:unit && npm run test:memory",
     "test:integration": "node tests/integration/run.js --bchromehl --bfirefoxhl",
@@ -141,7 +141,7 @@
   "scripts-list": {
     "Build a demo page (e.g. to test a code change)": {
       "start": "Build the \"full\" demo (with a UI) with the non-minified RxPlayer and serve it on a local server. Re-build on file updates.",
-      "start:fast": "Very fast version of `start` which does not perform type-checking. This script can be useful for very quick checks of modifications on a demo page",
+      "s": "Very fast version of `start` which does not perform type-checking. This script can be useful for quick testing",
       "demo": "Build the demo in demo/bundle.js",
       "demo:min": "Build the demo and minify it in demo/bundle.js",
       "demo:watch": "Build the demo in demo/bundle.js each times the files update.",
