@@ -601,4 +601,8 @@ export interface IKeySystemOption {
      */
     keyOutputRestricted? : boolean;
   };
+  formatInitializationData? : (
+    initData : Uint8Array,
+    initDataType : string | undefined
+  ) => Uint8Array;
 }

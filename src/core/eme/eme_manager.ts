@@ -267,12 +267,17 @@ export default function EMEManager(
           // `generateKeyRequest` awaits a single Uint8Array containing all
           // initialization data.
           const concatInitData = concat(...initializationData.values.map(i => i.data));
+          const formattedInitData =
+            typeof options.formatInitializationData === "function" ?
+              options.formatInitializationData(concatInitData,
+                                               initializationData.type) :
+              concatInitData;
 
           const generateRequest$ = sessionEvt.type !== "created-session" ?
               EMPTY :
               generateKeyRequest(mediaKeySession,
                                  initializationData.type,
-                                 concatInitData).pipe(
+                                 formattedInitData).pipe(
                 catchError((error: unknown) => {
                   throw new EncryptedMediaError(
                     "KEY_GENERATE_REQUEST_ERROR",
