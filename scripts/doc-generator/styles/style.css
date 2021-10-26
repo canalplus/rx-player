@@ -189,6 +189,8 @@ table tr td {
 
 #search-results {
   margin-top: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px dashed black;
 }
 
 #search-results .message {
