@@ -47,7 +47,7 @@ function fastDemoBuild(options) {
   const minify = !!options.minify;
   const watch = !!options.watch;
   const isDevMode = !options.production;
-  let beforeTime = performance.now();
+  let beforeTime = process.hrtime.bigint();
 
   esbuild.build({
     entryPoints: [path.join(__dirname, "../demo/full/scripts/index.jsx")],
@@ -123,8 +123,9 @@ function fastDemoBuild(options) {
                   ` ${warnings.length} warning(s) ` +
                   `(in ${stats.endTime - stats.startTime} ms).`);
     }
+    const fullTime = (process.hrtime.bigint() - beforeTime) / 1000000n;
     console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
-                `Build done in ${(performance.now() - beforeTime).toFixed(2)}ms`);
+                `Build done in ${fullTime}ms`);
   },
   (err) => {
     console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo build failed:`,
