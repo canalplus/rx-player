@@ -187,6 +187,14 @@ table tr td {
   margin: 17px 0px;
 }
 
+#search-results {
+  margin-top: 20px;
+}
+
+#search-results .message {
+  font-style: italic;
+}
+
 .search-result-location {
   margin-bottom: 5px;
 }

@@ -4,11 +4,43 @@ const searchParams = new URLSearchParams(window.location.search);
 
 // =========== Initialize search ===========
 
+/**
+ * Last searched text.
+ * `null` if nothing was yet searched in the current searching session.
+ * @type {string|null}
+ */
+let lastSearch = null;
+
+/**
+ * Status of the search initialization (loading + building of the index).
+ * Can be:
+ *   1. "not-loaded": when... not loaded.
+ *   2. "loading": when in the process of being loaded (e.g. the index request
+ *      is pending).
+ *   3. "loaded": Search is initialized with success. This is the only state
+ *      under which search operations can be performed.
+ *   4. "failed": Search initialization failed.
+ * @type {string}
+ */
 let searchInitStatus = "not-loaded";
-let completeSearchIndex = [];
+
+/**
+ * Contains the links to search results.
+ * The elements of this array are in this same order than `elasticlunr`'s index.
+ * @type {Array.<Object>}
+ */
+let searchIndexLinks = [];
+
+/** Parent element to search-related dynamic elements (input + results ...) */
 const searchWrapperElt = document.getElementById("search-wrapper");
+
+/** All search icon elements in the page (hopefully, there's only one). */
 const searchIconElts = document.getElementsByClassName("search-icon");
+
+/** The Element corresponding to the search input. */
 const searchBarElt = document.getElementById("searchbar");
+
+/** The Element containing the search results. */
 const searchResultsElt = document.getElementById("search-results");
 
 const searchEngine = elasticlunr(function () {
@@ -23,12 +55,7 @@ if (searchIconElts.length > 0) {
   for (let i = 0; i < searchIconElts.length; i++) {
     const searchIconElt = searchIconElts[i];
     searchIconElt.onclick = function() {
-      if (searchInitStatus === "not-loaded") {
-        initializeSearchEngine().then(() => {
-          refreshSearchResults();
-        });
-      }
-
+      lastSearch = null;
       searchResultsElt.innerHTML = "";
       searchBarElt.value = "";
       if (searchWrapperElt.classList.contains("active")) {
@@ -37,10 +64,16 @@ if (searchIconElts.length > 0) {
         searchWrapperElt.classList.remove("active");
         searchIconElt.classList.remove("active");
       } else {
+        if (searchInitStatus === "not-loaded") {
+          initializeSearchEngine().then(() => {
+            updateSearchResults();
+          });
+        }
         window.scrollTo(0, 0);
         searchWrapperElt.classList.add("active");
         searchIconElt.classList.add("active");
         searchBarElt.focus();
+        updateSearchResults();
       }
     }
   }
@@ -56,8 +89,9 @@ if (searchIconElts.length > 0) {
     searchBarElt.value = initialSearch;
     searchBarElt.focus();
     searchBarElt.selectionStart = searchBarElt.selectionEnd = searchBarElt.value.length;
+    updateSearchResults();
     initializeSearchEngine().then(() => {
-      refreshSearchResults();
+      updateSearchResults();
     });
   }
 }
@@ -72,12 +106,12 @@ function initializeSearchEngine() {
         return;
       }
       console.time("Search initialization");
-      completeSearchIndex = [];
+      searchIndexLinks = [];
       let id = 0;
       for (let i = 0; i < res.length; i++) {
         for (let j = 0; j < res[i].index.length; j++) {
           const elt = res[i].index[j];
-          completeSearchIndex.push({
+          searchIndexLinks.push({
             file: res[i].file,
             anchorH1: elt.anchorH1,
             anchorH2: elt.anchorH2,
@@ -106,15 +140,39 @@ if (searchBarElt !== null) {
   searchBarElt.oninput = function() {
     searchParams.set("search", searchBarElt.value);
     history.replaceState(null, null, "?" + searchParams.toString());
-    if (searchInitStatus !== "loaded") {
-      return;
-    }
-    refreshSearchResults();
+    updateSearchResults();
   }
 }
 
-function refreshSearchResults() {
-  const { value } = searchBarElt;
+function updateSearchResults() {
+  const value = searchBarElt.value;
+  if (value === lastSearch) {
+    return;
+  }
+
+  if (value === "") {
+    lastSearch = "";
+    searchResultsElt.innerHTML = "<div class=\"message\">" +
+      "Enter text to search in all documentation pages." +
+      "</div>";
+    return;
+  }
+  if (searchInitStatus === "not-loaded") {
+    lastSearch = null;
+    searchResultsElt.innerHTML = "<div class=\"message\">" +
+      "Loading the search index..." +
+      "</div>";
+    return;
+  }
+  if (searchInitStatus === "failed") {
+    lastSearch = null;
+    searchResultsElt.innerHTML = "<div class=\"message\">" +
+      "Error: an error happened while initializing the search index" +
+      "</div>";
+    return;
+  }
+  lastSearch = value;
+
   const searchResults = searchEngine.search(value, {
     fields: {
       h1: { boost: 5, bool: "AND" },
@@ -124,10 +182,16 @@ function refreshSearchResults() {
      },
     expand: true,
   });
+  if (searchResults.length === 0) {
+    searchResultsElt.innerHTML = "<div class=\"message\">" +
+      "No result for that search." +
+      "</div>";
+    return;
+  }
   searchResultsElt.innerHTML = "";
   for (let resIdx = 0; resIdx < searchResults.length && resIdx < 30; resIdx++) {
     const res = searchResults[resIdx];
-    const ref = completeSearchIndex[+res.ref];
+    const links = searchIndexLinks[+res.ref];
     const contentDiv = document.createElement("div");
     contentDiv.className = "search-result-item";
 
@@ -135,8 +199,8 @@ function refreshSearchResults() {
     locationDiv.className = "search-result-location";
     if (res.doc.h1 !== undefined && res.doc.h1 !== "") {
       let linkH1;
-      if (ref.anchorH1 !== undefined) {
-        const href = rootUrl + "/" + ref.file + "#" + ref.anchorH1;
+      if (links.anchorH1 !== undefined) {
+        const href = rootUrl + "/" + links.file + "#" + links.anchorH1;
         linkH1 = document.createElement("a");
         linkH1.href = href;
       } else {
@@ -150,8 +214,8 @@ function refreshSearchResults() {
         separatorSpan.textContent = " > ";
         locationDiv.appendChild(separatorSpan);
         let linkH2;
-        if (ref.anchorH2 !== undefined) {
-          const href = rootUrl + "/" + ref.file + "#" + ref.anchorH2;
+        if (links.anchorH2 !== undefined) {
+          const href = rootUrl + "/" + links.file + "#" + links.anchorH2;
           linkH2 = document.createElement("a");
           linkH2.href = href;
         } else {
@@ -165,8 +229,8 @@ function refreshSearchResults() {
           separatorSpan.textContent = " > ";
           locationDiv.appendChild(separatorSpan);
           let linkH3;
-          if (ref.anchorH3 !== undefined) {
-            const href = rootUrl + "/" + ref.file + "#" + ref.anchorH3;
+          if (links.anchorH3 !== undefined) {
+            const href = rootUrl + "/" + links.file + "#" + links.anchorH3;
             linkH3 = document.createElement("a");
             linkH3.href = href;
           } else {
@@ -190,6 +254,7 @@ function refreshSearchResults() {
     contentDiv.appendChild(bodyDiv);
     searchResultsElt.appendChild(contentDiv);
   }
+  return;
 }
 
 // ========= Sidebar opening / closing ===========
