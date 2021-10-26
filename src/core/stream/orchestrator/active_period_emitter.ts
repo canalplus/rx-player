@@ -109,12 +109,12 @@ export default function ActivePeriodEmitter(
         case "representationChange": {
           const { period, type } = evt.value;
           const currentInfos = acc[period.id];
-          if (currentInfos !== undefined && !currentInfos.buffers.has(type)) {
-            currentInfos.buffers.add(type);
-          } else {
+          if (currentInfos === undefined) {
             const bufferSet = new Set<IBufferType>();
             bufferSet.add(type);
             acc[period.id] = { period, buffers: bufferSet };
+          } else if (!currentInfos.buffers.has(type)) {
+            currentInfos.buffers.add(type);
           }
         }
           break;
