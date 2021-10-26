@@ -20,5 +20,5 @@ By default, this value is set to `30`.
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./../Basic_Methods/loadVideo.md#transport)).
+mode (see [loadVideo options](../Loading_a_Content.md#transport)).
 :::

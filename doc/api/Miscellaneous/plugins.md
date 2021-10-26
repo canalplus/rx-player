@@ -128,15 +128,15 @@ As you can see, this function takes two arguments:
      More information on its structure can be found on the documentation
      linked below [5].
 
-[1] [Manifest structure](../additional_ressources/manifest.md#manifest)
+[1] [Manifest structure](./Manifest_Object.md#manifest)
 
-[2] [Period structure](../additional_ressources/manifest.md#period)
+[2] [Period structure](./Manifest_Object.md#period)
 
-[3] [Adaptation structure](../additional_ressources/manifest.md#adaptation)
+[3] [Adaptation structure](./Manifest_Object.md#adaptation)
 
-[4] [Representation structure](../additional_ressources/manifest.md#representation)
+[4] [Representation structure](./Manifest_Object.md#representation)
 
-[5] [Segment structure](../additional_ressources/manifest.md#segment)
+[5] [Segment structure](./Manifest_Object.md#segment)
 
 2. **callbacks**: An object containing multiple callbacks to allow this
    `segmentLoader` to communicate various events to the RxPlayer.
@@ -222,7 +222,7 @@ the request is aborted. You can define one to clean-up or dispose all resources.
 The manifestLoader is a function that can be included in the
 `transportOptions` of the `loadVideo` API call.
 
-A manifestLoader allows to define a custom [Manifest](../glossary.md#manifest)
+A manifestLoader allows to define a custom [Manifest](../../Getting_Started/Glossary.md#manifest)
 loader.
 
 The Manifest loader is the part performing the Manifest request.
@@ -324,15 +324,15 @@ The representationFilter is a function that can be included in the
 `transportOptions` of the `loadVideo` API call.
 
 A representationFilter allows you to filter out
-[Representations](../glossary.md#representation) (i.e. media qualities) based on
+[Representations](../../Getting_Started/Glossary.md#representation) (i.e. media qualities) based on
 its attributes.
 
 The representationFilter will be called each time we load a
-[Manifest](../glossary.md#manifest) with two arguments:
+[Manifest](../../Getting_Started/Glossary.md#manifest) with two arguments:
 
 - representation `{Representation}`: The concerned `Representation`.
   A `Representation` structure's is described [in the Manifest structure
-  documentation](../additional_ressources/manifest.md#representation).
+  documentation](./Manifest_Object.md#representation).
 
 - representationInfos `{Object}`: Basic information about this
   `Representation`. Contains the following keys:
@@ -390,4 +390,4 @@ function representationFilter(representation, infos) {
 }
 ```
 
-[1] [Representation structure](../additional_ressources/manifest.md#representation)
+[1] [Representation structure](./Manifest_Object.md#representation)

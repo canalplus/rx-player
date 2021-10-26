@@ -43,7 +43,7 @@ RxPlayer. Doing that will both be more flexible for users and much easier to
 maintain for us (albeit with a small time of transition for the application).
 
 You can replace those API by this new exported function:
-[parseBifThumbnails](../api/Tools/parseBifThumbnails.md).
+[parseBifThumbnails](../Tools/parseBifThumbnails.md).
 
 To give more details about why those APIs have been deprecated, there are
 multiple reasons:
@@ -223,7 +223,7 @@ parsing.
 You can read [the related chapter](#bif-apis) for more information.
 
 You can replace this API by using the
-[parseBifThumbnails](../api/Tools/parseBifThumbnails.md) tool.
+[parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.
 
 ## RxPlayer Events
 
@@ -270,7 +270,7 @@ thumbnail parsing.
 You can read [the related chapter](#bif-apis) for more information.
 
 You can replace this API by using the
-[parseBifThumbnails](../api/Tools/parseBifThumbnails.md) tool.
+[parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.
 
 ## loadVideo options
 
@@ -279,11 +279,11 @@ The following loadVideo options are deprecated.
 ### defaultAudioTrack
 
 [The `preferredAudioTracks` loadVideo
-option](./api/Basic_Methods/loadVideo.md#preferredaudiotracks) is now the preferred
+option](../Loading_a_Content.md#preferredaudiotracks) is now the preferred
 (no pun intended) solution to set the default audio track.
 This new option allows to handle much more complex use cases and can even be
 updated at any time through [the `setPreferredAudioTracks`
-method](../api/Track_Selection/setPreferredAudioTracks.md).
+method](../Track_Selection/setPreferredAudioTracks.md).
 
 #### How to replace that option
 
@@ -320,7 +320,7 @@ player.setPreferredAudioTracks([{ language: "fra", audioDescription: false }]);
 ### defaultTextTrack
 
 `defaultTextTrack` is replaced by [the `preferredTextTracks` constructor
-option](./api/Basic_Methods/loadVideo.md#preferredtexttracks) for the same reason
+option](../Loading_a_Content.md#preferredtexttracks) for the same reason
 than `defaultAudioTrack`.
 
 #### How to replace that option
@@ -401,7 +401,7 @@ Every `supplementaryTextTracks` feature can be replaced by the
 Please bear in mind however that they are two completely different APIs, doing
 the transition might take some time.
 
-The `TextTrackRenderer` tool is documented [here](../api/Tools/TextTrackRenderer.md).
+The `TextTrackRenderer` tool is documented [here](../Tools/TextTrackRenderer.md).
 
 ### supplementaryImageTracks
 
@@ -410,7 +410,7 @@ to BIF thumbnail parsing.
 You can read [the related chapter](#bif-apis) for more information.
 
 You can replace this API by using the
-[parseBifThumbnails](../api/Tools/parseBifThumbnails.md) tool.
+[parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.
 
 ### hideNativeSubtitle
 

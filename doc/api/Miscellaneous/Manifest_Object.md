@@ -6,7 +6,7 @@ A Manifest Object and its sub-parts are data structures returned by multiple
 APIs of the player.
 
 Its data represents the corresponding streaming protocol's
-[Manifest](../glossary.md#manifest) equivalent (MPD for DASH, Manifest for
+[Manifest](../../Getting_Started/Glossary.md#manifest) equivalent (MPD for DASH, Manifest for
 Microsoft Smooth Streaming etc.).
 
 Basically, the structure of a Manifest file has the following hierarchy:
@@ -39,7 +39,7 @@ enough.
 
 ## Structure of a Manifest Object
 
-The manifest Object represents the [Manifest file](../glossary.md#manifest) of the
+The manifest Object represents the [Manifest file](../../Getting_Started/Glossary.md#manifest) of the
 content loaded.
 
 ### properties
@@ -50,7 +50,7 @@ The manifest Object has the following properties.
 
 _type_: `Array.<Period>`
 
-A single Manifest instance can contain multiple [Periods](../glossary.md#period),
+A single Manifest instance can contain multiple [Periods](../../Getting_Started/Glossary.md#period),
 which are periods of time for which the list of available type of contents
 (audio tracks, subtitles, video tracks...) can be different.
 
@@ -67,7 +67,7 @@ content.
 
 :::caution
 This property is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./deprecated.md)).
+release `v4.0.0` (see [Deprecated APIs](./Deprecated_APIs.md)).
 :::
 
 ---
@@ -147,7 +147,7 @@ it is the current last content of the current Manifest.
 
 _type_: `Object`
 
-The [Adaptations](../glossary.md#adaptation) (tracks if you want) for the current
+The [Adaptations](../../Getting_Started/Glossary.md#adaptation) (tracks if you want) for the current
 content, per-type (audio/video/text/image).
 
 See [the Adaptation chapter](#adaptation) for more info about an Adaptation's
@@ -162,7 +162,7 @@ The Adaptation object _can_ contain any of the following keys:
 
 ## Structure of an Adaptation Object
 
-An [Adaptation](../glossary.md#adaptation) is a set of streams representing the
+An [Adaptation](../../Getting_Started/Glossary.md#adaptation) is a set of streams representing the
 exact same contents in multiple forms (different sizes, different bitrates...).
 Concretely, a frequent usecase is to have a single video Adaptation and multiple
 audio ones, one for each language available.
@@ -234,7 +234,7 @@ if the user start the trick mode on the respective main adaptation.
 
 _type_: `Array.<Representation>`
 
-The [Represesentations](../glossary.md#representation) for this Adaptation.
+The [Represesentations](../../Getting_Started/Glossary.md#representation) for this Adaptation.
 
 See [the Representation chapter](#representation) for more info about a
 Representation's structure.
@@ -249,8 +249,8 @@ Returns every bitrates available for this Adaptation.
 
 ## Structure of a Representation Object
 
-A [Representation](../glossary.md#representation) is an
-[Adaptation](../glossary.md#adaptation) encoded in a certain way. It is defined by
+A [Representation](../../Getting_Started/Glossary.md#representation) is an
+[Adaptation](../../Getting_Started/Glossary.md#adaptation) encoded in a certain way. It is defined by
 multiple values (a codec, a bitrate). Only some of them are documented here (as
 stated before, open an issue if you would like to access other properties).
 
@@ -322,12 +322,12 @@ number of frames per second as an integer (24), or as a ratio (24000 / 1000).
 _type_: `Object|undefined`
 
 Information about the hdr characteristics of the track.
-(see [HDR support documentation](../api/hdr.md#hdrinfo))
+(see [HDR support documentation](./hdr.md#hdrinfo))
 
 ## Structure of a RepresentationIndex Object
 
 A RepresentationIndex is an uniform way of declaring the segment index in any
-[Manifest](../glossary.md#manifest).
+[Manifest](../../Getting_Started/Glossary.md#manifest).
 
 That's the part that calculates which segments will be needed. Because the index
 can be different depending on the type of contents/transport most interactions

@@ -9,12 +9,13 @@ seconds.
 Note for multi-Period contents:
 
 This method will only return the available audio bitrates of the
-<a href="../../glossary.md#period">Period</a> that is currently playing.
+<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently playing.
+
 </div>
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
-href="../Basic_Methods/loadVideo.md#transport">loadVideo options</a>),
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
 this method returns an empty array.
 </div>
 
@@ -24,8 +25,8 @@ this method returns an empty array.
 const bitrates = player.getAvailableAudioBitrates();
 ```
 
-  - **return value** `Array.<Number>`: the available audio bitrates for the
-     current track of the current Period.
+- **return value** `Array.<Number>`: the available audio bitrates for the
+  current track of the current Period.
 
 ## Example
 

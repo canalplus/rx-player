@@ -53,7 +53,7 @@ rxPlayer.loadVideo({
 ```
 
 More infos on the `manifestLoader` can be found
-[here](../api/plugins.md#manifestLoader).
+[here](./plugins.md#manifestLoader).
 
 ## How to import this feature
 
@@ -89,8 +89,7 @@ you have to set to `true`:
 RXP_LOCAL_MANIFEST=true npm run build:min
 ```
 
-More information about any of that can be found in the [minimal player
-documentation](./minimal_player.md).
+More information about any of that can be found in the [minimal player documentation](../../Getting_Started/Minimal_Player.md).
 
 ## The Manifest format
 
@@ -631,7 +630,7 @@ manifest format, but this is not available for now.
 
 The previous `0.1` version of the local Manifest is now obsolete and is not
 compatible with the new versions of the RxPlayer.
-Its documentation can be found [here](./local_manifest_v0.1.md).
+Its documentation can be found [here](./Local_Manifest_v0.1.md).
 
 If you were relying on this version before and would like to switch the the
 `0.2` version, to be able to play it on newer versions of the RxPlayer, here

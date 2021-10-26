@@ -12,7 +12,7 @@ Might enter in `RELOADING` state for a short period after calling this API.
 
 Note for multi-Period contents:
 
-This method will only have an effect on the [Period](../../glossary.md#period) that is
+This method will only have an effect on the [Period](../../Getting_Started/Glossary.md#period) that is
 currently playing.
 
 If you want to disable the video track for other Periods as well, you might want
@@ -26,7 +26,7 @@ More information can be found on that API's documentation.
 :::caution
 
 This option may have no effect in _DirectFile_ mode
-(see [loadVideo options](./../Basic_Methods/loadVideo.md#transport)).
+(see [loadVideo options](../Loading_a_Content.md#transport)).
 
 The directfile mode is a special case here because when in it, the RxPlayer
 depends for track selection on the [corresponding HTML

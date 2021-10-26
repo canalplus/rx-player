@@ -45,7 +45,7 @@ return an object with the following properties:
 
   - `hdrInfo` (`Object|undefined`) Information about the hdr
     characteristics of the track.
-    (see [HDR support documentation](./hdr.md#hdrinfo))
+    (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
 
 - `signInterpreted` (`Boolean|undefined`): If set to `true`, the track is
   known to contain an interpretation in sign language.
@@ -79,6 +79,6 @@ This method will only return the chosen video track for the
 
 :::caution
 In _DirectFile_ mode
-(see [loadVideo options](./../Basic_Methods/loadVideo.md#transport)), if there is
+(see [loadVideo options](../Loading_a_Content.md#transport)), if there is
 no video tracks API in the browser, this method will return `undefined`.
 :::

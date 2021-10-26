@@ -9,11 +9,11 @@ captions - directly over your content:
 
 Adding text tracks to contents can be done by two means:
 
-- by using a [Manifest](../glossary.md#manifest) declaring those text tracks
+- by using a [Manifest](../../Getting_Started/Glossary.md#manifest) declaring those text tracks
 - by manually adding text track(s) when you call the `loadVideo` API
 
 You can then choose the right track through the different text track-related
-API, all documented in the [general API documentation](../api/Creating_a_Player.md).
+API, all documented in the [general API documentation](../Creating_a_Player.md).
 
 ## Supported text track formats
 
@@ -143,7 +143,7 @@ value is `DESC`.
 
 It is also possible to add a supplementary text track dynamically, by using the
 `TextTrackRenderer` tool. You can read its documentation
-[here](../api/Tools/TextTrackRenderer.md).
+[here](../Tools/TextTrackRenderer.md).
 
 ## Text track display modes
 
@@ -156,5 +156,5 @@ There is two ways the text track can be displayed:
 
 The second ones allows for a better track stylisation. The distinction between
 those two is pretty simple and is explained
-[here](../api/Basic_Methods/loadVideo.md#texttrackmode), in the [loadVideo options
-documentation](../api/Basic_Methods/loadVideo.md).
+[here](../Loading_a_Content.md#texttrackmode), in the [loadVideo options
+documentation](../Loading_a_Content.md).

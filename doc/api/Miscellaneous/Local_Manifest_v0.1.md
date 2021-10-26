@@ -4,7 +4,7 @@
 The `0.1` version of the local Manifest format is an old version which
 is not properly understood by the RxPlayer anymore.
 
-The last version of this specification can be found [here](./local_contents.md).
+The last version of this specification can be found [here](./Local_Contents.md).
 
 :::
 
@@ -61,7 +61,7 @@ rxPlayer.loadVideo({
 ```
 
 More infos on the `manifestLoader` can be found
-[here](../api/plugins.md#manifestLoader).
+[here](./plugins.md#manifestLoader).
 
 ## How to import this feature
 
@@ -97,8 +97,7 @@ you have to set to `true`:
 RXP_LOCAL_MANIFEST=true npm run build:min
 ```
 
-More information about any of that can be found in the [minimal player
-documentation](./minimal_player.md).
+More information about any of that can be found in the [minimal player documentation](../../Getting_Started/Minimal_Player.md).
 
 ## The Manifest format
 

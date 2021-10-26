@@ -44,6 +44,6 @@ This method will only return the chosen text track for the
 
 :::caution
 In _DirectFile_ mode
-(see [loadVideo options](./../Basic_Methods/loadVideo.md#transport)), if there is
+(see [loadVideo options](../Loading_a_Content.md#transport)), if there is
 no text tracks API in the browser, this method will return `undefined`.
 :::

@@ -63,7 +63,7 @@ We found that value to be just at the right boundary between rebuffering risks,
 and delay to the live edge.
 
 However, you can still provide a lower distance through the `startAt`
-`loadVideo` option (documented [here](./api/Basic_Methods/loadVideo.md#startat)):
+`loadVideo` option (documented [here](../Loading_a_Content.md#startat)):
 
 ```js
 rxPlayer.loadVideo({
@@ -77,6 +77,7 @@ rxPlayer.loadVideo({
 ```
 
 <a name="note-time-sync"></a>
+
 ### Note about time synchronization
 
 In most cases, DASH low-latency contents rely on time synchronization between
@@ -90,7 +91,7 @@ synchronization mechanism to loadVideo. This is done through the
 `serverSyncInfos` `transportOptions`. Which itself is a `loadVideo` option.
 
 TL;DR You can look at the [API
-documentation](./api/Basic_Methods/loadVideo.md#transportoptions) for a quick
+documentation](../Loading_a_Content.md#transportoptions) for a quick
 explanation of what to put in it.
 
 ---

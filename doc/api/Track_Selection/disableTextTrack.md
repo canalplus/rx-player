@@ -13,7 +13,7 @@ After calling that method, no subtitles track will be displayed until
 
 Note for multi-Period contents:
 
-This method will only have an effect on the [Period](../../glossary.md#period) that is
+This method will only have an effect on the [Period](../../Getting_Started/Glossary.md#period) that is
 currently playing.
 
 If you want to disable the text track for other Periods as well, you might want

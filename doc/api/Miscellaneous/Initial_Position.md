@@ -42,7 +42,7 @@ duration of the content. The minimum position here is always inferred to be `0`
 
 You can define yourself the start position at which we should play. This is
 configurable thanks to the startAt option, documented
-[here in the API documentation](../api/Basic_Methods/loadVideo.md#startAt).
+[here in the API documentation](../Loading_a_Content.md#startat).
 
 Please note however that there is a catch: every of the possible values you
 will set will be "bounded" to the maximum and minimum position actually detected
@@ -84,7 +84,7 @@ should be broadcasted at which time by either of those means:
   contents).
 - One was provided to `loadVideo` thanks to the `serverSyncInfos` transport
   option [see loadVideo
-  documentation](../api/Basic_Methods/loadVideo.md#transportOptions).
+  documentation](../Loading_a_Content.md#transportoptions).
 
 [2] I wrote "close to" in every cases as we might substract some seconds from
 that value. How much we might do, depends on:

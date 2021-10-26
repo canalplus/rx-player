@@ -110,7 +110,7 @@ player.setPreferredTextTracks(
 :::caution
 
 This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](./../Basic_Methods/loadVideo.md#transport)) when either :
+(see [loadVideo options](../Loading_a_Content.md#transport)) when either :
 
 - No text track API is supported on the current browser
 - The media file tracks are not supported on the browser

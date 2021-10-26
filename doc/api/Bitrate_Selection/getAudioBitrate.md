@@ -11,11 +11,12 @@ Note for multi-Period contents:
 
 This method will only return the chosen audio bitrate for the
 Period that is currently playing.
+
 </div>
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
-href="../Basic_Methods/loadVideo.md#transport">loadVideo options</a>),
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
 this method returns "undefined".
 </div>
 
@@ -25,5 +26,5 @@ this method returns "undefined".
 const bitrate = player.getAudioBitrate();
 ```
 
-  - **return value** `number|undefined`: Bitrate of the current audio quality
-    chosen. `undefined` if none is chosen yet.
+- **return value** `number|undefined`: Bitrate of the current audio quality
+  chosen. `undefined` if none is chosen yet.

@@ -262,7 +262,7 @@ RXP_METAPLAYLIST=true npm run build:min
 ```
 
 More information about any of that can be found in the [minimal player
-documentation](./minimal_player.md).
+documentation](../../Getting_Started/Minimal_Player.md).
 
 ### Loading a MetaPlaylist content
 
@@ -294,14 +294,14 @@ player.loadVideo({
 ```
 
 More infos on the `manifestLoader` can be found
-[here](../api/plugins.md#manifestLoader).
+[here](./plugins.md#manifestLoader).
 
 ### Defining an initial position for a dynamic MetaPlaylist
 
 As already explained, a MetaPlaylist can either be dynamic or static.
 
 For calculating the initial position of those contents, the RxPlayer will obey
-[the same rules than for other contents](./initial_position.md).
+[the same rules than for other contents](./Initial_Position.md).
 
 As such, dynamic MetaPlaylist contents will by default start just before the end
 of the last defined content which might not be what you want.
@@ -311,7 +311,7 @@ when calling `loadVideo` to indicate the current time and construct the
 MetaPlaylist by using unix time for each content's `startTime` and `endTime`.
 
 The `serverSyncInfos` option is explained [in the `transportOptions`
-documentation](./api/Basic_Methods/loadVideo.md#transportoptions).
+documentation](../Loading_a_Content.md#transportoptions).
 
 For example, if you trust the user's system clock to indicate the current live
 time (in most cases this is risky however), you can use the `Date.now()` api:

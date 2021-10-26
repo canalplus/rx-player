@@ -8,11 +8,10 @@
 
 ---
 
-Returns the URL of the downloaded [Manifest](../../glossary.md#manifest).
+Returns the URL of the downloaded [Manifest](../../Getting_Started/Glossary.md#manifest).
 
 :::note
-In _DirectFile_ mode (see [loadVideo
-options](../Basic_Methods/loadVideo.md#transport)), returns the URL of the content
+In _DirectFile_ mode (see [loadVideo options](../Loading_a_Content.md#transport)), returns the URL of the content
 being played.
 :::
 

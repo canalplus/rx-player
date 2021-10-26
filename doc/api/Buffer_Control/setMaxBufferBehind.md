@@ -27,5 +27,5 @@ this job instead.
 
 :::caution
 This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./../Basic_Methods/loadVideo.md#transport)).
+mode (see [loadVideo options](../Loading_a_Content.md#transport)).
 :::

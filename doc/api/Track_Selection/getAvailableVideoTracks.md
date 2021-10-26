@@ -50,7 +50,7 @@ This method will only return the available tracks of the
 :::
 
 :::caution
-In _DirectFile_ mode (see [loadVideo options](./../Basic_Methods/loadVideo.md#transport)), if there are no supported
+In _DirectFile_ mode (see [loadVideo options](../Loading_a_Content.md#transport)), if there are no supported
 tracks in the file or no track management API this method will return an empty
 Array.
 :::
