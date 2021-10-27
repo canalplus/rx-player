@@ -1,14 +1,6 @@
-# setVideoTrack method
+# player.setVideoTrack()
 
----
-
-**syntax**: `player.setVideoTrack(videoTrackId)`
-
-**arguments**:
-
-- _videoTrackId_ (`string|Number`): The `id` of the track you want to set
-
----
+## Description
 
 Change the current video track.
 
@@ -75,3 +67,13 @@ This option will have no effect in _DirectFile_ mode
 - The media file tracks are not supported on the browser
 
 :::
+
+## Syntax
+
+```js
+player.setVideoTrack(videoTrackId);
+```
+
+ - **arguments**:
+
+   1. _videoTrackId_ `string|Number`: The `id` of the track you want to set

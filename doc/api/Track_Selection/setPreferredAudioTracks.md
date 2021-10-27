@@ -1,19 +1,6 @@
-# setPreferredAudioTracks method
+# player.setPreferredAudioTracks()
 
----
-
-**syntax**: `player.setPreferredAudioTracks(preferences)` /
-`player.setPreferredAudioTracks(preferences, shouldApply)`
-
-**arguments**:
-
-- _preferences_ (`Array.<Object>`): wanted audio track configurations by
-  order of preference.
-
-- _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
-  content being played.
-
----
+## Description
 
 Allows the RxPlayer to choose an initial audio track, based on language
 preferences, codec preferences or both.
@@ -152,3 +139,20 @@ This option will have no effect in _DirectFile_ mode
 - The media file tracks are not supported on the browser
 
 :::
+
+## Syntax
+
+```js
+player.setPreferredAudioTracks(preferences);
+
+// or
+player.setPreferredAudioTracks(preferences, shouldApply);
+```
+
+ - **arguments**:
+
+   1. _preferences_ (`Array.<Object>`): wanted audio track configurations by
+      order of preference.
+
+   2. _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
+      content being played.

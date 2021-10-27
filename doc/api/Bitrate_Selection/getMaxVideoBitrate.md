@@ -1,6 +1,7 @@
 # player.getMaxVideoBitrate()
 
 ## Description
+
 Returns the maximum video bitrate reachable through adaptive streaming, in bits
 per second.
 

@@ -1,15 +1,6 @@
-# setPlaybackRate method
+# player.setPlaybackRate()
 
----
-
-**syntax**: `player.setPlaybackRate(speed)` / `player.setPlaybackRate(speed, { preferTrickModeTracks })`
-
-**arguments**:
-
-- _speed_ (`Number`): The speed / playback rate you want to set.
-- _options_ (`Object|undefined`): Options related to the speed update.
-
----
+## Description
 
 Updates the current playback rate, i.e. the speed at which contents are played.
 
@@ -104,3 +95,18 @@ player.setPlaybackRate(5, { preferTrickModeTracks: true });
 // reset the speed to "normal" (x1) speed and to disable trickMode video tracks
 player.setPlaybackRate(1, { preferTrickModeTracks: false });
 ```
+
+## Syntax
+
+```js
+player.setPlaybackRate(speed);
+
+// or, with trickmode settings
+player.setPlaybackRate(speed, { preferTrickModeTracks });
+```
+
+ - **arguments**:
+
+   1. _speed_ `number`: The speed / playback rate you want to set.
+   2. _options_ (optional) `Object|undefined`: Options related to the speed
+      update.

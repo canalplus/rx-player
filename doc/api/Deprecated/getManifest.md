@@ -6,14 +6,6 @@ This option is deprecated, it will disappear in the next major release
 APIs</a>).
 </div>
 
-## Syntax
-
-```js
-const manifest = player.getManifest();
-```
-
-  - **return value** `Object|null`: The current Manifest object.
-
 ## Description
 
 Returns the current loaded [Manifest](../../Getting_Started/Glossary.md#manifest)
@@ -27,3 +19,11 @@ The Manifest object structure is relatively complex and is described in the
 options](../Loading_a_Content.md#transport)).
 
 The Manifest will be available before the player reaches the `"LOADED"` state.
+
+## Syntax
+
+```js
+const manifest = player.getManifest();
+```
+
+  - **return value** `Object|null`: The current Manifest object.

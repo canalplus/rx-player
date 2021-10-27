@@ -1,16 +1,18 @@
-# isMute method
+# player.isMute()
 
----
-
-**syntax**: `const isMute = player.isMute()`
-
-**return value**: `Boolean`
-
----
+## Description
 
 Returns true if the volume is set to `0`.
 
-#### Example
+## Syntax
+
+```js
+const isMute = player.isMute();
+```
+
+ - **return value** `boolean`
+
+## Example
 
 ```js
 if (player.isMute()) {

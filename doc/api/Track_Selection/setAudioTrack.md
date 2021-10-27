@@ -1,14 +1,6 @@
-# setAudioTrack method
+# player.setAudioTrack()
 
----
-
-**syntax**: `player.setAudioTrack(audioTrackId)`
-
-**arguments**:
-
-- _audioTrackId_ (`string|Number`): The `id` of the track you want to set
-
----
+## Description
 
 Change the current audio track.
 
@@ -46,3 +38,13 @@ This has two potential reasons :
   events that the tracks have changed.
 
 :::
+
+## Syntax
+
+```js
+player.setAudioTrack(audioTrackId);
+```
+
+ - **arguments**:
+
+   1. _audioTrackId_ `string|number`: The `id` of the track you want to set

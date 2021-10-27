@@ -1,10 +1,6 @@
-# disableVideoTrack method
+# player.disableVideoTrack()
 
----
-
-**syntax**: `player.disableVideoTrack()`
-
----
+## Description
 
 Disable the current video track, if one.
 
@@ -43,3 +39,9 @@ now. You might even receive a reassuring `videoTrackChange` event (with a `null`
 payload) while the video track is still actually active.
 
 :::
+
+## Syntax
+
+```js
+player.disableVideoTrack();
+```

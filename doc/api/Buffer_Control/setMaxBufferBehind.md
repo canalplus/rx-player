@@ -1,15 +1,6 @@
-# setMaxBufferBehind method
+# player.setMaxBufferBehind()
 
----
-
-**syntax**: `player.setMaxBufferBehind(bufferSize)`
-
-**arguments**:
-
-- _bufferSize_ (`Number`): Maximum amount of buffer behind the current
-  position, in seconds.
-
----
+## Description
 
 Set the maximum kept buffer before the current position, in seconds.
 
@@ -25,7 +16,19 @@ of the player, you might want to set this limit.
 You can set it to `Infinity` to remove this limit and just let the browser do
 this job instead.
 
-:::caution
-This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](../Loading_a_Content.md#transport)).
-:::
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
+this method has no effect.
+</div>
+
+## Syntax
+
+```js
+player.setMaxBufferBehind(bufferSize);
+```
+
+- **arguments**:
+
+  1. _bufferSize_ `number`: Maximum amount of buffer behind the current
+     position, in seconds.

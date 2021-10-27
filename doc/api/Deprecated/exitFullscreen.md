@@ -6,12 +6,12 @@ This option is deprecated, it will disappear in the next major release
 APIs</a>).
 </div>
 
+## Description
+
+Exit fullscreen mode. Same than `setFullscreen(false)`.
+
 ## Syntax
 
 ```js
 player.exitFullscreen();
 ```
-
-## Description
-
-Exit fullscreen mode. Same than `setFullscreen(false)`.

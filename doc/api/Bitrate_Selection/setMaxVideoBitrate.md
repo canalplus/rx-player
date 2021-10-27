@@ -1,15 +1,6 @@
 # player.setMaxVideoBitrate()
 
----
-
-**syntax**: `player.setMaxVideoBitrate(maxBitrate)`
-
-**arguments**:
-
-- _maxBitrate_ (`Number`): Upper video bitrate limit when adaptive streaming
-  is enabled.
-
----
+## Description
 
 Set a maximum video bitrate reachable through adaptive streaming.
 
@@ -40,7 +31,19 @@ even be called when no content is currently loaded.
 Note that this only affects adaptive strategies. Forcing the bitrate manually
 (for example by calling `setVideoBitrate`) bypass this limit completely.
 
-:::caution
-This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](../Loading_a_Content.md#transport)).
-:::
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
+this method has no effect.
+</div>
+
+## Syntax
+
+```js
+player.setMaxVideoBitrate(maxBitrate);
+```
+
+  - **arguments**:
+
+    1. _maxBitrate_ `number`: Upper video bitrate limit when adaptive streaming
+       is enabled.

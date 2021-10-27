@@ -6,16 +6,6 @@ This option is deprecated, it will disappear in the next major release
 APIs</a>).
 </div>
 
-## Syntax
-
-```js
-const representations = player.getCurrentRepresentations();
-```
-
-  - **return value** `Object|null`: The current Representation objects, per
-    type.
-    `null` if not known.
-
 ## Description
 
 Returns the [Representations](../../Getting_Started/Glossary.md#representation) being
@@ -31,3 +21,13 @@ The Representation object structure is relatively complex and is described in th
 
 `null` in _DirectFile_ mode (see [loadVideo
 options](../Loading_a_Content.md#transport)).
+
+## Syntax
+
+```js
+const representations = player.getCurrentRepresentations();
+```
+
+  - **return value** `Object|null`: The current Representation objects, per
+    type.
+    `null` if not known.

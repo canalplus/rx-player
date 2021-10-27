@@ -1,12 +1,6 @@
-# getVideoPlayedTime method
+# player.getVideoPlayedTime()
 
----
-
-**syntax**: `const playedTime = player.getVideoPlayedTime()`
-
-**return value**: `Number`
-
----
+## Description
 
 Returns in seconds the difference between:
 
@@ -20,3 +14,11 @@ data from the second `40` to the second `60`, then `getVideoPlayedTime()` will
 return `11` (`51 - 40`).
 
 `0` if there's no data loaded for the current position.
+
+## Syntax
+
+```js
+const playedTime = player.getVideoPlayedTime();
+```
+
+ - **return value** `number`

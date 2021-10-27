@@ -1,12 +1,6 @@
-# isLive method
+# player.isLive()
 
----
-
-**syntax**: `const isLive = player.isLive()`
-
-**return value**: `Boolean`
-
----
+## Description
 
 Returns `true` if the content is a "live" content (e.g. a live TV Channel).
 `false` otherwise.
@@ -20,3 +14,11 @@ if (player.isLive()) {
   console.log("We're playing a live content");
 }
 ```
+
+## Syntax
+
+```js
+const isLive = player.isLive();
+```
+
+ - **return value** `boolean`

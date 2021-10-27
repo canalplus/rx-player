@@ -1,15 +1,6 @@
-# setMaxBufferAhead method
+# player.setMaxBufferAhead()
 
----
-
-**syntax**: `player.setMaxBufferAhead(bufferSize)`
-
-**arguments**:
-
-- _bufferSize_ (`Number`): Maximum amount of buffer ahead of the current
-  position, in seconds.
-
----
+## Description
 
 Set the maximum kept buffer ahead of the current position, in seconds.
 
@@ -28,11 +19,24 @@ this job instead.
 The minimum value between this one and the one returned by
 `getWantedBufferAhead` will be considered when downloading new segments.
 
-:::caution
+<div class="warning">
 Bear in mind that a too-low configuration there (e.g. inferior to
-`10`) might prevent the browser to play the content at all.
-:::
+10) might prevent the browser to play the content at all.
+</div>
 
-:::caution
-This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](../Loading_a_Content.md#transport)).
-:::
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
+this method has no effect.
+</div>
+
+## Syntax
+
+```js
+player.setMaxBufferAhead(bufferSize);
+```
+
+  - **arguments**:
+
+    1. _bufferSize_ `number`: Maximum amount of buffer ahead of the current
+       position, in seconds.

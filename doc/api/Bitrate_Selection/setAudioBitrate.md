@@ -1,15 +1,6 @@
 # player.setAudioBitrate()
 
----
-
-**syntax**: `player.setAudioBitrate(bitrate)`
-
-**arguments**:
-
-- _bitrate_ (`Number`): Optimal audio bitrate (the quality with the maximum
-  bitrate inferior to this value will be chosen if it exists).
-
----
+## Description
 
 Force the current audio track to be of a certain bitrate.
 
@@ -35,7 +26,19 @@ Note that the value set is persistent between `loadVideo` calls.
 As such, this method can also be called when no content is playing (the same
 rules apply for future contents).
 
-:::caution
-This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](../Loading_a_Content.md#transport)).
-:::
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
+this method has no effect.
+</div>
+
+## Syntax
+
+```js
+player.setAudioBitrate(bitrate);
+```
+
+  - **arguments**:
+
+    1. _bitrate_ `Number`: Optimal audio bitrate (the quality with the maximum
+       bitrate inferior to this value will be chosen if it exists).

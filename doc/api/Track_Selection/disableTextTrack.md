@@ -1,10 +1,6 @@
-# disableTextTrack method
+# player.disableTextTrack()
 
----
-
-**syntax**: `player.disableTextTrack()`
-
----
+## Description
 
 Disable the current text track, if one.
 
@@ -23,3 +19,9 @@ that you would prefer having no text track - by setting its second argument to
 `true`.
 
 More information can be found on that API's documentation.
+
+## Syntax
+
+```js
+player.disableTextTrack();
+```

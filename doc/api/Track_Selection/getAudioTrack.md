@@ -1,12 +1,6 @@
-# getAudioTrack method
+# player.getAudioTrack()
 
----
-
-**syntax**: `const audioTrack = player.getAudioTrack()`
-
-**return value**: `Object|null|undefined`
-
----
+## Description
 
 Get information about the audio track currently set.
 `null` if no audio track is enabled right now.
@@ -67,3 +61,11 @@ In _DirectFile_ mode
 (see [loadVideo options](../Loading_a_Content.md#transport)), if there is
 no audio tracks API in the browser, this method will return `undefined`.
 :::
+
+## Syntax
+
+```js
+const audioTrack = player.getAudioTrack();
+```
+
+ - **return value** `Object|null|undefined`

@@ -1,12 +1,6 @@
-# getPreferredTextTracks method
+# player.getPreferredTextTracks()
 
----
-
-**syntax**: `const preferences = player.getPreferredTextTracks()`
-
-**return value**: `Array.<Object|null>`
-
----
+## Description
 
 Returns the current list of preferred text tracks - by order of preference.
 
@@ -22,3 +16,11 @@ it was called:
                        // caption for the hard of hearing
 }
 ```
+
+## Syntax
+
+```js
+const preferences = player.getPreferredTextTracks();
+```
+
+ - **return value** `Array.<Object|null>`

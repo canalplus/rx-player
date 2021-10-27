@@ -1,12 +1,6 @@
-# getAvailableVideoTracks method
+# player.getAvailableVideoTracks()
 
----
-
-**syntax**: `const videoTracks = player.getAvailableVideoTracks()`
-
-**return value**: `Array.<Object>`
-
----
+## Description
 
 Returns the list of available video tracks for the current content.
 
@@ -54,3 +48,11 @@ In _DirectFile_ mode (see [loadVideo options](../Loading_a_Content.md#transport)
 tracks in the file or no track management API this method will return an empty
 Array.
 :::
+
+## Syntax
+
+```js
+const videoTracks = player.getAvailableVideoTracks();
+```
+
+ - **return value** `Array.<Object>`

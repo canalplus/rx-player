@@ -1,14 +1,6 @@
-# setTextTrack method
+# player.setTextTrack()
 
----
-
-**syntax**: `player.setTextTrack(textTrackId)`
-
-**arguments**:
-
-- _textTrackId_ (`string|Number`): The `id` of the track you want to set
-
----
+## Description
 
 Change the current text (subtitles) track.
 
@@ -47,3 +39,13 @@ This has two potential reasons :
   events that the tracks have changed.
 
 :::
+
+## Syntax
+
+```js
+player.setTextTrack(textTrackId);
+```
+
+ - **arguments**:
+
+   1. _textTrackId_ `string|number`: The `id` of the track you want to set

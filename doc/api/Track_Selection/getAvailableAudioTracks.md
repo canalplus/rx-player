@@ -1,12 +1,6 @@
-# getAvailableAudioTracks method
+# player.getAvailableAudioTracks()
 
----
-
-**syntax**: `const audioTracks = player.getAvailableAudioTracks()`
-
-**return value**: `Array.<Object>`
-
----
+## Description
 
 Returns the list of available audio tracks for the current content.
 
@@ -62,3 +56,11 @@ In _DirectFile_ mode (see [loadVideo options](../Loading_a_Content.md#transport)
 tracks in the file or no track management API this method will return an empty
 Array.
 :::
+
+## Syntax
+
+```js
+const audioTracks = player.getAvailableAudioTracks();
+```
+
+ - **return value** `Array.<Object>`

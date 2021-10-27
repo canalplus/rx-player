@@ -6,14 +6,6 @@ This option is deprecated, it will disappear in the next major release
 APIs</a>).
 </div>
 
-## Syntax
-
-```js
-const data = player.getImageTrackData();
-```
-
-  - **return value** `Array.<Object>|null`: The image playlist.
-
 ## Description
 
 The current image track's data, `null` if no content is loaded / no image track
@@ -24,3 +16,11 @@ The returned array follows the usual image playlist structure, defined
 
 `null` in _DirectFile_ mode (see [loadVideo
 options](../Loading_a_Content.md#transport)).
+
+## Syntax
+
+```js
+const data = player.getImageTrackData();
+```
+
+  - **return value** `Array.<Object>|null`: The image playlist.

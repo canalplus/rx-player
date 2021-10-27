@@ -1,12 +1,6 @@
-# getUrl method
+# player.getUrl()
 
----
-
-**syntax**: `const url = player.getUrl()`
-
-**return value**: `string`
-
----
+## Description
 
 Returns the URL of the downloaded [Manifest](../../Getting_Started/Glossary.md#manifest).
 
@@ -25,3 +19,11 @@ if (url) {
   console.log("We are playing the following content:", url);
 }
 ```
+
+## Syntax
+
+```js
+const url = player.getUrl();
+```
+
+ - **return value** `string`

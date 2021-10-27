@@ -1,19 +1,6 @@
-# setPreferredVideoTracks method
+# player.setPreferredVideoTracks()
 
----
-
-**syntax**: `player.setPreferredVideoTracks(preferences)` /
-`player.setPreferredVideoTracks(preferences, shouldApply)`
-
-**arguments**:
-
-- _preferences_ (`Array.<Object>`): wanted video track configurations by
-  order of preference.
-
-- _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
-  content being played.
-
----
+## Description
 
 Allows the RxPlayer to choose an initial video track, based on codec
 preferences, accessibility preferences or both.
@@ -139,3 +126,20 @@ This option will have no effect in _DirectFile_ mode
 - The media file tracks are not supported on the browser
 
 :::
+
+## Syntax
+
+```js
+player.setPreferredVideoTracks(preferences);
+
+// or
+player.setPreferredVideoTracks(preferences, shouldApply);
+```
+
+ - **arguments**:
+
+   1. _preferences_ (`Array.<Object>`): wanted video track configurations by
+      order of preference.
+
+   2. _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
+      content being played.

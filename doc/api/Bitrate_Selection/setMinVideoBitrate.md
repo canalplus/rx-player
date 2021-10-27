@@ -1,15 +1,6 @@
 # player.setMinVideoBitrate()
 
----
-
-**syntax**: `player.setMinVideoBitrate(minBitrate)`
-
-**arguments**:
-
-- _minBitrate_ (`Number`): Lower video bitrate limit when adaptive streaming
-  is enabled.
-
----
+## Description
 
 Set a minimum video bitrate reachable through adaptive streaming.
 
@@ -40,7 +31,19 @@ even be called when no content is currently loaded.
 Note that this only affects adaptive strategies. Forcing the bitrate manually
 (for example by calling `setVideoBitrate`) bypass this limit completely.
 
-:::caution
-This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](../Loading_a_Content.md#transport)).
-:::
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
+this method has no effect.
+</div>
+
+## Syntax
+
+```js
+player.setMinVideoBitrate(minBitrate);
+```
+
+  - **arguments**:
+
+    1. _minBitrate_ `number`: Lower video bitrate limit when adaptive streaming
+       is enabled.

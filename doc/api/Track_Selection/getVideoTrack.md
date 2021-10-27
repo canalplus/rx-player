@@ -1,12 +1,6 @@
-# getVideoTrack method
+# player.getVideoTrack()
 
----
-
-**syntax**: `const videoTrack = player.getVideoTrack()`
-
-**return value**: `Object|null|undefined`
-
----
+## Description
 
 Get information about the video track currently set.
 
@@ -82,3 +76,11 @@ In _DirectFile_ mode
 (see [loadVideo options](../Loading_a_Content.md#transport)), if there is
 no video tracks API in the browser, this method will return `undefined`.
 :::
+
+## Syntax
+
+```js
+const videoTrack = player.getVideoTrack();
+```
+
+ - **return value** `Object|null|undefined`

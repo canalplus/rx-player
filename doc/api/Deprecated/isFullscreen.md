@@ -6,14 +6,6 @@ This option is deprecated, it will disappear in the next major release
 APIs</a>).
 </div>
 
-## Syntax
-
-```js
-const isFullscreen = player.isFullscreen();
-```
-
-  - **return value** `Boolean`
-
 ## Description
 
 Returns `true` if the video element is in fullscreen mode, `false`
@@ -26,3 +18,11 @@ if (player.isFullscreen()) {
   console.log("The player is in fullscreen mode");
 }
 ```
+
+## Syntax
+
+```js
+const isFullscreen = player.isFullscreen();
+```
+
+  - **return value** `Boolean`

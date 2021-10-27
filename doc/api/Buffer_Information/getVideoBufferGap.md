@@ -1,12 +1,6 @@
-# getVideoBufferGap method
+# player.getVideoBufferGap()
 
----
-
-**syntax**: `const bufferGap = player.getVideoBufferGap()`
-
-**return value**: `Number`
-
----
+## Description
 
 Returns in seconds the difference between:
 
@@ -18,3 +12,11 @@ of the current contiguous range of media data.
 If we're currently playing at the position at `51` seconds, and there is media
 data from the second `40` to the second `60`, then `getVideoPlayedTime()` will
 return `9` (`60 - 51`).
+
+## Syntax
+
+```js
+const bufferGap = player.getVideoBufferGap();
+```
+
+ - **return value** `number`

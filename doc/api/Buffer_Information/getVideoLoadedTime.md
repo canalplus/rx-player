@@ -1,12 +1,6 @@
-# getVideoLoadedTime method
+# player.getVideoLoadedTime()
 
----
-
-**syntax**: `const loadedTime = player.getVideoLoadedTime()`
-
-**return value**: `Number`
-
----
+## Description
 
 Returns in seconds the difference between:
 
@@ -20,3 +14,11 @@ data from the second `40` to the second `60`, then `getVideoLoadedTime()` will
 return `20` (`60 - 40`).
 
 `0` if there's no data loaded for the current position.
+
+## Syntax
+
+```js
+const loadedTime = player.getVideoLoadedTime();
+```
+
+ - **return value** `number`

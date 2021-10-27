@@ -6,15 +6,6 @@ This option is deprecated, it will disappear in the next major release
 APIs</a>).
 </div>
 
-## Syntax
-
-```js
-const adaptations = player.getCurrentAdaptations();
-```
-
-  - **return value** `Object|null`: The current Adaptation objects, per type.
-    `null` if not known.
-
 ## Description
 
 Returns the [Adaptations](../../Getting_Started/Glossary.md#adaptation) being
@@ -30,3 +21,12 @@ The Adaptation object structure is relatively complex and is described in the
 
 `null` in _DirectFile_ mode (see [loadVideo
 options](../Loading_a_Content.md#transport)).
+
+## Syntax
+
+```js
+const adaptations = player.getCurrentAdaptations();
+```
+
+  - **return value** `Object|null`: The current Adaptation objects, per type.
+    `null` if not known.
