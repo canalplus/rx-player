@@ -43,11 +43,12 @@ This method will only return the available tracks of the
 [Period](../../Getting_Started/Glossary.md#period) that is currently playing.
 :::
 
-:::caution
-In _DirectFile_ mode (see [loadVideo options](../Loading_a_Content.md#transport)), if there are no supported
-tracks in the file or no track management API this method will return an empty
-Array.
-:::
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>), if there is no
+supported tracks in the file or no track management API in the browser this
+method will return an empty Array.
+</div>
 
 ## Syntax
 

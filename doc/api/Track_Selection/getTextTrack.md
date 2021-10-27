@@ -36,11 +36,11 @@ This method will only return the chosen text track for the
 [Period](../../Getting_Started/Glossary.md#period) that is currently playing.
 :::
 
-:::caution
-In _DirectFile_ mode
-(see [loadVideo options](../Loading_a_Content.md#transport)), if there is
-no text tracks API in the browser, this method will return `undefined`.
-:::
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>), if there is no
+text tracks API in the browser, this method returns "undefined".
+</div>
 
 ## Syntax
 

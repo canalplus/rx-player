@@ -58,15 +58,11 @@ either:
 
 :::
 
-:::caution
-
-This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](../Loading_a_Content.md#transport)) when either :
-
-- No video track API is supported on the current browser
-- The media file tracks are not supported on the browser
-
-:::
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
+this method has no effect.
+</div>
 
 ## Syntax
 

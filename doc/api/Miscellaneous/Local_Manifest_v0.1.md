@@ -1,12 +1,12 @@
 # Local Manifest format version 0.1
 
-:::caution
+<div class="warning">
 The `0.1` version of the local Manifest format is an old version which
 is not properly understood by the RxPlayer anymore.
-
-The last version of this specification can be found [here](./Local_Contents.md).
-
-:::
+<br>
+The last version of this specification can be found
+<a href="./Local_Contents.md">here</a>.
+</div>
 
 ## Preamble
 

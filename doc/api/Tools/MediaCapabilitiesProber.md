@@ -257,14 +257,14 @@ The returned string of this function is either:
 - `"Unknown"`: The API is not available or it is but could not check if the
   HDCP type is supported.
 
-:::caution
+<div class="warning">
 As of the 2018-july-03, this feature is very poorly supported (with only
 some support on the EDGE browser).
-
+<br>
 We should have a real support of it in the coming months on
-[Chrome](https://www.chromestatus.com/feature/5652917147140096) and
-[Firefox](https://bugzilla.mozilla.org/show_bug.cgi?id=1404230).
-:::
+<a href="https://www.chromestatus.com/feature/5652917147140096">Chrome</a> and
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1404230">Firefox</a>.
+</div>
 
 #### Example
 

@@ -117,15 +117,16 @@ simply do:
 player.setPreferredVideoTracks([null], true);
 ````
 
-:::caution
-
+<div class ="warning">
 This option will have no effect in _DirectFile_ mode
-(see [loadVideo options](../Loading_a_Content.md#transport)) when either :
+(see <a href="../Loading_a_Content.md#transport">loadVideo options</a>) when
+either:
 
-- No video track API is supported on the current browser
-- The media file tracks are not supported on the browser
-
-:::
+<ul>
+  <li>No video track API is supported on the current browser</li>
+  <li>The media file tracks are not supported on the browser</li>
+</ul>
+</div>
 
 ## Syntax
 

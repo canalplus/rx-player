@@ -478,10 +478,10 @@ _payload type_: `Object`
 
 ---
 
-:::warning
-This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./Loading_a_Content.md#transport)).
-:::
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
 
 ---
 

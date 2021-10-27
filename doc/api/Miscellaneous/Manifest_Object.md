@@ -29,10 +29,10 @@ Manifest Object
 Due to this highly hierachical structure, each level will be described in its
 own chapter here.
 
-:::caution
+<div class="warning">
 Like in the rest of this documentation, any variable or method not
 defined here can change without notice.
-:::
+</div>
 
 Only use the documented variables and open an issue if you think it's not
 enough.
@@ -65,10 +65,11 @@ content.
 
 #### adaptations
 
-:::caution
-This property is deprecated, it will disappear in the next major
-release `v4.0.0` (see [Deprecated APIs](./Deprecated_APIs.md)).
-:::
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="../Miscellaneous/Deprecated_APIs.md">Deprecated
+APIs</a>).
+</div>
 
 ---
 
