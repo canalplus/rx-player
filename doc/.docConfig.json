@@ -19,6 +19,11 @@
       "displayName": "API"
     },
     {
+      "type": "local-doc",
+      "path": "./reference",
+      "displayName": "Reference"
+    },
+    {
       "type": "link",
       "link": "https://developers.canal-plus.com/rx-player/",
       "displayName": "Demo"
