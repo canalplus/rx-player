@@ -139,7 +139,7 @@ export default function createSegmentFetcher<
             requests$.next({ type: "progress",
                              value: { duration: info.duration,
                                       size: info.size,
-                                      totalSize: info.totalSize,
+                                      totalSize: info.totalSize ?? 0,
                                       timestamp: performance.now(),
                                       id } });
           }
@@ -186,6 +186,7 @@ export default function createSegmentFetcher<
             requests$.next({ type: "metrics",
                              value: { size: res.resultData.size,
                                       duration: res.resultData.duration,
+                                      sendingTime: res.resultData.sendingTime,
                                       finishTime: Date.now(),
                                       content } });
           }

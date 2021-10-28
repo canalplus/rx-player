@@ -141,6 +141,7 @@ export interface IABRMetricsEventValue {
   size: number;
   /** The exact unix time where the request finished */
   finishTime: number;
+  sendingTime: number | undefined;
   /** Context about the segment downloaded. */
   content: { representation: Representation;
              adaptation: Adaptation;
@@ -563,16 +564,40 @@ export default function RepresentationEstimator({
 
           const stableRepresentation = scoreCalculator.getLastStableRepresentation();
           const knownStableBitrate = stableRepresentation == null ?
-            undefined :
-            stableRepresentation.bitrate / (clock.speed > 0 ? clock.speed : 1);
-
-          const { bufferGap } = clock;
+          undefined :
+          stableRepresentation.bitrate / (clock.speed > 0 ? clock.speed : 1);
+          
+          const { bufferGap, speed } = clock;
           if (!forceBandwidthMode && bufferGap <= 5) {
             forceBandwidthMode = true;
           } else if (forceBandwidthMode && isFinite(bufferGap) && bufferGap > 10) {
             forceBandwidthMode = false;
           }
-
+          
+          L2A.setSpeed(speed);
+          if (bandwidthEstimate !== undefined) {
+            const bitRateChosenByL2A = L2A.getMaxPossibleRepresentation({ 
+              qualityBasedBitrate: bitrates.reduce((prev, curr) => Math.abs(curr - bandwidthEstimate) < Math.abs(prev - bandwidthEstimate) ? curr : prev),
+              bufferGap,
+              bandwidthEstimate
+            });
+            // console.warn(bitrates, bitRateChosenByL2A);
+            if (typeof bitRateChosenByL2A === "number") {
+              const chosenRepFromBandwidth = selectOptimalRepresentation(_representations,
+                bitRateChosenByL2A,
+                minAutoBitrate,
+                maxAutoBitrate);
+                return { bitrate: bandwidthEstimate,
+                  representation: chosenRepFromBandwidth,
+                  urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
+                                                   currentRepresentation,
+                                                   requests,
+                                                   clock),
+                  manual: false,
+                  knownStableBitrate };
+  
+            }
+          } 
           const chosenRepFromBandwidth = selectOptimalRepresentation(_representations,
                                                                      bitrateChosen,
                                                                      minAutoBitrate,

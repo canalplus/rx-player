@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 import { Representation } from "../../manifest";
-import { IBeginRequestValue, IRequestInfo } from "./pending_requests_store";
+import { IBeginRequestValue } from "./pending_requests_store";
 import { IABRMetricsEventValue, IABRStreamEvents } from "./representation_estimator";
 
 enum L2A_State {
@@ -12,8 +12,7 @@ enum L2A_State {
 interface IRulesContext {
   qualityBasedBitrate: number;
   bufferGap: number;
-  lastRequestInfo: IRequestInfo;
-  speed: number;
+  bandwidthEstimate: number;
 }
 
 interface L2AParameters {
@@ -34,6 +33,13 @@ interface ICxtArg {
 class L2ARule {
   // private readonly _representations: Representation[];
   private readonly _bitrates: number[];
+  private speed: number;
+  // private lastRequest: IRequestInfo | null;
+
+  // private lastRequestDuration: number;
+  // private lastRequestSize: number;
+  private _lastThroughputCalculated : number;
+  private lastQualityWithThroughput : number;
 
   private _state: L2A_State;
   private _lastQuality: number;
@@ -52,7 +58,11 @@ class L2ARule {
     this._bitrates = bitrates;
 
     this._state = L2A_State.Start;
+    // this.lastRequestDuration = 0;
+    // this.lastRequestSize = 0;
+    this.lastQualityWithThroughput = 0;
     this._lastQuality = 0;
+    this._lastThroughputCalculated = 0;
     this._lastSegmentDuration = 0;
     // this._placeholderBuffer = 0;
     // this._lastSegmentWasReplacement = false;
@@ -61,6 +71,9 @@ class L2ARule {
     this._lastSegmentStart = null;
     this._lastSegmentRequestTimeMs = null;
     this._lastSegmentFinishTimeMs = null;
+
+    this.speed = 1;
+    // this.lastRequest =null;
 
     this._l2AParameters = {
       w: [],
@@ -144,6 +157,14 @@ class L2ARule {
     return x;
 }
 
+  public setSpeed(speed: number) {
+    this.speed = speed;
+  }
+
+  // public setLastRequest(request: IRequestInfo) {
+  //   this.lastRequest = request;
+  // }
+
   /**
    * When the Player seek, reset the state to Start and
    * reset L2A infos, to start from a fresh learning copy.
@@ -170,8 +191,10 @@ class L2ARule {
 }
 
   public onMetricAdded(e: IABRMetricsEventValue) {
+    // this.lastRequestDuration = e.duration;
+    // this.lastRequestSize = e.size;
     if (this._state !== L2A_State.NoChange) {
-      this._lastSegmentRequestTimeMs = e.duration;
+      this._lastSegmentRequestTimeMs = e.sendingTime ?? null;
       this._lastSegmentFinishTimeMs = e.finishTime;
       this._checkNewSegment();
     }
@@ -181,7 +204,7 @@ class L2ARule {
   //   // Do something when quality/representation change is asked by application
   // }
 
-  public getMaxPossibleRepresentation({ qualityBasedBitrate, bufferGap, lastRequestInfo, speed }: IRulesContext) {
+  public getMaxPossibleRepresentation({ qualityBasedBitrate, bufferGap, bandwidthEstimate }: IRulesContext) {
     const react = 2; // Reactiveness to volatility (abrupt throughput drops), used to re-calibrate Lagrangian multiplier Q
     const horizon = 4; // Optimization horizon (The amount of steps required to achieve convergence)
     const vl = Math.pow(horizon, 0.99);// Cautiousness parameter, used to control aggressiveness of the bitrate decision process.
@@ -191,7 +214,7 @@ class L2ARule {
     switch (this._state) {
       case L2A_State.Start: {
         this._lastQuality = qualityBasedBitrate;
-        if (this._lastSegmentDuration === null && bufferGap >= this._l2AParameters.bufferTargetLvl) {
+        if (bufferGap >= this._l2AParameters.bufferTargetLvl) {
           this._state = L2A_State.Steady;
           this._l2AParameters.Q = vl;
           for (let i = 0; i < this._bitrates.length; i++) {
@@ -205,11 +228,19 @@ class L2ARule {
         break;
       }
       case L2A_State.Steady: {
+        const tmpBitrates: number[] = [];
         const diff = [];
-        const throughputMeasureTime = lastRequestInfo.progress.reduce((acc, curr) => acc + curr.duration, 0);
-        const downloadedBytes = lastRequestInfo.progress.reduce((acc, curr) => acc + curr.size, 0);
-        let lastThroughput = Math.round((8 * downloadedBytes) / throughputMeasureTime);
-        if (lastThroughput < 1) { // Avoid division by 0 if the network goes off.
+        // const throughputMeasureTime = this.lastRequestDuration;
+        // const downloadedBytes = this.lastRequestSize;
+
+        // console.warn(throughputMeasureTime)
+        let lastThroughput = bandwidthEstimate / 1000;//Math.round((8 * downloadedBytes) / throughputMeasureTime);
+        // console.warn(lastThroughput);
+        if (this._lastThroughputCalculated === lastThroughput) {
+          return this.lastQualityWithThroughput;
+        }
+        this._lastThroughputCalculated = lastThroughput;
+        if (lastThroughput < 1 || isNaN(lastThroughput)) { // Avoid division by 0 if the network goes off.
           lastThroughput = 1;
         
         }
@@ -217,11 +248,11 @@ class L2ARule {
         let sign = 1;
 
         for (let i = 0; i< this._bitrates.length; i++) {
-          this._bitrates[i] = this._bitrates[i] / 1000;
-          if (speed * this._bitrates[i] > lastThroughput) {
+          tmpBitrates[i] = this._bitrates[i] / 1000;
+          if (this.speed * tmpBitrates[i] > lastThroughput) {
             sign = -1;
           }
-          this._l2AParameters.w[i] = this._l2AParameters.prevW[i] + sign * (V / (2 * alpha)) * ((this._l2AParameters.Q + vl) * (speed * this._bitrates[i] / lastThroughput));//Lagrangian descent
+          this._l2AParameters.w[i] = this._l2AParameters.prevW[i] + sign * (V / (2 * alpha)) * ((this._l2AParameters.Q + vl) * (this.speed * tmpBitrates[i] / lastThroughput));//Lagrangian descent
         }
         this._l2AParameters.w = this._euclideanProjection(this._l2AParameters.w);
 
@@ -230,17 +261,17 @@ class L2ARule {
           this._l2AParameters.prevW[i] = this._l2AParameters.w[i];
         }
 
-        this._l2AParameters.Q = Math.max(0, this._l2AParameters.Q - V + V * speed * ((this._dotmultiplication(this._bitrates, this._l2AParameters.prevW) + this._dotmultiplication(this._bitrates, diff)) / lastThroughput));
+        this._l2AParameters.Q = Math.max(0, this._l2AParameters.Q - V + V * this.speed * ((this._dotmultiplication(tmpBitrates, this._l2AParameters.prevW) + this._dotmultiplication(tmpBitrates, diff)) / lastThroughput));
 
         let temp: number[] = [];
         for (let i = 0; i < this._bitrates.length; i++) {
-          temp[i] = Math.abs(this._bitrates[i] - this._dotmultiplication(this._l2AParameters.w, this._bitrates));
+          temp[i] = Math.abs(tmpBitrates[i] - this._dotmultiplication(this._l2AParameters.w, tmpBitrates));
         }
 
         quality = temp.find(x => x === Math.min(...temp)) as number;
 
         if (quality > this._lastQuality) {
-          const targetsBitrate = this._bitrates.filter(x => x <= lastThroughput);
+          const targetsBitrate = tmpBitrates.filter(x => x <= lastThroughput);
           if (targetsBitrate.length > 0) {
             quality = targetsBitrate[targetsBitrate.length - 1];
           }
@@ -248,7 +279,12 @@ class L2ARule {
         if (quality >= lastThroughput) {
           this._l2AParameters.Q = react * Math.max(vl, this._l2AParameters.Q);
         }
-        return quality;
+        const qualityIndex = temp.findIndex(t => t === quality);
+        if (qualityIndex !== -1) {
+          this.lastQualityWithThroughput = this._bitrates[qualityIndex];
+          return this._bitrates[qualityIndex];
+        }
+        return "NOT FOUND BITRATE";
       }
       default:
         break;
