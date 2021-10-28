@@ -9,13 +9,12 @@ Those plugins are often under the form of functions passed as an argument to the
 
 ## segmentLoader
 
-The segmentLoader is a function that can be included in the `transportOptions`
+The `segmentLoader` is a function that can be included in the `transportOptions`
 of the `loadVideo` API call.
 
-A segmentLoader allows to define a custom audio/video segment loader (it might
+A `segmentLoader` allows to define a custom audio/video segment loader (it might
 on the future work for other types of segments, so always check the type if you
 only want those two).
-
 The segment loader is the part performing the segment request. One usecase where
 you might want to set your own segment loader is to integrate Peer-to-Peer
 segment downloading through the player.
@@ -23,22 +22,18 @@ segment downloading through the player.
 Before the complete documentation, let's write an example which will just use
 an XMLHttpRequest (it has no use, as our implementation does the same thing and
 more):
-
 ```js
 /**
- * @param {string|undefined} url - the url the Manifest request should normally
- * be on.
- * Can be undefined in very specific conditions, like in cases when the
- * `loadVideo` call had no defined URL (e.g. "local" manifest, playing a locally
- * crafted "Metaplaylist" content).
+ * @param {Object} infos - infos about the segment to download
  * @param {Object} callbacks - Object containing several callbacks to indicate
- * that the manifest has been loaded, the loading operation has failed or to
+ * that the segment has been loaded, the loading operation has failed or to
  * fallback to our default implementation. More information on this object below
  * this code example.
  * @returns {Function|undefined} - If a function is defined in the return value,
  * it will be called if and when the request is canceled.
  */
 const customSegmentLoader = (infos, callbacks) => {
+
   // we will only use this custom loader for videos segments.
   if (infos.adaptation.type !== "video") {
     callbacks.fallback();
@@ -63,14 +58,10 @@ const customSegmentLoader = (infos, callbacks) => {
 
   xhr.onprogress = function onXHRProgress(event) {
     const currentTime = performance.now();
-    callbacks.progress({
-      type: "progress",
-      value: {
-        duration: currentTime - sendingTime,
-        size: event.loaded,
-        totalSize: event.total,
-      },
-    });
+    callbacks.progress({ type: "progress",
+                         value: { duration: currentTime - sendingTime,
+                                  size: event.loaded,
+                                  totalSize: event.total } });
   };
 
   xhr.onerror = function onXHRError() {
@@ -101,135 +92,132 @@ const customSegmentLoader = (infos, callbacks) => {
 
 As you can see, this function takes two arguments:
 
-1. **infos**: An Object giving information about the wanted segments.
-   This object contains the following properties:
+  1. **infos**: An Object giving information about the wanted segments.
+     This object contains the following properties:
 
-   - _url_ (`string`): The URL the segment request should normally be
-     performed at.
+       - *url* (`string`): The URL the segment request should normally be
+         performed at.
 
-   - _manifest_ (`Object`) - the Manifest object containing the segment.
-     More information on its structure can be found on the documentation
-     linked below [1].
+       - *manifest* (`Object`) - the Manifest object containing the segment.
+         More information on its structure can be found on the documentation
+         linked below [1].
 
-   - _period_ (`Object`) - the Period object containing the segment.
-     More information on its structure can be found on the documentation
-     linked below [2].
+       - *period* (`Object`) - the Period object containing the segment.
+         More information on its structure can be found on the documentation
+         linked below [2].
 
-   - _adaptation_ (`Object`) - the Adaptation object containing the segment.
-     More information on its structure can be found on the documentation
-     linked below [3].
+       - *adaptation* (`Object`) - the Adaptation object containing the segment.
+         More information on its structure can be found on the documentation
+         linked below [3].
 
-   - _representation_ (`Object`) - the Representation object containing the
-     segment.
-     More information on its structure can be found on the documentation
-     linked below [4].
+       - *representation* (`Object`) - the Representation object containing the
+         segment.
+         More information on its structure can be found on the documentation
+         linked below [4].
 
-   - _segment_ (`Object`) - the segment object related to this segment.
-     More information on its structure can be found on the documentation
-     linked below [5].
+       - *segment* (`Object`) - the segment object related to this segment.
+         More information on its structure can be found on the documentation
+         linked below [5].
 
-[1] [Manifest structure](./Manifest_Object.md#manifest)
+     [1] [Manifest structure](./Manifest_Object.md#manifest)
 
-[2] [Period structure](./Manifest_Object.md#period)
+     [2] [Period structure](./Manifest_Object.md#period)
 
-[3] [Adaptation structure](./Manifest_Object.md#adaptation)
+     [3] [Adaptation structure](./Manifest_Object.md#adaptation)
 
-[4] [Representation structure](./Manifest_Object.md#representation)
+     [4] [Representation structure](./Manifest_Object.md#representation)
 
-[5] [Segment structure](./Manifest_Object.md#segment)
+     [5] [Segment structure](./Manifest_Object.md#segment)
 
-2. **callbacks**: An object containing multiple callbacks to allow this
-   `segmentLoader` to communicate various events to the RxPlayer.
+  2. **callbacks**: An object containing multiple callbacks to allow this
+     `segmentLoader` to communicate various events to the RxPlayer.
 
-   This Object contains the following functions:
+     This Object contains the following functions:
 
-   - **resolve**: To call after the segment is loaded, to communicate it to
-     the RxPlayer.
+       - **resolve**: To call after the segment is loaded, to communicate it to
+         the RxPlayer.
 
-     When called, it should be given an object with the following
-     properties:
+         When called, it should be given an object with the following
+         properties:
+           - *data* (`ArrayBuffer`|`Uint8Array`) - the segment data.
 
-     - _data_ (`ArrayBuffer`|`Uint8Array`) - the segment data.
+           - *duration* (`Number|undefined`) - the duration the request took, in
+             milliseconds.
 
-     - _duration_ (`Number|undefined`) - the duration the request took, in
-       milliseconds.
+             This value may be used to estimate the ideal user bandwidth.
 
-       This value may be used to estimate the ideal user bandwidth.
 
-     - _size_ (`Number|undefined`) size, in bytes, of the total downloaded
-       response.
+           - *size* (`Number|undefined`) size, in bytes, of the total downloaded
+             response.
 
-   - **progress** - Callback to call when progress information is available
-     on the current request. This callback allows to improve our adaptive
-     streaming logic by better predicting the bandwidth before the request
-     is finished and whether a request is stalling.
+       - **progress** - Callback to call when progress information is available
+         on the current request. This callback allows to improve our adaptive
+         streaming logic by better predicting the bandwidth before the request
+         is finished and whether a request is stalling.
 
-     When called, it should be given an object with the following
-     properties:
+         When called, it should be given an object with the following
+         properties:
 
-     - _duration_ (`Number`) - The duration since the beginning of the
-       request, in milliseconds.
+           - *duration* (`Number`) - The duration since the beginning of the
+             request, in milliseconds.
 
-     - _size_ (`Number`) - the current size loaded, in bytes.
+           - *size* (`Number`) - the current size loaded, in bytes.
 
-     - _totalSize_ (`Number|undefined`) - the whole size of the wanted
-       data, in bytes. Can be let to undefined when not known.
+           - *totalSize* (`Number|undefined`) - the whole size of the wanted
+             data, in bytes. Can be let to undefined when not known.
 
-   - **reject**: Callback to call when an error is encountered which made
-     loading the segment impossible.
+       - **reject**: Callback to call when an error is encountered which made
+         loading the segment impossible.
 
-     It is recommended (but not enforced) to give it an Object or error
-     instance with the following properties:
+         It is recommended (but not enforced) to give it an Object or error
+         instance with the following properties:
+            - *canRetry* (`boolean|undefined`): If set to `true`, the RxPlayer
+              may retry the request (depending on the configuration set by the
+              application).
 
-     - _canRetry_ (`boolean|undefined`): If set to `true`, the RxPlayer
-       may retry the request (depending on the configuration set by the
-       application).
+              If set to `false`, the RxPlayer will never try to retry this
+              request and will probably just stop the current content.
 
-       If set to `false`, the RxPlayer will never try to retry this
-       request and will probably just stop the current content.
+              If not set or set to `undefined`, the RxPlayer might retry or fail
+              depending on other factors.
 
-       If not set or set to `undefined`, the RxPlayer might retry or fail
-       depending on other factors.
+            - *xhr* (`XMLHttpRequest|undefined`): If an `XMLHttpRequest` was
+              used to perform this request, this should be the corresponding
+              instance.
 
-     - _xhr_ (`XMLHttpRequest|undefined`): If an `XMLHttpRequest` was
-       used to perform this request, this should be the corresponding
-       instance.
+              This can be used for example by the RxPlayer to know whether
+              retrying should be done when the `canRetry` property is not set.
 
-       This can be used for example by the RxPlayer to know whether
-       retrying should be done when the `canRetry` property is not set.
+            - *isOfflineError* (`boolean|undefined`): If set to `true`, this
+              indicates that this error is due to the user being offline
+              (disconnected from the needed network).
 
-     - _isOfflineError_ (`boolean|undefined`): If set to `true`, this
-       indicates that this error is due to the user being offline
-       (disconnected from the needed network).
+              If set to `false`, this indicates that it wasn't.
 
-       If set to `false`, this indicates that it wasn't.
+              If not known or not applicable, you can just set it to undefined
+              or not define it at all.
 
-       If not known or not applicable, you can just set it to undefined
-       or not define it at all.
+              The RxPlayer might retry a segment request due to the user being
+              offline a different amount of time than when the error is due to
+              another issue, depending on its configuration.
 
-       The RxPlayer might retry a segment request due to the user being
-       offline a different amount of time than when the error is due to
-       another issue, depending on its configuration.
-
-   - **fallback**: Callback to call if you want to call our default
-     implementation instead for loading this segment. No argument is needed.
+       - **fallback**: Callback to call if you want to call our default
+         implementation instead for loading this segment. No argument is needed.
 
 The `segmentLoader` can also return a function, which will be called if/when
 the request is aborted. You can define one to clean-up or dispose all resources.
 
 ## manifestLoader
 
-The manifestLoader is a function that can be included in the
+The `manifestLoader` is a function that can be included in the
 `transportOptions` of the `loadVideo` API call.
 
 A manifestLoader allows to define a custom [Manifest](../../Getting_Started/Glossary.md#manifest)
 loader.
 
-The Manifest loader is the part performing the Manifest request.
-
-Here is a Manifest loader which uses an XHR (it has no use, as our
-implementation does the same thing and more):
-
+Before the complete documentation, let's write an example which will just use
+an XMLHttpRequest (it has no use, as our implementation does the same thing and
+more):
 ```js
 /**
  * @param {string|undefined} url - the url the Manifest request should normally
@@ -237,26 +225,10 @@ implementation does the same thing and more):
  * Can be undefined in very specific conditions, like in cases when the
  * `loadVideo` call had no defined URL (e.g. "local" manifest, playing a locally
  * crafted "Metaplaylist" content).
- * @param {Object} callbacks
- * @param {Function} callbacks.resolve - Callback to call when the request is
- * finished with success. It should be called with an object with at least 3
- * properties:
- *   - data {*} - the Manifest data
- *   - duration {Number|undefined} - the duration of the request, in
- *     milliseconds.
- *   - size {Number|undefined} - size, in bytes, of the total downloaded
- *     response.
- *   - url {string|undefined} - url of the Manifest (post redirection if one).
- *   - sendingTime {number|undefined} - Time at which the manifest request was
- *     done as a unix timestamp in milliseconds.
- *   - receivingTime {number|undefined} - Time at which the manifest request was
- *     finished as a unix timestamp in milliseconds.
- * @param {Function} callbacks.reject - Callback to call when an error is
- * encountered. If you relied on an XHR, it is recommended to include it as an
- * object property named "xhr" in the argument.
- * @param {Function} callbacks.fallback - Callback to call if you want to call
- * our default implementation instead for this segment. No argument is needed.
-
+ * @param {Object} callbacks - Object containing several callbacks to indicate
+ * that the manifest has been loaded, the loading operation has failed or to
+ * fallback to our default implementation. More information on this object below
+ * this code example.
  * @returns {Function|undefined} - If a function is defined in the return value,
  * it will be called if and when the request is canceled.
  */
@@ -317,6 +289,86 @@ const customManifestLoader = (url, callbacks) => {
   };
 };
 ```
+
+As you can see, this function takes two arguments:
+
+  1. **url**: The URL the Manifest request should normally be performed at.
+
+     This argument can be `undefined` in very rare and specific conditions where
+     the Manifest URL doesn't exist or has not been communicated by the
+     application.
+
+  2. **callbacks**: An object containing multiple callbacks to allow this
+     `manifestLoader` to communicate the loaded Manifest or an encountered error
+     to the RxPlayer.
+
+     This Object contains the following functions:
+
+       - **resolve**: To call after the Manifest is loaded, to communicate it to
+         the RxPlayer.
+
+         When called, it should be given an object with the following
+         properties:
+           - *data* - the Manifest data.
+             Many formats are accepted depending on what makes sense in the
+             current transport: string, Document, ArrayBuffer, Uint8Array,
+             object.
+
+           - *duration* (`Number|undefined`) - the duration of the request, in
+             milliseconds.
+
+           - *size* (`Number|undefined`) size, in bytes, of the total downloaded
+             response.
+
+           - *url* (`string|undefined`) - url of the Manifest (after any
+             potential redirection if one).
+
+           - *sendingTime* (`number|undefined`) - Time at which the manifest
+             request was done as a unix timestamp in milliseconds.
+
+           - *receivingTime* (`number|undefined`) - Time at which the manifest
+             request was finished as a unix timestamp in milliseconds.
+
+       - **reject**: Callback to call when an error is encountered which made
+         loading the Manifest impossible.
+
+         It is recommended (but not enforced) to give it an Object or error
+         instance with the following properties:
+            - *canRetry* (`boolean|undefined`): If set to `true`, the RxPlayer
+              may retry the request (depending on the configuration set by the
+              application).
+
+              If set to `false`, the RxPlayer will never try to retry this
+              request and will probably just stop the current content.
+
+              If not set or set to `undefined`, the RxPlayer might retry or fail
+              depending on other factors.
+
+            - *xhr* (`XMLHttpRequest|undefined`): If an `XMLHttpRequest` was
+              used to perform this request, this should be the corresponding
+              instance.
+
+              This can be used for example by the RxPlayer to know whether
+              retrying should be done when the `canRetry` property is not set.
+
+            - *isOfflineError* (`boolean|undefined`): If set to `true`, this
+              indicates that this error is due to the user being offline
+              (disconnected from the needed network).
+
+              If set to `false`, this indicates that it wasn't.
+
+              If not known or not applicable, you can just set it to undefined
+              or not define it at all.
+
+              The RxPlayer might retry a Manifest request due to the user being
+              offline a different amount of time than when the error is due to
+              another issue, depending on its configuration.
+
+       - **fallback**: Callback to call if you want to call our default
+         implementation instead for this Manifest. No argument is needed.
+
+The `manifestLoader` can also return a function, which will be called if/when
+the request is aborted. You can define one to clean-up or dispose all resources.
 
 ## representationFilter
 

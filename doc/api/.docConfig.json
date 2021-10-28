@@ -61,6 +61,10 @@
       "displayName": "RxPlayer Static Properties"
     },
     {
+      "path": "./Typescript_Types.md",
+      "displayName": "Typescript Types"
+    },
+    {
       "path": "./Tools",
       "displayName": "Tools"
     },

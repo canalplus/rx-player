@@ -4,10 +4,10 @@
 
 Returns the URL of the downloaded [Manifest](../../Getting_Started/Glossary.md#manifest).
 
-:::note
-In _DirectFile_ mode (see [loadVideo options](../Loading_a_Content.md#transport)), returns the URL of the content
-being played.
-:::
+<div class="note">
+In <i>DirectFile</i> mode (see <a href="../Loading_a_Content.md#transport">
+loadVideo options</a>), returns the URL of the content being played.
+</div>
 
 Returns `undefined` if no content is loaded yet.
 

@@ -8,20 +8,22 @@ The argument to this method is the wanted track's `id` property. This `id` can
 for example be obtained on the corresponding track object returned by the
 `getAvailableAudioTracks` method.
 
-:::note
+<div class="note">
 Note for multi-Period contents:
-
+<br>
 This method will only have an effect on the
-[Period](../../Getting_Started/Glossary.md#period) that is currently playing.
-If you want to update the track for other Periods as well, you might want to
-either:
-
-- update the current audio track once a `"periodChange"` event has been
-  received.
-- update first the preferred audio tracks through the
-  [setPreferredAudioTracks](./setPreferredAudioTracks.md) method.
-
-:::
+<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
+playing.  If you want to update the track for other Periods as well, you might
+want to either:
+<br>
+<ul>
+  <li>update the current video track once a `"periodChange"` event has been
+  received.</li>
+  <li>update first the preferred video tracks through the
+  <a href="./setPreferredVideoTracks.md">setPreferredVideoTracks</a> method.
+  </li>
+</ul>
+</div>
 
 <div class="warning">
 If used on Safari, in _DirectFile_ mode, the track change may change

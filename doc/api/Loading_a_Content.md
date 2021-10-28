@@ -581,17 +581,19 @@ _defaults_: `false`
 
 If set to `true`, the video will play immediately after being loaded.
 
-:::note
+<div class="note">
 On some browsers, auto-playing a media without user interaction is blocked
 due to the browser's policy.
-
+<br>
+<br>
 In that case, the player won't be able to play (it will stay in a `LOADED`
-state) and you will receive a [warning event](./Player_Errors.md) containing a
-`MEDIA_ERROR` with the code: `MEDIA_ERR_BLOCKED_AUTOPLAY`.
-
+state) and you will receive a <a href="./Player_Errors.md">warning event</a>
+containing a `MEDIA_ERROR` with the code: `MEDIA_ERR_BLOCKED_AUTOPLAY`.
+<br>
+<br>
 A solution in that case would be to propose to your users an UI element to
 trigger the play with an interaction.
-:::
+</div>
 
 ### startAt
 
@@ -640,10 +642,10 @@ can be either:
   (`duration` for VoD content, last currently possible position for dynamic
   contents).
 
-:::note
+<div>
 Only one of those properties will be considered, in the same order of
 priority they are written here.
-:::
+</div>
 
 If the value set is inferior to the minimum possible position, the minimum
 possible position will be used instead. If it is superior to the maximum
@@ -932,10 +934,10 @@ considered stable:
     multiple worker, the `performance.now()` call should be done on the same
     worker than the one in which loadVideo is called.
 
-    :::note
-    _The `performance.now()` API is used here because it is the main API to
-    obtain a monotically increasing clock on the client-side._
-    :::
+    <div class="note">
+    The `performance.now()` API is used here because it is the main API to
+    obtain a monotically increasing clock on the client-side.
+    </div</div>
 
   Example:
 

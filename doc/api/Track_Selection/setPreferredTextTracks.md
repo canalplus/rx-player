@@ -95,7 +95,7 @@ player.setPreferredTextTracks(
 ```
 
 <div class ="warning">
-This option will have no effect in _DirectFile_ mode
+This option will have no effect in <i>DirectFile</i> mode
 (see <a href="../Loading_a_Content.md#transport">loadVideo options</a>) when
 either:
 

@@ -29,12 +29,13 @@ return an object with the following properties:
 `undefined` if no text content has been loaded yet or if its information is
 unknown.
 
-:::note
+<div class="note">
 Note for multi-Period contents:
-
-This method will only return the chosen text track for the
-[Period](../../Getting_Started/Glossary.md#period) that is currently playing.
-:::
+<br>
+This method will only return the chosen video track for the
+<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
+playing.
+</div>
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a

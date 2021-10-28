@@ -42,14 +42,13 @@ Each of the objects in the returned array have the following properties:
   - `codec` (`string|undefined`): The audio codec the Representation is
     in, as announced in the corresponding Manifest.
 
-:::note
-
+<div class="note">
 Note for multi-Period contents:
-
+<br>
 This method will only return the available tracks of the
-[Period](../../Getting_Started/Glossary.md#period) that is currently playing.
-
-:::
+<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
+playing.
+</div>
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
