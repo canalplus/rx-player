@@ -2,6 +2,8 @@
 
 Welcome to the RxPlayer API documentation.
 
+The RxPlayer is a media player library allowing to play adaptive streaming
+contents such as DASH, Smooth Streaming and others.
 In the following pages, you will find the description of the full RxPlayer API,
 allowing you to:
 

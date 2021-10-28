@@ -1,4 +1,4 @@
-# Minimal player with Feature selection
+# Importing a minimal player with feature selection
 
 ## Overview
 

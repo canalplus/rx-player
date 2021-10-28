@@ -1,6 +1,10 @@
 {
   "pages": [
     {
+      "path": "./Welcome.md",
+      "displayName": "Welcome"
+    },
+    {
       "path": "./Tutorials",
       "displayName": "Tutorials"
     },
