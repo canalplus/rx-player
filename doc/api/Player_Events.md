@@ -315,11 +315,6 @@ This chapter describes events linked to audio and/or video bitrates and quality.
 
 _payload type_: `Array.<Number>`
 
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
 Triggered when the currently available audio bitrates change (e.g.: at the
 beginning of the content, when switching the current audio track, when period
 changes...).
@@ -329,14 +324,14 @@ seconds.
 
 This event only concerns the currently-playing Period.
 
-### availableVideoBitratesChange
-
-_payload type_: `Array.<Number>`
-
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
+
+### availableVideoBitratesChange
+
+_payload type_: `Array.<Number>`
 
 Triggered when the currently available video bitrates change (e.g.: at the
 beginning of the content, when switching the current video track, when period
@@ -347,14 +342,14 @@ seconds.
 
 This event only concerns the currently-playing Period.
 
-### audioBitrateChange
-
-_payload type_: `Number`
-
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
+
+### audioBitrateChange
+
+_payload type_: `Number`
 
 The payload is the new audio bitrate, in bits per seconds. It is emitted every
 time it changes (based on the last received segment).
@@ -363,14 +358,14 @@ time it changes (based on the last received segment).
 
 This event only concerns the currently-playing Period.
 
-### videoBitrateChange
-
-_payload type_: `Number`
-
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
+
+### videoBitrateChange
+
+_payload type_: `Number`
 
 The payload is the new video bitrate, in bits per seconds. It is emitted every
 time it changes (based on the last received segment).
@@ -379,14 +374,14 @@ time it changes (based on the last received segment).
 
 This event only concerns the currently-playing Period.
 
-### bitrateEstimationChange
-
-_payload type_: `Object`
-
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
+
+### bitrateEstimationChange
+
+_payload type_: `Object`
 
 Information about the last bitrate estimation performed, by type of buffer
 (`audio`, `video` etc.).
@@ -404,6 +399,11 @@ The payload is an object with the following properties:
   This bitrate is smoothed by doing a (complex) mean on an extended period of
   time, so it often does not link directly to the current calculated bitrate.
 
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
 ## Playback information
 
 This chapter describes events describing miscellaneous information about the
@@ -413,25 +413,20 @@ current content.
 
 _payload type_: `Object`
 
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
 Triggered when the current [Period](../Getting_Started/Glossary.md#period) being seen changes.
 
 The payload is the corresponding Period. See [the Manifest
 documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_period_object)
 for more information.
 
-### decipherabilityUpdate
-
-_payload type_: `Array.<Object>`
-
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
+
+### decipherabilityUpdate
+
+_payload type_: `Array.<Object>`
 
 Triggered when a or multiple Representation's decipherability status were
 updated. Which means either:
@@ -472,18 +467,14 @@ Each of those objects have the following properties:
 You can then know if any of those Representations are becoming decipherable or
 not through their `decipherable` property.
 
-## inbandEvents
-
-_payload type_: `Object`
-
----
-
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
 
----
+## inbandEvents
+
+_payload type_: `Object`
 
 Event triggered when the player encounters inband events in the stream. These
 events are included in the loaded and parsed chunks, and are often used to carry
@@ -512,14 +503,14 @@ The supported inband event types are :
 
   These attributes are documented in the ISOBMFF specification.
 
-### streamEvent
-
-_payload type_: `Object`
-
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
+
+### streamEvent
+
+_payload type_: `Object`
 
 Event triggered when the player enters the time boundaries of a "stream event".
 
@@ -561,14 +552,12 @@ current position goes after the end time or before the start time of that event.
 The `onExit` callback will only be called a single time at most and will only
 concern this iteration of the event (and not possible subsequent ones).
 
-### streamEventSkip
-
-_payload type_: `Object`
-
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
+
+### streamEventSkip _payload type_: `Object`
 
 Event triggered when the player skipped the time boundaries of a "stream event"
 (you can refer to the [`streamEvent`](#streamevent) event for a
@@ -591,39 +580,37 @@ Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
 was not entered, and will thus not be exited.
 
-### trickModeStart
-
-_payload type_: `undefined`
-
----
-
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
 
----
+### trickModeStart
+
+_payload type_: `undefined`
+
 
 Event triggered when the trick mode starts. It means that it will be triggered
 when the trick mode is enabled by the user.
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
 
 ### trickModeStop
 
 _payload type_: `undefined`
 
----
+Event triggered when the trick mode stops. It means that it will be triggered
+when the trick mode is disabled by the user. Also, it can be emitted when
+changing track and trick mode is enabled, but no trick mode track exists on the
+wanted track.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
-
----
-
-Event triggered when the trick mode stops. It means that it will be triggered
-when the trick mode is disabled by the user. Also, it can be emitted when
-changing track and trick mode is enabled, but no trick mode track exists on the
-wanted track.
 
 ## Deprecated
 
@@ -640,11 +627,6 @@ APIs</a>).
 
 _payload type_: `Object`
 
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
 Triggered each time the current image playlist changes (has new images).
 
 Has the following property in its payload:
@@ -652,6 +634,11 @@ _data_ (`Array.<Object>`): Every image data.
 
 Each image has a structure as defined in the [Images structure
 page](./Miscellaneous/images.md).
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
 
 ### fullscreenChange
 
@@ -678,13 +665,13 @@ APIs</a>).
 
 _payload type_: `Array.<TextTrackElement>`
 
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
 Triggered each times a new `<track>` element is removed or added to the video
 element.
 
 The payload is the array of `TextTrack` elements. The RxPlayer will only set
 a single `<track>` when a text track is set.
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
