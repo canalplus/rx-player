@@ -515,7 +515,7 @@ useful depending on your needs):
 
 - **onKeyStatusesChange** (`Function|undefined`): Callback triggered each
   time one of the key's
-  [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)[status]
+  [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
   is updated except for the following statuses and conditions (in which cases
   the RxPlayer throws instead):
 
