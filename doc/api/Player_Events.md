@@ -557,7 +557,9 @@ This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
 
-### streamEventSkip _payload type_: `Object`
+### streamEventSkip
+
+_payload type_: `Object`
 
 Event triggered when the player skipped the time boundaries of a "stream event"
 (you can refer to the [`streamEvent`](#streamevent) event for a
@@ -579,33 +581,6 @@ tutorial](../Getting_Started/Tutorials/EventStream_Handling.md).
 Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
 was not entered, and will thus not be exited.
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
-### trickModeStart
-
-_payload type_: `undefined`
-
-
-Event triggered when the trick mode starts. It means that it will be triggered
-when the trick mode is enabled by the user.
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
-### trickModeStop
-
-_payload type_: `undefined`
-
-Event triggered when the trick mode stops. It means that it will be triggered
-when the trick mode is disabled by the user. Also, it can be emitted when
-changing track and trick mode is enabled, but no trick mode track exists on the
-wanted track.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -665,7 +640,7 @@ APIs</a>).
 
 _payload type_: `Array.<TextTrackElement>`
 
-Triggered each times a new `<track>` element is removed or added to the video
+Triggered each times a new `<track>` element is removed or added to the media
 element.
 
 The payload is the array of `TextTrack` elements. The RxPlayer will only set
