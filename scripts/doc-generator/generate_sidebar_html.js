@@ -73,9 +73,9 @@ function constructSidebarHeaderHtml(logoInfo) {
       hasLink = true;
       sidebarHeaderHtml += `<a href="${encodeHtmlAttributeValue(logoInfo.link)}">`;
     }
-    if (typeof logoInfo.srcLink === "string") {
+    if (typeof logoInfo.url === "string") {
       sidebarHeaderHtml += `<img class="sidebar-header-logo"` +
-        ` src="${encodeHtmlAttributeValue(logoInfo.srcLink)}" />`;
+        ` src="${encodeHtmlAttributeValue(logoInfo.url)}" />`;
     }
     if (hasLink) {
       sidebarHeaderHtml += "</a>";

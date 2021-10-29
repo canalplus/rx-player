@@ -115,7 +115,10 @@ async function updateMediaTag(mediaTag, inputDir, outputDir) {
       process.exit(1);
     }
   }
-  await promisify(fs.copyFile)(inputFile, outputFile);
+  const doesOutFileExist = await promisify(fs.exists)(outputFile);
+  if (!doesOutFileExist) {
+    await promisify(fs.copyFile)(inputFile, outputFile);
+  }
 }
 
 function constructNextPreviousPage(prevPageInfo, nextPageInfo) {

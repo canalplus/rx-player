@@ -5,14 +5,17 @@ const { encodeHtmlAttributeValue } = require("./utils");
  * Generate HTML page for the given documentation.
  * @param {Object} args
  * @param {string} args.contentHtml - HTML content for the content of the
- * @param {Array.<string>} args.cssUris - URIs to the CSS files that should
+ * @param {Array.<string>} args.cssUrls - URLs to the CSS files that should
  * be imported.
+ * @param {string|null|undefined} [args.faviconUrl] - Eventual URL to the
+ * favicon.
+ * `null` or `undefined` if unset.
  * @param {string} options.navBarHtml - HTML strinng for the Navbar (the
  * header).
  * @param {string} options.rootUrl - Relative URL for the root of the site.
  * This value is included in a custom script so it can be accessed from other
  * JavaScript files.
- * @param {Array.<string>} args.scriptUris - URIs to the JS files that should
+ * @param {Array.<string>} args.scriptUrls - URLs to the JS files that should
  * be imported.
  * @param {string} options.sidebarHtml - HTML string for the Sidebar.
  * @param {string} args.title - title of the page.
@@ -23,23 +26,28 @@ const { encodeHtmlAttributeValue } = require("./utils");
 function generatePageHtml(
   {
     contentHtml,
-    cssUris,
+    cssUrls,
+    faviconUrl,
     navBarHtml,
     rootUrl,
-    scriptUris,
+    scriptUrls,
     sidebarHtml,
     title,
     tocHtml,
   }
 ) {
-  const styles = constructStylesHtml(cssUris);
-  const scripts = constructScriptsHtml(scriptUris);
+  const styles = constructStylesHtml(cssUrls);
+  const scripts = constructScriptsHtml(scriptUrls);
+  const faviconHtml = typeof faviconUrl === "string" ?
+    `<link rel="icon" type="image/png" href="${encodeHtmlAttributeValue(faviconUrl)}">` :
+    "";
 
   return "<head>" +
            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
            "<meta charset=\"utf-8\">" +
            styles +
            "<title>" + encode(title) + "</title>" +
+           faviconHtml +
          "</head>" +
          "<body class=\"no-js\">" +
          `<script type="text/javascript">` +
@@ -67,22 +75,22 @@ function generatePageHtml(
 
 /**
  * Returns links to CSS file as an HTML string to be included in the page.
- * @param {Array.<string>} cssUris - URL to CSS files
+ * @param {Array.<string>} cssUrls - URL to CSS files
  * @returns {string}
  */
-function constructStylesHtml(cssUris) {
-  return cssUris.map(cssUri =>
-    `<link rel="stylesheet" href="${encodeHtmlAttributeValue(cssUri)}"/>`)
+function constructStylesHtml(cssUrls) {
+  return cssUrls.map(cssUrl =>
+    `<link rel="stylesheet" href="${encodeHtmlAttributeValue(cssUrl)}"/>`)
     .join("");
 }
 
 /**
- * @param {Array.<string>} scriptUris - URL to scripts files
+ * @param {Array.<string>} scriptUrls - URL to scripts files
  * @returns {string}
  */
-function constructScriptsHtml(scriptUris) {
-  return scriptUris.map(scriptUri =>
-    `<script type="text/javascript" src="${encodeHtmlAttributeValue(scriptUri)}" ` +
+function constructScriptsHtml(scriptUrls) {
+  return scriptUrls.map(scriptUrl =>
+    `<script type="text/javascript" src="${encodeHtmlAttributeValue(scriptUrl)}" ` +
     `charset="utf-8"></script>`
   ).join("");
 }

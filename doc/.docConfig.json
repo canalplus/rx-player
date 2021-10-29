@@ -1,6 +1,6 @@
 {
   "logo": {
-    "srcLink": "https://raw.githubusercontent.com/canalplus/rx-player/master/doc/assets/logo.png",
+    "srcPath": "./static/img/logo.png",
     "link": "https://github.com/canalplus/rx-player"
   },
   "favicon": {

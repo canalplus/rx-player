@@ -19,8 +19,10 @@ const {
 module.exports = async function createDocumentationPage({
   // Absolute path to the root dir where all outputed files will be
   baseOutDir,
-  // Relative CSS URIs on this page
-  cssUris,
+  // Relative CSS URLs on this page
+  cssUrls,
+  // Eventual URL to the favicon
+  faviconUrl,
   // Absolute path to the file that should be converted
   inputFile,
   // Function translating links in Markdown files to an URL form to the right file
@@ -35,8 +37,8 @@ module.exports = async function createDocumentationPage({
   pageTitle,
   // Information relative to the previous documentation page, `null` if none.
   prevPageInfo,
-  // Relative JS URIs on this page
-  scriptUris,
+  // Relative JS URLs on this page
+  scriptUrls,
   // Array corresponding to the complete search index.
   // It will be completed with data present in this file.
   searchIndex,
@@ -75,10 +77,11 @@ module.exports = async function createDocumentationPage({
     "";
   const html = generatePageHtml({
     contentHtml,
-    cssUris,
+    cssUrls,
+    faviconUrl,
     navBarHtml,
     rootUrl,
-    scriptUris,
+    scriptUrls,
     sidebarHtml,
     title: pageTitle,
     tocHtml,

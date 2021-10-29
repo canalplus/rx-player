@@ -11,11 +11,12 @@ const {
  * @param {Object} config
  * @param {number} currentLinkIdx
  * @param {string} currentPath
+ * @param {object} logoInfo
  * @returns {string}
  */
-function constructHeaderBar(config, currentLinkIdx, currentPath) {
-  const { logo, versionInfo, links, linksRightIndex } = config;
-  const logoHtml = constructLogoHtmlInHeaderBar(logo);
+function constructHeaderBar(config, currentLinkIdx, currentPath, logoInfo) {
+  const { versionInfo, links, linksRightIndex } = config;
+  const logoHtml = constructLogoHtmlInHeaderBar(logoInfo);
 
   const linksHtml = links.map((l, i) => {
     const customClass =
@@ -138,9 +139,9 @@ function constructLogoHtmlInHeaderBar(logoInfo) {
     hasLink = true;
     logoHtml += `<a href="${encodeHtmlAttributeValue(logoInfo.link)}">`;
   }
-  if (typeof logoInfo.srcLink === "string") {
+  if (typeof logoInfo.url === "string") {
     logoHtml += `<img class="navbar-item navbar-item-logo"` +
-      ` src="${encodeHtmlAttributeValue(logoInfo.srcLink)}" />`;
+      ` src="${encodeHtmlAttributeValue(logoInfo.url)}" />`;
   }
   if (hasLink) {
     logoHtml += "</a>";

@@ -3,39 +3,6 @@ const { promisify } = require("util");
 const fs = require("fs");
 const path = require("path");
 
-/**
- *
- * ```
- * {
- *   logo: {
- *     src: "path_or_url_to_img",
- *     link: "url_to_link",
- *   },
- *   linksRightIndex: -1,
- *   links: [{
- *     type: "local-doc",
- *     displayName: "Category 1",
- *     firstPage: "/destination/category_1",
- *     pages: [{
- *       isPageGroup: false,
- *       displayName: "Page 1",
- *       inputFile: "/example/of/path/to/category_1/file.md",
- *       outputFile: "/destination/category_1/file.html",
- *     },
- *     {
- *       isPageGroup: true,
- *       displayName: "Group of pages 1",
- *       pages: [{
- *         isPageGroup: false,
- *         displayName: "Page 1",
- *         inputFile: "/example/of/path/to/category_1/group_1/file.md",
- *         outputFile: "/destination/category_1/group_1/file.html",
- *       }],
- *     }],
- *   }],
- * }
- * ```
- */
 module.exports = async function parseDocConfigs(
   baseInDir,
   baseOutDir,
@@ -46,6 +13,7 @@ module.exports = async function parseDocConfigs(
   const ret = {
     versionInfo: undefined,
     logo: undefined,
+    favicon: undefined,
     links: [],
     linksRightIndex: -1,
   };
@@ -59,6 +27,10 @@ module.exports = async function parseDocConfigs(
 
   if (typeof rootConfig.logo === "object") {
     ret.logo = rootConfig.logo;
+  }
+
+  if (typeof rootConfig.favicon === "object") {
+    ret.favicon = rootConfig.favicon;
   }
 
   const linksLeft = rootConfig.linksLeft ?? [];
@@ -232,10 +204,9 @@ async function parseAndCheckRootConfigFile(rootConfigFileName) {
       );
     }
 
-    // TODO srcLink or srcPath?
-    if (typeof config.logo.srcLink !== "string") {
+    if (typeof config.logo.srcPath !== "string") {
       exitWithInvalidRootConfig(
-        `The "logo" property, if defined, should contain a "srcLink" ` +
+        `The "logo" property, if defined, should contain a "srcPath" ` +
           "property set as a string."
       );
     }
@@ -248,7 +219,6 @@ async function parseAndCheckRootConfigFile(rootConfigFileName) {
   }
 
   if (config.favicon !== undefined) {
-    // TODO srcLink or srcPath?
     if (typeof config.favicon.srcPath !== "string") {
       exitWithInvalidRootConfig(
         `The "favicon" property, if defined, should contain a "srcPath" `+
@@ -270,7 +240,6 @@ async function parseAndCheckRootConfigFile(rootConfigFileName) {
     typeof config.linksLeft !== undefined &&
     !Array.isArray(config.linksLeft)
   ) {
-    // XXX TODO check each link
     exitWithInvalidRootConfig(
       `The "linksLeft" property, if defined, should be set as an Array.`
     );
@@ -280,7 +249,6 @@ async function parseAndCheckRootConfigFile(rootConfigFileName) {
     typeof config.linksRight !== undefined &&
     !Array.isArray(config.linksRight)
   ) {
-    // XXX TODO check each link
     exitWithInvalidRootConfig(
       `The "linksRight" property, if defined, should be set as an Array.`
     );

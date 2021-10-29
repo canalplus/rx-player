@@ -75,6 +75,14 @@ async function createDocumentation(
   // Construct tree listing categories, pages, and relations between them.
   const config = await parseDocConfigs(baseInDir, baseOutDir, options.version);
 
+  if (config.favicon !== undefined && typeof config.favicon.srcPath === "string") {
+    await copyFileToOutputDir(config.favicon.srcPath, baseInDir, baseOutDir);
+  }
+  if (config.logo !== undefined && typeof config.logo.srcPath === "string") {
+    await copyFileToOutputDir(config.logo.srcPath, baseInDir, baseOutDir);
+  }
+
+
   // Construct a dictionary of markdown files to the corresponding output file.
   // This can be useful to redirect links to other converted markdowns.
   const fileDict = config.links.reduce((acc, linkInfo) => {
@@ -175,9 +183,25 @@ async function prepareAndCreateDocumentationPage({
   const outDir = path.dirname(outputFile);
   await createDirIfDoesntExist(outDir);
 
-  const navBarHtml = generateHeaderHtml(config, linkIdx, outputFile);
+  let logoInfo = null;
+  if (config.logo !== undefined) {
+    logoInfo = {};
+    if (config.logo !== undefined && typeof config.logo.link === "string") {
+      logoInfo.link = config.logo.link;
+    }
+    if (config.logo !== undefined && typeof config.logo.srcPath === "string") {
+      const fullPath =  path.join(baseOutDir, config.logo.srcPath);
+      logoInfo.url = toUriCompatibleRelativePath(fullPath, outDir);
+    }
+  }
+  let faviconUrl = null;
+  if (config.favicon !== undefined && typeof config.favicon.srcPath === "string") {
+    const fullPath =  path.join(baseOutDir, config.favicon.srcPath);
+    faviconUrl = toUriCompatibleRelativePath(fullPath, outDir);
+  }
+  const navBarHtml = generateHeaderHtml(config, linkIdx, outputFile, logoInfo);
   const pages = config.links[linkIdx].pages;
-  const sidebarHtml = generateSidebarHtml(pages, pageIdxs, outputFile, config.logo);
+  const sidebarHtml = generateSidebarHtml(pages, pageIdxs, outputFile, logoInfo);
 
   let prevPageConfig = null;
   let nextPageConfig = null;
@@ -198,16 +222,17 @@ async function prepareAndCreateDocumentationPage({
     null :
     getRelativePageInfo(nextPageConfig, outputFile);
 
-  const cssUris = cssOutputPaths
+  const cssUrls = cssOutputPaths
     .map(cssOutput => toUriCompatibleRelativePath(cssOutput, outDir));
-  const scriptUris = scriptOutputPaths
+  const scriptUrls = scriptOutputPaths
     .map(s => toUriCompatibleRelativePath(s, outDir));
 
   // add link translation to options
   const linkTranslator = linkTranslatorFactory(inputFile, outDir, fileDict);
   await createDocumentationPage({
     baseOutDir,
-    cssUris,
+    cssUrls,
+    faviconUrl,
     inputFile,
     linkTranslator,
     navBarHtml,
@@ -215,7 +240,7 @@ async function prepareAndCreateDocumentationPage({
     outputFile,
     pageTitle,
     prevPageInfo,
-    scriptUris,
+    scriptUrls,
     searchIndex,
     sidebarHtml,
   });
@@ -275,6 +300,29 @@ function getRelativePageInfo(
 
   const relativeHref = toUriCompatibleRelativePath(pOutputFile, path.dirname(currentPath));
   return { name: pDisplayName, link: relativeHref };
+}
+
+async function copyFileToOutputDir(
+  filePathFromInputDir,
+  inputDir,
+  outputDir
+) {
+  const inputPath = path.join(inputDir, filePathFromInputDir);
+  const outputPath = path.join(outputDir, filePathFromInputDir);
+  const doesOutDirExists = await promisify(fs.exists)(path.dirname(outputPath));
+  if (!doesOutDirExists) {
+    try {
+      await mkdirParent(path.dirname(outputPath));
+    } catch (err) {
+      const srcMessage = (err ?? {}).message ?? "Unknown error";
+      console.error(`Error: Could not create "${outputPath}" directory: ${srcMessage}`);
+      process.exit(1);
+    }
+  }
+  const doesOutFileExist = await promisify(fs.exists)(outputPath);
+  if (!doesOutFileExist) {
+    await promisify(fs.copyFile)(inputPath, outputPath);
+  }
 }
 
 module.exports = createDocumentation;
