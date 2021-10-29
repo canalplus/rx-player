@@ -265,7 +265,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getVideoLoadedTime()).to.be.below(9);
   });
 
-  it("should continue downloading when seek to wanter buffer ahead", async function() {
+  it("should continue downloading when seek to wanted buffer ahead", async function() {
     player.setWantedBufferAhead(2);
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -317,7 +317,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(4);
   });
 
-  it("should stay in PLAYING state when seeking to a buffered part when playing", async function() {
+  it("may switch to SEEKING state when seeking to a buffered part when playing", async function() {
     this.timeout(5000);
     player.setWantedBufferAhead(30);
     player.loadVideo({
@@ -331,10 +331,31 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getVideoBufferGap()).to.be.above(10);
 
     player.seekTo(10);
+    await waitForState(player, "SEEKING", ["PLAYING"]);
     expect(player.getVideoBufferGap()).to.be.above(10);
     await sleep(1000);
     expect(player.getVideoBufferGap()).to.be.above(10);
     expect(player.getPlayerState()).to.equal("PLAYING");
+  });
+
+  it("may switch to SEEKING state when seeking to a buffered part when paused", async function() {
+    this.timeout(5000);
+    player.setWantedBufferAhead(30);
+    player.loadVideo({
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
+    });
+    await waitForLoadedStateAfterLoadVideo(player);
+    await sleep(1000);
+    expect(player.getPlayerState()).to.equal("LOADED");
+    expect(player.getVideoBufferGap()).to.be.above(10);
+
+    player.seekTo(10);
+    await waitForState(player, "SEEKING", ["PAUSED"]);
+    expect(player.getVideoBufferGap()).to.be.above(10);
+    await sleep(1000);
+    expect(player.getVideoBufferGap()).to.be.above(10);
+    expect(player.getPlayerState()).to.equal("PAUSED");
   });
 
   it("should be in SEEKING state when seeking to a non-buffered part when playing", async function() {

@@ -36,6 +36,7 @@ import EVENTS from "../stream/events_generators";
 import {
   IInitClockTick,
   IStalledEvent,
+  IStallingSituation,
   IUnstalledEvent,
   IWarningEvent,
 } from "./types";
@@ -243,14 +244,27 @@ export default function StallAvoider(
 
       if (rebuffering === null) {
         if (readyState === 1) {
-          // With a readyState set to 1, we should still be not able to play,
-          // anounce that we're stalled due to an unknown "freezing" status.
+          // With a readyState set to 1, we should still not be able to play:
+          // Return that we're stalled
+          let reason : IStallingSituation;
+          if (tick.seeking) {
+            reason = tick.internalSeeking ? "internal-seek" :
+                                            "seeking";
+          } else {
+            reason = "not-ready";
+          }
           return { type: "stalled" as const,
-                   value: "freezing" as const };
+                   value: reason };
         }
         return { type: "unstalled" as const,
                  value: null };
       }
+
+      // We want to separate a stall situation when a seek is due to a seek done
+      // internally by the player to when its due to a regular user seek.
+      const stalledReason = rebuffering.reason === "seeking" &&
+                            tick.internalSeeking ? "internal-seek" as const :
+                                                   rebuffering.reason;
 
       if (tick.seeking) {
         lastSeekingPosition = tick.position;
@@ -264,7 +278,7 @@ export default function StallAvoider(
             now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY)
         {
           return { type: "stalled" as const,
-                   value: rebuffering.reason };
+                   value: stalledReason };
         }
         lastSeekingPosition = null;
       }
@@ -273,7 +287,7 @@ export default function StallAvoider(
 
       if (manifest === null) {
         return { type: "stalled" as const,
-                 value: rebuffering.reason };
+                 value: stalledReason };
       }
 
       /** Position at which data is awaited. */
@@ -337,7 +351,7 @@ export default function StallAvoider(
       }
 
       return { type: "stalled" as const,
-               value: rebuffering.reason };
+               value: stalledReason };
     }));
   return observableMerge(unlock$, stall$);
 }
