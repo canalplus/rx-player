@@ -14358,6 +14358,10 @@ var Adaptation = /*#__PURE__*/function () {
       this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
     }
 
+    if (parsedAdaptation.label !== undefined) {
+      this.label = parsedAdaptation.label;
+    }
+
     if (trickModeTracks !== undefined && trickModeTracks.length > 0) {
       this.trickModeTracks = trickModeTracks.map(function (track) {
         return new Adaptation(track);
@@ -20666,7 +20670,8 @@ function parseAdaptationSets(adaptationsIR, periodInfos) {
     var adaptation = _step2.value;
     var adaptationChildren = adaptation.children;
     var essentialProperties = adaptationChildren.essentialProperties,
-        roles = adaptationChildren.roles;
+        roles = adaptationChildren.roles,
+        label = adaptationChildren.label;
     var isMainAdaptation = Array.isArray(roles) && roles.some(function (role) {
       return role.value === "main";
     }) && roles.some(function (role) {
@@ -20804,6 +20809,10 @@ function parseAdaptationSets(adaptationsIR, periodInfos) {
 
       if (isSignInterpreted === true) {
         parsedAdaptationSet.isSignInterpreted = true;
+      }
+
+      if (label) {
+        parsedAdaptationSet.label = label.value;
       }
 
       var adaptationsOfTheSameType = parsedAdaptations[type];
@@ -22083,6 +22092,41 @@ function parseContentProtection(contentProtectionElement) {
     attributes: attributes
   }, childrenWarnings];
 }
+;// CONCATENATED MODULE: ./src/parsers/manifest/dash/js-parser/node_parsers/Label.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Parse Label element into a Label intermediate
+ * representation.
+ * @param {Element} adaptationSetElement - The Label root element.
+ * @returns {Array.<Object|undefined>}
+ */
+function parseLabel(root) {
+  var value = root.textContent;
+  var warnings = [];
+
+  if (value === null || value.length === 0) {
+    return [undefined, warnings];
+  }
+
+  return [{
+    value: value
+  }, warnings];
+}
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/js-parser/node_parsers/Initialization.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -22709,41 +22753,6 @@ function createRepresentationIntermediateRepresentation(representationElement) {
   return [{
     children: children,
     attributes: attributes
-  }, warnings];
-}
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/js-parser/node_parsers/Label.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Parse an Label element into an Label intermediate
- * representation.
- * @param {Element} adaptationSetElement - The Label root element.
- * @returns {Array.<Object|undefined>}
- */
-function parseLabel(root) {
-  var value = root.textContent;
-  var warnings = [];
-
-  if (value === null || value.length === 0) {
-    return [undefined, warnings];
-  }
-
-  return [{
-    value: value
   }, warnings];
 }
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/js-parser/node_parsers/AdaptationSet.ts
@@ -56714,7 +56723,8 @@ var TrackChoiceManager = /*#__PURE__*/function () {
         audioDescription: adaptation.isAudioDescription === true,
         id: adaptation.id,
         active: currentId === null ? false : currentId === adaptation.id,
-        representations: adaptation.representations.map(parseAudioRepresentation)
+        representations: adaptation.representations.map(parseAudioRepresentation),
+        label: adaptation.label
       };
 
       if (adaptation.isDub === true) {

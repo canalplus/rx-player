@@ -195,7 +195,6 @@ export interface IAdaptationSetChildren {
   label? : ILabelIntermediateRepresentation;
   roles? : IScheme[];
   supplementalProperties? : IScheme[];
-  label?: ILabelIntermediateRepresentation;
 
   segmentBase? : ISegmentBaseIntermediateRepresentation;
   segmentList? : ISegmentListIntermediateRepresentation;
@@ -367,15 +366,6 @@ export interface IBaseUrlIntermediateRepresentation {
     /** availabilityTimeOffset attribute assiociated to that BaseURL node. */
     availabilityTimeOffset?: number;
   };
-}
-
-/** Intermediate representation for a Label node. */
-export interface ILabelIntermediateRepresentation {
-  /**
-   * The label itself.
-   */
-  value: string;
-
 }
 
 export interface ILabelIntermediateRepresentation {
