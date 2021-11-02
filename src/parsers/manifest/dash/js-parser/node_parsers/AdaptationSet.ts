@@ -36,6 +36,7 @@ import {
   parseScheme,
   ValueParser,
 } from "./utils";
+import parseLabel from "./Label";
 
 /**
  * Parse child nodes from an AdaptationSet.
@@ -92,6 +93,16 @@ function parseAdaptationSetChildren(
             children.inbandEventStreams = [];
           }
           children.inbandEventStreams.push(parseScheme(currentElement));
+          break;
+
+        case "Label":
+          const [labelObj, labelWarnings] = parseLabel(currentElement);
+          if (labelObj !== undefined) {
+            children.label = labelObj;
+          }
+          if (labelWarnings.length > 0) {
+            warnings = warnings.concat(labelWarnings);
+          }
           break;
 
         case "Representation":

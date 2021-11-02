@@ -192,6 +192,7 @@ export interface IAdaptationSetChildren {
   contentProtections? : IContentProtectionIntermediateRepresentation[];
   essentialProperties? : IScheme[];
   inbandEventStreams? : IScheme[];
+  label? : ILabelIntermediateRepresentation;
   roles? : IScheme[];
   supplementalProperties? : IScheme[];
 
@@ -365,6 +366,15 @@ export interface IBaseUrlIntermediateRepresentation {
     /** availabilityTimeOffset attribute assiociated to that BaseURL node. */
     availabilityTimeOffset?: number;
   };
+}
+
+/** Intermediate representation for a Label node. */
+export interface ILabelIntermediateRepresentation {
+  /**
+   * The label itself.
+   */
+  value: string;
+
 }
 
 /** Intermediate representation for a Node following a "scheme" format. */

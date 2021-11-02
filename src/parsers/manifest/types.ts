@@ -180,6 +180,10 @@ export interface IParsedAdaptation {
    */
   language?: string;
   /**
+   * Label of the `Adaptation` if it exists.
+   */
+  label?: string;
+  /**
    * TrickMode tracks attached to the adaptation.
    */
   trickModeTracks?: IParsedAdaptation[];

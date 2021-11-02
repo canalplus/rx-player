@@ -643,6 +643,10 @@ function createSmoothStreamingParser(
     };
     checkManifestIDs(manifest);
     return manifest;
+
+
+
+
   }
 
   return parseFromDocument;
