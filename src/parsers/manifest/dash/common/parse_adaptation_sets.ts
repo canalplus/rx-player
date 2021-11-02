@@ -295,7 +295,7 @@ export default function parseAdaptationSets(
   for (const adaptation of adaptationsIR) {
     const adaptationChildren = adaptation.children;
     const { essentialProperties,
-            roles } = adaptationChildren;
+            roles, label } = adaptationChildren;
 
     const isMainAdaptation = Array.isArray(roles) &&
       roles.some((role) => role.value === "main") &&
@@ -449,6 +449,9 @@ export default function parseAdaptationSets(
       }
       if (isSignInterpreted === true) {
         parsedAdaptationSet.isSignInterpreted = true;
+      }
+      if (label) {
+        parsedAdaptationSet.label = label.value;
       }
 
       const adaptationsOfTheSameType = parsedAdaptations[type];

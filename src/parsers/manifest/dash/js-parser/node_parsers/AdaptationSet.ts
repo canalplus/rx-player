@@ -22,6 +22,7 @@ import {
 import parseBaseURL from "./BaseURL";
 import parseContentComponent from "./ContentComponent";
 import parseContentProtection from "./ContentProtection";
+import parseLabel from "./Label";
 import {
   createRepresentationIntermediateRepresentation,
 } from "./Representation";
@@ -119,6 +120,14 @@ function parseAdaptationSetChildren(
             children.roles = [parseScheme(currentElement)];
           } else {
             children.roles.push(parseScheme(currentElement));
+          }
+          break;
+
+        case "Label":
+          const [label, labelWarnings] = parseLabel(currentElement);
+          children.label = label;
+          if (labelWarnings.length > 0) {
+            warnings = warnings.concat(labelWarnings);
           }
           break;
 

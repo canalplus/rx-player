@@ -71,6 +71,7 @@ export interface ITMAudioTrack { language : string;
                                  audioDescription : boolean;
                                  dub? : boolean;
                                  id : number|string;
+                                 label?: string;
                                  representations: ITMAudioRepresentation[]; }
 
 /** Text track returned by the TrackChoiceManager. */
@@ -801,6 +802,7 @@ export default class TrackChoiceManager {
           active: currentId === null ? false :
                                        currentId === adaptation.id,
           representations: adaptation.representations.map(parseAudioRepresentation),
+          label: adaptation.label,
         };
         if (adaptation.isDub === true) {
           formatted.dub = true;

@@ -17,20 +17,20 @@
 import { ILabelIntermediateRepresentation } from "../../node_parser_types";
 
 /**
- * Parse an Label element into an Label intermediate
+ * Parse Label element into a Label intermediate
  * representation.
  * @param {Element} adaptationSetElement - The Label root element.
  * @returns {Array.<Object|undefined>}
  */
 export default function parseLabel(
   root: Element
-) : [ILabelIntermediateRepresentation | undefined, Error[]] {
+): [ILabelIntermediateRepresentation | undefined, Error[]] {
   const value = root.textContent;
 
-  const warnings : Error[] = [];
+  const warnings: Error[] = [];
   if (value === null || value.length === 0) {
     return [undefined, warnings];
   }
 
-  return [ { value }, warnings ];
+  return [{ value }, warnings];
 }

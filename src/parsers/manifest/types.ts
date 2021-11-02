@@ -187,6 +187,11 @@ export interface IParsedAdaptation {
    * TrickMode tracks attached to the adaptation.
    */
   trickModeTracks?: IParsedAdaptation[];
+
+  /**
+   * Label of the adaptionset
+   */
+  label?: string;
 }
 
 /** Information on a given period of time in the Manifest */

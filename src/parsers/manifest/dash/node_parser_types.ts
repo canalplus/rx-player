@@ -195,6 +195,7 @@ export interface IAdaptationSetChildren {
   label? : ILabelIntermediateRepresentation;
   roles? : IScheme[];
   supplementalProperties? : IScheme[];
+  label?: ILabelIntermediateRepresentation;
 
   segmentBase? : ISegmentBaseIntermediateRepresentation;
   segmentList? : ISegmentListIntermediateRepresentation;
@@ -375,6 +376,13 @@ export interface ILabelIntermediateRepresentation {
    */
   value: string;
 
+}
+
+export interface ILabelIntermediateRepresentation {
+  /**
+   * The content of the label
+   */
+  value: string;
 }
 
 /** Intermediate representation for a Node following a "scheme" format. */
