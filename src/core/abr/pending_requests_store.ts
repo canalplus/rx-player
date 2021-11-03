@@ -15,6 +15,7 @@
  */
 
 import log from "../../log";
+import { ISegment } from "../../manifest";
 import objectValues from "../../utils/object_values";
 
 export interface IProgressEventValue {
@@ -33,23 +34,19 @@ export interface IProgressEventValue {
 export interface IBeginRequestValue {
   /** Unique ID for the request. */
   id: string|number;
-  /** Time at which the corresponding segment begins, in seconds. */
-  time: number;
-  /** Duration of the corresponding chunk, in seconds. */
-  duration: number;
+  /** Metadata on the requested segment. */
+  segment: ISegment;
   /** Unix timestamp at which the request began, in ms. */
   requestTimestamp: number;
 }
 
 export interface IRequestInfo {
-  /** Duration of the corresponding chunk, in seconds. */
-  duration : number;
+  /** Metadata on the requested segment. */
+  segment: ISegment;
   /** Progress events for this request. */
   progress: IProgressEventValue[];
   /** Unix timestamp at which the request began, in ms. */
   requestTimestamp: number;
-  /** Time at which the corresponding segment begins, in seconds. */
-  time: number;
 }
 
 export interface IProgressEventValue {
@@ -84,9 +81,8 @@ export default class PendingRequestsStore {
    * @param {Object} payload
    */
   public add(payload : IBeginRequestValue) : void {
-    const { id, time, duration, requestTimestamp } = payload;
-    this._currentRequests[id] = { time,
-                                  duration,
+    const { id, segment, requestTimestamp } = payload;
+    this._currentRequests[id] = { segment,
                                   requestTimestamp,
                                   progress: [] };
   }
@@ -129,6 +125,6 @@ export default class PendingRequestsStore {
   public getRequests() : IRequestInfo[] {
     return objectValues(this._currentRequests)
       .filter((x) : x is IRequestInfo => x != null)
-      .sort((reqA, reqB) => reqA.time - reqB.time);
+      .sort((reqA, reqB) => reqA.segment.time - reqB.segment.time);
   }
 }

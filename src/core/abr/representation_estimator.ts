@@ -179,13 +179,8 @@ export interface IABRRequestBeginEvent {
      * should have this `id` at the same time.
      */
     id: string;
-    /** Presentation time at which the corresponding segment begins, in seconds. */
-    time: number;
-    /**
-     * Difference between the presentation end time and start time of the
-     * corresponding segment, in seconds.
-     */
-    duration: number;
+    /** Metadata on the requested segment. */
+    segment: ISegment;
     /** Value of `performance.now` at the time the request began.  */
     requestTimestamp: number;
   };
@@ -426,6 +421,7 @@ export default function RepresentationEstimator({
     // calculate "maintainability score"
     const { segment } = content;
     const requestDuration = duration / 1000;
+
     const segmentDuration = segment.duration;
 
     const { representation } = content;

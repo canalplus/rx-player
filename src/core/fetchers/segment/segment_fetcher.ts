@@ -119,8 +119,7 @@ export default function createSegmentFetcher<
 
       const id = generateRequestID();
       requests$.next({ type: "requestBegin",
-                       value: { duration: segment.duration,
-                                time: segment.time,
+                       value: { segment,
                                 requestTimestamp: performance.now(),
                                 id } });
 

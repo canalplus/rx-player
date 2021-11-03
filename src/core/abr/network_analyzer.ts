@@ -62,12 +62,12 @@ function getConcernedRequests(
 ) : IRequestInfo[] {
   /** Index of the request for the next needed segment, in `requests`. */
   const nextSegmentIndex = arrayFindIndex(requests, (request) => {
-    if (request.duration <= 0) {
+    if (request.segment.duration <= 0) {
       return false;
     }
-    const segmentEnd = request.time + request.duration;
+    const segmentEnd = request.segment.time + request.segment.duration;
     return segmentEnd > neededPosition &&
-           neededPosition - request.time > -1.2;
+           neededPosition - request.segment.time > -1.2;
   });
 
   if (nextSegmentIndex < 0) { // Not found
@@ -75,12 +75,12 @@ function getConcernedRequests(
   }
 
   const nextRequest = requests[nextSegmentIndex];
-  const segmentTime = nextRequest.time;
+  const segmentTime = nextRequest.segment.time;
   const filteredRequests = [nextRequest];
 
   // Get the possibly multiple requests for that segment's position
   for (let i = nextSegmentIndex + 1; i < requests.length; i++) {
-    if (requests[i].time === segmentTime) {
+    if (requests[i].segment.time === segmentTime) {
       filteredRequests.push(requests[i]);
     } else {
       break;
@@ -158,7 +158,7 @@ function estimateStarvationModeBitrate(
   }
 
   const concernedRequest = concernedRequests[0];
-  const chunkDuration = concernedRequest.duration;
+  const chunkDuration = concernedRequest.segment.duration;
   const now = performance.now();
   const lastProgressEvent = concernedRequest.progress.length > 0 ?
     concernedRequest.progress[concernedRequest.progress.length - 1] :
@@ -219,7 +219,8 @@ function shouldDirectlySwitchToLowBitrate(
                                                            0;
   const nextNeededPosition = playbackInfo.position + realBufferGap;
   const nextRequest = arrayFind(requests, (r) =>
-    r.duration > 0 && (r.time + r.duration) > nextNeededPosition);
+    r.segment.duration > 0 &&
+    (r.segment.time + r.segment.duration) > nextNeededPosition);
 
   if (nextRequest === undefined) {
     return true;
