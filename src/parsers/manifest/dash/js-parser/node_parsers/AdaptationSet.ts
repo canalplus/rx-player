@@ -333,6 +333,18 @@ function parseAdaptationSetAttributes(
                                       parser: parseMPDInteger,
                                       dashName: "width" });
         break;
+
+      case "availabilityTimeOffset":
+        parseValue(attribute.value, { asKey: "availabilityTimeOffset",
+                                      parser: parseMPDFloat,
+                                      dashName: "availabilityTimeOffset" });
+        break;
+
+      case "availabilityTimeComplete":
+        parseValue(attribute.value, { asKey: "availabilityTimeComplete",
+                                      parser: parseBoolean,
+                                      dashName: "availabilityTimeComplete" });
+        break;
     }
   }
 

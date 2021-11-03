@@ -425,10 +425,11 @@ export default function RepresentationEstimator({
     const { segment } = content;
     const requestDuration = duration / 1000;
 
-    const segmentDuration = segment.duration;
-
-    const { representation } = content;
-    scoreCalculator.addSample(representation, requestDuration, segmentDuration);
+    if (segment.complete) {
+      const segmentDuration = segment.duration;
+      const { representation } = content;
+      scoreCalculator.addSample(representation, requestDuration, segmentDuration);
+    }
   }
 
   const metrics$ = streamEvents$.pipe(

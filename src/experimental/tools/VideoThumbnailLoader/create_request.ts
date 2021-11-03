@@ -6,6 +6,7 @@ import {
 } from "rxjs";
 import {
   ISegmentFetcher,
+  ISegmentFetcherChunkCompleteEvent,
   ISegmentFetcherChunkEvent,
 } from "../../../core/fetchers/segment/segment_fetcher";
 import { ISegment } from "../../../manifest";
@@ -21,9 +22,11 @@ const requests = new Map<string, ICancellableRequest>();
 export interface ICancellableRequest {
   data?: ISegmentParserParsedInitChunk<Uint8Array | ArrayBuffer> |
          ISegmentParserParsedMediaChunk<Uint8Array | ArrayBuffer>;
+  isComplete: boolean;
   error?: Error;
   onData?: (data: ISegmentParserParsedInitChunk<Uint8Array | ArrayBuffer> |
                   ISegmentParserParsedMediaChunk<Uint8Array | ArrayBuffer>) => void;
+  onComplete?: () => void;
   onError?: (err: Error) => void;
   cancel: () => void;
 }
@@ -48,7 +51,11 @@ export function createRequest(
   }
 
   const _request: ICancellableRequest = {
-    cancel: () => subscription.unsubscribe(),
+    cancel() {
+      subscription.unsubscribe();
+      this.isComplete = true;
+    },
+    isComplete: false,
   };
 
   const subscription = segmentFetcher({ manifest: contentInfos.manifest,
@@ -56,8 +63,10 @@ export function createRequest(
                                         adaptation: contentInfos.adaptation,
                                         representation: contentInfos.representation,
                                         segment }).pipe(
-    filter((evt): evt is ISegmentFetcherChunkEvent<ArrayBuffer | Uint8Array> =>
-      evt.type === "chunk"
+    filter((evt): evt is ISegmentFetcherChunkEvent<ArrayBuffer | Uint8Array> |
+                         ISegmentFetcherChunkCompleteEvent =>
+      evt.type === "chunk" ||
+      evt.type === "chunk-complete"
     ),
     take(1),
     catchError((err: Error) => {
@@ -65,13 +74,21 @@ export function createRequest(
       if (_request.onError !== undefined) {
         _request.onError(err);
       }
+      _request.isComplete = true;
       return EMPTY;
     })
   ).subscribe((evt) => {
-    const parsed = evt.parse();
-    _request.data = parsed;
-    if (_request.onData !== undefined) {
-      _request.onData(parsed);
+    if (evt.type === "chunk-complete") {
+      if (_request.onComplete !== undefined) {
+        _request.onComplete();
+        _request.isComplete = true;
+      }
+    } else {
+      const parsed = evt.parse();
+      _request.data = parsed;
+      if (_request.onData !== undefined) {
+        _request.onData(parsed);
+      }
     }
   });
 

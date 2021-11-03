@@ -312,7 +312,8 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
              time: 0,
              end: 0,
              duration: 0,
-             timescale: 1 };
+             timescale: 1,
+             complete: true };
   }
 
   /**
@@ -362,6 +363,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
                           timescale: 1 as const,
                           number,
                           mediaURLs: [replaceSegmentSmoothTokens(media, time)],
+                          complete: true,
                           privateInfos: { smoothMediaSegment: { time,
                                                                 duration } } };
         segments.push(segment);

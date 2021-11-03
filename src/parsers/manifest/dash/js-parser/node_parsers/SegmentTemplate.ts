@@ -23,7 +23,7 @@ import parseSegmentBase from "./SegmentBase";
 import createSegmentTimelineParser from "./SegmentTimeline";
 import {
   parseBoolean,
-  parseMPDInteger,
+  parseMPDFloat,
   ValueParser,
 } from "./utils";
 
@@ -71,12 +71,15 @@ export default function parseSegmentTemplate(
         break;
 
       case "availabilityTimeOffset":
-        if (attribute.value === "INF") {
-          ret.availabilityTimeOffset = Infinity;
-        }
         parseValue(attribute.value, { asKey: "availabilityTimeOffset",
-                                      parser: parseMPDInteger,
+                                      parser: parseMPDFloat,
                                       dashName: "availabilityTimeOffset" });
+        break;
+
+      case "availabilityTimeComplete":
+        parseValue(attribute.value, { asKey: "availabilityTimeComplete",
+                                      parser: parseBoolean,
+                                      dashName: "availabilityTimeComplete" });
         break;
 
       case "media":

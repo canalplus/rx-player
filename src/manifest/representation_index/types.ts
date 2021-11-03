@@ -187,9 +187,20 @@ export interface ISegment {
   end : number;
   /**
    * Estimated duration for the segment, in seconds.
-   * Note that some rounding errors and some differences between what the
-   * Manifest says and what the content really is might make that time not
-   * exact.
+   *
+   * Note that this may not reflect the exact segment duration:
+   *
+   *   1. In some very specific cases, segments might be generated and served
+   *      progressively. In this case, the full duration of a segment might not
+   *      be yet known and thus this property only reflect the currently known
+   *      `duration` of the segment, which may be inferior to its final duration.
+   *
+   *      You can know if we're in that case when the `complete` property of
+   *      this same segment is set to `false`.
+   *
+   *   2. some rounding errors and some differences between what the
+   *      Manifest says and what the content really is might make that time not
+   *      exact.
    *
    * `0` for initialization segments.
    */
@@ -202,6 +213,17 @@ export interface ISegment {
    * As both are always in seconds now, this property became unneeded.
    */
   timescale : 1;
+
+  /**
+   * If `false`, this segment's `duration` property may not be the duration of
+   * the full segment as it could still be in the process of being generated
+   * on the server-side (when this `ISegment` had been constructed).
+   *
+   * Note that if the `duration` is sure to be the final one, `complete`
+   * should be set to `true` even if the segment is still being
+   * generated.
+   */
+  complete : boolean;
 }
 
 /** Interface that should be implemented by any Representation's `index` value. */

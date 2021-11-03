@@ -21,6 +21,7 @@ import {
 } from "../../../../../manifest";
 import { IEMSG } from "../../../../containers/isobmff";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
+import { IResolvedBaseUrl } from "../resolve_base_urls";
 import getInitSegment from "./get_init_segment";
 import isPeriodFulfilled from "./is_period_fulfilled";
 import {
@@ -122,7 +123,7 @@ export interface ITemplateIndexContextArgument {
   /** Whether the corresponding Manifest can be updated and changed. */
   isDynamic : boolean;
   /** Base URL for the Representation concerned. */
-  representationBaseURLs : string[];
+  representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
   representationId? : string;
   /** Bitrate of the Representation concerned. */
@@ -177,7 +178,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             isEMSGWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
-    this._availabilityTimeOffset = availabilityTimeOffset;
+    const minBaseUrlAto = representationBaseURLs.length === 0 ?
+      0 :
+      representationBaseURLs.reduce((acc, rbu) => {
+        return Math.min(acc, rbu.availabilityTimeOffset);
+      }, Infinity);
+    this._availabilityTimeOffset = availabilityTimeOffset + minBaseUrlAto;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
     this._aggressiveMode = aggressiveMode;
@@ -192,18 +198,19 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       throw new Error("Invalid SegmentTemplate: no duration");
     }
 
+    const urlSources : string[] = representationBaseURLs.map(b => b.url);
     this._index = { duration: index.duration,
                     timescale,
                     indexRange: index.indexRange,
                     indexTimeOffset,
                     initialization: index.initialization == null ?
                       undefined :
-                      { mediaURLs: createIndexURLs(representationBaseURLs,
+                      { mediaURLs: createIndexURLs(urlSources,
                                                    index.initialization.media,
                                                    representationId,
                                                    representationBitrate),
                         range: index.initialization.range },
-                    mediaURLs: createIndexURLs(representationBaseURLs,
+                    mediaURLs: createIndexURLs(urlSources,
                                                index.media,
                                                representationId,
                                                representationBitrate),
@@ -293,6 +300,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                      scaledDuration: realDuration / timescale,
                      mediaURLs: detokenizedURLs,
                      timestampOffset: -(index.indexTimeOffset / timescale),
+                     complete: true,
                      privateInfos: {
                        isEMSGWhitelisted: this._isEMSGWhitelisted,
                      } };

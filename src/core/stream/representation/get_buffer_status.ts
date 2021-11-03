@@ -227,10 +227,9 @@ function getPlayableBufferedSegments(
       const inventorySegment = eltInventory.infos.segment;
       const eltInventoryStart = inventorySegment.time /
                                 inventorySegment.timescale;
-      const eltInventoryEnd = inventorySegment.duration == null ?
+      const eltInventoryEnd = !inventorySegment.complete ?
         eltInventory.end :
-        eltInventoryStart + inventorySegment.duration /
-          inventorySegment.timescale;
+        eltInventoryStart + inventorySegment.duration / inventorySegment.timescale;
       if ((eltInventoryEnd > minEnd && eltInventoryStart < maxStart) ||
           (eltInventory.end > minEnd && eltInventory.start < maxStart))
       {

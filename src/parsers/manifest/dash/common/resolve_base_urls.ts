@@ -14,39 +14,48 @@
  * limitations under the License.
  */
 
-import arrayIncludes from "../../../../utils/array_includes";
 import resolveURL from "../../../../utils/resolve_url";
 import { IBaseUrlIntermediateRepresentation } from "../node_parser_types";
 
+export interface IResolvedBaseUrl {
+  url : string;
+  availabilityTimeOffset : number;
+  availabilityTimeComplete : boolean;
+}
+
 /**
  * @param {Array.<string>} currentBaseURLs
- * @param {Array.<Object>} newBaseURLs
+ * @param {Array.<Object>} newBaseUrlsIR
  * @returns {Array.<string>}
  */
 export default function resolveBaseURLs(
-  currentBaseURLs : string[],
-  newBaseURLs : IBaseUrlIntermediateRepresentation[]
-) : string[] {
-  const result : string[] = [];
-  if (newBaseURLs.length === 0) {
+  currentBaseURLs : IResolvedBaseUrl[],
+  newBaseUrlsIR : IBaseUrlIntermediateRepresentation[]
+) : IResolvedBaseUrl[] {
+  if (newBaseUrlsIR.length === 0) {
     return currentBaseURLs;
-  } else if (currentBaseURLs.length === 0) {
-    for (let i = 0; i < newBaseURLs.length; i++) {
-      if (!arrayIncludes(result, newBaseURLs[i].value)) {
-        result.push(newBaseURLs[i].value);
-      }
-    }
-    return result;
-  } else {
-    for (let i = 0; i < currentBaseURLs.length; i++) {
-      const rootURL = currentBaseURLs[i];
-      for (let j = 0; j < newBaseURLs.length; j++) {
-        const newURL = resolveURL(rootURL,
-                                  newBaseURLs[j].value);
-        if (!arrayIncludes(result, newURL)) {
-          result.push(newURL);
-        }
-      }
+  }
+
+  const newBaseUrls : IResolvedBaseUrl[] = newBaseUrlsIR.map(ir => {
+    return { url: ir.value,
+             availabilityTimeOffset: ir.attributes.availabilityTimeOffset ?? 0,
+             availabilityTimeComplete: ir.attributes.availabilityTimeComplete ?? true };
+  });
+  if (currentBaseURLs.length === 0) {
+    return newBaseUrls;
+  }
+
+  const result : IResolvedBaseUrl[] = [];
+  for (let i = 0; i < currentBaseURLs.length; i++) {
+    const curBaseUrl = currentBaseURLs[i];
+    for (let j = 0; j < newBaseUrls.length; j++) {
+      const newBaseUrl = newBaseUrls[j];
+      const newUrl = resolveURL(curBaseUrl.url, newBaseUrl.url);
+      const newAvailabilityTimeOffset = curBaseUrl.availabilityTimeOffset +
+        newBaseUrl.availabilityTimeOffset;
+      result.push({ url: newUrl,
+                    availabilityTimeOffset: newAvailabilityTimeOffset,
+                    availabilityTimeComplete: newBaseUrl.availabilityTimeComplete });
     }
   }
   return result;

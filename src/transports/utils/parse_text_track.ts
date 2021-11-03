@@ -122,7 +122,7 @@ export function getISOBMFFEmbeddedTextTrackData(
     startTime = chunkInfos.time;
     if (chunkInfos.duration !== undefined) {
       endTime = startTime + chunkInfos.duration;
-    } else if (!isChunked) {
+    } else if (!isChunked && segment.complete) {
       endTime = startTime + segment.duration;
     }
   }
@@ -162,7 +162,9 @@ export function getPlainTextTrackData(
     log.warn("Transport: Unavailable time data for current text track.");
   } else {
     start = segment.time;
-    end = segment.time + segment.duration;
+    if (segment.complete) {
+      end = segment.time + segment.duration;
+    }
   }
 
   const type = getPlainTextTrackFormat(representation);

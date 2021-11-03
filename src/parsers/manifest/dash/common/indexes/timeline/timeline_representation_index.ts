@@ -38,6 +38,7 @@ import isSegmentStillAvailable from "../../../../utils/is_segment_still_availabl
 import updateSegmentTimeline from "../../../../utils/update_segment_timeline";
 import { ISegmentTimelineElement } from "../../../node_parser_types";
 import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
+import { IResolvedBaseUrl } from "../../resolve_base_urls";
 import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
 import isPeriodFulfilled from "../is_period_fulfilled";
@@ -54,6 +55,8 @@ const { MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY } = config;
  * given media time.
  */
 export interface ITimelineIndex {
+  /** If `false`, the last segment anounced might be still incomplete. */
+  availabilityTimeComplete : boolean;
   /** Byte range for a possible index of segments in the server. */
   indexRange?: [number, number];
   /**
@@ -141,6 +144,8 @@ export interface ITimelineIndexIndexArgument {
 
 /** Aditional context needed by a SegmentTimeline RepresentationIndex. */
 export interface ITimelineIndexContextArgument {
+  /** If `false`, the last segment anounced might be still incomplete. */
+  availabilityTimeComplete : boolean;
   /** Allows to obtain the minimum and maximum positions of a content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
@@ -155,7 +160,7 @@ export interface ITimelineIndexContextArgument {
    */
   receivedTime? : number;
   /** Base URL for the Representation concerned. */
-  representationBaseURLs : string[];
+  representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
   representationId? : string;
   /** Bitrate of the Representation concerned. */
@@ -231,7 +236,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       throw new Error("The given index is not compatible with a " +
                       "TimelineRepresentationIndex.");
     }
-    const { manifestBoundsCalculator,
+    const { availabilityTimeComplete,
+            manifestBoundsCalculator,
             isDynamic,
             representationBaseURLs,
             representationId,
@@ -269,18 +275,20 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
     this._isDynamic = isDynamic;
     this._parseTimeline = index.timelineParser ?? null;
-    this._index = { indexRange: index.indexRange,
+    const urlSources : string[] = representationBaseURLs.map(b => b.url);
+    this._index = { availabilityTimeComplete,
+                    indexRange: index.indexRange,
                     indexTimeOffset,
                     initialization: index.initialization == null ?
                       undefined :
                       {
-                        mediaURLs: createIndexURLs(representationBaseURLs,
+                        mediaURLs: createIndexURLs(urlSources,
                                                    index.initialization.media,
                                                    representationId,
                                                    representationBitrate),
                         range: index.initialization.range,
                       },
-                    mediaURLs: createIndexURLs(representationBaseURLs,
+                    mediaURLs: createIndexURLs(urlSources,
                                                index.media,
                                                representationId,
                                                representationBitrate),

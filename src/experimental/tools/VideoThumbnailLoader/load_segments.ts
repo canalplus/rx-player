@@ -49,12 +49,18 @@ export default function loadSegments(
 
         if (request.data !== undefined) {
           obs.next({ data: request.data, segment });
+        }
+
+        if (request.isComplete) {
           obs.complete();
           return;
         }
 
         request.onData = (data) => {
           obs.next({ data, segment });
+        };
+
+        request.onComplete = () => {
           obs.complete();
         };
       });

@@ -14,24 +14,34 @@
  * limitations under the License.
  */
 
-// Generic way to representat segments in an index of segments
-export interface IIndexSegment { start: number; // start time
-                                 duration: number; // duration
-                                 repeatCount: number; // repeat counter
-                                 range?: [number, number]; } // possible
-                                                             // byte-range
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+
+/** Generic way to represent segments in an index of segments. */
+export interface IIndexSegment {
+  /** The segment starting presentation time. */
+  start: number;
+  /** Difference between the last and first presentation time. */
+  duration: number;
+  /**
+   * Repeat counter.
+   * 1 === Repeat 1 time == 2 consecutive segments of this same duration.
+   */
+  repeatCount: number;
+  /** Optional byte-range the segment is available at when requested. */
+  range?: [number, number];
+}
 
 /**
  * Calculate the number of times a timeline element repeats based on the next
  * element.
  * @param {Object} element
- * @param {Object} nextElement
- * @param {number} maxPosition
+ * @param {Object|null|undefined} nextElement
+ * @param {number|undefined} maxPosition
  * @returns {Number}
  */
 export function calculateRepeat(
   element : IIndexSegment,
-  nextElement? : IIndexSegment|null,
+  nextElement? : IIndexSegment | null | undefined,
   maxPosition? : number
 ) : number {
   const { repeatCount } = element;
@@ -45,9 +55,9 @@ export function calculateRepeat(
   // start of the next S element, the end of the Period or until the
   // next MPD update.
   let segmentEnd : number;
-  if (nextElement != null) {
+  if (!isNullOrUndefined(nextElement)) {
     segmentEnd = nextElement.start;
-  } else if (maxPosition != null) {
+  } else if (maxPosition !== undefined) {
     segmentEnd = maxPosition;
   } else {
     segmentEnd = Number.MAX_VALUE;

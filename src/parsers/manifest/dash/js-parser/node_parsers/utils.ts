@@ -106,6 +106,9 @@ function parseMPDFloat(
 ) : [number | null,
      MPDError | null]
 {
+  if (val === "INF") {
+    return [Infinity, null];
+  }
   const toInt = parseFloat(val);
   if (isNaN(toInt)) {
     const error = new MPDError(

@@ -174,6 +174,12 @@ export function generateRepresentationAttrParser(
         representationAttrs.segmentProfiles =
           parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
+      case AttributeName.AvailabilityTimeOffset:
+        representationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
+        break;
+      case AttributeName.AvailabilityTimeComplete:
+        representationAttrs.availabilityTimeComplete = dataView.getUint8(0) === 0;
+        break;
     }
   };
 }

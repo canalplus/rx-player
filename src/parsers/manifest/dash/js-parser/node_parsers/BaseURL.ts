@@ -16,7 +16,8 @@
 
 import { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
 import {
-  parseMPDInteger,
+  parseBoolean,
+  parseMPDFloat,
   ValueParser,
 } from "./utils";
 
@@ -29,7 +30,8 @@ import {
 export default function parseBaseURL(
   root: Element
 ) : [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
-  const attributes : { availabilityTimeOffset?: number } = {};
+  const attributes : { availabilityTimeOffset?: number;
+                       availabilityTimeComplete?: boolean; } = {};
   const value = root.textContent;
 
   const warnings : Error[] = [];
@@ -42,13 +44,15 @@ export default function parseBaseURL(
 
     switch (attribute.name) {
       case "availabilityTimeOffset":
-        if (attribute.value === "INF") {
-          attributes.availabilityTimeOffset = Infinity;
-        } else {
-          parseValue(attribute.value, { asKey: "availabilityTimeOffset",
-                                        parser: parseMPDInteger,
-                                        dashName: "availabilityTimeOffset" });
-        }
+        parseValue(attribute.value, { asKey: "availabilityTimeOffset",
+                                      parser: parseMPDFloat,
+                                      dashName: "availabilityTimeOffset" });
+        break;
+
+      case "availabilityTimeComplete":
+        parseValue(attribute.value, { asKey: "availabilityTimeComplete",
+                                      parser: parseBoolean,
+                                      dashName: "availabilityTimeComplete" });
         break;
     }
   }

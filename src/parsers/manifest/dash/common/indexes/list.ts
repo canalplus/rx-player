@@ -21,6 +21,7 @@ import {
 } from "../../../../../manifest";
 import { IEMSG } from "../../../../containers/isobmff";
 import { getTimescaledRange } from "../../../utils/index_helpers";
+import { IResolvedBaseUrl } from "../resolve_base_urls";
 import getInitSegment from "./get_init_segment";
 import { createIndexURLs } from "./tokens";
 
@@ -106,7 +107,7 @@ export interface IListIndexContextArgument {
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
   periodStart : number;
   /** Base URL for the Representation concerned. */
-  representationBaseURLs : string[];
+  representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
   representationId? : string;
   /** Bitrate of the Representation concerned. */
@@ -145,8 +146,9 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     const timescale = index.timescale ?? 1;
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
+    const urlSources : string[] = representationBaseURLs.map(b => b.url);
     const list = index.list.map((lItem) => ({
-      mediaURLs: createIndexURLs(representationBaseURLs,
+      mediaURLs: createIndexURLs(urlSources,
                                  lItem.media,
                                  representationId,
                                  representationBitrate),
@@ -158,7 +160,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
                     indexRange: index.indexRange,
                     initialization: index.initialization == null ?
                       undefined :
-                      { mediaURLs: createIndexURLs(representationBaseURLs,
+                      { mediaURLs: createIndexURLs(urlSources,
                                                    index.initialization.media,
                                                    representationId,
                                                    representationBitrate),
@@ -207,6 +209,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
           end: time + durationInSeconds,
           mediaURLs,
           timestampOffset: -(index.indexTimeOffset / timescale),
+          complete: true,
           privateInfos: { isEMSGWhitelisted:
                             this._isEMSGWhitelisted } };
       segments.push(segment);

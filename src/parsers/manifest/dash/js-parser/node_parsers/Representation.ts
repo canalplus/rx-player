@@ -170,6 +170,18 @@ function parseRepresentationAttributes(
                                  parser: parseMPDInteger,
                                  dashName: "width" });
         break;
+
+      case "availabilityTimeOffset":
+        parseValue(attr.value, { asKey: "availabilityTimeOffset",
+                                 parser: parseMPDFloat,
+                                 dashName: "availabilityTimeOffset" });
+        break;
+
+      case "availabilityTimeComplete":
+        parseValue(attr.value, { asKey: "availabilityTimeComplete",
+                                 parser: parseBoolean,
+                                 dashName: "availabilityTimeComplete" });
+        break;
     }
   }
   if (attributes.bitrate === undefined) {

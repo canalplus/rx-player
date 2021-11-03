@@ -40,8 +40,8 @@ export default function isSegmentStillAvailable(
     if (tSegmentTime > segment.time) {
       return false;
     } else if (tSegmentTime === segment.time) {
-      if (tSegment.range == null) {
-        return segment.range == null;
+      if (tSegment.range === undefined) {
+        return segment.range === undefined;
       }
       return segment.range != null &&
              tSegment.range[0] === segment.range[0] &&
