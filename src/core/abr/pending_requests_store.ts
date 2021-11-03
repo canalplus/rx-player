@@ -18,33 +18,51 @@ import log from "../../log";
 import objectValues from "../../utils/object_values";
 
 export interface IProgressEventValue {
-  duration : number; // current duration for the request, in ms
-  id: string|number; // unique ID for the request
-  size : number; // current downloaded size, in bytes
-  timestamp : number; // timestamp of the progress event since unix epoch, in ms
-  totalSize : number; // total size to download, in bytes
+  // Current duration for the request, in ms. */
+  duration : number;
+  /** Unique ID for the request. */
+  id: string|number;
+  /** Current downloaded size, in bytes. */
+  size : number;
+  /** Timestamp of the progress event since unix epoch, in ms. */
+  timestamp : number;
+  /** Total size to download, in bytes. */
+  totalSize : number;
 }
 
 export interface IBeginRequestValue {
+  /** Unique ID for the request. */
   id: string|number;
+  /** Time at which the corresponding segment begins, in seconds. */
   time: number;
+  /** Duration of the corresponding chunk, in seconds. */
   duration: number;
+  /** Unix timestamp at which the request began, in ms. */
   requestTimestamp: number;
 }
 
 export interface IRequestInfo {
-  duration : number; // duration of the corresponding chunk, in seconds
-  progress: IProgressEventValue[]; // progress events for this request
-  requestTimestamp: number; // unix timestamp at which the request began, in ms
-  time: number; // time at which the corresponding segment begins, in seconds
+  /** Duration of the corresponding chunk, in seconds. */
+  duration : number;
+  /** Progress events for this request. */
+  progress: IProgressEventValue[];
+  /** Unix timestamp at which the request began, in ms. */
+  requestTimestamp: number;
+  /** Time at which the corresponding segment begins, in seconds. */
+  time: number;
 }
 
 export interface IProgressEventValue {
-  duration : number; // current duration for the request, in ms
-  id: string|number; // unique ID for the request
-  size : number; // current downloaded size, in bytes
-  timestamp : number; // timestamp of the progress event since unix epoch, in ms
-  totalSize : number; // total size to download, in bytes
+  /** Current duration for the request, in ms. */
+  duration : number;
+  /** Unique ID for the request. */
+  id: string|number;
+  /** Current downloaded size, in bytes. */
+  size : number;
+  /** Timestamp of the progress event since unix epoch, in ms. */
+  timestamp : number;
+  /** Total size to download, in bytes. */
+  totalSize : number;
 }
 
 /**
