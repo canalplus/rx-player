@@ -36,7 +36,7 @@ export default function clearTimelineFromPosition(
       timeline.shift();
     } else { // we have a segment repetition
       const nextElt = timeline[1];
-      if (nextElt != null && nextElt.start <= firstAvailablePosition) {
+      if (nextElt !== undefined && nextElt.start <= firstAvailablePosition) {
         timeline.shift();
       } else { // no next segment or next segment is available
         if (firstElt.duration <= 0) {

@@ -16,6 +16,7 @@
 
 import { ISegment } from "../../../manifest";
 import { IIndexSegment } from "./index_helpers";
+
 /**
  * Returns true if a Segment returned by the corresponding index is still
  * considered available.
@@ -39,9 +40,6 @@ export default function isSegmentStillAvailable(
     if (tSegmentTime > segment.time) {
       return false;
     } else if (tSegmentTime === segment.time) {
-      if ((tSegment.duration / timescale) !== segment.duration) {
-        return false;
-      }
       if (tSegment.range == null) {
         return segment.range == null;
       }
@@ -49,7 +47,7 @@ export default function isSegmentStillAvailable(
              tSegment.range[0] === segment.range[0] &&
              tSegment.range[1] === segment.range[1];
     } else { // tSegment.start < segment.time
-      if (tSegment.repeatCount >= 0 && tSegment.duration != null) {
+      if (tSegment.repeatCount >= 0 && tSegment.duration !== undefined) {
         const timeDiff = tSegmentTime - tSegment.start;
         const repeat = (timeDiff / tSegment.duration) - 1;
         return repeat % 1 === 0 && repeat <= tSegment.repeatCount;
