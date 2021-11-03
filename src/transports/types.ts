@@ -632,7 +632,7 @@ export interface ISegmentLoaderResultSegmentCreated<T> {
 /** Data emitted in a `ISegmentLoaderResultChunkedComplete`. */
 export interface IChunkCompleteInformation {
   /** Duration the request took to be performed, in seconds. */
-  duration : number | undefined;
+  requestDuration : number | undefined;
   /**
    * "Real" URL (post-redirection) at which the segment was loaded.
    *
@@ -768,7 +768,7 @@ export interface IRequestedData<T> {
   /** The loaded response data. */
   responseData : T;
   /** Duration the request took to be performed, in seconds. */
-  duration : number | undefined;
+  requestDuration : number | undefined;
   /**
    * "Real" URL (post-redirection) at which the data can be loaded.
    *

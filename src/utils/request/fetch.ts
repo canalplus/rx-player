@@ -30,7 +30,7 @@ import {
 /** Object returned by `fetchRequest` after the fetch operation succeeded. */
 export interface IFetchedStreamComplete {
   /** Duration of the whole request, in milliseconds. */
-  duration : number;
+  requestDuration : number;
   /** Result of `performance.now()` at the time the request was received. */
   receivedTime : number;
   /** Result of `performance.now()` at the time the request was started. */
@@ -211,8 +211,8 @@ export default function fetchRequest(
       } else if (data.done) {
         deregisterCancelLstnr();
         const receivedTime = performance.now();
-        const duration = receivedTime - sendingTime;
-        return { duration,
+        const requestDuration = receivedTime - sendingTime;
+        return { requestDuration,
                  receivedTime,
                  sendingTime,
                  size,

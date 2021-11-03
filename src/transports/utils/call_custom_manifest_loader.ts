@@ -72,7 +72,7 @@ export default function callCustomManifestLoader(
 
         res({ responseData: _args.data,
               size: _args.size,
-              duration: _args.duration,
+              requestDuration: _args.duration,
               url: _args.url,
               receivedTime, sendingTime });
       };

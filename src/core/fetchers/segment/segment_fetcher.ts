@@ -179,11 +179,11 @@ export default function createSegmentFetcher<
           if ((res.resultType === "segment-loaded" ||
                res.resultType === "chunk-complete") &&
                res.resultData.size !== undefined &&
-               res.resultData.duration !== undefined)
+               res.resultData.requestDuration !== undefined)
           {
             requests$.next({ type: "metrics",
                              value: { size: res.resultData.size,
-                                      duration: res.resultData.duration,
+                                      duration: res.resultData.requestDuration,
                                       content } });
           }
 

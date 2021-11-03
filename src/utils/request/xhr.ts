@@ -247,7 +247,7 @@ export default function request<T>(
                     responseType: loadedResponseType,
                     sendingTime,
                     receivedTime,
-                    duration: receivedTime - sendingTime,
+                    requestDuration: receivedTime - sendingTime,
                     size: totalSize,
                     responseData });
 
@@ -303,7 +303,7 @@ export interface IRequestOptions<ResponseType> {
 /** Data emitted by `request`'s Promise when the request succeeded. */
 export interface IRequestResponse<T, U> {
   /** Time taken by the request, in milliseconds. */
-  duration : number;
+  requestDuration : number;
   /** Time (relative to the "time origin") at which the request ended. */
   receivedTime : number;
   /** Data requested. Its type will depend on the responseType. */

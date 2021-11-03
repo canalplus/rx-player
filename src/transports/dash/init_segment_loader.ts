@@ -99,7 +99,7 @@ export default function initSegmentLoader(
                resultData: { url,
                              responseData: data,
                              size: initData.size + indexData.size,
-                             duration: receivedTime - sendingTime,
+                             requestDuration: receivedTime - sendingTime,
                              sendingTime,
                              receivedTime } };
 

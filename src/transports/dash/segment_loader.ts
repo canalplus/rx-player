@@ -151,7 +151,7 @@ export default function generateSegmentLoader(
         res({ resultType: "segment-loaded",
               resultData: { responseData: _args.data,
                             size: _args.size,
-                            duration: _args.duration } });
+                            requestDuration: _args.duration } });
       };
 
       /**

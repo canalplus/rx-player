@@ -266,7 +266,7 @@ export default class ManifestFetcher {
                  IManifestFetcherParsedResult> {
     return this._parseLoadedManifest({ responseData: manifest,
                                        size: undefined,
-                                       duration: undefined },
+                                       requestDuration: undefined },
                                      parserOptions);
 
   }

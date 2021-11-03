@@ -190,7 +190,7 @@ const generateSegmentLoader = ({
           res({ resultType: "segment-loaded" as const,
                 resultData: { responseData: _args.data,
                               size: _args.size,
-                              duration: _args.duration } });
+                              requestDuration: _args.duration } });
         }
 
         const dataU8 = _args.data instanceof Uint8Array ? _args.data :
@@ -199,7 +199,7 @@ const generateSegmentLoader = ({
         res({ resultType: "segment-loaded" as const,
               resultData: { responseData: dataU8,
                             size: _args.size,
-                            duration: _args.duration } });
+                            requestDuration: _args.duration } });
       };
 
       /**
