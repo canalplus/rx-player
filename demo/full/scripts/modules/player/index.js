@@ -10,7 +10,7 @@ import {
   Subject,
   takeUntil,
 } from "rxjs";
-import RxPlayer from "rx-player";
+import RxPlayer from "../../../../../src/index.ts";
 import { linkPlayerEventsToState } from "./events.js";
 import $handleCatchUpMode from "./catchUp";
 import VideoThumbnailLoader, {

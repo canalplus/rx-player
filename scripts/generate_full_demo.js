@@ -5,7 +5,7 @@
  * Build the full demo
  * ===================
  *
- * This script allows to build the full demo locally.
+ * This script allows to build the full demo locally, by using Webpack's bundler.
  *
  * You can either run it directly as a script (run `node
  * generate_full_demo.js -h` to see the different options) or by requiring it as
@@ -58,11 +58,6 @@ function generateFullDemo(options) {
     entry: path.join(__dirname, "../demo/full/scripts/index.jsx"),
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
-      alias: {
-        ["rx-player$"]: path.resolve(__dirname, "../src/index.ts"),
-        ["rx-player/tools$"]: path.resolve(__dirname, "../src/tools/index.ts"),
-        ["rx-player/experimental/tools$"]: path.resolve(__dirname, "../src/experimental/tools/index.ts"),
-      },
     },
     output: {
       path: path.join(__dirname, "../demo/full"),
