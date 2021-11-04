@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import noop from "../../../../../../utils/noop";
 import { IPeriodIntermediateRepresentation } from "../../../node_parser_types";
 import ParsersStack, {
   IChildrenParser,
@@ -54,6 +55,12 @@ export function generateXLinkChildrenParser(
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;
       }
+
+      default:
+        // Allows to make sure we're not mistakenly closing a re-opened
+        // tag.
+        parsersStack.pushParsers(nodeId, noop, noop);
+        break;
     }
   };
 }
