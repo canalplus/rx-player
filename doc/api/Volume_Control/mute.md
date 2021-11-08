@@ -1,4 +1,4 @@
-# player.mute()
+# mute
 
 ## Description
 

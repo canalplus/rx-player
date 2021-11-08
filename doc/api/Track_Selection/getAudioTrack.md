@@ -1,4 +1,4 @@
-# player.getAudioTrack()
+# getAudioTrack
 
 ## Description
 

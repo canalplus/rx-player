@@ -1,4 +1,4 @@
-# player.getUrl()
+# getUrl
 
 ## Description
 

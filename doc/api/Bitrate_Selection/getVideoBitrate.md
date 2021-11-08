@@ -1,4 +1,4 @@
-# player.getVideoBitrate()
+# getVideoBitrate
 
 ## Description
 

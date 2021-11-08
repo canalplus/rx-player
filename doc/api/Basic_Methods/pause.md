@@ -1,4 +1,4 @@
-# player.pause()
+# pause
 
 ## Description
 

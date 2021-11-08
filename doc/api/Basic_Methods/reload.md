@@ -1,4 +1,4 @@
-# player.reload()
+# reload
 
 ## Description
 

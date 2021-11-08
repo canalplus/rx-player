@@ -1,4 +1,4 @@
-# player.setTextTrack()
+# setTextTrack
 
 ## Description
 

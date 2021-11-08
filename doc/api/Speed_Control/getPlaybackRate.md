@@ -1,4 +1,4 @@
-# player.getPlaybackRate()
+# getPlaybackRate
 
 ## Description
 

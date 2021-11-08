@@ -1,4 +1,4 @@
-# player.setMaxBufferAhead()
+# setMaxBufferAhead
 
 ## Description
 

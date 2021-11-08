@@ -1,4 +1,4 @@
-# player.getPreferredVideoTracks()
+# getPreferredVideoTracks
 
 ## Description
 

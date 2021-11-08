@@ -1,4 +1,4 @@
-# player.getAudioBitrate()
+# getAudioBitrate
 
 ## Description
 

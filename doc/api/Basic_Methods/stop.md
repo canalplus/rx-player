@@ -1,4 +1,4 @@
-# player.stop()
+# stop
 
 ## Description
 

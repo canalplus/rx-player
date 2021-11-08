@@ -1,4 +1,4 @@
-# player.seekTo()
+# seekTo
 
 ## Description
 

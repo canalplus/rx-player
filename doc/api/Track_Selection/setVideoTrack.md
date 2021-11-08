@@ -1,4 +1,4 @@
-# player.setVideoTrack()
+# setVideoTrack
 
 ## Description
 

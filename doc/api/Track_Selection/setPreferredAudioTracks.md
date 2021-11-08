@@ -1,4 +1,4 @@
-# player.setPreferredAudioTracks()
+# setPreferredAudioTracks
 
 ## Description
 

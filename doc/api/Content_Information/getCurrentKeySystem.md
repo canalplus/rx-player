@@ -1,4 +1,4 @@
-# player.getCurrentKeySystem()
+# getCurrentKeySystem
 
 ## Description
 

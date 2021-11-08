@@ -1,4 +1,4 @@
-# player.getMinimumPosition()
+# getMinimumPosition
 
 ## Description
 

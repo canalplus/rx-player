@@ -1,4 +1,4 @@
-# player.dispose()
+# dispose
 
 ## Description
 

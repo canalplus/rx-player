@@ -1,4 +1,4 @@
-# player.unMute()
+# unMute
 
 ## Description
 

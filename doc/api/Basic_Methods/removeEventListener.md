@@ -1,4 +1,4 @@
-# player.removeEventListener()
+# removeEventListener
 
 ## Description
 

@@ -1,4 +1,4 @@
-# player.getError()
+# getError
 
 ## Description
 

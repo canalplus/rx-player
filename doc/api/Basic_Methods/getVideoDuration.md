@@ -1,4 +1,4 @@
-# player.getVideoDuration()
+# getVideoDuration
 
 ## Description
 

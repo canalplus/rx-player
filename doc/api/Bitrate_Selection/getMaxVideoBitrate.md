@@ -1,4 +1,4 @@
-# player.getMaxVideoBitrate()
+# getMaxVideoBitrate
 
 ## Description
 

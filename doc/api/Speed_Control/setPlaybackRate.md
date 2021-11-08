@@ -1,4 +1,4 @@
-# player.setPlaybackRate()
+# setPlaybackRate
 
 ## Description
 

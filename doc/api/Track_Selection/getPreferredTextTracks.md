@@ -1,4 +1,4 @@
-# player.getPreferredTextTracks()
+# getPreferredTextTracks
 
 ## Description
 

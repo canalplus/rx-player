@@ -1,4 +1,4 @@
-# player.isTrickModeEnabled()
+# isTrickModeEnabled
 
 ## Description
 

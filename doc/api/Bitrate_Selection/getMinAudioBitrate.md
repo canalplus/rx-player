@@ -1,4 +1,4 @@
-# player.getMinAudioBitrate()
+# getMinAudioBitrate
 
 ## Description
 

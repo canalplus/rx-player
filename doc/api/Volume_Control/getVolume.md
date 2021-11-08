@@ -1,4 +1,4 @@
-# player.getVolume()
+# getVolume
 
 ## Description
 

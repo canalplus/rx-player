@@ -1,4 +1,4 @@
-# player.disableVideoTrack()
+# disableVideoTrack
 
 ## Description
 

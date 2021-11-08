@@ -1,4 +1,4 @@
-# player.getVideoTrack()
+# getVideoTrack
 
 ## Description
 

@@ -1,4 +1,4 @@
-# player.setMaxAudioBitrate()
+# setMaxAudioBitrate
 
 ## Description
 

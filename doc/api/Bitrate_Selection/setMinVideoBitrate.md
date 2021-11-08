@@ -1,4 +1,4 @@
-# player.setMinVideoBitrate()
+# setMinVideoBitrate
 
 ## Description
 

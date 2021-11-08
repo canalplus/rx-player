@@ -1,4 +1,4 @@
-# player.disableTextTrack()
+# disableTextTrack
 
 ## Description
 

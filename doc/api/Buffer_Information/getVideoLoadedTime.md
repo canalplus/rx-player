@@ -1,4 +1,4 @@
-# player.getVideoLoadedTime()
+# getVideoLoadedTime
 
 ## Description
 

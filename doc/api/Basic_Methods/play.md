@@ -1,4 +1,4 @@
-# player.play()
+# play
 
 ## Description
 

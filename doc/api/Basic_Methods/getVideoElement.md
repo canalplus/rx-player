@@ -1,4 +1,4 @@
-# player.getVideoElement()
+# getVideoElement
 
 ## Description
 

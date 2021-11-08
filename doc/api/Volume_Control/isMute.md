@@ -1,4 +1,4 @@
-# player.isMute()
+# isMute
 
 ## Description
 

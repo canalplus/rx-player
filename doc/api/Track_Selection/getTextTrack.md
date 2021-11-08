@@ -1,4 +1,4 @@
-# player.getTextTrack()
+# getTextTrack
 
 ## Description
 

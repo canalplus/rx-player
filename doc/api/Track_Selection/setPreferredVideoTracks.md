@@ -1,4 +1,4 @@
-# player.setPreferredVideoTracks()
+# setPreferredVideoTracks
 
 ## Description
 

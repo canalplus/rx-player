@@ -1,4 +1,4 @@
-# player.getWantedBufferAhead()
+# getWantedBufferAhead
 
 ## Description
 

@@ -1,4 +1,4 @@
-# player.exitFullscreen()
+# exitFullscreen
 
 <div class="warning">
 This option is deprecated, it will disappear in the next major release

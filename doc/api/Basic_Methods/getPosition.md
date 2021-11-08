@@ -1,4 +1,4 @@
-# player.getPosition()
+# getPosition
 
 ## Description
 
