@@ -12,6 +12,8 @@ const { encodeHtmlAttributeValue } = require("./utils");
  * `null` or `undefined` if unset.
  * @param {string} options.navBarHtml - HTML strinng for the Navbar (the
  * header).
+ * @param {string} options.pageListHtml - HTML string for the complete list of
+ * documentation pages with links.
  * @param {string} options.rootUrl - Relative URL for the root of the site.
  * This value is included in a custom script so it can be accessed from other
  * JavaScript files.
@@ -29,6 +31,7 @@ function generatePageHtml(
     cssUrls,
     faviconUrl,
     navBarHtml,
+    pageListHtml,
     rootUrl,
     scriptUrls,
     sidebarHtml,
@@ -41,6 +44,7 @@ function generatePageHtml(
   const faviconHtml = typeof faviconUrl === "string" ?
     `<link rel="icon" type="image/png" href="${encodeHtmlAttributeValue(faviconUrl)}">` :
     "";
+  const hamburgerHtml = constructHamburgerBarHtml(pageListHtml);
 
   return "<head>" +
            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
@@ -69,9 +73,23 @@ function generatePageHtml(
                tocHtml +
              "</div>" +
            "</div>" +
+           hamburgerHtml +
            scripts +
          "</body>";
 };
+
+function constructHamburgerBarHtml(pageListHtml) {
+  return `<div class="hamburger-bar">` +
+    `<div class="hamburger-header">` +
+    `<span class="hamburger-title">Page List</span>` +
+    `<button type="button" class="hamburger-bar-closer">` +
+    `<svg viewBox="0 0 15 15" width="21" height="21">` +
+    `<g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g>` +
+    `</svg></button>` +
+    `</div>` +
+    pageListHtml +
+    "</div>";
+}
 
 /**
  * Returns links to CSS file as an HTML string to be included in the page.

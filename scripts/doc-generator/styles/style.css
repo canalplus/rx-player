@@ -212,6 +212,17 @@ table tr td {
 
 /* ========== Navbar (header bar) ========== */
 
+.hamburger-opener {
+  display: none;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  margin: 0px 10px 0px 0px;
+}
+
 .navbar-parent {
   position: fixed;
   top: 0;
@@ -392,6 +403,185 @@ a.navbar-active {
   display: block;
 }
 
+
+/* ========== Hamburger bar ========== */
+
+.overlay {
+  position: fixed;
+  z-index: 500;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transition-duration: .2s;
+  transition-property: opacity,visibility;
+}
+
+.hamburger-bar {
+  z-index: 1000;
+  background-color: #f9fafb;
+  position: fixed;
+  transform: translate3d(-100%,0,0);
+  transition-duration: .25s;
+  transition-property: opacity,visibility,transform;
+  bottom: 0;
+  transition-timing-function: ease-in-out;
+  top: 0;
+  left: 0;
+  padding: 0px 15px;
+  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+}
+
+.hamburger-bar.opened {
+  transform: translateZ(0);
+}
+
+.hamburger-header {
+  height: 41px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px;
+  border-bottom: 1px dotted black;
+ }
+
+ .hamburger-title {
+   font-weight: bold;
+   font-size: 1.05em;
+ }
+
+.hamburger-bar-closer {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+
+.page-list-wrapper {
+  padding: 0px;
+  margin: 0px;
+  overflow-x: hidden;
+  list-style: none;
+  width: auto;
+  min-width: 300px;
+  color: #333;
+  overflow-y: auto;
+  height: calc(100% - 61px);
+}
+
+.page-list-wrapper svg {
+  height: 24px;
+  width: 24px;
+}
+
+.page-list-group.active, .page-list-item.active a {
+  color: rgba(36,122,183,1);
+}
+
+.page-list-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px 0px 5px 5px;
+  padding-left: 5px;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.no-js .page-list-group {
+  cursor: default;
+}
+.no-js .page-list-group::after {
+  cursor: default;
+  transform: rotate(180deg);
+}
+
+.page-list-group.opened::after {
+  transform: rotate(180deg);
+}
+
+.page-list-group::after {
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><path fill="rgba(0,0,0,0.5)" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path></svg>') 50%/2rem 2rem;
+  content: " ";
+  height: 1.25rem;
+  min-width: 1.25rem;
+  transform: rotate(90deg);
+  transition: transform 0.2s linear;
+}
+
+.page-list-group.active::after {
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><path fill="rgba(60,134,187,1)" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path></svg>') 50%/2rem 2rem;
+  content: " ";
+  height: 1.25rem;
+  min-width: 1.25rem;
+  transition: transform 0.2s linear;
+}
+
+.page-list-item ul {
+  display: none;
+  will-change: height;
+  overflow: hidden;
+}
+
+.no-js .page-list-item ul {
+  display: block;
+}
+
+.page-list-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  color: #454545;
+  /* padding: 5px 12px; */
+  width: 100%;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.page-list-group:hover {
+  background-color: #e4f3ff;
+}
+
+.no-js .page-list-group:hover {
+  background-color: transparent;
+}
+
+.page-list-item a:hover {
+  background-color: #e4f3ff;
+}
+
+.page-list-item a.active {
+  background-color: #cfebff;
+}
+
+li.page-list-item {
+  margin-top: 2px;
+}
+
+.page-list-item ul {
+  list-style: none;
+  margin: 0px;
+  padding-left: 10px;
+  width: 100%;
+}
+
+.page-list-item a {
+  text-decoration: none;
+  color: #454545;
+  padding: 5px 0px 5px 5px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+
 /* ========== sidebar ========== */
 
 .sidebar-parent {
@@ -472,7 +662,7 @@ a.navbar-active {
   transform: rotate(180deg);
 }
 
-.sidebar-item.opened .sidebar-item-group::after {
+.sidebar-item-group.opened::after {
   transform: rotate(180deg);
 }
 
@@ -490,7 +680,6 @@ a.navbar-active {
   content: " ";
   height: 1.25rem;
   min-width: 1.25rem;
-  transform: rotate(90deg);
   transition: transform 0.2s linear;
 }
 
@@ -615,5 +804,17 @@ li.sidebar-item {
   .content-wrapper {
     padding-left: 7px;
     padding-right: 7px;
+  }
+
+  .hideable {
+    display: none;
+  }
+
+  .hamburger-opener {
+    display: block;
+  }
+
+  .navbar-item.last-left {
+    margin-right: 0px;
   }
 }

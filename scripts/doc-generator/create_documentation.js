@@ -4,6 +4,7 @@ const path = require("path");
 const parseDocConfigs = require("./parse_doc_configs.js");
 const createDocumentationPage = require("./create_documentation_page.js");
 const generateHeaderHtml = require("./generate_header_html.js");
+const generatePageListHtml = require("./generate_page_list_html.js");
 const generateSidebarHtml = require("./generate_sidebar_html.js");
 const {
   mkdirParent,
@@ -199,6 +200,7 @@ async function prepareAndCreateDocumentationPage({
     const fullPath =  path.join(baseOutDir, config.favicon.srcPath);
     faviconUrl = toUriCompatibleRelativePath(fullPath, outDir);
   }
+  const pageListHtml = generatePageListHtml(config.links, linkIdx, pageIdxs, outputFile);
   const navBarHtml = generateHeaderHtml(config, linkIdx, outputFile, logoInfo);
   const pages = config.links[linkIdx].pages;
   const sidebarHtml = generateSidebarHtml(pages, pageIdxs, outputFile, logoInfo);
@@ -238,6 +240,7 @@ async function prepareAndCreateDocumentationPage({
     navBarHtml,
     nextPageInfo,
     outputFile,
+    pageListHtml,
     pageTitle,
     prevPageInfo,
     scriptUrls,

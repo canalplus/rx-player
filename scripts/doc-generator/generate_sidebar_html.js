@@ -30,8 +30,8 @@ function generateSidebarHtml(
         const isActiveSubPage = isActive && j === currentPageIndexes[1];
         return generateLiForPage(sp, isActiveSubPage);
       }).join("");
-      return `<li class="sidebar-item${isActive ? " opened" : ""}">` +
-        `<div class="sidebar-item sidebar-item-group${isActive ? " active" : ""}">` +
+      return `<li class="sidebar-item">` +
+        `<div class="sidebar-item sidebar-item-group${isActive ? " active opened" : ""}">` +
         encode(p.displayName) +
         "</div>" +
         `<ul>${lis}</ul>` +

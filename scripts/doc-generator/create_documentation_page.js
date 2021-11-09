@@ -33,6 +33,8 @@ module.exports = async function createDocumentationPage({
   nextPageInfo,
   // Absolute path where the generated page should be generated.
   outputFile,
+  // HTML string for the complete list of documentation pages with links
+  pageListHtml,
   // Title of the corresponding HTML page
   pageTitle,
   // Information relative to the previous documentation page, `null` if none.
@@ -80,6 +82,7 @@ module.exports = async function createDocumentationPage({
     cssUrls,
     faviconUrl,
     navBarHtml,
+    pageListHtml,
     rootUrl,
     scriptUrls,
     sidebarHtml,
