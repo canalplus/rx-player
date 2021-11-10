@@ -187,7 +187,7 @@ useful depending on your needs):
       - `"playready"`
       - `"clearkey"`
 
-    For more specific (or just diffrent ones), the full reverse domain name of
+    For more specific (or just different ones), the full reverse domain name of
     the key system can be used instead, for example:
       - `"com.widevine.alpha"`,
       - `"com.microsoft.playready.hardware"`
@@ -405,7 +405,7 @@ useful depending on your needs):
 
     The size of this cache is usually kept relatively low (in the 10s) by the
     player.
-    We found out however that some devices have an event lower limit for the
+    We found out however that some devices have an even lower limit for the
     number of `MediaKeySession` that can be created at the same time.
 
     The `maxSessionCacheSize` option allows to configure the maximum number of
