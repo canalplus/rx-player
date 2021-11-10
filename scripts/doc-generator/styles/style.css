@@ -162,6 +162,11 @@ table tr td {
 }
 
 /* ========= Search ======== */
+
+.no-js .search-icon {
+  display: none;
+}
+
 .search-icon {
   cursor: pointer;
 }
@@ -405,6 +410,10 @@ a.navbar-active {
 
 
 /* ========== Hamburger bar ========== */
+
+.no-js .hamburger-bar {
+  display: none;
+}
 
 .overlay {
   position: fixed;
@@ -807,6 +816,10 @@ li.sidebar-item {
   }
 
   .hideable {
+    display: none;
+  }
+
+  .no-js .hamburger-opener {
     display: none;
   }
 
