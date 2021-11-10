@@ -16,7 +16,7 @@
 
 import ABRManager, {
   IABRManagerArguments,
-  IABRManagerClockTick,
+  IABRManagerPlaybackObservation,
 } from "./abr_manager";
 export {
   IABRAddedSegmentEvent,
@@ -32,5 +32,5 @@ export {
 export default ABRManager;
 export {
   IABRManagerArguments,
-  IABRManagerClockTick,
+  IABRManagerPlaybackObservation,
 };

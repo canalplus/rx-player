@@ -23,10 +23,8 @@ describe("DASH live content (SegmentTimeline)", function () {
 
   it("should fetch and parse the Manifest", async function () {
     xhrMock.lock();
-    player.loadVideo({
-      url: manifestInfos.url,
-      transport: manifestInfos.transport,
-    });
+    player.loadVideo({ url: manifestInfos.url,
+                       transport: manifestInfos.transport });
 
     await sleep(1);
     expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request

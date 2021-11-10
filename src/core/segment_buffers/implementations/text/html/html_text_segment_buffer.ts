@@ -52,11 +52,11 @@ const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL,
         TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config;
 
 /**
- * Generate the clock at which TextTrack HTML Cues should be refreshed.
+ * Generate the interval at which TextTrack HTML Cues should be refreshed.
  * @param {HTMLMediaElement} videoElement
  * @returns {Observable}
  */
-function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
+function generateRefreshInterval(videoElement : HTMLMediaElement) : Observable<boolean> {
   const seeking$ = onSeeking$(videoElement);
   const seeked$ = onSeeked$(videoElement);
   const ended$ = onEnded$(videoElement);
@@ -175,7 +175,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
     this._currentCues = [];
 
     // update text tracks
-    generateClock(this._videoElement)
+    generateRefreshInterval(this._videoElement)
       .pipe(takeUntil(this._destroy$))
       .subscribe((shouldDisplay) => {
         if (!shouldDisplay) {

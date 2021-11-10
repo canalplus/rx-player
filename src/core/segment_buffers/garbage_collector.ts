@@ -31,7 +31,7 @@ export interface IGarbageCollectorArgument {
   /** SegmentBuffer implementation */
   segmentBuffer : SegmentBuffer;
   /** Emit current position in seconds regularly */
-  clock$ : Observable<number>;
+  currentTime$ : Observable<number>;
   /** Maximum time to keep behind current time position, in seconds */
   maxBufferBehind$ : Observable<number>;
   /** Minimum time to keep behind current time position, in seconds */
@@ -40,19 +40,19 @@ export interface IGarbageCollectorArgument {
 
 /**
  * Perform cleaning of the buffer according to the values set by the user
- * at each clock tick and each times the maxBufferBehind/maxBufferAhead values
- * change.
+ * each time `currentTime$` emits and each times the
+ * maxBufferBehind/maxBufferAhead values change.
  *
  * @param {Object} opt
  * @returns {Observable}
  */
 export default function BufferGarbageCollector({
   segmentBuffer,
-  clock$,
+  currentTime$,
   maxBufferBehind$,
   maxBufferAhead$,
 } : IGarbageCollectorArgument) : Observable<never> {
-  return observableCombineLatest([clock$, maxBufferBehind$, maxBufferAhead$]).pipe(
+  return observableCombineLatest([currentTime$, maxBufferBehind$, maxBufferAhead$]).pipe(
     mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
       return clearBuffer(segmentBuffer,
                          currentTime,

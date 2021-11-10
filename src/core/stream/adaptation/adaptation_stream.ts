@@ -57,12 +57,13 @@ import {
 import ABRManager, {
   IABREstimate,
 } from "../../abr";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import reloadAfterSwitch from "../reload_after_switch";
 import RepresentationStream, {
-  IRepresentationStreamClockTick,
+  IRepresentationStreamPlaybackObservation,
   ITerminationOrder,
 } from "../representation";
 import {
@@ -73,22 +74,21 @@ import createRepresentationEstimator from "./create_representation_estimator";
 
 const { DELTA_POSITION_AFTER_RELOAD } = config;
 
-/** `Clock tick` information needed by the AdaptationStream. */
-export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTick {
-  /**
-   * For the current SegmentBuffer, difference in seconds between the next position
-   * where no segment data is available and the current position.
-   */
-  bufferGap : number;
-  /** `duration` property of the HTMLMediaElement on which the content plays. */
-  duration : number;
-  /** Allows to fetch the current position at any time. */
-  getCurrentTime : () => number;
-  /** If true, the player has been put on pause. */
-  isPaused: boolean;
-  /** Last "playback rate" asked by the user. */
-  speed : number;
-}
+/** Regular playback information needed by the AdaptationStream. */
+export interface IAdaptationStreamPlaybackObservation extends
+  IRepresentationStreamPlaybackObservation {
+    /**
+     * For the current SegmentBuffer, difference in seconds between the next position
+     * where no segment data is available and the current position.
+     */
+    bufferGap : number;
+    /** `duration` property of the HTMLMediaElement on which the content plays. */
+    duration : number;
+    /** If true, the player has been put on pause. */
+    isPaused: boolean;
+    /** Last "playback rate" asked by the user. */
+    speed : number;
+  }
 
 /** Arguments given when creating a new `AdaptationStream`. */
 export interface IAdaptationStreamArguments {
@@ -97,11 +97,8 @@ export interface IAdaptationStreamArguments {
    * conditions like the current network bandwidth.
    */
   abrManager : ABRManager;
-  /**
-   * Regularly emit playback conditions.
-   * The main AdaptationStream logic will be triggered on each `tick`.
-   */
-  clock$ : Observable<IAdaptationStreamClockTick>;
+  /** Regularly emit playback conditions. */
+  playbackObserver : IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
   /** Content you want to create this Stream for. */
   content : { manifest : Manifest;
               period : Period;
@@ -177,7 +174,7 @@ export interface IAdaptationStreamOptions {
  */
 export default function AdaptationStream({
   abrManager,
-  clock$,
+  playbackObserver,
   content,
   options,
   segmentBuffer,
@@ -198,7 +195,7 @@ export default function AdaptationStream({
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
   const { estimator$, requestFeedback$, streamFeedback$ } =
-    createRepresentationEstimator(content, abrManager, clock$);
+    createRepresentationEstimator(content, abrManager, playbackObserver.observe(true));
 
   /** Allows the `RepresentationStream` to easily fetch media segments. */
   const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type,
@@ -262,7 +259,7 @@ export default function AdaptationStream({
     {
       return reloadAfterSwitch(period,
                                adaptation.type,
-                               clock$,
+                               playbackObserver,
                                DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
     }
 
@@ -357,7 +354,7 @@ export default function AdaptationStream({
       );
 
       log.info("Stream: changing representation", adaptation.type, representation);
-      return RepresentationStream({ clock$,
+      return RepresentationStream({ playbackObserver,
                                     content: { representation,
                                                adaptation,
                                                period,

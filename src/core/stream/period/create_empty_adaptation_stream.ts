@@ -23,6 +23,7 @@ import {
 import log from "../../../log";
 import { Period } from "../../../manifest";
 import { IReadOnlySharedReference } from "../../../utils/reference";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import { IBufferType } from "../../segment_buffers";
 import { IStreamStatusEvent } from "../types";
 
@@ -31,14 +32,14 @@ import { IStreamStatusEvent } from "../types";
  *
  * This observable will never download any segment and just emit a "full"
  * event when reaching the end.
- * @param {Observable} streamClock$
+ * @param {Observable} playbackObserver
  * @param {Object} wantedBufferAhead
  * @param {string} bufferType
  * @param {Object} content
  * @returns {Observable}
  */
 export default function createEmptyAdaptationStream(
-  streamClock$ : Observable<{ position : number }>,
+  playbackObserver : IReadOnlyPlaybackObserver<{ position : number }>,
   wantedBufferAhead : IReadOnlySharedReference<number>,
   bufferType : IBufferType,
   content : { period : Period }
@@ -46,9 +47,10 @@ export default function createEmptyAdaptationStream(
   const { period } = content;
   let hasFinishedLoading = false;
   const wantedBufferAhead$ = wantedBufferAhead.asObservable();
-  return observableCombineLatest([streamClock$, wantedBufferAhead$]).pipe(
-    mergeMap(([clockTick, wba]) => {
-      const { position } = clockTick;
+  const observation$ = playbackObserver.observe(true);
+  return observableCombineLatest([observation$, wantedBufferAhead$]).pipe(
+    mergeMap(([observation, wba]) => {
+      const { position } = observation;
       if (period.end !== undefined && position + wba >= period.end) {
         log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
         hasFinishedLoading = true;
@@ -56,7 +58,7 @@ export default function createEmptyAdaptationStream(
       return observableOf({ type: "stream-status" as const,
                             value: { period,
                                      bufferType,
-                                     position: clockTick.position,
+                                     position: observation.position,
                                      imminentDiscontinuity: null,
                                      hasFinishedLoading,
                                      neededSegments: [],

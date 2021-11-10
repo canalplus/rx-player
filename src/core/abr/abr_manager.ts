@@ -28,10 +28,10 @@ import createFilters from "./create_filters";
 import RepresentationEstimator, {
   IABREstimate,
   IABRStreamEvents,
-  IRepresentationEstimatorClockTick,
+  IRepresentationEstimatorPlaybackObservation,
 } from "./representation_estimator";
 
-export type IABRManagerClockTick = IRepresentationEstimatorClockTick;
+export type IABRManagerPlaybackObservation = IRepresentationEstimatorPlaybackObservation;
 
 // Options for every RepresentationEstimator
 interface IRepresentationEstimatorsThrottlers {
@@ -97,14 +97,14 @@ export default class ABRManager {
    * state).
    * @param {string} type
    * @param {Array.<Representation>} representations
-   * @param {Observable<Object>} clock$
+   * @param {Observable<Object>} observation$
    * @param {Observable<Object>} streamEvents$
    * @returns {Observable}
    */
   public get$(
     type : IBufferType,
     representations : Representation[],
-    clock$ : Observable<IABRManagerClockTick>,
+    observation$ : Observable<IABRManagerPlaybackObservation>,
     streamEvents$ : Observable<IABRStreamEvents>
   ) : Observable<IABREstimate> {
     const bandwidthEstimator = this._getBandwidthEstimator(type);
@@ -123,7 +123,7 @@ export default class ABRManager {
                                    this._throttlers.throttle[type]);
     return RepresentationEstimator({ bandwidthEstimator,
                                      streamEvents$,
-                                     clock$,
+                                     observation$,
                                      filters$,
                                      initialBitrate,
                                      manualBitrate$,

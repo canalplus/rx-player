@@ -31,7 +31,7 @@ import Manifest, {
 import { fromEvent } from "../../../utils/event_emitter";
 import ABRManager, {
   IABREstimate,
-  IABRManagerClockTick,
+  IABRManagerPlaybackObservation,
   IABRMetricsEvent,
   IABRRequestBeginEvent,
   IABRRequestEndEvent,
@@ -62,14 +62,14 @@ import {
  *
  * @param {Object} content
  * @param {Object} abrManager
- * @param {Observable} clock$
+ * @param {Observable} observation$
  * @returns {Object}
  */
 export default function createRepresentationEstimator(
   { manifest, adaptation } : { manifest : Manifest;
                                adaptation : Adaptation; },
   abrManager : ABRManager,
-  clock$ : Observable<IABRManagerClockTick>
+  observation$ : Observable<IABRManagerPlaybackObservation>
 ) : { estimator$ : Observable<IABREstimate>;
       streamFeedback$ : Subject<IStreamEventAddedSegment<unknown> |
                                 IRepresentationChangeEvent>;
@@ -115,7 +115,10 @@ export default function createRepresentationEstimator(
       return true;
     }),
     switchMap((playableRepresentations) =>
-      abrManager.get$(adaptation.type, playableRepresentations, clock$, abrEvents$)));
+      abrManager.get$(adaptation.type,
+                      playableRepresentations,
+                      observation$,
+                      abrEvents$)));
 
   return { estimator$,
            streamFeedback$,

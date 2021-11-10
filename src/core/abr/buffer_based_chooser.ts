@@ -21,7 +21,7 @@ import {
 import log from "../../log";
 import getBufferLevels from "./get_buffer_levels";
 import getEstimateFromBufferLevels, {
-  IBufferBasedChooserClockTick,
+  IBufferBasedChooserPlaybackObservation,
 } from "./get_estimate_from_buffer_levels";
 
 /**
@@ -40,13 +40,13 @@ import getEstimateFromBufferLevels, {
  * @returns {Observable}
  */
 export default function BufferBasedChooser(
-  update$ : Observable<IBufferBasedChooserClockTick>,
+  update$ : Observable<IBufferBasedChooserPlaybackObservation>,
   bitrates: number[]
 ) : Observable<number|undefined> {
   const levelsMap = getBufferLevels(bitrates);
   log.debug("ABR: Steps for buffer based chooser.",
             levelsMap.map((l, i) => ({ bufferLevel: l, bitrate: bitrates[i] })));
-  return update$.pipe(map((clockTick) => {
-    return getEstimateFromBufferLevels(clockTick, bitrates, levelsMap);
+  return update$.pipe(map((playbackObservation) => {
+    return getEstimateFromBufferLevels(playbackObservation, bitrates, levelsMap);
   }));
 }

@@ -27,7 +27,7 @@ export default function assert(
   assertion : boolean,
   message? : string
 ) : asserts assertion {
-  if (!assertion) {
+  if (__DEV__ && !assertion) {
     throw new AssertionError(message === undefined ? "invalid assertion" :
                                                      message);
   }

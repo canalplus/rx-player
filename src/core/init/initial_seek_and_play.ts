@@ -38,11 +38,12 @@ import {
   createSharedReference,
   IReadOnlySharedReference,
 } from "../../utils/reference";
-import EVENTS from "./events_generators";
 import {
-  IInitClockTick,
-  IWarningEvent,
-} from "./types";
+  IPlaybackObservation,
+  PlaybackObserver,
+} from "../api";
+import EVENTS from "./events_generators";
+import { IWarningEvent } from "./types";
 
 /** Event emitted when trying to perform the initial `play`. */
 export type IInitialPlayEvent =
@@ -59,19 +60,19 @@ export type IInitialPlayEvent =
   IWarningEvent;
 
 /**
- * Emit once as soon as the clock$ announce that the content can begin to be
- * played by calling the `play` method.
+ * Emit once as soon as the playback observation announces that the content can
+ * begin to be played by calling the `play` method.
  *
  * This depends on browser-defined criteria (e.g. the readyState status) as well
  * as RxPlayer-defined ones (e.g.) not rebuffering.
  *
- * @param {Observable} clock$
+ * @param {Observable} observation$
  * @returns {Observable.<undefined>}
  */
 export function waitUntilPlayable(
-  clock$ : Observable<IInitClockTick>
+  observation$ : Observable<IPlaybackObservation>
 ) : Observable<undefined> {
-  return clock$.pipe(
+  return observation$.pipe(
     filter(({ seeking, rebuffering, readyState }) => !seeking &&
                                                      rebuffering === null &&
                                                      readyState >= 1),
@@ -133,17 +134,13 @@ export interface IInitialSeekAndPlayObject {
  * @returns {Object}
  */
 export default function initialSeekAndPlay(
-  { clock$,
-    mediaElement,
+  { mediaElement,
+    playbackObserver,
     startTime,
-    mustAutoPlay,
-    setCurrentTime } : { clock$ : Observable<IInitClockTick>;
-                         isDirectfile : boolean;
-                         mediaElement : HTMLMediaElement;
-                         mustAutoPlay : boolean;
-                         /** Perform an internal seek. */
-                         setCurrentTime: (nb: number) => void;
-                         startTime : number|(() => number); }
+    mustAutoPlay } : { playbackObserver : PlaybackObserver;
+                       mediaElement : HTMLMediaElement;
+                       mustAutoPlay : boolean;
+                       startTime : number|(() => number); }
 ) : IInitialSeekAndPlayObject {
   const initialSeekPerformed = createSharedReference(false);
   const initialPlayPerformed = createSharedReference(false);
@@ -154,7 +151,7 @@ export default function initialSeekAndPlay(
       log.info("Init: Set initial time", startTime);
       const initialTime = typeof startTime === "function" ? startTime() :
                                                             startTime;
-      setCurrentTime(initialTime);
+      playbackObserver.setCurrentTime(initialTime);
       initialSeekPerformed.setValue(true);
       initialSeekPerformed.finish();
     }),
@@ -164,12 +161,12 @@ export default function initialSeekAndPlay(
   const seekAndPlay$ = seek$.pipe(
     mergeMap(() : Observable<IWarningEvent | undefined> => {
       if (!shouldValidateMetadata() || mediaElement.duration > 0) {
-        return waitUntilPlayable(clock$);
+        return waitUntilPlayable(playbackObserver.observe(true));
       } else {
         const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
                                      "Cannot load automatically: your browser " +
                                      "falsely announced having loaded the content.");
-        return waitUntilPlayable(clock$)
+        return waitUntilPlayable(playbackObserver.observe(true))
           .pipe(startWith(EVENTS.warning(error)));
       }
     }),

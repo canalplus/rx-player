@@ -29,6 +29,7 @@ import Manifest, {
 } from "../../../manifest";
 import { ISegmentParserParsedSegment } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
@@ -45,20 +46,22 @@ const { APPEND_WINDOW_SECURITIES } = config;
  * @returns {Observable}
  */
 export default function pushMediaSegment<T>(
-  { clock$,
+  { playbackObserver,
     content,
     initSegmentData,
     parsedSegment,
     segment,
-    segmentBuffer } : { clock$ : Observable<{ position : number }>;
-                        content: { adaptation : Adaptation;
-                                   manifest : Manifest;
-                                   period : Period;
-                                   representation : Representation; };
-                        initSegmentData : T | null;
-                        parsedSegment : ISegmentParserParsedSegment<T>;
-                        segment : ISegment;
-                        segmentBuffer : SegmentBuffer; }
+    segmentBuffer } :
+  { playbackObserver : IReadOnlyPlaybackObserver<{ position : number;
+                                                   wantedTimeOffset : number; }>;
+    content: { adaptation : Adaptation;
+               manifest : Manifest;
+               period : Period;
+               representation : Representation; };
+    initSegmentData : T | null;
+    parsedSegment : ISegmentParserParsedSegment<T>;
+    segment : ISegment;
+    segmentBuffer : SegmentBuffer; }
 ) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (parsedSegment.chunkData === null) {
@@ -103,10 +106,11 @@ export default function pushMediaSegment<T>(
                                           end: estimatedEnd },
                                         content);
 
-    return appendSegmentToBuffer(clock$, segmentBuffer, { data, inventoryInfos })
-      .pipe(map(() => {
-        const buffered = segmentBuffer.getBufferedRanges();
-        return EVENTS.addedSegment(content, segment, buffered, chunkData);
-      }));
+    return appendSegmentToBuffer(playbackObserver,
+                                 segmentBuffer,
+                                 { data, inventoryInfos }).pipe(map(() => {
+      const buffered = segmentBuffer.getBufferedRanges();
+      return EVENTS.addedSegment(content, segment, buffered, chunkData);
+    }));
   });
 }

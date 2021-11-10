@@ -109,14 +109,17 @@ export interface IABREstimate {
   knownStableBitrate?: number;
 }
 
-/** Properties the `RepresentationEstimator` will need at each "clock tick". */
-export interface IRepresentationEstimatorClockTick {
+/** Media properties the `RepresentationEstimator` will need to keep track of. */
+export interface IRepresentationEstimatorPlaybackObservation {
   /**
    * For the concerned media buffer, difference in seconds between the next
    * position where no segment data is available and the current position.
    */
   bufferGap : number;
-  /** The position, in seconds, the media element was in at the time of the tick. */
+  /**
+   * The position, in seconds, the media element was in at the time of the
+   * observation.
+   */
   position : number;
   /**
    * Last "playback rate" set by the user. This is the ideal "playback rate" at
@@ -290,7 +293,7 @@ export interface IRepresentationEstimatorArguments {
   /** Events indicating current playback and network conditions. */
   streamEvents$ : Observable<IABRStreamEvents>;
   /** Observable emitting regularly the current playback situation. */
-  clock$ : Observable<IRepresentationEstimatorClockTick>;
+  observation$ : Observable<IRepresentationEstimatorPlaybackObservation>;
   /** Observable allows to filter out Representation in our estimations. */
   filters$ : Observable<IABRFiltersObject>;
   /**
@@ -392,7 +395,7 @@ function getFilteredRepresentations(
  */
 export default function RepresentationEstimator({
   bandwidthEstimator,
-  clock$,
+  observation$,
   filters$,
   initialBitrate,
   lowLatencyMode,
@@ -489,9 +492,9 @@ export default function RepresentationEstimator({
 
       // Emit each time a buffer-based estimation should be actualized (each
       // time a segment is added).
-      const bufferBasedClock$ = streamEvents$.pipe(
+      const bufferBasedobservation$ = streamEvents$.pipe(
         filter((e) : e is IABRAddedSegmentEvent => e.type === "added-segment"),
-        withLatestFrom(clock$),
+        withLatestFrom(observation$),
         map(([{ value: evtValue }, { speed, position } ]) => {
           const timeRanges = evtValue.buffered;
           const bufferGap = getLeftSizeOfRange(timeRanges, position);
@@ -503,24 +506,28 @@ export default function RepresentationEstimator({
       );
 
       const bitrates = representations.map(r => r.bitrate);
-      const bufferBasedEstimation$ = BufferBasedChooser(bufferBasedClock$, bitrates)
+      const bufferBasedEstimation$ = BufferBasedChooser(bufferBasedobservation$, bitrates)
         .pipe(startWith(undefined));
 
-      return observableCombineLatest([ clock$,
+      return observableCombineLatest([ observation$,
                                        minAutoBitrate$,
                                        maxAutoBitrate$,
                                        filters$,
                                        bufferBasedEstimation$ ]
       ).pipe(
         withLatestFrom(currentRepresentation$),
-        map(([ [ clock, minAutoBitrate, maxAutoBitrate, filters, bufferBasedBitrate ],
+        map(([ [ observation,
+                 minAutoBitrate,
+                 maxAutoBitrate,
+                 filters,
+                 bufferBasedBitrate ],
                currentRepresentation ]
         ) : IABREstimate => {
           const _representations = getFilteredRepresentations(representations,
                                                               filters);
           const requests = requestsStore.getRequests();
           const { bandwidthEstimate, bitrateChosen } = networkAnalyzer
-            .getBandwidthEstimate(clock,
+            .getBandwidthEstimate(observation,
                                   bandwidthEstimator,
                                   currentRepresentation,
                                   requests,
@@ -531,9 +538,10 @@ export default function RepresentationEstimator({
           const stableRepresentation = scoreCalculator.getLastStableRepresentation();
           const knownStableBitrate = stableRepresentation == null ?
             undefined :
-            stableRepresentation.bitrate / (clock.speed > 0 ? clock.speed : 1);
+            stableRepresentation.bitrate / (observation.speed > 0 ? observation.speed :
+                                                                    1);
 
-          const { bufferGap } = clock;
+          const { bufferGap } = observation;
           if (!forceBandwidthMode && bufferGap <= 5) {
             forceBandwidthMode = true;
           } else if (forceBandwidthMode && isFinite(bufferGap) && bufferGap > 10) {
@@ -552,7 +560,7 @@ export default function RepresentationEstimator({
                      urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
                                                       currentRepresentation,
                                                       requests,
-                                                      clock),
+                                                      observation),
                      manual: false,
                      knownStableBitrate };
           }
@@ -566,7 +574,7 @@ export default function RepresentationEstimator({
                      urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
                                                       currentRepresentation,
                                                       requests,
-                                                      clock),
+                                                      observation),
                      manual: false,
                      knownStableBitrate };
           }
@@ -583,7 +591,7 @@ export default function RepresentationEstimator({
                    urgent: networkAnalyzer.isUrgent(bufferBasedBitrate,
                                                     currentRepresentation,
                                                     requests,
-                                                    clock),
+                                                    observation),
                    manual: false,
                    knownStableBitrate };
         })

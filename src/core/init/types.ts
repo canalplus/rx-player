@@ -21,11 +21,6 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import {
-  IClockMediaEventType,
-  IFreezingStatus,
-  IRebufferingStatus,
-} from "../api";
-import {
   IAttachedMediaKeysEvent,
   IBlacklistProtectionDataEvent,
   ICreatedMediaKeysEvent,
@@ -59,26 +54,6 @@ import {
   IStreamEventEvent,
   IStreamEventSkipEvent,
 } from "./stream_events_emitter";
-
-/** Object awaited by the `Init` on each clock tick. */
-export interface IInitClockTick { position : number;
-                                  getCurrentTime : () => number;
-                                  buffered : TimeRanges;
-                                  duration : number;
-                                  bufferGap : number;
-                                  event : IClockMediaEventType;
-                                  playbackRate : number;
-                                  currentRange : { start : number;
-                                                   end : number; } |
-                                                 null;
-                                  readyState : number;
-                                  paused : boolean;
-                                  rebuffering : IRebufferingStatus |
-                                                null;
-                                  freezing : IFreezingStatus |
-                                             null;
-                                  seeking : boolean;
-                                  internalSeeking : boolean; }
 
 /** Event sent after the Manifest has been loaded and parsed for the first time. */
 export interface IManifestReadyEvent {

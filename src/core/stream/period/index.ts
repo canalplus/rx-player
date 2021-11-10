@@ -16,14 +16,14 @@
 
 import PeriodStream, {
   IPeriodStreamArguments,
-  IPeriodStreamClockTick,
   IPeriodStreamOptions,
+  IPeriodStreamPlaybackObservation,
 } from "./period_stream";
 
 export default PeriodStream;
 
 export {
   IPeriodStreamArguments,
-  IPeriodStreamClockTick,
   IPeriodStreamOptions,
+  IPeriodStreamPlaybackObservation,
 };
