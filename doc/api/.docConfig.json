@@ -13,6 +13,10 @@
       "displayName": "Loading a Content"
     },
     {
+      "path": "./Decryption_Options.md",
+      "displayName": "Decryption Options"
+    },
+    {
       "path": "./Basic_Methods",
       "displayName": "Basic Methods"
     },

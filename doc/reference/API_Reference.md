@@ -1,4 +1,4 @@
-# API reference
+ API reference
 
 ## Overview
 
@@ -78,58 +78,58 @@ properties, methods, events and so on.
   - [`url`](../api/Loading_a_Content.md#url): URL to the content (e.g. DASH's
     MPD, Smooth's Manifest etc.)
 
-  - [`keySystems`](../api/Loading_a_Content.md#keysystems): DRM configuration
-    for the content.
+  - [`keySystems`](../api/Decryption_Options.md#loadvideo_%60keysystems%60_options):
+    DRM configuration for the content.
 
-    - [`keySystems[].type`](../api/Loading_a_Content.md#keysystems): Name of the
+    - [`keySystems[].type`](../api/Decryption_Options.md#type): Name of the
       DRM technology wanted.
 
-    - [`keySystems[].getLicense`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].getLicense`](../api/Decryption_Options.md#getlicense):
       Logic to fetch the license.
 
-    - [`keySystems[].getLicenseConfig`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].getLicenseConfig`](../api/Decryption_Options.md#getlicenseconfig):
       Supplementary configuration linked to the `getLicense` function.
 
-    - [`keySystems[].serverCertificate`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].serverCertificate`](../api/Decryption_Options.md#servercertificate):
       Eventual certificate encrypting exchanges between the CDM and license
       server.
 
-    - [`keySystems[].persistentLicense`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].persistentLicense`](../api/Decryption_Options.md#persistentlicense):
       Allows to ask for the DRM session to persist the license.
 
-    - [`keySystems[].licenseStorage`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].licenseStorage`](../api/Decryption_Options.md#licensestorage):
       Allows to ask for the DRM session to persist the license.
 
-    - [`keySystems[].fallbackOn`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].fallbackOn`](../api/Decryption_Options.md#fallbackon):
       Allows to fallback to another quality when a key is refused.
 
-    - [`keySystems[].maxSessionCacheSize`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].maxSessionCacheSize`](../api/Decryption_Options.md#maxsessioncachesize):
       Maximum number of DRM sessions cached by the RxPlayer.
 
-    - [`keySystems[].closeSessionsOnStop`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].closeSessionsOnStop`](../api/Decryption_Options.md#closesessionsonstop):
       Closes DRM sessions when the content stops.
 
-    - [`keySystems[].singleLicensePer`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].singleLicensePer`](../api/Decryption_Options.md#singlelicenseper):
       Allows to use a single `getLicense` call for keys linked to multiple
       qualities.
 
-    - [`keySystems[].disableMediaKeysAttachmentLock`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].disableMediaKeysAttachmentLock`](../api/Decryption_Options.md#disablemediakeysattachmentlock):
       Disable a lock that may cause the RxPlayer to deadlock on encrypted
       contents on some peculiar devices.
 
-    - [`keySystems[].distinctiveIdentifierRequired`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].distinctiveIdentifierRequired`](../api/Decryption_Options.md#distinctiveidentifierrequired):
       Allows the configuration of the [Distinctive
       Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier)
       property.
 
-    - [`keySystems[].persistentStateRequired`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].persistentStateRequired`](../api/Decryption_Options.md#persistentstaterequired):
       Allows the configuration of the [persistentState](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate)
       property.
 
-    - [`keySystems[].throwOnLicenseExpiration`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].throwOnLicenseExpiration`](../api/Decryption_Options.md#throwonlicenseexpiration):
       Allows to stop or not when the current license has expired.
 
-    - [`keySystems[].onKeyStatusesChange`](../api/Loading_a_Content.md#keysystems):
+    - [`keySystems[].onKeyStatusesChange`](../api/Decryption_Options.md#onkeystatuseschange):
       Callback triggered when on of the key's [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
       is updated.
 
