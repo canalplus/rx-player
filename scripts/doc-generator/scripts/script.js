@@ -375,18 +375,33 @@ function onScroll() {
     return;
   }
   if (curScroll > prevScroll) {
-    if (isHeaderShown) {
-      headerElt.classList.add("hidden");
-      isHeaderShown = false;
-    }
+    hideHeader();
   } else if (curScroll < prevScroll) {
-    if (!isHeaderShown) {
-      headerElt.classList.remove("hidden");
-      isHeaderShown = true;
-    }
+    showHeader();
   }
   prevScroll = curScroll;
 };
+
+function hideHeader() {
+  if (isHeaderShown) {
+    headerElt.classList.add("hidden");
+    isHeaderShown = false;
+  }
+}
+
+function showHeader() {
+  if (!isHeaderShown) {
+    headerElt.classList.remove("hidden");
+    isHeaderShown = true;
+  }
+}
+
+// Work-arounds to make sure the header doesn't go on top
+// of a link
+if (window.location.hash !== "") {
+  hideHeader();
+}
+window.onhashchange = hideHeader;
 
 // ======= Hamburger menu ========
 
