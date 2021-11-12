@@ -105,7 +105,6 @@ function initializeSearchEngine() {
         console.error("Failed to initialize search: index has an invalid format.");
         return;
       }
-      console.time("Search initialization");
       searchIndexLinks = [];
       let id = 0;
       for (let i = 0; i < res.length; i++) {
@@ -127,7 +126,6 @@ function initializeSearchEngine() {
           id++;
         }
       }
-      console.timeEnd("Search initialization");
       searchInitStatus = "loaded";
     })
     .catch(err => {
