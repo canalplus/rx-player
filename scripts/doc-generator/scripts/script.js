@@ -371,6 +371,11 @@ window.addEventListener("scroll", onScroll);
 
 function onScroll() {
   const curScroll = window.scrollY;
+  if (curScroll === 0) {
+    showHeader();
+    return;
+  }
+
   if (Math.abs(curScroll - prevScroll) < 5) {
     return;
   }
