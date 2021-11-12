@@ -406,7 +406,11 @@ function showHeader() {
 if (window.location.hash !== "") {
   hideHeader();
 }
-window.onhashchange = hideHeader;
+
+window.onhashchange = function() {
+  hideHeader();
+  prevScroll = window.scrollY;
+};
 
 // ======= Hamburger menu ========
 
