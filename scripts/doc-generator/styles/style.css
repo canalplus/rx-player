@@ -439,7 +439,7 @@ a.navbar-active {
   transition-timing-function: ease-in-out;
   top: 0;
   left: 0;
-  padding: 0px 15px;
+  padding: 0px 5px;
   box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
 }
 
@@ -454,6 +454,7 @@ a.navbar-active {
   align-items: center;
   margin: 10px;
   border-bottom: 1px dotted black;
+  padding: 0px 10px;
  }
 
  .hamburger-title {
@@ -480,6 +481,7 @@ a.navbar-active {
   color: #333;
   overflow-y: auto;
   height: calc(100% - 61px);
+  padding: 0px 10px;
 }
 
 .page-list-wrapper svg {
