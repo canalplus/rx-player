@@ -260,7 +260,7 @@ export default class DownloadingQueue<T> {
       return request$
         .pipe(mergeMap((evt) => {
           switch (evt.type) {
-            case "warning":
+            case "retry":
               return observableOf({ type: "retry" as const,
                                     value: { segment, error: evt.value } });
             case "interrupted":
@@ -336,7 +336,7 @@ export default class DownloadingQueue<T> {
                                         IEndOfSegmentEvent> =>
       {
         switch (evt.type) {
-          case "warning":
+          case "retry":
             return observableOf({ type: "retry" as const,
                                   value: { segment, error: evt.value } });
           case "interrupted":

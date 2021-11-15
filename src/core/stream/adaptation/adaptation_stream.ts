@@ -56,6 +56,10 @@ import {
 } from "../../../utils/reference";
 import ABRManager, {
   IABREstimate,
+  IABRMetricsEventValue,
+  IABRRequestBeginEventValue,
+  IABRRequestEndEventValue,
+  IABRRequestProgressEventValue,
 } from "../../abr";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
@@ -194,12 +198,26 @@ export default function AdaptationStream({
    */
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
-  const { estimator$, requestFeedback$, streamFeedback$ } =
+  const { estimator$, abrFeedbacks$ } =
     createRepresentationEstimator(content, abrManager, playbackObserver.observe(true));
 
   /** Allows the `RepresentationStream` to easily fetch media segments. */
-  const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type,
-                                                                    requestFeedback$);
+  const segmentFetcher = segmentFetcherCreator
+    .createSegmentFetcher(adaptation.type,
+                          {
+                            onRequestBegin(value : IABRRequestBeginEventValue) {
+                              abrFeedbacks$.next({ type: "requestBegin", value });
+                            },
+                            onRequestEnd(value : IABRRequestEndEventValue) {
+                              abrFeedbacks$.next({ type: "requestEnd", value });
+                            },
+                            onProgress(value : IABRRequestProgressEventValue) {
+                              abrFeedbacks$.next({ type: "progress", value });
+                            },
+                            onMetrics(value : IABRMetricsEventValue) {
+                              abrFeedbacks$.next({ type: "metrics", value });
+                            },
+                          });
 
   /**
    * Stores the last estimate emitted through the `abrEstimate$` Observable,
@@ -317,7 +335,7 @@ export default function AdaptationStream({
         if (evt.type === "representationChange" ||
             evt.type === "added-segment")
         {
-          return streamFeedback$.next(evt);
+          return abrFeedbacks$.next(evt);
         }
       }),
       mergeMap((evt) => {

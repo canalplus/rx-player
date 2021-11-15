@@ -586,6 +586,7 @@ export interface ISegmentLoaderCallbacks<T> {
   onNewChunk : (data : T) => void;
 }
 
+/** Information related to a pending Segment request progressing. */
 export interface ISegmentLoadingProgressInformation {
   /** Time since the beginning of the request so far, in seconds. */
   duration : number;

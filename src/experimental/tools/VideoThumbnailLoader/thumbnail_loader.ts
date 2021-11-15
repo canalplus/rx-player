@@ -209,7 +209,8 @@ export default class VideoThumbnailLoader {
     const segmentFetcher = createSegmentFetcher(
       "video",
       loader.video,
-      new Subject(),
+      // We don't care about the SegmentFetcher's lifecycle events
+      {},
       { baseDelay: 0,
         maxDelay: 0,
         maxRetryOffline: 0,

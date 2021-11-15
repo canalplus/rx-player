@@ -23,88 +23,6 @@ import log from "../../../log";
 import arrayFindIndex from "../../../utils/array_find_index";
 
 /**
- * Event sent when the corresponding task is a low-priority task that has just
- * been temporarly interrupted due to another task with a high priority.
- * The task will restart (from scratch) when tasks with more priority are
- * finished.
- */
-export interface IInterruptedTaskEvent { type : "interrupted" }
-
-/** Event sent when the corresponding task emit an event. */
-export interface ITaskDataEvent<T> { type : "data";
-                                     value : T; }
-
-/**
- * Event sent when the corresponding task has ended (it will then complete).
- * You can use this event to schedule another task you wanted to perform after
- * that one.
- */
-export interface IEndedTaskEvent { type : "ended" }
-
-/** Events sent when a task has been created through the `create` method. */
-export type ITaskEvent<T> = IInterruptedTaskEvent |
-                            ITaskDataEvent<T> |
-                            IEndedTaskEvent;
-
-/** Stored object representing a single task. */
-interface IPrioritizerTask<T> {
-  /**
-   * Observable created by the ObservablePrioritizer allowing to identify
-   * the task.
-   * This is another Observable wrapping the underlying Observable that the
-   * ObservablePrioritizer is asked to run.
-   */
-  observable : Observable<ITaskEvent<T>>;
-  /**
-   * Function used to start and interrupt a task:
-   *   - when `true` is emitted the task should be started. If it was already
-   *     started, it will be interrupted first.
-   *   - when `false` is emitted, the task should just be interrupted if running
-   */
-  trigger : (shouldRun : boolean) => void;
-  /**
-   * Subscription of the underlying, wrapped, Observable.
-   * Only defined when the task has been started, `null` otherwise.
-   */
-  subscription : Subscription | null;
-  /** Priority of the task. Lower that number is, higher is the priority. */
-  priority : number;
-  /** `true` if the underlying wrapped Observable either errored of completed. */
-  finished : boolean;
-}
-
-/** Options to give to the ObservablePrioritizer. */
-export interface IPrioritizerOptions {
-  /** @see IPrioritizerPrioritySteps */
-  prioritySteps : IPrioritizerPrioritySteps;
-}
-
-/**
- * Define both the `low` and `high` priority steps:
- *
- *   - Any Observable with a priority number that is lower or equal to the
- *     `high` value will be an Observable with high priority.
- *
- *     When Observables with high priorities are scheduled, they immediately
- *     abort pending Observables with low priorities (which will have then to
- *     wait until all higher-priority Observable have ended before re-starting).
- *
- *   - Any Observable with a priority number that is higher or equal to the
- *     `low` value will be an Observable with low priority.
- *
- *     Pending Observables with low priorities have the added particularity*
- *     of being aborted as soon as a high priority Observable is scheduled.
- *
- *     * Other pending Observables are not aborted when a higher-priority
- *     Observable is scheduled, as their priorities only affect them before
- *     they are started (to know when to start them).
- */
-export interface IPrioritizerPrioritySteps {
-  low : number;
-  high : number;
-}
-
-/**
  * Create Observables which can be priorized between one another.
  *
  * With this class, you can link an Observables to a priority number.
@@ -555,4 +473,86 @@ export default class ObservablePrioritizer<T> {
     return this._minPendingPriority !== null &&
            this._minPendingPriority <= this._prioritySteps.high;
   }
+}
+
+/**
+ * Event sent when the corresponding task is a low-priority task that has just
+ * been temporarly interrupted due to another task with a high priority.
+ * The task will restart (from scratch) when tasks with more priority are
+ * finished.
+ */
+export interface IInterruptedTaskEvent { type : "interrupted" }
+
+/** Event sent when the corresponding task emit an event. */
+export interface ITaskDataEvent<T> { type : "data";
+                                     value : T; }
+
+/**
+ * Event sent when the corresponding task has ended (it will then complete).
+ * You can use this event to schedule another task you wanted to perform after
+ * that one.
+ */
+export interface IEndedTaskEvent { type : "ended" }
+
+/** Events sent when a task has been created through the `create` method. */
+export type ITaskEvent<T> = IInterruptedTaskEvent |
+                            ITaskDataEvent<T> |
+                            IEndedTaskEvent;
+
+/** Stored object representing a single task. */
+interface IPrioritizerTask<T> {
+  /**
+   * Observable created by the ObservablePrioritizer allowing to identify
+   * the task.
+   * This is another Observable wrapping the underlying Observable that the
+   * ObservablePrioritizer is asked to run.
+   */
+  observable : Observable<ITaskEvent<T>>;
+  /**
+   * Function used to start and interrupt a task:
+   *   - when `true` is emitted the task should be started. If it was already
+   *     started, it will be interrupted first.
+   *   - when `false` is emitted, the task should just be interrupted if running
+   */
+  trigger : (shouldRun : boolean) => void;
+  /**
+   * Subscription of the underlying, wrapped, Observable.
+   * Only defined when the task has been started, `null` otherwise.
+   */
+  subscription : Subscription | null;
+  /** Priority of the task. Lower that number is, higher is the priority. */
+  priority : number;
+  /** `true` if the underlying wrapped Observable either errored of completed. */
+  finished : boolean;
+}
+
+/** Options to give to the ObservablePrioritizer. */
+export interface IPrioritizerOptions {
+  /** @see IPrioritizerPrioritySteps */
+  prioritySteps : IPrioritizerPrioritySteps;
+}
+
+/**
+ * Define both the `low` and `high` priority steps:
+ *
+ *   - Any Observable with a priority number that is lower or equal to the
+ *     `high` value will be an Observable with high priority.
+ *
+ *     When Observables with high priorities are scheduled, they immediately
+ *     abort pending Observables with low priorities (which will have then to
+ *     wait until all higher-priority Observable have ended before re-starting).
+ *
+ *   - Any Observable with a priority number that is higher or equal to the
+ *     `low` value will be an Observable with low priority.
+ *
+ *     Pending Observables with low priorities have the added particularity*
+ *     of being aborted as soon as a high priority Observable is scheduled.
+ *
+ *     * Other pending Observables are not aborted when a higher-priority
+ *     Observable is scheduled, as their priorities only affect them before
+ *     they are started (to know when to start them).
+ */
+export interface IPrioritizerPrioritySteps {
+  low : number;
+  high : number;
 }

@@ -20,13 +20,17 @@ import ABRManager, {
 } from "./abr_manager";
 export {
   IABRAddedSegmentEvent,
-  IABRStreamEvents,
   IABREstimate,
   IABRMetricsEvent,
+  IABRMetricsEventValue,
   IABRRepresentationChangeEvent,
   IABRRequestBeginEvent,
+  IABRRequestBeginEventValue,
   IABRRequestEndEvent,
+  IABRRequestEndEventValue,
   IABRRequestProgressEvent,
+  IABRRequestProgressEventValue,
+  IABRStreamEvents,
 } from "./representation_estimator";
 
 export default ABRManager;

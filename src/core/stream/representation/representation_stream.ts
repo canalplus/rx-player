@@ -52,10 +52,7 @@ import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
 import { createSharedReference } from "../../../utils/reference";
 import { IReadOnlyPlaybackObserver } from "../../api";
-import {
-  IPrioritizedSegmentFetcher,
-  ISegmentFetcherWarning,
-} from "../../fetchers";
+import { IPrioritizedSegmentFetcher } from "../../fetchers";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import {
@@ -68,6 +65,7 @@ import {
   IStreamStatusEvent,
   IStreamTerminatingEvent,
   IInbandEventsEvent,
+  IStreamWarningEvent,
 } from "../types";
 import DownloadingQueue, {
   IDownloadingQueueEvent,
@@ -386,7 +384,7 @@ export default function RepresentationStream<TSegmentDataType>({
   function onQueueEvent(
     evt : IDownloadingQueueEvent<TSegmentDataType>
   ) : Observable<IStreamEventAddedSegment<TSegmentDataType> |
-                 ISegmentFetcherWarning |
+                 IStreamWarningEvent |
                  IEncryptionDataEncounteredEvent |
                  IInbandEventsEvent |
                  IStreamNeedsManifestRefresh |

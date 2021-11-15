@@ -26,7 +26,7 @@ import SegmentFetcherCreator, {
   ISegmentFetcherChunkEvent,
   ISegmentFetcherCreatorBackoffOptions,
   ISegmentFetcherEvent,
-  ISegmentFetcherWarning,
+  ISegmentFetcherRetry,
 } from "./segment";
 
 export {
@@ -46,5 +46,5 @@ export {
 
   ISegmentFetcherChunkEvent,
   ISegmentFetcherChunkCompleteEvent,
-  ISegmentFetcherWarning,
+  ISegmentFetcherRetry,
 };
