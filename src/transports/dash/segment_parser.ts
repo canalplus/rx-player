@@ -30,8 +30,8 @@ import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentContext,
   ISegmentParser,
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import inferSegmentContainer from "../utils/infer_segment_container";
@@ -52,8 +52,8 @@ export default function generateAudioVideoSegmentParser(
                       isChunked : boolean; },
     content : ISegmentContext,
     initTimescale : number | undefined
-  ) : ISegmentParserParsedSegment< Uint8Array | ArrayBuffer | null > |
-      ISegmentParserParsedInitSegment< Uint8Array | ArrayBuffer | null > {
+  ) : ISegmentParserParsedMediaChunk< Uint8Array | ArrayBuffer | null > |
+      ISegmentParserParsedInitChunk< Uint8Array | ArrayBuffer | null > {
     const { period, adaptation, representation, segment, manifest } = content;
     const { data, isChunked } = loadedSegment;
     const appendWindow : [number, number | undefined] = [ period.start, period.end ];

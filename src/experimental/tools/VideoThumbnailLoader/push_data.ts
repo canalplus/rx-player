@@ -8,7 +8,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
-import { ISegmentParserParsedSegment } from "../../../transports";
+import { ISegmentParserParsedMediaChunk } from "../../../transports";
 
 /**
  * Push data to the video source buffer.
@@ -26,7 +26,7 @@ export default function pushData(
                     segment: ISegment;
                     start: number;
                     end: number; },
-  parsed: ISegmentParserParsedSegment<Uint8Array | ArrayBuffer>,
+  parsed: ISegmentParserParsedMediaChunk<Uint8Array | ArrayBuffer>,
   videoSourceBuffer: AudioVideoSegmentBuffer
 ): Observable<void> {
   const { chunkData, appendWindow } = parsed;

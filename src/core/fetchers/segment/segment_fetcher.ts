@@ -28,8 +28,8 @@ import Manifest, {
 } from "../../../manifest";
 import {
   ISegmentLoadingProgressInformation,
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
   ISegmentPipeline,
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
@@ -233,8 +233,8 @@ export default function createSegmentFetcher<
        */
       function generateParserFunction(data : LoadedFormat, isChunked : boolean)  {
         return function parse(initTimescale? : number) :
-          ISegmentParserParsedInitSegment<TSegmentDataType> |
-          ISegmentParserParsedSegment<TSegmentDataType>
+          ISegmentParserParsedInitChunk<TSegmentDataType> |
+          ISegmentParserParsedMediaChunk<TSegmentDataType>
         {
           const loaded = { data, isChunked };
 
@@ -287,8 +287,8 @@ export interface ISegmentFetcherChunkEvent<TSegmentDataType> {
    * @param {number} initTimescale
    * @returns {Object}
    */
-  parse(initTimescale? : number) : ISegmentParserParsedInitSegment<TSegmentDataType> |
-                                   ISegmentParserParsedSegment<TSegmentDataType>;
+  parse(initTimescale? : number) : ISegmentParserParsedInitChunk<TSegmentDataType> |
+                                   ISegmentParserParsedMediaChunk<TSegmentDataType>;
 }
 
 /**

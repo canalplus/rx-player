@@ -27,8 +27,8 @@ import {
   ISegmentLoaderResultChunkedComplete,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
 } from "../types";
 
 /**
@@ -70,8 +70,8 @@ export function imageParser(
   loadedSegment : { data : ArrayBuffer | Uint8Array | null;
                     isChunked : boolean; },
   content : ISegmentContext
-) : ISegmentParserParsedSegment< IImageTrackSegmentData | null > |
-    ISegmentParserParsedInitSegment< null > {
+) : ISegmentParserParsedMediaChunk< IImageTrackSegmentData | null > |
+    ISegmentParserParsedInitChunk< null > {
   const { segment, period } = content;
   const { data, isChunked } = loadedSegment;
 

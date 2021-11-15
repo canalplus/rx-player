@@ -23,8 +23,8 @@ import takeFirstSet from "../../utils/take_first_set";
 import {
   ILoadedTextSegmentFormat,
   ISegmentContext,
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
   ITextTrackSegmentData,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
@@ -54,8 +54,8 @@ function parseISOBMFFEmbeddedTextTrack(
   isChunked : boolean,
   content : ISegmentContext,
   initTimescale : number | undefined
-) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
+) : ISegmentParserParsedInitChunk<null> |
+    ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
 
@@ -100,8 +100,8 @@ function parsePlainTextTrack(
   data : string | Uint8Array | ArrayBuffer,
   isChunked : boolean,
   content : ISegmentContext
-) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
+) : ISegmentParserParsedInitChunk<null> |
+    ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
   if (segment.isInit) {
@@ -141,8 +141,8 @@ export default function textTrackParser(
                     isChunked : boolean; },
   content : ISegmentContext,
   initTimescale : number | undefined
-) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
+) : ISegmentParserParsedInitChunk<null> |
+    ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
 {
   const { period, adaptation, representation, segment } = content;
   const { data, isChunked } = loadedSegment;

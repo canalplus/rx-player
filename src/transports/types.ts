@@ -232,7 +232,8 @@ export type ISegmentLoader<TLoadedFormat> = (
              ISegmentLoaderResultChunkedComplete>;
 
 /**
- * Segment parser function, allowing to parse a segment of any type.
+ * Segment parser function, allowing to parse a chunk (which may be a sub-part
+ * of a segment) of any type.
  *
  * This function will throw if it encounters any error it cannot recover from.
  */
@@ -268,16 +269,16 @@ export type ISegmentParser<
    * The parsed data.
    *
    * Can be of two types:
-   *   - `ISegmentParserParsedInitSegment`: When the parsed segment was an
+   *   - `ISegmentParserParsedInitChunk`: When the parsed chunk was part of an
    *     initialization segment.
    *     Such segments only serve to initialize the decoder and do not contain
    *     any decodable media data.
-   *   - `ISegmentParserParsedSegment`: When the parsed segment was a media
-   *     segment.
+   *   - `ISegmentParserParsedMediaChunk`: When the parsed chunk was part of a
+   *     media segment.
    *     Such segments generally contain decodable media data.
    */
-  ISegmentParserParsedInitSegment<TParsedSegmentDataFormat> |
-  ISegmentParserParsedSegment<TParsedSegmentDataFormat>;
+  ISegmentParserParsedInitChunk<TParsedSegmentDataFormat> |
+  ISegmentParserParsedMediaChunk<TParsedSegmentDataFormat>;
 
 export interface IManifestParserOptions {
   /**
@@ -682,8 +683,11 @@ export type ILoadedImageSegmentFormat = Uint8Array |
                                         ArrayBuffer |
                                         null;
 
-/** Result returned by a segment parser when it parsed an initialization segment. */
-export interface ISegmentParserParsedInitSegment<DataType> {
+/**
+ * Result returned by a segment parser when it parsed a chunk from an init
+ * segment (which does not contain media data).
+ */
+export interface ISegmentParserParsedInitChunk<DataType> {
   segmentType : "init";
   /**
    * Initialization segment that can be directly pushed to the corresponding
@@ -710,14 +714,20 @@ export interface ISegmentParserParsedInitSegment<DataType> {
 }
 
 /**
- * Result returned by a segment parser when it parsed a media (not an
- * initialization segment).
+ * Result returned by a segment parser when it parsed a chunk from a media
+ * segment (which contains media data, unlike an initialization segment).
  */
-export interface ISegmentParserParsedSegment<DataType> {
+export interface ISegmentParserParsedMediaChunk<DataType> {
   segmentType : "media";
-  /** Parsed chunk of data that can be decoded. */
+  /**
+   * Parsed chunk of data that can be decoded.
+   * `null` if no data was parsed.
+   */
   chunkData : DataType | null;
-  /** Time information on this parsed chunk. */
+  /**
+   * Time information on this parsed chunk.
+   * `null` if unknown.
+   */
   chunkInfos : IChunkTimeInfo | null;
   /**
    * time offset, in seconds, to add to the absolute timed data defined in
@@ -743,7 +753,7 @@ export interface ISegmentParserParsedSegment<DataType> {
    * If set and not empty, then "events" have been encountered in this parsed
    * chunks.
    */
-  inbandEvents? : IInbandEvent[]; // Inband events parsed from segment data
+  inbandEvents? : IInbandEvent[];
   /**
    * If set to `true`, then parsing this chunk revealed that the current
    * Manifest instance needs to be refreshed.

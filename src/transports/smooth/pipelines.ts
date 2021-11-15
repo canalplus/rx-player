@@ -45,8 +45,8 @@ import {
   ISegmentLoaderCallbacks,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
   ITextTrackSegmentData,
   ITransportOptions,
   ITransportPipelines,
@@ -189,8 +189,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                         isChunked : boolean; },
       content : ISegmentContext,
       initTimescale : number | undefined
-    ) : ISegmentParserParsedInitSegment< ArrayBuffer | Uint8Array | null> |
-        ISegmentParserParsedSegment< ArrayBuffer | Uint8Array | null >
+    ) : ISegmentParserParsedInitChunk< ArrayBuffer | Uint8Array | null> |
+        ISegmentParserParsedMediaChunk< ArrayBuffer | Uint8Array | null >
     {
       const { segment, adaptation, manifest } = content;
       const { data, isChunked } = loadedSegment;
@@ -294,8 +294,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                         isChunked : boolean; },
       content : ISegmentContext,
       initTimescale : number | undefined
-    ) : ISegmentParserParsedInitSegment< null > |
-        ISegmentParserParsedSegment< ITextTrackSegmentData | null >
+    ) : ISegmentParserParsedInitChunk< null > |
+        ISegmentParserParsedMediaChunk< ITextTrackSegmentData | null >
     {
       const { manifest, adaptation, representation, segment } = content;
       const { language } = adaptation;
@@ -457,8 +457,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                         isChunked : boolean; },
       content : ISegmentContext,
       _initTimescale : number | undefined
-    ) : ISegmentParserParsedInitSegment< null > |
-        ISegmentParserParsedSegment< IImageTrackSegmentData | null >
+    ) : ISegmentParserParsedInitChunk< null > |
+        ISegmentParserParsedMediaChunk< IImageTrackSegmentData | null >
     {
       const { data, isChunked } = loadedSegment;
 

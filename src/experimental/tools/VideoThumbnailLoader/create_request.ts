@@ -10,8 +10,8 @@ import {
 } from "../../../core/fetchers/segment/segment_fetcher";
 import { ISegment } from "../../../manifest";
 import {
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
 } from "../../../transports";
 import getCompleteSegmentId from "./get_complete_segment_id";
 import { IContentInfos } from "./types";
@@ -19,11 +19,11 @@ import { IContentInfos } from "./types";
 const requests = new Map<string, ICancellableRequest>();
 
 export interface ICancellableRequest {
-  data?: ISegmentParserParsedInitSegment<Uint8Array | ArrayBuffer> |
-         ISegmentParserParsedSegment<Uint8Array | ArrayBuffer>;
+  data?: ISegmentParserParsedInitChunk<Uint8Array | ArrayBuffer> |
+         ISegmentParserParsedMediaChunk<Uint8Array | ArrayBuffer>;
   error?: Error;
-  onData?: (data: ISegmentParserParsedInitSegment<Uint8Array | ArrayBuffer> |
-                  ISegmentParserParsedSegment<Uint8Array | ArrayBuffer>) => void;
+  onData?: (data: ISegmentParserParsedInitChunk<Uint8Array | ArrayBuffer> |
+                  ISegmentParserParsedMediaChunk<Uint8Array | ArrayBuffer>) => void;
   onError?: (err: Error) => void;
   cancel: () => void;
 }
