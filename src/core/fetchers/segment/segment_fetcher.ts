@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Subject,
-} from "rxjs";
+import { Observable } from "rxjs";
 import config from "../../../config";
-import { formatError, ICustomError } from "../../../errors";
+import {
+  formatError,
+  ICustomError,
+} from "../../../errors";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -40,10 +40,10 @@ import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
 import {
-  IABRMetricsEvent,
-  IABRRequestBeginEvent,
-  IABRRequestEndEvent,
-  IABRRequestProgressEvent,
+  IABRMetricsEventValue,
+  IABRRequestBeginEventValue,
+  IABRRequestEndEventValue,
+  IABRRequestProgressEventValue,
 } from "../../abr";
 import { IBufferType } from "../../segment_buffers";
 import errorSelector from "../utils/error_selector";
@@ -57,33 +57,30 @@ const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
 const generateRequestID = idGenerator();
 
 /**
- * Create a function which will fetch and parse segments.
+ * Create an `ISegmentFetcher` object which will allow to easily fetch and parse
+ * segments.
+ * An `ISegmentFetcher` also implements a retry mechanism, based on the given
+ * `options` argument, which may retry a segment request when it fails.
+ *
  * @param {string} bufferType
  * @param {Object} transport
- * @param {Subject} requests$
+ * @param {Object} callbacks
  * @param {Object} options
  * @returns {Function}
  */
-export default function createSegmentFetcher<
-  LoadedFormat,
-  TSegmentDataType,
->(
+export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   bufferType : IBufferType,
-  pipeline : ISegmentPipeline<LoadedFormat, TSegmentDataType>,
-  requests$ : Subject<IABRMetricsEvent |
-                      IABRRequestBeginEvent |
-                      IABRRequestProgressEvent |
-                      IABRRequestEndEvent>,
+  pipeline : ISegmentPipeline<TLoadedFormat, TSegmentDataType>,
+  callbacks : ISegmentFetcherCreatorCallbacks,
   options : ISegmentFetcherOptions
 ) : ISegmentFetcher<TSegmentDataType> {
-
   /**
    * Cache audio and video initialization segments.
    * This allows to avoid doing too many requests for what are usually very
    * small files.
    */
   const cache = arrayIncludes(["audio", "video"], bufferType) ?
-    new InitializationSegmentCache<LoadedFormat>() :
+    new InitializationSegmentCache<TLoadedFormat>() :
     undefined;
 
   const { loadSegment, parseSegment } = pipeline;
@@ -91,11 +88,13 @@ export default function createSegmentFetcher<
   /**
    * Fetch a specific segment.
    *
-   * This function returns an Observable which will fetch the segment on
+   * This function returns an Observable which will fetch segments on
    * subscription.
+   * If the corresponding request fails, it may retry it based on the given
+   * options.
+   *
    * This Observable will emit various events during that request lifecycle and
    * throw if the segment request(s) (including potential retries) fail.
-   *
    * The Observable will automatically complete once no events are left to be
    * sent.
    * @param {Object} content
@@ -118,11 +117,9 @@ export default function createSegmentFetcher<
       }
 
       const id = generateRequestID();
-      requests$.next({ type: "requestBegin",
-                       value: { segment,
-                                requestTimestamp: performance.now(),
-                                id } });
-
+      callbacks.onRequestBegin?.({ segment,
+                                   requestTimestamp: performance.now(),
+                                   id });
       const canceller = new TaskCanceller();
       let hasRequestEnded = false;
 
@@ -134,12 +131,11 @@ export default function createSegmentFetcher<
          */
         onProgress(info : ISegmentLoadingProgressInformation) : void {
           if (info.totalSize !== undefined && info.size < info.totalSize) {
-            requests$.next({ type: "progress",
-                             value: { duration: info.duration,
-                                      size: info.size,
-                                      totalSize: info.totalSize,
-                                      timestamp: performance.now(),
-                                      id } });
+            callbacks.onProgress?.({ duration: info.duration,
+                                     size: info.size,
+                                     totalSize: info.totalSize,
+                                     timestamp: performance.now(),
+                                     id });
           }
         },
 
@@ -149,7 +145,7 @@ export default function createSegmentFetcher<
          * argument.
          * @param {*} chunkData
          */
-        onNewChunk(chunkData : LoadedFormat) : void {
+        onNewChunk(chunkData : TLoadedFormat) : void {
           obs.next({ type: "chunk" as const,
                      parse: generateParserFunction(chunkData, true) });
         },
@@ -181,10 +177,9 @@ export default function createSegmentFetcher<
                res.resultData.size !== undefined &&
                res.resultData.requestDuration !== undefined)
           {
-            requests$.next({ type: "metrics",
-                             value: { size: res.resultData.size,
-                                      duration: res.resultData.requestDuration,
-                                      content } });
+            callbacks.onMetrics?.({ size: res.resultData.size,
+                                    duration: res.resultData.requestDuration,
+                                    content });
           }
 
           if (!canceller.isUsed) {
@@ -192,11 +187,11 @@ export default function createSegmentFetcher<
             // of the previous `next` calls. In that case, we don't want to send
             // a "requestEnd" again as it has already been sent on cancellation.
             //
-            // Note that we only perform this check for `"requestEnd"` on
+            // Note that we only perform this check for `onRequestEnd` on
             // purpose. Observable's events should have been ignored by RxJS if
             // the Observable has already been canceled and we don't care if
             // `"metrics"` is sent there.
-            requests$.next({ type: "requestEnd", value: { id } });
+            callbacks.onRequestEnd?.({ id });
           }
           obs.complete();
         })
@@ -208,7 +203,7 @@ export default function createSegmentFetcher<
       return () => {
         if (!hasRequestEnded) {
           canceller.cancel();
-          requests$.next({ type: "requestEnd", value: { id } });
+          callbacks.onRequestEnd?.({ id });
         }
       };
 
@@ -231,7 +226,7 @@ export default function createSegmentFetcher<
        * @param {Boolean} isChunked
        * @returns {Function}
        */
-      function generateParserFunction(data : LoadedFormat, isChunked : boolean)  {
+      function generateParserFunction(data : TLoadedFormat, isChunked : boolean)  {
         return function parse(initTimescale? : number) :
           ISegmentParserParsedInitChunk<TSegmentDataType> |
           ISegmentParserParsedMediaChunk<TSegmentDataType>
@@ -252,7 +247,7 @@ export default function createSegmentFetcher<
        * @param {*} err
        */
       function onRetry(err: unknown) : void {
-        obs.next({ type: "warning" as const,
+        obs.next({ type: "retry" as const,
                    value: errorSelector(err) });
       }
     });
@@ -264,10 +259,9 @@ export type ISegmentFetcher<TSegmentDataType> = (content : ISegmentLoaderContent
 
 /** Event sent by the SegmentFetcher when fetching a segment. */
 export type ISegmentFetcherEvent<TSegmentDataType> =
-  ISegmentFetcherChunkCompleteEvent |
   ISegmentFetcherChunkEvent<TSegmentDataType> |
-  ISegmentFetcherWarning;
-
+  ISegmentFetcherChunkCompleteEvent |
+  ISegmentFetcherRetry;
 
 /**
  * Event sent when a new "chunk" of the segment is available.
@@ -304,10 +298,38 @@ export interface ISegmentLoaderContent { manifest : Manifest;
                                          representation : Representation;
                                          segment : ISegment; }
 
-/** An Error happened while loading (usually a request error). */
-export interface ISegmentFetcherWarning { type : "warning";
-                                          value : ICustomError; }
+/**
+ * An Error happened while loading which led to a retry.
+ * The request is retried from scratch.
+ */
+export interface ISegmentFetcherRetry { type : "retry";
+                                        value : ICustomError; }
 
+/**
+ * Callbacks that can be bound when creating an `ISegmentFetcher`.
+ * Those allows to be notified of an `ISegmentFetcher` various lifecycles and of
+ * network information.
+ */
+export interface ISegmentFetcherCreatorCallbacks {
+  /** Called when a segment request begins. */
+  onRequestBegin? : (arg : IABRRequestBeginEventValue) => void;
+  /** Called when progress information is available on a pending segment request. */
+  onProgress? : (arg : IABRRequestProgressEventValue) => void;
+  /**
+   * Called when a segment request ends (either because it completed, it failed
+   * or was canceled).
+   */
+  onRequestEnd? : (arg : IABRRequestEndEventValue) => void;
+  /**
+   * Called when network metrics linked to a segment request are available,
+   * once the request has terminated.
+   * This callback may be called before or after the corresponding
+   * `onRequestEnd` callback, you should not rely on the order between the two.
+   */
+  onMetrics? : (arg : IABRMetricsEventValue) => void;
+}
+
+/** Options allowing to configure an `ISegmentFetcher`'s behavior. */
 export interface ISegmentFetcherOptions {
   /**
    * Initial delay to wait if a request fails before making a new request, in

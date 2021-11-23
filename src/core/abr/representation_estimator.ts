@@ -131,7 +131,7 @@ export interface IRepresentationEstimatorPlaybackObservation {
 }
 
 /** Content of the `IABRMetricsEvent` event's payload. */
-interface IABRMetricsEventValue {
+export interface IABRMetricsEventValue {
   /** Time the request took to perform the request, in milliseconds. */
   duration: number;
   /** Amount of bytes downloaded with this request. */
@@ -174,19 +174,22 @@ export interface IABRRepresentationChangeEvent {
  */
 export interface IABRRequestBeginEvent {
   type: "requestBegin";
-  value: {
-    /**
-     * String identifying this request.
-     *
-     * Only one request communicated to the current `RepresentationEstimator`
-     * should have this `id` at the same time.
-     */
-    id: string;
-    /** Metadata on the requested segment. */
-    segment: ISegment;
-    /** Value of `performance.now` at the time the request began.  */
-    requestTimestamp: number;
-  };
+  value: IABRRequestBeginEventValue;
+}
+
+/** Value associated with a `IABRRequestBeginEvent`. */
+export interface IABRRequestBeginEventValue {
+  /**
+   * String identifying this request.
+   *
+   * Only one request communicated to the current `RepresentationEstimator`
+   * should have this `id` at the same time.
+   */
+  id: string;
+  /** Metadata on the requested segment. */
+  segment: ISegment;
+  /** Value of `performance.now` at the time the request began.  */
+  requestTimestamp: number;
 }
 
 /**
@@ -197,24 +200,27 @@ export interface IABRRequestBeginEvent {
  */
 export interface IABRRequestProgressEvent {
   type: "progress";
-  value: {
-    /** Amount of time since the request has started, in seconds. */
-    duration : number;
-    /**
-     * Same `id` value used to identify that request at the time the corresponding
-     * `IABRRequestBeginEvent` event was sent.
-     */
-    id: string;
-    /** Current downloaded size, in bytes. */
-    size : number;
-    /** Value of `performance.now` at the time this progression report was available. */
-    timestamp : number;
-    /**
-     * Total size of the segment to download (including already-loaded data),
-     * in bytes.
-     */
-    totalSize : number;
-  };
+  value: IABRRequestProgressEventValue;
+}
+
+/** Value associated with a `IABRRequestProgressEvent`. */
+export interface IABRRequestProgressEventValue {
+  /** Amount of time since the request has started, in seconds. */
+  duration : number;
+  /**
+   * Same `id` value used to identify that request at the time the corresponding
+   * `IABRRequestBeginEvent` event was sent.
+   */
+  id: string;
+  /** Current downloaded size, in bytes. */
+  size : number;
+  /** Value of `performance.now` at the time this progression report was available. */
+  timestamp : number;
+  /**
+   * Total size of the segment to download (including already-loaded data),
+   * in bytes.
+   */
+  totalSize : number;
 }
 
 /**
@@ -225,13 +231,16 @@ export interface IABRRequestProgressEvent {
  */
 export interface IABRRequestEndEvent {
   type: "requestEnd";
-  value: {
-    /**
-     * Same `id` value used to identify that request at the time the corresponding
-     * `IABRRequestBeginEvent` event was sent.
-     */
-    id: string;
-  };
+  value: IABRRequestEndEventValue;
+}
+
+/** Value associated with a `IABRRequestProgressEvent`. */
+export interface IABRRequestEndEventValue {
+  /**
+   * Same `id` value used to identify that request at the time the corresponding
+   * `IABRRequestBeginEvent` event was sent.
+   */
+  id: string;
 }
 
 /** Object allowing to filter some Representations out based on different attributes. */
