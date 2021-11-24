@@ -16,7 +16,7 @@
 
 import log from "../../log";
 import { Representation } from "../../manifest";
-import EWMA from "./ewma";
+import EWMA from "./utils/ewma";
 
 /**
  * Calculate the "maintainability score" of a given Representation:

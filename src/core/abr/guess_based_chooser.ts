@@ -17,7 +17,9 @@
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFindIndex from "../../utils/array_find_index";
-import LastEstimateStorage from "./last_estimate_storage";
+import LastEstimateStorage, {
+  ABRAlgorithmType,
+} from "./last_estimate_storage";
 import { estimateRequestBandwidth } from "./network_analyzer";
 import { IRequestInfo } from "./pending_requests_store";
 import RepresentationScoreCalculator, {
@@ -42,6 +44,7 @@ export default class GuessBasedChooser {
   private _scoreCalculator : RepresentationScoreCalculator;
   private _consecutiveWrongGuesses : number;
   private _blockGuessesUntil : number;
+  private _lastMaintanableBitrate : number | null;
 
   /**
    * Create a new `GuessBasedChooser`.
@@ -56,6 +59,7 @@ export default class GuessBasedChooser {
     this._lastAbrEstimate = prevEstimate;
     this._consecutiveWrongGuesses = 0;
     this._blockGuessesUntil = 0;
+    this._lastMaintanableBitrate = null;
   }
 
   /**
@@ -93,22 +97,25 @@ export default class GuessBasedChooser {
     requests : IRequestInfo[]
   ) : Representation | null {
     const { bufferGap, speed } = observation;
-    const prevRep = this._lastAbrEstimate.representation;
-    if (prevRep === null) {
+    const lastChosenRep = this._lastAbrEstimate.representation;
+    if (lastChosenRep === null) {
       return null; // There's nothing to base our guess on
     }
 
-    if (incomingBestBitrate > prevRep.bitrate) {
+    if (incomingBestBitrate > lastChosenRep.bitrate) {
       // ABR estimates are already superior or equal to the guess
       // we'll be doing here, so no need to guess
-      if (this._lastAbrEstimate.wasGuessed) {
+      if (this._lastAbrEstimate.algorithmType === ABRAlgorithmType.GuessBased) {
+        if (this._lastAbrEstimate.representation !== null) {
+          this._lastMaintanableBitrate = this._lastAbrEstimate.representation.bitrate;
+        }
         this._consecutiveWrongGuesses = 0;
       }
       return null;
     }
 
     const scoreData = this._scoreCalculator.getEstimate(currentRepresentation);
-    if (!this._lastAbrEstimate.wasGuessed) {
+    if (this._lastAbrEstimate.algorithmType !== ABRAlgorithmType.GuessBased) {
       if (scoreData === undefined) {
         return null; // not enough information to start guessing
       }
@@ -123,13 +130,15 @@ export default class GuessBasedChooser {
     }
 
     // If we reached here, we're currently already in guessing mode
-    if (incomingBestBitrate === prevRep.bitrate) {
-      log.debug("ABR: Guessed Representation validated", prevRep.bitrate);
+
+    if (this._isLastGuessValidated(lastChosenRep, incomingBestBitrate, scoreData)) {
+      log.debug("ABR: Guessed Representation validated", lastChosenRep.bitrate);
+      this._lastMaintanableBitrate = lastChosenRep.bitrate;
       this._consecutiveWrongGuesses = 0;
     }
 
-    if (currentRepresentation.id !== prevRep.id) {
-      return prevRep;
+    if (currentRepresentation.id !== lastChosenRep.id) {
+      return lastChosenRep;
     }
 
     const shouldStopGuess = this._shouldStopGuess(currentRepresentation,
@@ -140,7 +149,7 @@ export default class GuessBasedChooser {
       // Block guesses for a time
       this._consecutiveWrongGuesses++;
       this._blockGuessesUntil = performance.now() +
-        Math.min(this._consecutiveWrongGuesses * 15000, 300000);
+        Math.min(this._consecutiveWrongGuesses * 15000, 120000);
       const prev = getPreviousRepresentation(representations, currentRepresentation);
       return prev;
     } else if (scoreData === undefined) {
@@ -177,16 +186,16 @@ export default class GuessBasedChooser {
   }
 
   /**
-   * Returns `true` if the pending guess of `currentRepresentation` seems to not
+   * Returns `true` if the pending guess of `lastGuess` seems to not
    * be maintainable and as such should be stopped.
-   * @param {Object} currentRepresentation
+   * @param {Object} lastGuess
    * @param {Array} scoreData
    * @param {number} bufferGap
    * @param {Array.<Object>} requests
    * @returns {boolean}
    */
   private _shouldStopGuess(
-    currentRepresentation : Representation,
+    lastGuess : Representation,
     scoreData : [number, ScoreConfidenceLevel] | undefined,
     bufferGap : number,
     requests : IRequestInfo[]
@@ -198,7 +207,7 @@ export default class GuessBasedChooser {
     }
 
     const guessedRepresentationRequests = requests.filter(req => {
-      return req.content.representation.id === currentRepresentation.id;
+      return req.content.representation.id === lastGuess.id;
     });
 
     const now = performance.now();
@@ -213,12 +222,28 @@ export default class GuessBasedChooser {
         return true;
       } else {
         const fastBw = estimateRequestBandwidth(req);
-        if (fastBw !== undefined && fastBw < currentRepresentation.bitrate * 0.8) {
+        if (fastBw !== undefined && fastBw < lastGuess.bitrate * 0.8) {
           return true;
         }
       }
     }
     return false;
+  }
+
+  private _isLastGuessValidated(
+    lastGuess : Representation,
+    incomingBestBitrate : number,
+    scoreData : [number, ScoreConfidenceLevel] | undefined
+  ) : boolean {
+    if (scoreData !== undefined &&
+        scoreData[1] === ScoreConfidenceLevel.HIGH &&
+        scoreData[0] > 1.5)
+    {
+      return true;
+    }
+    return incomingBestBitrate >= lastGuess.bitrate &&
+      (this._lastMaintanableBitrate === null ||
+        this._lastMaintanableBitrate < lastGuess.bitrate);
   }
 }
 

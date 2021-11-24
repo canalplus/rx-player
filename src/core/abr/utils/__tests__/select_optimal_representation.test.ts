@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import { Representation } from "../../../../manifest";
 import selectOptimalRepresentation from "../select_optimal_representation";
 
 describe("ABR - selectOptimalRepresentation", () => {

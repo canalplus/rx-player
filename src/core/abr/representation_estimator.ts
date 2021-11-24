@@ -37,17 +37,19 @@ import {
 import { getLeftSizeOfRange } from "../../utils/ranges";
 import BandwidthEstimator from "./bandwidth_estimator";
 import BufferBasedChooser from "./buffer_based_chooser";
-import filterByBitrate from "./filter_by_bitrate";
-import filterByWidth from "./filter_by_width";
 import GuessBasedChooser from "./guess_based_chooser";
-import LastEstimateStorage from "./last_estimate_storage";
+import LastEstimateStorage, {
+  ABRAlgorithmType,
+} from "./last_estimate_storage";
 import NetworkAnalyzer from "./network_analyzer";
 import PendingRequestsStore, {
   IPendingRequestStoreBegin,
   IPendingRequestStoreProgress,
 } from "./pending_requests_store";
 import RepresentationScoreCalculator from "./representation_score_calculator";
-import selectOptimalRepresentation from "./select_optimal_representation";
+import filterByBitrate from "./utils/filter_by_bitrate";
+import filterByWidth from "./utils/filter_by_width";
+import selectOptimalRepresentation from "./utils/select_optimal_representation";
 
 /**
  * Adaptive BitRate estimate object.
@@ -614,7 +616,9 @@ export default function RepresentationEstimator({
               chosenRepFromGuessMode.bitrate > currentBestBitrate) {
             log.debug("ABR: Choosing representation with guess-based estimation.",
                       chosenRepFromGuessMode);
-            prevEstimate.store(chosenRepFromGuessMode, bandwidthEstimate, true);
+            prevEstimate.update(chosenRepFromGuessMode,
+                                bandwidthEstimate,
+                                ABRAlgorithmType.GuessBased);
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromGuessMode,
                      urgent: currentRepresentation === null ||
@@ -624,7 +628,9 @@ export default function RepresentationEstimator({
           } else if (chosenRepFromBufferSize !== null) {
             log.debug("ABR: Choosing representation with buffer-based estimation.",
                       chosenRepFromBufferSize);
-            prevEstimate.store(chosenRepFromBufferSize, bandwidthEstimate, false);
+            prevEstimate.update(chosenRepFromBufferSize,
+                                bandwidthEstimate,
+                                ABRAlgorithmType.BufferBased);
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromBufferSize,
                      urgent: networkAnalyzer.isUrgent(chosenRepFromBufferSize.bitrate,
@@ -636,7 +642,9 @@ export default function RepresentationEstimator({
           } else {
             log.debug("ABR: Choosing representation with bandwidth estimation.",
                       chosenRepFromBandwidth);
-            prevEstimate.store(chosenRepFromBandwidth, bandwidthEstimate, false);
+            prevEstimate.update(chosenRepFromBandwidth,
+                                bandwidthEstimate,
+                                ABRAlgorithmType.BandwidthBased);
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromBandwidth,
                      urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,

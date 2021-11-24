@@ -16,7 +16,6 @@
 
 import { Representation } from "../../manifest";
 
-
 /** Stores the last estimate made by the `RepresentationEstimator`. */
 export default class LastEstimateStorage {
   /**
@@ -30,13 +29,14 @@ export default class LastEstimateStorage {
    * `null` if no estimate has been performed yet.
    */
   public representation : Representation | null;
-  /** If `true`, the last estimate was a guess made by the `GuessingEstimator`. */
-  public wasGuessed : boolean;
+
+  /** Algorithm type used to make the last Representation estimate. */
+  public algorithmType : ABRAlgorithmType;
 
   constructor() {
     this.bandwidth = undefined;
     this.representation = null;
-    this.wasGuessed = false;
+    this.algorithmType = ABRAlgorithmType.None;
   }
 
   /**
@@ -46,14 +46,34 @@ export default class LastEstimateStorage {
    * @param {boolean} wasGuessed - If `true`, this estimate was a guess made by
    * the `GuessingEstimator`.
    */
-  public store(
+  public update(
     representation : Representation,
     bandwidth : number | undefined,
-    wasGuessed : boolean
+    algorithmType : ABRAlgorithmType
   ) : void {
     this.representation = representation;
     this.bandwidth = bandwidth;
-    this.wasGuessed = wasGuessed;
+    this.algorithmType = algorithmType;
   }
 }
 
+/** Identify an algorithm used to perform a Representation estimate.  */
+export const enum ABRAlgorithmType {
+ /**
+  * Buffer-based algorithm using mostly the size of the buffer to determine the
+  * best Representation.
+  */
+  BufferBased,
+  /**
+   * Bandwidth-based algorithm using mostly the speed at which segments are
+   * downloaded to determine the best Representation.
+   */
+  BandwidthBased,
+  /**
+   * Guess-based algorithm, which iterates through Representation and
+   * try to find the best one empirically.
+   */
+  GuessBased,
+    /** None of the other or no algorithm was used yet. */
+  None,
+}

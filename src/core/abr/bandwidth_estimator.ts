@@ -15,7 +15,7 @@
  */
 
 import config from "../../config";
-import EWMA from "./ewma";
+import EWMA from "./utils/ewma";
 
 const { ABR_MINIMUM_TOTAL_BYTES,
         ABR_MINIMUM_CHUNK_SIZE,
