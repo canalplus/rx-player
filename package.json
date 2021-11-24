@@ -152,6 +152,7 @@
       "check": "Check the validity of the src directory by running the linter, type checker and unit tests",
       "check:all": "Check the validity of the whole project by running linters, type checkers and every tests",
       "check:types": "Check TypeScript typings in src",
+      "check:types:watch": "Check TypeScript typings in src each time files change",
       "lint": "Lint rx-player source files",
       "lint:demo": "Lint demo source files",
       "lint:tests": "Lint integration tests source files"
