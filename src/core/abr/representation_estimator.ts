@@ -515,8 +515,11 @@ export default function RepresentationEstimator({
       );
 
       const bitrates = representations.map(r => r.bitrate);
-      const bufferBasedEstimation$ = BufferBasedChooser(bufferBasedobservation$, bitrates)
-        .pipe(startWith(undefined));
+      const bufferBasedChooser = new BufferBasedChooser(bitrates);
+      const bufferBasedEstimation$ = bufferBasedobservation$.pipe(
+        map(bbo => bufferBasedChooser.getEstimate(bbo)),
+        startWith(undefined)
+      );
 
       return observableCombineLatest([ observation$,
                                        minAutoBitrate$,

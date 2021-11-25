@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-import {
-  map,
-  Observable,
-} from "rxjs";
 import log from "../../log";
+import arrayFindIndex from "../../utils/array_find_index";
 import getBufferLevels from "./get_buffer_levels";
-import getEstimateFromBufferLevels, {
-  IBufferBasedChooserPlaybackObservation,
-} from "./get_estimate_from_buffer_levels";
 
 /**
  * Choose a bitrate based on the currently available buffer.
@@ -35,18 +29,89 @@ import getEstimateFromBufferLevels, {
  * "maintanable" or not.
  * If so, we may switch to a better quality, or conversely to a worse quality.
  *
- * @param {Observable} update$
- * @param {Array.<number>} bitrates
- * @returns {Observable}
+ * @class BufferBasedChooser
  */
-export default function BufferBasedChooser(
-  update$ : Observable<IBufferBasedChooserPlaybackObservation>,
-  bitrates: number[]
-) : Observable<number|undefined> {
-  const levelsMap = getBufferLevels(bitrates);
-  log.debug("ABR: Steps for buffer based chooser.",
-            levelsMap.map((l, i) => ({ bufferLevel: l, bitrate: bitrates[i] })));
-  return update$.pipe(map((playbackObservation) => {
-    return getEstimateFromBufferLevels(playbackObservation, bitrates, levelsMap);
-  }));
+export default class BufferBasedChooser {
+  private _levelsMap : number[];
+  private _bitrates : number[];
+
+  /**
+   * @param {Array.<number>} number;
+   */
+  constructor(bitrates : number[]) {
+    this._levelsMap = getBufferLevels(bitrates);
+    this._bitrates = bitrates;
+    log.debug("ABR: Steps for buffer based chooser.",
+              this._levelsMap.map((l, i) => ({ bufferLevel: l, bitrate: bitrates[i] })));
+  }
+
+  /**
+   * @param {Object} playbackObservation
+   * @returns {number|undefined}
+   */
+  public getEstimate(
+    playbackObservation : IBufferBasedChooserPlaybackObservation
+  ) : number | undefined {
+    const bufferLevels = this._levelsMap;
+    const bitrates = this._bitrates;
+    const { bufferGap, currentBitrate, currentScore, speed } = playbackObservation;
+    if (currentBitrate == null) {
+      return bitrates[0];
+    }
+    const currentBitrateIndex = arrayFindIndex(bitrates, b => b === currentBitrate);
+    if (currentBitrateIndex < 0 || bitrates.length !== bufferLevels.length) {
+      log.error("ABR: Current Bitrate not found in the calculated levels");
+      return bitrates[0];
+    }
+
+    let scaledScore : number|undefined;
+    if (currentScore != null) {
+      scaledScore = speed === 0 ? currentScore : (currentScore / speed);
+    }
+
+    if (scaledScore != null && scaledScore > 1) {
+      const currentBufferLevel = bufferLevels[currentBitrateIndex];
+      const nextIndex = (() => {
+        for (let i = currentBitrateIndex + 1; i < bufferLevels.length; i++) {
+          if (bufferLevels[i] > currentBufferLevel) {
+            return i;
+          }
+        }
+      })();
+      if (nextIndex != null) {
+        const nextBufferLevel = bufferLevels[nextIndex];
+        if (bufferGap >= nextBufferLevel) {
+          return bitrates[nextIndex];
+        }
+      }
+    }
+
+    if (scaledScore == null || scaledScore < 1.15) {
+      const currentBufferLevel = bufferLevels[currentBitrateIndex];
+      if (bufferGap < currentBufferLevel) {
+        for (let i = currentBitrateIndex - 1; i >= 0; i--) {
+          if (bitrates[i] < currentBitrate) {
+            return bitrates[i];
+          }
+        }
+        return currentBitrate;
+      }
+    }
+    return currentBitrate;
+  }
+}
+
+/** Playback observation needed by the `BufferBasedChooser`. */
+export interface IBufferBasedChooserPlaybackObservation {
+  /**
+   * Difference in seconds between the current position and the next
+   * non-buffered position
+   */
+  bufferGap : number;
+  /** The bitrate of the currently downloaded segments, in bps. */
+  currentBitrate? : number;
+  /** The "maintainability score" of the currently downloaded segments. */
+  currentScore? : number;
+  /** Playback rate wanted */
+  speed : number;
 }
