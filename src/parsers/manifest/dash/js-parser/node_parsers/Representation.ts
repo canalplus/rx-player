@@ -20,6 +20,7 @@ import {
   IRepresentationIntermediateRepresentation,
 } from "../../node_parser_types";
 import parseBaseURL from "./BaseURL";
+import parseContentProtection from "./ContentProtection";
 import parseSegmentBase from "./SegmentBase";
 import parseSegmentList from "./SegmentList";
 import parseSegmentTemplate from "./SegmentTemplate";
@@ -42,6 +43,7 @@ function parseRepresentationChildren(
   const children : IRepresentationChildren = {
     baseURLs: [],
   };
+  const contentProtections = [];
 
   let warnings : Error[] = [];
   for (let i = 0; i < representationChildren.length; i++) {
@@ -80,8 +82,22 @@ function parseRepresentationChildren(
           warnings = warnings.concat(segmentTemplateWarnings);
           children.segmentTemplate = segmentTemplate;
           break;
+
+        case "ContentProtection":
+          const [ contentProtection,
+                  contentProtectionWarnings ] = parseContentProtection(currentElement);
+          if (contentProtectionWarnings.length > 0) {
+            warnings = warnings.concat(contentProtectionWarnings);
+          }
+          if (contentProtection !== undefined) {
+            contentProtections.push(contentProtection);
+          }
+          break;
       }
     }
+  }
+  if (contentProtections.length > 0) {
+    children.contentProtections = contentProtections;
   }
   return [children, warnings];
 }
