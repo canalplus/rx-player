@@ -30,6 +30,7 @@ import {
 } from "../types";
 import { parseString } from "../utils";
 import { generateBaseUrlAttrParser } from "./BaseURL";
+import { generateContentProtectionAttrParser } from "./ContentProtection";
 import { generateSchemeAttrParser } from "./Scheme";
 import { generateSegmentBaseAttrParser } from "./SegmentBase";
 import { generateSegmentListChildrenParser } from "./SegmentList";
@@ -56,6 +57,19 @@ export function generateRepresentationChildrenParser(
         parsersStack.pushParsers(nodeId,
                                  noop,
                                  generateBaseUrlAttrParser(baseUrl, linearMemory));
+        break;
+      }
+
+      case TagName.ContentProtection: {
+        const contentProtection = { children: { cencPssh: [] },
+                                    attributes: {} };
+        if (childrenObj.contentProtections === undefined) {
+          childrenObj.contentProtections = [];
+        }
+        childrenObj.contentProtections.push(contentProtection);
+        const contentProtAttrParser =
+          generateContentProtectionAttrParser(contentProtection, linearMemory);
+        parsersStack.pushParsers(nodeId, noop, contentProtAttrParser);
         break;
       }
 

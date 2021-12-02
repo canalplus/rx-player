@@ -242,6 +242,7 @@ export interface IRepresentationChildren {
   baseURLs : IBaseUrlIntermediateRepresentation[];
 
   // optional
+  contentProtections? : IContentProtectionIntermediateRepresentation[];
   inbandEventStreams? : IScheme[];
   segmentBase? : ISegmentBaseIntermediateRepresentation;
   segmentList? : ISegmentListIntermediateRepresentation;

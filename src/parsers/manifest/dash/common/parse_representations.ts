@@ -28,6 +28,7 @@ import {
   IRepresentationIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
   IScheme,
+  IContentProtectionIntermediateRepresentation,
 } from "../node_parser_types";
 import { getWEBMHDRInformation } from "./get_hdr_information";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
@@ -237,8 +238,16 @@ export default function parseRepresentations(
         adaptation.attributes.width;
     }
 
-    if (adaptation.children.contentProtections != null) {
-      const contentProtections = adaptation.children.contentProtections
+    const contentProtectionsIr : IContentProtectionIntermediateRepresentation[] =
+      adaptation.children.contentProtections !== undefined ?
+        adaptation.children.contentProtections :
+        [];
+    if (representation.children.contentProtections !== undefined) {
+      contentProtectionsIr.push(...representation.children.contentProtections);
+    }
+
+    if (contentProtectionsIr.length > 0) {
+      const contentProtections = contentProtectionsIr
         .reduce<IContentProtections>((acc, cp) => {
           let systemId : string|undefined;
           if (cp.attributes.schemeIdUri !== undefined &&
