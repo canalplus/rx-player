@@ -461,7 +461,7 @@ export interface INativeTextTracksBufferSegmentData {
 function assertChunkIsTextTrackSegmentData(
   chunk : unknown
 ) : asserts chunk is INativeTextTracksBufferSegmentData {
-  if (!__DEV__) {
+  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   if (
@@ -495,7 +495,7 @@ function assertChunkIsTextTrackSegmentData(
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
-if (__DEV__) {
+if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   /* eslint-disable @typescript-eslint/ban-ts-comment */
   // @ts-ignore

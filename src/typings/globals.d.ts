@@ -14,49 +14,66 @@
  * limitations under the License.
  */
 
-// Webpack-defined globals
+// Compile-time globals
 // Should be all replaced once the lib built.
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-declare const __DEV__: boolean;
-declare const __LOGGER_LEVEL__: string;
 declare const __FEATURES__ : {
-  BIF_PARSER : boolean;
-  DASH : boolean;
-  DIRECTFILE : boolean;
-  EME : boolean;
-  HTML_SAMI : boolean;
-  HTML_SRT : boolean;
-  HTML_TTML : boolean;
-  HTML_VTT : boolean;
-  LOCAL_MANIFEST : boolean;
-  METAPLAYLIST : boolean;
-  NATIVE_SAMI : boolean;
-  NATIVE_SRT : boolean;
-  NATIVE_TTML : boolean;
-  NATIVE_VTT : boolean;
-  SMOOTH : boolean;
+  IS_ENABLED : number;
+  IS_DISABLED : number;
+
+  BIF_PARSER : number;
+  DASH : number;
+  DIRECTFILE : number;
+  EME : number;
+  HTML_SAMI : number;
+  HTML_SRT : number;
+  HTML_TTML : number;
+  HTML_VTT : number;
+  LOCAL_MANIFEST : number;
+  METAPLAYLIST : number;
+  NATIVE_SAMI : number;
+  NATIVE_SRT : number;
+  NATIVE_TTML : number;
+  NATIVE_VTT : number;
+  SMOOTH : number;
+} | typeof FEATURES_ENUM;
+
+declare const enum FEATURES_ENUM {
+  IS_DISABLED,
+  IS_ENABLED,
+
+  BIF_PARSER,
+  DASH,
+  DIRECTFILE,
+  EME,
+  HTML_SAMI,
+  HTML_SRT,
+  HTML_TTML,
+  HTML_VTT,
+  LOCAL_MANIFEST,
+  METAPLAYLIST,
+  NATIVE_SAMI,
+  NATIVE_SRT,
+  NATIVE_TTML,
+  NATIVE_VTT,
+  SMOOTH,
+}
+
+declare const __ENVIRONMENT__ : {
+  CURRENT_ENV : number;
+  DEV : number;
+  PRODUCTION : number;
+} | typeof ENVIRONMENT_ENUM;
+
+declare const enum ENVIRONMENT_ENUM {
+  CURRENT_ENV,
+  DEV,
+  PRODUCTION,
+}
+
+declare const __LOGGER_LEVEL__ : {
+  CURRENT_LEVEL : string;
 };
-declare const __RELATIVE_PATH__ : {
-  BIF_PARSER: string;
-  DASH: string;
-  DASH_JS_PARSER: string;
-  DIRECTFILE: string;
-  EME_MANAGER: string;
-  HTML_SAMI: string;
-  HTML_SRT: string;
-  HTML_TEXT_BUFFER: string;
-  HTML_TTML: string;
-  HTML_VTT: string;
-  IMAGE_BUFFER: string;
-  LOCAL_MANIFEST : string;
-  MEDIA_ELEMENT_TRACK_CHOICE_MANAGER: string;
-  METAPLAYLIST: string;
-  NATIVE_SAMI: string;
-  NATIVE_SRT: string;
-  NATIVE_TEXT_BUFFER: string;
-  NATIVE_TTML: string;
-  NATIVE_VTT: string;
-  SMOOTH: string;
-};
+

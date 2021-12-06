@@ -151,7 +151,7 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
      */
     setValue(newVal : T) : void {
       if (isFinished) {
-        if (__DEV__) {
+        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
           throw new Error("Finished shared references cannot be updated");
         } else {
           log.error("Finished shared references cannot be updated");

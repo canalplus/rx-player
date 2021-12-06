@@ -135,7 +135,7 @@ function compatibleListener<T extends Event>(
       if (isNonEmptyString(mem)) {
         return observableFromEvent(element, mem) as Observable<T>;
       } else {
-        if (__DEV__) {
+        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
           log.warn(`compat: element ${element.tagName}` +
                    " does not support any of these events: " +
                    prefixedEvents.join(", "));

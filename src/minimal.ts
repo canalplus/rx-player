@@ -20,6 +20,7 @@
  * This allows to import a "minimal" player with a small bundle size and then
  * import only features that is needed.
  */
+
 import Player from "./core/api";
 import {
   addFeatures,
@@ -27,8 +28,8 @@ import {
 } from "./features";
 import logger from "./log";
 
-if (__DEV__) {
-  logger.setLevel(__LOGGER_LEVEL__);
+if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
 }
 
 /**
