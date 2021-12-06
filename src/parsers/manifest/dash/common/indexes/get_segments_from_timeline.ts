@@ -66,9 +66,7 @@ export default function getSegmentsFromTimeline(
   const scaledTo = toIndexTime(from + durationWanted, index);
   const { timeline, timescale, mediaURLs, startNumber } = index;
 
-  let currentNumber = startNumber != null ? startNumber :
-                                            undefined;
-
+  let currentNumber = startNumber ?? 1;
   const segments : ISegment[] = [];
 
   const timelineLength = timeline.length;
@@ -88,8 +86,7 @@ export default function getSegmentsFromTimeline(
     let segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
     let segmentTime = start + segmentNumberInCurrentRange * duration;
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
-      const segmentNumber = currentNumber != null ?
-        currentNumber + segmentNumberInCurrentRange : undefined;
+      const segmentNumber = currentNumber + segmentNumberInCurrentRange;
 
       const detokenizedURLs = mediaURLs === null ?
         null :
@@ -119,9 +116,7 @@ export default function getSegmentsFromTimeline(
       return segments;
     }
 
-    if (currentNumber != null) {
-      currentNumber += repeat + 1;
-    }
+    currentNumber += repeat + 1;
   }
 
   return segments;

@@ -16,6 +16,9 @@ import {
   brokenSidxManifestInfos,
   multiCodecsManifestInfos as segmentBaseMultiCodecsInfos,
 } from "../../contents/DASH_static_SegmentBase";
+import {
+  manifestInfos as numberBasedTimelineManifestInfos,
+} from "../../contents/DASH_static_number_based_SegmentTimeline";
 
 describe("DASH non-linear content (SegmentTimeline)", function () {
   launchTestsForContent(segmentTimelineManifestInfos);
@@ -229,5 +232,40 @@ describe("DASH non-linear content with a \"broken\" sidx", function() {
                 "should have fixed the video segment with a bad range");
     xhrMock.restore();
     player.dispose();
+  });
+});
+
+describe("DASH non-linear content with number-based SegmentTimeline", function () {
+  let xhrMock;
+  let player;
+  beforeEach(() => {
+    player = new RxPlayer();
+    xhrMock = new XHRMock();
+  });
+
+  afterEach(() => {
+    player.dispose();
+    xhrMock.restore();
+  });
+
+  it("should correctly parse DASH number-based SegmentTimeline", async function () {
+    xhrMock.lock();
+
+    player.loadVideo({ url: numberBasedTimelineManifestInfos.url,
+                       transport: numberBasedTimelineManifestInfos.transport });
+
+    // should only have the manifest for now
+    await sleep(1);
+    expect(xhrMock.getLockedXHR().length).to.equal(1);
+    expect(xhrMock.getLockedXHR()[0].url)
+      .to.equal(numberBasedTimelineManifestInfos.url);
+
+    await xhrMock.flush(); // only wait for the manifest request
+    await sleep(10);
+
+    expect(player.getPlayerState()).to.equal("LOADING");
+
+    // segment requests should be pending
+    expect(xhrMock.getLockedXHR().length).to.be.at.least(1);
   });
 });

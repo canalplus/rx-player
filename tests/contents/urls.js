@@ -12,6 +12,7 @@ const urls7 = require("./DASH_static_SegmentTemplate_Multi_Periods/urls");
 const urls8 = require("./directfile_webm/urls");
 const urls9 = require("./DASH_dynamic_SegmentTemplate_Multi_Periods/urls");
 const urls10 = require("./DASH_static_broken_cenc_in_MPD/urls");
+const urls11 = require("./DASH_static_number_based_SegmentTimeline/urls");
 
 module.exports = [
   ...urls1,
@@ -24,4 +25,5 @@ module.exports = [
   ...urls8,
   ...urls9,
   ...urls10,
+  ...urls11,
 ];
