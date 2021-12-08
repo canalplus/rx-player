@@ -15,6 +15,7 @@
  */
 
 import log from "../../../../../../log";
+import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
 import { IIndexSegment } from "../../../../utils/index_helpers";
 
 /**
@@ -40,23 +41,23 @@ export default function convertElementsToIndexSegment(
   let start = item.start;
   let duration = item.duration;
   const repeatCount = item.repeatCount;
-  if (start == null) {
-    if (previousItem == null) {
+  if (start === undefined) {
+    if (previousItem === null) {
       start = timelineStart;
-    } else if (previousItem.duration != null) {
+    } else if (!isNullOrUndefined(previousItem.duration)) {
       start = previousItem.start +
               (previousItem.duration * (previousItem.repeatCount + 1));
     }
   }
-  if ((duration == null || isNaN(duration)) &&
-      nextItem != null && nextItem.start != null && !isNaN(nextItem.start) &&
-      start != null && !isNaN(start)
+  if ((duration === undefined || isNaN(duration)) &&
+      nextItem !== null && nextItem.start !== undefined && !isNaN(nextItem.start) &&
+      start !== undefined && !isNaN(start)
   ) {
     duration = nextItem.start - start;
   }
-  if ((start != null && !isNaN(start)) &&
-      (duration != null && !isNaN(duration)) &&
-      (repeatCount == null || !isNaN(repeatCount))
+  if ((start !== undefined && !isNaN(start)) &&
+      (duration !== undefined && !isNaN(duration)) &&
+      (repeatCount === undefined || !isNaN(repeatCount))
   ) {
     return { start,
              duration,

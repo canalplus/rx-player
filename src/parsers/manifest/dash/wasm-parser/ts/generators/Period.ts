@@ -147,6 +147,14 @@ export function generatePeriodAttrParser(
                                                ptr,
                                                len);
         break;
+      case AttributeName.AvailabilityTimeOffset:
+        periodAttrs.availabilityTimeOffset =
+          new DataView(linearMemory.buffer).getFloat64(ptr, true);
+        break;
+      case AttributeName.AvailabilityTimeComplete:
+        periodAttrs.availabilityTimeComplete =
+          new DataView(linearMemory.buffer).getUint8(0) === 0;
+        break;
       case AttributeName.Namespace:
         const xmlNs = { key: "", value: "" };
         const dataView = new DataView(linearMemory.buffer);

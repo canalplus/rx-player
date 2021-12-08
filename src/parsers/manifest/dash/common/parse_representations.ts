@@ -33,6 +33,7 @@ import {
 import { getWEBMHDRInformation } from "./get_hdr_information";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import parseRepresentationIndex from "./parse_representation_index";
+import { IResolvedBaseUrl } from "./resolve_base_urls";
 
 /**
  * Combine inband event streams from representation and
@@ -62,10 +63,11 @@ function combineInbandEventStreams(
 export interface IAdaptationInfos {
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
+  availabilityTimeComplete: boolean;
   /** availability time offset of the concerned Adaptation. */
   availabilityTimeOffset: number;
   /** Eventual URLs from which every relative URL will be based on. */
-  baseURLs : string[];
+  baseURLs : IResolvedBaseUrl[];
   /** Allows to obtain the first/last available position of a dynamic content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /** End time of the current period, in seconds. */
@@ -176,8 +178,16 @@ export default function parseRepresentations(
     const inbandEventStreams =
       combineInbandEventStreams(representation, adaptation);
 
+    const availabilityTimeComplete =
+      representation.attributes.availabilityTimeComplete ??
+      adaptationInfos.availabilityTimeComplete;
+    const availabilityTimeOffset =
+      (representation.attributes.availabilityTimeOffset ?? 0) +
+      adaptationInfos.availabilityTimeOffset;
     const representationInfos = objectAssign({}, adaptationInfos,
-                                             { unsafelyBaseOnPreviousRepresentation,
+                                             { availabilityTimeOffset,
+                                               availabilityTimeComplete,
+                                               unsafelyBaseOnPreviousRepresentation,
                                                adaptation,
                                                inbandEventStreams });
     const representationIndex = parseRepresentationIndex(representation,

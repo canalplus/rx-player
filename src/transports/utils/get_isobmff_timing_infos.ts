@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log";
 import { ISegment } from "../../manifest";
 import {
   getDurationFromTrun,
@@ -50,7 +51,11 @@ export default function getISOBMFFTimingInfos(
                       baseDecodeTime + (segment.timestampOffset * initTimescale) :
                       baseDecodeTime;
   const trunDuration = getDurationFromTrun(buffer);
-  if (isChunked) { // when chunked, no mean to know the duration for now
+  if (isChunked || !segment.complete) {
+    if (trunDuration === undefined) {
+      log.warn("DASH: Chunked segments should indicate a duration through their" +
+               " trun boxes");
+    }
     return { time: startTime / initTimescale,
              duration: trunDuration !== undefined ? trunDuration / initTimescale :
                                                     undefined };

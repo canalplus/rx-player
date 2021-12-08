@@ -320,6 +320,12 @@ export function generateAdaptationSetAttrParser(
       case AttributeName.MaxSAPPeriod:
         adaptationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
         break;
+      case AttributeName.AvailabilityTimeOffset:
+        adaptationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
+        break;
+      case AttributeName.AvailabilityTimeComplete:
+        adaptationAttrs.availabilityTimeComplete = dataView.getUint8(0) === 0;
+        break;
 
       // TODO
       // case AttributeName.StartsWithSap:

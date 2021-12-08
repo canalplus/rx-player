@@ -58,6 +58,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
               time: 0,
               end: Number.MAX_VALUE,
               duration: Number.MAX_VALUE,
+              complete: true,
               timescale: 1 }];
   }
 

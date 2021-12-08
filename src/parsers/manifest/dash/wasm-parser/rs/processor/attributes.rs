@@ -44,6 +44,10 @@ pub fn report_period_attrs(tag_bs : &quick_xml::events::BytesStart) {
                 b"start" => Start.try_report_as_iso_8601_duration(&attr),
                 b"duration" => Duration.try_report_as_iso_8601_duration(&attr),
                 b"bitstreamSwitching" => BitstreamSwitching.try_report_as_bool(&attr),
+                b"availabilityTimeOffset" => match attr.value.as_ref() {
+                    b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
+                    _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
+                },
                 b"xlink:href" => XLinkHref.try_report_as_string(&attr),
                 b"xlink:actuate" => XLinkActuate.try_report_as_string(&attr),
                 x => {
@@ -90,6 +94,12 @@ pub fn report_adaptation_set_attrs(e : &quick_xml::events::BytesStart) {
                 b"width" => Width.try_report_as_u64(&attr),
                 b"maxPlayoutRate" => MaxPlayoutRate.try_report_as_f64(&attr),
                 b"maxSAPPeriod" => MaxSAPPeriod.try_report_as_f64(&attr),
+                b"availabilityTimeOffset" => match attr.value.as_ref() {
+                    b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
+                    _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
+                },
+                b"availabilityTimeComplete" =>
+                    AvailabilityTimeComplete.try_report_as_bool(&attr),
                 _ => {},
             },
             Err(err) => ParsingError::from(err).report_err(),
@@ -115,6 +125,12 @@ pub fn report_representation_attrs(tag_bs : &quick_xml::events::BytesStart) {
                 b"profiles" => Profiles.try_report_as_string(&attr),
                 b"qualityRanking" => QualityRanking.try_report_as_u64(&attr),
                 b"segmentProfiles" => SegmentProfiles.try_report_as_string(&attr),
+                b"availabilityTimeOffset" => match attr.value.as_ref() {
+                    b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
+                    _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
+                },
+                b"availabilityTimeComplete" =>
+                    AvailabilityTimeComplete.try_report_as_bool(&attr),
                 _ => {},
             },
             Err(err) => ParsingError::from(err).report_err(),
@@ -125,11 +141,16 @@ pub fn report_representation_attrs(tag_bs : &quick_xml::events::BytesStart) {
 pub fn report_base_url_attrs(tag_bs : &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => if let b"availabilityTimeOffset" = attr.key {
-                match attr.value.as_ref() {
-                    b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
-                    _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
-                }
+            Ok(attr) => match attr.key {
+                b"availabilityTimeOffset" => {
+                    match attr.value.as_ref() {
+                        b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
+                        _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
+                    }
+                },
+                b"availabilityTimeComplete" =>
+                    AvailabilityTimeComplete.try_report_as_bool(&attr),
+                _ => {},
             },
             Err(err) => ParsingError::from(err).report_err(),
         };

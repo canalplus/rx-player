@@ -26,6 +26,7 @@ import {
   IIndexSegment,
   toIndexTime,
 } from "../../../utils/index_helpers";
+import { IResolvedBaseUrl } from "../resolve_base_urls";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { createIndexURLs } from "./tokens";
@@ -110,7 +111,7 @@ export interface IBaseIndexContextArgument {
   /** End of the period concerned by this RepresentationIndex, in seconds. */
   periodEnd : number|undefined;
   /** Base URL for the Representation concerned. */
-  representationBaseURLs : string[];
+  representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
   representationId? : string;
   /** Bitrate of the Representation concerned. */
@@ -192,7 +193,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    const mediaURLs = createIndexURLs(representationBaseURLs,
+    const urlSources : string[] = representationBaseURLs.map(b => b.url);
+    const mediaURLs = createIndexURLs(urlSources,
                                      index.initialization !== undefined ?
                                        index.initialization.media :
                                        undefined,
@@ -213,7 +215,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
                     initialization: { mediaURLs, range },
-                    mediaURLs: createIndexURLs(representationBaseURLs,
+                    mediaURLs: createIndexURLs(urlSources,
                                                index.media,
                                                representationId,
                                                representationBitrate),

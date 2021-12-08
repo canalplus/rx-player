@@ -25,7 +25,6 @@ import {
   IPeriodIntermediateRepresentation,
 } from "../node_parser_types";
 // eslint-disable-next-line max-len
-import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
@@ -33,7 +32,9 @@ import parseAvailabilityStartTime from "./parse_availability_start_time";
 import parsePeriods, {
   IXLinkInfos,
 } from "./parse_periods";
-import resolveBaseURLs from "./resolve_base_urls";
+import resolveBaseURLs, {
+  IResolvedBaseUrl,
+} from "./resolve_base_urls";
 
 const { DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 } = config;
 
@@ -232,22 +233,21 @@ function parseCompleteIntermediateRepresentation(
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
   const isDynamic : boolean = rootAttributes.type === "dynamic";
-  const baseURLs = resolveBaseURLs(args.url === undefined ?
-                                     [] :
-                                     [normalizeBaseURL(args.url)],
-                                   rootChildren.baseURLs);
+  const initialBaseUrl : IResolvedBaseUrl[] = args.url !== undefined ?
+    [{ url: normalizeBaseURL(args.url),
+       availabilityTimeOffset: 0,
+       availabilityTimeComplete: true }] :
+    [];
+  const mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.baseURLs);
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const { externalClockOffset: clockOffset,
           unsafelyBaseOnPreviousManifest } = args;
-  const availabilityTimeOffset =
-    extractMinimumAvailabilityTimeOffset(rootChildren.baseURLs);
 
   const manifestInfos = { aggressiveMode: args.aggressiveMode,
                           availabilityStartTime,
-                          availabilityTimeOffset,
-                          baseURLs,
+                          baseURLs: mpdBaseUrls,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,

@@ -45,6 +45,7 @@ export default function getInitSegment(
                                            undefined,
            indexRange: index.indexRange,
            mediaURLs: initialization?.mediaURLs ?? null,
+           complete: true,
            privateInfos,
            timestampOffset: -(index.indexTimeOffset / index.timescale) };
 }

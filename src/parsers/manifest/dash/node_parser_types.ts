@@ -161,6 +161,8 @@ export interface IPeriodAttributes {
    */
   duration? : number;
   bitstreamSwitching? : boolean;
+  availabilityTimeComplete?: boolean;
+  availabilityTimeOffset?: number;
   xlinkHref? : string;
   xlinkActuate? : string;
 
@@ -230,6 +232,8 @@ export interface IAdaptationSetAttributes {
   segmentProfiles? : string;
   subsegmentAlignment? : number|boolean;
   width? : number;
+  availabilityTimeComplete?: boolean;
+  availabilityTimeOffset?: number;
 }
 
 export interface IRepresentationIntermediateRepresentation {
@@ -265,6 +269,8 @@ export interface IRepresentationAttributes {
   qualityRanking? : number;
   segmentProfiles? : string;
   width? : number;
+  availabilityTimeComplete?: boolean;
+  availabilityTimeOffset?: number;
 }
 
 export interface ISegmentBaseIntermediateRepresentation {
@@ -365,6 +371,7 @@ export interface IBaseUrlIntermediateRepresentation {
   attributes: {
     /** availabilityTimeOffset attribute assiociated to that BaseURL node. */
     availabilityTimeOffset?: number;
+    availabilityTimeComplete?: boolean;
   };
 }
 

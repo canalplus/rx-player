@@ -30,22 +30,24 @@ import {
 } from "../node_parser_types";
 import attachTrickModeTrack from "./attach_trickmode_track";
 // eslint-disable-next-line max-len
-import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import inferAdaptationType from "./infer_adaptation_type";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import parseRepresentations, {
   IAdaptationInfos,
 } from "./parse_representations";
-import resolveBaseURLs from "./resolve_base_urls";
+import resolveBaseURLs, {
+  IResolvedBaseUrl,
+} from "./resolve_base_urls";
 
 /** Context needed when calling `parseAdaptationSets`. */
 export interface IAdaptationSetsContextInfos {
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
+  availabilityTimeComplete: boolean;
   /** availabilityTimeOffset of the concerned period. */
   availabilityTimeOffset: number;
   /** Eventual URLs from which every relative URL will be based on. */
-  baseURLs : string[];
+  baseURLs : IResolvedBaseUrl[];
   /** Allows to obtain the first available position of a content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /* End time of the current period, in seconds. */
@@ -302,8 +304,11 @@ export default function parseAdaptationSets(
       roles.some((role) => role.schemeIdUri === "urn:mpeg:dash:role:2011");
 
     const representationsIR = adaptation.children.representations;
+    const availabilityTimeComplete =
+      adaptation.attributes.availabilityTimeComplete ??
+      periodInfos.availabilityTimeComplete;
     const availabilityTimeOffset =
-      extractMinimumAvailabilityTimeOffset(adaptation.children.baseURLs) +
+      (adaptation.attributes.availabilityTimeOffset ?? 0) +
       periodInfos.availabilityTimeOffset;
 
     const adaptationMimeType = adaptation.attributes.mimeType;
@@ -335,6 +340,7 @@ export default function parseAdaptationSets(
 
     const adaptationInfos : IAdaptationInfos = {
       aggressiveMode: periodInfos.aggressiveMode,
+      availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: resolveBaseURLs(periodInfos.baseURLs, adaptationChildren.baseURLs),
       manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,

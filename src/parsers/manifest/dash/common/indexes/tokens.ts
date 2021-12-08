@@ -47,7 +47,7 @@ function processFormatedToken(
 }
 
 /**
- * @param {string} representationURL
+ * @param {string} baseURLs
  * @param {string|undefined} media
  * @param {string|undefined} id
  * @param {number|undefined} bitrate

@@ -19,7 +19,7 @@ import { ISegment } from "../../manifest";
 import objectValues from "../../utils/object_values";
 
 export interface IProgressEventValue {
-  // Current duration for the request, in ms. */
+  /** Current duration for the request, in ms. */
   duration : number;
   /** Unique ID for the request. */
   id: string|number;

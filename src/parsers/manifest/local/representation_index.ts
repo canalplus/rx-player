@@ -46,6 +46,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       duration: 0,
       timescale: 1,
       mediaURLs: null,
+      complete: true,
       privateInfos: {
         localManifestInitSegment: { load: this._index.loadInitSegment } },
     };
@@ -83,6 +84,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
           timescale: 1,
           timestampOffset: wantedSegment.timestampOffset,
           mediaURLs: null,
+          complete: true,
           privateInfos: {
             localManifestSegment: { load: this._index.loadSegment,
                                     segment: wantedSegment },

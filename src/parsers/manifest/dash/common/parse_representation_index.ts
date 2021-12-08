@@ -26,8 +26,6 @@ import {
   ISegmentTemplateIntermediateRepresentation,
   IScheme,
 } from "../node_parser_types";
-// eslint-disable-next-line max-len
-import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import {
   BaseRepresentationIndex,
   ListRepresentationIndex,
@@ -35,7 +33,9 @@ import {
   TimelineRepresentationIndex,
 } from "./indexes";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
-import resolveBaseURLs from "./resolve_base_urls";
+import resolveBaseURLs, {
+  IResolvedBaseUrl,
+} from "./resolve_base_urls";
 
 /** Supplementary context needed to parse a RepresentationIndex. */
 export interface IRepresentationInfos {
@@ -43,10 +43,11 @@ export interface IRepresentationInfos {
   adaptation : IAdaptationSetIntermediateRepresentation;
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
+  availabilityTimeComplete : boolean;
   /** availability time offset of the concerned Adaptation. */
-  availabilityTimeOffset: number;
+  availabilityTimeOffset : number;
   /** Eventual URLs from which every relative URL will be based on. */
-  baseURLs : string[];
+  baseURLs : IResolvedBaseUrl[];
   /** Allows to obtain the first/last available position of a dynamic content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /** End time of the current period, in seconds. */
@@ -111,6 +112,7 @@ export default function parseRepresentationIndex(
       .some(({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeIdUri);
   };
   const context = { aggressiveMode,
+                    availabilityTimeComplete: true,
                     availabilityTimeOffset,
                     unsafelyBaseOnPreviousRepresentation,
                     isEMSGWhitelisted,
@@ -126,10 +128,6 @@ export default function parseRepresentationIndex(
   let representationIndex : IRepresentationIndex;
   if (representation.children.segmentBase !== undefined) {
     const { segmentBase } = representation.children;
-    context.availabilityTimeOffset =
-      representationInfos.availabilityTimeOffset +
-      extractMinimumAvailabilityTimeOffset(representation.children.baseURLs) +
-      (segmentBase.availabilityTimeOffset ?? 0);
     representationIndex = new BaseRepresentationIndex(segmentBase, context);
   } else if (representation.children.segmentList !== undefined) {
     const { segmentList } = representation.children;
@@ -147,10 +145,12 @@ export default function parseRepresentationIndex(
                    ...segmentTemplates as [
                      ISegmentTemplateIntermediateRepresentation
                    ] /* Ugly TS Hack */);
+    context.availabilityTimeComplete =
+      segmentTemplate.availabilityTimeComplete ??
+      representationInfos.availabilityTimeComplete;
     context.availabilityTimeOffset =
-      representationInfos.availabilityTimeOffset +
-      extractMinimumAvailabilityTimeOffset(representation.children.baseURLs) +
-      (segmentTemplate.availabilityTimeOffset ?? 0);
+      (segmentTemplate.availabilityTimeOffset ?? 0) +
+      representationInfos.availabilityTimeOffset;
     representationIndex = TimelineRepresentationIndex
       .isTimelineIndexArgument(segmentTemplate) ?
         new TimelineRepresentationIndex(segmentTemplate, context) :

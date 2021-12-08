@@ -31,12 +31,13 @@ import {
   IPeriodIntermediateRepresentation,
 } from "../node_parser_types";
 // eslint-disable-next-line max-len
-import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformation from "./get_periods_time_infos";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import parseAdaptationSets from "./parse_adaptation_sets";
-import resolveBaseURLs from "./resolve_base_urls";
+import resolveBaseURLs, {
+  IResolvedBaseUrl,
+} from "./resolve_base_urls";
 
 const generatePeriodID = idGenerator();
 
@@ -54,9 +55,8 @@ export type IXLinkInfos = WeakMap<IPeriodIntermediateRepresentation, {
 export interface IPeriodsContextInfos {
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
-  availabilityTimeOffset: number;
   availabilityStartTime : number;
-  baseURLs : string[];
+  baseURLs : IResolvedBaseUrl[];
   clockOffset? : number;
   duration? : number;
   isDynamic : boolean;
@@ -141,14 +141,13 @@ export default function parsePeriods(
     const receivedTime = xlinkInfos !== undefined ? xlinkInfos.receivedTime :
                                                     contextInfos.receivedTime;
 
-    const availabilityTimeOffset =
-      extractMinimumAvailabilityTimeOffset(periodIR.children.baseURLs) +
-      contextInfos.availabilityTimeOffset;
-
     const unsafelyBaseOnPreviousPeriod = contextInfos
       .unsafelyBaseOnPreviousManifest?.getPeriod(periodID) ?? null;
 
+    const availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete ?? true;
+    const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset ?? 0;
     const periodInfos = { aggressiveMode: contextInfos.aggressiveMode,
+                          availabilityTimeComplete,
                           availabilityTimeOffset,
                           baseURLs: periodBaseURLs,
                           manifestBoundsCalculator,

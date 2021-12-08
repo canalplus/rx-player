@@ -196,7 +196,7 @@ export const enum AttributeName {
   MaxSegmentDuration = 41, // f64
   MaxSubsegmentDuration = 42, // f64
 
-  // BaseURL + SegmentTemplate
+  // BaseURL + SegmentTemplate + Period + AdaptationSet + Representation
   AvailabilityTimeOffset = 43, // f64
 
   // BaseURL

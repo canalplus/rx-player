@@ -240,8 +240,18 @@ export default class VideoThumbnailLoader {
                   if (data.segmentType === "init") {
                     throw new Error("Unexpected initialization segment parsed.");
                   }
-                  const start = segment.time / segment.timescale;
-                  const end = start + (segment.duration / segment.timescale);
+                  let start;
+                  let end;
+                  if (data.chunkInfos !== null) {
+                    start = data.chunkInfos.time;
+                    end = data.chunkInfos.duration;
+                  } else {
+                    start = segment.time / segment.timescale;
+                  }
+
+                  if (end === undefined) {
+                    end = start + (segment.duration / segment.timescale);
+                  }
                   const inventoryInfos = objectAssign({ segment,
                                                         start,
                                                         end }, contentInfos);

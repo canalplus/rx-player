@@ -393,7 +393,10 @@ export interface IManifestParserRequestNeeded {
 export interface IChunkTimeInfo {
   /**
    * Difference between the latest and the earliest presentation time
-   * available in that segment, in seconds.
+   * available in that chunk, in seconds.
+   *
+   * If multiple chunks are present in a single segment (e.g. low-latency CMAF
+   * chunks, this is only the duration of the current chunk).
    *
    * Either `undefined` or set to `0` for an initialization segment.
    */

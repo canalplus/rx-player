@@ -51,16 +51,7 @@ export interface IBufferedChunk {
    * synchronization for that chunk this value could be more or less precize.
    */
   bufferedStart : number|undefined;
-  /**
-   * Supposed end, in seconds, the chunk is expected to end at.
-   *
-   * If the current `chunk` is part of a "partially pushed" segment (see
-   * `partiallyPushed`), the definition of this property is flexible in the way
-   * that it can correspond either to the end of the chunk or to the end of the
-   * whole segment the chunk is linked to.
-   * As such, this property should not be relied on until the segment has been
-   * fully-pushed.
-   */
+  /** Supposed end, in seconds, the chunk is expected to end at. */
   end : number;
   /**
    * If `true` the `end` property is an estimate the `SegmentInventory` has
@@ -84,8 +75,6 @@ export interface IBufferedChunk {
   infos : IChunkContext;
   /**
    * If `true`, this chunk is only a partial chunk of a whole segment.
-   * In this condition, the `start` and `end` properties may be ignored, as it
-   * is unclear if they refer to the chunk or to the whole segment.
    *
    * Inversely, if `false`, this chunk is a whole segment whose inner chunks
    * have all been fully pushed.
@@ -691,7 +680,6 @@ export default class SegmentInventory {
       return;
     }
     const inventory = this._inventory;
-
 
     const resSegments : IBufferedChunk[] = [];
 
