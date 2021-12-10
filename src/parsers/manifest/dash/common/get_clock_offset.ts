@@ -30,11 +30,11 @@ import log from "../../../../log";
  * @returns {number|undefined}
  */
 export default function getClockOffset(
-  serverClock : string
-) : number|undefined {
+  serverClock: string
+): number | undefined {
   const httpOffset = Date.parse(serverClock) - performance.now();
   if (isNaN(httpOffset)) {
-    log.warn("DASH Parser: Invalid clock received: ",  serverClock);
+    log.warn("DASH Parser: Invalid clock received: ", serverClock);
     return undefined;
   }
   return httpOffset;

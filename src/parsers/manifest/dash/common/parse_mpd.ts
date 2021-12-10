@@ -24,6 +24,7 @@ import {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
 } from "../node_parser_types";
+import { IResponseData } from "../parsers_types";
 // eslint-disable-next-line max-len
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
@@ -86,7 +87,7 @@ export interface IIrParserResponseNeedsClock {
      * Callback to call with the fetched clock data in argument to continue
      * parsing the MPD.
      */
-    continue : (clockValue : string) => IIrParserResponse;
+    continue : (clockValue : IResponseData<string>) => IIrParserResponse;
   };
 }
 
@@ -158,8 +159,15 @@ export default function parseMpdIr(
           type: "needs-clock",
           value: {
             url: UTCTimingHTTPURL,
-            continue: function continueParsingMPD(clockValue : string) {
-              args.externalClockOffset = getClockOffset(clockValue);
+            continue: function continueParsingMPD(
+              responseDataClock : IResponseData<string>) {
+              if (!responseDataClock.success) {
+                warnings.push(responseDataClock.error);
+                log.warn("DASH Parser: Error on fetching the clock ressource",
+                         responseDataClock.error);
+                return parseMpdIr(mpdIR, args, warnings, true);
+              }
+              args.externalClockOffset = getClockOffset(responseDataClock.data);
               return parseMpdIr(mpdIR, args, warnings, true);
             },
           },

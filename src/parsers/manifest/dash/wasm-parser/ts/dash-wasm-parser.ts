@@ -441,12 +441,15 @@ export default class DashWasmParser {
       ) : IDashParserResponse<string> | IDashParserResponse<ArrayBuffer> => {
         const resourceInfos : ILoadedXlinkData[] = [];
         for (let i = 0; i < loadedXlinks.length; i++) {
-          const { responseData: xlinkData,
+          const { responseData: xlinkResp,
                   receivedTime,
                   sendingTime,
                   url } = loadedXlinks[i];
+          if (!xlinkResp.success) {
+            throw xlinkResp.error;
+          }
           const [periodsIr,
-                 periodsIRWarnings] = this._parseXlink(xlinkData);
+                 periodsIRWarnings] = this._parseXlink(xlinkResp.data);
           resourceInfos.push({ url,
                                receivedTime,
                                sendingTime,

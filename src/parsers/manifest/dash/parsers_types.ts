@@ -61,6 +61,10 @@ export interface IDashParserNeedsResources<T extends string | ArrayBuffer> {
   };
 }
 
+export type IResponseData<T> =
+  { success: true; data: T } |
+  { success: false; error: Error };
+
 /** Format a loaded resource should take. */
 export interface ILoadedResource<T extends string | ArrayBuffer> {
   /**
@@ -80,6 +84,8 @@ export interface ILoadedResource<T extends string | ArrayBuffer> {
    * `undefined` if unknown or not applicable.
    */
   receivedTime? : number;
-  /** The loaded resource itself, under the right format. */
-  responseData : T;
+  /** The loaded resource itself, under the right format.
+   * Or an error, when fetching ressources.
+   */
+  responseData : IResponseData<T>;
 }
