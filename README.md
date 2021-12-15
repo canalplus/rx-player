@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./doc/assets/logo.png" />
+  <img src="./doc/static/img/logo.png" />
   <br /><br />
   <a href="https://canalplus.github.io/rx-player/doc/pages/api/index.html">📖 <b>API documentation</b></a>
   -
