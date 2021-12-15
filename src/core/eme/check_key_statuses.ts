@@ -17,6 +17,7 @@
 import { ICustomMediaKeySession } from "../../compat";
 import getUUIDKidFromKeyStatusKID from "../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../errors";
+import { bytesToHex } from "../../utils/string_parsing";
 import { IEMEWarningEvent } from "./types";
 
 const KEY_STATUSES = { EXPIRED: "expired",
@@ -96,8 +97,9 @@ export default function checkKeyStatuses(
                                              new Uint8Array(keyStatusKeyId));
     switch (keyStatus) {
       case KEY_STATUSES.EXPIRED: {
-        const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                              "A decryption key expired");
+        const error = new EncryptedMediaError(
+          "KEY_STATUS_CHANGE_ERROR",
+          `A decryption key expired (${bytesToHex(keyId)})`);
 
         if (throwOnLicenseExpiration !== false) {
           throw error;
@@ -108,9 +110,9 @@ export default function checkKeyStatuses(
       }
 
       case KEY_STATUSES.INTERNAL_ERROR: {
-        const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                              "An invalid key status has been " +
-                                              "encountered: " + keyStatus);
+        const error = new EncryptedMediaError(
+          "KEY_STATUS_CHANGE_ERROR",
+          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`);
         if (fallbackOn.keyInternalError !== true) {
           throw error;
         }
@@ -120,9 +122,9 @@ export default function checkKeyStatuses(
       }
 
       case KEY_STATUSES.OUTPUT_RESTRICTED: {
-        const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                              "An invalid key status has been " +
-                                              "encountered: " + keyStatus);
+        const error = new EncryptedMediaError(
+          "KEY_STATUS_CHANGE_ERROR",
+          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`);
         if (fallbackOn.keyOutputRestricted !== true) {
           throw error;
         }
