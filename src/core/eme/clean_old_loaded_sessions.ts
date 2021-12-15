@@ -14,49 +14,23 @@
  * limitations under the License.
  */
 
-import {
-  EMPTY,
-  mapTo,
-  merge as observableMerge,
-  Observable,
-  startWith,
-} from "rxjs";
 import { ICustomMediaKeySession } from "../../compat";
+import PPromise from "../../utils/promise";
 import { IInitializationDataInfo } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 
 /**
- * Event emitted when an old MediaKeySession has been closed to respect the
- * maximum limit of concurrent MediaKeySession active.
- */
-export interface ICleanedOldSessionEvent {
-  type : "cleaned-old-session";
-  value : {
-    /** The MediaKeySession cleaned. */
-    mediaKeySession : MediaKeySession |
-                      ICustomMediaKeySession;
-    /** The type of MediaKeySession (e.g. "temporary"). */
-    sessionType : MediaKeySessionType;
-    /** Initialization data assiociated to this MediaKeySession. */
-    initializationData : IInitializationDataInfo;
-  };
-}
-
-/**
- * Event emitted when we are beginning to close an old MediaKeySession to
+ * Data emitted when we are beginning to close an old MediaKeySession to
  * respect the maximum limit of concurrent MediaKeySession active.
  */
-export interface ICleaningOldSessionEvent {
-  type : "cleaning-old-session";
-  value : {
-    /** The MediaKeySession that we are currently cleaning. */
-    mediaKeySession : MediaKeySession |
-                      ICustomMediaKeySession;
-    /** The type of MediaKeySession (e.g. "temporary"). */
-    sessionType : MediaKeySessionType;
-    /** Initialization data assiociated to this MediaKeySession. */
-    initializationData : IInitializationDataInfo;
-  };
+export interface ICleaningOldSessionDataPayload {
+  /** The MediaKeySession that we are currently cleaning. */
+  mediaKeySession : MediaKeySession |
+                    ICustomMediaKeySession;
+  /** The type of MediaKeySession (e.g. "temporary"). */
+  sessionType : MediaKeySessionType;
+  /** Initialization data assiociated to this MediaKeySession. */
+  initializationData : IInitializationDataInfo;
 }
 
 /**
@@ -68,29 +42,22 @@ export interface ICleaningOldSessionEvent {
  * @param {Object} loadedSessionsStore
  * @returns {Observable}
  */
-export default function cleanOldLoadedSessions(
+export default async function cleanOldLoadedSessions(
   loadedSessionsStore : LoadedSessionsStore,
-  limit : number
-) : Observable<ICleaningOldSessionEvent | ICleanedOldSessionEvent> {
+  limit : number,
+  onCleaningSession : (arg : ICleaningOldSessionDataPayload) => void
+) : Promise<void> {
   if (limit < 0 || limit >= loadedSessionsStore.getLength()) {
-    return EMPTY;
+    return ;
   }
 
-  const cleaningOldSessions$ : Array<Observable<ICleanedOldSessionEvent |
-                                                 ICleaningOldSessionEvent>> = [];
-  const entries = loadedSessionsStore
-    .getAll()
-    .slice(); // clone
+  const proms : Array<Promise<unknown>> = [];
+  const entries = loadedSessionsStore.getAll().slice(); // clone
   const toDelete = entries.length - limit;
   for (let i = 0; i < toDelete; i++) {
     const entry = entries[i];
-    const cleaning$ = loadedSessionsStore
-      .closeSession(entry.initializationData)
-      .pipe(mapTo({ type: "cleaned-old-session" as const,
-                    value: entry }),
-            startWith({ type: "cleaning-old-session" as const,
-                        value: entry }));
-    cleaningOldSessions$.push(cleaning$);
+    onCleaningSession(entry);
+    proms.push(loadedSessionsStore.closeSession(entry.initializationData));
   }
-  return observableMerge(...cleaningOldSessions$);
+  await PPromise.all(proms);
 }

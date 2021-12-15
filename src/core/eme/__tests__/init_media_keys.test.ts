@@ -20,14 +20,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable no-restricted-properties */
 
 import {
-  of as observableOf,
   skip,
   take,
   tap,
-  throwError,
 } from "rxjs";
+import TaskCanceller from "../../../utils/task_canceller";
 
 describe("core - eme - initMediaKeys", () => {
   beforeEach(() => {
@@ -41,17 +41,17 @@ describe("core - eme - initMediaKeys", () => {
                                    persistentSessionsStore: { d: 2 } },
                          options: { e: 1 } };
     const spyGetMediaKeysInfos = jest.fn(() => {
-      return observableOf(fakeResult);
+      return Promise.resolve(fakeResult);
     });
     jest.mock("../get_media_keys", () => ({
       __esModule: true as const,
       default: spyGetMediaKeysInfos,
     }));
     const spyAttachMediaKeys = jest.fn(() => {
-      return observableOf(undefined);
+      return Promise.resolve(undefined);
     });
     const spyDisableOldMediaKeys = jest.fn(() => {
-      return observableOf(undefined);
+      return Promise.resolve(undefined);
     });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
@@ -77,7 +77,9 @@ describe("core - eme - initMediaKeys", () => {
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
-          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
+          .toHaveBeenCalledWith(mediaElement,
+                                keySystemsConfigs,
+                                new TaskCanceller().signal);
 
         expect(spyAttachMediaKeys).toHaveBeenCalledTimes(0);
         done();
@@ -91,17 +93,17 @@ describe("core - eme - initMediaKeys", () => {
                                    persistentSessionsStore: { d: 2 } },
                          options: { e: 1 } };
     const spyGetMediaKeysInfos = jest.fn(() => {
-      return observableOf(fakeResult);
+      return Promise.resolve(fakeResult);
     });
     jest.mock("../get_media_keys", () => ({
       __esModule: true as const,
       default: spyGetMediaKeysInfos,
     }));
     const spyAttachMediaKeys = jest.fn(() => {
-      return observableOf(undefined);
+      return Promise.resolve(undefined);
     });
     const spyDisableOldMediaKeys = jest.fn(() => {
-      return observableOf(undefined);
+      return Promise.resolve(undefined);
     });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
@@ -130,7 +132,9 @@ describe("core - eme - initMediaKeys", () => {
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
-          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
+          .toHaveBeenCalledWith(mediaElement,
+                                keySystemsConfigs,
+                                new TaskCanceller().signal);
 
         expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
         expect(spyAttachMediaKeys)
@@ -139,23 +143,24 @@ describe("core - eme - initMediaKeys", () => {
             { mediaKeySystemAccess: fakeResult.mediaKeySystemAccess,
               mediaKeys: fakeResult.mediaKeys,
               loadedSessionsStore: fakeResult.stores.loadedSessionsStore,
-              keySystemOptions: fakeResult.options });
+              keySystemOptions: fakeResult.options },
+            new TaskCanceller().signal);
         done();
       });
   });
 
   it("Should throw if getMediaKeys throws", (done) => {
     const err = new Error("a");
-    const spyGetMediaKeysInfos = jest.fn(() => throwError(() => err));
+    const spyGetMediaKeysInfos = jest.fn(() => Promise.reject(err));
     jest.mock("../get_media_keys", () => ({
       __esModule: true as const,
       default: spyGetMediaKeysInfos,
     }));
     const spyAttachMediaKeys = jest.fn(() => {
-      return observableOf(undefined);
+      return Promise.resolve(undefined);
     });
     const spyDisableOldMediaKeys = jest.fn(() => {
-      return observableOf(undefined);
+      return Promise.resolve(undefined);
     });
     jest.mock("../attach_media_keys", () => ({
       __esModule: true as const,
@@ -172,7 +177,9 @@ describe("core - eme - initMediaKeys", () => {
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
-          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
+          .toHaveBeenCalledWith(mediaElement,
+                                keySystemsConfigs,
+                                new TaskCanceller().signal);
 
         expect(spyAttachMediaKeys).not.toHaveBeenCalled();
         done();

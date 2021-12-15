@@ -20,8 +20,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable no-restricted-properties */
 
-import { of as observableOf } from "rxjs";
 import PPromise from "../../../../../utils/promise";
 import { ProberStatus } from "../../types";
 
@@ -60,7 +60,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       return PPromise.resolve({});
     });
     const mockRequestMediaKeySystemAcces = jest.fn(() => {
-      return observableOf({
+      return Promise.resolve({
         createMediaKeys: mockCreateMediaKeys,
       });
     });
@@ -90,7 +90,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       });
     });
     const mockRequestMediaKeySystemAcces = jest.fn(() => {
-      return observableOf({
+      return Promise.resolve({
         createMediaKeys: mockCreateMediaKeys,
       });
     });
@@ -120,7 +120,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       });
     });
     const mockRequestMediaKeySystemAcces = jest.fn(() => {
-      return observableOf({
+      return Promise.resolve({
         createMediaKeys: mockCreateMediaKeys,
       });
     });

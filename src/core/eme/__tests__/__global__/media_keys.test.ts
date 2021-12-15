@@ -25,9 +25,7 @@
 
 import {
   EMPTY,
-  of as observableOf,
   Subject,
-  take,
   takeUntil,
 } from "rxjs";
 import {
@@ -64,9 +62,9 @@ describe("core - eme - global tests - media key system access", () => {
       keySystem : string,
       conf : MediaKeySystemConfiguration[]
     ) {
-      return observableOf({ keySystem,
-                            getConfiguration() { return conf; },
-                            createMediaKeys() { throw new Error("No non no"); } });
+      return Promise.resolve({ keySystem,
+                               getConfiguration() { return conf; },
+                               createMediaKeys() { throw new Error("No non no"); } });
     }
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessBadMediaKeys });
 
@@ -88,7 +86,7 @@ describe("core - eme - global tests - media key system access", () => {
       keySystem : string,
       conf : MediaKeySystemConfiguration[]
     ) {
-      return observableOf({
+      return Promise.resolve({
         keySystem,
         getConfiguration: () => conf,
         createMediaKeys: () => Promise.reject(new Error("No non no")),
@@ -124,11 +122,11 @@ describe("core - eme - global tests - media key system access", () => {
   });
 
   /* eslint-disable max-len */
-  it("should not create any session until if no encrypted event was received", (done) => {
+  it("should not create any session if no encrypted event was received", (done) => {
   /* eslint-enable max-len */
 
     // == mocks ==
-    const setMediaKeysSpy = jest.fn(() => EMPTY);
+    const setMediaKeysSpy = jest.fn(() => Promise.resolve());
     mockCompat({ setMediaKeys: setMediaKeysSpy });
     const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
 
@@ -137,8 +135,14 @@ describe("core - eme - global tests - media key system access", () => {
     const kill$ = new Subject<void>();
     const EMEManager = require("../../eme_manager").default;
     EMEManager(videoElt, ksConfig, EMPTY)
-      .pipe(takeUntil(kill$), take(1))
+      .pipe(takeUntil(kill$))
       .subscribe((evt : any) => {
+        if (eventsReceived > 0) {
+          expect(evt.type).toEqual("attached-media-keys");
+          kill$.next();
+          kill$.complete();
+          return;
+        }
         eventsReceived++;
         expect(evt.type).toEqual("created-media-keys");
         evt.value.canAttachMediaKeys.setValue(true);
@@ -157,7 +161,7 @@ describe("core - eme - global tests - media key system access", () => {
   /* eslint-enable max-len */
 
     // == mocks ==
-    const setMediaKeysSpy = jest.fn(() => observableOf(null));
+    const setMediaKeysSpy = jest.fn(() => Promise.resolve(null));
     mockCompat({ setMediaKeys: setMediaKeysSpy });
 
     // == test ==
@@ -190,7 +194,7 @@ describe("core - eme - global tests - media key system access", () => {
   /* eslint-enable max-len */
 
     // == mocks ==
-    const setMediaKeysSpy = jest.fn(() => observableOf(null));
+    const setMediaKeysSpy = jest.fn(() => Promise.resolve(null));
     mockCompat({ setMediaKeys: setMediaKeysSpy });
     const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
 
@@ -227,7 +231,7 @@ describe("core - eme - global tests - media key system access", () => {
     // == mocks ==
     const mediaElement = document.createElement("video");
     const defaultMediaKeys = new MediaKeysImpl();
-    const setMediaKeysSpy = jest.fn(() => observableOf(null));
+    const setMediaKeysSpy = jest.fn(() => Promise.resolve(null));
     mockCompat({ setMediaKeys: setMediaKeysSpy });
     jest.spyOn(MediaKeySystemAccessImpl.prototype, "createMediaKeys")
       .mockReturnValue(Promise.resolve(defaultMediaKeys));
