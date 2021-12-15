@@ -1,0 +1,20 @@
+{
+  "pages": [
+    {
+      "path": "./Quick_Start.md",
+      "displayName": "Quick Start"
+    },
+    {
+      "path": "./Content_with_DRM.md",
+      "displayName": "Contents with DRM"
+    },
+    {
+      "path": "./Selecting_a_Track.md",
+      "displayName": "Selecting a Track"
+    },
+    {
+      "path": "./EventStream_Handling.md",
+      "displayName": "EventStream handling"
+    }
+  ]
+}

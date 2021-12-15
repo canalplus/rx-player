@@ -1,0 +1,8 @@
+{
+  "pages": [
+    {
+      "path": "./API_Reference.md",
+      "displayName": "API Reference"
+    }
+  ]
+}

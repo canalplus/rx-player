@@ -1,0 +1,28 @@
+{
+  "pages": [
+    {
+      "path": "./setWantedBufferAhead.md",
+      "displayName": "setWantedBufferAhead"
+    },
+    {
+      "path": "./getWantedBufferAhead.md",
+      "displayName": "getWantedBufferAhead"
+    },
+    {
+      "path": "./setMaxBufferBehind.md",
+      "displayName": "setMaxBufferBehind"
+    },
+    {
+      "path": "./getMaxBufferBehind.md",
+      "displayName": "getMaxBufferBehind"
+    },
+    {
+      "path": "./setMaxBufferAhead.md",
+      "displayName": "setMaxBufferAhead"
+    },
+    {
+      "path": "./getMaxBufferAhead.md",
+      "displayName": "getMaxBufferAhead"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "pages": [
+    {
+      "path": "./Welcome.md",
+      "displayName": "Welcome"
+    },
+    {
+      "path": "./Tutorials",
+      "displayName": "Tutorials"
+    },
+    {
+      "path": "./Minimal_Player.md",
+      "displayName": "Importing a minimal RxPlayer"
+    },
+    {
+      "path": "./Glossary.md",
+      "displayName": "Glossary"
+    }
+  ]
+}
+

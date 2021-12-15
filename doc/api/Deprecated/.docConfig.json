@@ -1,0 +1,36 @@
+{
+  "pages": [
+    {
+      "path": "./getManifest.md",
+      "displayName": "getManifest"
+    },
+    {
+      "path": "./getCurrentAdaptations.md",
+      "displayName": "getCurrentAdaptations"
+    },
+    {
+      "path": "./getCurrentRepresentations.md",
+      "displayName": "getCurrentRepresentations"
+    },
+    {
+      "path": "./setFullscreen.md",
+      "displayName": "setFullscreen"
+    },
+    {
+      "path": "./isFullscreen.md",
+      "displayName": "isFullscreen"
+    },
+    {
+      "path": "./exitFullscreen.md",
+      "displayName": "exitFullscreen"
+    },
+    {
+      "path": "./getImageTrackData.md",
+      "displayName": "getImageTrackData"
+    },
+    {
+      "path": "./getNativeTextTrack.md",
+      "displayName": "getNativeTextTrack"
+    }
+  ]
+}
