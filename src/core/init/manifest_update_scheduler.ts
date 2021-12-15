@@ -18,10 +18,9 @@ import {
   defer as observableDefer,
   EMPTY,
   from as observableFrom,
-  mapTo,
+  map,
   merge as observableMerge,
   mergeMap,
-  mergeMapTo,
   Observable,
   of as observableOf,
   share,
@@ -168,15 +167,17 @@ export default function manifestUpdateScheduler({
         return startManualRefreshTimer(delay ?? 0,
                                        minimumManifestUpdateInterval,
                                        sendingTime)
-          .pipe(mapTo({ completeRefresh, unsafeMode }));
+          .pipe(map(() => ({ completeRefresh, unsafeMode })));
       }));
 
     /** Emit when the Manifest tells us that it has "expired". */
     const expired$ = manifest.expired === null ?
       EMPTY :
-      observableTimer(minInterval)
-        .pipe(mergeMapTo(observableFrom(manifest.expired)),
-              mapTo({ completeRefresh: true, unsafeMode: unsafeModeEnabled }));
+      observableTimer(minInterval).pipe(
+        mergeMap(() =>
+          manifest.expired === null ? EMPTY :
+                                      observableFrom(manifest.expired)),
+        map(() => ({ completeRefresh: true, unsafeMode: unsafeModeEnabled })));
 
     /** Emit when the Manifest should normally be refreshed. */
     const autoRefresh$ = createAutoRefreshObservable();
@@ -255,7 +256,7 @@ export default function manifestUpdateScheduler({
         actualRefreshInterval = regularRefreshDelay;
       }
       return observableTimer(Math.max(actualRefreshInterval, minInterval))
-        .pipe(mapTo({ completeRefresh: false, unsafeMode: unsafeModeEnabled }));
+        .pipe(map(() => ({ completeRefresh: false, unsafeMode: unsafeModeEnabled })));
     }
   }
 

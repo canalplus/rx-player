@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import DASHFeature from "../../../transports/dash";

@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import samiParser from "../../../parsers/texttracks/sami/native";
 import addNativeSAMIFeature from "../native_sami_parser";

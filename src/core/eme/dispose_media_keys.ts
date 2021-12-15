@@ -16,7 +16,7 @@
 
 import {
   defer as observableDefer,
-  mergeMapTo,
+  mergeMap,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -41,6 +41,6 @@ export default function disposeMediaKeys(
     const { loadedSessionsStore } = currentState;
     MediaKeysInfosStore.clearState(mediaElement);
     return loadedSessionsStore.closeAllSessions()
-      .pipe(mergeMapTo(setMediaKeys(mediaElement, null)));
+      .pipe(mergeMap(() => setMediaKeys(mediaElement, null)));
   });
 }

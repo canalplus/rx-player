@@ -48,6 +48,11 @@ export default function clearEMESession(
     {
       log.info("EME: closing all current sessions.");
       return currentState.loadedSessionsStore.closeAllSessions()
+        // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+        // first type parameter as `any` instead of the perfectly fine `unknown`,
+        // leading to linter issues, as it forbids the usage of `any`.
+        // This is why we're disabling the eslint rule.
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
         .pipe(ignoreElements());
     }
     log.info("EME: Nothing to clear. Returning right away. No state =",

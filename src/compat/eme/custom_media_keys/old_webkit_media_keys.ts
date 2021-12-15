@@ -94,12 +94,15 @@ class OldWebkitMediaKeySession
             const licenseTypedArray =
               license instanceof ArrayBuffer ? new Uint8Array(license) :
                                                license;
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const json = JSON.parse(utf8ToStr(licenseTypedArray));
             /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+            /* eslint-disable @typescript-eslint/no-unsafe-argument */
+            /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+            const json = JSON.parse(utf8ToStr(licenseTypedArray));
             const key = base64ToBytes(json.keys[0].k);
             const kid = base64ToBytes(json.keys[0].kid);
             /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+            /* eslint-enable @typescript-eslint/no-unsafe-argument */
+            /* eslint-enable @typescript-eslint/no-unsafe-assignment */
             resolve(this._vid.webkitAddKey(this._key, key, kid, /* sessionId */ ""));
           } else {
             resolve(this._vid.webkitAddKey(this._key, license, null, /* sessionId */ ""));

@@ -18,13 +18,13 @@ import {
   concat as observableConcat,
   defer as observableDefer,
   interval as observableInterval,
-  mapTo,
+  map,
   merge as observableMerge,
   Observable,
   of as observableOf,
   startWith,
   Subject,
-  switchMapTo,
+  switchMap,
   takeUntil,
 } from "rxjs";
 import {
@@ -67,9 +67,9 @@ function generateRefreshInterval(videoElement : HTMLMediaElement) : Observable<b
 
   return manualRefresh$.pipe(
     startWith(null),
-    switchMapTo(observableConcat(autoRefresh$.pipe(mapTo(true),
-                                                   takeUntil(seeking$)),
-                                 observableOf(false))));
+    switchMap(() => observableConcat(autoRefresh$.pipe(map(() => true),
+                                                       takeUntil(seeking$)),
+                                     observableOf(false))));
 }
 
 /**

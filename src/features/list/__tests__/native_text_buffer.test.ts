@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 // eslint-disable-next-line max-len
 import nativeTextTracksBuffer from "../../../core/segment_buffers/implementations/text/native";

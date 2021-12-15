@@ -18,7 +18,7 @@ import {
   concat as observableConcat,
   concatMap,
   interval,
-  mapTo,
+  map,
   merge as observableMerge,
   Observable,
   Subject,
@@ -83,7 +83,7 @@ describe("utils - concatMapLatest", () => {
     let lastCount: number|undefined;
 
     const counter$ : Observable<number> = observableOf(...innerValues).pipe(
-      concatMap((v) => timer(5).pipe(mapTo(v)))
+      concatMap((v) => timer(5).pipe(map(() => v)))
     );
     counter$.pipe(
       concatMapLatest((i: number, count: number) => {
@@ -118,7 +118,7 @@ describe("utils - concatMapLatest", () => {
       tap(() => { itemEmittedCounter++; }),
       concatMapLatest((i: number, count: number) => {
         lastCount = count;
-        return timer(230).pipe(mapTo(i));
+        return timer(230).pipe(map(() => i));
       })
     ).subscribe({
       next(result: number) {

@@ -15,7 +15,7 @@
  */
 
 import {
-  mapTo,
+  map,
   share,
   startWith,
   timer,
@@ -27,7 +27,7 @@ describe("utils - deferSubscriptions", () => {
   it("should wait until all subscription in the current script are done before emitting", (done) => {
   /* eslint-enable max-len */
     let logs = "";
-    const myObservableDeferred = timer(5).pipe(mapTo("A"),
+    const myObservableDeferred = timer(5).pipe(map(() => "A"),
                                                startWith("S"),
                                                deferSubscriptions(),
                                                share());

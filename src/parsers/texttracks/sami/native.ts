@@ -94,7 +94,7 @@ function getCSSProperty(str : string, name : string) : string|null {
 function decodeEntities(text : string) : string {
   return text
     .replace(BR, "\n")
-    .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode($1));
+    .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode(Number($1)));
 }
 
 /**

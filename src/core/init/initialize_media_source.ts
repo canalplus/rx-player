@@ -22,7 +22,6 @@ import {
   finalize,
   ignoreElements,
   map,
-  mapTo,
   merge as observableMerge,
   mergeMap,
   mergeScan,
@@ -315,7 +314,7 @@ export default function InitializeOnMediaSource(
 
       const manifestEvents$ = observableMerge(
         fromEvent(manifest, "manifestUpdate")
-          .pipe(mapTo(EVENTS.manifestUpdate())),
+          .pipe(map(() => EVENTS.manifestUpdate())),
         fromEvent(manifest, "decipherabilityUpdate")
           .pipe(map(EVENTS.decipherabilityUpdate)));
 
@@ -328,6 +327,11 @@ export default function InitializeOnMediaSource(
             manifest.addUndecipherableProtectionData(evt.value);
           }
         }),
+        // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+        // first type parameter as `any` instead of the perfectly fine `unknown`,
+        // leading to linter issues, as it forbids the usage of `any`.
+        // This is why we're disabling the eslint rule.
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
         ignoreElements());
 
       return observableMerge(manifestEvents$,

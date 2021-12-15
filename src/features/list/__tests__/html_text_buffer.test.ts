@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 /* eslint-disable max-len */
 import htmlTextTracksBuffer from "../../../core/segment_buffers/implementations/text/html";

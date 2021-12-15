@@ -15,7 +15,7 @@
  */
 
 import {
-  mapTo,
+  map,
   mergeMap,
   Observable,
   Observer,
@@ -134,7 +134,7 @@ export default function openMediaSource(
     mergeMap(mediaSource => {
       return onSourceOpen$(mediaSource).pipe(
         take(1),
-        mapTo(mediaSource)
+        map(() => mediaSource)
       );
     })
   );

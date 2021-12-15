@@ -19,7 +19,6 @@ import {
   fromEvent as observableFromEvent,
   interval as observableInterval,
   map,
-  mapTo,
   merge as observableMerge,
   Observable,
   share,
@@ -245,7 +244,7 @@ export default class PlaybackObserver {
       const eventObs : Array< Observable< IPlaybackObserverEventType > > =
         SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) =>
           observableFromEvent(this._mediaElement, eventName)
-            .pipe(mapTo(eventName)));
+            .pipe(map(() => eventName)));
 
       const interval = this._lowLatencyMode  ? SAMPLING_INTERVAL_LOW_LATENCY :
                        this._withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
@@ -253,7 +252,7 @@ export default class PlaybackObserver {
 
       const interval$ : Observable<"timeupdate"> =
         observableInterval(interval)
-          .pipe(mapTo("timeupdate"));
+          .pipe(map(() => "timeupdate"));
 
       return observableMerge(interval$, ...eventObs).pipe(
         map((event : IPlaybackObserverEventType) => {
