@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  concat as observableConcat,
-  defer as observableDefer,
-  EMPTY,
-  ignoreElements,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-} from "rxjs";
+import PPromise from "pinkie";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
@@ -179,18 +171,17 @@ export default class LoadedSessionsStore {
    * @param {Object} initializationData
    * @returns {Observable}
    */
-  public closeSession(
+  public async closeSession(
     initializationData : IInitializationDataInfo
-  ) : Observable<unknown> {
-    return observableDefer(() => {
-      const entry = this._storage.remove(initializationData);
-      if (entry === undefined) {
-        log.warn("EME-LSS: No MediaKeySession found with " +
-                 "the given initData and initDataType");
-        return EMPTY;
-      }
-      return safelyCloseMediaKeySession(entry.mediaKeySession);
-    });
+  ) : Promise<boolean> {
+    const entry = this._storage.remove(initializationData);
+    if (entry === undefined) {
+      log.warn("EME-LSS: No MediaKeySession found with " +
+               "the given initData and initDataType");
+      return PPromise.resolve(false);
+    }
+    await safelyCloseMediaKeySession(entry.mediaKeySession);
+    return PPromise.resolve(true);
   }
 
   /**
@@ -213,23 +204,19 @@ export default class LoadedSessionsStore {
   /**
    * Close all sessions in this store.
    * Emit `null` when done.
-   * @returns {Observable}
+   * @returns {PPromise}
    */
-  public closeAllSessions() : Observable<null> {
-    return observableDefer(() => {
-      const closing$ = this._storage.getAll()
-        .map((entry) => safelyCloseMediaKeySession(entry.mediaKeySession));
+  public async closeAllSessions() : Promise<void> {
+    const allEntries = this._storage.getAll();
+    log.debug("EME-LSS: Closing all current MediaKeySessions", allEntries.length);
 
-      log.debug("EME-LSS: Closing all current MediaKeySessions", closing$.length);
+    // re-initialize the storage, so that new interactions with the
+    // `LoadedSessionsStore` do not rely on MediaKeySessions we're in the
+    // process of removing
+    this._storage = new InitDataStore<IStoredSessionEntry>();
 
-      // re-initialize the storage, so that new interactions with the
-      // `LoadedSessionsStore` do not rely on MediaKeySessions we're in the
-      // process of removing
-      this._storage = new InitDataStore<IStoredSessionEntry>();
-
-      return observableConcat(observableMerge(...closing$).pipe(ignoreElements()),
-                              observableOf(null));
-    });
+    const closingProms = allEntries
+      .map((entry) => safelyCloseMediaKeySession(entry.mediaKeySession));
+    await PPromise.all(closingProms);
   }
-
 }

@@ -14,19 +14,11 @@
  * limitations under the License.
  */
 
-import {
-  concat as observableConcat,
-  defer as observableDefer,
-  map,
-  mergeMap,
-  Observable,
-  of as observableOf,
-} from "rxjs";
 import { ICustomMediaKeySession } from "../../compat";
 import log from "../../log";
+import { CancellationSignal } from "../../utils/task_canceller";
 import cleanOldLoadedSessions, {
-  ICleanedOldSessionEvent,
-  ICleaningOldSessionEvent,
+  ICleaningOldSessionDataPayload,
 } from "./clean_old_loaded_sessions";
 import createSession from "./create_session";
 import {
@@ -67,9 +59,7 @@ export interface ILoadedPersistentSessionEvent {
 /** Every possible events sent by `getSession`. */
 export type IGetSessionEvent = ICreatedSession |
                                ILoadedOpenSession |
-                               ILoadedPersistentSessionEvent |
-                               ICleaningOldSessionEvent |
-                               ICleanedOldSessionEvent;
+                               ILoadedPersistentSessionEvent;
 
 /**
  * Handle MediaEncryptedEvents sent by a HTMLMediaElement:
@@ -81,55 +71,64 @@ export type IGetSessionEvent = ICreatedSession |
  * `EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS` config property.
  *
  * You can refer to the events emitted to know about the current situation.
- * @param {Event} initializationDataInfo
- * @param {Object} handledInitData
- * @param {Object} mediaKeysInfos
+ * @param {Object} initializationData
+ * @param {Object} stores
+ * @param {string} wantedSessionType
+ * @param {number} maxSessionCacheSize
+ * @param {Function} onCleaningSession
+ * @param {Object} cancelSignal
  * @returns {Observable}
  */
-export default function getSession(
+export default async function getSession(
   initializationData : IInitializationDataInfo,
   stores : IMediaKeySessionStores,
   wantedSessionType : MediaKeySessionType,
-  maxSessionCacheSize : number
-) : Observable<IGetSessionEvent> {
-  return observableDefer(() : Observable<IGetSessionEvent> => {
-    /**
-     * Store previously-loaded MediaKeySession with the same initialization data, if one.
-     */
-    let previousLoadedSession : MediaKeySession |
-                                ICustomMediaKeySession |
-                                null = null;
+  maxSessionCacheSize : number,
+  onCleaningSession : (arg : ICleaningOldSessionDataPayload) => void,
+  cancelSignal : CancellationSignal
+) : Promise<IGetSessionEvent> {
+  /**
+   * Store previously-loaded MediaKeySession with the same initialization data, if one.
+   */
+  let previousLoadedSession : MediaKeySession |
+                              ICustomMediaKeySession |
+                              null = null;
 
-    const { loadedSessionsStore, persistentSessionsStore } = stores;
-    const entry = loadedSessionsStore.getAndReuse(initializationData);
-    if (entry !== null) {
-      previousLoadedSession = entry.mediaKeySession;
-      if (isSessionUsable(previousLoadedSession)) {
-        log.info("EME: Reuse loaded session", previousLoadedSession.sessionId);
-        return observableOf({ type: "loaded-open-session" as const,
-                              value: { mediaKeySession: previousLoadedSession,
-                                       sessionType: entry.sessionType,
-                                       initializationData } });
-      } else if (persistentSessionsStore !== null) {
-        // If the session is not usable anymore, we can also remove it from the
-        // PersistentSessionsStore.
-        // TODO Are we sure this is always what we want?
-        persistentSessionsStore.delete(initializationData);
-      }
+  const { loadedSessionsStore, persistentSessionsStore } = stores;
+  const entry = loadedSessionsStore.getAndReuse(initializationData);
+  if (entry !== null) {
+    previousLoadedSession = entry.mediaKeySession;
+    if (isSessionUsable(previousLoadedSession)) {
+      log.info("EME: Reuse loaded session", previousLoadedSession.sessionId);
+      return { type: "loaded-open-session" as const,
+               value: { mediaKeySession: previousLoadedSession,
+                        sessionType: entry.sessionType,
+                        initializationData } };
+    } else if (persistentSessionsStore !== null) {
+      // If the session is not usable anymore, we can also remove it from the
+      // PersistentSessionsStore.
+      // TODO Are we sure this is always what we want?
+      persistentSessionsStore.delete(initializationData);
     }
+  }
 
-    return (previousLoadedSession != null ?
-      loadedSessionsStore.closeSession(initializationData) :
-      observableOf(null)
-    ).pipe(mergeMap(() => {
-      return observableConcat(
-        cleanOldLoadedSessions(loadedSessionsStore, maxSessionCacheSize),
-        createSession(stores, initializationData, wantedSessionType)
-          .pipe(map((evt) => ({ type: evt.type,
-                                value: { mediaKeySession: evt.value.mediaKeySession,
-                                         sessionType: evt.value.sessionType,
-                                         initializationData } })))
-      );
-    }));
-  });
+  if (previousLoadedSession) {
+    await loadedSessionsStore.closeSession(initializationData);
+    if (cancelSignal.cancellationError !== null) {
+      throw cancelSignal.cancellationError; // stop here if cancelled since
+    }
+  }
+
+  await cleanOldLoadedSessions(loadedSessionsStore,
+                               maxSessionCacheSize,
+                               onCleaningSession);
+  if (cancelSignal.cancellationError !== null) {
+    throw cancelSignal.cancellationError; // stop here if cancelled since
+  }
+
+  const evt = await createSession(stores, initializationData, wantedSessionType);
+  return { type: evt.type,
+           value: { mediaKeySession: evt.value.mediaKeySession,
+                    sessionType: evt.value.sessionType,
+                    initializationData } };
 }

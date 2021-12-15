@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import noop from "../../utils/noop";
 import disposeMediaKeys from "./dispose_media_keys";
 
 /**
  * Free up all ressources taken by the EME management.
  */
-export default function disposeEME(mediaElement : HTMLMediaElement) : void {
-  disposeMediaKeys(mediaElement).subscribe(noop);
+export default function disposeEME(
+  mediaElement : HTMLMediaElement
+) : Promise<void> {
+  return disposeMediaKeys(mediaElement);
 }
