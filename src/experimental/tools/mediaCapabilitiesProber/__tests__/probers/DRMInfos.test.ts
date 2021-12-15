@@ -20,11 +20,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable no-restricted-properties */
 
-import {
-  map,
-  of as observableOf,
-} from "rxjs";
 import { ProberStatus } from "../../types";
 
 
@@ -81,7 +78,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
       },
     };
     const mockRequestMediaKeySystemAccess = jest.fn(() => {
-      return observableOf({
+      return Promise.resolve({
         getConfiguration: () => ({}),
       });
     });
@@ -114,11 +111,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
     };
     const mockRequestMediaKeySystemAccess = jest.fn(
       () => {
-        return observableOf(null).pipe(
-          map(() => {
-            throw new Error();
-          })
-        );
+        return Promise.reject(new Error());
       }
     );
     jest.mock("../../../../../compat", () => ({

@@ -21,7 +21,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import { timer } from "rxjs";
 import cleanOldLoadedSessions from "../clean_old_loaded_sessions";
 import LoadedSessionsStore from "../utils/loaded_sessions_store";
 
@@ -50,7 +49,9 @@ function createLoadedSessionsStore() : LoadedSessionsStore {
       return [entry1, entry2, entry3];
     },
     closeSession() {
-      return timer(Math.random() * 50);
+      return new Promise((res) => {
+        setTimeout(res, Math.random() * 50);
+      });
     },
   } as unknown as LoadedSessionsStore;
 }
@@ -72,25 +73,18 @@ const emptyLoadedSessionsStore = {
  * @param {number} limit
  * @param {Function} done
  */
-function checkNothingHappen(
+async function checkNothingHappen(
   loadedSessionsStore : LoadedSessionsStore,
   limit : number
 ) : Promise<void> {
-  return new Promise((res, rej) => {
-
-    const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
-    let itemNb = 0;
-    cleanOldLoadedSessions(loadedSessionsStore, limit).subscribe({
-      next: () => { itemNb++; },
-      error: () => { rej(new Error("The Observable should not throw")); },
-      complete: () => {
-        expect(itemNb).toEqual(0);
-        expect(closeSessionSpy).not.toHaveBeenCalled();
-        closeSessionSpy.mockRestore();
-        res();
-      },
-    });
+  const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
+  let itemNb = 0;
+  await cleanOldLoadedSessions(loadedSessionsStore, limit, () => {
+    itemNb++;
   });
+  expect(itemNb).toEqual(0);
+  expect(closeSessionSpy).not.toHaveBeenCalled();
+  closeSessionSpy.mockRestore();
 }
 
 /**
@@ -103,41 +97,19 @@ function checkNothingHappen(
  * @param {Object} loadedSessionsStore
  * @param {number} limit
  * @param {Array.<Object>} entries
- * @param {Function} done
  */
 function checkEntriesCleaned(
   loadedSessionsStore : LoadedSessionsStore,
   limit : number,
-  entries : Array<{ initializationData: unknown }>,
-  done : () => void
-) {
+  entries : Array<{ initializationData: unknown }>
+) : Promise<void> {
   const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
   let itemNb = 0;
-  const pendingEntries : unknown[] = [];
-  cleanOldLoadedSessions(loadedSessionsStore, limit).subscribe({
-    next: (evt) => {
-      if (evt.type === "cleaning-old-session") {
-        pendingEntries.push(evt.value);
-      }
-      itemNb++;
-      if (itemNb <= entries.length) {
-        expect(evt).toEqual({ type: "cleaning-old-session",
-                              value: entries[itemNb - 1] });
-      } else if (itemNb > entries.length * 2) {
-        throw new Error("Too many received items: " + String(itemNb));
-      } else {
-        expect(evt.type).toEqual("cleaned-old-session");
-        expect(pendingEntries).not.toHaveLength(0);
-        expect(pendingEntries).toContainEqual(evt.value);
-        pendingEntries.splice(pendingEntries.indexOf(evt.value), 1);
-      }
-    },
-    error: () => { throw new Error("The Observable should not throw"); },
-    complete: () => {
-      expect(pendingEntries).toEqual([]);
-      expect(itemNb).toEqual(entries.length * 2);
-      done();
-    },
+  const prom = cleanOldLoadedSessions(loadedSessionsStore, limit, (evt) => {
+    itemNb++;
+    expect(evt).toEqual(entries[itemNb - 1]);
+  }).then(() => {
+    expect(itemNb).toEqual(entries.length);
   });
   expect(closeSessionSpy).toHaveBeenCalledTimes(entries.length);
   for (let i = 0; i < entries.length; i++) {
@@ -145,6 +117,7 @@ function checkEntriesCleaned(
       .toHaveBeenNthCalledWith(i + 1, entries[i].initializationData);
   }
   closeSessionSpy.mockRestore();
+  return prom;
 }
 
 describe("core - eme - cleanOldLoadedSessions", () => {
@@ -181,21 +154,12 @@ describe("core - eme - cleanOldLoadedSessions", () => {
     await checkNothingHappen(emptyLoadedSessionsStore, 0);
   });
 
-  it("should remove some if the limit is inferior to the current length", (done) => {
-    checkEntriesCleaned(createLoadedSessionsStore(),
-                        1,
-                        [ entry1, entry2 ],
-                        done);
-    checkEntriesCleaned(createLoadedSessionsStore(),
-                        2,
-                        [ entry1 ],
-                        done);
+  it("should remove some if the limit is inferior to the current length", async () => {
+    await checkEntriesCleaned(createLoadedSessionsStore(), 1, [ entry1, entry2 ]);
+    await checkEntriesCleaned(createLoadedSessionsStore(), 2, [ entry1 ]);
   });
 
-  it("should remove all if the limit is equal to 0", (done) => {
-    checkEntriesCleaned(createLoadedSessionsStore(),
-                        0,
-                        [ entry1, entry2, entry3 ],
-                        done);
+  it("should remove all if the limit is equal to 0", async () => {
+    await checkEntriesCleaned(createLoadedSessionsStore(), 0, [ entry1, entry2, entry3 ]);
   });
 });

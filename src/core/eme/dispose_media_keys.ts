@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-import {
-  defer as observableDefer,
-  mergeMap,
-  Observable,
-  of as observableOf,
-} from "rxjs";
 import { setMediaKeys } from "../../compat";
 import log from "../../log";
 import MediaKeysInfosStore from "./media_keys_infos_store";
@@ -28,19 +22,17 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
  * @param {Object} mediaKeysInfos
  * @returns {Observable}
  */
-export default function disposeMediaKeys(
+export default async function disposeMediaKeys(
   mediaElement : HTMLMediaElement
-) : Observable<unknown> {
-  return observableDefer(() => {
-    const currentState = MediaKeysInfosStore.getState(mediaElement);
-    if (currentState === null) {
-      return observableOf(null);
-    }
+) : Promise<void> {
+  const currentState = MediaKeysInfosStore.getState(mediaElement);
+  if (currentState === null) {
+    return ;
+  }
 
-    log.info("EME: Disposing of the current MediaKeys");
-    const { loadedSessionsStore } = currentState;
-    MediaKeysInfosStore.clearState(mediaElement);
-    return loadedSessionsStore.closeAllSessions()
-      .pipe(mergeMap(() => setMediaKeys(mediaElement, null)));
-  });
+  log.info("EME: Disposing of the current MediaKeys");
+  const { loadedSessionsStore } = currentState;
+  MediaKeysInfosStore.clearState(mediaElement);
+  await loadedSessionsStore.closeAllSessions();
+  setMediaKeys(mediaElement, null);
 }

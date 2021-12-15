@@ -614,7 +614,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (this.videoElement !== null) {
       // free resources used for EME management
-      disposeEME(this.videoElement);
+      disposeEME(this.videoElement)
+        .catch((err : unknown) => {
+          const message = err instanceof Error ? err.message :
+                                                 "Unknown error";
+          log.error("API: Could not dispose EME resources: " + message);
+        });
     }
 
     // free Observables linked to the Player instance
@@ -2343,18 +2348,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
-      clearEMESession(this.videoElement)
-        .subscribe({
-          error: (err : unknown) => {
-            log.error("API: An error arised when trying to clean-up the EME session:" +
-                      (err instanceof Error ? err.toString() :
-                                              "Unknown Error"));
-            freeUpContentLock();
-          },
-          complete: () => {
-            log.debug("API: EME session cleaned-up with success!");
-            freeUpContentLock();
-          },
+      clearEMESession(this.videoElement).then(
+        () => {
+          log.debug("API: EME session cleaned-up with success!");
+          freeUpContentLock();
+        },
+        (err : unknown) => {
+          log.error("API: An error arised when trying to clean-up the EME session:" +
+                    (err instanceof Error ? err.toString() :
+                                            "Unknown Error"));
+          freeUpContentLock();
         });
     } else {
       freeUpContentLock();

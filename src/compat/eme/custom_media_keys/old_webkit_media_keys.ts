@@ -14,16 +14,11 @@
  * limitations under the License.
  */
 
-import {
-  merge as observableMerge,
-  Subject,
-  takeUntil,
-} from "rxjs";
 import { base64ToBytes } from "../../../utils/base64";
 import EventEmitter from "../../../utils/event_emitter";
+import noop from "../../../utils/noop";
 import PPromise from "../../../utils/promise";
 import { utf8ToStr } from "../../../utils/string_parsing";
-import * as events from "../../event_listeners";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
@@ -54,11 +49,16 @@ export function isOldWebkitMediaElement(
     .webkitGenerateKeyRequest === "function";
 }
 
+/**
+ * MediaKeySession implementation for older versions of WebKit relying on APIs
+ * such as `webkitGenerateKeyRequest` `webkitAddKey` to be called on the
+ * HTMLMediaElement.
+ * @class OldWebkitMediaKeySession
+ */
 class OldWebkitMediaKeySession
   extends EventEmitter<IMediaKeySessionEvents>
   implements ICustomMediaKeySession
 {
-  public readonly update: (license: Uint8Array) => Promise<void>;
   public readonly closed: Promise<void>;
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
@@ -66,75 +66,92 @@ class OldWebkitMediaKeySession
 
   private readonly _vid: IOldWebkitHTMLMediaElement;
   private readonly _key: string;
-  private readonly _closeSession$: Subject<void>;
+
+  private readonly _onSessionRelatedEvent : (evt : Event) => void;
+  private _closeSession : () => void;
 
   constructor(mediaElement: IOldWebkitHTMLMediaElement, keySystem: string) {
     super();
-    this._closeSession$ = new Subject();
     this._vid = mediaElement;
     this._key = keySystem;
 
     this.sessionId = "";
+    this._closeSession = noop; // Just here to make TypeScript happy
     this.closed = new PPromise((resolve) => {
-      this._closeSession$.subscribe(resolve);
+      this._closeSession = resolve;
     });
     this.keyStatuses = new Map();
     this.expiration = NaN;
 
-    observableMerge(events.onKeyMessage$(mediaElement),
-                    events.onKeyAdded$(mediaElement),
-                    events.onKeyError$(mediaElement))
-      .pipe(takeUntil(this._closeSession$))
-      .subscribe((evt: Event) => this.trigger(evt.type, evt));
-
-    this.update = (license: Uint8Array) => {
-      return new PPromise((resolve, reject) => {
-        try {
-          if (this._key.indexOf("clearkey") >= 0) {
-            const licenseTypedArray =
-              license instanceof ArrayBuffer ? new Uint8Array(license) :
-                                               license;
-            /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-            /* eslint-disable @typescript-eslint/no-unsafe-argument */
-            /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-            const json = JSON.parse(utf8ToStr(licenseTypedArray));
-            const key = base64ToBytes(json.keys[0].k);
-            const kid = base64ToBytes(json.keys[0].kid);
-            /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-            /* eslint-enable @typescript-eslint/no-unsafe-argument */
-            /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-            resolve(this._vid.webkitAddKey(this._key, key, kid, /* sessionId */ ""));
-          } else {
-            resolve(this._vid.webkitAddKey(this._key, license, null, /* sessionId */ ""));
-          }
-        } catch (err) {
-          reject(err);
-        }
-      });
+    this._onSessionRelatedEvent = (evt : Event) => {
+      this.trigger(evt.type, evt);
     };
+
+    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
+      .forEach(evt => mediaElement.addEventListener(evt, this._onSessionRelatedEvent));
   }
 
-  generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
+  public update(license: Uint8Array) : Promise<void> {
+    return new PPromise((resolve, reject) => {
+      try {
+        if (this._key.indexOf("clearkey") >= 0) {
+          const licenseTypedArray =
+            license instanceof ArrayBuffer ? new Uint8Array(license) :
+            license;
+          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+          /* eslint-disable @typescript-eslint/no-unsafe-argument */
+          /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+          const json = JSON.parse(utf8ToStr(licenseTypedArray));
+          const key = base64ToBytes(json.keys[0].k);
+          const kid = base64ToBytes(json.keys[0].kid);
+          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+          /* eslint-enable @typescript-eslint/no-unsafe-argument */
+          /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+          resolve(this._vid.webkitAddKey(this._key, key, kid, /* sessionId */ ""));
+        } else {
+          resolve(this._vid.webkitAddKey(this._key, license, null, /* sessionId */ ""));
+        }
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  public generateRequest(
+    _initDataType: string,
+    initData: ArrayBuffer
+  ): Promise<void> {
     return new PPromise((resolve) => {
       this._vid.webkitGenerateKeyRequest(this._key, initData);
       resolve();
     });
   }
 
-  close(): Promise<void> {
+  public close(): Promise<void> {
     return new PPromise((resolve) => {
-      this._closeSession$.next();
-      this._closeSession$.complete();
+      this._unbindSession();
+      this._closeSession();
       resolve();
     });
   }
 
-  load(): Promise<boolean> {
+  /**
+   * Load a Persistent MediaKeySession.
+   * Do nothing here because this implementation doesn't handle them.
+   * @returns {Promise.<boolean>}
+   */
+  public load(): Promise<boolean> {
+    // Not implemented. Always return false as in "no session with that id".
     return PPromise.resolve(false);
   }
 
-  remove(): Promise<void> {
+  public remove(): Promise<void> {
     return PPromise.resolve();
+  }
+
+  private _unbindSession() {
+    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
+      .forEach(evt => this._vid.removeEventListener(evt, this._onSessionRelatedEvent));
   }
 }
 

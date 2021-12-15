@@ -24,9 +24,7 @@
 /* eslint-disable no-restricted-properties */
 
 import {
-  defer as observableDefer,
   Observable,
-  of as observableOf,
   Subject,
 } from "rxjs";
 import { IEncryptedEventData } from "../../../../compat/eme";
@@ -34,7 +32,6 @@ import {
   base64ToBytes,
   bytesToBase64,
 } from "../../../../utils/base64";
-import castToObservable from "../../../../utils/cast_to_observable";
 import EventEmitter, { fromEvent } from "../../../../utils/event_emitter";
 import flatMap from "../../../../utils/flat_map";
 import {
@@ -175,15 +172,17 @@ export class MediaKeySessionImpl extends EventEmitter<Record<string, unknown>> {
 
   public generateRequest(initDataType: string, initData: BufferSource) : Promise<void> {
     const msg = formatFakeChallengeFromInitData(initData, initDataType);
-    const event : MediaKeyMessageEvent =
-      Object.assign(new CustomEvent("message"),
-                    { message: msg.buffer,
-                      messageType: "license-request" as const });
+    setTimeout(() => {
+      const event : MediaKeyMessageEvent =
+        Object.assign(new CustomEvent("message"),
+                      { message: msg.buffer,
+                        messageType: "license-request" as const });
 
-    this.trigger("message", event);
-    if (this.onmessage !== null && this.onmessage !== undefined) {
-      this.onmessage(event);
-    }
+      this.trigger("message", event);
+      if (this.onmessage !== null && this.onmessage !== undefined) {
+        this.onmessage(event);
+      }
+    }, 10);
     return Promise.resolve();
   }
 
@@ -245,8 +244,8 @@ export class MediaKeySystemAccessImpl {
 export function requestMediaKeySystemAccessImpl(
   keySystem : string,
   config : MediaKeySystemConfiguration[]
-) : Observable<MediaKeySystemAccessImpl> {
-  return observableOf(new MediaKeySystemAccessImpl(keySystem, config));
+) : Promise<MediaKeySystemAccessImpl> {
+  return Promise.resolve(new MediaKeySystemAccessImpl(keySystem, config));
 }
 
 /**
@@ -272,16 +271,14 @@ export function mockCompat(exportedFunctions = {}) {
   };
 
   const rmksaSpy = jest.fn(requestMediaKeySystemAccessImpl);
-  const setMediaKeysSpy = jest.fn(() => observableOf(null));
+  const setMediaKeysSpy = jest.fn();
   const generateKeyRequestSpy = jest.fn((
     mks : MediaKeySessionImpl,
     initializationDataType,
     initializationData
   ) => {
-    return observableDefer(() => {
-      return castToObservable(mks.generateRequest(initializationDataType,
-                                                  initializationData));
-    });
+    return mks.generateRequest(initializationDataType,
+                               initializationData);
   });
 
   const getInitDataSpy = jest.fn((encryptedEvent : IEncryptedEventData) => {

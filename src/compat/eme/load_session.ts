@@ -14,20 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  defer as observableDefer,
-  map,
-  mergeMap,
-  Observable,
-  of as observableOf,
-  race as observableRace,
-  take,
-  timer as observableTimer,
-} from "rxjs";
+import PPromise from "pinkie";
 import log from "../../log";
-import castToObservable from "../../utils/cast_to_observable";
-import tryCatch from "../../utils/rx-try_catch";
-import { onKeyStatusesChange$ } from "../event_listeners";
 import { ICustomMediaKeySession } from "./custom_media_keys";
 
 const EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
@@ -46,26 +34,36 @@ const EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
  * @param {string} sessionId
  * @returns {Observable}
  */
-export default function loadSession(
+export default async function loadSession(
   session : MediaKeySession | ICustomMediaKeySession,
   sessionId : string
-) : Observable<boolean> {
-  return observableDefer(() => {
-    log.info("Compat/EME: Load persisted session", sessionId);
-    return tryCatch<undefined, boolean>(() => castToObservable(session.load(sessionId)),
-                                        undefined);
-  }).pipe(mergeMap((isLoaded : boolean) : Observable<boolean> => {
-    if (!isLoaded || session.keyStatuses.size > 0) {
-      return observableOf(isLoaded);
+) : Promise<boolean> {
+  log.info("Compat/EME: Load persisted session", sessionId);
+  const isLoaded = await session.load(sessionId);
+
+  if (!isLoaded || session.keyStatuses.size > 0) {
+    return isLoaded;
+  }
+
+  // A browser race condition can exist, seen for example in some
+  // Chromium/Chrome versions where the `keyStatuses` property from a loaded
+  // MediaKeySession would not be populated directly as the load answer but
+  // asynchronously after.
+  return new PPromise((resolve) => {
+    (session as MediaKeySession).addEventListener("keystatuseschange",
+                                                  resolveWithLoadedStatus);
+    const timeout = setTimeout(resolveWithLoadedStatus,
+                               EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES);
+
+    function resolveWithLoadedStatus() {
+      cleanUp();
+      resolve(isLoaded);
     }
 
-    // A browser race condition can exist, seen for example in some
-    // Chromium/Chrome versions where the `keyStatuses` property from a loaded
-    // MediaKeySession would not be populated directly as the load answer but
-    // asynchronously after.
-    return observableRace(
-      observableTimer(EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES),
-      onKeyStatusesChange$(session)
-    ).pipe(take(1), map(() => isLoaded));
-  }));
+    function cleanUp() {
+      clearTimeout(timeout);
+      (session as MediaKeySession).removeEventListener("keystatuseschange",
+                                                       resolveWithLoadedStatus);
+    }
+  });
 }
