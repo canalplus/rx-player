@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-import {
-  defer as observableDefer,
-  EMPTY,
-  ignoreElements ,
-  Observable,
-} from "rxjs";
 import { shouldUnsetMediaKeys } from "../../compat/";
 import log from "../../log";
+import PPromise from "../../utils/promise";
 import disposeMediaKeys from "./dispose_media_keys";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 
@@ -33,30 +28,21 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
  */
 export default function clearEMESession(
   mediaElement : HTMLMediaElement
-) : Observable<never> {
-  return observableDefer(() => {
-    log.info("EME: Clearing-up EME session.");
-    if (shouldUnsetMediaKeys()) {
-      log.info("EME: disposing current MediaKeys.");
-      return disposeMediaKeys(mediaElement)
-        .pipe(ignoreElements());
-    }
+) : Promise<void> {
+  log.info("EME: Clearing-up EME session.");
+  if (shouldUnsetMediaKeys()) {
+    log.info("EME: disposing current MediaKeys.");
+    return disposeMediaKeys(mediaElement);
+  }
 
-    const currentState = MediaKeysInfosStore.getState(mediaElement);
-    if (currentState !== null &&
-        currentState.keySystemOptions.closeSessionsOnStop === true)
-    {
-      log.info("EME: closing all current sessions.");
-      return currentState.loadedSessionsStore.closeAllSessions()
-        // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-        // first type parameter as `any` instead of the perfectly fine `unknown`,
-        // leading to linter issues, as it forbids the usage of `any`.
-        // This is why we're disabling the eslint rule.
-        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-        .pipe(ignoreElements());
-    }
-    log.info("EME: Nothing to clear. Returning right away. No state =",
-             currentState === null);
-    return EMPTY;
-  });
+  const currentState = MediaKeysInfosStore.getState(mediaElement);
+  if (currentState !== null &&
+      currentState.keySystemOptions.closeSessionsOnStop === true)
+  {
+    log.info("EME: closing all current sessions.");
+    return currentState.loadedSessionsStore.closeAllSessions();
+  }
+  log.info("EME: Nothing to clear. Returning right away. No state =",
+           currentState === null);
+  return PPromise.resolve();
 }

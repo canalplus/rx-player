@@ -16,16 +16,17 @@
 
 import {
   filter,
-  mapTo,
+  map,
   mergeMap,
   Observable,
-  of as observableOf,
   startWith,
   take,
 } from "rxjs";
 import log from "../../log";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import createSharedReference from "../../utils/reference";
+import fromCancellablePromise from "../../utils/rx-from_cancellable_promise";
+import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys, {
   disableMediaKeys,
 } from "./attach_media_keys";
@@ -47,60 +48,62 @@ export default function initMediaKeys(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[]
 ): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
-  return getMediaKeysInfos(mediaElement, keySystemsConfigs)
-    .pipe(mergeMap(({ mediaKeys, mediaKeySystemAccess, stores, options }) => {
+  const canceller = new TaskCanceller();
 
-      /**
-       * String identifying the key system, allowing the rest of the code to
-       * only advertise the required initialization data for license requests.
-       *
-       * Note that we only set this value if retro-compatibility to older
-       * persistent logic in the RxPlayer is not important, as the optimizations
-       * this property unlocks can break the loading of MediaKeySessions
-       * persisted in older RxPlayer's versions.
-       */
-      let initializationDataSystemId : string | undefined;
-      if (isNullOrUndefined(options.licenseStorage) ||
-          options.licenseStorage.disableRetroCompatibility === true)
-      {
-        initializationDataSystemId = getDrmSystemId(mediaKeySystemAccess.keySystem);
-      }
+  return fromCancellablePromise(
+    canceller,
+    () => getMediaKeysInfos(mediaElement, keySystemsConfigs, canceller.signal)
+  ).pipe(mergeMap(({ mediaKeys, mediaKeySystemAccess, stores, options }) => {
+    /**
+     * String identifying the key system, allowing the rest of the code to
+     * only advertise the required initialization data for license requests.
+     *
+     * Note that we only set this value if retro-compatibility to older
+     * persistent logic in the RxPlayer is not important, as the optimizations
+     * this property unlocks can break the loading of MediaKeySessions
+     * persisted in older RxPlayer's versions.
+     */
+    let initializationDataSystemId : string | undefined;
+    if (isNullOrUndefined(options.licenseStorage) ||
+        options.licenseStorage.disableRetroCompatibility === true)
+    {
+      initializationDataSystemId = getDrmSystemId(mediaKeySystemAccess.keySystem);
+    }
 
-      const canAttachMediaKeys = createSharedReference(false);
-      const shouldDisableOldMediaKeys =
-        mediaElement.mediaKeys !== null &&
-        mediaElement.mediaKeys !== undefined &&
-        mediaKeys !== mediaElement.mediaKeys;
+    const canAttachMediaKeys = createSharedReference(false);
+    const shouldDisableOldMediaKeys =
+      mediaElement.mediaKeys !== null &&
+      mediaElement.mediaKeys !== undefined &&
+      mediaKeys !== mediaElement.mediaKeys;
 
-      let disableOldMediaKeys$ : Observable<unknown> = observableOf(null);
-      if (shouldDisableOldMediaKeys) {
-        log.debug("EME: Disabling old MediaKeys");
-        disableOldMediaKeys$ = disableMediaKeys(mediaElement);
-      }
-      return disableOldMediaKeys$.pipe(
-        mergeMap(() => {
-          log.debug("EME: Attaching current MediaKeys");
-          return canAttachMediaKeys.asObservable().pipe(
-            filter(canAttach => canAttach),
-            mergeMap(() => {
-              const stateToAttatch = { loadedSessionsStore: stores.loadedSessionsStore,
-                                       mediaKeySystemAccess,
-                                       mediaKeys,
-                                       keySystemOptions: options };
-              return attachMediaKeys(mediaElement, stateToAttatch);
-            }),
-            take(1),
-            mapTo({ type: "attached-media-keys" as const,
-                    value: { mediaKeySystemAccess, mediaKeys, stores, options } }),
-            startWith({ type: "created-media-keys" as const,
-                        value: { mediaKeySystemAccess,
-                                 initializationDataSystemId,
+    if (shouldDisableOldMediaKeys) {
+      log.debug("EME: Disabling old MediaKeys");
+      disableMediaKeys(mediaElement);
+    }
+
+    log.debug("EME: Attaching current MediaKeys");
+    return canAttachMediaKeys.asObservable().pipe(
+      filter(canAttach => canAttach),
+      mergeMap(() => {
+        const stateToAttatch = { loadedSessionsStore: stores.loadedSessionsStore,
+                                 mediaKeySystemAccess,
                                  mediaKeys,
-                                 stores,
-                                 options,
-                                 canAttachMediaKeys } })
-          );
-        })
-      );
-    }));
+                                 keySystemOptions: options };
+        return fromCancellablePromise(
+          canceller,
+          () => attachMediaKeys(mediaElement, stateToAttatch, canceller.signal)
+        );
+      }),
+      take(1),
+      map(() => ({ type: "attached-media-keys" as const,
+                   value: { mediaKeySystemAccess, mediaKeys, stores, options } })),
+      startWith({ type: "created-media-keys" as const,
+                  value: { mediaKeySystemAccess,
+                           initializationDataSystemId,
+                           mediaKeys,
+                           stores,
+                           options,
+                           canAttachMediaKeys } })
+    );
+  }));
 }
