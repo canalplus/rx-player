@@ -67,7 +67,9 @@ export default class GuessBasedChooser {
    * chosen according to the `GuessBasedChooser`.
    *
    * @param {Array.<Object>} representations - Array of all Representation the
-   * GuessBasedChooser can choose from.
+   * GuessBasedChooser can choose from, sorted by bitrate ascending.
+   * /!\ It is very important that Representation in that Array are sorted by
+   * bitrate ascending for this method to work as intented.
    * @param {Object} observation - Last playback observation performed.
    * @param {Object} currentRepresentation - The Representation currently
    * loading.
@@ -177,12 +179,12 @@ export default class GuessBasedChooser {
   private _canGuessHigher(
     bufferGap : number,
     speed : number,
-    scoreData : [number, ScoreConfidenceLevel]
+    [score, scoreConfidenceLevel] : [number, ScoreConfidenceLevel]
   ) : boolean {
     return isFinite(bufferGap) && bufferGap >= 2.5 &&
            performance.now() > this._blockGuessesUntil &&
-           scoreData[1] === ScoreConfidenceLevel.HIGH &&
-           scoreData[0] / speed > 1.1;
+           scoreConfidenceLevel === ScoreConfidenceLevel.HIGH &&
+           score / speed > 1.1;
   }
 
   /**
@@ -249,10 +251,15 @@ export default class GuessBasedChooser {
 
 /**
  * From the array of Representations given, returns the Representation with a
- * bitrate immediately superior.
+ * bitrate immediately superior to the current one.
  * Returns `null` if that "next" Representation is not found.
- * @param {Array.<Object>} representations
- * @param {Object} representation
+ *
+ * /!\ The representations have to be already sorted by bitrate, in ascending
+ * order.
+ * @param {Array.<Object>} representations - Available representations to choose
+ * from, sorted by bitrate in ascending order.
+ * @param {Object} currentRepresentation - The Representation currently
+ * considered.
  * @returns {Object|null}
  */
 function getNextRepresentation(

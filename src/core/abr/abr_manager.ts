@@ -182,7 +182,7 @@ function createFilters(
   // from.
   return deviceEventsArray.length > 0 ?
     observableCombineLatest(deviceEventsArray)
-      .pipe(map((args : IABRFiltersObject[]) : IABRFiltersObject =>
+      .pipe(map((args : IABRFiltersObject[]) =>
         objectAssign({}, ...args) as IABRFiltersObject)) :
     observableOf({});
 }
